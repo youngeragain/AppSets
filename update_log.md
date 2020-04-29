@@ -1,3 +1,7 @@
+# 2020-04-29
+* Add some UI module and general bug fixes
+* Redesign the payment fragment
+* Reconstruction some tables in DB
 # 2020-04-25
 * Some Bugs fixed
 * Update UI
