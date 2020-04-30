@@ -1,5 +1,5 @@
 # AppSets:
-<img src="https://i.loli.net/2020/04/30/KPDgRLtnCo5OmVw.png " width="48" height="48" /><br>
+<img src="https://i.loli.net/2020/04/30/kWQH2nTSPXVed4B.png" width="48" height="48"/><br>
 An app store, inspired by Aurora Store. Can anyone help me?
 # ScreenShots:
 <img src="https://i.loli.net/2020/04/25/QyL2xDV39AW5YHr.png"  width="144" height="305"/>&nbsp;&nbsp;
