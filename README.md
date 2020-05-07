@@ -15,4 +15,3 @@ This is my first application to learn Kotlin. When I saw that there was a way to
 * <a href="https://gitlab.com/AuroraOSS">Aurora Store</a>
 * <a href="https://developer.android.com/jetpack">Android Jetpack</a>
 * Other open source libraries
-* **more features in the future**
