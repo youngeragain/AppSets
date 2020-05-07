@@ -11,4 +11,6 @@ An app store, inspired by Aurora Store.
 <img src="https://i.loli.net/2020/05/07/E9yI3lzPdO6vqFQ.png" width="150" height="325"/>&nbsp;&nbsp;
 # Why?
 This is my first application to learn Kotlin. When I saw that there was a way to access Google Play Store, I was very excited. So I developed AppSets.
+# Thanks
+* <a href="https://gitlab.com/AuroraOSS">Aurora Store</a>
 * **more features in the future**
