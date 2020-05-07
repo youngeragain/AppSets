@@ -8,14 +8,14 @@
 # 2020-04-29
 * Add some UI module and general bug fixes
 * Redesign the payment fragment
-* Reconstruction some tables in Server DB
+* Reconstruction some tables in server' database
 # 2020-04-25
 * Update UI
-* Reconstruction some tables in Server DB
+* Reconstruction some tables in server's database
 * General bug fixes
 # 2020-04-24
 * Replace RxJava with Kotlin Coroutine in some places
-* Update database
+* Update server's database
 * General bug fixes
 # 2020-04-22
 * Update UI
