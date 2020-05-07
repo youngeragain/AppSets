@@ -1,3 +1,6 @@
+# 2020-05-07
+* Replace some data in SharedPreferences with jetpack Room
+* General bug fixes
 # 2020-05-05
 * UI changes
 * Improve performance
@@ -5,13 +8,13 @@
 # 2020-04-29
 * Add some UI module and general bug fixes
 * Redesign the payment fragment
-* Reconstruction some tables in DB
+* Reconstruction some tables in Server DB
 # 2020-04-25
-* Some Bugs fixed
+* General bug fixes
 * Update UI
-* Reconstruction some tables in DB
+* Reconstruction some tables in Server DB
 # 2020-04-24
-* Some Bugs fixed
+* General bug fixes
 * Replace RxJava with Kotlin Coroutine in some places
 * Update database
 # 2020-04-22
