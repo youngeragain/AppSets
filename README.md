@@ -1,6 +1,6 @@
 # AppSets:
 <img src="https://i.loli.net/2020/04/30/kWQH2nTSPXVed4B.png" width="68" height="68"/><br>
-An app store, inspired by Aurora Store. Can anyone help me?
+An app store, inspired by Aurora Store.
 # ScreenShots:
 <img src="https://i.loli.net/2020/05/07/ovUiSAhRMECFWDd.png" width="150" height="325"/>&nbsp;&nbsp;
 <img src="https://i.loli.net/2020/05/07/sS7RvmAUD1an28c.png" width="150" height="325"/>&nbsp;&nbsp;
