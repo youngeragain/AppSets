@@ -14,3 +14,4 @@ This is my first application to learn Kotlin. When I saw that there was a way to
 # Thanks
 * <a href="https://gitlab.com/AuroraOSS">Aurora Store</a>
 * Other open source libraries
+* **More information：t.me/appsets**
