@@ -1,6 +1,6 @@
 # AppSets
 <img src="https://i.loli.net/2020/04/30/kWQH2nTSPXVed4B.png" width="68" height="68"/><br>
-An app store, inspired by Aurora Store. 100% written in Kotlin
+An app store, inspired by Aurora Store. All written in Kotlin. More information：<a href="https://www.t.me/appsets">t.me/appsets</a>
 # Features
 * Recommend apps every day, not just Android platforms.
 * Browse the content of Google Play Store.
@@ -14,4 +14,4 @@ This is my first application to learn Kotlin. When I saw that there was a way to
 # Thanks
 * <a href="https://gitlab.com/AuroraOSS">Aurora Store</a>
 * Other open source libraries
-* More information：<a href="https://www.t.me/appsets">t.me/appsets</a>
+
