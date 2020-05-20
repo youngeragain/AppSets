@@ -1,4 +1,7 @@
 # 2020-05-07
+* Finally added to retrieve my password
+* General bug fixes
+# 2020-05-07
 * Replace some data in SharedPreferences with jetpack Room
 * General bug fixes
 # 2020-05-05
