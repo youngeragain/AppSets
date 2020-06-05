@@ -1,4 +1,7 @@
 # 2020-05-20
+* Added user page
+* Too bugs don't wanna to fixes
+# 2020-05-20
 * Finally added to retrieve my password
 * General bug fixes
 # 2020-05-07
