@@ -4,6 +4,7 @@ An app store, inspired by Aurora Store. All written in Kotlin. Go to the <a href
 # Features
 * Recommend apps every day, not just Android platforms.
 * Browse the content of Google Play Store.
+* Manage your apps.
 # ScreenShots
 <img src="https://i.loli.net/2020/07/01/6ocyp3z7VTYP9Rd.png" width="150" height="325"/>&nbsp;&nbsp;
 <img src="https://i.loli.net/2020/07/01/xQNzi6HeSoKCUXl.png" width="150" height="325"/>&nbsp;&nbsp;
