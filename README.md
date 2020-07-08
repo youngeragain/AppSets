@@ -1,6 +1,6 @@
 # AppSets
 <img src="https://i.loli.net/2020/04/30/kWQH2nTSPXVed4B.png" width="68" height="68"/><br>
-An app store, inspired by Aurora Store. All written in Kotlin. Go to the <a href="https://github.com/Xucaiju/AppSets/tree/dev">dev branch</a> to see more information
+An app store, inspired by Aurora Store. Go to the <a href="https://github.com/Xucaiju/AppSets/tree/dev">dev branch</a> to see more information
 # Features
 * Recommend apps every day, not just Android platforms.
 * Browse the content of Google Play Store.
