@@ -12,7 +12,7 @@ An app store, inspired by Aurora Store. All written in Kotlin. Go to the <a href
 <img src="https://i.loli.net/2020/07/01/MYcyAIz5vSskeXT.png" width="150" height="325"/>&nbsp;&nbsp;
 <img src="https://i.loli.net/2020/07/01/L3Xnm97crgpxD1S.png" width="150" height="325"/>&nbsp;&nbsp;
 # What i used
-Kotlin, ViewModel, LiveData, AndroidX, Room, Couroutine, WorkManager, Navigation, RxJava, Glide, Retrofit, Material Design...
+Kotlin, ViewModel, LiveData, AndroidX, Room, Couroutine, WorkManager, Navigation, RxJava, Glide, Retrofit, Material Design,Spring Boot...
 # Why?
 Learn Kotlin, Love Google Play Store.
 # Thanks
