@@ -7,12 +7,12 @@ An app store, inspired by Aurora Store. Go to the <a href="https://github.com/Xu
 * Manage your apps.
 # ScreenShots
 <img src="https://i.loli.net/2020/07/06/KnPGChJzN29gu4m.png" width="150" height="325"/>&nbsp;&nbsp;
-<img src="https://i.loli.net/2020/07/06/qETY3N7dWvK5Ixn.png" width="150" height="325"/>&nbsp;&nbsp;
+<img src="https://i.loli.net/2020/07/09/SMzEHJqhtsbToiI.png" width="150" height="325"/>&nbsp;&nbsp;
 <img src="https://i.loli.net/2020/07/06/qmCTukHPzvQylfL.png" width="150" height="325"/>&nbsp;&nbsp;
 <img src="https://i.loli.net/2020/07/01/MYcyAIz5vSskeXT.png" width="150" height="325"/>&nbsp;&nbsp;
 <img src="https://i.loli.net/2020/07/01/L3Xnm97crgpxD1S.png" width="150" height="325"/>&nbsp;&nbsp;
 # What i used
-Kotlin, ViewModel, LiveData, AndroidX, Room, Couroutine, WorkManager, Navigation, RxJava, Glide, Retrofit, Material Design,Spring Boot...
+Kotlin, ViewModel, LiveData, AndroidX, Room, Couroutine, WorkManager, Navigation, RxJava, Glide, Retrofit, Material Design, Spring Boot...
 # Thanks
 * <a href="https://gitlab.com/AuroraOSS">Aurora Store</a>
 * Other open source libraries
