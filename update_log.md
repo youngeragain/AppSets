@@ -1,9 +1,5 @@
 # 2020-06-29
-My server has been hacked! Therefore, there are some problems with the AppSets, 
-* info like this: To recover your lost Database and avoid leaking it: Send us 0.035 Bitcoin (BTC) to our Bitcoin address 1HbRNfvYhdkSjk61QwNhhqzapzThfyBAQZ and contact us by Email with your Server IP or Domain name and a Proof of Payment. If you are unsure if we have your data, contact us and we will send you a proof. Your Database is downloaded and backed up on our servers. Backups that we have right now: appsets. If we dont receive your payment in the next 10 Days, we will make your database public or use them otherwise.
-* Bitcion Address is: 1HbRNfvYhdkSjk61QwNhhqzapzThfyBAQZ
-* Hacker email address is: sqldump2020@protonmail.com
-* I love you ❤, can you teach me?
+My server has been hacked! Therefore, there are some problems with the AppSets.
 # 2020-06-05
 * Added user page
 * Too bugs don't wanna to fixes
