@@ -5,6 +5,7 @@
 * 每周推荐应用，不仅仅是Android平台
 * 浏览Google Play Store上面的内容
 * 管理你自己开发的应用
+* ...
 # 截图
 <img src="https://i.loli.net/2020/07/06/KnPGChJzN29gu4m.png" width="150" height="325"/>&nbsp;&nbsp;
 <img src="https://i.loli.net/2020/07/09/SMzEHJqhtsbToiI.png" width="150" height="325"/>&nbsp;&nbsp;
