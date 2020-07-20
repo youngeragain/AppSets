@@ -7,11 +7,11 @@
 * 管理你自己开发的应用
 * ...
 # 截图
-<img src="https://i.loli.net/2020/07/06/KnPGChJzN29gu4m.png" width="150" height="325"/>&nbsp;&nbsp;
-<img src="https://i.loli.net/2020/07/09/SMzEHJqhtsbToiI.png" width="150" height="325"/>&nbsp;&nbsp;
-<img src="https://i.loli.net/2020/07/06/qmCTukHPzvQylfL.png" width="150" height="325"/>&nbsp;&nbsp;
-<img src="https://i.loli.net/2020/07/01/MYcyAIz5vSskeXT.png" width="150" height="325"/>&nbsp;&nbsp;
-<img src="https://i.loli.net/2020/07/01/L3Xnm97crgpxD1S.png" width="150" height="325"/>&nbsp;&nbsp;
+<img src="https://i.loli.net/2020/07/20/amhKkt8YETJSXd4.png" width="150" height="325"/>&nbsp;&nbsp;
+<img src="https://i.loli.net/2020/07/20/K5hngo4s3q9bRwT.png" width="150" height="325"/>&nbsp;&nbsp;
+<img src="https://i.loli.net/2020/07/20/eplMzXRnQgS8ZED.png" width="150" height="325"/>&nbsp;&nbsp;
+<img src="https://i.loli.net/2020/07/20/izHlwcnjY9xPfpu.png" width="150" height="325"/>&nbsp;&nbsp;
+<img src="https://i.loli.net/2020/07/20/3e1IpXHs2oa65wR.png" width="150" height="325"/>&nbsp;&nbsp;
 # 我用到了这些
 Kotlin, ViewModel, LiveData, AndroidX, Room, Couroutine, WorkManager, Navigation, RxJava, Glide, Retrofit, Material Design, Spring Boot...
 # 谢谢
