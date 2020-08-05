@@ -1,6 +1,7 @@
 # AppSets
 <img src="https://i.loli.net/2020/04/30/kWQH2nTSPXVed4B.png" width="68" height="68"/><br>
-一个受Aurora Store和Google Play Store启发的应用商店，去<a href="https://github.com/Xucaiju/AppSets/tree/dev">dev branch</a> 查看更多详情。
+一个受Aurora Store和Google Play Store启发的应用商店，去 <a href="https://github.com/Xucaiju/AppSets/tree/dev">dev branch</a> 查看更多详情。
+-><a href="http://49.234.61.225">网站在这儿</a>
 # 特点
 * 每周推荐应用，不仅仅是Android平台
 * 浏览Google Play Store上面的内容
