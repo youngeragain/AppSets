@@ -1,6 +1,6 @@
 # AppSets
 <img src="https://i.loli.net/2020/04/30/kWQH2nTSPXVed4B.png" width="68" height="68"/><br>
-AppSets is an Android application store inspired by Aurora Store and Google Play Store, with an beautiful interface designed by Material Design.
+AppSets is an Android application store inspired by Aurora Store and Google Play Store, with a beautiful interface designed by Material Design.
 Go to <a href="https://github.com/Xucaiju/AppSets/tree/dev">dev branch</a> for more details.
 # Features
 * Recommended applications from time to time, Android, iOS, Windows 10, mac OS, Linux, Fuchisa, Tizen, Ubuntu Touch, Harmony, KaiOS, WarOS by google, watchOS and other platforms
