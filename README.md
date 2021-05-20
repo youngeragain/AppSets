@@ -12,14 +12,14 @@ AppSets是一个受Aurora商店和Google Play商店启发的Android应用商店�
 * 应用公告牌：让那些流氓应用，不自觉的应用都暴露出来！
 * ...
 # 一些截图
-<img src="https://i.loli.net/2021/05/16/NE4X5lV92SwkY7I.png" width="150" height="325"/>&nbsp;&nbsp;
-<img src="https://i.loli.net/2021/05/16/kUZnSWKqu3cElNM.png" width="150" height="325"/>&nbsp;&nbsp;
-<img src="https://i.loli.net/2021/05/16/DZCXgTY9hJeOsVH.png" width="150" height="325"/>&nbsp;&nbsp;
-<img src="https://i.loli.net/2021/05/16/8uj6ThUOlWvmtVs.png" width="150" height="325"/>&nbsp;&nbsp;
-<img src="https://i.loli.net/2021/05/16/UZAH278kOyioMJv.png" width="150" height="325"/>&nbsp;&nbsp;
-<img src="https://i.loli.net/2021/05/16/FhNVS7KyvkYe8u1.png" width="150" height="325"/>&nbsp;&nbsp;
-<img src="https://i.loli.net/2021/05/16/dt6gBiQFDT5OSAl.png" width="150" height="325"/>&nbsp;&nbsp;
-<img src="https://i.loli.net/2021/05/16/idWAabSCOPJs5yj.png" width="150" height="325"/>&nbsp;&nbsp;
+<img src="https://i.loli.net/2021/05/16/NE4X5lV92SwkY7I.png" width="150" height="305"/>&nbsp;&nbsp;
+<img src="https://i.loli.net/2021/05/16/kUZnSWKqu3cElNM.png" width="150" height="305"/>&nbsp;&nbsp;
+<img src="https://i.loli.net/2021/05/16/DZCXgTY9hJeOsVH.png" width="150" height="305"/>&nbsp;&nbsp;
+<img src="https://i.loli.net/2021/05/16/8uj6ThUOlWvmtVs.png" width="150" height="305"/>&nbsp;&nbsp;
+<img src="https://i.loli.net/2021/05/16/UZAH278kOyioMJv.png" width="150" height="305"/>&nbsp;&nbsp;
+<img src="https://i.loli.net/2021/05/16/FhNVS7KyvkYe8u1.png" width="150" height="305"/>&nbsp;&nbsp;
+<img src="https://i.loli.net/2021/05/16/dt6gBiQFDT5OSAl.png" width="150" height="305"/>&nbsp;&nbsp;
+<img src="https://i.loli.net/2021/05/16/idWAabSCOPJs5yj.png" width="150" height="305"/>&nbsp;&nbsp;
 # 谢谢
 * <a href="https://gitlab.com/AuroraOSS">Aurora Store</a>
 * 其他所有使用到的开源库
