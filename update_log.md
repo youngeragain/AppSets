@@ -1,3 +1,5 @@
+# 2021-06-29
+The first rebuilt version is completed, and functions such as deleting friends, creating groups, etc. are being added
 # 2020-06-29
 My server has been hacked! Therefore, there are some problems with the AppSets.
 # 2020-06-05
