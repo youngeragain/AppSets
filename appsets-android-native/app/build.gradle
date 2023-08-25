@@ -1,0 +1,128 @@
+import java.nio.file.Files
+import java.nio.file.StandardCopyOption
+
+plugins {
+    id 'com.android.application'
+    id 'kotlin-android'
+    /*id 'xcj.app.plugin.gradle'*/
+    id 'com.google.devtools.ksp'
+}
+
+android {
+    signingConfigs {
+        release {
+
+        }
+        debug {
+
+        }
+    }
+    compileSdk 34
+
+    defaultConfig {
+        applicationId "xcj.app.container"
+        minSdk 24
+        targetSdk 34
+        versionCode 26
+        versionName "1.6.19"
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        vectorDrawables {
+            useSupportLibrary true
+        }
+        ndk {
+            abiFilters 'arm64-v8a', 'x86_64'
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.release
+        }
+        debug {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+    /*kotlin {
+        jvmToolchain(17)
+    }
+
+    kotlinOptions {
+        jvmTarget = '17'
+    }*/
+    buildFeatures {
+        dataBinding true
+    }
+    namespace 'xcj.app.container'
+}
+
+dependencies {
+    implementation project(path: ":core")
+    implementation project(path: ':appsets')
+/*    implementation project(path: ':binder')
+    //implementation project(path: ':web')
+    implementation project(path: ':webrtc')
+    implementation project(path: ':food')
+    implementation project(path: ':pay')*/
+
+    testImplementation 'junit:junit:4.13.2'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.5'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
+
+    testImplementation "com.android.tools.build:gradle:$android_gradle_plugin_version"
+    testImplementation "com.android.tools.build:gradle:$android_gradle_plugin_version"
+//    implementation "com.google.dagger:hilt-android:2.28-alpha"
+//    kapt "com.google.dagger:hilt-android-compiler:2.28-alpha"
+//    implementation (project(":EntryCollectorProcessor"))
+//    annotationProcessor project(":EntryCollectorProcessor")
+
+}
+
+String apkOutPutFilePath = null
+String apkOutPutFileName = null
+
+android.applicationVariants.all { variant ->
+    // Do something
+    variant.outputs.each { output ->
+        def newOutputFileName = "appsets3-dev-latest.apk"
+        output.outputFileName = newOutputFileName
+        apkOutPutFileName  = "appsets3-dev-${variant.versionCode}-${variant.versionName}.apk"
+        apkOutPutFilePath = output.outputFile.getPath()
+    }
+}
+
+gradle.projectsEvaluated {
+    project.gradle.taskGraph.whenReady {
+        def assembleReleaseTasks = getTasksByName("assembleRelease", false)
+        if(assembleReleaseTasks!=null&&assembleReleaseTasks.size()==1){
+            def assembleReleaseTask = assembleReleaseTasks[0]
+            assembleReleaseTask.doLast{
+                println("assembleRelease:" + "do custom Last"+apkOutPutFilePath)
+                if(apkOutPutFilePath==null){
+                    return
+                }
+                if(apkOutPutFileName==null)
+                    return
+                def file = new File(apkOutPutFilePath)
+                if(!file.exists())
+                    return
+                try {
+                    def copyDestinationFile = new File("C:\\Users\\12248\\Downloads\\appsets_achives\\android\\" + apkOutPutFileName)
+
+                    Files.copy(file.toPath(), copyDestinationFile.toPath(), StandardCopyOption.REPLACE_EXISTING)
+                } catch (Exception ex) {
+                    println "exception when copy:"+ex.printStackTrace()
+                }
+            }
+        }else{
+            println("=======> task assembleRelease not find in project:app")
+        }
+    }
+}

@@ -1,0 +1,24 @@
+<resources>
+    <string name="app_name">AppSets</string>
+    <string name="login">login</string>
+    <string name="try_later">try later</string>
+    <string name="account">account</string>
+    <string name="password">password</string>
+    <string name="sign_up">sign up</string>
+    <string name="sign_up_to_appsets">Sign up to AppSets</string>
+    <string name="choose_your_avatar">Choose your avatar</string>
+    <string name="your_name">your name</string>
+    <string name="nick_name_helper_text">a name for your appsets account</string>
+    <string name="account_helper_text">for login AppSets service</string>
+    <string name="password_helper_text">password of login account</string>
+    <string name="ok">OK</string>
+    <string name="more_information_you_can_set_after_login">more information you can set after login</string>
+    <string name="to_grant">To grant</string>
+    <string name="deny">Deny</string>
+    <string name="allow_app_to_modify_the_system_settings">Allow %s to modify the system settings?</string>
+    <string name="allow_app_to_display_the_overlay">Allow the application %s to display the overlay?</string>
+    <string name="allow_app_to_manage_external_storage">Allow the application %s to manage external storage?</string>
+    <string name="allow_app_to_open_a_game">Allow the application %s to open a game?</string>
+    <string name="the_developer_did_not_provide_a_reason_for_use">The developer did not provide a reason for use</string>
+    <string name="allow">Allow</string>
+</resources>

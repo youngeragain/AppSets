@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Config 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="xcj.app.userinfo.dao.mysql.RoleDao">
+    <insert id="addRole">
+        insert into role_2022(
+                              uid,
+                              role_type,
+                              <if test="hostUid!=null">added_by_uid,</if>
+                              <if test="reason!=null">reason,</if>
+                              create_time)
+            VALUE(
+                  #{beenGivenUid},
+                  #{role},
+                  <if test="hostUid!=null">added_by_uid,</if>
+                  <if test="reason!=null">#{reason},</if>
+                    current_timestamp()
+                 )
+    </insert>
+    <delete id="deleteUserRole">
+        delete from role_2022 where uid=#{uid} and role_type=#{role}
+    </delete>
+
+    <update id="updateUserRole">
+        update role_2022
+        set role_type = #{newRole}
+        where uid = #{uid} and role_type=#{oldRole};
+    </update>
+    <select id="getAllRoleByUid" resultType="java.lang.String">
+        select role_type from role_2022 where uid = #{uid}
+    </select>
+
+    <select id="getAllRoleByUidPaged" resultType="java.lang.String">
+        select role_type
+        from role_2022
+        where uid = #{uid}
+        <if test="orderByTime">
+            order by create_time
+        </if>
+        <if test="offset!=null and offset>=0 and limit!=null and limit>0">
+            limit #{limit} offset #{offset}
+        </if>
+
+    </select>
+
+    <select id="isUserHasRole" resultType="java.lang.Boolean">
+        select count(1) from role_2022 where uid=#{uid} and role_type=#{role}
+    </select>
+    <select id="getUserRolesByUid" resultType="java.lang.String">
+        select role_type
+        from role_2022
+        where uid=#{uid};
+    </select>
+    <!--<cache/>-->
+</mapper>

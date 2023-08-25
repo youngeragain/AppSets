@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Config 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="xcj.app.userinfo.dao.mysql.ScreenMediaFileUrlDao">
+
+   <insert id="addScreenMediaFileUrl">
+       insert into
+       user_screen_media_file_url_2022 (
+       media_file_url,
+       <if test="mediaFileCompanionUrl!=null">media_file_companion_url,</if>
+       screen_id,
+       media_type,
+       media_description,
+       create_time )
+       values
+           (
+            #{mediaFile.mediaFileUrl},
+            <if test="mediaFileCompanionUrl!=null">#{mediaFileCompanionUrl},</if>
+            #{screenId},
+            #{mediaFile.mediaType},
+            #{mediaFile.mediaDescription},
+            current_timestamp()
+            )
+   </insert>
+    <insert id="addScreenMediaFileUrls">
+        insert into
+        user_screen_media_file_url_2022 (
+        media_file_url,
+        media_file_companion_url,
+        screen_id,
+        media_type,
+        x_18_content,
+        media_description,
+        create_time)
+        values
+        <foreach collection="screenMediaFileUrls" item="mediaFile" separator="," close=";">
+            (
+             #{mediaFile.mediaFileUrl},
+             #{mediaFile.mediaFileCompanionUrl},
+             #{screenId},
+             #{mediaFile.mediaType},
+             #{mediaFile.x18Content},
+             #{mediaFile.mediaDescription},
+             current_timestamp())
+        </foreach>
+    </insert>
+    <!--<cache/>-->
+</mapper>

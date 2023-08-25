@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Config 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="xcj.app.userinfo.dao.mysql.UserFollowersDao">
+
+    <insert id="addFollowers">
+        insert into
+        user_followers_2022(
+        uid,
+        follower_uid,
+        follower_datetime,
+        create_time,
+        update_time
+        )
+        values
+        <foreach collection="followerUids" item="followerUid" separator="," close=";">
+            (
+            #{uid},
+            #{followerUid},
+            current_timestamp(),
+            current_timestamp(),
+            current_timestamp()
+            )
+        </foreach>
+    </insert>
+
+    <delete id="deleteFollower">
+        delete from user_followers_2022 where uid=#{uid} and follower_uid=${followerUid}
+    </delete>
+
+    <cache/>
+</mapper>

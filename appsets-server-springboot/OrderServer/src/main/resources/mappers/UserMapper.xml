@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="xcj.app.a.ibatis.mapper.UserMapper">
+    <sql id="default_get_all">
+        select * from user
+    </sql>
+
+    <sql id="sometable">
+        ${prefix}_t_user
+    </sql>
+
+    <sql id="someinclude">
+        from
+        <include refid="${include_target}"/>
+    </sql>
+
+    <select id="getAll" resultType="xcj.app.a.model.User">
+        <include refid="default_get_all"/>
+    </select>
+
+
+    <select id="selectUserBalance" resultType="xcj.app.a.model.User">
+        select
+        *
+        <include refid="someinclude">
+            <property name="prefix" value="${table}"/>
+            <property name="include_target" value="sometable"/>
+        </include>
+    </select>
+
+    <select id="customQuery" resultType="java.util.HashMap">
+        ${querySql}
+    </select>
+    <!--<cache/>-->
+</mapper>

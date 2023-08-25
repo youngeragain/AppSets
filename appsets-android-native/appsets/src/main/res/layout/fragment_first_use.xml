@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+
+    </data>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:paddingHorizontal="12dp">
+
+        <View
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:backgroundTint="#0F292929"
+            android:background="@drawable/bg_for_screen"
+            app:layout_constraintBottom_toBottomOf="@+id/materialTextView2"
+            app:layout_constraintEnd_toEndOf="@+id/materialTextView2"
+            app:layout_constraintStart_toStartOf="@+id/materialTextView2"
+            app:layout_constraintTop_toTopOf="@+id/materialTextView" />
+
+        <View
+            android:id="@+id/view2"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:backgroundTint="#0F292929"
+            android:background="@drawable/bg_for_screen"
+            app:layout_constraintBottom_toBottomOf="@+id/materialTextView4"
+            app:layout_constraintEnd_toEndOf="@+id/materialTextView4"
+            app:layout_constraintStart_toStartOf="@+id/materialTextView4"
+            app:layout_constraintTop_toTopOf="@+id/materialTextView1" />
+
+        <View
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:background="@drawable/bg_for_screen"
+            android:backgroundTint="#0F292929"
+            app:layout_constraintBottom_toBottomOf="@+id/rv_permissions"
+            app:layout_constraintEnd_toEndOf="@+id/rv_permissions"
+            app:layout_constraintStart_toStartOf="@+id/rv_permissions"
+            app:layout_constraintTop_toTopOf="@+id/materialTextView3" />
+
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/materialTextView"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            android:textStyle="bold"
+            android:layout_marginTop="24dp"
+            android:paddingHorizontal="12dp"
+            android:paddingBottom="4dp"
+            android:paddingTop="12dp"
+            android:textColor="?android:attr/textColorPrimary"
+            android:text="用户约定" />
+
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/materialTextView2"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:paddingHorizontal="12dp"
+            android:paddingVertical="4dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/materialTextView"
+            android:text="狮子觉得最好吓唬吓唬魔法师，就发出一声惊天动地的大吼，那声音太可怕了，托托惊慌地从它身边跳开，把竖在墙角的屏风给撞翻了。屏风哗啦一声倒下来，他们都朝那里望去，接着就都吃惊得说不出话来。他们看见在屏风刚才挡住的地方，站着一个小老头儿，秃脑袋，满脸皱纹，看上去跟他们一样吃惊。铁皮伐木工举起斧头冲向那个小个子男人，喊道：“你是谁？”" />
+
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/materialTextView1"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:textStyle="bold"
+            android:layout_marginTop="12dp"
+            android:paddingHorizontal="12dp"
+            android:paddingBottom="4dp"
+            android:paddingTop="12dp"
+            android:textColor="?android:attr/textColorPrimary"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/materialTextView2"
+            android:text="隐私约定" />
+
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/materialTextView4"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:paddingHorizontal="12dp"
+            android:paddingVertical="4dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/materialTextView1"
+            android:text="狮子觉得最好吓唬吓唬魔法师，就发出一声惊天动地的大吼，那声音太可怕了，托托惊慌地从它身边跳开，把竖在墙角的屏风给撞翻了。屏风哗啦一声倒下来，他们都朝那里望去，接着就都吃惊得说不出话来。他们看见在屏风刚才挡住的地方，站着一个小老头儿，秃脑袋，满脸皱纹，看上去跟他们一样吃惊。铁皮伐木工举起斧头冲向那个小个子男人，喊道：“你是谁？”" />
+
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/materialTextView3"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:textStyle="bold"
+            android:layout_marginTop="12dp"
+            android:paddingHorizontal="12dp"
+            android:paddingBottom="4dp"
+            android:paddingTop="12dp"
+            android:textColor="?android:attr/textColorPrimary"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/materialTextView4"
+            android:text="系统权限使用告知" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rv_permissions"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_marginBottom="9dp"
+            android:overScrollMode="never"
+            android:padding="12dp"
+            app:layout_constraintBottom_toTopOf="@+id/tv_confirm"
+            app:layout_constraintEnd_toEndOf="@+id/materialTextView3"
+            app:layout_constraintStart_toStartOf="@+id/materialTextView3"
+            app:layout_constraintTop_toBottomOf="@+id/materialTextView3"
+            tools:itemCount="3"
+            tools:listitem="@layout/item_permission" />
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/tv_confirm"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="7dp"
+            android:background="@drawable/shape_radius8_ffffff"
+            android:backgroundTint="@color/blue"
+            android:gravity="center_horizontal"
+            android:paddingVertical="10dp"
+            android:text="好的"
+            android:textColor="@color/white"
+            android:textSize="14sp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</layout>

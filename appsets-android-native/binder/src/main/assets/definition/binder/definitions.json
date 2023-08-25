@@ -1,0 +1,14 @@
+[
+  {
+    "designDefinitionKClass": "xcj.app.core.test.PurpleContextAware",
+    "customKClassList": [
+      "xcj.app.purple_module.ContextAware"
+    ]
+  },
+  {
+    "designDefinitionKClass": "xcj.app.core.test.AndroidInitEventListener",
+    "customKClassList": [
+      "xcj.app.purple_module.AndroidInitEventListener"
+    ]
+  }
+]

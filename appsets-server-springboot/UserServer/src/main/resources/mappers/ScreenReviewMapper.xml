@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Config 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="xcj.app.userinfo.dao.mysql.ScreenReviewDao">
+
+    <resultMap id="screenReviewRes" type="xcj.app.userinfo.model.res.ScreenReviewRes">
+        <result column="review_id" property="reviewId"/>
+        <result column="content" property="content"/>
+        <result column="review_time" property="reviewTime"/>
+        <result column="likes" property="likes"/>
+        <result column="dislikes" property="dislikes"/>
+        <result column="pid" property="pid" javaType="string" jdbcType="VARCHAR"/>
+        <result column="uid" property="uid" javaType="string" jdbcType="VARCHAR"/>
+        <result column="screen_id" property="screenId"/>
+        <result column="review_passed" property="reviewPassed"/>
+        <result column="withdraw" property="withdraw"/>
+        <result column="is_public" property="isPublic"/>
+        <association property="userInfo" column="uid" select="getUserInfoByUid"/>
+    </resultMap>
+
+
+    <select id="getUserInfoByUid" resultType="xcj.app.userinfo.model.res.UserInfoRes">
+        select
+        user_2022.agree_to_the_agreement,
+        user_2022.uid,
+        user_info_2022.`name`,
+        user_info_2022.age,
+        user_info_2022.sex,
+        user_info_2022.email,
+        user_info_2022.phone,
+        user_info_2022.address,
+        user_info_2022.avatar_url,
+        user_info_2022.introduction,
+        user_info_2022.company,
+        user_info_2022.profession,
+        user_info_2022.website
+        from
+        user_2022
+        left join user_info_2022
+        on user_info_2022.uid = user_2022.uid
+        where user_2022.uid = #{uid}
+    </select>
+
+
+    <select id="getScreenReviewsByScreenId" resultMap="screenReviewRes">
+        select
+        review_id,
+        content,
+        review_time,
+        likes,
+        dislikes,
+        pid,
+        uid,
+        screen_id,
+        review_passed,
+        withdraw,
+        is_public
+        from user_screen_review_2022
+        where screen_id = #{screenId} and is_public = 1
+        <if test="checkReviewResult">
+            and review_passed = 1
+        </if>
+        <if test="orderByTime">
+            order by review_time
+        </if>
+        <if test="offset!=null and offset>=0 and limit!=null and limit>0">
+            limit #{limit} offset #{offset}
+        </if>
+    </select>
+
+
+    <insert id="addScreenReview">
+        insert into
+        user_screen_review_2022(
+        review_id,
+        content,
+        review_time,
+        likes,
+        dislikes,
+        <if test="screenReviewId!=null">pid,</if>
+        uid,
+        screen_id,
+        review_passed,
+        withdraw,
+        is_public,
+        create_time,
+        update_time
+        )
+        values (
+        #{reviewId},
+        #{content},
+        current_timestamp(),
+        0,
+        0,
+        <if test="screenReviewId!=null">#{screenReviewId},</if>
+        #{reviewUid},
+        #{screenId},
+        #{reviewPassed},
+        0,
+        ${isPublic},
+        current_timestamp(),
+        current_timestamp()
+        );
+
+    </insert>
+
+    <cache/>
+</mapper>

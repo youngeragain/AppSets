@@ -1,0 +1,37 @@
+spring:
+  mvc:
+    log-request-details: true
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://172.17.0.1:3000/appsets_3?allowMultiQueries=true
+    username: root
+    password: kubernetes3000
+  cloud:
+    zookeeper:
+      connect-string: 172.17.0.1:2181
+  application:
+    name: UserServer3
+  data:
+    mongodb:
+      uri: mongodb://dev-ubuntu-3100:dev-ubuntu-3100pwd@172.17.0.1:3100/appsets_2023?authMechanism=SCRAM-SHA-1
+    redis:
+      host: 172.17.0.1
+      port: 3200
+  rabbitmq:
+    host: 172.17.0.1
+    port: 3300
+    username: ubuntu
+    password: kubernetes3300
+    virtual-host: /
+server:
+  port: 8084
+  ssl:
+    key-store: classpath:ssl/ca.p12
+    key-store-password: (AppSets)1224888759
+    key-store-type: PKCS12
+    key-alias: 1
+logging:
+  level:
+    xcj.* : debug
+mybatis:
+  mapper-locations: classpath:mappers/*.xml

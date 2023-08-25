@@ -1,0 +1,12 @@
+[
+  {
+    "xcj.app.core.test.PurpleContextAware": [
+      "xcj.app.purple_module.MyPurpleContextAware"
+    ]
+  },
+  {
+    "xcj.app.core.test.PurpleContextEventListener": [
+      "xcj.app.module.AndroidInitEventListener"
+    ]
+  }
+]

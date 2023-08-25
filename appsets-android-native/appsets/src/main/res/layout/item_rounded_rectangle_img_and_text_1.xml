@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+
+    </data>
+
+    <xcj.app.appsets.ui.nonecompose.ui.common.SquareConstrainLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="6dp">
+
+        <androidx.appcompat.widget.AppCompatImageView
+            android:id="@+id/iv_img"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:background="@drawable/shape_radius8_ffffff"
+            android:scaleType="matrix"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+        <androidx.appcompat.widget.AppCompatImageView
+            android:id="@+id/view_mask"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:background="@drawable/shape_radius8_ffffff"
+            android:backgroundTint="#C3FFFFFF"
+            android:alpha="0"
+            tools:alpha="1"
+            android:scaleType="centerInside"
+            app:srcCompat="@drawable/ic_round_check_24"
+            app:layout_constraintBottom_toBottomOf="@+id/iv_img"
+            app:layout_constraintEnd_toEndOf="@+id/iv_img"
+            app:layout_constraintStart_toStartOf="@+id/iv_img"
+            app:layout_constraintTop_toTopOf="@+id/iv_img" />
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/view_current_size"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="32sp"
+            android:textStyle="bold"
+            tools:text="20"
+            app:layout_constraintStart_toStartOf="@id/view_mask"
+            app:layout_constraintEnd_toEndOf="@id/view_mask"
+            app:layout_constraintBottom_toBottomOf="@id/view_mask"
+            app:layout_constraintTop_toTopOf="@id/view_mask" />
+    </xcj.app.appsets.ui.nonecompose.ui.common.SquareConstrainLayout>
+
+</layout>

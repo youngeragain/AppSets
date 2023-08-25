@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Config 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="xcj.app.userinfo.dao.mysql.UserScreenDao">
+    <resultMap id="userScreenInfo" type="xcj.app.userinfo.model.res.UserScreenInfoRes">
+        <result column="screen_id" property="screenId"/>
+        <result column="screen_content" property="screenContent"/>
+        <result column="uid" property="uid"/>
+        <result column="like_times" property="likeTimes"/>
+        <result column="dislike_times" property="dislikeTimes"/>
+        <result column="associate_topics" property="associateTopics" javaType="String" jdbcType="VARCHAR"/>
+        <result column="associate_users" property="associateUsers" javaType="String" jdbcType="VARCHAR"/>
+        <result column="post_time" property="postTime"/>
+        <result column="edit_time" property="editTime"/>
+        <result column="edit_times" property="editTimes"/>
+        <result column="is_public" property="isPublic"/>
+        <result column="system_review_result" property="systemReviewResult"/>
+        <association property="userInfo" column="uid" select="getUserInfoByUid"/>
+        <collection property="mediaFileUrls" column="screen_id" select="getScreenMediaFileUrls"/>
+    </resultMap>
+
+    <select id="getUserInfoByUid" resultType="xcj.app.userinfo.model.res.UserInfoRes">
+        select
+        user_2022.agree_to_the_agreement,
+        user_2022.uid,
+        user_info_2022.`name`,
+        user_info_2022.age,
+        user_info_2022.sex,
+        user_info_2022.email,
+        user_info_2022.phone,
+        user_info_2022.address,
+        user_info_2022.avatar_url,
+        user_info_2022.introduction,
+        user_info_2022.company,
+        user_info_2022.profession,
+        user_info_2022.website
+        from
+        user_2022
+        left join user_info_2022
+        on user_info_2022.uid = user_2022.uid
+        where user_2022.uid = #{uid}
+    </select>
+
+    <select id="getScreenMediaFileUrls" resultType="xcj.app.userinfo.model.table.mysql.ScreenMediaFileUrl">
+        select
+            media_file_url, media_file_companion_url, media_type, media_description, x_18_content
+        from
+            user_screen_media_file_url_2022
+        where screen_id = #{screen_id}
+    </select>
+
+    <select id="getScreenPageListByUidPaged" resultMap="userScreenInfo">
+        select screen_id,
+               screen_content,
+               uid,
+               like_times,
+               dislike_times,
+               associate_topics,
+               associate_users,
+               post_time,
+               edit_time,
+               edit_times,
+               is_public,
+               system_review_result
+        from user_screen_2022
+        <where>
+            uid = #{uid}
+            <if test="checkReviewResult">
+                and system_review_result=1
+            </if>
+            <if test="orderByTime">
+                order by post_time desc
+            </if>
+            <if test="offset!=null and offset>=0 and limit!=null and limit>0">
+                limit #{limit} offset #{offset}
+            </if>
+        </where>
+    </select>
+
+    <select id="getIndexRandomUserScreen" resultMap="userScreenInfo" useCache="false">
+        select
+            screen_id,
+            screen_content,
+            uid,
+            like_times,
+            dislike_times,
+            associate_topics,
+            associate_users,
+            post_time,
+            edit_time,
+            edit_times,
+            is_public,
+            system_review_result
+        FROM
+        user_screen_2022  AS t1
+        JOIN (SELECT ROUND(RAND() * (SELECT MAX(id) FROM user_screen_2022)) AS id) AS t2
+        WHERE t1.id >= t2.id and t1.system_review_result=1 and t1.is_public=1
+        <if test="orderByTime">
+            order by post_time desc
+        </if>
+        <if test="offset!=null and offset>=0 and limit!=null and limit>0">
+            limit #{limit} offset #{offset}
+        </if>
+    </select>
+    <insert id="addScreen">
+        insert into
+            user_screen_2022 (
+            screen_id,
+            <if test="screenContent!=null">screen_content,</if>
+            uid,
+            <if test="associateTopics!=null">associate_topics,</if>
+            <if test="associateUsers!=null">associate_users,</if>
+            is_public,
+            system_review_result,
+            post_time,
+            create_time)
+        values (
+        #{screenId},
+        <if test="screenContent!=null">#{screenContent},</if>
+        #{uid},
+        <if test="associateTopics!=null">#{associateTopics},</if>
+        <if test="associateUsers!=null">#{associateUsers},</if>
+        #{isPublic},
+        #{systemReviewResult},
+        current_timestamp(),
+        current_timestamp()
+        );
+    </insert>
+
+    <delete id="deleteScreen">
+        delete from user_screen_2022 where screen_id=#{screenId}
+    </delete>
+
+    <update id="updateAdminReviewResult">
+        update user_screen_2022
+        set system_review_result = #{systemReviewResult}
+        where screen_id = #{screenId};
+    </update>
+
+
+    <update id="updateScreenPublicStatus" parameterType="xcj.app.userinfo.model.table.mysql.UserScreen">
+        update user_screen_2022
+        set is_public = #{isPublic}
+        where screen_id = #{screenId};
+    </update>
+
+
+    <select id="getScreenByScreenId" parameterType="String" resultType="xcj.app.userinfo.model.table.mysql.UserScreen">
+        SELECT
+        screen_id,
+        screen_content,
+        uid,
+        like_times,
+        dislike_times,
+        associate_topics,
+        associate_users,
+        post_time,
+        edit_time,
+        edit_times,
+        is_public,
+        system_review_result
+        FROM user_screen_2022
+        WHERE screen_id = #{screenId}
+    </select>
+
+    <select id="searchScreenByKeywords" resultMap="userScreenInfo">
+        SELECT
+        screen_id,
+        screen_content,
+        uid,
+        like_times,
+        dislike_times,
+        associate_topics,
+        associate_users,
+        post_time,
+        edit_time,
+        edit_times,
+        is_public,
+        system_review_result
+        FROM user_screen_2022
+        WHERE system_review_result=1 AND is_public=1 AND
+        (screen_content like "%"#{keywords}"%" OR associate_topics like "%"#{keywords}"%" OR associate_users like "%"#{keywords}"%")
+        LIMIT #{limit} OFFSET #{offset};
+    </select>
+
+
+   <!-- <update id="changeScreenPublicState">
+
+    </update>-->
+    <cache/>
+</mapper>

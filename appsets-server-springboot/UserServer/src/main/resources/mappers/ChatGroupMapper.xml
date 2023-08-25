@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Config 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="xcj.app.userinfo.dao.mysql.GroupDao">
+
+
+    <resultMap id="groupInfo" type="xcj.app.userinfo.model.res.GroupInfoRes">
+        <result column="name" property="name"/>
+        <result column="group_id" property="groupId"/>
+        <result column="current_owner_uid" property="currentOwnerUid"/>
+        <result column="type" property="type"/>
+        <result column="is_public" property="public"/>
+        <result column="max_members" property="maxMembers"/>
+        <result column="icon_url" property="iconUrl"/>
+        <result column="introduction" property="introduction"/>
+        <collection property="userInfoList" column="group_id" ofType="xcj.app.userinfo.model.res.UserInfoRes"
+                    select="getUserInfoByGroupId"/>
+    </resultMap>
+
+
+    <select id="getUserIdsInGroupByGroupId" resultType="java.lang.String">
+        select uid from user_chat_group_2022 where group_id = #{group_id}
+    </select>
+
+    <select id="getUserInfoByGroupId" resultType="xcj.app.userinfo.model.res.UserInfoRes">
+        select user_info_2022.*
+        from user_chat_group_2022 left join user_info_2022 on user_chat_group_2022.uid = user_info_2022.uid
+        where user_chat_group_2022.group_id = #{group_id};
+
+    </select>
+
+   <select id="getGroupInfoResByGroupId" resultMap="groupInfo">
+       select
+            name, group_id, current_owner_uid, type, icon_url, introduction, is_public, max_members
+       from
+           chat_group_2022
+       where group_id = #{groupId}
+   </select>
+
+    <select id="getGroupInfoResListByUserId" resultMap="groupInfo">
+       select
+           name, chat_group_2022.group_id, current_owner_uid, type, icon_url, introduction, is_public, max_members
+       from
+           chat_group_2022 left join user_chat_group_2022 on chat_group_2022.group_id = user_chat_group_2022.group_id
+       where user_chat_group_2022.uid = #{uid}
+   </select>
+
+    <insert id="createGroup">
+        insert into
+        chat_group_2022(<if test="name!=null">name,</if>
+                        group_id,
+                        <if test="type!=null">type,</if>
+                        <if test="iconUrl!=null">icon_url,</if>
+                        <if test="introduction!=null">introduction,</if>
+                        <if test="isPublic!=null">is_public,</if>
+                        <if test="maxMembers!=null">max_members,</if>
+                        create_uid, current_owner_uid, last_owner_uid, create_time)
+        values
+            (<if test="name!=null">#{name},</if>
+             #{groupId},
+            <if test="type!=null"> #{type}, </if>
+            <if test="iconUrl!=null"> #{iconUrl}, </if>
+            <if test="introduction!=null"> #{introduction}, </if>
+            <if test="isPublic!=null"> #{isPublic}, </if>
+            <if test="maxMembers!=null"> #{maxMembers}, </if>
+             #{uid}, #{uid}, #{uid}, current_timestamp());
+        <if test="uids!=null and uids.size()>0">
+            insert into
+                user_chat_group_2022(group_id, uid, create_time)
+            values
+            <foreach collection="uids" item="addUid" index="index" separator="," close=";">
+                (#{groupId}, #{addUid}, current_timestamp())
+            </foreach>
+        </if>
+
+    </insert>
+
+
+    <delete id="deleteGroup">
+        delete from chat_group_2022 where group_id=#{groupId}
+    </delete>
+
+    <delete id="deleteUsersInGroup">
+        delete from user_chat_group_2022 where uid in
+        <foreach collection="uids" open="(" close=")" separator="," item="uid">
+            #{uid}
+        </foreach>
+    </delete>
+
+    <select id="isGroupNameExist" resultType="java.lang.Boolean">
+        select count(1) from chat_group_2022 where `name`=#{name}
+    </select>
+    <select id="isGroupIdExist" resultType="java.lang.Boolean">
+        select count(1) from chat_group_2022 where group_id=#{groupId}
+    </select>
+
+    <insert id="addUsersInGroup">
+        insert into user_chat_group_2022 (group_id, uid, create_time)
+        values
+        <foreach collection="uids" item="uid" separator="," close=";">
+            (#{groupId}, #{uid}, current_timestamp())
+        </foreach>
+    </insert>
+
+
+    <select id="searchChatGroupResListByKeywords" resultMap="groupInfo">
+        select
+        DISTINCT chat_group_2022.group_id, name, current_owner_uid, type, icon_url, introduction, is_public, max_members
+        from
+        chat_group_2022 left join user_chat_group_2022 on chat_group_2022.group_id = user_chat_group_2022.group_id
+        where chat_group_2022.group_id like "%"#{keywords}"%" or chat_group_2022.name like "%"#{keywords}"%"
+    </select>
+
+    <select id="getChatGroupInfoByGroupId" resultType="xcj.app.userinfo.model.table.mysql.ChatGroup">
+        select
+        id, name, group_id, create_uid,
+        current_owner_uid, last_owner_uid,
+        type, icon_url, introduction, create_time, update_time
+        from chat_group_2022 where group_id = #{groupId}
+    </select>
+
+    <cache/>
+</mapper>

@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+
+    </data>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginVertical="4dp"
+        android:background="@drawable/selector_bg_1"
+        android:paddingVertical="8dp">
+
+        <androidx.appcompat.widget.AppCompatImageView
+            android:id="@+id/iv_permission_ic"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:background="@drawable/bg_for_permission_ic"
+            android:padding="8dp"
+            app:layout_constraintBottom_toBottomOf="@+id/tv_permission_exp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/tv_permission_name"
+            app:srcCompat="@drawable/outline_folder_24" />
+
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/tv_permission_name"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:paddingHorizontal="12dp"
+            android:textColor="?android:attr/textColorPrimary"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/iv_permission_ic"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:text="文件和媒体" />
+
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/tv_permission_exp"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:paddingHorizontal="12dp"
+            tools:text="使用该权限能够获取你的图片和其他文件"
+            android:textSize="12sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="@+id/tv_permission_name"
+            app:layout_constraintTop_toBottomOf="@+id/tv_permission_name" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</layout>

@@ -1,0 +1,14 @@
+spring:
+  cloud:
+    zookeeper:
+      connect-string: localhost:2181
+  application:
+    name: PayServer
+  rabbitmq:
+    host: 139.198.125.139
+    username: ideaUser
+    password: 12345678
+    virtual-host: /
+
+server:
+  port: 8085
