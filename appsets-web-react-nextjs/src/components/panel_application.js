@@ -5,13 +5,6 @@ import {api_base_url, api_get_index_applicaitons, useGetApplicationList} from "@
 import Image from "next/image";
 import RequestLoading from "./request_loading";
 
-const tempObj = {
-    name:"leijun",
-    age:12,
-    sex:"male"
-}
-
-
 function ApplicationsPanel(){
     var model = useGetApplicationList();
     let check = RequestLoading(model.data, model.error, model.isLoading);
