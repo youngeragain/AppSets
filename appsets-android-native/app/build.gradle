@@ -69,7 +69,6 @@ dependencies {
 /*    implementation project(path: ':binder')
     //implementation project(path: ':web')
     implementation project(path: ':webrtc')
-    implementation project(path: ':food')
     implementation project(path: ':pay')*/
 
     testImplementation 'junit:junit:4.13.2'
@@ -88,12 +87,23 @@ dependencies {
 String apkOutPutFilePath = null
 String apkOutPutFileName = null
 
+
+def getLocalProperty(key) {
+    InputStream inputStream = rootProject.file('local.properties').newDataInputStream();
+    Properties properties = new Properties()
+    properties.load(inputStream)
+    if (properties.containsKey(key)) {
+        return properties.getProperty(key)
+    }
+    return null
+}
+
 android.applicationVariants.all { variant ->
     // Do something
     variant.outputs.each { output ->
         def newOutputFileName = "appsets3-dev-latest.apk"
         output.outputFileName = newOutputFileName
-        apkOutPutFileName  = "appsets3-dev-${variant.versionCode}-${variant.versionName}.apk"
+        apkOutPutFileName = "appsets3-dev-${variant.versionCode}-${variant.versionName}.apk"
         apkOutPutFilePath = output.outputFile.getPath()
     }
 }
@@ -101,27 +111,31 @@ android.applicationVariants.all { variant ->
 gradle.projectsEvaluated {
     project.gradle.taskGraph.whenReady {
         def assembleReleaseTasks = getTasksByName("assembleRelease", false)
-        if(assembleReleaseTasks!=null&&assembleReleaseTasks.size()==1){
+        if (assembleReleaseTasks != null && assembleReleaseTasks.size() == 1) {
             def assembleReleaseTask = assembleReleaseTasks[0]
-            assembleReleaseTask.doLast{
-                println("assembleRelease:" + "do custom Last"+apkOutPutFilePath)
-                if(apkOutPutFilePath==null){
+            assembleReleaseTask.doLast {
+                println("assembleRelease:" + "do custom Last" + apkOutPutFilePath)
+                if (apkOutPutFilePath == null) {
                     return
                 }
-                if(apkOutPutFileName==null)
+                if (apkOutPutFileName == null)
                     return
                 def file = new File(apkOutPutFilePath)
-                if(!file.exists())
+                if (!file.exists())
                     return
                 try {
-                    def copyDestinationFile = new File("C:\\Users\\12248\\Downloads\\appsets_achives\\android\\" + apkOutPutFileName)
+                    def appsetsAchivesPath = getLocalProperty("appsets_achives_path")
+                    if (appsetsAchivesPath != null) {
+                        def copyDestinationFile = new File(appsetsAchivesPath + apkOutPutFileName)
 
-                    Files.copy(file.toPath(), copyDestinationFile.toPath(), StandardCopyOption.REPLACE_EXISTING)
+                        Files.copy(file.toPath(), copyDestinationFile.toPath(), StandardCopyOption.REPLACE_EXISTING)
+                    }
+
                 } catch (Exception ex) {
-                    println "exception when copy:"+ex.printStackTrace()
+                    println "exception when copy:" + ex.printStackTrace()
                 }
             }
-        }else{
+        } else {
             println("=======> task assembleRelease not find in project:app")
         }
     }

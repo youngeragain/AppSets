@@ -7,7 +7,7 @@ object ModuleNames{
     const val ImServer = "ImServer"
     const val Share = "Share"
     const val RetrofitStater = "RetrofitStater"
-    const val Proccessor1 = "Proccessor1"
+    const val Processor = "Processor"
     const val Launcher = "Launcher"
     const val AppSetsWeb = "AppSetsWeb"
     fun isSpringBootModule(name:String):Boolean{
