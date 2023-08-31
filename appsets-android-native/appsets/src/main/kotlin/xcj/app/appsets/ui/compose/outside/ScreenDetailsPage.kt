@@ -64,7 +64,7 @@ import xcj.app.appsets.ui.compose.LocalOrRemoteImage
 import xcj.app.appsets.ui.compose.MainViewModel
 import xcj.app.appsets.ui.compose.NoneLineTextField
 import xcj.app.appsets.ui.compose.PageRouteNameProvider
-import xcj.app.appsets.util.compose.clickableSingle
+import xcj.app.compose_share.compose.clickableSingle
 
 @Composable
 fun ScreenDetailsPage(

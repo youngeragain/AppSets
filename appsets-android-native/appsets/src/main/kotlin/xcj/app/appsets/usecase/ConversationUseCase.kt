@@ -7,7 +7,6 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.lifecycle.LifecycleOwner
 import androidx.media3.common.util.UnstableApi
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -45,17 +44,16 @@ class ConversationUseCase(
 ) : NoConfigUseCase() {
     private val TAG = "ConversationUseCase"
 
-    private val notificationPusher = NotificationPusher()
-    val currentPage: MutableState<Int> = mutableStateOf(0)
+    private var notificationPusher: NotificationPusher? = null
+    val currentTab: MutableState<Int> = mutableStateOf(0)
 
-    val systemSessions: MutableList<Session> = mutableStateListOf()
+    private val systemSessions: MutableList<Session> = mutableStateListOf()
 
-    val userSessions: MutableList<Session> = mutableStateListOf()
+    private val userSessions: MutableList<Session> = mutableStateListOf()
 
-    val groupSessions: MutableList<Session> = mutableStateListOf()
+    private val groupSessions: MutableList<Session> = mutableStateListOf()
 
-    var lastSession: Session? = null
-        private set
+    private var lastSession: Session? = null
     var currentSession: Session? = null
         private set
 
@@ -235,7 +233,10 @@ class ConversationUseCase(
             if (imMessage.msgFromInfo.uid == LocalAccountManager._userInfo.value.uid)
                 return@launch
             if (context is NotificationPusherInterface) {
-                context.pushNotificationIfNeeded(notificationPusher, session?.id!!, imMessage)
+                if (notificationPusher == null) {
+                    notificationPusher = NotificationPusher()
+                }
+                context.pushNotificationIfNeeded(notificationPusher!!, session?.id!!, imMessage)
             }
         }
     }
@@ -447,7 +448,7 @@ class ConversationUseCase(
     }
 
     fun currentSessions(): MutableList<Session> {
-        return when (currentPage.value) {
+        return when (currentTab.value) {
             0 -> userSessions
             1 -> groupSessions
             else -> systemSessions
@@ -457,20 +458,20 @@ class ConversationUseCase(
     fun onChipClick(chip: Int) {
         when (chip) {
             0 -> {
-                if (currentPage.value != 0) {
-                    currentPage.value = 0
+                if (currentTab.value != 0) {
+                    currentTab.value = 0
                 }
             }
 
             1 -> {
-                if (currentPage.value != 1) {
-                    currentPage.value = 1
+                if (currentTab.value != 1) {
+                    currentTab.value = 1
                 }
             }
 
             else -> {
-                if (currentPage.value != 2) {
-                    currentPage.value = 2
+                if (currentTab.value != 2) {
+                    currentTab.value = 2
                 }
             }
         }
@@ -484,14 +485,14 @@ class ConversationUseCase(
             userSessions.clear()
             groupSessions.clear()
             systemSessions.clear()
-            currentPage.value = 0
+            currentTab.value = 0
         }
     }
 
     /**
      * 登录成功以及本地状态为已经登录即触发初始化会话列表
      */
-    fun initSessions(lifecycleOwner: LifecycleOwner) {
+    fun initSessions() {
         coroutineScope.launch((Dispatchers.IO)) {
             if (userSessions.isNotEmpty())
                 userSessions.clear()

@@ -7,7 +7,16 @@ interface SharedPreferencesDelegate{
 
     fun getSharedPreferences(): SharedPreferences?
 
-    fun putString(key: String, value: String){
+    fun remove(key: String) {
+        getSharedPreferences()?.apply {
+            edit {
+                remove(key)
+                apply()
+            }
+        }
+    }
+
+    fun putString(key: String, value: String) {
         getSharedPreferences()?.apply {
             edit {
                 putString(key, value)
@@ -15,7 +24,8 @@ interface SharedPreferencesDelegate{
             }
         }
     }
-    fun clear(){
+
+    fun clear() {
         getSharedPreferences()?.apply {
             edit {
                 clear()

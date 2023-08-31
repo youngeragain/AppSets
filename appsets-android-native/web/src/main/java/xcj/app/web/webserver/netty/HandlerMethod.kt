@@ -11,8 +11,10 @@ import xcj.app.web.webserver.interfaces.*
 import java.lang.reflect.Method
 
 class HandlerMethod{
+    private val TAG = "HandlerMethod"
+
     //TODO move to val
-    lateinit var methodContextObject:Any
+    lateinit var methodContextObject: Any
     //TODO move to val
     lateinit var method: Method
     //TODO move to val
@@ -40,7 +42,7 @@ class HandlerMethod{
             if(acceptRequestMethods.isNotEmpty()&&acceptRequestMethods.firstOrNull { it.asString()==httpMethod }==null){
                 val httpMethodNotSupportString =
                     "${toString()} only support http request method is:${acceptRequestMethodsString}, your request method is:${httpRequest.method()}"
-                Log.e("blue", httpMethodNotSupportString)
+                Log.e(HandlerMethod, httpMethodNotSupportString)
                 return httpMethodNotSupportString
             }
             if(methodArgumentsTypes.isEmpty())
@@ -63,7 +65,7 @@ class HandlerMethod{
         }.onSuccess {
             return it
         }.onFailure {
-            Log.e("blue","invoke failed:${it}")
+            Log.e(HandlerMethod, "invoke failed:${it}")
             return null
         }
         return null
@@ -202,7 +204,7 @@ object Estimator{
         val httpPostRequestDecoder: HttpPostRequestDecoder = HttpPostRequestDecoder(httpRequest)
 
         httpPostRequestDecoder.bodyHttpDatas.forEach {
-            Log.e("blue", "表单数据或文件:$it")
+            Log.e(HandlerMethod, "表单数据或文件:$it")
         }
         httpPostRequestDecoder.destroy()
         return null

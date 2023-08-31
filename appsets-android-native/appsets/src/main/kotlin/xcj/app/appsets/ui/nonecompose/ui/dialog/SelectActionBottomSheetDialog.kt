@@ -33,11 +33,11 @@ import xcj.app.appsets.ktx.getSystemFileUris
 import xcj.app.appsets.ktx.gone
 import xcj.app.appsets.ktx.post
 import xcj.app.appsets.ktx.toast
+import xcj.app.appsets.purple_module.ModuleConstant
 import xcj.app.appsets.ui.nonecompose.base.BaseBottomSheetDialog
 import xcj.app.appsets.ui.nonecompose.base.BaseFragment
 import xcj.app.appsets.ui.nonecompose.base.BaseViewModel
 import xcj.app.appsets.ui.nonecompose.base.BaseViewModelFactory
-import xcj.app.purple_module.ModuleConstant
 
 
 /**

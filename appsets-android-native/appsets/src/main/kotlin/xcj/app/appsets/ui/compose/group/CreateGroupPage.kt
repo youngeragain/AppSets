@@ -43,9 +43,9 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import xcj.app.appsets.R
 import xcj.app.appsets.ktx.MediaStoreDataUriWrapper
-import xcj.app.appsets.ui.compose.BackActionTopBar
 import xcj.app.appsets.ui.compose.LocalOrRemoteImage
 import xcj.app.appsets.ui.compose.MainViewModel
+import xcj.app.compose_share.compose.BackActionTopBar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -81,7 +81,7 @@ fun CreateGroupPage(
             backButtonRightText = "创建群组",
             endButtonText = "确定",
             onBackAction = onBackAction,
-            onConfirmClick = {
+            onEndButtonClick = {
                 onConfirmAction(groupName, groupMembersCount, isPublic, groupIntroduction)
             })
         Column(

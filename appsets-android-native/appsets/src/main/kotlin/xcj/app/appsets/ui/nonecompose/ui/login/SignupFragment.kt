@@ -24,27 +24,27 @@ import xcj.external.appsets.OnMessageInterface
 
 class SignupFragment :
     BaseFragment<FragmentSignUpBinding, SignupVM, BaseViewModelFactory<SignupVM>>() {
-    val arcs_StartActivityForResult = ActivityResultContracts.StartActivityForResult()
-    lateinit var activityResultLauncher: ActivityResultLauncher<Intent>
-
+    private val arcs_StartActivityForResult = ActivityResultContracts.StartActivityForResult()
+    private lateinit var activityResultLauncher: ActivityResultLauncher<Intent>
+    private val TAG = "SignupFragment"
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         activityResultLauncher = registerForActivityResult(arcs_StartActivityForResult) {
             Log.e(
-                "blue", """
+                TAG, """
                 it.resultCode:${it.resultCode}
                 Activity.RESULT_OK:${Activity.RESULT_OK}
             """.trimIndent()
             )
-            if(it.resultCode==Activity.RESULT_OK){
-                Log.e("blue", "registerForActivityResult2")
+            if (it.resultCode == Activity.RESULT_OK) {
+                Log.e(TAG, "registerForActivityResult2")
                 it.data?.getStringExtra("id")?.let { bitmapId->
                     Uri.parse("content://xcj.appsets.provider/bitmap").also { uri ->
                         lifecycleScope.launch(Dispatchers.IO){
                             val deleteResult = context?.contentResolver?.delete(uri, "id=?", arrayOf(bitmapId))
-                            Log.e("blue", "deleteResult${deleteResult}")
+                            Log.e(TAG, "deleteResult${deleteResult}")
                             if(deleteResult==0){
-                                Log.e("blue", "删除成功!")
+                                Log.e(TAG, "删除成功!")
                             }
                         }
                     }
@@ -68,20 +68,20 @@ class SignupFragment :
                 }
                 val b = requireActivity().bindService(intent, object :ServiceConnection{
                     override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
-                        Log.e("blue", "onServiceConnected:name${name},service:${service} ")
+                        Log.e(TAG, "onServiceConnected:name${name},service:${service} ")
                         viewModel?.onMessageInterface = OnMessageInterface.Stub.asInterface(service)
                     }
 
                     override fun onServiceDisconnected(name: ComponentName?) {
-                        Log.e("blue", "onServiceDisconnected:name${name}")
+                        Log.e(TAG, "onServiceDisconnected:name${name}")
                     }
 
                     override fun onNullBinding(name: ComponentName?) {
                         super.onNullBinding(name)
-                        Log.e("blue", "onNullBinding:name${name}")
+                        Log.e(TAG, "onNullBinding:name${name}")
                     }
                 }, Context.BIND_AUTO_CREATE)
-                Log.e("blue", "bindService:${b}")
+                Log.e(TAG, "bindService:${b}")
             }
             btnSignUpAction.setOnClickListener {
                 val requireActivity = requireActivity()
@@ -102,7 +102,7 @@ class SignupFragment :
                                 putExtra("bitmapId", id)
                             }
                             activityResultLauncher.launch(arcs_StartActivityForResult.createIntent(requireContext(), intent))
-                            //Log.e("blue", "newUri id:${id}")
+                            //Log.e(TAG, "newUri id:${id}")
                             /*delay(200)
                             requireActivity.contentResolver.query(uri, arrayOf("id"), null, arrayOf(id), null)?.use { cursor->
                                 if(cursor.count==1){

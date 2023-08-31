@@ -19,8 +19,3 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
-
--keep class xcj.app.purple_module.**{ *; }
--keep class xcj.app.appsets.**{ *; }
--keep class xcj.app.core.**{ *; }
--keep class xcj.app.io.**{ *; }

@@ -23,7 +23,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
@@ -130,36 +129,38 @@ fun LiteSettingsPanelDialog(
                 }
                 if (LocalAccountManager.isLogged()) {
                     Spacer(modifier = Modifier.height(8.dp))
-                    OutlinedButton(onClick = {
+                    Button(onClick = {
                         mainViewModel.qrCodeUseCase!!.genQrCode()
                     }) {
                         Text(text = "二维码登录")
                     }
                     Spacer(modifier = Modifier.width(6.dp))
-                    OutlinedButton(onClick = {
+                    Button(onClick = {
                         mainViewModel.qrCodeUseCase!!.toScanQrCodePage(context)
                     }) {
                         Text(text = "扫描二维码")
                     }
                     Spacer(modifier = Modifier.width(8.dp))
                 }
-                val qrcode = mainViewModel.qrCodeUseCase!!.qrcodeState
-                AnimatedVisibility(visible = qrcode.value?.first != null && qrcode.value?.second == "0") {
-                    Image(
-                        painter = BitmapPainter(qrcode.value!!.first!!.asImageBitmap()),
-                        contentDescription = "qrcode"
-                    )
-                }
-                if (qrcode.value?.second == "1") {
-                    Box(Modifier.padding(16.dp)) {
-                        Button(onClick = {
-                            mainViewModel.qrCodeUseCase?.doConfirm()
-                        }) {
-                            Text(text = "设备已扫描，确认此设备登录?")
+                if (mainViewModel.qrCodeUseCase != null) {
+                    val qrcode = mainViewModel.qrCodeUseCase!!.qrcodeState
+                    AnimatedVisibility(visible = qrcode.value?.first != null && qrcode.value?.second == "0") {
+                        Image(
+                            painter = BitmapPainter(qrcode.value!!.first!!.asImageBitmap()),
+                            contentDescription = "qrcode"
+                        )
+                    }
+                    if (qrcode.value?.second == "1") {
+                        Box(Modifier.padding(16.dp)) {
+                            Button(onClick = {
+                                mainViewModel.qrCodeUseCase?.doConfirm()
+                            }) {
+                                Text(text = "设备已扫描，确认此设备登录?")
+                            }
                         }
                     }
+                    Spacer(modifier = Modifier.height(16.dp))
                 }
-                Spacer(modifier = Modifier.height(16.dp))
                 Row(
                     modifier = Modifier
                         .fillMaxWidth(1f)

@@ -11,6 +11,7 @@ import java.lang.reflect.Constructor
 
 interface DefaultController{
 
+
     companion object{
         @RequiresApi(Build.VERSION_CODES.O)
         @JvmStatic
@@ -34,7 +35,7 @@ interface DefaultController{
                 }else{
                     it.getConstructor()
                 }
-                //Log.e("blue", "controller:${it.simpleName} declaredConstructors:${declaredConstructors.size}")
+                //Log.e("DefaultController", "controller:${it.simpleName} declaredConstructors:${declaredConstructors.size}")
                 val contextObject = if(constructorToUse?.parameterCount==0){
                     constructorToUse.newInstance()
                 }else{

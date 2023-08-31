@@ -25,6 +25,7 @@ class RecyclerViewTemplateFragment : Fragment() {
     companion object {
         fun newInstance() = RecyclerViewTemplateFragment()
     }
+    private val TAG = "RecyclerViewTemplateFragment"
 
     private lateinit var viewModel: RecyclerViewTemplateViewModel
     private lateinit var binding:FragmentRecyclerviewTemplateBinding
@@ -128,7 +129,7 @@ class RecyclerViewTemplateFragment : Fragment() {
         val allItems = mutableListOf<Diffable>()
         addB(allItems, level0)
         val gson = Gson()
-        Log.e("blue", gson.toJson(allItems))
+        Log.e(TAG, gson.toJson(allItems))
         return allItems
     }
 

@@ -15,12 +15,12 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import xcj.app.appsets.ktx.MediaStoreDataUriWrapper
 import xcj.app.appsets.ktx.observeAny2
+import xcj.app.appsets.purple_module.ModuleConstant
 import xcj.app.appsets.ui.compose.login.LoginPage
 import xcj.app.appsets.ui.compose.login.SignUpPage
 import xcj.app.appsets.ui.compose.theme.AppSetsTheme
 import xcj.app.appsets.ui.nonecompose.base.BaseActivity
 import xcj.app.appsets.ui.nonecompose.base.BaseViewModelFactory
-import xcj.app.purple_module.ModuleConstant
 
 
 class LoginActivity :

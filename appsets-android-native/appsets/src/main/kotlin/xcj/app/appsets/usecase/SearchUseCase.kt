@@ -1,19 +1,13 @@
 package xcj.app.appsets.usecase
 
-import android.util.Log
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateOf
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.FlowCollector
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.dropWhile
 import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.take
-import kotlinx.coroutines.flow.takeWhile
 import kotlinx.coroutines.launch
 import xcj.app.appsets.account.LocalAccountManager
 import xcj.app.appsets.db.room.repository.UserGroupsRoomRepository
@@ -41,12 +35,13 @@ sealed class SearchState {
     data class SplitTitle(val title: String) : SearchState()
 }
 
-class SearchFlow(private val coroutineScope: CoroutineScope):Flow<Pair<String, Long>>{
+class SearchFlow(private val coroutineScope: CoroutineScope) : Flow<Pair<String, Long>> {
     private lateinit var collector: FlowCollector<Pair<String, Long>>
     override suspend fun collect(collector: FlowCollector<Pair<String, Long>>) {
         this.collector = collector
     }
-    fun emit(string: String){
+
+    fun emit(string: String) {
         coroutineScope.launch {
             val currentTimeMillis = System.currentTimeMillis()
             delay(100)
@@ -57,6 +52,7 @@ class SearchFlow(private val coroutineScope: CoroutineScope):Flow<Pair<String, L
 
 class SearchUseCase(private val coroutineScope: CoroutineScope) : NoConfigUseCase() {
     private val TAG = "SearchUseCase"
+
     //保存上一次搜索内容
     @Volatile
     var searchStringState: String? = null
@@ -73,22 +69,23 @@ class SearchUseCase(private val coroutineScope: CoroutineScope) : NoConfigUseCas
                 delay(100)
                 searchResultListState.clear()
             }
-        }else{
+        } else {
             searchFlow.emit(searchStr)
         }
     }
-    fun attachToSearchFlow(){
+
+    fun attachToSearchFlow() {
         coroutineScope.launch {
             searchFlow.filter {
-                (System.currentTimeMillis() -it.second)>100
-            }.collectLatest{
+                (System.currentTimeMillis() - it.second) > 100
+            }.collectLatest {
                 search(it.first)
             }
         }
     }
 
     private suspend fun search(keywords: String) {
-        if(keywords.isEmpty())
+        if (keywords.isEmpty())
             return
         if (!LocalAccountManager.isLogged()) {
             coroutineScope.launch(Dispatchers.IO) {
@@ -106,12 +103,12 @@ class SearchUseCase(private val coroutineScope: CoroutineScope) : NoConfigUseCas
             searchRepository!!.commonSearch(keywords)
         }, onSuccess = {
             if (searchStringState.isNullOrEmpty()) {
-                if(searchResultListState.isNotEmpty())
+                if (searchResultListState.isNotEmpty())
                     searchResultListState.clear()
                 return@requestNotNull
             }
             delay(350)
-            if(searchResultListState.isNotEmpty())
+            if (searchResultListState.isNotEmpty())
                 searchResultListState.clear()
             if (searchStringState.isNullOrEmpty()) {
                 return@requestNotNull

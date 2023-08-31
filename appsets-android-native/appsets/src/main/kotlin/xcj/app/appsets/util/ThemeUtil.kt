@@ -12,7 +12,7 @@ import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import xcj.app.appsets.constants.Constants
-import xcj.app.purple_module.MySharedPreferences
+import xcj.app.appsets.purple_module.MySharedPreferences
 
 
 class ThemeUtil {

@@ -41,11 +41,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import xcj.app.appsets.R
-import xcj.app.appsets.ui.compose.BackActionTopBar
 import xcj.app.appsets.ui.compose.LocalOrRemoteImage
 import xcj.app.appsets.usecase.models.Application
 import xcj.app.appsets.usecase.models.PlatForm
 import xcj.app.appsets.usecase.models.VersionInfo
+import xcj.app.compose_share.compose.BackActionTopBar
 
 
 @OptIn(ExperimentalAnimationApi::class)

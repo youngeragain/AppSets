@@ -95,7 +95,7 @@ fun ConversationOverviewPage(
                 }
                 titles.forEachIndexed { index, title ->
                     FilterChip(
-                        selected = vm.conversationUseCase?.currentPage?.value == index,
+                        selected = vm.conversationUseCase?.currentTab?.value == index,
                         onClick = {
                             vm.conversationUseCase?.onChipClick(index)
                         },
@@ -150,7 +150,7 @@ fun ConversationOverviewPage(
         Spacer(modifier = Modifier.height(12.dp))
         Divider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outline)
         val sortedSessions = vm.conversationUseCase?.currentSessions()
-        val shouldShowEmpty = if (vm.conversationUseCase?.currentPage?.value == 2) {
+        val shouldShowEmpty = if (vm.conversationUseCase?.currentTab?.value == 2) {
             if (sortedSessions.isNullOrEmpty())
                 true
             else
@@ -162,7 +162,7 @@ fun ConversationOverviewPage(
             Box(modifier = Modifier
                 .fillMaxSize()
                 .weight(1f)) {
-                val text = when (vm.conversationUseCase?.currentPage?.value) {
+                val text = when (vm.conversationUseCase?.currentTab?.value) {
                     0 -> {
                         "空的个人列表"
                     }
@@ -183,7 +183,7 @@ fun ConversationOverviewPage(
                     modifier = Modifier.padding(horizontal = 12.dp),
                     contentPadding = PaddingValues(bottom = 68.dp)
                 ) {
-                    if (vm.conversationUseCase?.currentPage?.value == 2) {
+                    if (vm.conversationUseCase?.currentTab?.value == 2) {
                         itemsIndexed(sortedSessions) { index, session ->
                             if (!session.conversionState?.messages.isNullOrEmpty()) {
                                 Column(

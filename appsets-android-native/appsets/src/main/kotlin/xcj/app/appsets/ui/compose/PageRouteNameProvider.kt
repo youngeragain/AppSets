@@ -7,7 +7,6 @@ object PageRouteNameProvider {
     const val LoginPage = "Login/LoginPage"
     const val SignUpPage = "Login/SinUpPage"
 
-
     const val Win11SnapShotPage = "Main/Win11SnapShotPage"
     const val Win11AllAppsPage = "Main/Win11AllAppsPage"
     const val OutSidePage = "Main/OutSidePage"
@@ -19,6 +18,7 @@ object PageRouteNameProvider {
     const val SearchPage = "Main/SearchPage"
     const val SettingsPage = "Main/SettingsPage"
     const val AboutPage = "Main/AboutPage"
+    const val DynamicPage = "Main/DynamicPage"
     const val AppSetsCenterPage = "Main/AppSetsCenterPage"
     const val CreateAppPage = "Main/CreateAppPage"
     const val ConversationDetailsPage = "Main/ConversationDetailsPage"

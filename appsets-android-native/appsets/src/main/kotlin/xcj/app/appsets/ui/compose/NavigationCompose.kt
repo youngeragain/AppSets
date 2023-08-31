@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.os.bundleOf
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -45,6 +46,7 @@ import xcj.app.appsets.ui.compose.win11Snapshot.SpotLightState
 import xcj.app.appsets.ui.compose.win11Snapshot.Win11AllAppsPage
 import xcj.app.appsets.ui.compose.win11Snapshot.Win11SnapShotPage
 import xcj.app.appsets.usecase.models.Application
+import xcj.app.compose_share.compose.dynamic.DynamicPage
 
 @SuppressLint("ResourceAsColor")
 @UnstableApi
@@ -151,6 +153,7 @@ fun NavigationCompose(navController: NavHostController){
                 }
             ) {
                 Win11AllAppsPage(
+                    tabVisibilityState = viewModel.bottomMenuUseCase.tabVisibilityState,
                     onBackClick = {
                         navController.navigateUp()
                     }
@@ -515,7 +518,7 @@ fun NavigationCompose(navController: NavHostController){
                 }
             ) {
                 AppsCenterPage(
-                    recommendApplication = viewModel.appSetsUseCase.fastFindApplicationState,
+                    headerApplication = viewModel.appSetsUseCase.headerApplicationState.value,
                     applications = viewModel.appSetsUseCase.indexApplications,
                     onRequestLoadApplication = {
                         viewModel.appSetsUseCase.loadIndexApps()
@@ -633,6 +636,9 @@ fun NavigationCompose(navController: NavHostController){
                     },
                     onAboutClick = {
                         navController.navigate(PageRouteNameProvider.AboutPage)
+                    },
+                    onAddInClick = {
+                        navController.navigate(PageRouteNameProvider.DynamicPage)
                     }
                 )
             }
@@ -925,6 +931,30 @@ fun NavigationCompose(navController: NavHostController){
                 onDispose = {
                     viewModel.appSetsUseCase.cleanUpdateHistory()
                 }
+            )
+        }
+
+        composable(PageRouteNameProvider.DynamicPage) {
+            val context = LocalContext.current
+            val viewModel: MainViewModel = viewModel(context as AppCompatActivity)
+            LaunchedEffect(key1 = true, block = {
+                viewModel.composeDynamicUseCase?.doLoad()
+            })
+            DynamicPage(
+                tabVisibilityState = viewModel.bottomMenuUseCase.tabVisibilityState,
+                onBackAction = {
+                    navController.navigateUp()
+                },
+                onAddClick = {
+                    viewModel.composeDynamicUseCase?.onAddClick(context)
+                },
+                onDeleteClick = {
+                    viewModel.composeDynamicUseCase?.onDeleteClick(it)
+                },
+                onDispose = {
+                    viewModel.composeDynamicUseCase?.onParentComposeDispose()
+                },
+                composeMethods = viewModel.composeDynamicUseCase?.composeMethodsState,
             )
         }
 

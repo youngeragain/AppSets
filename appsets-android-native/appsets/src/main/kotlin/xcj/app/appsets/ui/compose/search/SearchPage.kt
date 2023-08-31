@@ -1,6 +1,5 @@
 package xcj.app.appsets.ui.compose.search
 
-import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
@@ -342,16 +341,16 @@ fun SearchPage(
     }
     Column(modifier = Modifier.padding(horizontal = 12.dp)) {
         Spacer(modifier = Modifier.windowInsetsTopHeight(WindowInsets.systemBars))
-        
+
         var sizeOfSearchBar by remember {
             mutableStateOf(IntSize.Zero)
         }
         Row(verticalAlignment = Alignment.CenterVertically) {
             var inputContent by remember {
-                mutableStateOf( "")
+                mutableStateOf("")
             }
             LaunchedEffect(key1 = true, block = {
-                if(!searchStringState.isNullOrEmpty()){
+                if (!searchStringState.isNullOrEmpty()) {
                     inputContent = searchStringState
                 }
             })

@@ -1,10 +1,3 @@
-import javax.net.ssl.*
-import java.nio.charset.Charset
-import java.nio.file.Files
-import java.security.SecureRandom
-import java.security.cert.CertificateException
-import java.security.cert.X509Certificate
-
 plugins {
     id 'com.android.library'
     id 'kotlin-android'
@@ -12,124 +5,10 @@ plugins {
 //    id 'dagger.hilt.android.plugin'
 }
 
-ksp {
-    arg("room.schemaLocation", "C:\\Users\\12248\\StudioProjects\\AppSets3\\appsets")
-}
-
-def getLocalProperty(key) {
-    InputStream inputStream = rootProject.file('local.properties').newDataInputStream();
-    Properties properties = new Properties()
-    properties.load(inputStream)
-    if (properties.containsKey(key)) {
-        return properties.getProperty(key)
-    }
-    return null
-}
-
-def getApiHost(buildType) {
-    if (buildType == "debug") {
-        def inetAddresses = Inet4Address.getAllByName(InetAddress.localHost.hostName)
-        for (Inet4Address inet4Address : inetAddresses) {
-            if (inet4Address.hostAddress.contains('.')) {
-                def split = inet4Address.hostAddress.split("\\.")
-                if ("0" == split[2]) {
-                    return inet4Address.hostAddress
-                }
-            }
-        }
-        return "localhost"
-    } else {
-        return getLocalProperty("api_host")
-    }
-}
-
-def getApiPort(buildType, sslEnable) {
-    if (buildType == "debug") {
-        return 8084
-    } else {
-        if (sslEnable)
-            return 3401
-        else
-            return 3400
-    }
-}
-
-def getAppSetsAppId(buildType) {
-    if (buildType == "debug") {
-        return getLocalProperty("appsets_app_id")
-    } else {
-        return getLocalProperty("appsets_app_id")
-    }
-}
-
-
-def skipSsl() {
-    try {
-        def trustManager = new X509TrustManager() {
-            @Override
-            void checkClientTrusted(X509Certificate[] chain, String authType) throws CertificateException {
-
-            }
-
-            @Override
-            void checkServerTrusted(X509Certificate[] chain, String authType) throws CertificateException {
-
-            }
-
-            @Override
-            X509Certificate[] getAcceptedIssuers() {
-                return new X509Certificate[0]
-            }
-        }
-        def trustManagers = new TrustManager[]{trustManager}
-        def secureRandom = new SecureRandom()
-        def sslContext = SSLContext.getInstance("SSL")
-        sslContext.init(null, trustManagers, secureRandom)
-
-        HttpsURLConnection.setDefaultSSLSocketFactory(sslContext.getSocketFactory())
-        def hostNameVerifier = new HostnameVerifier() {
-            @Override
-            boolean verify(String hostname, SSLSession session) {
-                return true
-            }
-        }
-        HttpsURLConnection.setDefaultHostnameVerifier(hostNameVerifier)
-    } catch (Exception e) {
-        println("skip ssl fail," + e.message)
-    }
-}
-
-def getRabbitProperty(buildType, sslEnable) {
-    skipSsl()
-    def rabbitUrl
-    if (buildType == "debug") {
-        if (sslEnable) {
-            rabbitUrl = getLocalProperty("rabbit_url_localssl")
-        } else {
-            rabbitUrl = getLocalProperty("rabbit_url_local")
-        }
-    } else {
-        if (sslEnable) {
-            rabbitUrl = getLocalProperty("rabbit_url_remotessl")
-        } else {
-            rabbitUrl = getLocalProperty("rabbit_url_remote")
-        }
-    }
-    println("rabbitUrl:" + rabbitUrl)
-    try {
-        def url = new URL(rabbitUrl)
-        def jsonStr = new String(url.openStream().readAllBytes(), Charset.forName("UTF-8"))
-        if (jsonStr != null || jsonStr != "")
-            return jsonStr
-    } catch (ConnectException e) {
-        e.printStackTrace()
-        println "getRabbitProperty Connection refused: connect"
-    }
-    return "\"{}\""
-}
-
+apply from: 'mine.gradle'
 
 android {
+    namespace 'xcj.app.appsets'
     compileSdk 34
     sourceSets {
         // Encapsulates configurations for the main source set.
@@ -170,49 +49,33 @@ android {
             useSupportLibrary true
         }
     }
-
     buildTypes {
         release {
-            def sslEnable = true
-            def apiHostAddress = getApiHost("release")
-            def apiPort = getApiPort("release", sslEnable)
-            def rabbitProperties = getRabbitProperty("release", sslEnable)
-            def appSetsAppId = getAppSetsAppId("release")
-
-
-            minifyEnabled true
-            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-            buildConfigField "String", "ApiHostAddress", "\"${apiHostAddress}\""
-            buildConfigField "String", "ApiPort", "\"${apiPort}\""
-            buildConfigField "String", "RabbitProperties", rabbitProperties
-            buildConfigField "String", "AppSetsAppId", "\"${appSetsAppId}\""
-            buildConfigField "Boolean", "CanSignUp", "true"
-            buildConfigField "Boolean", "SSLEnable", "${sslEnable}"
-        }
-        debug {
-            def sslEnable = true
-            def apiHostAddress = getApiHost("debug")
-            def apiPort = getApiPort("debug", sslEnable)
-            def rabbitProperties = getRabbitProperty("debug", sslEnable)
-            def appSetsAppId = getAppSetsAppId("debug")
-
-
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-            buildConfigField "String", "ApiHostAddress", "\"${apiHostAddress}\""
-            buildConfigField "String", "ApiPort", "\"${apiPort}\""
-            buildConfigField "String", "RabbitProperties", rabbitProperties
-            buildConfigField "String", "AppSetsAppId", "\"${appSetsAppId}\""
+            consumerProguardFiles 'consumer-rules.pro'
+            buildConfigField "String", "ApiHostAddress", "\"${buildConfigRequiredValue.apiHostAddress}\""
+            buildConfigField "String", "ApiPort", "\"${buildConfigRequiredValue.apiPort}\""
+            buildConfigField "String", "RabbitProperties", buildConfigRequiredValue.rabbitProperties
+            buildConfigField "String", "AppSetsAppId", "\"${buildConfigRequiredValue.appSetsAppId}\""
             buildConfigField "Boolean", "CanSignUp", "true"
-            buildConfigField "Boolean", "SSLEnable", "${sslEnable}"
+            buildConfigField "Boolean", "SSLEnable", "${buildConfigRequiredValue.sslEnable}"
+        }
+        debug {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            consumerProguardFiles 'consumer-rules.pro'
+            buildConfigField "String", "ApiHostAddress", "\"${buildConfigRequiredValue.apiHostAddress}\""
+            buildConfigField "String", "ApiPort", "\"${buildConfigRequiredValue.apiPort}\""
+            buildConfigField "String", "RabbitProperties", buildConfigRequiredValue.rabbitProperties
+            buildConfigField "String", "AppSetsAppId", "\"${buildConfigRequiredValue.appSetsAppId}\""
+            buildConfigField "Boolean", "CanSignUp", "true"
+            buildConfigField "Boolean", "SSLEnable", "${buildConfigRequiredValue.sslEnable}"
         }
     }
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.4.0"
+        kotlinCompilerExtensionVersion = "1.4.3"
     }
-
-
-
     buildFeatures {
         compose true
         dataBinding true
@@ -220,135 +83,87 @@ android {
         buildConfig true
         aidl true
     }
-
     packagingOptions {
         resources {
             excludes += '/META-INF/{AL2.0,LGPL2.1}'
         }
     }
-    namespace 'xcj.app.appsets'
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
     }
-    /*kotlin {
+    kotlin {
         jvmToolchain(17)
     }
-
     kotlinOptions {
         jvmTarget = '17'
-    }*/
+    }
 }
 
 dependencies {
     implementation(project(":core"))
     implementation(project(":io"))
-    implementation "androidx.compose.ui:ui:$compose_version"
-    //implementation "androidx.compose.material:material:$compose_version"
-    implementation 'androidx.compose.material3:material3:1.1.1'
-    implementation "androidx.compose.ui:ui-tooling-preview:$compose_version"
-    implementation "androidx.compose.runtime:runtime-livedata:$compose_version"
+    implementation(project(":compose_share"))
 
-    implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.6.1'
+    implementation("androidx.compose.runtime:runtime-livedata")
     implementation 'androidx.activity:activity-compose:1.7.2'
-    implementation 'androidx.legacy:legacy-support-v4:1.0.0'
+    implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.6.1'
     implementation 'androidx.lifecycle:lifecycle-livedata-ktx:2.6.1'
     implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.6.1'
     implementation 'androidx.navigation:navigation-fragment-ktx:2.5.3'
     implementation 'androidx.annotation:annotation:1.6.0'
+    implementation 'androidx.slice:slice-core:1.0.0'
     implementation 'androidx.slice:slice-builders:1.0.0'
     implementation 'androidx.slice:slice-builders-ktx:1.0.0-alpha08'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
     implementation 'androidx.recyclerview:recyclerview:1.3.0'
     implementation 'androidx.navigation:navigation-ui-ktx:2.5.3'
-    implementation 'androidx.slice:slice-core:1.0.0'
-    implementation platform('androidx.compose:compose-bom:2023.03.00')
-    implementation 'androidx.compose.ui:ui-graphics'
+    implementation "androidx.navigation:navigation-compose:$nav_version"
     implementation 'androidx.appcompat:appcompat:1.6.1'
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
-    androidTestImplementation "androidx.compose.ui:ui-test-junit4:$compose_version"
-    androidTestImplementation platform('androidx.compose:compose-bom:2023.03.00')
-    debugImplementation "androidx.compose.ui:ui-tooling:$compose_version"
+    implementation "androidx.room:room-ktx:$room_version"
+    implementation "androidx.room:room-runtime:$room_version"
+    ksp "androidx.room:room-compiler:$room_version"
+    implementation 'androidx.media:media:1.6.0'
+    implementation 'androidx.media3:media3-exoplayer:1.0.1'
+    implementation "androidx.media3:media3-ui:1.0.1"
+    /*implementation "androidx.media3:media3-session:1.0.0"*/
+    implementation "androidx.work:work-runtime-ktx:2.8.1"
+    implementation "androidx.camera:camera-core:${camerax_version}"
+    implementation "androidx.camera:camera-camera2:${camerax_version}"
+    implementation "androidx.camera:camera-lifecycle:${camerax_version}"
+    implementation "androidx.camera:camera-view:${camerax_version}"
+    implementation "androidx.camera:camera-mlkit-vision:${camerax_version}"
+    implementation 'com.google.mlkit:barcode-scanning:17.1.0'
+
+    /*implementation "com.google.dagger:hilt-android:2.28-alpha"
+    ksp "com.google.dagger:hilt-android-compiler:2.28-alpha"
+    implementation 'androidx.hilt:hilt-lifecycle-viewmodel:1.0.0-alpha03'
+    When using Kotlin.
+    ksp 'androidx.hilt:hilt-compiler:1.0.0'*/
 
     implementation 'com.rabbitmq:amqp-client:5.18.0'
 
-    implementation 'com.squareup.moshi:moshi-kotlin:1.15.0'
     implementation 'com.squareup.moshi:moshi:1.15.0'
+    implementation 'com.squareup.moshi:moshi-kotlin:1.15.0'
+    ksp 'com.squareup.moshi:moshi-kotlin-codegen:1.15.0'
+
+    implementation 'com.squareup.retrofit2:retrofit:2.9.0'
     implementation 'com.squareup.retrofit2:converter-moshi:2.9.0'
     implementation 'com.squareup.retrofit2:converter-scalars:2.9.0'
-    debugImplementation 'androidx.compose.ui:ui-test-manifest'
-    ksp 'com.squareup.moshi:moshi-kotlin-codegen:1.15.0'
-    implementation 'com.squareup.retrofit2:retrofit:2.9.0'
+    implementation "com.squareup.retrofit2:converter-gson:2.9.0"
     implementation "com.jakewharton.retrofit:retrofit2-kotlin-coroutines-adapter:0.9.2"
     implementation 'com.squareup.okhttp3:logging-interceptor:5.0.0-alpha.2'
 
     implementation 'com.github.bumptech.glide:glide:4.15.1'
     ksp 'com.github.bumptech.glide:compiler:4.15.1'
-
-    implementation "androidx.room:room-ktx:$room_version"
-    implementation "androidx.room:room-runtime:$room_version"
-    ksp "androidx.room:room-compiler:$room_version"
-    implementation('io.coil-kt:coil:2.4.0')
-    implementation('io.coil-kt:coil-compose:2.4.0')
-    implementation "androidx.navigation:navigation-compose:$nav_version"
-
-
-    implementation 'com.squareup.retrofit2:converter-gson:2.9.0'
-
-
-/*    implementation "com.google.dagger:hilt-android:2.28-alpha"
-    ksp "com.google.dagger:hilt-android-compiler:2.28-alpha"
-    implementation 'androidx.hilt:hilt-lifecycle-viewmodel:1.0.0-alpha03'*/
-    // When using Kotlin.
-    //ksp 'androidx.hilt:hilt-compiler:1.0.0'
-    implementation 'androidx.media3:media3-exoplayer:1.0.1'
-    implementation "androidx.media3:media3-ui:1.0.1"
-    /*implementation "androidx.media3:media3-session:1.0.0"*/
-
-    implementation "androidx.work:work-runtime-ktx:2.8.1"
-
-    // https://mvnrepository.com/artifact/com.google.zxing/core
-    implementation('com.google.zxing:core:3.5.2')
-
-
-    def camerax_version = '1.3.0-alpha05'
-    implementation "androidx.camera:camera-core:1.3.0-alpha05"
-    implementation "androidx.camera:camera-camera2:1.3.0-alpha05"
-    implementation "androidx.camera:camera-lifecycle:1.3.0-alpha05"
-    implementation "androidx.camera:camera-view:${camerax_version}"
-    implementation 'androidx.camera:camera-mlkit-vision:1.3.0-alpha05'
-    implementation 'com.google.mlkit:barcode-scanning:17.1.0'
-
+    
+    implementation "io.coil-kt:coil:2.4.0"
+    implementation "io.coil-kt:coil-compose:2.4.0"
 
     implementation 'com.github.stfalcon-studio:StfalconImageViewer:v1.0.1'
-}
-/*
-tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
-    kotlinOptions {
-        jvmTarget = "1.8"
-        freeCompilerArgs += [
-                "-Xallow-jvm-ir-dependencies",
-                "-P",
-                "plugin:androidx.compose.compiler.plugins.kotlin:suppressKotlinVersionCompatibilityCheck=true"
-        ]
-    }
-}*/
-
-gradle.projectsEvaluated {
-
-    project.gradle.taskGraph.whenReady {
-        //println "project.gradle.taskGraph class:"+project.gradle.taskGraph.getClass();
-        def generateReleaseBuildConfigTask = getTasksByName("generateReleaseBuildConfig", false)[0]
-
-        generateReleaseBuildConfigTask.doFirst {
-
-            println "generateReleaseBuildConfigTask doFirst before generateReleaseBuildConfig"
-        }
-        //println("=======> task:" + tasks[0].name)
-        //println(project.gradle.taskGraph.allTasks)
-        //def appProject = project.parent.getChildProjects().get("app")
-        //println "appProject:"+appProject
-    }
+    // https://mvnrepository.com/artifact/com.google.zxing/core
+    implementation('com.google.zxing:core:3.5.2')
 }

@@ -36,7 +36,8 @@ class MainViewModel:ViewModel(){
 }
 
 class MainActivity : ComponentActivity() {
-    private val mViewModel:MainViewModel by viewModels()
+    private val TAG = "MainActivity"
+    private val mViewModel: MainViewModel by viewModels()
     lateinit var eglBase:EglBase
     lateinit var peerConnectionFactory:PeerConnectionFactory
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -104,7 +105,7 @@ fun MainScreen() {
             factory = ::SurfaceViewRenderer,
             modifier = Modifier.fillMaxSize(),
             update = { render->
-                Log.e("blue", "othersCameraView")
+                Log.e("MainScreen", "othersCameraView")
                 render.background = ColorDrawable(Color.GRAY)
             })
         AndroidView(
@@ -113,7 +114,7 @@ fun MainScreen() {
                 .size(180.dp, 300.dp)
                 .padding(start = 12.dp, top = 12.dp),
             update = { render->
-                Log.e("blue", "mineCameraView")
+                Log.e("MainScreen", "mineCameraView")
                 render.setMirror(false)
                 val mainActivity = render.context as MainActivity
                 mainActivity.lifecycleScope.launch(Dispatchers.IO) {

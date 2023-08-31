@@ -5,12 +5,12 @@ import android.os.Bundle
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.viewModelScope
 import xcj.app.appsets.ktx.MediaStoreDataUriWrapper
+import xcj.app.appsets.purple_module.ModuleConstant
 import xcj.app.appsets.ui.nonecompose.base.BaseViewModel
 import xcj.app.appsets.ui.nonecompose.ui.dialog.SelectActionBottomSheetDialog
 import xcj.app.appsets.usecase.QrCodeUseCase
 import xcj.app.appsets.usecase.SystemUseCase
 import xcj.app.appsets.usecase.UserLoginUseCase
-import xcj.app.purple_module.ModuleConstant
 
 
 class LoginViewModel : BaseViewModel() {

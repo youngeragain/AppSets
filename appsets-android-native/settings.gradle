@@ -16,3 +16,6 @@ include ':io'
 include ':web'
 include ':webrtc'
 include ':pay'*/
+include ':dynamic_compose'
+include ':compose_share'
+

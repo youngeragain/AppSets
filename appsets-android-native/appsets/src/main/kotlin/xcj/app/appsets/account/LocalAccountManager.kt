@@ -14,8 +14,8 @@ import xcj.app.appsets.server.model.UserInfo
 import xcj.app.appsets.ui.compose.LoginActivity
 import xcj.app.core.android.ApplicationHelper
 import xcj.app.io.components.SimpleFileIO
-import xcj.app.purple_module.ModuleConstant
-import xcj.app.purple_module.MySharedPreferences
+import xcj.app.appsets.purple_module.ModuleConstant
+import xcj.app.appsets.purple_module.MySharedPreferences
 
 
 class UseOnceValue<T>(private val value: T) {

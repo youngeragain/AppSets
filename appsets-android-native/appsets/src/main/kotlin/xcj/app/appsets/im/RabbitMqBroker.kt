@@ -56,6 +56,7 @@ object RabbitMqBroker : MessageBroker<RabbitMqBrokerConfig> {
     }
 
     private class RabbitDaemonThread : DeliverCallback, Runnable {
+        private val TAG = "RabbitDaemonThread"
         private lateinit var connection: Connection
         private lateinit var channel: Channel
         private lateinit var rabbitmqProperty: RabbitMqBrokerProperty
@@ -90,7 +91,7 @@ object RabbitMqBroker : MessageBroker<RabbitMqBrokerConfig> {
                 userGroupsChanged = true
             }
             rabbitmqProperty = outRabbitmqProperty
-            Log.e("RabbitDaemonThread", "updateUserChannel")
+            Log.e(TAG, "updateUserChannel")
             executeSelf()
         }
 
@@ -126,14 +127,14 @@ object RabbitMqBroker : MessageBroker<RabbitMqBrokerConfig> {
             } catch (e: SocketTimeoutException) {
                 e.printStackTrace()
                 Log.e(
-                    "RabbitDaemonThread",
+                    TAG,
                     "rabbitmq SocketTimeoutException! thread id:${Thread.currentThread().id}"
                 )
                 return
             } catch (e: IOException) {
                 e.printStackTrace()
                 Log.e(
-                    "RabbitDaemonThread",
+                    TAG,
                     "rabbitmq IOException! thread id:${Thread.currentThread().id}"
                 )
                 return
@@ -141,7 +142,7 @@ object RabbitMqBroker : MessageBroker<RabbitMqBrokerConfig> {
             if (!connection.isOpen)
                 return
             Log.i(
-                "RabbitDaemonThread",
+                TAG,
                 "rabbitmq connected! thread id:${Thread.currentThread().id}\""
             )
             channel = try {
@@ -149,7 +150,7 @@ object RabbitMqBroker : MessageBroker<RabbitMqBrokerConfig> {
             } catch (e: Exception) {
                 e.printStackTrace()
                 Log.e(
-                    "RabbitDaemonThread",
+                    TAG,
                     "rabbitmq create channel failed! thread id:${Thread.currentThread().id}\""
                 )
                 return
@@ -163,7 +164,7 @@ object RabbitMqBroker : MessageBroker<RabbitMqBrokerConfig> {
             } catch (e: Exception) {
                 e.printStackTrace()
                 Log.e(
-                    "RabbitDaemonThread",
+                    TAG,
                     "rabbitmq exchange bind or queue bind or create exception! thread id:${Thread.currentThread().id}\""
                 )
             }
@@ -243,7 +244,7 @@ object RabbitMqBroker : MessageBroker<RabbitMqBrokerConfig> {
         override fun handle(consumerTag: String?, message: Delivery?) {
             if (message == null)
                 return
-            Log.e("blue", "message delivery from rabbitmq!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+            Log.e(TAG, "message delivery from rabbitmq!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
             val headers = message.properties.headers
             val imMessageType = message.properties.type
             val imMessageTimestamp = message.properties.timestamp

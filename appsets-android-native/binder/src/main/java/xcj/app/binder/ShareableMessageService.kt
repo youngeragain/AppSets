@@ -8,9 +8,10 @@ import xcj.app.core.android.DesignMessageDeliver
 import xcj.external.binder.OnMessageInterface
 
 class ShareableMessageService:Service() {
+    private val TAG = "ShareableMessageService"
     override fun onCreate() {
         super.onCreate()
-        Log.e("blue", "ShareableMessageService:onCreate")
+        Log.e(TAG, "onCreate")
     }
     override fun onBind(intent: Intent?): IBinder? {
         DesignMessageDeliver.post("Service_Connect_State", "connected!")
@@ -38,16 +39,15 @@ class NoDefault: OnMessageInterface.Stub(){
     }
 
     override fun showNumber(number: Int) {
-        Log.e("blue", "a number from remote:${number}")
+        Log.e(TAG, "showNumber a number from remote:${number}")
     }
 
     override fun showMessage(message: String?) {
-        /*Log.e("blue", "message from remote:${message}")*/
         DesignMessageDeliver.post("Message_From_Remote", message)
     }
 
     override fun getMessage(): String {
-        Log.e("blue", "message request from remote!")
+        Log.e(TAG, "getMessage message request from remote!")
         return "remote message:"+(0..1000).random()+"time:"+System.currentTimeMillis()
     }
 

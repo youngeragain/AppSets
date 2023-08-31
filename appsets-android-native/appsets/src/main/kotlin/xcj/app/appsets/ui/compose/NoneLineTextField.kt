@@ -118,7 +118,7 @@ internal fun Modifier.drawIndicatorLineWin11Style(
         val arc2Y = size.height - toPx2*2
         val arc1X = toPx1
         val arc2X = size.width-toPx2*2
-        Log.e("blue", """
+        Log.e("LineWin11Style", """
             arc1X:$arc1X
             arc1Y:$arc1Y
             arc2X:$arc2X

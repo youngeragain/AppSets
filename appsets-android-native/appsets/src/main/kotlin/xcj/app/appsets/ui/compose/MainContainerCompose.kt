@@ -61,7 +61,6 @@ fun MainContainerCompose() {
         })
 
         val onTabClick: (TabItemState) -> Unit = { tab ->
-            Log.e("OnTabClick", "tab:${tab}")
             if (!tab.isSelect.value) {
                 navHostController.navigate(tab.type, navOptions {
                     popUpTo(navHostController.graph.findStartDestination().id) {

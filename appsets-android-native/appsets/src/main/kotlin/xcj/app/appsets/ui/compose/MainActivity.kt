@@ -24,6 +24,7 @@ import xcj.app.appsets.im.RabbitMqBroker
 import xcj.app.appsets.im.Session
 import xcj.app.appsets.ktx.MediaStoreDataUriWrapper
 import xcj.app.appsets.ktx.observeAny2
+import xcj.app.appsets.purple_module.ModuleConstant
 import xcj.app.appsets.ui.compose.conversation.InputSelector
 import xcj.app.appsets.ui.compose.theme.AppSetsTheme
 import xcj.app.appsets.ui.nonecompose.base.BaseActivity
@@ -34,7 +35,6 @@ import xcj.app.core.android.annotations.EntryPoint
 import xcj.app.core.android.annotations.PageHelper
 import xcj.app.core.test.Purple
 import xcj.app.core.test.SimplePurpleForAndroidContext
-import xcj.app.purple_module.ModuleConstant
 
 @UnstableApi
 @EntryPoint("/main_page")
@@ -152,7 +152,7 @@ class MainActivity :
         /* if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
              val t: OnBackInvokedCallback = object :OnBackInvokedCallback{
                  override fun onBackInvoked() {
-                     Log.e("blue", "back gesture invoke")
+                     Log.e(TAG, "back gesture invoke")
                  }
              }
              onBackInvokedDispatcher.registerOnBackInvokedCallback(OnBackInvokedDispatcher.PRIORITY_DEFAULT, t)
@@ -183,7 +183,12 @@ class MainActivity :
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-
+        viewModel?.composeDynamicUseCase?.onExternalAARFileSelectActivityResult(
+            this,
+            requestCode,
+            resultCode,
+            data
+        )
     }
 
     override fun onTouchEvent(event: MotionEvent?): Boolean {
@@ -232,5 +237,3 @@ class MainActivity :
         }
     }
 }
-
-

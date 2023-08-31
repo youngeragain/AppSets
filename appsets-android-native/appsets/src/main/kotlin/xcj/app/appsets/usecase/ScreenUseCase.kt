@@ -195,12 +195,14 @@ class ScreenUseCase(private val coroutineScope: CoroutineScope) {
 
                 async {
                     kotlin.runCatching {
-                        val screenIsCollectByUserRes = screenRepository.screenIsCollectByUser(screenId)
+                        val screenIsCollectByUserRes =
+                            screenRepository.screenIsCollectByUser(screenId)
                         Log.e(
                             "ScreenUseCase",
                             "screenIsCollectByUser, screen is collect by user:${screenIsCollectByUserRes.data}"
                         )
-                        currentViewScreenIsCollectByUser.value = screenIsCollectByUserRes.data == true
+                        currentViewScreenIsCollectByUser.value =
+                            screenIsCollectByUserRes.data == true
                     }
                 }
 

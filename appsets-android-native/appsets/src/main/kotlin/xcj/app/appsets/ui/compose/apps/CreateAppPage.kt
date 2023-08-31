@@ -1,6 +1,5 @@
 package xcj.app.appsets.ui.compose.apps
 
-import android.util.Log
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalAnimationApi
@@ -10,7 +9,6 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.with
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -18,24 +16,19 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.windowInsetsTopHeight
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -75,6 +68,7 @@ import xcj.app.appsets.usecase.models.PlatForm
 import xcj.app.appsets.usecase.models.PlatformForCreate
 import xcj.app.appsets.usecase.models.VersionInfo
 import xcj.app.appsets.usecase.models.VersionInfoForCreate
+import xcj.app.compose_share.compose.BackActionTopBar
 
 @UnstableApi
 @Preview(showBackground = true)
@@ -120,40 +114,12 @@ fun CreateAppPage(
             .imePadding()
             .verticalScroll(rememberScrollState())
     ) {
-        Spacer(modifier = Modifier.windowInsetsTopHeight(WindowInsets.statusBars))
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-        ) {
-            Row(
-                modifier = Modifier.align(Alignment.CenterStart),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Image(
-                    painter = painterResource(id = R.drawable.ic_round_arrow_24),
-                    contentDescription = "go back",
-                    modifier = Modifier
-                        .clip(CircleShape)
-                        .clickable(onClick = onBackClick)
-                        .padding(12.dp)
-                )
-                Spacer(modifier = Modifier.width(4.dp))
-                Text(
-                    text = "Create Application",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-            Row(
-                modifier = Modifier
-                    .align(Alignment.CenterEnd)
-                    .padding(horizontal = 12.dp)
-            ) {
-                Button(onClick = onConfirmClick) {
-                    Text(text = "确认")
-                }
-            }
-        }
+        BackActionTopBar(
+            onBackAction = onBackClick,
+            backButtonRightText = "Create Application",
+            endButtonText = "确定",
+            onEndButtonClick = onConfirmClick
+        )
         AnimatedVisibility(visible = createApplicationState.value != null) {
             Box(
                 modifier = Modifier
@@ -182,9 +148,6 @@ fun CreateAppPage(
                 }
             }
         }
-        Spacer(modifier = Modifier.height(10.dp))
-        Divider(modifier = Modifier.height(0.5.dp), color = MaterialTheme.colorScheme.outline)
-        Spacer(modifier = Modifier.height(10.dp))
         IconAndBanner(
             createStep = createStep,
             showSelect = applicationForCreate.appId.isNullOrEmpty(),

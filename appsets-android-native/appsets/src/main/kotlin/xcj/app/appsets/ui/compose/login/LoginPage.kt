@@ -122,7 +122,7 @@ fun LoginPage(
                 Text(text = "提示", color = MaterialTheme.colorScheme.primary)
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = "AppSets为你提供类似应用商店，社交，聊天等功能，开发版无法保证你账号的数据和隐私安全\n* 注册时使用消息摘要算法对账号密码处理的情况,需要以同等方式处理后再填入输入框",
+                    text = "AppSets为你提供类似应用商店，社交，聊天等功能，开发版无法保证你账号的数据和隐私安全\n* 注册时使用消息摘要算法对账号密码处理的情况，需要以同等方式处理后再填入输入框",
                     color = MaterialTheme.colorScheme.secondary,
                     fontSize = 12.sp
                 )

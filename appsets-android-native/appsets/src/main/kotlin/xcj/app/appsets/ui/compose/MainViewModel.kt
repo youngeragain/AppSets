@@ -4,12 +4,12 @@ import android.content.Context
 import android.os.Bundle
 import android.util.Log
 import androidx.fragment.app.FragmentActivity
-import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.viewModelScope
 import androidx.media3.common.util.UnstableApi
 import xcj.app.appsets.account.LocalAccountManager
 import xcj.app.appsets.im.ImMessage
 import xcj.app.appsets.ktx.MediaStoreDataUriWrapper
+import xcj.app.appsets.purple_module.ModuleConstant
 import xcj.app.appsets.ui.compose.conversation.InputSelector
 import xcj.app.appsets.ui.nonecompose.base.BaseViewModel
 import xcj.app.appsets.ui.nonecompose.ui.dialog.SelectActionBottomSheetDialog
@@ -28,11 +28,13 @@ import xcj.app.appsets.usecase.ThirdPartUseCase
 import xcj.app.appsets.usecase.UserInfoUseCase
 import xcj.app.appsets.usecase.UserLoginUseCase
 import xcj.app.appsets.usecase.Win11SnapShotUseCase
-import xcj.app.purple_module.ModuleConstant
+import xcj.app.compose_share.compose.usecase.ComposeDynamicUseCase
 
 
 @UnstableApi
 class MainViewModel : BaseViewModel() {
+    private val TAG = "MainViewModel"
+    var composeDynamicUseCase: ComposeDynamicUseCase? = null
     var systemUseCase: SystemUseCase? = null
     var screenPostUseCase: ScreenPostUseCase? = null
     var userLoginUseCase: UserLoginUseCase? = null
@@ -40,20 +42,19 @@ class MainViewModel : BaseViewModel() {
     var qrCodeUseCase: QrCodeUseCase? = null
     var createApplicationUseCase: CreateApplicationUseCase? = null
     var groupInfoUseCase: GroupInfoUseCase? = null
+    var screensUseCase: ScreenUseCase? = null
+    var conversationUseCase: ConversationUseCase? = null
 
-
-    val appSetsUseCase: AppSetsUseCase = AppSetsUseCase(viewModelScope)
+    val mediaUseCase: MediaUseCase = MediaUseCase(arrayOf("remote", "local"), false)
     val bottomMenuUseCase: BottomMenuUseCase = BottomMenuUseCase()
+    val appSetsUseCase: AppSetsUseCase = AppSetsUseCase(viewModelScope)
     val win11SnapShotUseCase: Win11SnapShotUseCase = Win11SnapShotUseCase(viewModelScope)
     val userInfoUseCase: UserInfoUseCase = UserInfoUseCase(viewModelScope)
 
-    var screensUseCase: ScreenUseCase? = null
-    var conversationUseCase: ConversationUseCase? = null
-    val mediaUseCase: MediaUseCase = MediaUseCase(arrayOf("remote", "local"), false)
 
 
     init {
-        Log.e("MainVM", "init")
+        Log.e(TAG, "init")
     }
 
     fun pinApp(appPackageName: String?) {
@@ -163,14 +164,14 @@ class MainViewModel : BaseViewModel() {
      * 和用户部分没有关系的数据加载以及初始化部分工具类
      */
     fun doNecessaryActionsWhenAppTokenGot(context: Context) {
-        Log.e("MainVM", "doNecessaryActions")
-        mediaUseCase.onCreate(context)
+        Log.e(TAG, "doNecessaryActionsWhenAppTokenGot")
         createNeededUseCase()
-        systemUseCase?.cleanCaches()
         ThirdPartUseCase.getInstance().run {
             setCoroutineScope(viewModelScope)
             initSimpleFileIO(context)
         }
+        systemUseCase?.cleanCaches()
+        mediaUseCase.onCreate(context)
         appSetsUseCase.checkUpdate(context)
         appSetsUseCase.loadSpotLight()
 
@@ -185,7 +186,7 @@ class MainViewModel : BaseViewModel() {
             override fun onEvent(e: Event) {
                 when (e.payload) {
                     "sync_data_finish" -> {
-                        conversationUseCase?.initSessions(context as LifecycleOwner)
+                        conversationUseCase?.initSessions()
                         SystemUseCase.startServiceToStartRabbit(context)
                     }
                 }
@@ -219,11 +220,12 @@ class MainViewModel : BaseViewModel() {
             screensUseCase = ScreenUseCase(viewModelScope)
         if (conversationUseCase == null)
             conversationUseCase = ConversationUseCase(viewModelScope)
+        if (composeDynamicUseCase == null) {
+            composeDynamicUseCase = ComposeDynamicUseCase(viewModelScope)
+        }
     }
 
     fun onUserLogout() {
         conversationUseCase?.clean()
     }
-
-
 }

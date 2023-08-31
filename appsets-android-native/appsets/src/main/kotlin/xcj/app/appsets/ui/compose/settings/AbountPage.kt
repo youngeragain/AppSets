@@ -31,7 +31,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import xcj.app.appsets.R
 import xcj.app.appsets.server.model.UpdateCheckResult
-import xcj.app.appsets.ui.compose.BackActionTopBar
+import xcj.app.compose_share.compose.BackActionTopBar
 
 @Composable
 fun AboutPage(

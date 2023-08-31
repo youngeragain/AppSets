@@ -210,7 +210,6 @@ fun OutSidePage(
         /*val c = with(LocalDensity.current){
             vm.pressPosition!!.x.toDp()-((sizeOfItem.width/3).toDp())/2 to vm.pressPosition!!.y.toDp()-picHeight/2
         }*/
-        //Log.e("blue", "c:$c")
         LocalOrRemoteImage(
             modifier = Modifier
                 .offset(y = 120f.dp)

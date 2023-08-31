@@ -18,6 +18,7 @@ import xcj.app.web.webserver.DefaultController
 import kotlin.concurrent.thread
 
 class ServerBootStrap(private val port:Int) {
+    private val TAG = "ServerBootStrap"
 
     @RequiresApi(Build.VERSION_CODES.O)
     fun boot(context: Context, handler:Handler?=null) {
@@ -26,7 +27,7 @@ class ServerBootStrap(private val port:Int) {
             val workerLoopGroup = NioEventLoopGroup()
             kotlin.runCatching {
                 val handlerMethodList = DefaultController.collect(context, (context.applicationContext as Application)::class.java.`package`?.name, handler)
-                Log.e("blue", "handlerMethodList:${handlerMethodList}")
+                Log.e(TAG, "handlerMethodList:${handlerMethodList}")
                 val fixedUriHandlerMethod = handlerMethodList?.filter { it.uriSplitResults == null }
                 val dynamicUriHandlerMethod = handlerMethodList?.filter { it.uriSplitResults != null }
                 val requestPathHandlerMapping = RequestPathHandlerMapping(fixedUriHandlerMethod, dynamicUriHandlerMethod)
@@ -53,9 +54,9 @@ class ServerBootStrap(private val port:Int) {
                     })
                 serverBootstrap.bind().sync().channel().closeFuture().sync()
             }.onSuccess {
-                Log.e("blue", "doNetty success")
+                Log.e(TAG, "doNetty success")
             }.onFailure {
-                Log.e("blue", "doNetty failure")
+                Log.e(TAG, "doNetty failure")
             }
         }
     }

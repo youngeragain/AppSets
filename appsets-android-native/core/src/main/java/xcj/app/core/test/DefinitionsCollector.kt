@@ -25,29 +25,39 @@ class DefinitionsCollector{
         assetManager.list(definitionFolderName)?.forEach { folderName ->
             assetManager.open("${definitionFolderName}/${folderName}/${definitionJsonFileName}")
                 .bufferedReader().use {
-                val definitionRawText = it.readText()
-                val purpleJsonDefinitions =
-                    gson.fromJson(
-                        definitionRawText,
-                        object : TypeToken<List<PurpleJsonDefinition>>() {})
-                purpleJsonDefinitions.forEach { definition ->
-                    TestLogger.log(definition)
-                    kotlin.runCatching {
-                            val designDefinitionKClass = Class.forName(definition.designDefinitionKClass)
-                            val userCustomKClassList = definition.customKClassList.mapNotNull { className->
-                                kotlin.runCatching {
-                                    Class.forName(className)
-                                }.onSuccess { clazz->
-                                    return@mapNotNull clazz
-                                }.onFailure {
-                                    return@mapNotNull null
-                                }
-                                return@mapNotNull null
-                            }.toMutableList()
-                            if(purpleContext.definitionClassMap.containsKey(designDefinitionKClass))
-                                purpleContext.definitionClassMap[designDefinitionKClass]?.addAll(userCustomKClassList)
-                            else
-                                purpleContext.definitionClassMap[designDefinitionKClass] = userCustomKClassList
+                    val definitionRawText = it.readText()
+                    if (definitionRawText.isNotEmpty()) {
+                        val purpleJsonDefinitions =
+                            gson.fromJson(
+                                definitionRawText,
+                                object : TypeToken<List<PurpleJsonDefinition>>() {})
+                        purpleJsonDefinitions.forEach { definition ->
+                            TestLogger.log(definition)
+                            kotlin.runCatching {
+                                val designDefinitionKClass =
+                                    Class.forName(definition.designDefinitionKClass)
+                                val userCustomKClassList =
+                                    definition.customKClassList.mapNotNull { className ->
+                                        kotlin.runCatching {
+                                            Class.forName(className)
+                                        }.onSuccess { clazz ->
+                                            return@mapNotNull clazz
+                                        }.onFailure {
+                                            return@mapNotNull null
+                                        }
+                                        return@mapNotNull null
+                                    }.toMutableList()
+                                if (purpleContext.definitionClassMap.containsKey(
+                                        designDefinitionKClass
+                                    )
+                                )
+                                    purpleContext.definitionClassMap[designDefinitionKClass]?.addAll(
+                                        userCustomKClassList
+                                    )
+                                else
+                                    purpleContext.definitionClassMap[designDefinitionKClass] =
+                                        userCustomKClassList
+                            }
                         }
                     }
                 }

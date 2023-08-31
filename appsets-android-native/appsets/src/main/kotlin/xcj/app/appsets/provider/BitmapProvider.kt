@@ -10,8 +10,8 @@ import android.util.Log
 import xcj.app.appsets.db.room.AppDatabase
 import xcj.app.appsets.db.room.dao.BitmapDao
 import xcj.app.appsets.db.room.entity.BitmapDefinition
+import xcj.app.appsets.purple_module.ModuleConstant
 import xcj.app.core.android.ApplicationHelper
-import xcj.app.purple_module.ModuleConstant
 import java.io.File
 
 

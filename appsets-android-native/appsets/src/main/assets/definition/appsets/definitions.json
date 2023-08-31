@@ -2,7 +2,7 @@
   {
     "designDefinitionKClass":"xcj.app.core.test.PurpleContextAware",
     "customKClassList":[
-      "xcj.app.purple_module.MyPurpleContextAware"
+      "xcj.app.purple_module.PurpleContextAware"
     ]
   },
   {

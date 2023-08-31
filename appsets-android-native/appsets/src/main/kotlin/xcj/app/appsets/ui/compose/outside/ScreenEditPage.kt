@@ -27,7 +27,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import xcj.app.appsets.server.model.UserScreenInfo
-import xcj.app.appsets.ui.compose.BackActionTopBar
+import xcj.app.compose_share.compose.BackActionTopBar
 
 @Composable
 fun ScreenEditPage(

@@ -125,21 +125,7 @@ fun SignUpPage(
                 .verticalScroll(rememberScrollState())
         ) {
             Spacer(modifier = Modifier.windowInsetsTopHeight(WindowInsets.statusBars))
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .border(0.5.dp, MaterialTheme.colorScheme.secondary, RoundedCornerShape(12.dp))
-                    .padding(12.dp)
-            ) {
-                Text(text = "建议", color = MaterialTheme.colorScheme.primary)
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = "使用消息摘要算法(例如MD5)对账号密码处理后填写到输入框内,增加账号密码安全性",
-                    color = MaterialTheme.colorScheme.secondary,
-                    fontSize = 12.sp
-                )
-            }
-            Spacer(modifier = Modifier.height(12.dp))
+
             val showBranding = loginState is UserLoginUseCase.LoginSignUpState.SignUping ||
                     loginState is UserLoginUseCase.LoginSignUpState.SignUpFail
             Spacer(
@@ -246,6 +232,31 @@ fun SignUpPage(
                 }
             }
             Divider(Modifier.height(0.5.dp), color = MaterialTheme.colorScheme.outline)
+
+            Row(modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 12.dp, vertical = 24.dp)) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .border(
+                            0.5.dp,
+                            MaterialTheme.colorScheme.secondary,
+                            RoundedCornerShape(12.dp)
+                        )
+                        .padding(12.dp)
+                ) {
+                    Text(text = "建议", color = MaterialTheme.colorScheme.primary)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "使用消息摘要算法(例如MD5)对账号密码处理后填写到输入框内，增加账号密码安全性",
+                        color = MaterialTheme.colorScheme.secondary,
+                        fontSize = 12.sp
+                    )
+                }
+                Spacer(modifier = Modifier.height(12.dp))
+            }
+
             Column(Modifier.padding(horizontal = 12.dp)) {
                 Text(text = "账号 (必填)", modifier = Modifier.padding(vertical = 10.dp))
                 TextField(modifier = Modifier.fillMaxWidth(), value = account,

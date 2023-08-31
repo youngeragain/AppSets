@@ -24,6 +24,9 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -45,9 +48,17 @@ import xcj.app.appsets.ui.compose.MainViewModel
 @UnstableApi
 @Composable
 fun Win11AllAppsPage(
+    tabVisibilityState: MutableState<Boolean>,
     onBackClick: () -> Unit
-){
-
+) {
+    DisposableEffect(key1 = true, effect = {
+        onDispose {
+            tabVisibilityState.value = true
+        }
+    })
+    SideEffect {
+        tabVisibilityState.value = false
+    }
     Column(
         modifier = Modifier
             .padding(top = 32.dp, bottom = 32.dp, start = 10.dp, end = 10.dp)

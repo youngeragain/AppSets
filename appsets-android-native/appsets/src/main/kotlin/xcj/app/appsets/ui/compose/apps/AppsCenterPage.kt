@@ -28,7 +28,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.State
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -51,7 +50,7 @@ import xcj.app.appsets.usecase.models.Application
 @UnstableApi
 @Composable
 fun AppsCenterPage(
-    recommendApplication: State<Application?>,
+    headerApplication: Application?,
     applications: List<AppsWithCategory>,
     onRequestLoadApplication: () -> Unit,
     onAppClick: (Application) -> Unit,
@@ -72,16 +71,8 @@ fun AppsCenterPage(
             }
         }
         Column(modifier = Modifier.verticalScroll(rememberScrollState)) {
-            val recApplication = recommendApplication.value
-            if (recApplication != null) {
-
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable {
-                            onAppClick(recApplication)
-                        }
-                ) {
+            if (headerApplication != null) {
+                Box(modifier = Modifier.fillMaxWidth()) {
                     Column {
                         Spacer(modifier = Modifier.windowInsetsTopHeight(WindowInsets.statusBars))
                         Spacer(modifier = Modifier.height(68.dp))
@@ -99,8 +90,11 @@ fun AppsCenterPage(
                                         MaterialTheme.colorScheme.outline,
                                         RoundedCornerShape(12.dp)
                                     )
-                                    .clip(RoundedCornerShape(12.dp)),
-                                any = recApplication.bannerUrl
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .clickable {
+                                        onAppClick(headerApplication)
+                                    },
+                                any = headerApplication.bannerUrl
                             )
                         }
 
@@ -132,11 +126,11 @@ fun AppsCenterPage(
                                         modifier = Modifier
                                             .clip(RoundedCornerShape(12.dp))
                                             .size(36.dp),
-                                        any = recApplication.iconUrl
+                                        any = headerApplication.iconUrl
                                     )
                                     Spacer(modifier = Modifier.width(12.dp))
                                     Text(
-                                        text = recApplication.name ?: "",
+                                        text = headerApplication.name ?: "",
                                         fontSize = 22.sp,
                                         fontWeight = FontWeight.Bold,
                                         color = Color.White

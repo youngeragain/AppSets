@@ -19,7 +19,7 @@ import java.lang.ref.WeakReference
 
 object Greeting {
 
-
+    private val TAG = "Greeting"
     private class GreetingsLifecycleObserver : DefaultLifecycleObserver {
         /*@OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)
         fun cleanUp() {
@@ -80,7 +80,7 @@ object Greeting {
                     field = value
                     addLifecycleOwnerObserver(value)
                 } else {
-                    Log.e("blue", "current only support AppcompatActivity and Fragment")
+                    Log.e(TAG, "current only support AppcompatActivity and Fragment")
                 }
             }
         }
@@ -185,7 +185,7 @@ object Greeting {
                 }
             }
             if(list.isEmpty()){
-                Log.e("blue", "all special permissions is granted!")
+                Log.e(TAG, "all special permissions is granted!")
                 dispatchRequestCallback()
             }else{
                 emptyPermissionFragment.specialPermissions = list
@@ -390,7 +390,7 @@ object Greeting {
     ) {
         if (++callListGreetingTimes > 1) {
             callListGreetingTimes = 1
-            Log.e("blue", "Please do not call the greeting method multiple times synchronously!")
+            Log.e(TAG, "Please do not call the greeting method multiple times synchronously!")
             return
         }
         putHolder(context)

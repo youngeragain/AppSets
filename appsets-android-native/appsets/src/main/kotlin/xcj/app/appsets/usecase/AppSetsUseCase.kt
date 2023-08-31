@@ -38,9 +38,10 @@ import java.util.Calendar
 
 @UnstableApi
 class AppSetsUseCase(private val coroutineScope: CoroutineScope): NoConfigUseCase() {
+    private val TAG = "AppSetsUseCase"
     val indexApplications: MutableList<AppsWithCategory> = mutableStateListOf()
     val spotLightsState: MutableList<SpotLightState> = mutableStateListOf()
-    var fastFindApplicationState: MutableState<Application?> = mutableStateOf(null)
+    var headerApplicationState: MutableState<Application?> = mutableStateOf(null)
     private var packageInfo: PackageInfo? = null
     val applicationDetailsBlurDrawableState: MutableState<BitmapDrawable?> = mutableStateOf(null)
 
@@ -78,20 +79,20 @@ class AppSetsUseCase(private val coroutineScope: CoroutineScope): NoConfigUseCas
      */
     private fun initAppToken() {
         coroutineScope.request({
-            Log.i("AppSetsUseCase", "getAppToken")
+            Log.i(TAG, "getAppToken")
             AppSetsRepository.getInstance().getAppToken()
         }, onSuccess = {
             appTokenInitialized.postValue(true)
         }, onFailed = {
-            Log.e("AppSetsUseCase", "getAppToken failed:${it.info}")
+            Log.e(TAG, "getAppToken failed:${it.info}")
         })
     }
 
     fun loadIndexApps() {
-        if (fastFindApplicationState.value != null)
+        if (headerApplicationState.value != null)
             return
         coroutineScope.request({
-            Log.i("blue", "AppSetsUseCase:getIndexRecommendApps")
+            Log.i(TAG, "AppSetsUseCase:getIndexRecommendApps")
             AppSetsRepository.getInstance().getIndexApplications()
         }, onSuccess = {
             if (it.isNullOrEmpty())
@@ -105,7 +106,7 @@ class AppSetsUseCase(private val coroutineScope: CoroutineScope): NoConfigUseCas
                 AppSetsRepository.mapIconUrl(applications)
             if (applications.isNotEmpty()) {
                 val randomApplication = applications.random()
-                fastFindApplicationState.value = randomApplication
+                headerApplicationState.value = randomApplication
             }
             indexApplications.addAll(it)
         })
@@ -116,7 +117,7 @@ class AppSetsUseCase(private val coroutineScope: CoroutineScope): NoConfigUseCas
         if (spotLightsState.isNotEmpty())
             return
         coroutineScope.requestNotNullRaw({
-            Log.i("AppSetsUseCase", "getWin11SearchSpotLightInfo")
+            Log.i(TAG, "getWin11SearchSpotLightInfo")
             val calendar = Calendar.getInstance()
             val month = calendar.get(Calendar.MONTH) + 1
             val dayOfMonth = calendar.get(Calendar.DAY_OF_MONTH)
@@ -195,7 +196,7 @@ class AppSetsUseCase(private val coroutineScope: CoroutineScope): NoConfigUseCas
             }
 
         }, onFailed = {
-            Log.e("AppSetsUseCase", "getWin11SearchSpotLightInfo, failed!${it.info}")
+            Log.e(TAG, "getWin11SearchSpotLightInfo, failed!${it.info}")
         })
     }
 

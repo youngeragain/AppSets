@@ -9,6 +9,8 @@ import java.io.File
 
 
 class AndroidContextFileDir {
+    lateinit var dynamicAARDir: String
+    lateinit var dynamicAAROPTDir: String
     lateinit var errorsCacheDir: String
     lateinit var logsCacheDir: String
     lateinit var tempCacheDir: String
@@ -59,6 +61,16 @@ class AndroidContexts(val application: Application) {
     fun simpleInit() {
         kotlin.runCatching {
             Log.e("AndroidContexts", "simpleInit, init cache dir file paths on purple init")
+
+            val parentPath0 = application.getExternalFilesDir(null)?.path
+            val childPaths0 = listOf<String>(
+                "/dynamic_aar",
+                "/dynamic_aar/opt"
+            )
+            initDirs(parentPath0, childPaths0)
+            androidContextFileDir.dynamicAARDir = parentPath0 + childPaths0[0]
+            androidContextFileDir.dynamicAAROPTDir = parentPath0 + childPaths0[1]
+
             val childPaths = listOf<String>(
                 "/errors", "/logs", "/temp", "/temp/files",
                 "/temp/images", "/temp/videos", "/temp/dbs", "/temp/audios"

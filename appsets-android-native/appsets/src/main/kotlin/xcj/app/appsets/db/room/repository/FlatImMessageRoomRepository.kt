@@ -21,7 +21,7 @@ import xcj.app.appsets.server.model.GroupInfo
 import xcj.app.appsets.server.model.UserInfo
 import xcj.app.appsets.usecase.UserRelationsCase
 import xcj.app.core.android.ApplicationHelper
-import xcj.app.purple_module.ModuleConstant
+import xcj.app.appsets.purple_module.ModuleConstant
 
 class FlatImMessageRoomRepository {
     private val flatImMessageDao: FlatImMessageDao =

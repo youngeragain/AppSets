@@ -2,11 +2,11 @@ package xcj.app.appsets.db.room.repository
 
 import xcj.app.appsets.db.room.AppDatabase
 import xcj.app.appsets.ktx.isHttpUrl
+import xcj.app.appsets.purple_module.ModuleConstant
 import xcj.app.appsets.server.model.UserInfo
 import xcj.app.appsets.usecase.UserRelationsCase
 import xcj.app.core.android.ApplicationHelper
 import xcj.app.io.components.SimpleFileIO
-import xcj.app.purple_module.ModuleConstant
 
 class UserInfoRoomRepository() {
 

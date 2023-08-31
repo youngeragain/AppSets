@@ -11,13 +11,14 @@ import xcj.app.web.webserver.Dog
 class WebHandler(
     private val handlerMappingCache:List<HandlerMapping>,
 ): SimpleChannelInboundHandler<FullHttpRequest>(){
+    private val TAG = "WebHandler"
 
     private var defaultFullHttpRequest:DefaultFullHttpRequest? = null
 
     private var defaultHttpRequest:DefaultHttpRequest? = null
 
     private fun requestUriNotFount(ctx: ChannelHandlerContext, why:String?) {
-        Log.e("WebHandler", "why:${why}")
+        Log.e(TAG, "requestUriNotFount why:${why}")
         ctx.channel().write(notFoundUriResponse)
     }
 
@@ -110,7 +111,7 @@ class WebHandler(
 
         try {
             if(handle== HandleResult.EMPTY){
-                Log.e("blue", "handlerMethod hand result is empty!")
+                Log.e(requestUriNotFount, "handlerMethod hand result is empty!")
             }else{
                 val handleResult = handle.getResult()
                 ctx.channel().write(handleResult)

@@ -4,8 +4,8 @@ import android.util.Log
 import xcj.app.appsets.db.room.AppDatabase
 import xcj.app.appsets.db.room.dao.UserRelationDao
 import xcj.app.appsets.db.room.entity.UserRelation
+import xcj.app.appsets.purple_module.ModuleConstant
 import xcj.app.core.android.ApplicationHelper
-import xcj.app.purple_module.ModuleConstant
 
 class UserRelationsCase private constructor() {
     var relatedUids: MutableSet<String>? = null

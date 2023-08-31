@@ -1,7 +1,7 @@
 [
   {
     "xcj.app.core.test.PurpleContextAware": [
-      "xcj.app.purple_module.MyPurpleContextAware"
+      "xcj.app.purple_module.PurpleContextAware"
     ]
   },
   {

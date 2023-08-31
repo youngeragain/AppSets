@@ -20,9 +20,10 @@ class ShareableMessageViewModel : BaseViewModel()
 
 class ShareableMessageActivity :
     BaseActivity<ActivityShareableMessageBinding, ShareableMessageViewModel, BaseViewModelFactory<ShareableMessageViewModel>>() {
-    var onMessageInterface: OnMessageInterface? = null
-    var serviceConnection: ServiceConnection? = null
-    var binded = false
+    private var onMessageInterface: OnMessageInterface? = null
+    private var serviceConnection: ServiceConnection? = null
+    private var binded = false
+    private val TAG = "ShareableMessageActivity"
 
     override fun createBinding(): ActivityShareableMessageBinding? {
         return ActivityShareableMessageBinding.inflate(layoutInflater)
@@ -48,22 +49,22 @@ class ShareableMessageActivity :
                 override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
                     onMessageInterface = OnMessageInterface.Stub.asInterface(service)
                     Log.e(
-                        "blue",
+                        TAG,
                         "onServiceConnected:name:$name, onMessageInterface:$onMessageInterface"
                     )
                     binded = true
                 }
 
                 override fun onServiceDisconnected(name: ComponentName?) {
-                    Log.e("blue", "onServiceDisconnected:name:$name")
+                    Log.e(TAG, "onServiceDisconnected:name:$name")
                 }
 
                 override fun onBindingDied(name: ComponentName?) {
-                    Log.e("blue", "onBindingDied:name:$name")
+                    Log.e(TAG, "onBindingDied:name:$name")
                 }
 
                 override fun onNullBinding(name: ComponentName?) {
-                    Log.e("blue", "onNullBinding:name:$name")
+                    Log.e(TAG, "onNullBinding:name:$name")
                 }
             }
         }

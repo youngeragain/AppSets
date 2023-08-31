@@ -5,7 +5,6 @@ import android.app.Service
 import android.content.BroadcastReceiver
 import android.content.ComponentName
 import android.content.ContentResolver
-import android.content.ContentUris
 import android.content.Context
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
@@ -145,7 +144,6 @@ fun Context.getSystemFileUris(
             while (it.moveToNext()) {
                 val mediaStoreDataUriWrapper = MediaStoreDataUriWrapper()
                 projections.forEach { projectionName ->
-                    //Log.e("blue", "projectionName:${projectionName}")
                     val index = it.getColumnIndexOrThrow(projectionName)
                     when (projectionName) {
                         MediaStore.MediaColumns.DATA -> mediaStoreDataUriWrapper.uri =
@@ -194,32 +192,4 @@ fun Context.saveBitmap(bitmap: Bitmap, pathToSave: String? = null): Pair<String,
         bitmap.compress(Bitmap.CompressFormat.JPEG, 100, it)
     }
     return file1.absolutePath to name
-}
-
-
-//Android 10+
-fun ContentResolver.loadImagesUrisAfterQ(): List<Uri> {
-    val uri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI
-    val images = mutableListOf<Uri>()
-    val projection = arrayOf(MediaStore.Images.Media._ID)
-    query(uri, projection, null, null, null)?.use { cursor ->
-        val idColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media._ID)
-        while (cursor.moveToNext()) {
-            images += ContentUris.withAppendedId(uri, cursor.getLong(idColumn))
-        }
-    }
-    return images
-}
-
-fun ContentResolver.loadImagesPathsBeforeQ(): List<String> {
-    val uri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI
-    val images = mutableListOf<String>()
-    val projection = arrayOf(MediaStore.MediaColumns.DATA)
-    query(uri, projection, null, null, null)?.use { cursor ->
-        val dataColumn = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.DATA)
-        while (cursor.moveToNext()) {
-            images += cursor.getString(dataColumn)
-        }
-    }
-    return images
 }

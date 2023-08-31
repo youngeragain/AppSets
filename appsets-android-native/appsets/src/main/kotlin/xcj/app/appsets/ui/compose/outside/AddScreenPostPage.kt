@@ -10,6 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -27,11 +28,11 @@ import com.bumptech.glide.Glide
 import com.stfalcon.imageviewer.StfalconImageViewer
 import xcj.app.appsets.R
 import xcj.app.appsets.ktx.MediaStoreDataUriWrapper
-import xcj.app.appsets.ui.compose.BackActionTopBar
 import xcj.app.appsets.ui.compose.LocalOrRemoteImage
 import xcj.app.appsets.ui.compose.MainViewModel
 import xcj.app.appsets.ui.nonecompose.ui.dialog.ScalableItemAdapter
 import xcj.app.appsets.ui.nonecompose.ui.dialog.ScalableItemState
+import xcj.app.compose_share.compose.BackActionTopBar
 
 @UnstableApi
 @OptIn(ExperimentalMaterial3Api::class)
@@ -52,12 +53,14 @@ fun AddScreenPostPage(
         }
     })
     DisposableEffect(key1 = true, effect = {
-        tabVisibilityState.value = false
         onDispose {
             tabVisibilityState.value = true
             mainViewModel.screenPostUseCase!!.clear()
         }
     })
+    SideEffect {
+        tabVisibilityState.value = false
+    }
     Column(modifier = Modifier.imePadding()) {
         BackActionTopBar(
             backButtonRightText = "Post Screen",
@@ -65,7 +68,7 @@ fun AddScreenPostPage(
             onBackAction = {
                 onBackAction(false)
             },
-            onConfirmClick = onConfirmClick
+            onEndButtonClick = onConfirmClick
         )
         val rememberScrollState = rememberScrollState()
         Column(
@@ -302,7 +305,7 @@ fun AddScreenPostPage(
                     )
                 }
             }
-            Spacer(modifier = Modifier.height(68.dp))
+            Spacer(modifier = Modifier.height(128.dp))
         }
     }
 }

@@ -19,23 +19,25 @@ android {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            consumerProguardFiles 'consumer-rules.pro'
         }
         debug {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            consumerProguardFiles 'consumer-rules.pro'
         }
     }
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
     }
-    /*kotlin {
+    kotlin {
         jvmToolchain(17)
     }
 
     kotlinOptions {
         jvmTarget = '17'
-    }*/
+    }
 
     packagingOptions {
         resources {
@@ -45,7 +47,7 @@ android {
 }
 
 dependencies {
-    implementation(project(":core"))
+    compileOnly(project(":core"))
     implementation 'id.zelory:compressor:3.0.1'
     implementation 'com.qcloud.cos:cos-android-lite-nobeacon:5.9.15'
 }

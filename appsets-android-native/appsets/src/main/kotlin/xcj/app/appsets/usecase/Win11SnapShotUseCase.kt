@@ -11,13 +11,13 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import xcj.app.appsets.db.room.AppDatabase
 import xcj.app.appsets.db.room.repository.PinnedAppsRepository
+import xcj.app.appsets.purple_module.ModuleConstant
 import xcj.app.appsets.ui.compose.win11Snapshot.AppDefinition
 import xcj.app.appsets.ui.compose.win11Snapshot.ItemDefinition
 import xcj.app.appsets.ui.compose.win11Snapshot.SpotLightState
 import xcj.app.appsets.util.PackageUtil
 import xcj.app.core.android.ApplicationHelper
 import xcj.app.core.foundation.usecase.NoConfigUseCase
-import xcj.app.purple_module.ModuleConstant
 
 class Win11SnapShotUseCase(
     coroutineScope: CoroutineScope
@@ -25,10 +25,17 @@ class Win11SnapShotUseCase(
     private lateinit var pinnedAppsRepository: PinnedAppsRepository
     fun repository(): PinnedAppsRepository {
         if (!::pinnedAppsRepository.isInitialized) {
-            val pinnedAppsDao =
-                ApplicationHelper.getDataBase<AppDatabase>(ModuleConstant.MODULE_NAME)
-                    ?.pinnedAppsDao() ?: throw Exception("pinnedAppsDao 未初始化")
-            pinnedAppsRepository = PinnedAppsRepository(pinnedAppsDao)
+            try {
+                val pinnedAppsDao =
+                    ApplicationHelper.getDataBase<AppDatabase>(ModuleConstant.MODULE_NAME)
+                        ?.pinnedAppsDao() ?: throw Exception("pinnedAppsDao 未初始化")
+                pinnedAppsRepository = PinnedAppsRepository(pinnedAppsDao)
+            } catch (e: Exception) {
+                e.printStackTrace()
+                pinnedAppsRepository = PinnedAppsRepository(null)
+            }
+
+
         }
         return pinnedAppsRepository
     }
