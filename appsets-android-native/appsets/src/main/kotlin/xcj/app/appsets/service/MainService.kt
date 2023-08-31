@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.app.Service
 import android.content.Intent
 import android.os.IBinder
+import android.util.Base64
 import android.util.Log
 import androidx.work.OneTimeWorkRequest
 import androidx.work.WorkManager
@@ -19,13 +20,14 @@ import xcj.app.appsets.worker.LocalSyncWorker
 import xcj.app.appsets.worker.ServerSyncWorker
 
 class MainService : Service() {
+    private val TAG = "MainService"
     override fun onCreate() {
         super.onCreate()
-        Log.i("MainService", "onCreate")
+        Log.i(TAG, "onCreate")
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        Log.i("MainService", "MainMessageService:onStartCommand")
+        Log.i(TAG, "MainMessageService:onStartCommand")
         intent?.getStringExtra("what_to_do")?.let {
             when (it) {
                 "to_sync_user_data_from_server" -> toSyncUserDataFromServer("friends,groups")
@@ -70,28 +72,36 @@ class MainService : Service() {
     private fun toStartRabbit() {
         if (LocalAccountManager._userInfo.value.isDefault()) {
             Log.e(
-                "MainService",
+                TAG,
                 "start rabbit failed! because of _userInfo is default!"
             )
             return
         }
-        if (BuildConfig.RabbitProperties == "{}") {
+
+        if (BuildConfig.RabbitProperties.isNullOrEmpty()) {
             Log.e(
-                "MainService",
-                "start rabbit failed! because of BuildConfig.RabbitProperties is:${BuildConfig.RabbitProperties}"
+                TAG,
+                "start rabbit failed! because of BuildConfig.RabbitProperties isNullOrEmpty}"
             )
             return
         }
+        val decodeConfig =
+            Base64.decode(BuildConfig.RabbitProperties, Base64.DEFAULT).decodeToString()
+        if (decodeConfig.isEmpty())
+            return
         try {
             val rabbitProperties =
-                Gson().fromJson(BuildConfig.RabbitProperties, RabbitMqBrokerProperty::class.java)
+                Gson().fromJson(decodeConfig, RabbitMqBrokerProperty::class.java)
             rabbitProperties.uid = LocalAccountManager._userInfo.value.uid
             rabbitProperties.`user-exchange-groups` =
                 UserRelationsCase.getInstance().relatedGroupIdMap?.keys?.joinToString(",")
             val rabbitMqBrokerConfig = RabbitMqBrokerConfig(rabbitProperties)
             RabbitMqBroker.bootstrap(rabbitMqBrokerConfig)
         } catch (e: Exception) {
-            e.printStackTrace()
+            Log.e(
+                TAG,
+                "start rabbit failed! rabbitProperties deserialize fail! exception:${e.message}\nvalue is:${decodeConfig}"
+            )
         }
     }
 

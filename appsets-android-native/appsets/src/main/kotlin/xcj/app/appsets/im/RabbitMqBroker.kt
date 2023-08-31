@@ -182,6 +182,10 @@ object RabbitMqBroker : MessageBroker<RabbitMqBrokerConfig> {
         }
 
         fun someDeclare() {
+            if (!::connection.isInitialized || !::channel.isInitialized)
+                return
+            if (!connection.isOpen || !channel.isOpen)
+                return
             val groupsExchanges: MutableList<Pair<String, BuiltinExchangeType>> = mutableListOf()
             val groupExchangePrefix = rabbitmqProperty.`user-exchange-group-prefix`
             if (!rabbitmqProperty.`user-exchange-groups`.isNullOrEmpty()) {
@@ -200,6 +204,10 @@ object RabbitMqBroker : MessageBroker<RabbitMqBrokerConfig> {
         }
 
         fun fullDeclare() {
+            if (!::connection.isInitialized || !::channel.isInitialized)
+                return
+            if (!connection.isOpen || !channel.isOpen)
+                return
             queueName =
                 rabbitmqProperty.`queue-prefix` + rabbitmqProperty.uid + "_CUUID_" + UUID.randomUUID()
                     .toString()
