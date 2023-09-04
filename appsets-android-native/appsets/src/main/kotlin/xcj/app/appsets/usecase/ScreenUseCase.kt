@@ -23,7 +23,7 @@ import xcj.app.appsets.server.repository.ScreenRepository
 import xcj.app.core.foundation.http.DesignResponse
 
 class ScreenUseCase(private val coroutineScope: CoroutineScope) {
-
+    private val TAG = "ScreenUseCase"
 
     class ScreensContainer {
         var uid: String? = null
@@ -31,7 +31,7 @@ class ScreenUseCase(private val coroutineScope: CoroutineScope) {
         var pageSize: Int = 15
         var lastScreensSize: Int = -1
         val requestingState: MutableState<Boolean> = mutableStateOf(false)
-        val screensState: MutableList<ScreenState> = mutableStateListOf()
+        val screensState: MutableState<List<ScreenState>?> = mutableStateOf(null)
     }
 
     private val screenRepository by lazy {
@@ -47,7 +47,7 @@ class ScreenUseCase(private val coroutineScope: CoroutineScope) {
         }
         if (userScreensContainer!!.uid != uid) {
             userScreensContainer!!.uid = uid
-            userScreensContainer!!.screensState.clear()
+            userScreensContainer!!.screensState.value = null
         }
         if (userScreensContainer!!.requestingState.value)
             return
@@ -64,7 +64,7 @@ class ScreenUseCase(private val coroutineScope: CoroutineScope) {
         if (systemScreensContainer.requestingState.value)
             return
         if (!force) {
-            if (systemScreensContainer.screensState.isNotEmpty())
+            if (systemScreensContainer.screensState.value != null)
                 return
         }
         systemScreensContainer.page = 1
@@ -74,7 +74,7 @@ class ScreenUseCase(private val coroutineScope: CoroutineScope) {
 
     private fun requestScreens(container: ScreensContainer) {
         coroutineScope.requestNotNull({
-            Log.e("ScreenUseCase", "ScreenUseCase:container uid:${container.uid}")
+            Log.i(TAG, "ScreenUseCase:container uid:${container.uid}")
             if (!container.uid.isNullOrEmpty()) {
                 screenRepository
                     .getScreensByUid(container.uid!!, container.page, container.pageSize)
@@ -84,24 +84,32 @@ class ScreenUseCase(private val coroutineScope: CoroutineScope) {
             }
         }, onSuccess = { userScreenInfoList ->
             container.lastScreensSize = userScreenInfoList.size
-            if (container.screensState.isNotEmpty()) {
-                val lastIndex = container.screensState.size - 1
-                if (container.screensState[lastIndex] is ScreenState.NoMore) {
-                    container.screensState.removeAt(lastIndex)
-                }
-            }
+            val lastScreenStateList = container.screensState.value
+            var newScreenStateList: MutableList<ScreenState>? = null
             if (userScreenInfoList.isNotEmpty()) {
-                if (container.page == 1)
-                    container.screensState.clear()
-                userScreenInfoList.map { userScreen -> ScreenState.Screen(userScreen) }.also {
-                    container.screensState.addAll(it)
-                }
-                if (userScreenInfoList.size < container.pageSize) {
-                    container.screensState.add(ScreenState.NoMore)
+                val screenStateList =
+                    userScreenInfoList.map { userScreen -> ScreenState.Screen(userScreen) as ScreenState }
+                        .toMutableList()
+                if (container.page == 1) {
+                    newScreenStateList = screenStateList
+                } else {
+                    if (!lastScreenStateList.isNullOrEmpty()) {
+                        newScreenStateList = mutableListOf()
+                        newScreenStateList.addAll(lastScreenStateList)
+                        newScreenStateList.addAll(screenStateList)
+                    } else {
+                        newScreenStateList = screenStateList
+                    }
+
                 }
             } else {
-                container.screensState.add(ScreenState.NoMore)
                 container.page -= 1
+            }
+            if (userScreenInfoList.size < container.pageSize) {
+                newScreenStateList?.add(ScreenState.NoMore)
+            }
+            if (newScreenStateList != null) {
+                container.screensState.value = newScreenStateList
             }
             delay(1000)
             container.requestingState.value = false
@@ -114,17 +122,17 @@ class ScreenUseCase(private val coroutineScope: CoroutineScope) {
     fun loadMore() {
         val container = userScreensContainer ?: systemScreensContainer
         if (container.lastScreensSize < systemScreensContainer.pageSize) {
-            Log.e(
-                "ScreenUseCase",
+            Log.i(
+                TAG,
                 "Load more, lastScreensSize not equals, break"
             )
             return
         }
         if (container.requestingState.value) {
-            Log.e("ScreenUseCase", "Load more, requesting is true, break")
+            Log.i(TAG, "Load more, requesting is true, break")
             return
         }
-        Log.e("ScreenUseCase", "Load more")
+        Log.i(TAG, "Load more")
         container.page += 1
         container.requestingState.value = true
         requestScreens(container)
@@ -160,8 +168,8 @@ class ScreenUseCase(private val coroutineScope: CoroutineScope) {
             requestAction = {
                 kotlin.runCatching {
                     val screenReviewsRes = screenRepository.getScreenReviews(screenId)
-                    Log.e(
-                        "ScreenUseCase",
+                    Log.i(
+                        TAG,
                         "updateCurrentViewScreen, screenReviews:${screenReviewsRes.data}"
                     )
                     if (!screenReviewsRes.data.isNullOrEmpty())
@@ -175,8 +183,8 @@ class ScreenUseCase(private val coroutineScope: CoroutineScope) {
                 async {
                     kotlin.runCatching {
                         val screenViewCountRes = screenRepository.getScreenViewCount(screenId)
-                        Log.e(
-                            "ScreenUseCase",
+                        Log.i(
+                            TAG,
                             "updateCurrentViewScreen, screenViewCount:${screenViewCountRes.data}"
                         )
                         currentViewScreenViewCount.value = screenViewCountRes.data ?: 0
@@ -185,7 +193,7 @@ class ScreenUseCase(private val coroutineScope: CoroutineScope) {
                 async {
                     kotlin.runCatching {
                         val screenLikedCountRes = screenRepository.getScreenLikedCount(screenId)
-                        Log.e(
+                        Log.i(
                             "ScreenUseCase",
                             "updateCurrentViewScreen, screenLikedCount:${screenLikedCountRes.data}"
                         )
@@ -197,7 +205,7 @@ class ScreenUseCase(private val coroutineScope: CoroutineScope) {
                     kotlin.runCatching {
                         val screenIsCollectByUserRes =
                             screenRepository.screenIsCollectByUser(screenId)
-                        Log.e(
+                        Log.i(
                             "ScreenUseCase",
                             "screenIsCollectByUser, screen is collect by user:${screenIsCollectByUserRes.data}"
                         )
@@ -208,7 +216,7 @@ class ScreenUseCase(private val coroutineScope: CoroutineScope) {
 
             },
             onFailed = {
-                Log.e("ScreenUseCase", "updateCurrentViewScreen, failed:${it}")
+                Log.e(TAG, "updateCurrentViewScreen, failed:${it}")
             })
     }
 
@@ -252,8 +260,8 @@ class ScreenUseCase(private val coroutineScope: CoroutineScope) {
                 }
                 screenRepository.screenCollectByUser(screenInfo.screenId!!, submitCategory)
             }, onSuccess = {
-                Log.e(
-                    "ScreenUseCase",
+                Log.i(
+                    TAG,
                     "userClickCollectScreen, screen is collected by user:${it?.data}"
                 )
                 if (it?.data == true)
@@ -269,7 +277,7 @@ class ScreenUseCase(private val coroutineScope: CoroutineScope) {
         coroutineScope.requestRaw({
             screenRepository.changeScreenPublicState(screenInfo.screenId!!, isPublic)
         }, onSuccess = {
-            Log.e("ScreenUseCase", "changeScreenPublicState, result:${it?.data}")
+            Log.i(TAG, "changeScreenPublicState, result:${it?.data}")
             if (it?.data == true) {
                 currentViewScreenState.value?.isPublic = if (isPublic) {
                     1

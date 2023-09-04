@@ -23,8 +23,8 @@ android {
         applicationId "xcj.app.container"
         minSdk 24
         targetSdk 34
-        versionCode 28
-        versionName "1.6.21"
+        versionCode 29
+        versionName "1.6.22"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {

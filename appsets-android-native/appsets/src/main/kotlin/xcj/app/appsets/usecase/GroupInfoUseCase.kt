@@ -18,6 +18,7 @@ sealed class GroupInfoState {
 }
 
 class GroupInfoUseCase(private val coroutineScope: CoroutineScope) {
+    private val TAG = "GroupInfoUseCase"
 
     private val userRepository: UserRepository by lazy {
         UserRepository(URLApi.provide(UserApi::class.java))
@@ -55,7 +56,7 @@ class GroupInfoUseCase(private val coroutineScope: CoroutineScope) {
             it.userInfoList?.let { userInfoList -> UserInfoRoomRepository.mapAvatarUrl(userInfoList) }
             groupInfoState.value = GroupInfoState.GroupInfoWrapper(it)
         }, onFailed = {
-            Log.e("GroupInfoUseCase", "updateGroupInfoByGroupId failed:${it.e}")
+            Log.e(TAG, "updateGroupInfoByGroupId failed:${it.e}")
         })
     }
 }

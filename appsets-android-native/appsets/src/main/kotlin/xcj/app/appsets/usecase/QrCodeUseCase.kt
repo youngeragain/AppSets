@@ -126,14 +126,14 @@ class QrCodeUseCase(
             LocalAccountManager.initNonPersistenceToken(token)
             val loginRes = userLoginRepository.login2()
             if (!loginRes.success || loginRes.data.isNullOrEmpty()) {
-                Log.e("QrCodeUseCase", loginRes.info ?: "")
+                Log.i("QrCodeUseCase", loginRes.info ?: "")
                 loginState?.value = UserLoginUseCase.LoginSignUpState.LoggingFail()
                 return@launch
             }
             LocalAccountManager.initNonPersistenceToken(loginRes.data)
             val userInfoRes = userRepository.getLoggedUserInfo()
             if (!userInfoRes.success || userInfoRes.data == null) {
-                Log.e("QrCodeUseCase", "登录2失败")
+                Log.i("QrCodeUseCase", "登录2失败")
                 loginState?.value = UserLoginUseCase.LoginSignUpState.LoggingFail()
                 return@launch
             }

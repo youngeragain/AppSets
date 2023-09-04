@@ -3,6 +3,7 @@ package xcj.app.appsets.ui.compose.user
 import android.content.res.Configuration
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -20,25 +21,21 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsTopHeight
-import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.grid.LazyGridState
-import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.SideEffect
-import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -60,10 +57,12 @@ import xcj.app.appsets.server.model.UserScreenInfo
 import xcj.app.appsets.ui.compose.LocalOrRemoteImage
 import xcj.app.appsets.ui.compose.MainViewModel
 import xcj.app.appsets.ui.compose.PageRouteNameProvider
+import xcj.app.appsets.ui.compose.outside.LoadMoreHandler
 import xcj.app.appsets.ui.compose.outside.ScreensList
 import xcj.app.appsets.usecase.UserInfoProfileState
 import xcj.app.appsets.usecase.UserRelationsCase
 
+@OptIn(ExperimentalFoundationApi::class)
 @UnstableApi
 @Composable
 fun UserProfilePage(
@@ -94,7 +93,7 @@ fun UserProfilePage(
         Spacer(modifier = Modifier.windowInsetsTopHeight(WindowInsets.statusBars))
         Box(modifier = Modifier.fillMaxWidth()) {
             Column(Modifier.fillMaxWidth()) {
-                Image(
+                Icon(
                     painter = painterResource(id = R.drawable.ic_round_arrow_24),
                     contentDescription = "go back",
                     modifier = Modifier
@@ -194,7 +193,10 @@ fun UserProfilePage(
             }
             Divider(modifier = Modifier.height(0.5.dp), color = MaterialTheme.colorScheme.outline)
             val screensState = mainViewModel.screensUseCase?.userScreensContainer?.screensState
-            if (screensState.isNullOrEmpty() || (screensState.size == 1 && screensState[0] is ScreenState.NoMore)) {
+            if (screensState?.value.isNullOrEmpty() || (screensState!!.value!!.size == 1 && screensState.value?.get(
+                    0
+                ) is ScreenState.NoMore)
+            ) {
                 Box(
                     Modifier
                         .fillMaxWidth()
@@ -203,48 +205,23 @@ fun UserProfilePage(
                     Text(text = "没有推文")
                 }
             } else {
-                val configuration = LocalConfiguration.current
-                val scrollableState =
-                    if (configuration.orientation == Configuration.ORIENTATION_PORTRAIT) {
-                        rememberLazyListState()
-                    } else {
-                        rememberLazyGridState()
-                    }
-                val interactionFlow: (Interaction, ScreenMediaFileUrl) -> Unit = remember {
-                    { _, _ -> }
-                }
-                val listHorizontalPadding =
-                    if (LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE) {
-                        0.dp
-                    } else {
-                        12.dp
-                    }
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(horizontal = listHorizontalPadding)) {
-                    val requestNewData by remember {
-                        derivedStateOf {
-                            var t = false
-                            if (scrollableState is LazyGridState) {
-                                t = scrollableState.layoutInfo.visibleItemsInfo.isNotEmpty() &&
-                                        scrollableState.firstVisibleItemIndex != 0 &&
-                                        (scrollableState.layoutInfo.visibleItemsInfo.maxOf { it.index } + 3) >= screensState.size
-                            } else if (scrollableState is LazyListState) {
-                                t = scrollableState.layoutInfo.visibleItemsInfo.isNotEmpty() &&
-                                        scrollableState.firstVisibleItemIndex != 0 &&
-                                        (scrollableState.layoutInfo.visibleItemsInfo.maxOf { it.index } + 3) >= screensState.size
-                            }
-                            t
+                Box(modifier = Modifier.fillMaxSize()) {
+                    val scrollableState =
+                        if (LocalConfiguration.current.orientation == Configuration.ORIENTATION_PORTRAIT) {
+                            rememberLazyListState()
+                        } else {
+                            rememberLazyStaggeredGridState()
                         }
-                    }
-                    LaunchedEffect(key1 = requestNewData, block = {
+                    LoadMoreHandler(scrollableState = scrollableState) {
                         mainViewModel.screensUseCase?.loadMore()
-                    })
+                    }
+                    val interactionFlow: (Interaction, ScreenMediaFileUrl) -> Unit = remember {
+                        { _, _ -> }
+                    }
                     ScreensList(
                         modifier = Modifier,
                         currentDestinationRoute = PageRouteNameProvider.UserProfilePage,
-                        screens = screensState,
+                        screensState = screensState!!,
                         scrollableState = scrollableState,
                         onPictureClick = onPictureClick,
                         picInteractionFlow = interactionFlow,
@@ -252,6 +229,7 @@ fun UserProfilePage(
                         onScreenContentClick = onScreenContentClick,
                         onScreenVideoPlayClick = onScreenVideoPlayClick
                     )
+
                 }
             }
         } else if (userInfoState is UserInfoProfileState.Loading) {

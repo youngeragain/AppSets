@@ -53,7 +53,7 @@ class UserLoginUseCase(
         }
         loginSignUpState.value = LoginSignUpState.Logining()
         coroutineScope.requestRaw({
-            Log.e("UserLoginUseCase", "login action thread:${Thread.currentThread()}")
+            Log.i("UserLoginUseCase", "login action thread:${Thread.currentThread()}")
             val accountEncode = Md5Helper.encode(account)
             val passwordEncode = Md5Helper.encode(password)
             val userLoginRepository = UserLoginRepository(URLApi.provide(UserApi::class.java))
@@ -113,7 +113,7 @@ class UserLoginUseCase(
             )
         }, onFailed = {
             loginSignUpState.value = LoginSignUpState.LoggingFail()
-            Log.i("UserLoginUseCase", "login failed")
+            Log.e("UserLoginUseCase", "login failed")
         })
     }
 

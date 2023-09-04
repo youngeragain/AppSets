@@ -61,7 +61,7 @@ import xcj.app.appsets.im.Session
 import xcj.app.appsets.im.SystemContentInterface
 import xcj.app.appsets.ui.compose.LocalOrRemoteImage
 import xcj.app.appsets.ui.compose.MainViewModel
-import xcj.app.appsets.ui.compose.win11Snapshot.ComponentAddButton
+import xcj.app.appsets.ui.compose.win11Snapshot.ComponentImageButton
 
 @UnstableApi
 @OptIn(ExperimentalMaterial3Api::class)
@@ -127,7 +127,7 @@ fun ConversationOverviewPage(
                         tint = MaterialTheme.colorScheme.surfaceVariant
                     )
                 } else {
-                    ComponentAddButton(modifier = Modifier, onClick = {
+                    ComponentImageButton(modifier = Modifier, onClick = {
                         isShowAddActions = true
                     })
                 }

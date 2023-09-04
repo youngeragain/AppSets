@@ -1,8 +1,9 @@
 package xcj.app.appsets.ui.compose.outside
 
 import android.content.res.Configuration
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.ScrollableState
@@ -23,23 +24,23 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyGridState
-import androidx.compose.foundation.lazy.grid.LazyHorizontalGrid
-import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.staggeredgrid.LazyStaggeredGridState
+import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
+import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
+import androidx.compose.foundation.lazy.staggeredgrid.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Card
 import androidx.compose.material3.Divider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -64,13 +65,14 @@ import xcj.app.appsets.server.model.UserScreenInfo
 import xcj.app.appsets.ui.compose.LocalOrRemoteImage
 import xcj.app.appsets.ui.compose.PageRouteNameProvider
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ScreensList(
     modifier: Modifier,
     currentDestinationRoute: String,
-    screens: MutableList<ScreenState>,
+    screensState: State<List<ScreenState>?>,
     scrollableState: ScrollableState,
-    onPictureClick: ((ScreenMediaFileUrl, List<ScreenMediaFileUrl>) -> Unit)?,
+    onPictureClick: ((ScreenMediaFileUrl, List<ScreenMediaFileUrl>) -> Unit)? = null,
     picInteractionFlow: ((Interaction, ScreenMediaFileUrl) -> Unit)? = null,
     onScreenAvatarClick: ((UserScreenInfo) -> Unit)? = null,
     onScreenContentClick: ((UserScreenInfo) -> Unit)? = null,
@@ -84,135 +86,146 @@ fun ScreensList(
     }
     X18ContentConfirmDialog(isShowX18ContentRequestDialog, x18ContentConfirmCallback)
     val configuration = LocalConfiguration.current
+    val paddingValues = if (currentDestinationRoute == PageRouteNameProvider.OutSidePage) {
+        PaddingValues(top = 68.dp, bottom = 68.dp, start = 12.dp, end = 12.dp)
+    } else {
+        PaddingValues(top = 12.dp, bottom = 68.dp, start = 12.dp, end = 12.dp)
+    }
+    val coroutineScope = rememberCoroutineScope()
+    val screenStateList = screensState.value
     if (configuration.orientation == Configuration.ORIENTATION_PORTRAIT) {
-        val paddingTop = if (currentDestinationRoute == PageRouteNameProvider.OutSidePage) {
-            68.dp
-        } else {
-            12.dp
-        }
-
         LazyColumn(
-            contentPadding = PaddingValues(
-                top = paddingTop,
-                bottom = 68.dp,
-                start = 0.dp,
-                end = 0.dp
-            ),
+            contentPadding = paddingValues,
             state = scrollableState as LazyListState
         ) {
-            itemsIndexed(screens, { index, _ -> index }) { index, screenState ->
-                if (screenState is ScreenState.Screen) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 16.dp)
-                    ) {
-                        if (index >= 1) {
-                            Divider(
-                                color = MaterialTheme.colorScheme.outline,
-                                thickness = 0.5.dp
-                            )
-                            Spacer(modifier = Modifier.height(12.dp))
-                        }
-                        ScreenComponent(
-                            screenState.userScreenInfo,
-                            currentDestinationRoute,
-                            160.dp,
-                            onScreenAvatarClick,
-                            onScreenContentClick,
-                            onPictureClick = { url, urls ->
-                                if (url.x18Content == 1) {
-                                    x18ContentConfirmCallback = {
-                                        onPictureClick?.invoke(url, urls)
-                                    }
-                                    isShowX18ContentRequestDialog.value = true
-                                } else {
-                                    onPictureClick?.invoke(url, urls)
-                                }
-                            },
-                            picInteractionFlow,
-                            onScreenVideoPlayClick = { url ->
-                                if (url.x18Content == 1) {
-                                    x18ContentConfirmCallback = {
-                                        onScreenVideoPlayClick?.invoke(url)
-                                    }
-                                    isShowX18ContentRequestDialog.value = true
-                                } else {
-                                    onScreenVideoPlayClick?.invoke(url)
-                                }
-                            }
-                        )
-                    }
-                } else if (screenState is ScreenState.NoMore) {
-                    Box(
-                        Modifier
-                            .height(150.dp)
-                            .fillMaxWidth(), contentAlignment = Alignment.Center
-                    ) {
-                        Text(text = "...", color = MaterialTheme.colorScheme.tertiary)
-                    }
-                }
 
-            }
-
-            item {
-                Spacer(modifier = Modifier.height(98.dp))
-            }
-        }
-    } else {
-        LazyHorizontalGrid(
-            rows = GridCells.Fixed(2),
-            contentPadding = PaddingValues(6.dp),
-            state = scrollableState as LazyGridState,
-            content = {
-                itemsIndexed(screens, { index, _ -> index }) { _, screenState ->
+            if (screenStateList != null) {
+                itemsIndexed(screenStateList, { index, _ -> index }) { index, screenState ->
                     if (screenState is ScreenState.Screen) {
-                        Card(
+                        Column(
                             modifier = Modifier
-                                .padding(6.dp),
-                            shape = RoundedCornerShape(24.dp)
+                                .fillMaxWidth()
+                                .padding(top = 16.dp)
                         ) {
-                            Column(
-                                modifier = Modifier
-                                    .width(400.dp)
-                                    .padding(12.dp)
-                                    .verticalScroll(ScrollState(0))
-                            ) {
-                                ScreenComponent(
-                                    screenState.userScreenInfo,
-                                    currentDestinationRoute,
-                                    160.dp,
-                                    onScreenAvatarClick,
-                                    onScreenContentClick,
-                                    onPictureClick = { url, urls ->
-                                        if (url.x18Content == 1) {
-                                            x18ContentConfirmCallback = {
-                                                onPictureClick?.invoke(url, urls)
-                                            }
-                                            isShowX18ContentRequestDialog.value = true
-                                        } else {
+                            if (index >= 1) {
+                                Divider(
+                                    color = MaterialTheme.colorScheme.outline,
+                                    thickness = 0.5.dp
+                                )
+                                Spacer(modifier = Modifier.height(12.dp))
+                            }
+                            ScreenComponent(
+                                screenState.userScreenInfo,
+                                currentDestinationRoute,
+                                160.dp,
+                                onScreenAvatarClick,
+                                onScreenContentClick,
+                                onPictureClick = { url, urls ->
+                                    if (url.x18Content == 1) {
+                                        x18ContentConfirmCallback = {
                                             onPictureClick?.invoke(url, urls)
                                         }
-                                    },
-                                    picInteractionFlow,
-                                    onScreenVideoPlayClick = { url ->
-                                        if (url.x18Content == 1) {
-                                            x18ContentConfirmCallback = {
-                                                onScreenVideoPlayClick?.invoke(url)
-                                            }
-                                            isShowX18ContentRequestDialog.value = true
-                                        } else {
+                                        isShowX18ContentRequestDialog.value = true
+                                    } else {
+                                        onPictureClick?.invoke(url, urls)
+                                    }
+                                },
+                                picInteractionFlow,
+                                onScreenVideoPlayClick = { url ->
+                                    if (url.x18Content == 1) {
+                                        x18ContentConfirmCallback = {
                                             onScreenVideoPlayClick?.invoke(url)
                                         }
+                                        isShowX18ContentRequestDialog.value = true
+                                    } else {
+                                        onScreenVideoPlayClick?.invoke(url)
                                     }
-                                )
+                                }
+                            )
+                        }
+                    } else if (screenState is ScreenState.NoMore) {
+                        Box(
+                            Modifier
+                                .height(150.dp)
+                                .fillMaxWidth(), contentAlignment = Alignment.Center
+                        ) {
+                            Text(text = "•••")
+                        }
+                    }
+
+                }
+
+                item {
+                    Spacer(modifier = Modifier.height(98.dp))
+                }
+            }
+
+        }
+    } else {
+        LazyVerticalStaggeredGrid(
+            columns = StaggeredGridCells.Fixed(3),
+            contentPadding = paddingValues,
+            state = scrollableState as LazyStaggeredGridState,
+            content = {
+                if (screenStateList != null) {
+                    itemsIndexed(screenStateList, { index, _ -> index }) { _, screenState ->
+                        if (screenState is ScreenState.Screen) {
+                            Surface(
+                                modifier = Modifier.padding(6.dp),
+                                shape = RoundedCornerShape(24.dp),
+                                border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.outline)
+                            ) {
+                                Column(
+                                    modifier = Modifier
+                                        .width(400.dp)
+                                        .padding(12.dp)
+                                ) {
+                                    ScreenComponent(
+                                        screenState.userScreenInfo,
+                                        currentDestinationRoute,
+                                        160.dp,
+                                        onScreenAvatarClick,
+                                        onScreenContentClick,
+                                        onPictureClick = { url, urls ->
+                                            if (url.x18Content == 1) {
+                                                x18ContentConfirmCallback = {
+                                                    onPictureClick?.invoke(url, urls)
+                                                }
+                                                isShowX18ContentRequestDialog.value = true
+                                            } else {
+                                                onPictureClick?.invoke(url, urls)
+                                            }
+                                        },
+                                        picInteractionFlow,
+                                        onScreenVideoPlayClick = { url ->
+                                            if (url.x18Content == 1) {
+                                                x18ContentConfirmCallback = {
+                                                    onScreenVideoPlayClick?.invoke(url)
+                                                }
+                                                isShowX18ContentRequestDialog.value = true
+                                            } else {
+                                                onScreenVideoPlayClick?.invoke(url)
+                                            }
+                                        }
+                                    )
+                                }
+                            }
+                        } else if (screenState is ScreenState.NoMore) {
+                            Box(
+                                Modifier
+                                    .height(150.dp)
+                                    .fillMaxWidth(), contentAlignment = Alignment.Center
+                            ) {
+                                Text(text = "•••")
                             }
                         }
+                    }
+                    item {
+                        Spacer(modifier = Modifier.height(98.dp))
                     }
                 }
             })
     }
-
 }
 
 @Composable

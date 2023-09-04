@@ -37,13 +37,18 @@ import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onPlaced
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.IntSize
@@ -51,6 +56,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.media3.common.util.UnstableApi
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import xcj.app.appsets.R
 import xcj.app.appsets.server.model.GroupInfo
 import xcj.app.appsets.server.model.ScreenMediaFileUrl
@@ -315,6 +322,7 @@ fun SearchedApplicationComponent(
 }
 
 
+@OptIn(ExperimentalComposeUiApi::class)
 @UnstableApi
 @Composable
 fun SearchPage(
@@ -330,6 +338,8 @@ fun SearchPage(
     onScreenVideoPlayClick: ((ScreenMediaFileUrl) -> Unit)?
 ) {
     val vm: MainViewModel = viewModel(LocalContext.current as AppCompatActivity)
+
+
     DisposableEffect(key1 = true, effect = {
         vm.searchUseCase?.attachToSearchFlow()
         onDispose {
@@ -354,12 +364,27 @@ fun SearchPage(
                     inputContent = searchStringState
                 }
             })
+            val requester = remember {
+                FocusRequester()
+            }
+            LaunchedEffect(key1 = true, block = {
+                delay(450)
+                requester.requestFocus()
+            })
+            val keyboardController = LocalSoftwareKeyboardController.current
+            val rememberCoroutineScope = rememberCoroutineScope()
             NoneLineTextField(
                 leadingIcon = {
                     Icon(
                         modifier = Modifier
                             .clip(CircleShape)
-                            .clickable(onClick = onBackClick)
+                            .clickable(onClick = {
+                                rememberCoroutineScope.launch {
+                                    keyboardController?.hide()
+                                    delay(350)
+                                    onBackClick()
+                                }
+                            })
                             .padding(4.dp),
                         painter = painterResource(id = R.drawable.ic_round_arrow_24),
                         contentDescription = "go back"
@@ -388,6 +413,7 @@ fun SearchPage(
                 },
                 modifier = Modifier
                     .weight(1f)
+                    .focusRequester(requester)
                     .onPlaced {
                         sizeOfSearchBar = it.size
                     },
@@ -399,6 +425,7 @@ fun SearchPage(
                 )
             )
         }
+
         Spacer(modifier = Modifier.height(1.dp))
         SearchPageResults(
             sizeOfSearchBar = sizeOfSearchBar,

@@ -30,6 +30,7 @@ import xcj.app.io.components.SimpleFileIO
 import java.util.UUID
 
 class SystemUseCase(private val coroutineScope: CoroutineScope) {
+    private val TAG = "SystemUseCase"
     private var requestIdMap: MutableMap<String, String>? = mutableMapOf()
     private fun userFeedbackJoinGroupRequest(
         context: Context,
@@ -53,7 +54,7 @@ class SystemUseCase(private val coroutineScope: CoroutineScope) {
                 }
             )
         }, onSuccess = {
-            Log.e("SystemUseCase", "userFeedbackFriendsRequest, call backend result:$it")
+            Log.i(TAG, "userFeedbackFriendsRequest, call backend result:$it")
             /*if(result){
                 val intent = Intent(context, MainService::class.java)
                 intent.putExtra("what_to_do", "to_sync_user_data_from_server")
@@ -91,7 +92,7 @@ class SystemUseCase(private val coroutineScope: CoroutineScope) {
                 }
             )
         }, onSuccess = {
-            Log.e("SystemUseCase", "userFeedbackFriendsRequest, call backend result:$it")
+            Log.i(TAG, "userFeedbackFriendsRequest, call backend result:$it")
             if (result && it) {
                 startServiceToSyncFriendsFromServer(context)
             }
@@ -112,7 +113,7 @@ class SystemUseCase(private val coroutineScope: CoroutineScope) {
             val userRepository = UserRepository(URLApi.provide(UserApi::class.java))
             userRepository.requestAddFriend(uid, hello, reason)
         }, onSuccess = {
-            Log.e("SystemUseCase", "requestAddFriend, call backend result: requestId${it}")
+            Log.i(TAG, "requestAddFriend, call backend result: requestId${it}")
             if (it.data.isNullOrEmpty()) {
                 if (!it.info.isNullOrEmpty()) {
                     it.info.toastSuspend()
@@ -133,7 +134,7 @@ class SystemUseCase(private val coroutineScope: CoroutineScope) {
             val userRepository = UserRepository(URLApi.provide(UserApi::class.java))
             userRepository.requestJoinGroup(groupId, hello, reason)
         }, onSuccess = {
-            Log.e("SystemUseCase", "requestJoinGroup, call backend result: requestId${it}")
+            Log.i(TAG, "requestJoinGroup, call backend result: requestId${it}")
             if (it.data.isNullOrEmpty()) {
                 if (!it.info.isNullOrEmpty()) {
                     it.info.toastSuspend()
@@ -150,7 +151,7 @@ class SystemUseCase(private val coroutineScope: CoroutineScope) {
             val userRepository = UserRepository(URLApi.provide(UserApi::class.java))
             userRepository.flipFollowToUserState(userInfo.uid)
         }, onSuccess = {
-            Log.e("SystemUseCase", "flipFollowToUserState, call backend result:${it}")
+            Log.i(TAG, "flipFollowToUserState, call backend result:${it}")
         })
     }
 

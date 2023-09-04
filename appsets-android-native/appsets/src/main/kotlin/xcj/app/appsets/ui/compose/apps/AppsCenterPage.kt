@@ -57,6 +57,7 @@ fun AppsCenterPage(
     onSearchBarClick: () -> Unit,
     onSearchBarAddButtonClick: () -> Unit,
     onSettingsUserNameClick: () -> Unit,
+    onShareClick: () -> Unit,
     onSettingsClick: () -> Unit,
     onSettingsLoginClick: () -> Unit
 ) {
@@ -208,6 +209,7 @@ fun AppsCenterPage(
                 onSearchBarClick = onSearchBarClick,
                 onSettingsUserNameClick = onSettingsUserNameClick,
                 onSettingsClick = onSettingsClick,
+                onShareClick = onShareClick,
                 onSettingsLoginClick = onSettingsLoginClick,
                 onAddButtonClick = onSearchBarAddButtonClick
             )

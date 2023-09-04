@@ -22,6 +22,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -78,7 +79,7 @@ fun GroupInfoPage(
         val groupInfoState = mainViewModel.groupInfoUseCase?.groupInfoState?.value
         Row(modifier = Modifier.fillMaxWidth()) {
             Box(Modifier.fillMaxWidth()) {
-                Image(
+                Icon(
                     painter = painterResource(id = R.drawable.ic_round_arrow_24),
                     contentDescription = "go back",
                     modifier = Modifier

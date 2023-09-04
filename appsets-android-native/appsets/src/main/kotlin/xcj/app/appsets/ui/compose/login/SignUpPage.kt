@@ -32,6 +32,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -191,7 +192,7 @@ fun SignUpPage(
                     modifier = Modifier.align(Alignment.CenterStart),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Image(
+                    Icon(
                         painter = painterResource(id = R.drawable.ic_round_arrow_24),
                         contentDescription = "go back",
                         modifier = Modifier

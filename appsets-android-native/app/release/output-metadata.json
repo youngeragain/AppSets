@@ -1,0 +1,20 @@
+{
+  "version": 3,
+  "artifactType": {
+    "type": "APK",
+    "kind": "Directory"
+  },
+  "applicationId": "xcj.app.container",
+  "variantName": "release",
+  "elements": [
+    {
+      "type": "SINGLE",
+      "filters": [],
+      "attributes": [],
+      "versionCode": 29,
+      "versionName": "1.6.22",
+      "outputFile": "appsets3-dev-latest.apk"
+    }
+  ],
+  "elementType": "File"
+}

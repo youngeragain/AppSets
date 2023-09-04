@@ -151,18 +151,18 @@ class ConversationUseCase(
     }
 
     fun updateCurrentSessionBySession(session: Session) {
-        Log.e(TAG, "updateCurrentSessionBySession, session:${session}")
+        Log.i(TAG, "updateCurrentSessionBySession, session:${session}")
         currentSession = session
     }
 
     fun updateCurrentSessionByUserInfo(userInfo: UserInfo) {
-        Log.e(TAG, "changeCurrentSession, userinfo:${userInfo}")
+        Log.i(TAG, "changeCurrentSession, userinfo:${userInfo}")
         val session = getSessionByImObj(userInfo.asImSingle())
         currentSession = session
     }
 
     fun updateCurrentSessionByGroupInfo(groupInfo: GroupInfo) {
-        Log.e(TAG, "changeCurrentSession, groupInfo:${groupInfo}")
+        Log.i(TAG, "changeCurrentSession, groupInfo:${groupInfo}")
         val session = getSessionByImObj(groupInfo.asImGroup())
         currentSession = session
     }
@@ -189,7 +189,7 @@ class ConversationUseCase(
      * @param isLocal msg是从本机发送
      */
     fun onMessage(context: Context, imMessage: ImMessage, isLocal: Boolean) {
-        Log.e(
+        Log.i(
             TAG,
             "onMessage::currentSession:${currentSession}"
         )
@@ -244,14 +244,14 @@ class ConversationUseCase(
     private fun convertAdminImMessageIfNeeded(context: Context, imMessage: ImMessage.System) {
         when (val contentObject = imMessage.systemContentJson.contentObject) {
             is SystemContentInterface.FriendRequestFeedbackJson -> {
-                Log.e(TAG, "convertAdminImMessageIfNeeded:${contentObject.isAccept}")
+                Log.i(TAG, "convertAdminImMessageIfNeeded:${contentObject.isAccept}")
                 if (contentObject.isAccept) {
                     SystemUseCase.startServiceToSyncFriendsFromServer(context)
                 }
             }
 
             is SystemContentInterface.GroupJoinRequestFeedbackJson -> {
-                Log.e(TAG, "convertAdminImMessageIfNeeded:${contentObject.isAccept}")
+                Log.i(TAG, "convertAdminImMessageIfNeeded:${contentObject.isAccept}")
                 if (contentObject.isAccept) {
                     SystemUseCase.startServiceToSyncGroupsFromServer(context)
                 }
@@ -502,11 +502,11 @@ class ConversationUseCase(
             kotlin.runCatching {
                 val relatedUserList = UserInfoRoomRepository.getInstance().getRelatedUserList()
                 relatedUserList?.let { users ->
-                    Log.e("ConversationUC", "initSessions, RelatedUsers:${users}")
+                    Log.i(TAG, "initSessions, RelatedUsers:${users}")
                     commonCollect(userSessions, users, 1)
                 }
                 UserInfoRoomRepository.getInstance().getUnRelatedUserList()?.let { users ->
-                    Log.e("ConversationUC", "initSessions, UnRelatedUsers:${users}")
+                    Log.i(TAG, "initSessions, UnRelatedUsers:${users}")
                     commonCollect(userSessions, users, (relatedUserList?.size ?: 0) + 2)
                 }
                 val relatedGroupList = UserGroupsRoomRepository.getInstance().getRelatedGroupList()
@@ -517,7 +517,7 @@ class ConversationUseCase(
                     commonCollect(groupSessions, groups, (relatedGroupList?.size ?: 0) + 2)
                 }
             }.onSuccess {
-                Log.e(TAG, "init sessions list successful!")
+                Log.i(TAG, "init sessions list successful!")
             }.onFailure {
                 Log.e(TAG, "init sessions list failed!:${it.message}")
             }

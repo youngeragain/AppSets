@@ -87,6 +87,9 @@ fun NavigationCompose(navController: NavHostController){
                     onSearchBarAddButtonClick = {
 
                     },
+                    onShareClick = {
+                        viewModel.toShareActivity(context)
+                    },
                     onWin11SnapShotStateClick = { any, payload ->
                         when (any) {
                             is SpotLightState.AudioPlayer -> {}
@@ -546,6 +549,9 @@ fun NavigationCompose(navController: NavHostController){
                             viewModel.screensUseCase?.loadScreensByUid(userInfo.uid)
                             navController.navigate(PageRouteNameProvider.UserProfilePage)
                         }
+                    },
+                    onShareClick = {
+                        viewModel.toLoginPageOrSinOut(context)
                     },
                     onSettingsClick = {
                         navController.navigate(PageRouteNameProvider.SettingsPage)

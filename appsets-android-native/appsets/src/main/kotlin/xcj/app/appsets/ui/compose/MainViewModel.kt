@@ -1,6 +1,7 @@
 package xcj.app.appsets.ui.compose
 
 import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import androidx.fragment.app.FragmentActivity
@@ -11,6 +12,7 @@ import xcj.app.appsets.im.ImMessage
 import xcj.app.appsets.ktx.MediaStoreDataUriWrapper
 import xcj.app.appsets.purple_module.ModuleConstant
 import xcj.app.appsets.ui.compose.conversation.InputSelector
+import xcj.app.appsets.ui.compose.wlanp2p.WLANP2PActivity
 import xcj.app.appsets.ui.nonecompose.base.BaseViewModel
 import xcj.app.appsets.ui.nonecompose.ui.dialog.SelectActionBottomSheetDialog
 import xcj.app.appsets.usecase.AppSetsUseCase
@@ -54,7 +56,7 @@ class MainViewModel : BaseViewModel() {
 
 
     init {
-        Log.e(TAG, "init")
+        Log.i(TAG, "init")
     }
 
     fun pinApp(appPackageName: String?) {
@@ -164,7 +166,7 @@ class MainViewModel : BaseViewModel() {
      * 和用户部分没有关系的数据加载以及初始化部分工具类
      */
     fun doNecessaryActionsWhenAppTokenGot(context: Context) {
-        Log.e(TAG, "doNecessaryActionsWhenAppTokenGot")
+        Log.i(TAG, "doNecessaryActionsWhenAppTokenGot")
         createNeededUseCase()
         ThirdPartUseCase.getInstance().run {
             setCoroutineScope(viewModelScope)
@@ -227,5 +229,9 @@ class MainViewModel : BaseViewModel() {
 
     fun onUserLogout() {
         conversationUseCase?.clean()
+    }
+
+    fun toShareActivity(context: Context) {
+        context.startActivity(Intent(context, WLANP2PActivity::class.java))
     }
 }

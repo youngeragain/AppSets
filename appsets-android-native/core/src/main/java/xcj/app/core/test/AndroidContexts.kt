@@ -4,6 +4,7 @@ import android.app.Activity
 import android.app.Application
 import android.content.Context
 import android.os.Bundle
+import android.os.Environment
 import android.util.Log
 import java.io.File
 
@@ -19,6 +20,7 @@ class AndroidContextFileDir {
     lateinit var tempVideosCacheDir: String
     lateinit var tempDbsCacheDir: String
     lateinit var tempAudiosCacheDir: String
+    lateinit var publicDownloadDir: String
     fun cleanCaches() {
         kotlin.runCatching {
             listOf(
@@ -62,6 +64,7 @@ class AndroidContexts(val application: Application) {
         kotlin.runCatching {
             Log.e("AndroidContexts", "simpleInit, init cache dir file paths on purple init")
 
+
             val parentPath0 = application.getExternalFilesDir(null)?.path
             val childPaths0 = listOf<String>(
                 "/dynamic_aar",
@@ -70,6 +73,14 @@ class AndroidContexts(val application: Application) {
             initDirs(parentPath0, childPaths0)
             androidContextFileDir.dynamicAARDir = parentPath0 + childPaths0[0]
             androidContextFileDir.dynamicAAROPTDir = parentPath0 + childPaths0[1]
+
+            val parentPath1 =
+                Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)?.path
+            val childPaths1 = listOf<String>(
+                "/AppSets/ContentShare"
+            )
+            initDirs(parentPath1, childPaths1)
+            androidContextFileDir.publicDownloadDir = parentPath1 + childPaths1[0]
 
             val childPaths = listOf<String>(
                 "/errors", "/logs", "/temp", "/temp/files",

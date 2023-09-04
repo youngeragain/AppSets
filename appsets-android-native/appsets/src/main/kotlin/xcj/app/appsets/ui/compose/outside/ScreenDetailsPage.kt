@@ -2,7 +2,6 @@ package xcj.app.appsets.ui.compose.outside
 
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -108,7 +107,7 @@ fun ScreenDetailsPage(
             }
             Box(modifier = Modifier.fillMaxWidth()) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Image(
+                    Icon(
                         painter = painterResource(id = R.drawable.ic_round_arrow_24),
                         contentDescription = "go back",
                         modifier = Modifier
@@ -120,7 +119,7 @@ fun ScreenDetailsPage(
                     )
                     Text(
                         text = "Screen 展开",
-                        fontSize = 20.sp,
+                        fontSize = 16.sp,
                         fontWeight = FontWeight.Bold
                     )
                 }

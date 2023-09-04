@@ -50,6 +50,7 @@ fun Win11SnapShotPage(
     onSettingsClick: () -> Unit,
     onSettingsLoginClick: () -> Unit,
     onSearchBarAddButtonClick: () -> Unit,
+    onShareClick: () -> Unit,
     onWin11SnapShotStateClick: (Any, Any?) -> Unit
 ) {
     when (LocalConfiguration.current.orientation) {
@@ -61,6 +62,7 @@ fun Win11SnapShotPage(
                 onSettingsUserNameClick = onSettingsUserNameClick,
                 onSettingsClick = onSettingsClick,
                 onSettingsLoginClick = onSettingsLoginClick,
+                onShareClick = onShareClick,
                 onSearchBarAddButtonClick = onSearchBarAddButtonClick,
                 onWin11SnapShotStateClick = onWin11SnapShotStateClick
             )
@@ -71,6 +73,7 @@ fun Win11SnapShotPage(
                 onSettingsUserNameClick = onSettingsUserNameClick,
                 onSettingsClick = onSettingsClick,
                 onSettingsLoginClick = onSettingsLoginClick,
+                onShareClick = onShareClick,
                 onSearchBarAddButtonClick = onSearchBarAddButtonClick,
                 onWin11SnapShotStateClick = onWin11SnapShotStateClick
             )
@@ -84,6 +87,7 @@ fun LandscapeSnapShotPage(
     onSettingsUserNameClick: () -> Unit,
     onSettingsClick: () -> Unit,
     onSettingsLoginClick: () -> Unit,
+    onShareClick: () -> Unit,
     onSearchBarAddButtonClick: () -> Unit,
     onWin11SnapShotStateClick: (Any, Any?) -> Unit
 ) {
@@ -102,6 +106,7 @@ fun LandscapeSnapShotPage(
             onSettingsUserNameClick = onSettingsUserNameClick,
             onSettingsClick = onSettingsClick,
             onSettingsLoginClick = onSettingsLoginClick,
+            onShareClick = onShareClick,
             onAddButtonClick = onSearchBarAddButtonClick,
             onWin11SnapShotStateClick = onWin11SnapShotStateClick
         )
@@ -114,6 +119,7 @@ fun LandscapeSnapShotPage(
             onSearchBarClick = onSearchBarClick,
             onSettingsUserNameClick = onSettingsUserNameClick,
             onSettingsClick = onSettingsClick,
+            onShareClick = onShareClick,
             onSettingsLoginClick = onSettingsLoginClick,
             onAddButtonClick = onSearchBarAddButtonClick,
             onWin11SnapShotStateClick = onWin11SnapShotStateClick
@@ -130,6 +136,7 @@ fun LeftOrRight(
     onSettingsUserNameClick: () -> Unit,
     onSettingsClick: () -> Unit,
     onSettingsLoginClick: () -> Unit,
+    onShareClick: () -> Unit,
     onAddButtonClick: () -> Unit,
     onWin11SnapShotStateClick: (Any, Any?) -> Unit
 ) {
@@ -146,6 +153,7 @@ fun LeftOrRight(
                 onSettingsUserNameClick = onSettingsUserNameClick,
                 onSettingsClick = onSettingsClick,
                 onSettingsLoginClick = onSettingsLoginClick,
+                onShareClick = onShareClick,
                 onSearchBarAddButtonClick = onAddButtonClick,
                 onWin11SnapShotStateClick = onWin11SnapShotStateClick
             )
@@ -164,6 +172,7 @@ fun LeftOrRight(
                 onSettingsUserNameClick = onSettingsUserNameClick,
                 onSettingsClick = onSettingsClick,
                 onSettingsLoginClick = onSettingsLoginClick,
+                onShareClick = onShareClick,
                 onSearchBarAddButtonClick = onAddButtonClick,
                 onWin11SnapShotStateClick = onWin11SnapShotStateClick
             )
@@ -180,6 +189,7 @@ fun ArrangeComponent(
     onSettingsUserNameClick: () -> Unit,
     onSettingsClick: () -> Unit,
     onSettingsLoginClick: () -> Unit,
+    onShareClick: () -> Unit,
     onSearchBarAddButtonClick: () -> Unit,
     onWin11SnapShotStateClick: (Any, Any?) -> Unit
 ) {
@@ -191,6 +201,7 @@ fun ArrangeComponent(
                 onSearchBarClick = onSearchBarClick,
                 onSettingsUserNameClick = onSettingsUserNameClick,
                 onSettingsClick = onSettingsClick,
+                onShareClick = onShareClick,
                 onSettingsLoginClick = onSettingsLoginClick,
                 onAddButtonClick = onSearchBarAddButtonClick
             )
@@ -355,6 +366,7 @@ fun PortraitSnapShotPage(
     onSettingsUserNameClick: () -> Unit,
     onSettingsClick: () -> Unit,
     onSettingsLoginClick: () -> Unit,
+    onShareClick: () -> Unit,
     onSearchBarAddButtonClick: () -> Unit,
     onWin11SnapShotStateClick: (Any, Any?) -> Unit
 ) {
@@ -373,6 +385,7 @@ fun PortraitSnapShotPage(
                 onSettingsUserNameClick = onSettingsUserNameClick,
                 onSettingsClick = onSettingsClick,
                 onSettingsLoginClick = onSettingsLoginClick,
+                onShareClick = onShareClick,
                 onSearchBarAddButtonClick = onSearchBarAddButtonClick,
                 onWin11SnapShotStateClick = onWin11SnapShotStateClick
             )
@@ -383,6 +396,7 @@ fun PortraitSnapShotPage(
             onSettingsUserNameClick = onSettingsUserNameClick,
             onSettingsClick = onSettingsClick,
             onSettingsLoginClick = onSettingsLoginClick,
+            onShareClick = onShareClick,
             onSearchBarAddButtonClick = onSearchBarAddButtonClick,
             onWin11SnapShotStateClick = onWin11SnapShotStateClick
         )
@@ -392,6 +406,7 @@ fun PortraitSnapShotPage(
             onSettingsUserNameClick = onSettingsUserNameClick,
             onSettingsClick = onSettingsClick,
             onSettingsLoginClick = onSettingsLoginClick,
+            onShareClick = onShareClick,
             onSearchBarAddButtonClick = onSearchBarAddButtonClick,
             onWin11SnapShotStateClick = onWin11SnapShotStateClick
         )
@@ -401,6 +416,7 @@ fun PortraitSnapShotPage(
             onSettingsUserNameClick = onSettingsUserNameClick,
             onSettingsClick = onSettingsClick,
             onSettingsLoginClick = onSettingsLoginClick,
+            onShareClick = onShareClick,
             onSearchBarAddButtonClick = onSearchBarAddButtonClick,
             onWin11SnapShotStateClick = onWin11SnapShotStateClick
         )
@@ -421,6 +437,7 @@ fun PortraitSnapShotPage(
                     onSettingsUserNameClick = onSettingsUserNameClick,
                     onSettingsClick = onSettingsClick,
                     onSettingsLoginClick = onSettingsLoginClick,
+                    onShareClick = onShareClick,
                     onSearchBarAddButtonClick = onSearchBarAddButtonClick,
                     onWin11SnapShotStateClick = onWin11SnapShotStateClick
                 )

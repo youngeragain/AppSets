@@ -1,0 +1,1 @@
+-keep class xcj.app.compose_share.**{ *; }

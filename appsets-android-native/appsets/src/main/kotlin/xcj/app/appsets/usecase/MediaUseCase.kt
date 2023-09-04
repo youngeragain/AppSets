@@ -54,9 +54,9 @@ class MediaUseCase(
     private var localExoPlayer: LocalExoplayer? = null
 
     override fun onCreate(context: Context) {
-        Log.e(
+        Log.i(
             "MediaUseCase",
-            "usecase hashcode:${hashCode()} create, remoteExoplayer:${remoteExoplayer}, localExoPlayer:${localExoPlayer}"
+            "onCreate hashcode:${hashCode()}, remoteExoplayer:${remoteExoplayer}, localExoPlayer:${localExoPlayer}"
         )
         if (componentsToUsed.contains("local")) {
             if (localExoPlayer != null)
@@ -142,7 +142,7 @@ class MediaUseCase(
 
     fun playVideo(id: String, videoJson: CommonURLJson.VideoURLJson) {
         remoteExoplayer?.pauseAudio()
-        Log.e("MediaUseCase", "playVideo, localExoPlayer.hashcode:${localExoPlayer?.hashCode()}")
+        Log.i("MediaUseCase", "playVideo, localExoPlayer.hashcode:${localExoPlayer?.hashCode()}")
         localExoPlayer?.playVideo(id, videoJson)
     }
 
@@ -153,6 +153,7 @@ class MediaUseCase(
 
     @UnstableApi
     class RemoteExoplayer : LifecycleAwareForPlayer {
+        private val TAG = "RemoteExoplayer"
         private var mediaBrowser: MediaBrowserCompat? = null
         private var connectionCallbacks: MediaBrowserCompat.ConnectionCallback? = null
 
@@ -179,12 +180,12 @@ class MediaUseCase(
 
                         override fun onMetadataChanged(metadata: MediaMetadataCompat?) {
                             //currentMediaMetadataState.value = metadata
-                            Log.e("MediaUseCase", "onMetadataChanged")
+                            Log.i(TAG, "onMetadataChanged")
                             updateAudioMetadata(metadata)
                         }
 
                         override fun onPlaybackStateChanged(state: PlaybackStateCompat?) {
-                            Log.e("MediaUseCase", "onPlaybackStateChanged")
+                            Log.i(TAG, "onPlaybackStateChanged")
                             updateAudioPlaybackState(state)
 
                         }
@@ -211,8 +212,8 @@ class MediaUseCase(
         }
 
         private fun connectToBrowserService() {
-            Log.e(
-                "RemoteExoplayer",
+            Log.i(
+                TAG,
                 "connectToBrowserService, mediaBrowser?.isConnected:${mediaBrowser?.isConnected}"
             )
             if (mediaBrowser?.isConnected == true) {
@@ -382,31 +383,31 @@ class MediaUseCase(
             exoPlayer?.addListener(object : Player.Listener {
                 override fun onEvents(player: Player, events: Player.Events) {
                     super.onEvents(player, events)
-                    Log.e(TAG, "onEvents")
+                    Log.i(TAG, "onEvents")
                 }
 
                 override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
                     super.onMediaItemTransition(mediaItem, reason)
-                    Log.e(TAG, "onMediaMetadataChanged:${mediaItem}")
+                    Log.i(TAG, "onMediaMetadataChanged:${mediaItem}")
                 }
 
                 override fun onMediaMetadataChanged(mediaMetadata: androidx.media3.common.MediaMetadata) {
                     super.onMediaMetadataChanged(mediaMetadata)
-                    Log.e(TAG, "onMediaMetadataChanged:${mediaMetadata}")
+                    Log.i(TAG, "onMediaMetadataChanged:${mediaMetadata}")
                 }
 
                 override fun onMetadata(metadata: androidx.media3.common.Metadata) {
                     super.onMetadata(metadata)
-                    Log.e(TAG, "onMetadata:${metadata}")
+                    Log.i(TAG, "onMetadata:${metadata}")
                 }
 
                 override fun onPlaybackStateChanged(playbackState: Int) {
                     super.onPlaybackStateChanged(playbackState)
-                    Log.e(TAG, "onPlaybackStateChanged:${playbackState}")
+                    Log.i(TAG, "onPlaybackStateChanged:${playbackState}")
                     if (playbackState == Player.STATE_READY && playWhenReady) {
                         /*val gson = Gson()
                         val v = gson.toJson(exoPlayer?.mediaMetadata)*/
-                        Log.e(
+                        Log.i(
                             TAG,
                             "onPlaybackStateChanged:exoPlayer?.mediaMetadata:${exoPlayer?.mediaMetadata?.artist}"
                         )
@@ -481,7 +482,7 @@ class MediaUseCase(
             addToList: Boolean = false
         ) {
             Log.e(
-                "LocalExoplayer",
+                TAG,
                 "playVideo, currentWindow:${currentWindow}, playbackPosition:${playbackPosition}"
             )
             if (id == playId) {

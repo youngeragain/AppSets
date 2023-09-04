@@ -59,6 +59,7 @@ fun ComponentSearchBar(
     onSearchBarClick: () -> Unit,
     onSettingsUserNameClick: () -> Unit,
     onSettingsClick: () -> Unit,
+    onShareClick: () -> Unit,
     onSettingsLoginClick: () -> Unit,
     onAddButtonClick: () -> Unit,
 ) {
@@ -156,8 +157,12 @@ fun ComponentSearchBar(
                     }
                 }
             }
+            ComponentImageButton(
+                modifier = Modifier, useImage = false,
+                resId = R.drawable.round_swap_calls_24, onClick = onShareClick
+            )
             AnimatedVisibility(visible = currentDestinationRoute == PageRouteNameProvider.AppSetsCenterPage) {
-                ComponentAddButton(Modifier, onClick = onAddButtonClick)
+                ComponentImageButton(modifier = Modifier, onClick = onAddButtonClick)
             }
         }
     }
