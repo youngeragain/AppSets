@@ -13,7 +13,7 @@ import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.core.graphics.drawable.toBitmap
-import xcj.app.appsets.ui.compose.win11Snapshot.AppDefinition
+import xcj.app.appsets.ui.compose.start.AppDefinition
 
 object PackageUtil {
 

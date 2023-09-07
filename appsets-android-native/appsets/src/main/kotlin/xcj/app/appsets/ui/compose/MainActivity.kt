@@ -138,8 +138,8 @@ class MainActivity :
 
 
         viewModel?.run {
-            win11SnapShotUseCase.pinnedAppPackageNames.observe(this@MainActivity) {
-                win11SnapShotUseCase.getPinnedApps()
+            startUseCase.pinnedAppPackageNames.observe(this@MainActivity) {
+                startUseCase.getPinnedApps()
             }
             appSetsUseCase.appTokenInitialized.observe(this@MainActivity) {
                 doNecessaryActionsWhenAppTokenGot(this@MainActivity)

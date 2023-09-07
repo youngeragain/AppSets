@@ -44,7 +44,7 @@ import androidx.media3.common.util.UnstableApi
 import xcj.app.appsets.server.model.AppsWithCategory
 import xcj.app.appsets.ui.compose.LocalOrRemoteImage
 import xcj.app.appsets.ui.compose.PageRouteNameProvider
-import xcj.app.appsets.ui.compose.win11Snapshot.ComponentSearchBar
+import xcj.app.appsets.ui.compose.start.ComponentSearchBar
 import xcj.app.appsets.usecase.models.Application
 
 @UnstableApi

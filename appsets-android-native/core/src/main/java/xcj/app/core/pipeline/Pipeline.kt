@@ -24,8 +24,7 @@ fun <I> I.piping():Pipeline<I,I>{
 
 fun main() {
     "Hello".piping().then {
-        println("$it, world")
-        it
+        "$it, world"
     }.then {
         println("${it}, are you ok?")
     }

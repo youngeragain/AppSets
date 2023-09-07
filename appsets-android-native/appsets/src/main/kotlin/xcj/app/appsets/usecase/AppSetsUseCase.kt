@@ -29,7 +29,7 @@ import xcj.app.appsets.server.model.AppsWithCategory
 import xcj.app.appsets.server.model.UpdateCheckResult
 import xcj.app.appsets.server.repository.AppSetsRepository
 import xcj.app.appsets.ui.compose.ExoPlayerActivity
-import xcj.app.appsets.ui.compose.win11Snapshot.SpotLightState
+import xcj.app.appsets.ui.compose.start.SpotLightState
 import xcj.app.appsets.usecase.models.Application
 import xcj.app.appsets.util.ApplicationCategory
 import xcj.app.core.android.ApplicationHelper
@@ -117,7 +117,6 @@ class AppSetsUseCase(private val coroutineScope: CoroutineScope): NoConfigUseCas
         if (spotLightsState.isNotEmpty())
             return
         coroutineScope.requestNotNullRaw({
-            Log.i(TAG, "getWin11SearchSpotLightInfo")
             val calendar = Calendar.getInstance()
             val month = calendar.get(Calendar.MONTH) + 1
             val dayOfMonth = calendar.get(Calendar.DAY_OF_MONTH)
@@ -148,7 +147,7 @@ class AppSetsUseCase(private val coroutineScope: CoroutineScope): NoConfigUseCas
                 val whereBlowText = image?.title ?: "每日一题"
                 val questionOfTheDay =
                     SpotLightState.QuestionOfTheDay(bingWallpaperUrl, where, whereBlowText)
-                questionOfTheDay.onClick = ::win11SnapShotPageStateClick
+                questionOfTheDay.onClick = ::snapShotStateClick
                 spotLightsState.add(questionOfTheDay)
             }
 
@@ -172,8 +171,8 @@ class AppSetsUseCase(private val coroutineScope: CoroutineScope): NoConfigUseCas
                         wordOfTheDay,
                         todayInHistory
                     )
-                wordOfTheDay.onClick = ::win11SnapShotPageStateClick
-                todayInHistory.onClick = ::win11SnapShotPageStateClick
+                wordOfTheDay.onClick = ::snapShotStateClick
+                todayInHistory.onClick = ::snapShotStateClick
                 spotLightsState.add(wordOfTheDayAndTodayInHistory)
             }
 
@@ -196,13 +195,13 @@ class AppSetsUseCase(private val coroutineScope: CoroutineScope): NoConfigUseCas
             }
 
         }, onFailed = {
-            Log.e(TAG, "getWin11SearchSpotLightInfo, failed!${it.info}")
+            Log.e(TAG, "loadSpotLight, failed!${it.info}")
         })
     }
 
 
     @UnstableApi
-    fun win11SnapShotPageStateClick(
+    fun snapShotStateClick(
         spotLightState: SpotLightState,
         context: Context,
         payload: Any?

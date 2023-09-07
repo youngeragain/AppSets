@@ -46,6 +46,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.State
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -53,15 +55,16 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.databinding.ViewDataBinding
 import xcj.app.appsets.R
 import xcj.app.appsets.ktx.toast
+import xcj.app.appsets.ui.compose.start.ComponentImageButton
 import xcj.app.appsets.ui.compose.theme.AppSetsTheme
-import xcj.app.appsets.ui.compose.win11Snapshot.ComponentImageButton
 import xcj.app.appsets.ui.compose.wlanp2p.WLANP2PActivity.Companion.getDeviceStatus
 import xcj.app.appsets.ui.nonecompose.base.BaseActivity
 import xcj.app.appsets.ui.nonecompose.base.BaseViewModelFactory
@@ -74,6 +77,7 @@ import java.io.File
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
+import kotlin.concurrent.thread
 
 
 class WLANP2PActivity :
@@ -95,6 +99,9 @@ class WLANP2PActivity :
     val thisWifip2pDeviceState: MutableState<WifiP2pDevice?> = mutableStateOf(null)
     val thisWifip2pDeviceGroupInfoState: MutableState<WifiP2pGroup?> = mutableStateOf(null)
     val wifip2pDeviceListState: MutableList<WifiP2pDevice> = mutableStateListOf()
+    val receiveProgressState: MutableState<Pair<Map<String, Any>?, Int>?> = mutableStateOf(null)
+    val sendProgressState: MutableState<Pair<Map<String, Any>?, Int>?> = mutableStateOf(null)
+
 
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -107,14 +114,16 @@ class WLANP2PActivity :
                     color = MaterialTheme.colorScheme.background
                 ) {
                     MainContent(
-                        wifip2pIsEnableState.value,
-                        canLogicConnectState.value,
-                        logicConnectEstablishedState.value,
-                        thisWifip2pDeviceState.value,
-                        thisWifip2pDeviceGroupInfoState.value,
-                        isDiscoveringState.value,
+                        wifip2pIsEnableState,
+                        canLogicConnectState,
+                        logicConnectEstablishedState,
+                        thisWifip2pDeviceState,
+                        thisWifip2pDeviceGroupInfoState,
+                        isDiscoveringState,
                         wifip2pDeviceListState,
-                        receivedStringContent.value,
+                        receivedStringContent,
+                        receiveProgressState,
+                        sendProgressState,
                         ::onBackClick,
                         ::onStartDiscoveryClick,
                         ::onCloseEstablishCLick,
@@ -238,7 +247,7 @@ class WLANP2PActivity :
     }
 
     @SuppressLint("MissingPermission")
-    fun disconnect(device: WifiP2pDevice) {
+    private fun disconnect(device: WifiP2pDevice) {
         if (manager == null || channel == null) {
             return
         }
@@ -280,7 +289,6 @@ class WLANP2PActivity :
 
     @SuppressLint("MissingPermission")
     private fun onStartDiscoveryClick() {
-
         manager?.discoverPeers(
             channel,
             object : ActionListener {
@@ -337,16 +345,19 @@ class WLANP2PActivity :
         if (p2pInfo == null)
             return
         val contentReceivedListener = ContentReceivedListener { contentType, contentAny ->
-            if (contentType == "application/text") {
+            if (contentType == ContentType.Text) {
                 val contentBytes = contentAny as ByteArray
                 val stringContent = contentBytes.decodeToString()
                 Log.i(TAG, "length:${contentBytes.size} content:\n${stringContent}")
                 receivedStringContent.value = stringContent
-            } else if (contentType == "application/file") {
-                Log.i(TAG, "received a file")
+            } else if (contentType == ContentType.File) {
                 val file = contentAny as File
+                thread {
+                    val available = file.inputStream().available()
+                    Log.i(TAG, "received a file, available:${available}")
+                }
                 receivedStringContent.value =
-                    "收到文件，保存位置：${ApplicationHelper.getContextFileDir().publicDownloadDir}${File.separator}${file.name}"
+                    "收到文件，文件路径：${ApplicationHelper.getContextFileDir().publicDownloadDir}${File.separator}${file.name}"
             }
         }
         val establishListener = EstablishListener { established ->
@@ -360,9 +371,19 @@ class WLANP2PActivity :
         val socketExceptionListener = ISocketExceptionListener { type, exception ->
             logicConnectEstablishedState.value = false
         }
+        val readProgressListener =
+            ProgressListener { contentHeader, total, current, percentage, permillage ->
+                receiveProgressState.value = contentHeader to percentage
+            }
+
+        val writeProgressListener =
+            ProgressListener { contentHeader, total, current, percentage, permillage ->
+                sendProgressState.value = contentHeader to percentage
+            }
         if (isGroupOwner) {//server
             serverThread = ServerThread(
-                this,
+                readProgressListener,
+                writeProgressListener,
                 contentReceivedListener,
                 establishListener,
                 socketExceptionListener
@@ -370,8 +391,13 @@ class WLANP2PActivity :
             serverThread.start()
         } else {//client
             clientThread = ClientThread(
-                this, p2pInfo!!.groupOwnerAddress.hostAddress, 8988,
-                contentReceivedListener, establishListener, socketExceptionListener
+                p2pInfo!!.groupOwnerAddress.hostAddress,
+                8988,
+                readProgressListener,
+                writeProgressListener,
+                contentReceivedListener,
+                establishListener,
+                socketExceptionListener
             )
             clientThread.start()
         }
@@ -443,14 +469,16 @@ class WLANP2PActivity :
 
 @Composable
 fun MainContent(
-    wifiP2PIsEnable: Boolean,
-    canLogicConnect: Boolean,
-    logicConnectEstablished: Boolean,
-    thisWifiP2pDevice: WifiP2pDevice?,
-    thisWifiP2pGroup: WifiP2pGroup?,
-    isDiscovering: Boolean,
+    wifiP2PIsEnable: State<Boolean>,
+    canLogicConnect: State<Boolean>,
+    logicConnectEstablished: State<Boolean>,
+    thisWifiP2pDevice: State<WifiP2pDevice?>,
+    thisWifiP2pGroup: State<WifiP2pGroup?>,
+    isDiscovering: State<Boolean>,
     wifiP2pDeviceList: List<WifiP2pDevice>,
-    receivedStringContent: String?,
+    receivedStringContent: State<String?>,
+    receiveProgress: State<Pair<Map<String, Any>?, Int>?>,
+    sendProgress: State<Pair<Map<String, Any>?, Int>?>,
     onBackAction: () -> Unit,
     onStartDiscoveryClick: () -> Unit,
     onCloseEstablishCLick: () -> Unit,
@@ -460,10 +488,10 @@ fun MainContent(
     onSendInputContentClick: (Any) -> Unit,
 ) {
     Column {
-        val customEndContent: (@Composable () -> Unit)? = if (wifiP2PIsEnable) {
+        val customEndContent: (@Composable () -> Unit)? = if (wifiP2PIsEnable.value) {
             {
                 Row(modifier = Modifier.animateContentSize()) {
-                    if (!logicConnectEstablished && !canLogicConnect) {
+                    if (!logicConnectEstablished.value && !canLogicConnect.value) {
                         Button(onClick = onStartDiscoveryClick) {
                             Text(text = "搜索", fontSize = 12.sp)
                         }
@@ -472,7 +500,7 @@ fun MainContent(
                             Text(text = "关闭", fontSize = 12.sp)
                         }
                     }
-                    if (canLogicConnect && !logicConnectEstablished) {
+                    if (canLogicConnect.value && !logicConnectEstablished.value) {
                         Spacer(modifier = Modifier.width(12.dp))
                         Button(onClick = {
                             onLogicConnectClick()
@@ -497,19 +525,55 @@ fun MainContent(
                 .padding(horizontal = 12.dp)
                 .verticalScroll(rememberScrollState())
         ) {
-            if (logicConnectEstablished) {
+            if (logicConnectEstablished.value) {
                 Column(
                     Modifier
                         .padding(12.dp)
                         .fillMaxWidth()
                 ) {
-                    Row(
+                    if (sendProgress.value != null) {
+                        val progressText by remember {
+                            derivedStateOf {
+                                "发送进度(${sendProgress.value!!.second}%)"
+                            }
+                        }
+                        Text(text = progressText, fontSize = 12.sp)
+                        Spacer(modifier = Modifier.height(12.dp))
+                    }
+                    if (receiveProgress.value != null) {
+                        val progressText by remember {
+                            derivedStateOf {
+                                "接收进度(${receiveProgress.value!!.second}%) ${
+                                    receiveProgress.value!!.first?.get(
+                                        "file-name"
+                                    )
+                                }"
+                            }
+                        }
+                        Text(text = progressText, fontSize = 12.sp)
+                        Spacer(modifier = Modifier.height(12.dp))
+                    }
+                    Column(
                         Modifier
-                            .padding(12.dp)
                             .heightIn(min = 52.dp)
+                            .fillMaxWidth()
+                            .padding(vertical = 12.dp)
                             .animateContentSize()
                     ) {
-                        Text(text = receivedStringContent ?: "此处显示接收的内容", fontSize = 12.sp)
+                        Text(
+                            text = receivedStringContent.value ?: "此处显示接收的内容",
+                            fontSize = 12.sp
+                        )
+                        val clipboardManager = LocalClipboardManager.current
+                        if (!receivedStringContent.value.isNullOrEmpty()) {
+                            Spacer(modifier = Modifier.height(12.dp))
+                            Button(onClick = {
+                                clipboardManager.setText(AnnotatedString(receivedStringContent.value!!))
+                            }, modifier = Modifier.align(Alignment.End)) {
+                                Text(text = "复制", fontSize = 12.sp)
+                            }
+                        }
+
                     }
                     var inputText by remember {
                         mutableStateOf("")
@@ -533,14 +597,14 @@ fun MainContent(
                     Row {
                         Spacer(modifier = Modifier.weight(1f))
                         Button(onClick = onSendFileClick) {
-                            Text(text = "发送文件", fontSize = 12.sp)
+                            Text(text = "选择文件发送", fontSize = 12.sp)
                         }
                         Spacer(modifier = Modifier.width(12.dp))
                         Button(onClick = {
                             onSendInputContentClick(inputText)
                             inputText = ""
                         }) {
-                            Text(text = "发送", fontSize = 12.sp)
+                            Text(text = "发送输入内容", fontSize = 12.sp)
                         }
                     }
                 }
@@ -585,7 +649,7 @@ fun MainContent(
                         Spacer(modifier = Modifier.height(10.dp))
                     }
                 }
-            } else if (isDiscovering) {
+            } else if (isDiscovering.value) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -602,13 +666,13 @@ fun MainContent(
                 modifier = Modifier
                     .fillMaxWidth()
             ) {
-                if (wifiP2pDeviceList.isEmpty() && !logicConnectEstablished) {
+                if (wifiP2pDeviceList.isEmpty() && !logicConnectEstablished.value) {
                     Box(
                         Modifier
                             .fillMaxWidth()
                             .height(120.dp), contentAlignment = Alignment.Center
                     ) {
-                        val text = if (wifiP2PIsEnable) {
+                        val text = if (wifiP2PIsEnable.value) {
                             if (wifiP2pDeviceList.isEmpty()) {
                                 "搜索对等设备"
                             } else {
@@ -656,15 +720,15 @@ fun MainContent(
                     }
                     if (debug) {
                         Spacer(modifier = Modifier.height(12.dp))
-                        if (thisWifiP2pDevice != null) {
+                        if (thisWifiP2pDevice.value != null) {
                             Text(
-                                text = "Device:${thisWifiP2pDevice.deviceName ?: "未生成"} | mac:${thisWifiP2pDevice?.deviceAddress ?: ""}",
+                                text = "Device:${thisWifiP2pDevice.value!!.deviceName ?: "未生成"} | mac:${thisWifiP2pDevice.value!!.deviceAddress ?: ""}",
                                 fontSize = 10.sp, fontWeight = FontWeight.Bold
                             )
                         }
-                        if (thisWifiP2pGroup != null) {
+                        if (thisWifiP2pGroup.value != null) {
                             Text(
-                                text = "Group:$thisWifiP2pGroup",
+                                text = "Group:${thisWifiP2pGroup.value}",
                                 fontSize = 10.sp
                             )
                         }
@@ -677,6 +741,7 @@ fun MainContent(
 }
 
 
+/*
 @Preview(showBackground = true)
 @Composable
 fun MainContentPreview() {
@@ -699,4 +764,4 @@ fun MainContentPreview() {
             callback,
             {})
     }
-}
+}*/

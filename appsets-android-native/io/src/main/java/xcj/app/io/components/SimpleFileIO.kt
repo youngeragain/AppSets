@@ -24,7 +24,6 @@ import xcj.app.core.android.ApplicationHelper
 import java.io.File
 
 class SimpleFileIO private constructor() : FileIO {
-    private val TAG = "SimpleFileIO"
     // 初始化 COS Service，获取实例
     private var cosXmlService: CosXmlSimpleService? = null
     private var transferManager: TransferManager? = null
@@ -64,7 +63,8 @@ class SimpleFileIO private constructor() : FileIO {
     private fun getUpdateResultListener(): CosXmlResultListener {
         return object : CosXmlResultListener {
             override fun onSuccess(request: CosXmlRequest, result: CosXmlResult) {
-                Log.i(TAG, "uploadReturnUrlMarker, onSuccess")
+                //val uploadResult = result as COSXMLUploadTaskResult
+                Log.i("SimpleFileIO", "uploadReturnUrlMarker, onSuccess")
             }
 
             // 如果您使用 kotlin 语言来调用，请注意回调方法中的异常是可空的，否则不会回调 onFail 方法，即：
@@ -79,7 +79,7 @@ class SimpleFileIO private constructor() : FileIO {
                 } else {
                     serviceException!!.printStackTrace()
                 }
-                Log.e(TAG, "uploadReturnUrlMarker, onFail")
+                Log.e("SimpleFileIO", "uploadReturnUrlMarker, onFail")
             }
         }
     }
@@ -119,7 +119,7 @@ class SimpleFileIO private constructor() : FileIO {
                 default()
                 destination(File(tempFilesCacheDir + File.separator + urlMarker + "." + file.extension.lowercase()))
             }
-            Log.i(TAG, "compressed image file:${compressedFile}")
+            Log.i("SimpleFileIO", "compressed image file:${compressedFile}")
             finalUpload(compressedFile, urlMarker, resultListener)
         }
 
@@ -160,7 +160,7 @@ class SimpleFileIO private constructor() : FileIO {
     ) {
         if (uri.scheme == "file") {
             val file = File(uri.path!!)
-            Log.i(TAG, "uploadWithUri uri content file path:${file}")
+            Log.i("SimpleFileIO", "uploadWithUri uri content file path:${file}")
             uploadReturnUrlMarker(context, file, urlMarker, resultListener)
             return
         }
@@ -176,7 +176,7 @@ class SimpleFileIO private constructor() : FileIO {
             } else
                 null
         }?.let { filePath ->
-            Log.i(TAG, "uploadWithUri uri content file path:${filePath}")
+            Log.i("SimpleFileIO", "uploadWithUri uri content file path:${filePath}")
             uploadReturnUrlMarker(context, File(filePath), urlMarker, resultListener)
         }
     }
@@ -204,11 +204,11 @@ class SimpleFileIO private constructor() : FileIO {
 
     fun generatePreSign(contentUrlMarker: String): String? {
         if (!::tencentCosInfoProvider.isInitialized) {
-            Log.i(TAG, "tencentCosInfoProvider is not init when generatePreSign")
+            Log.i("SimpleFileIO", "tencentCosInfoProvider is not init when generatePreSign")
             return null
         }
         if (cosXmlService == null) {
-            Log.i(TAG, "cosXmlService is null when generatePreSign")
+            Log.i("SimpleFileIO", "cosXmlService is null when generatePreSign")
             return null
         }
         try {
@@ -231,9 +231,7 @@ class SimpleFileIO private constructor() : FileIO {
             presignedUrlRequest.setSignKeyTime(60 * 10)
             // 设置不签名 Host
             presignedUrlRequest.addNoSignHeader("Host")
-            val presignedURL = cosXmlService!!.getPresignedURL(presignedUrlRequest)
-            Log.i(TAG, "generatePreSign presignedURL:${presignedURL}")
-            return presignedURL
+            return cosXmlService!!.getPresignedURL(presignedUrlRequest)
         } catch (e: CosXmlClientException) {
             e.printStackTrace()
         }

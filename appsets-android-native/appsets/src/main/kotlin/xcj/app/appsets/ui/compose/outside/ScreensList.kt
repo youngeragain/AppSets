@@ -3,12 +3,12 @@ package xcj.app.appsets.ui.compose.outside
 import android.content.res.Configuration
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.ScrollableState
 import androidx.compose.foundation.interaction.Interaction
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -30,7 +30,7 @@ import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Divider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -40,7 +40,6 @@ import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -77,6 +76,7 @@ fun ScreensList(
     onScreenAvatarClick: ((UserScreenInfo) -> Unit)? = null,
     onScreenContentClick: ((UserScreenInfo) -> Unit)? = null,
     onScreenVideoPlayClick: ((ScreenMediaFileUrl) -> Unit)? = null,
+    headerContent: (@Composable () -> Unit)? = null
 ) {
     val isShowX18ContentRequestDialog = remember {
         mutableStateOf(false)
@@ -87,69 +87,64 @@ fun ScreensList(
     X18ContentConfirmDialog(isShowX18ContentRequestDialog, x18ContentConfirmCallback)
     val configuration = LocalConfiguration.current
     val paddingValues = if (currentDestinationRoute == PageRouteNameProvider.OutSidePage) {
-        PaddingValues(top = 68.dp, bottom = 68.dp, start = 12.dp, end = 12.dp)
+        PaddingValues(top = 98.dp, bottom = 98.dp, start = 12.dp, end = 12.dp)
     } else {
-        PaddingValues(top = 12.dp, bottom = 68.dp, start = 12.dp, end = 12.dp)
+        PaddingValues(top = 12.dp, bottom = 98.dp, start = 12.dp, end = 12.dp)
     }
-    val coroutineScope = rememberCoroutineScope()
-    val screenStateList = screensState.value
     if (configuration.orientation == Configuration.ORIENTATION_PORTRAIT) {
         LazyColumn(
             contentPadding = paddingValues,
+            verticalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterVertically),
             state = scrollableState as LazyListState
         ) {
-
+            if (headerContent != null) {
+                item {
+                    headerContent.invoke()
+                }
+            }
+            val screenStateList = screensState.value
             if (screenStateList != null) {
                 itemsIndexed(screenStateList, { index, _ -> index }) { index, screenState ->
                     if (screenState is ScreenState.Screen) {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(top = 16.dp)
+                        Surface(
+                            modifier = Modifier,
+                            shape = RoundedCornerShape(24.dp),
+                            border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.outline)
                         ) {
-                            if (index >= 1) {
-                                Divider(
-                                    color = MaterialTheme.colorScheme.outline,
-                                    thickness = 0.5.dp
-                                )
-                                Spacer(modifier = Modifier.height(12.dp))
-                            }
-                            ScreenComponent(
-                                screenState.userScreenInfo,
-                                currentDestinationRoute,
-                                160.dp,
-                                onScreenAvatarClick,
-                                onScreenContentClick,
-                                onPictureClick = { url, urls ->
-                                    if (url.x18Content == 1) {
-                                        x18ContentConfirmCallback = {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(12.dp)
+                            ) {
+                                ScreenComponent(
+                                    screenState.userScreenInfo,
+                                    currentDestinationRoute,
+                                    160.dp,
+                                    onScreenAvatarClick,
+                                    onScreenContentClick,
+                                    onPictureClick = { url, urls ->
+                                        if (url.x18Content == 1) {
+                                            x18ContentConfirmCallback = {
+                                                onPictureClick?.invoke(url, urls)
+                                            }
+                                            isShowX18ContentRequestDialog.value = true
+                                        } else {
                                             onPictureClick?.invoke(url, urls)
                                         }
-                                        isShowX18ContentRequestDialog.value = true
-                                    } else {
-                                        onPictureClick?.invoke(url, urls)
-                                    }
-                                },
-                                picInteractionFlow,
-                                onScreenVideoPlayClick = { url ->
-                                    if (url.x18Content == 1) {
-                                        x18ContentConfirmCallback = {
+                                    },
+                                    picInteractionFlow,
+                                    onScreenVideoPlayClick = { url ->
+                                        if (url.x18Content == 1) {
+                                            x18ContentConfirmCallback = {
+                                                onScreenVideoPlayClick?.invoke(url)
+                                            }
+                                            isShowX18ContentRequestDialog.value = true
+                                        } else {
                                             onScreenVideoPlayClick?.invoke(url)
                                         }
-                                        isShowX18ContentRequestDialog.value = true
-                                    } else {
-                                        onScreenVideoPlayClick?.invoke(url)
                                     }
-                                }
-                            )
-                        }
-                    } else if (screenState is ScreenState.NoMore) {
-                        Box(
-                            Modifier
-                                .height(150.dp)
-                                .fillMaxWidth(), contentAlignment = Alignment.Center
-                        ) {
-                            Text(text = "•••")
+                                )
+                            }
                         }
                     }
 
@@ -165,19 +160,27 @@ fun ScreensList(
         LazyVerticalStaggeredGrid(
             columns = StaggeredGridCells.Fixed(3),
             contentPadding = paddingValues,
+            horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
+            verticalItemSpacing = 6.dp,
             state = scrollableState as LazyStaggeredGridState,
             content = {
+                if (headerContent != null) {
+                    item {
+                        headerContent.invoke()
+                    }
+                }
+                val screenStateList = screensState.value
                 if (screenStateList != null) {
                     itemsIndexed(screenStateList, { index, _ -> index }) { _, screenState ->
                         if (screenState is ScreenState.Screen) {
                             Surface(
-                                modifier = Modifier.padding(6.dp),
+                                modifier = Modifier,
                                 shape = RoundedCornerShape(24.dp),
                                 border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.outline)
                             ) {
                                 Column(
                                     modifier = Modifier
-                                        .width(400.dp)
+                                        .fillMaxWidth()
                                         .padding(12.dp)
                                 ) {
                                     ScreenComponent(
@@ -210,14 +213,6 @@ fun ScreensList(
                                     )
                                 }
                             }
-                        } else if (screenState is ScreenState.NoMore) {
-                            Box(
-                                Modifier
-                                    .height(150.dp)
-                                    .fillMaxWidth(), contentAlignment = Alignment.Center
-                            ) {
-                                Text(text = "•••")
-                            }
                         }
                     }
                     item {
@@ -239,7 +234,6 @@ fun ScreenComponent(
     pictureInteractionFlow: ((Interaction, ScreenMediaFileUrl) -> Unit)?,
     onScreenVideoPlayClick: ((ScreenMediaFileUrl) -> Unit)?
 ) {
-    ScreenSectionOfUserPart(screenInfo, onScreenAvatarClick, currentDestinationRoute)
     if (screenInfo.isAllContentEmpty()) {
         ScreenSectionOfContentPartAllEmpty(
             modifier = Modifier
@@ -253,7 +247,6 @@ fun ScreenComponent(
             .clickable {
                 onScreenContentClick?.invoke(screenInfo)
             }) {
-            ScreenSectionOfContentTextPart(screenInfo, currentDestinationRoute)
             ScreenSectionOfContentPicturesPart(
                 screenInfo = screenInfo,
                 pictureHeight = pictureHeight,
@@ -261,10 +254,12 @@ fun ScreenComponent(
                 picInteractionFlow = pictureInteractionFlow
             )
             ScreenSectionOfContentVideosPart(screenInfo, pictureHeight, onScreenVideoPlayClick)
+            ScreenSectionOfContentTextPart(screenInfo, currentDestinationRoute)
             ScreenSectionOfContentAssociateTopicsPart(screenInfo)
             ScreenSectionOfContentAssociatePeoplesPart(screenInfo)
         }
     }
+    ScreenSectionOfUserPart(screenInfo, onScreenAvatarClick, currentDestinationRoute)
 }
 
 
@@ -277,8 +272,7 @@ fun ScreenSectionOfContentAssociatePeoplesPart(
             text = screenInfo.associateUsers ?: "",
             maxLines = 1,
             modifier = Modifier.padding(vertical = 6.dp),
-            fontSize = 12.sp,
-            color = MaterialTheme.colorScheme.tertiary
+            fontSize = 12.sp
         )
 }
 
@@ -291,8 +285,7 @@ fun ScreenSectionOfContentAssociateTopicsPart(
             text = screenInfo.associateTopics ?: "",
             maxLines = 1,
             modifier = Modifier.padding(vertical = 6.dp),
-            fontSize = 12.sp,
-            color = MaterialTheme.colorScheme.tertiary
+            fontSize = 12.sp
         )
 }
 
@@ -311,7 +304,7 @@ fun ScreenSectionOfContentVideosPart(
                 .fillMaxWidth()
                 .height(pictureHeight)
                 .background(
-                    MaterialTheme.colorScheme.secondaryContainer,
+                    MaterialTheme.colorScheme.outline,
                     RoundedCornerShape(12.dp)
                 )
                 .clip(RoundedCornerShape(12.dp))
@@ -335,11 +328,11 @@ fun ScreenSectionOfContentVideosPart(
                                     SpanStyle(
                                         color = MaterialTheme.colorScheme.primary,
                                         fontWeight = FontWeight.Bold
-                                    ), 4, 9
+                                    ), 5, 9
                                 )
                             )
                         )
-                        Text(text = text, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                        Text(text = text, fontSize = 12.sp)
                     }
                 } else {
                     LocalOrRemoteImage(
@@ -350,7 +343,7 @@ fun ScreenSectionOfContentVideosPart(
                     )
                 }
 
-                Image(
+                Icon(
                     modifier = Modifier
                         .padding(12.dp)
                         .align(Alignment.TopEnd),
@@ -400,13 +393,13 @@ fun ScreenSectionOfContentTextPart(
     screenInfo: UserScreenInfo,
     currentDestinationRoute: String
 ) {
-    val textStyle = MaterialTheme.typography.labelLarge
     if (!screenInfo.screenContent.isNullOrEmpty()) {
         val modifier = if (currentDestinationRoute != PageRouteNameProvider.ScreenDetailsPage) {
-            Modifier.heightIn(min = 42.dp, max = 350.dp)
+            Modifier.heightIn(min = 68.dp, max = 350.dp)
         } else {
-            Modifier.heightIn(min = 42.dp)
+            Modifier.heightIn(min = 68.dp)
         }
+        val textStyle = MaterialTheme.typography.labelLarge
         Text(
             text = screenInfo.screenContent ?: "",
             modifier = modifier
@@ -415,8 +408,7 @@ fun ScreenSectionOfContentTextPart(
             overflow = TextOverflow.Ellipsis,
             fontSize = textStyle.fontSize,
             fontStyle = textStyle.fontStyle,
-            fontWeight = textStyle.fontWeight,
-            color = MaterialTheme.colorScheme.tertiary
+            fontWeight = textStyle.fontWeight
         )
     }
 }
@@ -431,11 +423,10 @@ fun ScreenSectionOfContentPartAllEmpty(modifier: Modifier) {
     ) {
         val textStyle = MaterialTheme.typography.labelLarge
         Text(
-            text = ":) 一条空的状态 ",
+            text = "一条空的状态:)",
             fontSize = textStyle.fontSize,
             fontStyle = textStyle.fontStyle,
-            fontWeight = textStyle.fontWeight,
-            color = MaterialTheme.colorScheme.tertiary
+            fontWeight = textStyle.fontWeight
         )
     }
 }
@@ -453,54 +444,53 @@ fun ScreenSectionOfUserPart(
                 .clickable {
                     onScreenAvatarClick?.invoke(screenInfo)
                 }
-                .padding(vertical = 6.dp),
+                .padding(vertical = 12.dp)
+                .align(Alignment.CenterEnd),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            LocalOrRemoteImage(
-                any = screenInfo.userInfo?.avatarUrl,
-                modifier = Modifier
-                    .size(36.dp)
-                    .clip(RoundedCornerShape(10.dp))
+            Text(
+                text = screenInfo.postTime ?: "",
+                fontSize = 11.sp
             )
-            Spacer(modifier = Modifier.width(8.dp))
-            Column {
+            Spacer(modifier = Modifier.weight(1f))
+            if (screenInfo.uid == LocalAccountManager._userInfo.value.uid
+                && currentDestinationRoute == PageRouteNameProvider.UserProfilePage
+            ) {
+                Box(modifier = Modifier
+                    .background(
+                        MaterialTheme.colorScheme.primary,
+                        RoundedCornerShape(12.dp)
+                    )
+                    .clickable {
+
+                    }
+                    .padding(vertical = 6.dp, horizontal = 10.dp)
+                ) {
+                    val isPublicStr = if (screenInfo.isPublic == 1) {
+                        "公开"
+                    } else {
+                        "私有"
+                    }
+                    Text(
+                        text = isPublicStr,
+                        fontSize = 12.sp,
+                        color = MaterialTheme.colorScheme.onPrimary
+                    )
+                }
+
+            } else {
                 Text(
                     text = screenInfo.userInfo?.name ?: "",
-                    color = MaterialTheme.colorScheme.tertiary
-                )
-                Text(
-                    text = screenInfo.postTime ?: "",
-                    color = MaterialTheme.colorScheme.tertiary,
                     fontSize = 12.sp
                 )
-            }
-        }
-        if (screenInfo.uid == LocalAccountManager._userInfo.value.uid
-            && currentDestinationRoute == PageRouteNameProvider.UserProfilePage
-        ) {
-            Box(modifier = Modifier
-                .align(Alignment.CenterEnd)
-                .background(
-                    MaterialTheme.colorScheme.primary,
-                    RoundedCornerShape(12.dp)
-                )
-                .clickable {
-
-                }
-                .padding(vertical = 6.dp, horizontal = 10.dp)
-            ) {
-                val isPublicStr = if (screenInfo.isPublic == 1) {
-                    "公开"
-                } else {
-                    "私有"
-                }
-                Text(
-                    text = isPublicStr,
-                    fontSize = 12.sp,
-                    color = MaterialTheme.colorScheme.onPrimary
+                Spacer(modifier = Modifier.width(8.dp))
+                LocalOrRemoteImage(
+                    any = screenInfo.userInfo?.avatarUrl,
+                    modifier = Modifier
+                        .size(18.dp)
+                        .clip(RoundedCornerShape(4.dp))
                 )
             }
-
         }
     }
 }
@@ -574,7 +564,7 @@ fun RowOfScreenPictures(
                         .fillMaxHeight()
                         .width(singlePicWidth)
                         .clip(shape),
-                    color = MaterialTheme.colorScheme.secondaryContainer
+                    color = MaterialTheme.colorScheme.outline
                 ) {
                     if (mediaFileUrl.x18Content == 1) {
                         Box(
@@ -590,11 +580,11 @@ fun RowOfScreenPictures(
                                         SpanStyle(
                                             color = MaterialTheme.colorScheme.primary,
                                             fontWeight = FontWeight.Bold
-                                        ), 4, 9
+                                        ), 5, 9
                                     )
                                 )
                             )
-                            Text(text = text, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                            Text(text = text, fontSize = 12.sp)
                         }
                     } else {
                         LocalOrRemoteImage(

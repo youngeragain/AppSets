@@ -2,7 +2,8 @@ package xcj.app.appsets.ui.compose.wlanp2p
 
 import android.net.Uri
 import android.util.Log
-import com.google.gson.Gson
+import okhttp3.internal.notify
+import okhttp3.internal.wait
 import java.io.BufferedOutputStream
 import java.io.File
 import java.io.OutputStream
@@ -10,29 +11,34 @@ import java.util.UUID
 
 abstract class CommonWriteThread(
     outputStream: OutputStream,
+    private val progressListener: ProgressListener?,
     private val iSocketExceptionListener: ISocketExceptionListener
 ) : Thread(), ISocketState, IThreadWriter {
     abstract val TAG: String
     private var bos = outputStream.buffered()
     private var closed = false
 
+    //TODO 变成链表
     @Volatile
     private var writeFunction: WriteFunction? = null
-
+    private val readLock: Any = Any()
     override fun run() {
         try {
-            while (!closed) {
-                if (isSocketClosed())
-                    break
-                var tempFunction: WriteFunction? = null
+            synchronized(readLock) {
                 while (!closed) {
-                    tempFunction = writeFunction
-                    if (tempFunction != null) {
-                        tempFunction.writeContent(TAG, bos)
-                        writeFunction = null
+                    if (isSocketClosed())
+                        break
+                    while (!closed) {
+                        if (writeFunction != null) {
+                            writeFunction?.writeContent(TAG, bos)
+                            writeFunction = null
+                        }
+                        if (writeFunction == null) {
+                            Log.i(TAG, "thread[${id}] waiting a new writeFunction")
+                            readLock.wait()
+                        }
                     }
                 }
-
             }
         } catch (e: Exception) {
             Log.e(TAG, "run exception:" + e.message)
@@ -41,39 +47,56 @@ abstract class CommonWriteThread(
     }
 
     fun writeWithFunction(writeFunction: WriteFunction) {
-        this.writeFunction = writeFunction
+        synchronized(readLock) {
+            this.writeFunction = writeFunction
+            Log.i(TAG, "thread[${id}] notify with a new writeFunction")
+            this.readLock.notify()
+        }
     }
 
-    fun writeString(str: String) {
-        val byteArray = str.toByteArray()
-        val customHeader = mapOf(
-            "content-type" to "application/text",
-            "content-length" to byteArray.size,
-            "content-chunked" to false
-        )
-        writeBytesInternal(byteArray, customHeader)
-    }
-
-    private fun writeBytesInternal(byteArray: ByteArray, customHeader: Map<String, Any>? = null) {
+    private fun writeBytesInternal(
+        byteArray: ByteArray,
+        contentType: String,
+        fileName: String?,
+        contentLength: Long,
+        isContentChunked: Boolean,
+        chunkCount: Int?
+    ) {
         val writeFunction =
             WriteFunction { tag, bos ->
-                val flag = UUID.randomUUID().toString()
-                val gson = Gson()
+                val uuid = UUID.randomUUID().toString()
                 //start
-                writeChunkStartBytes(bos, flag, gson, customHeader)
+                writeChunkStartBytes(
+                    bos,
+                    uuid,
+                    contentType,
+                    fileName,
+                    contentLength,
+                    isContentChunked,
+                    chunkCount
+                )
                 //content
-                writeChunkContentBytes(bos, flag, byteArray)
+                writeChunkContentBytes(
+                    bos,
+                    uuid,
+                    byteArray.size.toLong(),
+                    0L,
+                    byteArray,
+                    0,
+                    byteArray.size
+                )
+                bos.flush()
             }
         writeWithFunction(writeFunction)
     }
 
+    fun writeString(str: String) {
+        val byteArray = str.toByteArray()
+        writeBytesInternal(byteArray, ContentType.Text, null, byteArray.size.toLong(), false, 1)
+    }
+
     fun writeBytes(byteArray: ByteArray) {
-        val customHeader = mapOf(
-            "content-type" to "application/text",
-            "content-length" to byteArray.size,
-            "content-chunked" to false
-        )
-        writeBytesInternal(byteArray, customHeader)
+        writeBytesInternal(byteArray, ContentType.Bytes, null, byteArray.size.toLong(), false, 1)
     }
 
     fun writeFile(file: File) {
@@ -82,94 +105,138 @@ abstract class CommonWriteThread(
             return
         }
         writeUriFileInputStream(UriFileNameAndInputStream(file.name, file.inputStream()))
-        /*        val writeFunction =
-                    WriteFunction { tag, bos ->
-                        val fileLength = file.length()
-                        val fbis = file.inputStream().buffered()
-                        val available = fbis.available()
-                        Log.e(TAG, "file length:${fileLength}, inputStream available:${available}")
-                        val bufferSize = 2048
-                        val fileBuffer = ByteArray(bufferSize)
-                        var readOffset = 0L
-                        val flag = UUID.randomUUID().toString()
-                        val gson = Gson()
-                        var chunkLength = (available/bufferSize)
-                        if(available%bufferSize!=0){
-                            chunkLength += 1
-                        }
-                        //start
-                        val customHeader = mapOf(
-                            "content-type" to "application/file",
-                            "file-name" to file.name,
-                            "content-length" to fileLength,
-                            "content-chunked" to true,
-                            "chunk-length" to chunkLength
-                        )
-                        try {
-                            val startTimeMills = System.currentTimeMillis()
-                            writeChunkStartBytes(bos, flag, gson, customHeader)
-                            while (true) {
-                                val readCount = fbis.read(fileBuffer)
-                                if(readCount==-1){
-                                    Log.e(TAG, "file read count is -1 break")
-                                    break
-                                }
-                                readOffset += readCount-1
-                                //content
-                                if(readCount==bufferSize){
-                                    Log.e(TAG, "write full buffer")
-                                    writeChunkContentBytes(bos, flag, fileBuffer)
-                                }else{
-                                    Log.e(TAG, "write not full buffer")
-                                    val dstByteArray = ByteArray(readCount)
-                                    System.arraycopy(fileBuffer, 0, dstByteArray, 0, readCount)
-                                    writeChunkContentBytes(bos, flag, dstByteArray)
-                                }
-                                if ((readOffset+1) == fileLength)
-                                    break
-                            }
-                            Log.e(TAG, "write to bos finish, time spend:${(System.currentTimeMillis()-startTimeMills)/1000f}s")
-                        }catch (e:Exception){
-                            e.printStackTrace()
-                        }finally {
-                            fbis.close()
-                        }
-                    }
-                writeWithFunction(writeFunction)*/
     }
 
     fun writeUriContent(uri: Uri) {
         //TODO
     }
 
+
     private fun writeChunkStartBytes(
         bos: BufferedOutputStream,
-        flag: String,
-        gson: Gson,
-        customHeader: Map<String, Any>? = null
+        uuid: String,
+        contentType: String,
+        fileName: String?,
+        contentLength: Long,
+        isContentChunked: Boolean,
+        chunkCount: Int?
     ) {
+        var headerBytesCount = 0
 
-        val header = mutableMapOf<String, Any>(
-            "start" to true,
-            "flag" to flag
-        )
-        if (!customHeader.isNullOrEmpty()) {
-            header.putAll(customHeader)
+
+        val headerBytes = arrayListOf<Byte>()
+
+        val uuidBytes = uuid.toByteArray().toMutableList()//byte[40]
+        if (uuidBytes.size < 40) {
+            for (i in uuidBytes.size until 40) {
+                uuidBytes.add(0)
+            }
         }
-        val contentStart = DeliveryContent(header, null)
-        val bytes = gson.toJson(contentStart).toByteArray()
-        Log.i(TAG, "[$flag]writeChunkStartBytes, bytes size:${bytes.size + 1}")
-        bos.write(bytes)
-        bos.write(0)
+        //Log.i(TAG, "uuidBytes size:${uuidBytes.size}:\n${uuidBytes.joinToString { it.toString() }}")
+        headerBytesCount += uuidBytes.size
+        headerBytes.addAll(uuidBytes)//uuid
+
+        val contentTypeBytes = contentType.toByteArray().toMutableList()//byte[36]
+        if (contentTypeBytes.size < 36) {
+            for (i in contentTypeBytes.size until 36) {
+                contentTypeBytes.add(0)
+            }
+        }
+        //Log.i(TAG, "contentTypeBytes size:${contentTypeBytes.size}:\n${contentTypeBytes.joinToString { it.toString() }}")
+        headerBytesCount += contentTypeBytes.size
+        headerBytes.addAll(contentTypeBytes)//contentType
+
+        val fileNameBytes =
+            fileName?.toByteArray()?.toMutableList() ?: mutableListOf<Byte>().apply {//byte[40]
+
+            }//512个byte
+        if (fileNameBytes.size < 512) {
+            for (i in fileNameBytes.size until 512) {
+                fileNameBytes.add(0)
+            }
+        }
+        //Log.i(TAG, "fileNameBytes size:${fileNameBytes.size}:\n${fileNameBytes.joinToString { it.toString() }}")
+        headerBytesCount += fileNameBytes.size
+        headerBytes.addAll(fileNameBytes)//fileName
+
+        val contentLengthBytes = mutableListOf<Byte>().apply {//byte[8]
+            addAll(longToByteArray(contentLength).toList())
+        }
+        if (contentLengthBytes.size < 8) {
+            for (i in contentLengthBytes.size until 8) {
+                contentLengthBytes.add(0)
+            }
+        }
+        //Log.i(TAG, "contentLength:${contentLength} contentLengthBytes size:${contentLengthBytes.size}:\n${contentLengthBytes.joinToString { it.toString() }}")
+        headerBytesCount += contentLengthBytes.size
+        headerBytes.addAll(contentLengthBytes)//contentLength
+
+
+        val isContentChunkedBytes = mutableListOf<Byte>().apply {//byte[1]
+            if (isContentChunked) {
+                add(1)
+            } else {
+                add(0)
+            }
+        }
+        if (isContentChunkedBytes.size < 1) {
+            isContentChunkedBytes.add(0)
+        }
+        //Log.i(TAG, "isContentChunkedBytes size:${isContentChunkedBytes.size}:\n${isContentChunkedBytes.joinToString { it.toString() }}")
+        headerBytesCount += isContentChunkedBytes.size
+        headerBytes.addAll(isContentChunkedBytes)//isContentChunked
+
+
+        val chunkCountBytes = mutableListOf<Byte>().apply {//byte[4]
+            if (chunkCount != null) {
+                addAll(intToByteArray(chunkCount).toList())
+            }
+        }
+        if (chunkCountBytes.size < 4) {
+            for (i in chunkCountBytes.size until 4) {
+                chunkCountBytes.add(0)
+            }
+        }
+        //Log.i(TAG, "chunkCountBytes size:${chunkCountBytes.size}:\n${chunkCountBytes.joinToString { it.toString() }}")
+        headerBytesCount += chunkCountBytes.size
+        headerBytes.addAll(chunkCountBytes)//chunkCount
+
+
+        headerBytes.addAll(0, contentLengthBytes)//byte[8]
+
+        val headerCountBytes = mutableListOf<Byte>().apply {//byte[4]
+            addAll(intToByteArray(headerBytesCount).toList())
+        }
+
+        //Log.i(TAG, "headerBytesCount:\n${headerBytesCount}")
+        //Log.i(TAG, "headerCountBytes size:${headerCountBytes.size}:\n${headerCountBytes.joinToString { it.toString() }}")
+        headerBytes.addAll(0, headerCountBytes)
+
+        Log.i(TAG, "[$uuid]writeChunkStartBytes, bytes size:${headerBytes.size}")
+        bos.write(headerBytes.toByteArray())
+
+
     }
 
     private fun writeChunkContentBytes(
         bos: BufferedOutputStream,
-        flag: String,
-        contentChunkBytes: ByteArray
+        uuid: String,
+        totalLength: Long,
+        writtenLength: Long,
+        contentChunkBytes: ByteArray,
+        startIndex: Int,
+        length: Int
     ) {
-        Log.i(TAG, "[$flag]writeChunkContentBytes last bytes:${contentChunkBytes.last()}")
-        bos.write(contentChunkBytes)
+        //Log.i(TAG, "[$uuid]writeChunkContentBytes length:${length} byte first:${contentChunkBytes[0]} last:${contentChunkBytes[length-1]} last-1:${contentChunkBytes[length-2]}")
+        Log.i(TAG, "[$uuid]writeChunkContentBytes length:${length}")
+        bos.write(contentChunkBytes, startIndex, length)
+        progressListener?.onProgress(
+            null,
+            totalLength,
+            writtenLength,
+            (((writtenLength + length) / totalLength.toDouble()) * 100).toInt(),
+            0
+        )
     }
 
     fun setClosed(closed: Boolean) {
@@ -209,23 +276,20 @@ abstract class CommonWriteThread(
                 Log.i(TAG, "inputStream available:${available}")
                 val bufferSize = 2048
                 val fileBuffer = ByteArray(bufferSize)
-                val flag = UUID.randomUUID().toString()
-                val gson = Gson()
-                var chunkLength = (available / bufferSize)
+                val uuid = UUID.randomUUID().toString()
+                var chunkCount: Int = (available / bufferSize).toInt()
                 if (available % bufferSize != 0L) {
-                    chunkLength += 1
+                    chunkCount += 1
                 }
                 //start
-                val customHeader = mapOf(
-                    "content-type" to "application/file",
-                    "file-name" to (uriFileNameAndInputStream.fileName ?: ""),
-                    "content-length" to available,
-                    "content-chunked" to true,
-                    "chunk-length" to chunkLength
-                )
                 try {
                     val startTimeMills = System.currentTimeMillis()
-                    writeChunkStartBytes(bos, flag, gson, customHeader)
+                    writeChunkStartBytes(
+                        bos, uuid, ContentType.File,
+                        uriFileNameAndInputStream.fileName, available,
+                        true, chunkCount
+                    )
+                    var writtenBytesSize = 0L
                     while (true) {
                         val readCount = fbis.read(fileBuffer)
                         if (readCount == -1) {
@@ -233,17 +297,21 @@ abstract class CommonWriteThread(
                             break
                         }
                         //content
-                        if (readCount == bufferSize) {
-                            writeChunkContentBytes(bos, flag, fileBuffer)
-                        } else {
-                            val dstByteArray = ByteArray(readCount)
-                            System.arraycopy(fileBuffer, 0, dstByteArray, 0, readCount)
-                            writeChunkContentBytes(bos, flag, dstByteArray)
-                        }
+                        writeChunkContentBytes(
+                            bos,
+                            uuid,
+                            available,
+                            writtenBytesSize,
+                            fileBuffer,
+                            0,
+                            readCount
+                        )
+                        writtenBytesSize += readCount
                     }
+                    bos.flush()
                     Log.i(
                         TAG,
-                        "write to bos finish, time spend:${(System.currentTimeMillis() - startTimeMills) / 1000f}s"
+                        "write to bos finish, time spend:${(System.currentTimeMillis() - startTimeMills) / 1000f}s, bytesWriteSize:${writtenBytesSize}"
                     )
                 } catch (e: Exception) {
                     e.printStackTrace()

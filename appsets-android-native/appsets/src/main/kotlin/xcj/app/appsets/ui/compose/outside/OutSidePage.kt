@@ -63,7 +63,7 @@ import xcj.app.appsets.server.model.UserScreenInfo
 import xcj.app.appsets.ui.compose.LocalOrRemoteImage
 import xcj.app.appsets.ui.compose.MainViewModel
 import xcj.app.appsets.ui.compose.PageRouteNameProvider
-import xcj.app.appsets.ui.compose.win11Snapshot.ComponentImageButton
+import xcj.app.appsets.ui.compose.start.ComponentImageButton
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable

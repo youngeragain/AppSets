@@ -9,7 +9,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import coil.compose.AsyncImage
 import xcj.app.appsets.ktx.isHttpUrl
-import xcj.app.appsets.ui.compose.win11Snapshot.anyToPainter
+import xcj.app.appsets.ui.compose.start.anyToPainter
 import java.io.File
 
 @Composable

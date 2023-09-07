@@ -1,14 +1,14 @@
 package xcj.app.appsets.ui.compose.wlanp2p
 
-import android.content.Context
 import android.util.Log
 import java.net.InetSocketAddress
 import java.net.Socket
 
 class ClientThread(
-    private val context: Context,
     private val host: String?,
     private val port: Int,
+    private val readProgressListener: ProgressListener?,
+    private val writeProgressListener: ProgressListener?,
     private val contentReceivedListener: ContentReceivedListener,
     private val establishListener: EstablishListener,
     private val iSocketExceptionListener: ISocketExceptionListener
@@ -51,12 +51,18 @@ class ClientThread(
             ClientReadThread(
                 socket,
                 inputStream,
+                readProgressListener,
                 contentReceivedListener,
                 iSocketExceptionListener
             ).also {
                 readThread = it
             }.start()
-            ClientWriteThread(socket, outputStream, iSocketExceptionListener).also {
+            ClientWriteThread(
+                socket,
+                outputStream,
+                writeProgressListener,
+                iSocketExceptionListener
+            ).also {
                 writeThread = it
             }.start()
         } catch (e: Exception) {

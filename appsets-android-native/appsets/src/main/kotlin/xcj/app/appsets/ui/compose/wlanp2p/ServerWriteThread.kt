@@ -6,9 +6,11 @@ import java.net.ServerSocket
 class ServerWriteThread(
     private val serverSocket: ServerSocket,
     outputStream: OutputStream,
+    writeProgressListener: ProgressListener?,
     socketExceptionListener: ISocketExceptionListener
 ) : CommonWriteThread(
     outputStream,
+    writeProgressListener,
     socketExceptionListener
 ) {
     override val TAG = "ServerWriteThread"

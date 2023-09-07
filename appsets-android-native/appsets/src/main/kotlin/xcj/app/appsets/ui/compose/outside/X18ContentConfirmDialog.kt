@@ -30,7 +30,7 @@ fun X18ContentConfirmDialog(
         }) {
             Box(
                 modifier = Modifier
-                    .fillMaxWidth(0.85f)
+                    .fillMaxWidth()
                     .heightIn(min = 250.dp, max = 450.dp)
                     .background(
                         MaterialTheme.colorScheme.surfaceVariant,

@@ -6,9 +6,15 @@ import java.net.Socket
 class ClientReadThread(
     private val socket: Socket,
     inputStream: InputStream,
+    progressListener: ProgressListener?,
     contentReceivedListener: ContentReceivedListener,
     iSocketExceptionListener: ISocketExceptionListener
-) : CommonReadThread(inputStream, contentReceivedListener, iSocketExceptionListener) {
+) : CommonReadThread(
+    inputStream,
+    progressListener,
+    contentReceivedListener,
+    iSocketExceptionListener
+) {
     override val TAG = "ClientReadThread"
     override fun isSocketClosed(): Boolean {
         return socket.isClosed

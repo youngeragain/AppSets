@@ -63,7 +63,7 @@ object RetrofitProvider {
             }
             val hostnameVerifier: HostnameVerifier =
                 HostnameVerifier { hostname, session ->
-                    Log.e("RetrofitProvider", "hostnameVerifier:${hostname}")
+                    Log.i("RetrofitProvider", "hostnameVerifier:${hostname}")
                     if (hostname == BuildConfig.ApiHostAddress) {
                         return@HostnameVerifier true
                     }

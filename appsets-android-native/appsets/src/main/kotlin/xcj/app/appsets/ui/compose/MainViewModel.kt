@@ -25,11 +25,11 @@ import xcj.app.appsets.usecase.QrCodeUseCase
 import xcj.app.appsets.usecase.ScreenPostUseCase
 import xcj.app.appsets.usecase.ScreenUseCase
 import xcj.app.appsets.usecase.SearchUseCase
+import xcj.app.appsets.usecase.StartUseCase
 import xcj.app.appsets.usecase.SystemUseCase
 import xcj.app.appsets.usecase.ThirdPartUseCase
 import xcj.app.appsets.usecase.UserInfoUseCase
 import xcj.app.appsets.usecase.UserLoginUseCase
-import xcj.app.appsets.usecase.Win11SnapShotUseCase
 import xcj.app.compose_share.compose.usecase.ComposeDynamicUseCase
 
 
@@ -50,7 +50,7 @@ class MainViewModel : BaseViewModel() {
     val mediaUseCase: MediaUseCase = MediaUseCase(arrayOf("remote", "local"), false)
     val bottomMenuUseCase: BottomMenuUseCase = BottomMenuUseCase()
     val appSetsUseCase: AppSetsUseCase = AppSetsUseCase(viewModelScope)
-    val win11SnapShotUseCase: Win11SnapShotUseCase = Win11SnapShotUseCase(viewModelScope)
+    val startUseCase: StartUseCase = StartUseCase(viewModelScope)
     val userInfoUseCase: UserInfoUseCase = UserInfoUseCase(viewModelScope)
 
 
@@ -60,11 +60,11 @@ class MainViewModel : BaseViewModel() {
     }
 
     fun pinApp(appPackageName: String?) {
-        win11SnapShotUseCase.addPinnedApp(appPackageName)
+        startUseCase.addPinnedApp(appPackageName)
     }
 
     fun unPinApp(appPackageName: String?) {
-        win11SnapShotUseCase.unPinApp(appPackageName)
+        startUseCase.unPinApp(appPackageName)
     }
 
     fun toLoginPageOrSinOut(context: Context) {

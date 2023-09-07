@@ -21,7 +21,7 @@ class BottomMenuUseCase() : NoConfigUseCase() {
             return
         with(tabItemsState) {
             val tab0 = TabItemState(
-                type = PageRouteNameProvider.Win11SnapShotPage,
+                type = PageRouteNameProvider.StartPage,
                 iconRes = R.drawable.outline_play_circle_outline_24,
                 name = "开始",
                 isSelect = mutableStateOf(true)
@@ -49,7 +49,7 @@ class BottomMenuUseCase() : NoConfigUseCase() {
         }
     }
 
-    fun invalidateWhenMainCompose(navCurrentRoute: String? = PageRouteNameProvider.Win11AllAppsPage) {
+    fun invalidateWhenMainCompose(navCurrentRoute: String? = PageRouteNameProvider.StartAllAppsPage) {
         if (!tabVisibilityState.value)
             tabVisibilityState.value = true
         mSavedLastNavDestination = null

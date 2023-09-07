@@ -22,7 +22,7 @@ import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.PlayerView
 import xcj.app.appsets.im.CommonURLJson
 import xcj.app.appsets.service.MediaPlayback101Service
-import xcj.app.appsets.ui.compose.win11Snapshot.SpotLightState
+import xcj.app.appsets.ui.compose.start.SpotLightState
 import xcj.app.appsets.util.DesignRecorder
 import xcj.app.core.android.toplevelfun.timestampToMSS
 import xcj.app.core.foundation.usecase.NoConfigUseCase

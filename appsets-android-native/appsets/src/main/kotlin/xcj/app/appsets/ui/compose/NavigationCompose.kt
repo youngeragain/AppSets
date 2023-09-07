@@ -39,21 +39,21 @@ import xcj.app.appsets.ui.compose.outside.ScreenEditPage
 import xcj.app.appsets.ui.compose.search.SearchPage
 import xcj.app.appsets.ui.compose.settings.AboutPage
 import xcj.app.appsets.ui.compose.settings.SettingsPage
+import xcj.app.appsets.ui.compose.start.AppDefinition
+import xcj.app.appsets.ui.compose.start.ItemDefinition
+import xcj.app.appsets.ui.compose.start.SpotLightState
+import xcj.app.appsets.ui.compose.start.StartAllAppsPage
+import xcj.app.appsets.ui.compose.start.StartPage
 import xcj.app.appsets.ui.compose.user.UserProfilePage
-import xcj.app.appsets.ui.compose.win11Snapshot.AppDefinition
-import xcj.app.appsets.ui.compose.win11Snapshot.ItemDefinition
-import xcj.app.appsets.ui.compose.win11Snapshot.SpotLightState
-import xcj.app.appsets.ui.compose.win11Snapshot.Win11AllAppsPage
-import xcj.app.appsets.ui.compose.win11Snapshot.Win11SnapShotPage
 import xcj.app.appsets.usecase.models.Application
 import xcj.app.compose_share.compose.dynamic.DynamicPage
 
 @SuppressLint("ResourceAsColor")
 @UnstableApi
 @Composable
-fun NavigationCompose(navController: NavHostController){
-    NavHost(navController = navController, PageRouteNameProvider.Win11SnapShotPage) {
-        composable(PageRouteNameProvider.Win11SnapShotPage) {
+fun NavigationCompose(navController: NavHostController) {
+    NavHost(navController = navController, PageRouteNameProvider.StartPage) {
+        composable(PageRouteNameProvider.StartPage) {
             val context = LocalContext.current
             val viewModel: MainViewModel = viewModel(context as AppCompatActivity)
             LoginInterceptorCompose(
@@ -66,7 +66,7 @@ fun NavigationCompose(navController: NavHostController){
                     viewModel.toLoginPageOrSinOut(context)
                 }
             ) {
-                Win11SnapShotPage(
+                StartPage(
                     onSearchBarClick = {
                         navController.navigate(PageRouteNameProvider.SearchPage)
                     },
@@ -90,12 +90,12 @@ fun NavigationCompose(navController: NavHostController){
                     onShareClick = {
                         viewModel.toShareActivity(context)
                     },
-                    onWin11SnapShotStateClick = { any, payload ->
+                    onSnapShotStateClick = { any, payload ->
                         when (any) {
                             is SpotLightState.AudioPlayer -> {}
                             is SpotLightState.PinnedApps -> {
                                 if (payload == "more_action") {
-                                    navController.navigate(PageRouteNameProvider.Win11AllAppsPage)
+                                    navController.navigate(PageRouteNameProvider.StartAllAppsPage)
                                 } else if (payload is AppDefinition) {
                                     any.onClick?.invoke(any, context, payload)
                                 }
@@ -142,7 +142,7 @@ fun NavigationCompose(navController: NavHostController){
                     })
             }
         }
-        composable(PageRouteNameProvider.Win11AllAppsPage) {
+        composable(PageRouteNameProvider.StartAllAppsPage) {
             val context = LocalContext.current
             val viewModel: MainViewModel = viewModel(context as AppCompatActivity)
             LoginInterceptorCompose(
@@ -155,7 +155,7 @@ fun NavigationCompose(navController: NavHostController){
                     viewModel.toLoginPageOrSinOut(context)
                 }
             ) {
-                Win11AllAppsPage(
+                StartAllAppsPage(
                     tabVisibilityState = viewModel.bottomMenuUseCase.tabVisibilityState,
                     onBackClick = {
                         navController.navigateUp()
@@ -293,7 +293,6 @@ fun NavigationCompose(navController: NavHostController){
                 )
             }
         }
-
         composable(PageRouteNameProvider.ScreenDetailsPage) {
             val context = LocalContext.current
             val viewModel: MainViewModel = viewModel(context as AppCompatActivity)
@@ -358,7 +357,6 @@ fun NavigationCompose(navController: NavHostController){
                     })
             }
         }
-
         composable(PageRouteNameProvider.ConversationOverviewPage) {
             val context = LocalContext.current
             val viewModel: MainViewModel = viewModel(context as AppCompatActivity)
@@ -466,7 +464,6 @@ fun NavigationCompose(navController: NavHostController){
                 )
             }
         }
-
         composable(PageRouteNameProvider.GroupInfoPage) {
             val context = LocalContext.current
             val viewModel: MainViewModel = viewModel(context as AppCompatActivity)
@@ -506,7 +503,6 @@ fun NavigationCompose(navController: NavHostController){
                 )
             }
         }
-
         composable(PageRouteNameProvider.AppSetsCenterPage) {
             val context = LocalContext.current
             val viewModel: MainViewModel = viewModel(context as AppCompatActivity)
@@ -551,7 +547,7 @@ fun NavigationCompose(navController: NavHostController){
                         }
                     },
                     onShareClick = {
-                        viewModel.toLoginPageOrSinOut(context)
+                        viewModel.toShareActivity(context)
                     },
                     onSettingsClick = {
                         navController.navigate(PageRouteNameProvider.SettingsPage)
@@ -822,7 +818,6 @@ fun NavigationCompose(navController: NavHostController){
                 )
             }
         }
-
         composable(PageRouteNameProvider.CreateGroup) {
             val context = LocalContext.current
             val viewModel: MainViewModel = viewModel(context as AppCompatActivity)
@@ -857,7 +852,6 @@ fun NavigationCompose(navController: NavHostController){
                 )
             }
         }
-
         composable(PageRouteNameProvider.ConversationDetailsMorePage) {
             val context = LocalContext.current
             val viewModel: MainViewModel = viewModel(context as AppCompatActivity)
@@ -921,7 +915,6 @@ fun NavigationCompose(navController: NavHostController){
                 )
             }
         }
-
         composable(PageRouteNameProvider.AboutPage) {
             val context = LocalContext.current
             val viewModel: MainViewModel = viewModel(context as AppCompatActivity)
@@ -939,7 +932,6 @@ fun NavigationCompose(navController: NavHostController){
                 }
             )
         }
-
         composable(PageRouteNameProvider.DynamicPage) {
             val context = LocalContext.current
             val viewModel: MainViewModel = viewModel(context as AppCompatActivity)
@@ -963,7 +955,6 @@ fun NavigationCompose(navController: NavHostController){
                 composeMethods = viewModel.composeDynamicUseCase?.composeMethodsState,
             )
         }
-
     }
 }
 

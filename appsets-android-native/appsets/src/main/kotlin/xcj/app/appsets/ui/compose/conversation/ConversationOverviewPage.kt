@@ -61,7 +61,7 @@ import xcj.app.appsets.im.Session
 import xcj.app.appsets.im.SystemContentInterface
 import xcj.app.appsets.ui.compose.LocalOrRemoteImage
 import xcj.app.appsets.ui.compose.MainViewModel
-import xcj.app.appsets.ui.compose.win11Snapshot.ComponentImageButton
+import xcj.app.appsets.ui.compose.start.ComponentImageButton
 
 @UnstableApi
 @OptIn(ExperimentalMaterial3Api::class)

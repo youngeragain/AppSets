@@ -1,12 +1,12 @@
 package xcj.app.appsets.ui.compose.wlanp2p
 
-import android.content.Context
 import android.util.Log
 import java.io.IOException
 import java.net.ServerSocket
 
 class ServerThread(
-    private val context: Context,
+    private val readProgressListener: ProgressListener?,
+    private val writeProgressListener: ProgressListener?,
     private val contentReceivedListener: ContentReceivedListener,
     private val establishListener: EstablishListener,
     private val socketExceptionListener: ISocketExceptionListener
@@ -50,12 +50,18 @@ class ServerThread(
             ServerReadThread(
                 serverSocket,
                 inputStream,
+                readProgressListener,
                 contentReceivedListener,
                 socketExceptionListener
             ).also {
                 readThread = it
             }.start()
-            ServerWriteThread(serverSocket, outputStream, socketExceptionListener).also {
+            ServerWriteThread(
+                serverSocket,
+                outputStream,
+                writeProgressListener,
+                socketExceptionListener
+            ).also {
                 writeThread = it
             }.start()
         } catch (e: IOException) {

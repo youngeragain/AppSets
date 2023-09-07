@@ -298,7 +298,7 @@ fun AddScreenPostPage(
                         .padding(12.dp)
                         .align(Alignment.TopEnd)
                 ) {
-                    Image(
+                    Icon(
                         painter =
                         painterResource(id = R.drawable.ic_baseline_slow_motion_video_24),
                         contentDescription = null,
