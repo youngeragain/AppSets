@@ -30,6 +30,11 @@ spring:
     virtual-host: /
 server:
   port: 8084
+  ssl:
+    key-store: classpath:ssl/ca.p12
+    key-store-password: (AppSets)1224888759
+    key-store-type: PKCS12
+    key-alias: 1
 logging:
   level:
     xcj.* : debug

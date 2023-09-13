@@ -7,7 +7,7 @@
         user_followers_2022(
         uid,
         follower_uid,
-        follower_datetime,
+        follow_datetime,
         create_time,
         update_time
         )
@@ -27,5 +27,49 @@
         delete from user_followers_2022 where uid=#{uid} and follower_uid=${followerUid}
     </delete>
 
+    <select id="getFollowersByUserId" resultType="xcj.app.userinfo.model.res.UserInfoRes">
+        select
+        user_2022.agree_to_the_agreement,
+        user_2022.uid,
+        user_info_2022.`name`,
+        user_info_2022.age,
+        user_info_2022.sex,
+        user_info_2022.email,
+        user_info_2022.phone,
+        user_info_2022.address,
+        user_info_2022.avatar_url,
+        user_info_2022.introduction,
+        user_info_2022.company,
+        user_info_2022.profession,
+        user_info_2022.website
+        from
+        (select user_followers_2022.follower_uid from user_followers_2022 where user_followers_2022.uid = #{uid}) as temp
+        left join user_info_2022
+        on user_info_2022.uid = temp.follower_uid
+        left join user_2022
+        on temp.follower_uid = user_2022.uid
+    </select>
+     <select id="getFollowedUsersByUser" resultType="xcj.app.userinfo.model.res.UserInfoRes">
+         select
+         user_2022.agree_to_the_agreement,
+         user_2022.uid,
+         user_info_2022.`name`,
+         user_info_2022.age,
+         user_info_2022.sex,
+         user_info_2022.email,
+         user_info_2022.phone,
+         user_info_2022.address,
+         user_info_2022.avatar_url,
+         user_info_2022.introduction,
+         user_info_2022.company,
+         user_info_2022.profession,
+         user_info_2022.website
+         from
+         (select user_followers_2022.uid from user_followers_2022 where user_followers_2022.follower_uid = #{uid}) as temp
+         left join user_info_2022
+         on user_info_2022.uid = temp.uid
+         left join user_2022
+         on temp.uid = user_2022.uid
+     </select>
     <cache/>
 </mapper>
