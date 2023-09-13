@@ -13,4 +13,5 @@ interface ApplicationDao{
     fun getApplicationsByCategoryPaged(category:ApplicationCategory, page: Int, pageSize: Int):List<Application>?
     fun hasAppNameExist(appName: String): Boolean
     fun searchApplicationsByKeywords(keywords: String, limit:Int, offset:Int):List<Application>?
+    fun getApplicationByUserId(uid: String): List<Application>?
 }

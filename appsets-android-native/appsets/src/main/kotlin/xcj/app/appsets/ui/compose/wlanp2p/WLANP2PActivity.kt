@@ -83,8 +83,10 @@ import kotlin.concurrent.thread
 class WLANP2PActivity :
     BaseActivity<ViewDataBinding, CommonViewModel, BaseViewModelFactory<CommonViewModel>>() {
     private val TAG = "WLANP2PActivity"
-    private lateinit var serverThread: ServerThread
-    private lateinit var clientThread: ClientThread
+    private lateinit var p2pOneThread: P2pOneThread
+
+    /*   private lateinit var serverThread: ServerThread
+       private lateinit var clientThread: ClientThread*/
     private var channel: WifiP2pManager.Channel? = null
     private var manager: WifiP2pManager? = null
     private var receiver: WLANP2PBroadCastReceiver? = null
@@ -149,11 +151,7 @@ class WLANP2PActivity :
     }
 
     private fun onSendInputContentClick(content: Any) {
-        if (isGroupOwner) {
-            serverThread.writeAny(content)
-        } else {
-            clientThread.writeAny(content)
-        }
+        p2pOneThread.writeAny(content)
     }
 
     fun onBackClick() {
@@ -274,12 +272,7 @@ class WLANP2PActivity :
 
     private fun closeThread(): Boolean {
         try {
-            if (::serverThread.isInitialized) {
-                serverThread.closeReadWrite()
-            }
-            if (::clientThread.isInitialized) {
-                clientThread.closeReadWrite()
-            }
+            p2pOneThread.closeReadWrite()
         } catch (e: Exception) {
             e.printStackTrace()
             return false
@@ -345,19 +338,31 @@ class WLANP2PActivity :
         if (p2pInfo == null)
             return
         val contentReceivedListener = ContentReceivedListener { contentType, contentAny ->
-            if (contentType == ContentType.Text) {
-                val contentBytes = contentAny as ByteArray
-                val stringContent = contentBytes.decodeToString()
-                Log.i(TAG, "length:${contentBytes.size} content:\n${stringContent}")
-                receivedStringContent.value = stringContent
-            } else if (contentType == ContentType.File) {
-                val file = contentAny as File
-                thread {
-                    val available = file.inputStream().available()
-                    Log.i(TAG, "received a file, available:${available}")
+            when (contentType) {
+                ContentType.ShareSystem -> {
+                    val bytes = contentAny as ByteArray
+                    val shareSystemMessage = bytes.decodeToString()
+                    if (ShareSystemMessage.ShareSystemClose == shareSystemMessage) {
+                        onCloseEstablishCLick()
+                    }
                 }
-                receivedStringContent.value =
-                    "收到文件，文件路径：${ApplicationHelper.getContextFileDir().publicDownloadDir}${File.separator}${file.name}"
+
+                ContentType.Text -> {
+                    val contentBytes = contentAny as ByteArray
+                    val stringContent = contentBytes.decodeToString()
+                    Log.i(TAG, "length:${contentBytes.size} content:\n${stringContent}")
+                    receivedStringContent.value = stringContent
+                }
+
+                ContentType.File -> {
+                    val file = contentAny as File
+                    thread {
+                        val available = file.inputStream().available()
+                        Log.i(TAG, "received a file, available:${available}")
+                    }
+                    receivedStringContent.value =
+                        "收到文件，文件路径：${ApplicationHelper.getContextFileDir().publicDownloadDir}${File.separator}${file.name}"
+                }
             }
         }
         val establishListener = EstablishListener { established ->
@@ -380,27 +385,23 @@ class WLANP2PActivity :
             ProgressListener { contentHeader, total, current, percentage, permillage ->
                 sendProgressState.value = contentHeader to percentage
             }
-        if (isGroupOwner) {//server
-            serverThread = ServerThread(
-                readProgressListener,
-                writeProgressListener,
-                contentReceivedListener,
-                establishListener,
-                socketExceptionListener
-            )
-            serverThread.start()
-        } else {//client
-            clientThread = ClientThread(
-                p2pInfo!!.groupOwnerAddress.hostAddress,
-                8988,
-                readProgressListener,
-                writeProgressListener,
-                contentReceivedListener,
-                establishListener,
-                socketExceptionListener
-            )
-            clientThread.start()
+        var host: String? = null
+        var port: Int? = null
+        if (!isGroupOwner) {
+            host = p2pInfo!!.groupOwnerAddress.hostAddress
+            port = 8988
         }
+        P2pOneThread(
+            host,
+            port,
+            readProgressListener,
+            writeProgressListener,
+            contentReceivedListener,
+            establishListener,
+            socketExceptionListener
+        ).also {
+            p2pOneThread = it
+        }.start()
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -427,11 +428,7 @@ class WLANP2PActivity :
             return
         }
         val uriFileNameAndInputStream = UriFileNameAndInputStream(fileName, inputStream)
-        if (isGroupOwner) {
-            serverThread.writeAny(uriFileNameAndInputStream)
-        } else {
-            clientThread.writeAny(uriFileNameAndInputStream)
-        }
+        p2pOneThread.writeAny(uriFileNameAndInputStream)
     }
 
     companion object {
@@ -491,21 +488,26 @@ fun MainContent(
         val customEndContent: (@Composable () -> Unit)? = if (wifiP2PIsEnable.value) {
             {
                 Row(modifier = Modifier.animateContentSize()) {
-                    if (!logicConnectEstablished.value && !canLogicConnect.value) {
-                        Button(onClick = onStartDiscoveryClick) {
-                            Text(text = "搜索", fontSize = 12.sp)
+                    if (!canLogicConnect.value) {
+                        if (!logicConnectEstablished.value) {
+                            Button(onClick = onStartDiscoveryClick) {
+                                Text(text = "搜索", fontSize = 12.sp)
+                            }
                         }
                     } else {
-                        Button(onClick = onCloseEstablishCLick) {
-                            Text(text = "关闭", fontSize = 12.sp)
+                        if (logicConnectEstablished.value) {
+                            Button(onClick = onCloseEstablishCLick) {
+                                Text(text = "关闭", fontSize = 12.sp)
+                            }
                         }
                     }
+
                     if (canLogicConnect.value && !logicConnectEstablished.value) {
                         Spacer(modifier = Modifier.width(12.dp))
                         Button(onClick = {
                             onLogicConnectClick()
                         }) {
-                            Text(text = "开启发送|接收", fontSize = 12.sp)
+                            Text(text = "开启共享", fontSize = 12.sp)
                         }
                     }
                 }

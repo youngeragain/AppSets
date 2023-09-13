@@ -19,7 +19,6 @@ import org.springframework.web.servlet.HandlerExceptionResolver
 import xcj.app.ApiDesignEncodeStr
 
 
-@Order(1)
 @Component
 class IpAddressFilter(
     apiDesignContext: ApiDesignContext,

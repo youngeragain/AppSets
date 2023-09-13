@@ -99,4 +99,19 @@ class ApplicationDaoImpl(private val mongoTemplate: MongoTemplate): ApplicationD
             null
         }
     }
+
+    override fun getApplicationByUserId(uid: String): List<Application>? {
+        return try {
+            val query = Query.query(Criteria.where("create_uid").`is`(uid))
+            val applications = mongoTemplate.find(
+                query,
+                Application::class.java,
+                "Application"
+            )
+            applications
+        }catch (e:Exception){
+            e.printStackTrace()
+            null
+        }
+    }
 }

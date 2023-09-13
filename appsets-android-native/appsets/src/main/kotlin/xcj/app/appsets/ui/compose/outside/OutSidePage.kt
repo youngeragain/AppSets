@@ -8,8 +8,6 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.ScrollableState
 import androidx.compose.foundation.interaction.Interaction
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -20,19 +18,15 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
-import androidx.compose.foundation.layout.windowInsetsBottomHeight
 import androidx.compose.foundation.layout.windowInsetsTopHeight
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.lazy.staggeredgrid.LazyStaggeredGridState
 import androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
@@ -45,13 +39,11 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onPlaced
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.toSize
@@ -104,6 +96,7 @@ fun LoadMoreHandler(
 fun OutSidePage(
     onAddButtonClick: () -> Unit,
     onRefreshButtonClick: () -> Unit,
+    onMediaFallClick: () -> Unit,
     onScreenAvatarClick: ((UserScreenInfo) -> Unit)?,
     onScreenContentClick: ((UserScreenInfo) -> Unit)?,
     onPictureClick: ((ScreenMediaFileUrl, List<ScreenMediaFileUrl>) -> Unit)?,
@@ -166,12 +159,12 @@ fun OutSidePage(
                 onScreenVideoPlayClick = onScreenVideoPlayClick
             )
         }
-        Spacer(modifier = Modifier.windowInsetsBottomHeight(WindowInsets.navigationBars))
         OutSizeTopActionBar(
             modifier = Modifier.align(Alignment.TopEnd),
             requestState = mainViewModel.screensUseCase!!.systemScreensContainer.requestingState,
             onAddButtonClick = onAddButtonClick,
-            onRefreshButtonClick = onRefreshButtonClick
+            onRefreshButtonClick = onRefreshButtonClick,
+            onMediaFallClick = onMediaFallClick
         )
 
         /*val bigImageTargetSize = if (bigImageAction?.second is PressInteraction.Press) {
@@ -206,7 +199,8 @@ fun OutSizeTopActionBar(
     modifier: Modifier,
     requestState: State<Boolean>,
     onAddButtonClick: () -> Unit,
-    onRefreshButtonClick: () -> Unit
+    onRefreshButtonClick: () -> Unit,
+    onMediaFallClick: () -> Unit
 ) {
     Column(modifier = modifier) {
         Spacer(modifier = Modifier.windowInsetsTopHeight(WindowInsets.statusBars))
@@ -223,19 +217,32 @@ fun OutSizeTopActionBar(
                 animationSpec = tween(1000),
                 label = "refresh_indicator"
             )
-            Icon(
-                painter = painterResource(R.drawable.round_refresh_24),
-                contentDescription = "refresh",
-                modifier = Modifier
-                    .size(46.dp)
-                    .background(
-                        MaterialTheme.colorScheme.primaryContainer,
-                        RoundedCornerShape(14.dp)
-                    )
-                    .clip(RoundedCornerShape(14.dp))
-                    .clickable(onClick = onRefreshButtonClick)
-                    .padding(6.dp)
-                    .rotate(rotationState)
+            /*  Icon(
+                  painter = painterResource(R.drawable.round_refresh_24),
+                  contentDescription = "refresh",
+                  modifier = Modifier
+                      .size(46.dp)
+                      .background(
+                          MaterialTheme.colorScheme.primaryContainer,
+                          RoundedCornerShape(14.dp)
+                      )
+                      .clip(RoundedCornerShape(14.dp))
+                      .clickable(onClick = onRefreshButtonClick)
+                      .padding(6.dp)
+                      .rotate(rotationState)
+              )*/
+            ComponentImageButton(
+                modifier = Modifier,
+                useImage = false,
+                resId = R.drawable.ic_baseline_slow_motion_video_24,
+                onClick = onMediaFallClick
+            )
+            ComponentImageButton(
+                modifier = Modifier,
+                useImage = false,
+                resId = R.drawable.round_refresh_24,
+                resRotate = rotationState,
+                onClick = onRefreshButtonClick
             )
             ComponentImageButton(modifier = Modifier, onClick = onAddButtonClick)
         }

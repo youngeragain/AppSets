@@ -14,6 +14,7 @@ import xcj.app.appsets.purple_module.ModuleConstant
 import xcj.app.appsets.ui.compose.conversation.InputSelector
 import xcj.app.appsets.ui.compose.wlanp2p.WLANP2PActivity
 import xcj.app.appsets.ui.nonecompose.base.BaseViewModel
+import xcj.app.appsets.ui.nonecompose.ui.MediaFallActivity
 import xcj.app.appsets.ui.nonecompose.ui.dialog.SelectActionBottomSheetDialog
 import xcj.app.appsets.usecase.AppSetsUseCase
 import xcj.app.appsets.usecase.BottomMenuUseCase
@@ -161,25 +162,15 @@ class MainViewModel : BaseViewModel() {
             }
         }
     }
-
+    private var necessaryActionsExecuted = false
     /**
      * 和用户部分没有关系的数据加载以及初始化部分工具类
      */
     fun doNecessaryActionsWhenAppTokenGot(context: Context) {
         Log.i(TAG, "doNecessaryActionsWhenAppTokenGot")
-        createNeededUseCase()
-        ThirdPartUseCase.getInstance().run {
-            setCoroutineScope(viewModelScope)
-            initSimpleFileIO(context)
-        }
-        systemUseCase?.cleanCaches()
-        mediaUseCase.onCreate(context)
-        appSetsUseCase.checkUpdate(context)
-        appSetsUseCase.loadSpotLight()
-
-    }
-
-    fun doNecessaryActionsOnCreate(context: Context) {
+        if (necessaryActionsExecuted)
+            return
+        necessaryActionsExecuted = true
         val mEventReceiver = object : EventReceiver {
             override fun getKey(): String {
                 return this@MainViewModel.toString()
@@ -195,7 +186,18 @@ class MainViewModel : BaseViewModel() {
             }
         }
         EventDispatcher.addEventReceiver(mEventReceiver)
+        createNeededUseCase()
+        ThirdPartUseCase.getInstance().run {
+            setCoroutineScope(viewModelScope)
+            initSimpleFileIO(context)
+        }
+        systemUseCase?.cleanCaches()
+        mediaUseCase.onCreate(context)
+        appSetsUseCase.checkUpdate(context)
+        appSetsUseCase.loadSpotLight()
+    }
 
+    fun doNecessaryActionsOnCreate(context: Context) {
         LocalAccountManager.restoreTokenIfNeeded()
     }
 
@@ -233,5 +235,9 @@ class MainViewModel : BaseViewModel() {
 
     fun toShareActivity(context: Context) {
         context.startActivity(Intent(context, WLANP2PActivity::class.java))
+    }
+
+    fun toMediaFallActivity(context: Context) {
+        MediaFallActivity.navigate(context)
     }
 }

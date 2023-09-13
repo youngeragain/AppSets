@@ -63,7 +63,7 @@ fun AddScreenPostPage(
     }
     Column(modifier = Modifier.imePadding()) {
         BackActionTopBar(
-            backButtonRightText = "Post Screen",
+            backButtonRightText = "添加Screen",
             endButtonText = "确认",
             onBackAction = {
                 onBackAction(false)
@@ -87,7 +87,7 @@ fun AddScreenPostPage(
                         Column {
                             CircularProgressIndicator()
                             Spacer(modifier = Modifier.height(12.dp))
-                            Text(text = "发布中")
+                            Text(text = "添加中")
                         }
                     }
                     Divider(

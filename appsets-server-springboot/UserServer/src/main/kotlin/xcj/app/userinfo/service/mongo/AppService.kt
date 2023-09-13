@@ -20,6 +20,7 @@ interface AppService {
     fun createApplicationPreCheckByUser(token: String, appName: String): DesignResponse<Boolean>
 
     fun searchApplicationsByKeywords(keywords: String, page: Int?, pageSize:Int?): DesignResponse<List<Application>?>
+    fun getUsersApplications(uid: String): DesignResponse<List<Application>?>
 }
 
 

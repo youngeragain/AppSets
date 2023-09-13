@@ -16,7 +16,7 @@ import java.io.File
 fun LocalOrRemoteImage(
     modifier: Modifier = Modifier,
     any: Any?,
-    defaultColor: Color = MaterialTheme.colorScheme.primary,
+    defaultColor: Color = MaterialTheme.colorScheme.outline,
     contentScale: ContentScale = ContentScale.Crop
 ) {
     if (any.isHttpUrl() || (any is Uri) || (any is File)) {

@@ -1,6 +1,7 @@
 package xcj.app.appsets.ui.compose
 
 import android.annotation.SuppressLint
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
@@ -11,6 +12,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.core.os.bundleOf
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.media3.common.util.UnstableApi
+import androidx.navigation.NavController
 import androidx.navigation.NavDirections
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -24,6 +26,7 @@ import xcj.app.appsets.im.CommonURLJson
 import xcj.app.appsets.im.ImMessage
 import xcj.app.appsets.im.Session
 import xcj.app.appsets.ktx.toast
+import xcj.app.appsets.server.model.ScreenMediaFileUrl
 import xcj.app.appsets.ui.compose.apps.AppDetailsPage
 import xcj.app.appsets.ui.compose.apps.AppsCenterPage
 import xcj.app.appsets.ui.compose.apps.CreateAppPage
@@ -71,12 +74,11 @@ fun NavigationCompose(navController: NavHostController) {
                         navController.navigate(PageRouteNameProvider.SearchPage)
                     },
                     onSettingsUserNameClick = {
-                        val userInfo = LocalAccountManager._userInfo.value
-                        if (userInfo.uid.isNotEmpty()) {
-                            viewModel.userInfoUseCase.updateUserInfo(userInfo)
-                            viewModel.screensUseCase?.loadScreensByUid(userInfo.uid)
-                            navController.navigate(PageRouteNameProvider.UserProfilePage)
-                        }
+                        navigateToUserInfoByUid(
+                            navController,
+                            viewModel,
+                            LocalAccountManager._userInfo.value.uid
+                        )
                     },
                     onSettingsClick = {
                         navController.navigate(PageRouteNameProvider.SettingsPage)
@@ -198,9 +200,7 @@ fun NavigationCompose(navController: NavHostController) {
                         }
                     },
                     onUserInfoClick = { userInfo ->
-                        viewModel.userInfoUseCase.updateUserInfo(userInfo)
-                        viewModel.screensUseCase?.loadScreensByUid(userInfo!!.uid)
-                        navController.navigate(PageRouteNameProvider.UserProfilePage)
+                        navigateToUserInfoByUid(navController, viewModel, userInfo?.uid)
                     },
                     onGroupInfoClick = { groupInfo ->
                         viewModel.groupInfoUseCase?.updateGroupInfo(groupInfo)
@@ -211,26 +211,10 @@ fun NavigationCompose(navController: NavHostController) {
                         navController.navigate(PageRouteNameProvider.ScreenDetailsPage)
                     },
                     onPictureClick = { pictureUrl, allPictureUrls ->
-                        StfalconImageViewer.Builder(
-                            context,
-                            allPictureUrls
-                        ) { view, imageUrl ->
-                            view.load(imageUrl.mediaFileUrl)
-                        }.withHiddenStatusBar(false)
-                            .withStartPosition(allPictureUrls.indexOf(pictureUrl))
-                            .show()
+                        showPictureViewDialog(context, pictureUrl, allPictureUrls)
                     },
                     onScreenVideoPlayClick = { mediaFileUrl ->
-                        val intent = Intent(context, ExoPlayerActivity::class.java).apply {
-                            val videoJson = Gson().toJson(
-                                CommonURLJson.VideoURLJson(
-                                    mediaFileUrl.mediaFileUrl,
-                                    mediaFileUrl.mediaDescription
-                                )
-                            )
-                            putExtra("video_json", videoJson)
-                        }
-                        context.startActivity(intent)
+                        navigateToVideoPlaybackActivity(context, mediaFileUrl)
                     }
                 )
             }
@@ -255,12 +239,11 @@ fun NavigationCompose(navController: NavHostController) {
                     onRefreshButtonClick = {
                         viewModel.screensUseCase?.loadIndexScreens(true)
                     },
+                    onMediaFallClick = {
+                        viewModel.toMediaFallActivity(context)
+                    },
                     onScreenAvatarClick = { userScreenInfo ->
-                        if (!userScreenInfo.uid.isNullOrEmpty()) {
-                            viewModel.userInfoUseCase.updateUserInfo(userScreenInfo.userInfo)
-                            viewModel.screensUseCase?.loadScreensByUid(userScreenInfo.uid)
-                            navController.navigate(PageRouteNameProvider.UserProfilePage)
-                        }
+                        navigateToUserInfoByUid(navController, viewModel, userScreenInfo.uid)
                     },
                     onScreenContentClick = { userScreenInfo ->
                         if (!userScreenInfo.uid.isNullOrEmpty()) {
@@ -269,26 +252,10 @@ fun NavigationCompose(navController: NavHostController) {
                         }
                     },
                     onPictureClick = { pictureUrl, allPictureUrls ->
-                        StfalconImageViewer.Builder(
-                            context,
-                            allPictureUrls
-                        ) { view, imageUrl ->
-                            view.load(imageUrl.mediaFileUrl)
-                        }.withHiddenStatusBar(false)
-                            .withStartPosition(allPictureUrls.indexOf(pictureUrl))
-                            .show()
+                        showPictureViewDialog(context, pictureUrl, allPictureUrls)
                     },
                     onScreenVideoPlayClick = { mediaFileUrl ->
-                        val intent = Intent(context, ExoPlayerActivity::class.java).apply {
-                            val videoJson = Gson().toJson(
-                                CommonURLJson.VideoURLJson(
-                                    mediaFileUrl.mediaFileUrl,
-                                    mediaFileUrl.mediaDescription
-                                )
-                            )
-                            putExtra("video_json", videoJson)
-                        }
-                        context.startActivity(intent)
+                        navigateToVideoPlaybackActivity(context, mediaFileUrl)
                     }
                 )
             }
@@ -327,33 +294,13 @@ fun NavigationCompose(navController: NavHostController) {
                         viewModel.screensUseCase?.userClickLikeScreen()
                     },
                     onUserAvatarClick = { userInfo ->
-                        if (!userInfo?.uid.isNullOrEmpty()) {
-                            viewModel.userInfoUseCase.updateUserInfo(userInfo)
-                            viewModel.screensUseCase?.loadScreensByUid(userInfo!!.uid)
-                            navController.navigate(PageRouteNameProvider.UserProfilePage)
-                        }
+                        navigateToUserInfoByUid(navController, viewModel, userInfo?.uid)
                     },
                     onPictureClick = { pictureUrl, allPictureUrls ->
-                        StfalconImageViewer.Builder(
-                            context,
-                            allPictureUrls
-                        ) { view, imageUrl ->
-                            view.load(imageUrl.mediaFileUrl)
-                        }.withHiddenStatusBar(false)
-                            .withStartPosition(allPictureUrls.indexOf(pictureUrl))
-                            .show()
+                        showPictureViewDialog(context, pictureUrl, allPictureUrls)
                     },
                     onScreenVideoPlayClick = { mediaFileUrl ->
-                        val intent = Intent(context, ExoPlayerActivity::class.java).apply {
-                            val videoJson = Gson().toJson(
-                                CommonURLJson.VideoURLJson(
-                                    mediaFileUrl.mediaFileUrl,
-                                    mediaFileUrl.mediaDescription
-                                )
-                            )
-                            putExtra("video_json", videoJson)
-                        }
-                        context.startActivity(intent)
+                        navigateToVideoPlaybackActivity(context, mediaFileUrl)
                     })
             }
         }
@@ -380,9 +327,10 @@ fun NavigationCompose(navController: NavHostController) {
                     onCreateGroupClick = {
                         navController.navigate(PageRouteNameProvider.CreateGroup)
                     },
-                    onConversionSessionClick = { session ->
+                    onConversionSessionClick = { session, shouldNavigateNewPage ->
                         viewModel.conversationUseCase?.updateCurrentSessionBySession(session)
-                        navController.navigate(PageRouteNameProvider.ConversationDetailsPage)
+                        if (shouldNavigateNewPage)
+                            navController.navigate(PageRouteNameProvider.ConversationDetailsPage)
                     },
                     onSystemImMessageClick = { session, imMessage ->
                         Log.e("ConversationOverviewPage", "system im message click")
@@ -390,13 +338,8 @@ fun NavigationCompose(navController: NavHostController) {
                     onAvatarClick = { type, id ->
                         when (type) {
                             "user" -> {
-                                if (id.isNotEmpty()) {
-                                    viewModel.userInfoUseCase.updateUserInfoByUid(id)
-                                    viewModel.screensUseCase?.loadScreensByUid(id)
-                                    navController.navigate(PageRouteNameProvider.UserProfilePage)
-                                }
+                                navigateToUserInfoByUid(navController, viewModel, id)
                             }
-
                             "group" -> {
                                 viewModel.groupInfoUseCase?.updateGroupInfoByGroupId(id)
                                 navController.navigate(PageRouteNameProvider.GroupInfoPage)
@@ -433,6 +376,12 @@ fun NavigationCompose(navController: NavHostController) {
                     onBackClick = {
                         navController.navigateUp()
                     },
+                    userInfoState = viewModel.userInfoUseCase.currentUserInfoState,
+                    userApplicationsState = viewModel.userInfoUseCase.applicationsForThisUserState,
+                    userFollowersState = viewModel.userInfoUseCase.followerUserListState,
+                    userFollowedState = viewModel.userInfoUseCase.followedUserListState,
+                    myFollowedThisUserState = viewModel.userInfoUseCase.myFollowedState,
+                    userScreensState = viewModel.screensUseCase!!.userScreensContainer!!.screensState,
                     onAddFriendClick = { userInfo ->
                         viewModel.systemUseCase?.requestAddFriend(
                             userInfo.uid,
@@ -441,25 +390,44 @@ fun NavigationCompose(navController: NavHostController) {
                         )
                     },
                     onFollowStateClick = { userInfo ->
-                        viewModel.systemUseCase?.flipFollowToUserState(userInfo)
+                        viewModel.systemUseCase?.flipFollowToUserState(userInfo) {
+                            viewModel.userInfoUseCase.updateUserFollowState()
+                        }
                     },
-                    onPictureClick = { pictureUrl, allPictureUrls ->
-                        StfalconImageViewer.Builder(
-                            context,
-                            allPictureUrls
-                        ) { view, imageUrl ->
-                            view.load(imageUrl.mediaFileUrl)
-                        }.withHiddenStatusBar(false)
-                            .withStartPosition(allPictureUrls.indexOf(pictureUrl))
-                            .show()
-                    },
+
                     onTalkToUserClick = { userInfo ->
                         viewModel.conversationUseCase?.updateCurrentSessionByUserInfo(userInfo)
                         navController.navigate(PageRouteNameProvider.ConversationDetailsPage)
                     },
+                    onPictureClick = { pictureUrl, allPictureUrls ->
+                        showPictureViewDialog(context, pictureUrl, allPictureUrls)
+                    },
                     onScreenContentClick = { userScreenInfo ->
                         viewModel.screensUseCase?.updateCurrentViewScreen(userScreenInfo)
                         navController.navigate(PageRouteNameProvider.ScreenDetailsPage)
+                    },
+                    onScreenVideoPlayClick = { mediaFileUrl ->
+                        navigateToVideoPlaybackActivity(context, mediaFileUrl)
+                    },
+
+                    onLoadMoreScreens = {
+                        viewModel.screensUseCase!!.loadMore()
+                    },
+                    onAppClick = { application ->
+                        navController.findDestination(PageRouteNameProvider.AppDetailsPage)?.id?.let { id ->
+                            val navDirections: NavDirections = object : NavDirections {
+                                override val actionId: Int = id
+                                override val arguments: Bundle =
+                                    bundleOf(Constants.BK_APP_INFO to application)
+                            }
+                            navController.navigate(navDirections)
+                        }
+                    },
+                    onUserInfoClick = { userInfo ->
+                        //TODO bug
+                        /*viewModel.userInfoUseCase.updateUserInfo(userInfo)
+                        viewModel.screensUseCase?.loadScreensByUid(userInfo!!.uid)
+                        navController.navigate(PageRouteNameProvider.UserProfilePage)*/
                     }
                 )
             }
@@ -483,11 +451,7 @@ fun NavigationCompose(navController: NavHostController) {
                         navController.navigateUp()
                     },
                     onUserAvatarClick = { userInfo ->
-                        if (!userInfo?.uid.isNullOrEmpty()) {
-                            viewModel.userInfoUseCase.updateUserInfo(userInfo)
-                            viewModel.screensUseCase?.loadScreensByUid(userInfo!!.uid)
-                            navController.navigate(PageRouteNameProvider.UserProfilePage)
-                        }
+                        navigateToUserInfoByUid(navController, viewModel, userInfo?.uid)
                     },
                     onTalkToGroupClick = { groupInfo ->
                         viewModel.conversationUseCase?.updateCurrentSessionByGroupInfo(groupInfo)
@@ -539,12 +503,11 @@ fun NavigationCompose(navController: NavHostController) {
                         navController.navigate(PageRouteNameProvider.CreateAppPage)
                     },
                     onSettingsUserNameClick = {
-                        val userInfo = LocalAccountManager._userInfo.value
-                        if (userInfo.uid.isNotEmpty()) {
-                            viewModel.userInfoUseCase.updateUserInfo(userInfo)
-                            viewModel.screensUseCase?.loadScreensByUid(userInfo.uid)
-                            navController.navigate(PageRouteNameProvider.UserProfilePage)
-                        }
+                        navigateToUserInfoByUid(
+                            navController,
+                            viewModel,
+                            LocalAccountManager._userInfo.value.uid
+                        )
                     },
                     onShareClick = {
                         viewModel.toShareActivity(context)
@@ -661,14 +624,10 @@ fun NavigationCompose(navController: NavHostController) {
                 ConversationDetailsPage(
                     tabVisibilityState = viewModel.bottomMenuUseCase.tabVisibilityState,
                     onBackClick = {
-                        navController.popBackStack()
+                        navController.navigateUp()
                     },
-                    onUserAvatarClick = { imMessage ->
-                        if (imMessage.msgFromInfo.uid.isNotEmpty()) {
-                            viewModel.userInfoUseCase.updateUserInfoByUid(imMessage.msgFromInfo.uid)
-                            viewModel.screensUseCase?.loadScreensByUid(imMessage.msgFromInfo.uid)
-                            navController.navigate(PageRouteNameProvider.UserProfilePage)
-                        }
+                    onAvatarClick = { imMessage ->
+                        navigateToUserInfoByUid(navController, viewModel, imMessage.msgFromInfo.uid)
                     },
                     onMoreClick = { imObj ->
                         if (imObj == null)
@@ -716,18 +675,13 @@ fun NavigationCompose(navController: NavHostController) {
                         viewModel.screenPostUseCase?.onRemoveMediaContent(type, scalableItemState)
                     },
                     onVideoPlayClick = { mediaUriWrapper ->
-                        val intent = Intent(context, ExoPlayerActivity::class.java).apply {
-                            val url =
-                                mediaUriWrapper.uri.path ?: ""
-                            val videoJson = Gson().toJson(
-                                CommonURLJson.VideoURLJson(
-                                    url,
-                                    mediaUriWrapper.name
-                                )
+                        navigateToVideoPlaybackActivity(
+                            context,
+                            ScreenMediaFileUrl(
+                                mediaUriWrapper.uri.path ?: "",
+                                null, mediaUriWrapper.name, "application/video", 0
                             )
-                            putExtra("video_json", videoJson)
-                        }
-                        context.startActivity(intent)
+                        )
                     }
                 )
             }
@@ -752,6 +706,9 @@ fun NavigationCompose(navController: NavHostController) {
                     application = application,
                     onBackAction = {
                         navController.navigateUp()
+                    },
+                    onShowApplicationCreatorClick = { uid ->
+                        navigateToUserInfoByUid(navController, viewModel, uid)
                     },
                     onAddPlatformInfoClick = { platform ->
                         navController.findDestination(PageRouteNameProvider.CreateAppPage)?.id?.let { id ->
@@ -874,11 +831,7 @@ fun NavigationCompose(navController: NavHostController) {
                     onRequestAddFriend = {},
                     onRequestDeleteFriend = {},
                     onShowUserInfoClick = { uid ->
-                        if (uid.isNotEmpty()) {
-                            viewModel.userInfoUseCase.updateUserInfoByUid(uid)
-                            viewModel.screensUseCase?.loadScreensByUid(uid)
-                            navController.navigate(PageRouteNameProvider.UserProfilePage)
-                        }
+                        navigateToUserInfoByUid(navController, viewModel, uid)
                     },
                     onRequestJoinGroup = {},
                     onRequestLeaveGroup = {},
@@ -956,6 +909,43 @@ fun NavigationCompose(navController: NavHostController) {
             )
         }
     }
+}
+
+fun navigateToUserInfoByUid(navController: NavController, viewModel: MainViewModel, uid: String?) {
+    if (uid.isNullOrEmpty())
+        return
+    viewModel.userInfoUseCase.updateUserInfoByUid(uid)
+    viewModel.screensUseCase?.loadScreensByUid(uid)
+    navController.navigate(PageRouteNameProvider.UserProfilePage)
+}
+
+@androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
+fun navigateToVideoPlaybackActivity(context: Context, mediaFileUrl: ScreenMediaFileUrl) {
+    val intent = Intent(context, ExoPlayerActivity::class.java).apply {
+        val videoJson = Gson().toJson(
+            CommonURLJson.VideoURLJson(
+                mediaFileUrl.mediaFileUrl,
+                mediaFileUrl.mediaDescription
+            )
+        )
+        putExtra("video_json", videoJson)
+    }
+    context.startActivity(intent)
+}
+
+fun showPictureViewDialog(
+    context: Context,
+    pictureUrl: ScreenMediaFileUrl,
+    allPictureUrls: List<ScreenMediaFileUrl>
+) {
+    StfalconImageViewer.Builder(
+        context,
+        allPictureUrls
+    ) { view, imageUrl ->
+        view.load(imageUrl.mediaFileUrl)
+    }.withHiddenStatusBar(false)
+        .withStartPosition(allPictureUrls.indexOf(pictureUrl))
+        .show()
 }
 
 

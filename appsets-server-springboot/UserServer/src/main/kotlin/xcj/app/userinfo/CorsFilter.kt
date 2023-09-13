@@ -10,7 +10,6 @@ import org.springframework.core.annotation.Order
 import org.springframework.stereotype.Component
 import xcj.app.CoreLogger
 
-@Order(2)
 @Component
 class CorsFilter: Filter {
     override fun doFilter(request: ServletRequest, response: ServletResponse, chain: FilterChain) {
@@ -21,7 +20,7 @@ class CorsFilter: Filter {
         //设置访问源请求方法
         responseTemp.setHeader("Access-Control-Allow-Methods", "*")
         //跨域请求的有效时间, 这里是1小时
-        responseTemp.setHeader("Access-Control-Max-Age", "3600")
+        responseTemp.setHeader("Access-Control-Max-Age", "60")
         //设置访问源请求头
         responseTemp.setHeader("Access-Control-Allow-Headers", "*")
         responseTemp.setHeader("Access-Control-Allow-Credentials", "true")

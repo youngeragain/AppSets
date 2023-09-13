@@ -135,10 +135,10 @@ interface UserApi:URLApi {
         @Path("groupId") groupId: String
     ): DesignResponse<GroupInfo?>
 
-    @GET("user/follower/state/flip")
+    @GET("user/follower/state/flip/{uid}")
     @Headers("Content-Type:application/json")
     suspend fun flipFollowToUserState(
-        @Header("uid") uid: String
+        @Path("uid") uid: String
     ): DesignResponse<Boolean>
 
     @POST("user/screen/viewedbyuser/{screenId}")
@@ -184,6 +184,12 @@ interface UserApi:URLApi {
         @Path("screenId") screenId: String,
         @Query("public") isPublic: Boolean
     ): DesignResponse<Boolean>
+
+    @GET("user/follower/active_passive/{uid}")
+    suspend fun getFollowersByUser(@Path("uid") uid: String): DesignResponse<Map<String, List<UserInfo>?>>
+
+    @GET("user/follower/followed/{uid}")
+    suspend fun getMyFollowedThisUser(@Path("uid") uid: String): DesignResponse<Boolean>
 
 
     /*  @GET("user/screens")

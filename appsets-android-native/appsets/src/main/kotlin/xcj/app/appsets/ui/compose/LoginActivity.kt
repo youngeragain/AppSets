@@ -26,6 +26,7 @@ import xcj.app.appsets.ui.nonecompose.base.BaseViewModelFactory
 class LoginActivity :
     BaseActivity<ViewDataBinding, LoginViewModel, BaseViewModelFactory<LoginViewModel>>() {
 
+    private val TAG = "LoginActivity"
     @RequiresApi(Build.VERSION_CODES.R)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -111,7 +112,7 @@ class LoginActivity :
 
     fun createObserver() {
         ModuleConstant.MSG_DELIVERY_KEY_USER_LOGIN_ACTION.observeAny2(this, Observer {
-            Log.e("LoginActivity", "MSG_DELIVERY_KEY_USER_LOGIN_ACTION")
+            Log.e(TAG, "MSG_DELIVERY_KEY_USER_LOGIN_ACTION")
             finish()
         })
         ModuleConstant.MSG_DELIVERY_KEY_SELECTOR_ITEM_SELECTED.observeAny2(
@@ -124,7 +125,7 @@ class LoginActivity :
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        Log.e("LoginActivity", "onActivityResult")
+        Log.e(TAG, "onActivityResult")
         if (requestCode == 9999) {
             if (resultCode == RESULT_OK && data != null) {
                 val providerId = data.getStringExtra("providerId") ?: return

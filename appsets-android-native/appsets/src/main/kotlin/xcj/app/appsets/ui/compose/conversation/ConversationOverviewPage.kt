@@ -1,14 +1,19 @@
 package xcj.app.appsets.ui.compose.conversation
 
+import android.content.res.Configuration
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.with
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -18,6 +23,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -28,7 +34,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsTopHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
@@ -47,6 +52,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -57,6 +63,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.media3.common.util.UnstableApi
 import xcj.app.appsets.R
 import xcj.app.appsets.im.ImMessage
+import xcj.app.appsets.im.ImObj
 import xcj.app.appsets.im.Session
 import xcj.app.appsets.im.SystemContentInterface
 import xcj.app.appsets.ui.compose.LocalOrRemoteImage
@@ -64,9 +71,118 @@ import xcj.app.appsets.ui.compose.MainViewModel
 import xcj.app.appsets.ui.compose.start.ComponentImageButton
 
 @UnstableApi
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ConversationOverviewPage(
+    onAddFriendClick: () -> Unit,
+    onJoinGroupClick: () -> Unit,
+    onCreateGroupClick: () -> Unit,
+    onConversionSessionClick: (Session, Boolean) -> Unit,
+    onSystemImMessageClick: (Session, ImMessage) -> Unit,
+    onAvatarClick: (String, String) -> Unit,
+    onUserRequestClick: (Boolean, Session, ImMessage.System) -> Unit
+) {
+    if (LocalConfiguration.current.orientation == Configuration.ORIENTATION_PORTRAIT) {
+        ConversationOverviewPanel(
+            Modifier,
+            onAddFriendClick,
+            onJoinGroupClick,
+            onCreateGroupClick,
+            onConversionSessionClick = { session ->
+                onConversionSessionClick(session, true)
+            },
+            onSystemImMessageClick,
+            onAvatarClick,
+            onUserRequestClick
+        )
+    } else {
+        var showConversationDetailsPanelCounter by remember {
+            mutableStateOf(0)
+        }
+        Row(Modifier.fillMaxSize()) {
+            ConversationOverviewPanel(
+                Modifier.width(410.dp),
+                onAddFriendClick,
+                onJoinGroupClick,
+                onCreateGroupClick,
+                onConversionSessionClick = { session ->
+                    onConversionSessionClick(session, false)
+                    showConversationDetailsPanelCounter += 1
+                },
+                onSystemImMessageClick,
+                onAvatarClick,
+                onUserRequestClick
+            )
+            Divider(
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .width(0.5.dp)
+            )
+            Box(
+                Modifier
+                    .weight(1f)
+                    .fillMaxHeight()
+            ) {
+                ConversationDetailsPanel(
+                    showConversationDetailsPanelCounter,
+                    onBackClick = {
+                        showConversationDetailsPanelCounter = 0
+                    },
+                    onAvatarClick = { imMessage ->
+                        onAvatarClick("user", imMessage.msgFromInfo.uid)
+                    },
+                    onMoreClick = {},
+                )
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalAnimationApi::class)
+@UnstableApi
+@Composable
+fun ConversationDetailsPanel(
+    counter: Int,
+    onBackClick: () -> Unit,
+    onAvatarClick: (ImMessage) -> Unit,
+    onMoreClick: ((ImObj?) -> Unit)?
+) {
+    AnimatedContent(
+        targetState = counter,
+        transitionSpec = {
+            fadeIn(animationSpec = tween(90)) with
+                    fadeOut(animationSpec = tween(90)) +
+                    scaleOut(targetScale = 1.08f, animationSpec = tween(90))
+        },
+        label = "conversationDetailsPanelAnimate"
+    ) {
+        if (it > 0) {
+            ConversationDetailsPage(
+                tabVisibilityState = null,
+                onBackClick = onBackClick,
+                onAvatarClick = onAvatarClick,
+                onMoreClick = onMoreClick
+            )
+        } else {
+            Box(
+                Modifier
+                    .fillMaxHeight()
+                    .fillMaxWidth()) {
+                Text(
+                    text = "没有对话",
+                    modifier = Modifier.align(Alignment.Center)
+                )
+            }
+
+        }
+    }
+
+}
+
+@UnstableApi
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ConversationOverviewPanel(
+    modifier: Modifier,
     onAddFriendClick: () -> Unit,
     onJoinGroupClick: () -> Unit,
     onCreateGroupClick: () -> Unit,
@@ -75,7 +191,9 @@ fun ConversationOverviewPage(
     onAvatarClick: (String, String) -> Unit,
     onUserRequestClick: (Boolean, Session, ImMessage.System) -> Unit
 ) {
-    Column {
+    Column(
+        modifier = modifier
+    ) {
         val current = LocalContext.current
         val vm: MainViewModel = viewModel(current as AppCompatActivity)
         Spacer(modifier = Modifier.windowInsetsTopHeight(WindowInsets.statusBars))
@@ -110,27 +228,16 @@ fun ConversationOverviewPage(
                 }
 
                 Spacer(modifier = Modifier.weight(1f))
-                if (isShowAddActions) {
-                    Icon(
-                        modifier = Modifier
-                            .background(
-                                MaterialTheme.colorScheme.primary,
-                                CircleShape
-                            )
-                            .clip(CircleShape)
-                            .clickable(onClick = {
-                                isShowAddActions = false
-                            })
-                            .padding(12.dp),
-                        painter = painterResource(id = R.drawable.ic_round_close_24),
-                        contentDescription = "close",
-                        tint = MaterialTheme.colorScheme.surfaceVariant
-                    )
-                } else {
-                    ComponentImageButton(modifier = Modifier, onClick = {
-                        isShowAddActions = true
-                    })
-                }
+                val imageRotate by animateFloatAsState(
+                    targetValue = if (isShowAddActions) {
+                        45f
+                    } else {
+                        0f
+                    }, label = "addButtonRotateAnimate"
+                )
+                ComponentImageButton(modifier = Modifier, resRotate = imageRotate, onClick = {
+                    isShowAddActions = !isShowAddActions
+                })
             }
             androidx.compose.animation.AnimatedVisibility(
                 visible = isShowAddActions,

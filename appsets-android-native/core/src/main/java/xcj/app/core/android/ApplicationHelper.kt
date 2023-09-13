@@ -28,7 +28,7 @@ object ApplicationHelper {
     ) {
         if (ApplicationHelper::application.isInitialized)
             return
-        Log.e("ApplicationHelper", "aplicationInit")
+        Log.e("ApplicationHelper", "applicationInit")
         this.application = application
         this.coroutineScope = coroutineScope
         this.androidContextFileDir = androidContextFileDir

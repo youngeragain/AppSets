@@ -57,6 +57,13 @@ class AppSetsController(
     ):DesignResponse<Boolean>{
         return appSetsService.addAppSetsClientUpdate(addAppSetsVersionForPlatformParams)
     }
+    @ApiDesignPermission.SpecialRequired(ApiDesignEncodeStr.appTokenStrToMd5)
+    @PutMapping("client/update")
+    fun updateApplicationClientUpdate(
+        @RequestBody addAppSetsVersionForPlatformParams: AddAppSetsVersionForPlatformParams
+    ):DesignResponse<Boolean>{
+        return appSetsService.updateAppSetsClientUpdate(addAppSetsVersionForPlatformParams)
+    }
 
     @ApiDesignPermission.SpecialRequired(ApiDesignEncodeStr.appTokenStrToMd5)
     @GetMapping("client/update/history")

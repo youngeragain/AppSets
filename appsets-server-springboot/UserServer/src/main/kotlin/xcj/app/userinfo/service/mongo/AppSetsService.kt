@@ -11,4 +11,6 @@ interface AppSetsService {
     fun appsetsClientCheckUpdate(versionCode: Int, platform:String): DesignResponse<UpdateCheckResult?>
     fun addAppSetsClientUpdate(addAppSetsClientUpdateParams:AddAppSetsVersionForPlatformParams): DesignResponse<Boolean>
     fun getApplicationClientUpdateHistory(minVersionCode: Int?, platform: String): DesignResponse<List<UpdateCheckResult>?>
+    fun updateAppSetsClientUpdate
+                (addAppSetsVersionForPlatformParams: AddAppSetsVersionForPlatformParams): DesignResponse<Boolean>
 }

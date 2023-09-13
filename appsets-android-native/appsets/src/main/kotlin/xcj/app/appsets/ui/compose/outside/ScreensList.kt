@@ -84,19 +84,18 @@ fun ScreensList(
     var x18ContentConfirmCallback: (() -> Unit)? by remember {
         mutableStateOf(null)
     }
-    X18ContentConfirmDialog(isShowX18ContentRequestDialog, x18ContentConfirmCallback)
     val configuration = LocalConfiguration.current
-    val paddingValues = if (currentDestinationRoute == PageRouteNameProvider.OutSidePage) {
-        PaddingValues(top = 98.dp, bottom = 98.dp, start = 12.dp, end = 12.dp)
-    } else {
-        PaddingValues(top = 12.dp, bottom = 98.dp, start = 12.dp, end = 12.dp)
-    }
     if (configuration.orientation == Configuration.ORIENTATION_PORTRAIT) {
         LazyColumn(
-            contentPadding = paddingValues,
+            contentPadding = PaddingValues(horizontal = 12.dp),
             verticalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterVertically),
             state = scrollableState as LazyListState
         ) {
+            if (currentDestinationRoute == PageRouteNameProvider.OutSidePage) {
+                item {
+                    Spacer(modifier = Modifier.height(86.dp))
+                }
+            }
             if (headerContent != null) {
                 item {
                     headerContent.invoke()
@@ -151,7 +150,7 @@ fun ScreensList(
                 }
 
                 item {
-                    Spacer(modifier = Modifier.height(98.dp))
+                    Spacer(modifier = Modifier.height(120.dp))
                 }
             }
 
@@ -159,68 +158,75 @@ fun ScreensList(
     } else {
         LazyVerticalStaggeredGrid(
             columns = StaggeredGridCells.Fixed(3),
-            contentPadding = paddingValues,
+            contentPadding = PaddingValues(horizontal = 12.dp),
             horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
             verticalItemSpacing = 6.dp,
-            state = scrollableState as LazyStaggeredGridState,
-            content = {
-                if (headerContent != null) {
-                    item {
-                        headerContent.invoke()
-                    }
+            state = scrollableState as LazyStaggeredGridState
+        )
+        {
+            if (currentDestinationRoute == PageRouteNameProvider.OutSidePage) {
+                items(3) {
+                    Spacer(modifier = Modifier.height(86.dp))
                 }
-                val screenStateList = screensState.value
-                if (screenStateList != null) {
-                    itemsIndexed(screenStateList, { index, _ -> index }) { _, screenState ->
-                        if (screenState is ScreenState.Screen) {
-                            Surface(
-                                modifier = Modifier,
-                                shape = RoundedCornerShape(24.dp),
-                                border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.outline)
+            }
+            if (headerContent != null) {
+                item {
+                    headerContent.invoke()
+                }
+            }
+            val screenStateList = screensState.value
+            if (screenStateList != null) {
+                itemsIndexed(screenStateList, { index, _ -> index }) { _, screenState ->
+                    if (screenState is ScreenState.Screen) {
+                        Surface(
+                            modifier = Modifier,
+                            shape = RoundedCornerShape(24.dp),
+                            border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.outline)
+                        ) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(12.dp)
                             ) {
-                                Column(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(12.dp)
-                                ) {
-                                    ScreenComponent(
-                                        screenState.userScreenInfo,
-                                        currentDestinationRoute,
-                                        160.dp,
-                                        onScreenAvatarClick,
-                                        onScreenContentClick,
-                                        onPictureClick = { url, urls ->
-                                            if (url.x18Content == 1) {
-                                                x18ContentConfirmCallback = {
-                                                    onPictureClick?.invoke(url, urls)
-                                                }
-                                                isShowX18ContentRequestDialog.value = true
-                                            } else {
+                                ScreenComponent(
+                                    screenState.userScreenInfo,
+                                    currentDestinationRoute,
+                                    160.dp,
+                                    onScreenAvatarClick,
+                                    onScreenContentClick,
+                                    onPictureClick = { url, urls ->
+                                        if (url.x18Content == 1) {
+                                            x18ContentConfirmCallback = {
                                                 onPictureClick?.invoke(url, urls)
                                             }
-                                        },
-                                        picInteractionFlow,
-                                        onScreenVideoPlayClick = { url ->
-                                            if (url.x18Content == 1) {
-                                                x18ContentConfirmCallback = {
-                                                    onScreenVideoPlayClick?.invoke(url)
-                                                }
-                                                isShowX18ContentRequestDialog.value = true
-                                            } else {
+                                            isShowX18ContentRequestDialog.value = true
+                                        } else {
+                                            onPictureClick?.invoke(url, urls)
+                                        }
+                                    },
+                                    picInteractionFlow,
+                                    onScreenVideoPlayClick = { url ->
+                                        if (url.x18Content == 1) {
+                                            x18ContentConfirmCallback = {
                                                 onScreenVideoPlayClick?.invoke(url)
                                             }
+                                            isShowX18ContentRequestDialog.value = true
+                                        } else {
+                                            onScreenVideoPlayClick?.invoke(url)
                                         }
-                                    )
-                                }
+                                    }
+                                )
                             }
                         }
                     }
-                    item {
-                        Spacer(modifier = Modifier.height(98.dp))
-                    }
                 }
-            })
+            }
+            items(3) {
+                Spacer(modifier = Modifier.height(120.dp))
+            }
+        }
     }
+    X18ContentConfirmDialog(isShowX18ContentRequestDialog, x18ContentConfirmCallback)
 }
 
 @Composable

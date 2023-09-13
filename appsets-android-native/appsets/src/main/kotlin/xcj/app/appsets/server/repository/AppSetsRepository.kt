@@ -186,6 +186,12 @@ class AppSetsRepository private constructor(
         return appSetsApi.createApplication(app)
     }
 
+    suspend fun getApplicationsByUser(uid: String): DesignResponse<List<Application>?> {
+        val usersApplications = appSetsApi.getUsersApplications(uid)
+        mapIconUrl(usersApplications.data)
+        return usersApplications
+    }
+
     companion object {
         private var INSTANCE: AppSetsRepository? = null
         fun getInstance(): AppSetsRepository {

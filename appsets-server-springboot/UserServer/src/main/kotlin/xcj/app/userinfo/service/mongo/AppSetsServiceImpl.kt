@@ -116,6 +116,25 @@ class AppSetsServiceImpl(
         }
         return DesignResponse(data = meetWithVersions)
     }
+
+    override fun updateAppSetsClientUpdate(addAppSetsVersionForPlatformParams: AddAppSetsVersionForPlatformParams): DesignResponse<Boolean> {
+        val keyOfPlatform = "AppSets-appclient-for-${addAppSetsVersionForPlatformParams.platform}-versions"
+        val opsForZSet = redisTemplate.opsForZSet()
+        val gson = Gson()
+        val existVersion = opsForZSet.range(keyOfPlatform, 0, Short.MAX_VALUE.toLong())?.map {
+            gson.fromJson(it, AddAppSetsVersionForPlatformParams::class.java)
+        }?.firstOrNull {
+            it.versionCode == addAppSetsVersionForPlatformParams.versionCode
+        }
+        if(existVersion==null)
+            return DesignResponse(data = false, info = "no version founded when update!")
+        //TODO delete bug
+        opsForZSet.remove(keyOfPlatform, gson.toJson(existVersion))
+        val appSetsVersionForPlatform = AppSetsVersionForPlatform.fromAddParams(addAppSetsVersionForPlatformParams)
+        val appSetsVersionForPlatformJson = gson.toJson(appSetsVersionForPlatform)
+        val addResult = opsForZSet.add(keyOfPlatform, appSetsVersionForPlatformJson, 0.0)
+        return DesignResponse(data = addResult)
+    }
 }
 
 

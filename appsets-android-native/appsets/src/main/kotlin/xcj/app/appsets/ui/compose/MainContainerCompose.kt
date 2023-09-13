@@ -86,9 +86,12 @@ fun MainContainerCompose() {
             Configuration.ORIENTATION_UNDEFINED -> Unit
             Configuration.ORIENTATION_LANDSCAPE -> {
                 MyLandScapeScaffold(
-                    appbarDirection = Direction.END,
+                    appbarDirection = Direction.START,
                     appBar = {
-                        NavigationBar(onTabClick = onTabClick)
+                        NavigationBar(
+                            appbarDirection = Direction.START,
+                            onTabClick = onTabClick
+                        )
                     }) {
                     NavigationCompose(navController = navHostController)
                 }
@@ -96,7 +99,10 @@ fun MainContainerCompose() {
 
             Configuration.ORIENTATION_PORTRAIT -> {
                 Scaffold(bottomBar = {
-                    NavigationBar(onTabClick = onTabClick)
+                    NavigationBar(
+                        appbarDirection = Direction.BOTTOM,
+                        onTabClick = onTabClick
+                    )
                 }) { _ ->
                     NavigationCompose(navHostController)
                 }

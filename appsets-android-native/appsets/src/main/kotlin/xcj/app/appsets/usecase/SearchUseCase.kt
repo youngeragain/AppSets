@@ -3,11 +3,11 @@ package xcj.app.appsets.usecase
 import androidx.compose.runtime.mutableStateListOf
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.FlowCollector
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.buffer
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.launch
 import xcj.app.appsets.account.LocalAccountManager
 import xcj.app.appsets.db.room.repository.UserGroupsRoomRepository
@@ -35,20 +35,6 @@ sealed class SearchState {
     data class SplitTitle(val title: String) : SearchState()
 }
 
-class SearchFlow(private val coroutineScope: CoroutineScope) : Flow<Pair<String, Long>> {
-    private lateinit var collector: FlowCollector<Pair<String, Long>>
-    override suspend fun collect(collector: FlowCollector<Pair<String, Long>>) {
-        this.collector = collector
-    }
-
-    fun emit(string: String) {
-        coroutineScope.launch {
-            val currentTimeMillis = System.currentTimeMillis()
-            delay(100)
-            collector.emit(string to currentTimeMillis)
-        }
-    }
-}
 
 class SearchUseCase(private val coroutineScope: CoroutineScope) : NoConfigUseCase() {
     private val TAG = "SearchUseCase"
@@ -60,26 +46,26 @@ class SearchUseCase(private val coroutineScope: CoroutineScope) : NoConfigUseCas
 
     private var searchRepository: SearchRepository? = null
 
-    private var searchFlow: SearchFlow = SearchFlow(coroutineScope)
+    private var searchFlow: MutableStateFlow<String> = MutableStateFlow("").apply {
+        debounce(200)
+        buffer(1, BufferOverflow.DROP_OLDEST)
+    }
 
     fun updateCurrentSearchStr(searchStr: String?) {
         searchStringState = searchStr
         if (searchStr.isNullOrEmpty()) {
             coroutineScope.launch {
-                delay(100)
                 searchResultListState.clear()
             }
         } else {
-            searchFlow.emit(searchStr)
+            searchFlow.value = searchStr
         }
     }
 
     fun attachToSearchFlow() {
         coroutineScope.launch {
-            searchFlow.filter {
-                (System.currentTimeMillis() - it.second) > 100
-            }.collectLatest {
-                search(it.first)
+            searchFlow.collect {
+                search(it)
             }
         }
     }

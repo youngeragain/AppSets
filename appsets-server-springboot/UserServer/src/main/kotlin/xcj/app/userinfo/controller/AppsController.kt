@@ -63,7 +63,6 @@ class AppsController(
 
 
 
-
    /* @ApiDesignPermission.LoginRequired
     @ApiDesignPermission.SpecialRequired(ApiDesignEncodeStr.appTokenStrToMd5)*/
     @GetMapping("application/search")
@@ -76,5 +75,12 @@ class AppsController(
         return mongoAppServiceImpl.searchApplicationsByKeywords(keywords, page, pageSize)
     }
 
+    @ApiDesignPermission.VersionRequired(200)
+    @ApiDesignPermission.LoginRequired
+    @GetMapping("application/user/{uid}")
+    fun getUsersApplications(
+        @PathVariable(name = "uid") uid: String):DesignResponse<List<Application>?>{
+        return mongoAppServiceImpl.getUsersApplications(uid)
+    }
 
 }

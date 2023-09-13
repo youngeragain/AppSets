@@ -45,7 +45,6 @@ class MainActivity :
     private lateinit var mNotificationManagerCompat: NotificationManagerCompat
 
     override fun createViewModel(): MainViewModel? {
-        val c = 0
         return ViewModelProvider(this)[MainViewModel::class.java]
     }
 

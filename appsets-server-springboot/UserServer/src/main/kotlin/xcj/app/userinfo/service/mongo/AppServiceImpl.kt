@@ -63,6 +63,11 @@ class AppServiceImpl(
         val applicationList = mongoApplicationDaoImpl.searchApplicationsByKeywords(keywords, limit, offset)
         return DesignResponse(data = applicationList)
     }
+
+    override fun getUsersApplications(uid: String): DesignResponse<List<Application>?> {
+        val applicationList = mongoApplicationDaoImpl.getApplicationByUserId(uid)
+        return DesignResponse(data = applicationList)
+    }
 }
 
 sealed class ApplicationCategory(val name:String, val nameZh:String){

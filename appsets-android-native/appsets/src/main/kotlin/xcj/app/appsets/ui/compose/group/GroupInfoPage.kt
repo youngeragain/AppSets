@@ -36,7 +36,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import xcj.app.appsets.R
 import xcj.app.appsets.server.model.GroupInfo
@@ -137,38 +136,40 @@ fun GroupInfoPage(
         } else if (groupInfoState is GroupInfoState.GroupInfoWrapper) {
             val scrollState = rememberScrollState()
             Column(
-                Modifier.verticalScroll(scrollState)
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 12.dp)
+                    .verticalScroll(scrollState)
             ) {
-                val groupInfoWrapper = groupInfoState as GroupInfoState.GroupInfoWrapper
-                Row(Modifier.padding(12.dp)) {
-                    LocalOrRemoteImage(
-                        modifier = Modifier
-                            .size(98.dp)
-                            .clip(RoundedCornerShape(12.dp)),
-                        any = groupInfoWrapper.groupInfo.iconUrl,
-                        defaultColor = MaterialTheme.colorScheme.primaryContainer
-                    )
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Column {
-                        Text(text = "群组名称")
-                        Text(
-                            text = groupInfoWrapper.groupInfo.name ?: "",
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Spacer(modifier = Modifier.height(10.dp))
-                        Text(text = "群介绍")
-                        Text(
-                            text = groupInfoWrapper.groupInfo.introduction ?: "没有介绍",
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                }
-                Text(text = "群组成员", modifier = Modifier.padding(12.dp))
-                if (!groupInfoWrapper.groupInfo.userInfoList.isNullOrEmpty()) {
-                    groupInfoWrapper.groupInfo.userInfoList!!.forEach { userInfo ->
-                        Column(modifier = Modifier.padding(horizontal = 12.dp, vertical = 2.dp)) {
+                Spacer(modifier = Modifier.height(24.dp))
+                LocalOrRemoteImage(
+                    modifier = Modifier
+                        .size(250.dp)
+                        .align(Alignment.CenterHorizontally)
+                        .clip(RoundedCornerShape(12.dp)),
+                    any = groupInfoState.groupInfo.iconUrl,
+                    defaultColor = MaterialTheme.colorScheme.primaryContainer
+                )
+                Spacer(modifier = Modifier.height(24.dp))
+                Text(text = "名称")
+                Spacer(modifier = Modifier.width(4.dp))
+                Text(
+                    text = groupInfoState.groupInfo.name ?: "",
+                    fontWeight = FontWeight.Bold
+                )
+                Spacer(modifier = Modifier.height(10.dp))
+                Text(text = "简介")
+                Spacer(modifier = Modifier.width(4.dp))
+                Text(
+                    text = groupInfoState.groupInfo.introduction ?: "没有简介",
+                    fontWeight = FontWeight.Bold
+                )
+                Spacer(modifier = Modifier.height(10.dp))
+                Text(text = "成员")
+                Spacer(modifier = Modifier.height(14.dp))
+                if (!groupInfoState.groupInfo.userInfoList.isNullOrEmpty()) {
+                    groupInfoState.groupInfo.userInfoList!!.forEach { userInfo ->
+                        Column(modifier = Modifier.padding(vertical = 2.dp)) {
                             Row {
                                 LocalOrRemoteImage(
                                     any = userInfo.avatarUrl,

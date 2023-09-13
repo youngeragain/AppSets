@@ -97,19 +97,19 @@ import xcj.app.appsets.ui.compose.PageRouteNameProvider
 @UnstableApi
 @Composable
 fun ConversationDetailsPage(
-    tabVisibilityState: MutableState<Boolean>,
+    tabVisibilityState: MutableState<Boolean>?,
     onBackClick: () -> Unit,
-    onUserAvatarClick: (ImMessage) -> Unit,
-    onMoreClick: ((ImObj?) -> Unit)? = null
+    onAvatarClick: (ImMessage) -> Unit,
+    onMoreClick: ((ImObj?) -> Unit)?
 ) {
 
     DisposableEffect(key1 = true, effect = {
         onDispose {
-            tabVisibilityState.value = true
+            tabVisibilityState?.value = true
         }
     })
     SideEffect {
-        tabVisibilityState.value = false
+        tabVisibilityState?.value = false
     }
     val mainViewModel: MainViewModel = viewModel(LocalContext.current as AppCompatActivity)
     Column(
@@ -174,7 +174,7 @@ fun ConversationDetailsPage(
             messages = mainViewModel.conversationUseCase?.currentSession?.conversionState?.messages,
             navigateToProfile = {},
             scrollState = scrollState,
-            onUserAvatarClick = onUserAvatarClick
+            onAvatarClick = onAvatarClick
         )
         val scope = rememberCoroutineScope()
         UserInput(
@@ -233,7 +233,7 @@ fun Messages(
     messages: List<ImMessage>?,
     navigateToProfile: (String) -> Unit,
     scrollState: LazyListState,
-    onUserAvatarClick: (ImMessage) -> Unit,
+    onAvatarClick: (ImMessage) -> Unit,
 ) {
     Box(modifier = modifier) {
         val viewModel = viewModel<MainViewModel>(LocalContext.current as AppCompatActivity)
@@ -269,7 +269,7 @@ fun Messages(
                                     UserAvatarCompose(
                                         modifier =
                                         Modifier.clickable {
-                                            onUserAvatarClick(imMessage)
+                                            onAvatarClick(imMessage)
                                         }, imMessage = imMessage
                                     )
                                     Spacer(modifier = Modifier.width(10.dp))

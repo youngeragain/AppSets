@@ -167,7 +167,6 @@ object RetrofitProvider {
         override fun intercept(chain: Interceptor.Chain): Response {
             val rawRequest = chain.request()
             try {
-                Log.e("BaseUrlInterceptor", "request tag:${rawRequest.tag()}")
                 val rawFullUrl = rawRequest.url.toString()
                 val rawOnlyBaseUrl = rawRequest.url.newBuilder("/")?.build().toString()
                 val urlSuffix = rawFullUrl.substring(rawOnlyBaseUrl.length)

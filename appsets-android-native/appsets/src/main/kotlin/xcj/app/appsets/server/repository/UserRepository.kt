@@ -1,5 +1,6 @@
 package xcj.app.appsets.server.repository
 
+import xcj.app.appsets.db.room.repository.UserInfoRoomRepository
 import xcj.app.appsets.server.api.UserApi
 import xcj.app.appsets.server.model.GroupInfo
 import xcj.app.appsets.server.model.UserInfo
@@ -124,5 +125,17 @@ class UserRepository(private val userApi: UserApi) {
 
     suspend fun createChatGroupPreCheck(groupName: String): DesignResponse<Boolean> {
         return userApi.createChatGroupPreCheck(groupName)
+    }
+
+    suspend fun getFollowersAndFollowedByUser(uid: String): DesignResponse<Map<String, List<UserInfo>?>> {
+        val followersByUser = userApi.getFollowersByUser(uid)
+        followersByUser.data?.values?.forEach {
+            UserInfoRoomRepository.mapAvatarUrl(it)
+        }
+        return followersByUser
+    }
+
+    suspend fun getMyFollowedThisUser(uid: String): DesignResponse<Boolean> {
+        return userApi.getMyFollowedThisUser(uid)
     }
 }

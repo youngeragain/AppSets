@@ -146,12 +146,13 @@ class SystemUseCase(private val coroutineScope: CoroutineScope) {
         })
     }
 
-    fun flipFollowToUserState(userInfo: UserInfo) {
+    fun flipFollowToUserState(userInfo: UserInfo, callback: (() -> Unit)? = null) {
         coroutineScope.requestNotNull({
             val userRepository = UserRepository(URLApi.provide(UserApi::class.java))
             userRepository.flipFollowToUserState(userInfo.uid)
         }, onSuccess = {
             Log.i(TAG, "flipFollowToUserState, call backend result:${it}")
+            callback?.invoke()
         })
     }
 

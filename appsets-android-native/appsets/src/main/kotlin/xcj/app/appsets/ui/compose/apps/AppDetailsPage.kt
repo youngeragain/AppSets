@@ -54,6 +54,7 @@ fun AppDetailsPage(
     tabVisibilityState: MutableState<Boolean>,
     application: Application?,
     onBackAction: () -> Unit,
+    onShowApplicationCreatorClick: ((String?) -> Unit)?,
     onAddPlatformInfoClick: (PlatForm?) -> Unit,
     onAddVersionInfoClick: (PlatForm) -> Unit,
     onAddScreenshotInfoClick: (PlatForm, VersionInfo) -> Unit,
@@ -104,6 +105,32 @@ fun AppDetailsPage(
                         }
                     }
                     Spacer(modifier = Modifier.height(20.dp))
+                }
+            }
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 12.dp, vertical = 20.dp)
+            ) {
+                Text(
+                    text = "创建者信息",
+                    modifier = Modifier.align(Alignment.CenterStart)
+                )
+                Row(
+                    modifier = Modifier
+                        .align(Alignment.CenterEnd)
+                        .background(
+                            MaterialTheme.colorScheme.secondaryContainer,
+                            RoundedCornerShape(6.dp)
+                        )
+                        .clip(RoundedCornerShape(6.dp))
+                        .clickable(onClick = {
+                            onShowApplicationCreatorClick?.invoke(application.createUid)
+                        })
+                        .padding(horizontal = 6.dp, vertical = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(text = "查看", fontSize = 13.sp)
                 }
             }
             var platformPosition by remember {
@@ -184,6 +211,7 @@ fun AppDetailsPage(
                     }
                 }
             }
+            Spacer(modifier = Modifier.height(120.dp))
         }
     }
 }

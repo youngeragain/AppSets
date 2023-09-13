@@ -49,8 +49,8 @@ class UserInfoRoomRepository() {
             return INSTANCE!!
         }
 
-        fun mapAvatarUrl(userInfoList: List<UserInfo>) {
-            userInfoList.forEach { userInfo ->
+        fun mapAvatarUrl(userInfoList: List<UserInfo>?) {
+            userInfoList?.forEach { userInfo ->
                 if (!userInfo.avatarUrl.isNullOrEmpty() && !userInfo.avatarUrl.isHttpUrl()) {
                     userInfo.avatarUrl =
                         SimpleFileIO.getInstance().generatePreSign(userInfo.avatarUrl!!)

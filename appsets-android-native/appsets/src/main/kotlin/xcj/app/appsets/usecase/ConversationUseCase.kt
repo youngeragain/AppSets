@@ -152,19 +152,22 @@ class ConversationUseCase(
 
     fun updateCurrentSessionBySession(session: Session) {
         Log.i(TAG, "updateCurrentSessionBySession, session:${session}")
-        currentSession = session
+        if (currentSession != session)
+            currentSession = session
     }
 
     fun updateCurrentSessionByUserInfo(userInfo: UserInfo) {
         Log.i(TAG, "changeCurrentSession, userinfo:${userInfo}")
         val session = getSessionByImObj(userInfo.asImSingle())
-        currentSession = session
+        if (currentSession != session)
+            currentSession = session
     }
 
     fun updateCurrentSessionByGroupInfo(groupInfo: GroupInfo) {
         Log.i(TAG, "changeCurrentSession, groupInfo:${groupInfo}")
         val session = getSessionByImObj(groupInfo.asImGroup())
-        currentSession = session
+        if (currentSession != session)
+            currentSession = session
     }
 
 
