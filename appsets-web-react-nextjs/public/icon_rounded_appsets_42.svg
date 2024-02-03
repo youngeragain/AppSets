@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<svg width="42px" height="42px" viewBox="0 0 42 42" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg">
-  <path d="M34 0C38.4189 0 42 3.58112 42 8L42 34C42 38.4189 38.4189 42 34 42L8 42C3.58118 42 0 38.4189 0 34L0 8C0 3.58112 3.58118 0 8 0L34 0Z" id="Rectangle-3" fill="#FFFFFF" stroke="none" />
-  <path d="M11 21L21.9773 36.2561" id="Line-7" fill="none" fill-rule="evenodd" stroke="#4285F4" stroke-opacity="0.87058824" stroke-width="6" stroke-linecap="round" />
-  <path d="M11 21L30.9586 29.3273" id="Line-Copy-7" fill="none" fill-rule="evenodd" stroke="#0F9D58" stroke-opacity="0.8862745" stroke-width="6" stroke-linecap="round" />
-  <path d="M11 21L32.9546 19.4291" id="Line-Copy-8" fill="none" fill-rule="evenodd" stroke="#F4B400" stroke-opacity="0.8901961" stroke-width="6" stroke-linecap="round" />
-  <path d="M11 20.067L25.7694 9" id="Line-Copy-9" fill="none" fill-rule="evenodd" stroke="#DB4437" stroke-opacity="0.8901961" stroke-width="6" stroke-linecap="round" />
-</svg>

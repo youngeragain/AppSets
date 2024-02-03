@@ -1,8 +1,0 @@
-org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-xcj.app.autoconfig.RetrofitStaterConfiguration
-
-org.springframework.boot.SpringApplicationRunListener=\
-xcj.app.autoconfig.MyApplicationRunListener
-
-org.springframework.context.ApplicationContextInitializer=\
-xcj.app.autoconfig.MyApplicationContextInitializer

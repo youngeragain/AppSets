@@ -1,8 +1,0 @@
-spring:
-  cloud:
-    zookeeper:
-      connect-string: localhost:2181
-  application:
-    name: OrderServer
-server:
-  port: 8091

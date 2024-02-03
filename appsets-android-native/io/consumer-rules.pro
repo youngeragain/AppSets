@@ -1,1 +1,0 @@
--keep class xcj.app.io.**{ *; }
