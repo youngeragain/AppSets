@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="ok">确定</string>
+    <string name="reject">拒绝</string>
+
+    <string name="camera">相机</string>
+    <string name="camera_permission_tips">应用可以使用相机硬件功能</string>
+    <string name="camera_app_usage_des">拍摄照片，视频，扫描图像</string>
+
+    <string name="location">位置</string>
+    <string name="location_permission_tips">应用可以使用定位硬件功能</string>
+    <string name="location_app_usage_des">获取当前地理信息</string>
+
+    <string name="file">文件</string>
+    <string name="file_permission_tips">应用能读取设备上的文件，例如图片，视频。</string>
+    <string name="file_permission_app_usage_des">用于社交属性以及应用创建。</string>
+
+    <string name="record_audio">录音</string>
+    <string name="record_audio_permission_tips">应用可以监听麦克风的输入</string>
+    <string name="record_audio_permission_app_usage_des">用于社交属性。</string>
+
+    <string name="install_package">安装应用</string>
+    <string name="install_package_permission_tips">应用可以安装其它应用到当前设备系统中。</string>
+    <string name="install_package_permission_app_usage_des">应用商店属性。</string>
+
+    <string name="internet">网络</string>
+    <string name="internet_permission_tips">应用可以使用互联网与外部设备交流</string>
+    <string name="internet_permission_app_usage_des">用于获取信息。</string>
+
+    <string name="notification">通知</string>
+    <string name="notification_permission_tips">借助系统的通知功能提醒用户</string>
+    <string name="notification_permission_app_usage_des">部分功能借助通知提升使用便捷度</string>
+
+    <string name="ignore_battery_optimizations">忽略电池优化</string>
+    <string name="ignore_battery_optimizations_permission_tips">系统提供的电池策略</string>
+    <string name="ignore_battery_optimizations_app_usage_des">修改电池策略以便可以及时收到消息</string>
+
+    <string name="please_grant_permission_in_system_application_settings">请到系统设置的应用信息中开启权限</string>
+</resources>

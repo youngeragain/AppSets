@@ -1,0 +1,29 @@
+/* 
+  Localizable.strings
+  AppSets
+
+  Created by caiju Xu on 2024/7/4.
+  
+*/
+
+"account" = "账号";
+"password" = "密码";
+"ok" = "确认";
+"sign_up" = "注册";
+"login" = "登录";
+"login_with_qrcode" = "二维码登录";
+"scan_qrcode" = "扫描二维码";
+"verification_code_login" = "验证码登录";
+"tips" = "提示";
+"appsets_aes_login_tips_des" = "AppSets为你提供类似应用商店，社交，聊天等功能，开发版无法保证你账号的数据和隐私安全\n*注册时使用AES,DES算法对账号密码处理的情况，需要以同等方式处理后再填入输入框。";
+"seach" = "搜索";
+"now_playing" = "当前播放";
+"empty_sessions" = "空的会话列表";
+"personal" = "个人";
+"group" = "群组";
+"system" = "系统";
+"generative_ai" = "Generative AI";
+"search" = "搜索";
+"send" = "发送";
+"chat" = "聊天";
+"get" = "获取";

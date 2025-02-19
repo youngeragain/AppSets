@@ -1,0 +1,29 @@
+/* 
+  Localizable.strings
+  AppSets
+
+  Created by caiju Xu on 2024/7/4.
+  
+*/
+
+"account" = "Account";
+"password" = "Password";
+"ok" = "OK";
+"sign_up" = "Sign up";
+"login" = "Login";
+"login_with_qrcode" = "QR code login";
+"scan_qrcode" = "Scan QR code";
+"verification_code_login" = "Verification code login";
+"tips" = "Tips";
+"appsets_aes_login_tips_des" = "AppSets provides functions similar to App Store, Social, Chat, etc. However, the development version cannot guarantee the data and privacy security of your account. When registering, if you use AES and DES algorithms to process account passwords, you need to process them in the same way before filling in the input box";
+"seach" = "Seach";
+"now_playing" = "Now playing";
+"empty_sessions" = "Empty Sessions";
+"personal" = "Personal";
+"group" = "Group";
+"system" = "System";
+"generative_ai" = "Generative AI";
+"search" = "Search";
+"send" = "Send";
+"chat" = "Chat";
+"get" = "Get";

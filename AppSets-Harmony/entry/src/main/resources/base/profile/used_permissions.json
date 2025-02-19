@@ -1,0 +1,123 @@
+[
+  {
+    "name": "ohos.permission.GET_NETWORK_INFO",
+    "reason": "$string:module_desc",
+    "usedScene": {
+      "abilities": [
+        "MainAbility",
+        "LoginAbility"
+      ],
+      "when": "inuse"
+    }
+  },
+  {
+    "name": "ohos.permission.SET_NETWORK_INFO",
+    "reason": "$string:module_desc",
+    "usedScene": {
+      "abilities": [
+        "MainAbility",
+        "LoginAbility"
+      ],
+      "when": "inuse"
+    }
+  },
+  {
+    "name": "ohos.permission.INTERNET",
+    "reason": "$string:module_desc",
+    "usedScene": {
+      "abilities": [
+        "MainAbility",
+        "LoginAbility"
+      ],
+      "when": "always"
+    }
+  },
+  {
+    "name": "ohos.permission.APPROXIMATELY_LOCATION",
+    "reason": "$string:module_desc",
+    "usedScene": {
+      "abilities": [
+        "MainAbility",
+        "LoginAbility"
+      ],
+      "when": "always"
+    }
+  },
+  {
+    "name": "ohos.permission.LOCATION",
+    "reason": "$string:module_desc",
+    "usedScene": {
+      "abilities": [
+        "MainAbility",
+        "LoginAbility"
+      ],
+      "when": "always"
+    }
+  },
+  {
+    "name": "ohos.permission.CAMERA",
+    "reason": "$string:module_desc",
+    "usedScene": {
+      "abilities": [
+        "MainAbility",
+        "LoginAbility"
+      ],
+      "when": "always"
+    }
+  },
+  {
+    "name": "ohos.permission.READ_MEDIA",
+    "reason": "$string:module_desc",
+    "usedScene": {
+      "abilities": [
+        "MainAbility",
+        "LoginAbility"
+      ],
+      "when": "always"
+    }
+  },
+  {
+    "name": "ohos.permission.GET_DEFAULT_APPLICATION",
+    "reason": "$string:module_desc",
+    "usedScene": {
+      "abilities": [
+        "MainAbility",
+        "LoginAbility"
+      ],
+      "when": "always"
+    }
+  },
+  {
+    "name": "ohos.permission.READ_IMAGEVIDEO",
+    "reason": "$string:module_desc",
+    "usedScene": {
+      "abilities": [
+        "MainAbility",
+        "LoginAbility"
+      ],
+      "when": "always"
+    }
+  },
+  {
+    "name": "ohos.permission.READ_AUDIO",
+    "reason": "$string:module_desc",
+    "usedScene": {
+      "abilities": [
+        "MainAbility",
+        "LoginAbility"
+      ],
+      "when": "always"
+    }
+  },
+  {
+    "name": "ohos.permission.READ_DOCUMENT",
+    "reason": "$string:module_desc",
+    "usedScene": {
+      "abilities": [
+        "MainAbility",
+        "LoginAbility"
+      ],
+      "when": "always"
+    }
+  }
+]

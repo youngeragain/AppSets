@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="appsets_share_http_usage_tips">AppSets Share with HTTP\n</string>
+    <string name="appsets_share_rpc_usage_tips">AppSets Share with RPC\n</string>
+    <string name="content_here_can_send">Content here can be send</string>
+    <string name="no_devices">No devices</string>
+    <string name="nike_name">Nike Name</string>
+    <string name="share_settings">Share Settings</string>
+    <string name="share_method">Share Method</string>
+    <string name="clear">Clear</string>
+    <string name="server_is_not_boot">Server is not boot</string>
+    <string name="server_booted">"Server Booted, Available Address: "</string>
+    <string name="sever_boot_failed">Sever boot failed\n%1$s</string>
+    <string name="please_grant_permission_in_system_application_settings">Please grant permission in the System Application Settings</string>
+    <string name="auto_accept">Auto Accept</string>
+    <string name="no">No</string>
+    <string name="accept">Accept</string>
+    <string name="new_share_content_to_you">New share content to you</string>
+    <string name="server_status">Server Status</string>
+    <string name="need_a_pin">Need a PIN</string>
+    <string name="appsets_share_send_tips">Input the content and click any device to send</string>
+    <string name="devices">Devices</string>
+    <string name="appsets_share_wlanp2p_usage_tips">WLAN P2P uses WIFI Direct and requires the following permissions: \n Nearby devices; Approximate location information; Precise location information; Get WIFI status; Change WIFI status; Nearby WIFI devices; * Turn on WIFI and position switches when using.</string>
+    <string name="send_progress_is">Send progress(%s)</string>
+
+    <string name="receive_space">Receive</string>
+    <string name="send_space">Send</string>
+    <string name="received_progress_is">Receiving progress(%s)</string>
+    <string name="copy">Copy</string>
+    <string name="view">View</string>
+    <string name="show_content_here_when_received">Received content displayed here</string>
+
+    <string name="available">Available</string>
+    <string name="invitation">Invitation</string>
+    <string name="invited">Invited</string>
+    <string name="waiting_other_to_accept_invitation">Waiting for the other party to accept the invitation</string>
+    <string name="connected">Connected</string>
+    <string name="disconnect">Disconnect</string>
+    <string name="failed">Failed</string>
+    <string name="not_available">Unavailable</string>
+    <string name="unconnected_or_unknown">Unknown</string>
+
+    <string name="connect_failed">Connection failed</string>
+    <string name="please_retry">Please retry</string>
+</resources>

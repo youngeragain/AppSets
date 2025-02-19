@@ -1,0 +1,63 @@
+PODS:
+  - Alamofire (5.9.1)
+  - CocoaAsyncSocket (7.6.5)
+  - CryptoSwift (1.8.2)
+  - JKVValue (1.3.3)
+  - QCloudCore/WithoutMTA (6.4.5)
+  - QCloudCOSXML/Transfer (6.4.5):
+    - QCloudCore/WithoutMTA (= 6.4.5)
+  - Realm (10.54.2):
+    - Realm/Headers (= 10.54.2)
+  - Realm/Headers (10.54.2)
+  - RealmSwift (10.54.2):
+    - Realm (= 10.54.2)
+  - RMQClient (0.12.0):
+    - CocoaAsyncSocket (~> 7.6)
+    - JKVValue (~> 1.3)
+  - SwiftEventBus (5.0.0)
+
+DEPENDENCIES:
+  - Alamofire (~> 5.9.1)
+  - CryptoSwift (~> 1.8.2)
+  - QCloudCOSXML/Transfer
+  - RealmSwift (~> 10)
+  - RMQClient (~> 0.12.0)
+  - SwiftEventBus (from `https://github.com/cesarferreira/SwiftEventBus.git`, tag `5.1.0`)
+
+SPEC REPOS:
+  https://mirrors.tuna.tsinghua.edu.cn/git/CocoaPods/Specs.git:
+    - Alamofire
+    - CocoaAsyncSocket
+    - CryptoSwift
+    - JKVValue
+    - QCloudCore
+    - QCloudCOSXML
+    - Realm
+    - RealmSwift
+    - RMQClient
+
+EXTERNAL SOURCES:
+  SwiftEventBus:
+    :git: https://github.com/cesarferreira/SwiftEventBus.git
+    :tag: 5.1.0
+
+CHECKOUT OPTIONS:
+  SwiftEventBus:
+    :git: https://github.com/cesarferreira/SwiftEventBus.git
+    :tag: 5.1.0
+
+SPEC CHECKSUMS:
+  Alamofire: f36a35757af4587d8e4f4bfa223ad10be2422b8c
+  CocoaAsyncSocket: 065fd1e645c7abab64f7a6a2007a48038fdc6a99
+  CryptoSwift: c63a805d8bb5e5538e88af4e44bb537776af11ea
+  JKVValue: d7941071b1cf9ba35c194fd40bcf4c4d9b5462e9
+  QCloudCore: a1c543624fe34c5e98c92b7faf421a23f57ad5e3
+  QCloudCOSXML: 8185a7a51c7dce6ff1a25c725907f6beb270cd01
+  Realm: 16852517a207e98cc6acba9336b56c30d06d84ad
+  RealmSwift: bca777b3904ee58a9b16036e1840012f03348060
+  RMQClient: 74776ee4d0f891f71667a2629f26a26de5ad3e90
+  SwiftEventBus: 976fdca8270b925c5f8e897f519cc49597e1f13c
+
+PODFILE CHECKSUM: 6e5f2ac905ef5d2651d603f2f52ba1a77648aff6
+
+COCOAPODS: 1.15.2

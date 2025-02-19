@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="there_are_no_add_ons_yet_click_on_the_upper_right_corner_to_add">Click on the top right corner to add</string>
+    <string name="delete">Delete</string>
+    <string name="compose_plugin">Compose Plugin</string>
+</resources>

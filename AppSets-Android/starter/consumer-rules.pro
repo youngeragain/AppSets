@@ -1,0 +1,10 @@
+-keepattributes Signature
+-keep class xcj.app.starter.android.DesignAppComponentFactory{ *; }
+-keep class xcj.app.starter.android.util.DesignMessageDeliver{ *; }
+-keep class xcj.app.starter.android.util.DesignMessageDeliver$* { *; }
+-keep class xcj.app.starter.android.util.MessageWrapper { *; }
+-keep class xcj.app.starter.android.util.KeyedObserver{ *; }
+-keep class xcj.app.starter.android.util.LocalMessager{ *; }
+-keep class xcj.app.starter.foundation.http.**{ *; }
+-keep class xcj.app.starter.test.PurpleContextAware{ *; }
+-keep class xcj.app.starter.test.PurpleContextEventListener{ *; }

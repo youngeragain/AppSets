@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="AppSetsLogo">
+        <attr name="line_one_color" format="color|reference|string"/>
+        <attr name="line_two_color" format="color|reference|string"/>
+        <attr name="line_three_color" format="color|reference|string"/>
+        <attr name="line_four_color" format="color|reference|string"/>
+        <attr name="show_coordinate" format="boolean"/>
+        <attr name="line_thickness" format="float"/>
+        <attr name="line_thickness_mode" format="enum">
+            <enum name="factory" value="0"/>
+            <enum name="custom" value="1"/>
+        </attr>
+        <attr name="background_color" format="float"/>
+        <attr name="line_one_degree" format="float"/>
+        <attr name="line_two_degree" format="float"/>
+        <attr name="line_three_degree" format="float"/>
+        <attr name="line_four_degree" format="float"/>
+        <attr name="left_vertex_of_line_position" format="float"/>
+    </declare-styleable>
+</resources>

@@ -1,0 +1,10 @@
+{
+  "app": {
+    "bundleName": "com.xcj.appsets.harmony",
+    "vendor": "com.xcj",
+    "versionCode": 35,
+    "versionName": "3.2024.03.30",
+    "icon": "$media:appsets_icon_colored",
+    "label": "$string:app_name"
+  }
+}

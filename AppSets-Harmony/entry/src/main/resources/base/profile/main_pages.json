@@ -1,0 +1,20 @@
+{
+  "src": [
+    "pages/main/Main",
+    "pages/wlanp2p/WlanP2PPage",
+    "pages/media_fall/MediaFallPage",
+    "pages/main/user/UserProfilePage",
+    "pages/main/settings/SettingsPage",
+    "pages/main/search/SearchPage",
+    "pages/main/outside/OutSidePage",
+    "pages/main/media/MediaPage",
+    "pages/main/conversation/ConversationDetailsMorePage",
+    "pages/main/conversation/ConversationOverviewPage",
+    "pages/main/conversation/ConversationDetailsPage",
+    "pages/main/apps/AppDetailsPage",
+    "pages/main/apps/AppsCenterPage",
+    "pages/main/apps/CreateAppPage",
+    "pages/login/Login",
+    "pages/login/SignUp"
+  ]
+}

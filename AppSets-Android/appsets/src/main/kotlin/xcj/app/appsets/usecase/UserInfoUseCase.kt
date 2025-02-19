@@ -1,0 +1,173 @@
+package xcj.app.appsets.usecase
+
+import android.content.Context
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
+import xcj.app.appsets.account.LocalAccountManager
+import xcj.app.starter.server.requestNotNull
+import xcj.app.starter.server.requestNotNullRaw
+import xcj.app.appsets.util.ktx.toastSuspend
+import xcj.app.appsets.server.model.Application
+import xcj.app.appsets.server.model.UserInfo
+import xcj.app.appsets.server.repository.AppSetsRepository
+import xcj.app.appsets.server.repository.UserRepository
+import xcj.app.appsets.ui.model.UserInfoModification
+import xcj.app.appsets.ui.model.UserProfileState
+import xcj.app.appsets.util.model.UriProvider
+import xcj.app.compose_share.dynamic.IComposeDispose
+
+class UserInfoUseCase(
+    private val coroutineScope: CoroutineScope,
+    private val userRepository: UserRepository,
+    private val appSetsRepository: AppSetsRepository
+) : IComposeDispose {
+
+    val currentUserInfoState: MutableState<UserProfileState> = mutableStateOf(
+        UserProfileState.Loading
+    )
+
+    val loggedUserFollowedState: MutableState<Boolean> = mutableStateOf(false)
+
+    val followedUsersState: MutableState<List<UserInfo>> = mutableStateOf(emptyList())
+
+    val followerUsersState: MutableState<List<UserInfo>> = mutableStateOf(emptyList())
+
+    val applicationsState: MutableState<List<Application>> = mutableStateOf(emptyList())
+
+    val userInfoModificationState: MutableState<UserInfoModification> = mutableStateOf(
+        UserInfoModification()
+    )
+
+    private fun fetchUserRelateInformation(
+        userInfo: UserInfo?,
+        requestOnlyUserInfo: Boolean = false
+    ) {
+        if (userInfo == null) {
+            currentUserInfoState.value = UserProfileState.NotFound
+            return
+        }
+        currentUserInfoState.value = UserProfileState.LoadSuccess(userInfo)
+        if (requestOnlyUserInfo) {
+            return
+        }
+        coroutineScope.launch {
+            requestNotNullRaw(
+                action = {
+                    if (userInfo.uid != LocalAccountManager.userInfo.uid) {
+                        val myFollowedThisUser =
+                            userRepository.getMyFollowedThisUser(userInfo.uid).data
+                        loggedUserFollowedState.value = myFollowedThisUser == true
+                    }
+                    val followersByUser =
+                        userRepository.getFollowersAndFollowedByUser(userInfo.uid).data
+                    if (!followersByUser.isNullOrEmpty()) {
+                        val followers = followersByUser["followers"]
+                        if (!followers.isNullOrEmpty()) {
+                            followerUsersState.value = followers
+                        }
+                        val followed = followersByUser["followed"]
+                        if (!followed.isNullOrEmpty()) {
+                            followedUsersState.value = followed
+                        }
+                    }
+                    val applicationsByUser =
+                        appSetsRepository.getApplicationsByUser(userInfo.uid).data
+                    if (!applicationsByUser.isNullOrEmpty()) {
+                        applicationsState.value = applicationsByUser
+                    }
+                }
+            )
+        }
+    }
+
+    fun updateCurrentUserInfoByUid(uid: String, requestOnlyUserInfo: Boolean = false) {
+        coroutineScope.launch {
+            requestNotNull(
+                action = {
+                    userRepository.getUserInfoByUid(uid)
+                },
+                onSuccess = {
+                    LocalAccountManager.updateUserInfoIfNeeded(it)
+                    fetchUserRelateInformation(it, requestOnlyUserInfo)
+                }
+            )
+        }
+    }
+
+    fun updateUserFollowState() {
+        val userInfo =
+            (currentUserInfoState.value as? UserProfileState.LoadSuccess)?.userInfo
+                ?: return
+        coroutineScope.launch {
+            requestNotNullRaw(
+                action = {
+                    if (userInfo.uid != LocalAccountManager.userInfo.uid) {
+                        val myFollowedThisUser =
+                            userRepository.getMyFollowedThisUser(userInfo.uid).data
+                        loggedUserFollowedState.value = myFollowedThisUser == true
+                    }
+                    val followersByUser =
+                        userRepository.getFollowersAndFollowedByUser(userInfo.uid).data
+                    if (!followersByUser.isNullOrEmpty()) {
+                        val followers = followersByUser["followers"]
+                        if (!followers.isNullOrEmpty()) {
+                            followerUsersState.value = followers
+                        }
+                        val followed = followersByUser["followed"]
+                        if (!followed.isNullOrEmpty()) {
+                            followedUsersState.value = followed
+                        }
+                    }
+                }
+            )
+        }
+    }
+
+    fun modifyUserInfo(
+        context: Context
+    ) {
+
+        val currentUserInfoState = currentUserInfoState.value
+        if (currentUserInfoState !is UserProfileState.LoadSuccess) {
+            return
+        }
+        val userInfo = currentUserInfoState.userInfo
+
+        if (!LocalAccountManager.isLoggedUser(userInfo.uid)) {
+            return
+        }
+        val userInfoModification = userInfoModificationState.value
+        coroutineScope.launch {
+            requestNotNull(
+                action = {
+                    userRepository.updateUserInfo(
+                        context,
+                        userInfo,
+                        userInfoModification
+                    )
+                },
+                onSuccess = {
+                    updateCurrentUserInfoByUid(userInfo.uid, true)
+                    context.getString(xcj.app.appsets.R.string.information_updated).toastSuspend()
+                },
+                onFailed = {
+                    context.getString(xcj.app.appsets.R.string.updated_failed).toastSuspend()
+                }
+            )
+        }
+    }
+
+    fun updateUserSelectAvatarUri(uriProvider: UriProvider) {
+        UserInfoModification.updateStateUserAvatarUri(userInfoModificationState, uriProvider)
+    }
+
+    override fun onComposeDispose(by: String?) {
+        loggedUserFollowedState.value = false
+        followedUsersState.value = emptyList()
+        followerUsersState.value = emptyList()
+        applicationsState.value = emptyList()
+        userInfoModificationState.value = UserInfoModification()
+    }
+}

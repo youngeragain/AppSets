@@ -1,0 +1,8 @@
+{
+  "xcj.app.starter.test.PurpleContextAware": [
+    "xcj.app.appsets.purple_module.PurpleContextAware"
+  ],
+  "xcj.app.starter.test.PurpleContextEventListener": [
+    "xcj.app.appsets.purple_module.AndroidInitEventListener"
+  ]
+}

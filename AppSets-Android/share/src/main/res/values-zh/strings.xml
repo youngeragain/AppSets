@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="appsets_share_http_usage_tips">AppSets Share with HTTP\n</string>
+    <string name="appsets_share_rpc_usage_tips">AppSets Share with RPC\n</string>
+    <string name="content_here_can_send">此处显示发送的内容</string>
+    <string name="no_devices">没有设备</string>
+    <string name="nike_name">别名</string>
+    <string name="share_settings">分享设置</string>
+    <string name="share_method">分享方式</string>
+    <string name="clear">清除</string>
+    <string name="server_is_not_boot">服务未启动</string>
+    <string name="server_booted">服务已经启动, 可用地址: </string>
+    <string name="sever_boot_failed">服务启动失败\n%1$s</string>
+    <string name="please_grant_permission_in_system_application_settings">请到系统设置的应用信息中开启权限</string>
+    <string name="auto_accept">自动接受</string>
+    <string name="no">不</string>
+    <string name="accept">接受</string>
+    <string name="new_share_content_to_you">新的分享内容给你</string>
+    <string name="server_status">服务状态</string>
+    <string name="need_a_pin">需要一个PIN</string>
+    <string name="appsets_share_send_tips">输入内容，然后点击设备发送</string>
+    <string name="devices">设备</string>
+    <string name="appsets_share_wlanp2p_usage_tips">WLAN P2P 使用WIFI Direct，需要以下权限:\n附近的设备; 位置大致信息; 位置精确信息; 获取WIFI状态; 更改WIFI状态; 附近WIFI设备; * 使用时打开WIFI开关和位置开关。</string>
+    <string name="send_progress_is">发送进度(%s)</string>
+    <string name="receive_space">接收</string>
+    <string name="send_space">发送</string>
+    <string name="received_progress_is">接收进度(%s)</string>
+    <string name="copy">复制</string>
+    <string name="view">查看</string>
+    <string name="show_content_here_when_received">此处显示接收的内容</string>
+
+    <string name="available">可用</string>
+    <string name="invitation">邀请</string>
+    <string name="invited">已邀请</string>
+    <string name="waiting_other_to_accept_invitation">等待对方接受邀请中</string>
+    <string name="connected">已连接</string>
+    <string name="disconnect">断开</string>
+    <string name="failed">失败</string>
+    <string name="not_available">不可用</string>
+    <string name="unconnected_or_unknown">未连接或未知</string>
+    <string name="connect_failed">连接失败</string>
+    <string name="please_retry">请重试</string>
+</resources>

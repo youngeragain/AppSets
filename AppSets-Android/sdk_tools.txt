@@ -1,0 +1,2 @@
+还原错误堆栈
+~/Android/sdk/cmdline-tools/latest/bin/retrace --verbose ~/AppSets-Android/app/build/outputs/mapping/release/mapping.txt

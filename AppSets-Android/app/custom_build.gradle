@@ -1,0 +1,59 @@
+import java.nio.file.Files
+import java.nio.file.StandardCopyOption
+
+String apkOutPutFilePath = null
+String apkOutPutFileName = null
+
+
+def getLocalProperty(key) {
+    InputStream inputStream = rootProject.file('local.properties').newDataInputStream();
+    Properties properties = new Properties()
+    properties.load(inputStream)
+    if (properties.containsKey(key)) {
+        return properties.getProperty(key)
+    }
+    return null
+}
+
+android.applicationVariants.configureEach { variant ->
+    // Do something
+    variant.outputs.each { output ->
+        def newOutputFileName = "appsets3-dev-latest.apk"
+        output.outputFileName = newOutputFileName
+        apkOutPutFileName = "appsets3-dev-${variant.versionCode}-${variant.versionName}.apk"
+        apkOutPutFilePath = output.outputFile.getPath()
+    }
+}
+
+gradle.projectsEvaluated {
+    project.gradle.taskGraph.whenReady {
+        def assembleReleaseTasks = getTasksByName("assembleRelease", false)
+        if (assembleReleaseTasks != null && assembleReleaseTasks.size() == 1) {
+            def assembleReleaseTask = assembleReleaseTasks[0]
+            assembleReleaseTask.doLast {
+                println("assembleRelease:" + "do custom Last" + apkOutPutFilePath)
+                if (apkOutPutFilePath == null) {
+                    return
+                }
+                if (apkOutPutFileName == null)
+                    return
+                def file = new File(apkOutPutFilePath)
+                if (!file.exists())
+                    return
+                try {
+                    def appsetsAchivesPath = getLocalProperty("appsets_achives_path")
+                    if (appsetsAchivesPath != null) {
+                        def copyDestinationFile = new File(appsetsAchivesPath + apkOutPutFileName)
+
+                        Files.copy(file.toPath(), copyDestinationFile.toPath(), StandardCopyOption.REPLACE_EXISTING)
+                    }
+
+                } catch (Exception ex) {
+                    println "exception when copy:" + ex.message
+                }
+            }
+        } else {
+            println("=======> task assembleRelease not find in project:app")
+        }
+    }
+}

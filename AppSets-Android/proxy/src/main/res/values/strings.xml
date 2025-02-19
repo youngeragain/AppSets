@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="port" translatable="false">Server Port:</string>
+    <string name="secret" translatable="false">Shared Secret:</string>
+    <string name="connect" translatable="false">Connect!</string>
+    <string name="connected" translatable="false">Connected</string>
+    <string name="proxyhost" translatable="false">HTTP proxy hostname</string>
+    <string name="proxyport" translatable="false">HTTP proxy port</string>
+
+    <string name="packages" translatable="false">Packages (comma separated):</string>
+    <string name="allowed" translatable="false">Allow</string>
+    <string name="disallowed" translatable="false">Disallow</string>
+
+    <string name="connecting" translatable="false">Connecting</string>
+    <string name="disconnected" translatable="false">Disconnected</string>
+    <string name="incomplete_proxy_settings" translatable="false">
+        Incomplete proxy settings. For HTTP proxy we require both hostname and port settings.
+    </string>
+    <string name="unknown_package_names" translatable="false">
+        Some of the specified package names do not correspond to any installed packages.
+    </string>
+</resources>

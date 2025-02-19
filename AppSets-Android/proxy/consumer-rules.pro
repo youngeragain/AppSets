@@ -1,0 +1,1 @@
+-keep class xcj.app.proxy.purple_module.ComposeEventListener{ *; }
