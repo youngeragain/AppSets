@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Config 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="xcj.app.main.dao.mysql.RoleDao">
+    <insert id="addRole">
+        INSERT INTO
+        role_2022(
+        uid,
+        role_type,
+        <if test="hostUid!=null">added_by_uid,</if>
+        <if test="reason!=null">reason,</if>
+        create_time
+        )
+        VALUE(
+        #{beenGivenUid},
+        #{role},
+        <if test="hostUid!=null">added_by_uid,</if>
+        <if test="reason!=null">#{reason},</if>
+        current_timestamp()
+        )
+    </insert>
+    <delete id="deleteUserRole">
+        DELETE FROM
+        role_2022
+        WHERE
+        uid=#{uid} AND role_type=#{role}
+    </delete>
+
+    <update id="updateUserRole">
+        UPDATE
+        role_2022
+        SET
+        role_type = #{newRole}
+        WHERE
+        uid = #{uid} AND role_type=#{oldRole};
+    </update>
+    <select id="getAllRoleByUid" resultType="java.lang.String">
+        SELECT
+        role_type
+        FROM
+        role_2022
+        WHERE
+        uid = #{uid}
+    </select>
+
+    <select id="getAllRoleByUidPaged" resultType="java.lang.String">
+        SELECT
+        role_type
+        FROM
+        role_2022
+        WHERE
+        uid = #{uid}
+        <if test="orderByTime">
+            ORDER BY create_time
+        </if>
+        <if test="offset!=null and offset>=0 and limit!=null and limit>0">
+            LIMIT
+            #{limit}
+            OFFSET
+            #{offset}
+        </if>
+
+    </select>
+
+    <select id="isUserHasRole" resultType="java.lang.Boolean">
+        SELECT
+        count(1)
+        FROM
+        role_2022
+        WHERE
+        uid=#{uid} AND role_type=#{role};
+    </select>
+    <select id="getUserRolesByUid" resultType="java.lang.String">
+        SELECT
+        role_type
+        FROM
+        role_2022
+        WHERE
+        uid=#{uid};
+    </select>
+    <!--<cache/>-->
+</mapper>

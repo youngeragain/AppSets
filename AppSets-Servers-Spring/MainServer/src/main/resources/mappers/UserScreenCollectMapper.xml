@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Config 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="xcj.app.main.dao.mysql.UserScreenCollectDao">
+
+   <insert id="addUserScreenCollect">
+       INSERT INTO
+       user_screen_collect_2022 (
+       uid,
+       screen_id,
+       collect_time,
+       <if test="category!=null">category,</if>
+       create_time,
+       update_time)
+       VALUES (
+       #{uid},
+       #{screenId},
+       current_timestamp(),
+       <if test="category!=null">#{category},</if>
+       current_timestamp(),
+       current_timestamp()
+       );
+   </insert>
+    <update id="removeCollectScreenByUidAndScreenId">
+        UPDATE
+        user_screen_collect_2022
+        SET
+        deleted=1
+        WHERE
+        uid=${uid} AND screen_id=${screenId};
+    </update>
+    <!--<cache/>-->
+</mapper>

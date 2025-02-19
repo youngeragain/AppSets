@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Config 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="xcj.app.main.dao.mysql.LoginInfoDao">
+
+  <insert id="addLoginInfo">
+      INSERT INTO
+      login_info_2022(
+      sign_in_time,
+      <if test="signInDeviceInfo!=null">sign_in_device_info,</if>
+      <if test="signInLocation!=null">sign_in_location,</if>
+      <if test="signInIp!=null">sign_in_ip,</if>
+      uid,
+      create_time
+      )
+      VALUE
+      (
+      current_timestamp(),
+      <if test="signInDeviceInfo!=null">#{signInDeviceInfo},</if>
+      <if test="signInLocation!=null">#{signInLocation},</if>
+      <if test="signInIp!=null">#{signInIp},</if>
+      #{uid},
+      current_timestamp()
+      )
+  </insert>
+    <!--<cache/>-->
+</mapper>

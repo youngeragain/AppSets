@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Config 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="xcj.app.main.dao.mysql.FriendDao">
+
+    <insert id="addFriend">
+        INSERT INTO
+        user_friend_2022(
+        uid,
+        friend_uid,
+        added_time,
+        create_time
+        )
+        VALUE (
+        #{uid},
+        #{friendUid},
+        current_timestamp(),
+        current_timestamp()
+        );
+    </insert>
+
+    <delete id="deleteFriend">
+        DELTE FROM
+        user_friend_2022
+        WHERE
+        uid=#{uid} AND friend_uid=#{friendUid}
+    </delete>
+
+    <delete id="deleteFriends">
+        DELETE FROM
+        user_friend_2022
+        WHERE
+        uid=#{uid} AND friend_uid IN
+        <foreach collection="friendUids" open="(" close=")" separator="," item="friendUid">
+            #{friendUid}
+        </foreach>
+    </delete>
+
+    <select id="getFriendUidsByUid" resultType="java.lang.String">
+        SELECT
+        friend_uid
+        FROM
+        user_friend_2022
+        WHERE
+        uid=#{uid};
+    </select>
+    <select id="isShipExist" resultType="java.lang.Boolean">
+        SELECT
+        count(1)
+        FROM
+        user_friend_2022
+        WHERE
+        uid = #{uid} AND friend_uid = #{friendUid};
+    </select>
+    <!--<cache/>-->
+</mapper>

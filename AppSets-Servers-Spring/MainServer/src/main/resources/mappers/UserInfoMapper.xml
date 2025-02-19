@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Config 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="xcj.app.main.dao.mysql.UserInfoDao">
+
+    <update id="updateUserInfo" parameterType="xcj.app.main.model.table.mysql.UserInfo">
+        UPDATE
+        user_info_2022
+        <trim prefix="set" suffixOverrides=",">
+            <if test="name!=null">
+                `name`=#{name},
+            </if>
+            <if test="age!=null">
+                age=#{age},
+            </if>
+            <if test="sex!=null">
+                sex=#{sex},
+            </if>
+            <if test="email!=null">
+                email=#{emial},
+            </if>
+            <if test="phone!=null">
+                phone=#{phone},
+            </if>
+            <if test="address!=null">
+                address=#{address},
+            </if>
+            <if test="avatarUrl!=null">
+                avatar_url=#{avatarUrl},
+            </if>
+            <if test="intro!=null">
+                introduction=#{intro},
+            </if>
+            <if test="company!=null">
+                company=#{company},
+            </if>
+            <if test="profession!=null">
+                profession=#{profession},
+            </if>
+            <if test="website!=null">
+                website=#{website},
+            </if>
+        </trim>
+        WHERE
+        uid = #{uid}
+    </update>
+
+    <select id="getUserInfoByUid" resultType="xcj.app.main.model.res.UserInfoRes">
+        SELECT
+        user_2022.agree_to_the_agreement,
+        user_2022.uid,
+        user_info_2022.`name`,
+        user_info_2022.age,
+        user_info_2022.sex,
+        user_info_2022.email,
+        user_info_2022.phone,
+        user_info_2022.address,
+        user_info_2022.avatar_url,
+        user_info_2022.introduction,
+        user_info_2022.company,
+        user_info_2022.profession,
+        user_info_2022.website
+        FROM
+        user_2022
+        LEFT JOIN
+        user_info_2022
+        ON
+        user_info_2022.uid = user_2022.uid
+        WHERE
+        user_2022.uid = #{uid}
+    </select>
+
+    <cache-ref namespace="xcj.app.main.dao.mysql.UserDao"/>
+</mapper>
