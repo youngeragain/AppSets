@@ -5,10 +5,11 @@ import io.netty.channel.ChannelHandlerContext
 interface HandlerMapping {
 
     fun handle(
+        webHandler: WebHandler,
         ctx: ChannelHandlerContext,
-        httpRequest: HttpRequestWrapper,
-        httpResponse: HttpResponseWrapper
-    ): HandleResult
+        httpRequestWrapper: HttpRequestWrapper,
+        httpResponseWrapper: HttpResponseWrapper
+    )
 
     fun isSupport(httpRequest: HttpRequestWrapper): Boolean
 

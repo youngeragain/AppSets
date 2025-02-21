@@ -1,27 +1,42 @@
+@file:OptIn(ExperimentalEncodingApi::class)
+
 package xcj.app.share.http.repository
 
 import android.content.Context
+import android.os.Build
+import androidx.lifecycle.lifecycleScope
+import io.netty.handler.codec.http.HttpHeaderNames
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
+import okhttp3.OkHttpClient
+import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
+import okhttp3.ResponseBody
+import retrofit2.Call
+import retrofit2.Response
 import xcj.app.share.base.DataContent
-import xcj.app.share.base.DataProgressInfoPool
 import xcj.app.share.base.DataSendContent
 import xcj.app.share.base.ShareDevice
+import xcj.app.share.base.ShareSystem
 import xcj.app.share.http.HttpShareMethod
 import xcj.app.share.http.api.AppSetsShareApi
+import xcj.app.share.http.common.ResponseProgressInterceptor
 import xcj.app.share.http.common.asProgressRequestBody
+import xcj.app.share.http.model.ContentListInfo
 import xcj.app.starter.android.util.PurpleLogger
 import xcj.app.starter.foundation.http.DesignResponse
 import xcj.app.starter.server.RetrofitProvider
 import xcj.app.starter.util.ContentType
+import xcj.app.web.webserver.base.DataProgressInfoPool
+import java.nio.file.Files
 import java.util.UUID
 import kotlin.collections.component1
 import kotlin.collections.component2
+import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlin.random.Random
 
 class AppSetsShareRepository() {
@@ -30,7 +45,10 @@ class AppSetsShareRepository() {
         private const val TAG = "AppSetsShareRepository"
     }
 
-    private fun buildApi(shareDevice: ShareDevice): AppSetsShareApi? {
+    private fun buildApi(
+        shareDevice: ShareDevice,
+        okHttpClient: OkHttpClient? = null
+    ): AppSetsShareApi? {
         PurpleLogger.current.d(TAG, "buildApi, shareDevice:$shareDevice")
         if (shareDevice.deviceAddress.ips.isEmpty()) {
             PurpleLogger.current.d(TAG, "buildApi, device ips is empty, return")
@@ -61,7 +79,12 @@ class AppSetsShareRepository() {
         PurpleLogger.current.d(TAG, "buildApi, baseUrl:$baseUrl")
         runCatching {
             val appSetsShareApi: AppSetsShareApi =
-                RetrofitProvider.getService(baseUrl, AppSetsShareApi::class.java)
+                RetrofitProvider.getService(
+                    baseUrl,
+                    AppSetsShareApi::class.java,
+                    okHttpClient,
+                    okHttpClient != null
+                )
             return appSetsShareApi
         }.onFailure {
             PurpleLogger.current.d(TAG, "buildApi, baseUrl:$baseUrl, failed:${it.message}")
@@ -133,7 +156,7 @@ class AppSetsShareRepository() {
         api.pair(pin = pinNumber)
     }
 
-    suspend fun pairResponse(shareDevice: ShareDevice.HttpShareDevice, token: String) =
+    suspend fun pairResponse(shareDevice: ShareDevice.HttpShareDevice, shareToken: String) =
         withContext(Dispatchers.IO) {
 
             val api = buildApi(shareDevice)
@@ -142,9 +165,9 @@ class AppSetsShareRepository() {
             }
             PurpleLogger.current.d(
                 TAG,
-                "postText, shareDevice:$shareDevice sendPairResponse:$token"
+                "pairResponse, shareDevice:$shareDevice shareToken:$shareToken"
             )
-            return@withContext api.pairResponse(token = token)
+            return@withContext api.pairResponse(shareToken = shareToken)
         }
 
 
@@ -166,7 +189,7 @@ class AppSetsShareRepository() {
             )
             val dataProgressForStart = DataProgressInfoPool.makeStart(dataContent.id)
             shareMethod.dataSendProgressListener.onProgress(dataProgressForStart)
-            api.postText(token = shareDevice.token ?: "", text = dataContent.content)
+            api.postText(shareToken = shareDevice.token ?: "", text = dataContent.content)
             val dataProgressForEnd = DataProgressInfoPool.makeStart(dataContent.id)
             shareMethod.dataSendProgressListener.onProgress(dataProgressForEnd)
         }
@@ -208,7 +231,7 @@ class AppSetsShareRepository() {
                 "postByteArray description".toRequestBody(ContentType.TEXT_PLAIN.toMediaTypeOrNull())
 
             api.postFile(
-                token = shareDevice.token ?: "",
+                shareToken = shareDevice.token ?: "",
                 multiPartBodyPart = multiPartBodyPart,
                 multiPartBodyPartDescription
             )
@@ -248,7 +271,7 @@ class AppSetsShareRepository() {
                 "file description".toRequestBody(ContentType.TEXT_PLAIN.toMediaTypeOrNull())
 
             api.postFile(
-                token = shareDevice.token ?: "",
+                shareToken = shareDevice.token ?: "",
                 multiPartBodyPart = multiPartBodyPart,
                 multiPartBodyPartDescription
             )
@@ -290,7 +313,7 @@ class AppSetsShareRepository() {
 
             val designResponse =
                 api.postFile(
-                    token = shareDevice.token ?: "",
+                    shareToken = shareDevice.token ?: "",
                     multiPartBodyPart = multiPartBodyPart,
                     description = multiPartBodyPartDescription
                 )
@@ -306,18 +329,29 @@ class AppSetsShareRepository() {
                 return@withContext DesignResponse.NOT_FOUND
             }
             PurpleLogger.current.d(TAG, "sendPrepareSend, shareDevice:$shareDevice")
-            api.prepareSend(token = shareDevice.token ?: "")
+            api.prepareSend(shareToken = shareDevice.token ?: "", "/")
         }
 
-    suspend fun prepareSendResponse(shareDevice: ShareDevice.HttpShareDevice, isAccept: Boolean) =
+    suspend fun prepareSendResponse(
+        shareDevice: ShareDevice.HttpShareDevice,
+        isAccept: Boolean,
+        isPreferDownloadSelf: Boolean
+    ) =
         withContext(Dispatchers.IO) {
 
             val api = buildApi(shareDevice)
             if (api == null) {
                 return@withContext DesignResponse.NOT_FOUND
             }
-            PurpleLogger.current.d(TAG, "prepareSendResponse, shareDevice:$shareDevice")
-            api.prepareSendResponse(token = shareDevice.token ?: "", isAccept = isAccept)
+            PurpleLogger.current.d(
+                TAG,
+                "prepareSendResponse, shareDevice:$shareDevice, isAccept:$isAccept, isPreferDownloadSelf:$isPreferDownloadSelf"
+            )
+            api.prepareSendResponse(
+                shareToken = shareDevice.token ?: "",
+                isAccept = isAccept,
+                isPreferDownloadSelf = isPreferDownloadSelf
+            )
         }
 
     suspend fun resumeHandleSend(
@@ -388,7 +422,7 @@ class AppSetsShareRepository() {
             )
             sendDataRunnableInfo.sendDataRunnable()
             sendDataRunnableInfo.isCalled = true
-            shareMethod.removeSendDataRunnableForDevice(shareDevice)
+            shareMethod.removeSendDataRunnableForDevice(shareDevice, "sendDataRunnable Called")
             return
         }
         if (shareDevice.isNeedPin && !shareDevice.isPaired) {
@@ -412,7 +446,7 @@ class AppSetsShareRepository() {
 
         sendDataRunnableInfo.sendDataRunnable()
         sendDataRunnableInfo.isCalled = true
-        shareMethod.removeSendDataRunnableForDevice(shareDevice)
+        shareMethod.removeSendDataRunnableForDevice(shareDevice, "sendDataRunnable Called")
     }
 
     suspend fun checkDevicePin(
@@ -430,4 +464,175 @@ class AppSetsShareRepository() {
 
         resumeHandleSend(shareMethod, shareDevice, "checkDevicePin")
     }
+
+    suspend fun handleDownload(
+        shareMethod: HttpShareMethod,
+        shareDevice: ShareDevice.HttpShareDevice,
+        contentListUri: String
+    ) = coroutineScope {
+        PurpleLogger.current.d(TAG, "handleDownload")
+        val designResponse = getContentList(shareDevice, contentListUri)
+        if (designResponse == DesignResponse.NOT_FOUND) {
+            return@coroutineScope
+        }
+        val enCodeContentList = designResponse.data?.contentList//this is encode
+        if (enCodeContentList.isNullOrEmpty()) {
+            return@coroutineScope
+        }
+
+        val clientInfo = shareDevice.toClientInfo(HttpShareMethod.SHARE_SERVER_PORT)
+
+        val dataContentMap = mutableMapOf<String, DataContent>()
+        shareMethod.downloadContentInfoMap.put(shareDevice, dataContentMap)
+        enCodeContentList.forEach { encodeContentUri ->
+            val defaultOkHttpClientBuilder = RetrofitProvider.defaultOkHttpClientBuilder()
+            val decodeContentUri =
+                kotlin.io.encoding.Base64.decode(encodeContentUri.toByteArray()).decodeToString()
+            val contentFile = ShareSystem.makeFileIfNeeded(decodeContentUri, createFile = false)
+            if (contentFile != null) {
+
+                val fileContent = DataContent.FileContent(contentFile, clientInfo = clientInfo)
+                dataContentMap.put(encodeContentUri, fileContent)
+
+                val responseProgressInterceptor = ResponseProgressInterceptor(
+                    fileContent,
+                    shareMethod.dataReceivedProgressListener
+                )
+                defaultOkHttpClientBuilder.addInterceptor(responseProgressInterceptor)
+
+                launch {
+                    val okHttpClient = defaultOkHttpClientBuilder.build()
+                    getContent(shareMethod, shareDevice, encodeContentUri, okHttpClient)
+                }
+            }
+        }
+    }
+
+    suspend fun getContentList(
+        shareDevice: ShareDevice.HttpShareDevice,
+        contentListUri: String
+    ): DesignResponse<ContentListInfo> =
+        withContext(Dispatchers.IO) {
+            val api = buildApi(shareDevice)
+            if (api == null) {
+                return@withContext DesignResponse(data = null)
+            }
+            PurpleLogger.current.d(
+                TAG,
+                "getContentList, shareDevice:$shareDevice contentListUri:$contentListUri"
+            )
+            val designResponse = api.getContentList(
+                shareToken = shareDevice.token ?: "",
+                contentListUri = contentListUri,
+            )
+            designResponse.data
+            return@withContext designResponse
+        }
+
+    suspend fun getContent(
+        shareMethod: HttpShareMethod,
+        shareDevice: ShareDevice.HttpShareDevice,
+        contentUri: String,
+        okHttpClient: OkHttpClient? = null
+    ) = withContext(Dispatchers.IO) {
+
+        val api = buildApi(shareDevice, okHttpClient)
+        if (api == null) {
+            return@withContext DesignResponse.NOT_FOUND
+        }
+        PurpleLogger.current.d(
+            TAG,
+            "getContent, shareDevice:$shareDevice contentUri:$contentUri"
+        )
+        val call = api.getContent(
+            shareToken = shareDevice.token ?: "",
+            contentUri,
+        )
+        call.enqueue(object : retrofit2.Callback<ResponseBody> {
+            override fun onResponse(
+                call: Call<ResponseBody?>,
+                response: Response<ResponseBody?>
+            ) {
+                if (!response.isSuccessful) {
+                    PurpleLogger.current.d(
+                        TAG, "getContent, onResponse failed: " + response.code()
+                    )
+                    return
+                }
+                saveContentResponseToFile(shareMethod, shareDevice, call.request(), response)
+            }
+
+            override fun onFailure(call: Call<ResponseBody?>, tr: Throwable) {
+                PurpleLogger.current.d(
+                    TAG, "getContent, onFailure: " + tr.message
+                )
+            }
+        })
+    }
+
+    private fun saveContentResponseToFile(
+        shareMethod: HttpShareMethod,
+        shareDevice: ShareDevice.HttpShareDevice,
+        request: Request,
+        response: Response<ResponseBody?>
+    ) {
+        PurpleLogger.current.d(TAG, "saveContentResponseToFile")
+        val contentUri = request.headers["content_uri"]
+        if (contentUri.isNullOrEmpty()) {
+            return
+        }
+        val dataContentMap = shareMethod.downloadContentInfoMap.get(shareDevice)
+        if (dataContentMap.isNullOrEmpty()) {
+            return
+        }
+        val dataContent = dataContentMap[contentUri]
+        if (dataContent == null) {
+            return
+        }
+        if (dataContent !is DataContent.FileContent) {
+            return
+        }
+        val responseBody = response.body()
+        if (responseBody == null) {
+            return
+        }
+        val contentDisposition =
+            response.headers()[HttpHeaderNames.CONTENT_DISPOSITION.toString()]
+        if (contentDisposition?.startsWith("attachment;") != true) {
+            return
+        }
+        if (!contentDisposition.contains("filename=")) {
+            return
+        }
+        val attachmentFileName =
+            contentDisposition.substringAfter("filename=").trimStart('"').trimEnd('"')
+        PurpleLogger.current.d(
+            TAG,
+            "saveContentResponseToFile, attachmentFileName:$attachmentFileName, " +
+                    "dataContent.file.name:${dataContent.file.name}"
+        )
+
+
+        shareMethod.activity.lifecycleScope.launch(Dispatchers.IO) {
+            runCatching {
+                val inputStream = responseBody.byteStream()
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    val fileToSave = dataContent.file
+                    Files.copy(inputStream, fileToSave.toPath())
+                }
+                inputStream.close()
+            }.onFailure { tr ->
+                tr.printStackTrace()
+                PurpleLogger.current.d(
+                    TAG, "saveContentResponseToFile, onFailure: " + tr.message
+                )
+            }.onSuccess {
+                PurpleLogger.current.d(
+                    TAG, "saveContentResponseToFile, onSuccess"
+                )
+                shareMethod.onContentReceived(dataContent)
+            }
+        }
+    }
+
 }

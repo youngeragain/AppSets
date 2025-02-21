@@ -1,4 +1,4 @@
-package xcj.app.rtc
+package xcj.app.rtc.ui.compose
 
 import android.content.Context
 import android.graphics.Color
@@ -14,8 +14,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -27,18 +25,21 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.webrtc.*
 import org.webrtc.SurfaceTextureHelper.FrameRefMonitor
-import xcj.app.rtc.ui.theme.AndroidProjectsForXcjTheme
+import xcj.app.rtc.ui.compose.theme.AndroidProjectsForXcjTheme
 import java.util.concurrent.Callable
 
-class MainViewModel:ViewModel(){
+class MainViewModel : ViewModel() {
 
 }
 
 class MainActivity : ComponentActivity() {
-    private val TAG = "MainActivity"
+    companion object {
+        private const val TAG = "MainActivity"
+    }
+
     private val mViewModel: MainViewModel by viewModels()
-    lateinit var eglBase:EglBase
-    lateinit var peerConnectionFactory:PeerConnectionFactory
+    lateinit var eglBase: EglBase
+    lateinit var peerConnectionFactory: PeerConnectionFactory
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         eglBase = EglBase.create()
@@ -62,52 +63,54 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    fun createCameraCapture(context: Context):VideoCapturer? {
+    fun createCameraCapture(context: Context): VideoCapturer? {
         val camera2Enumerator = Camera2Enumerator(context.applicationContext)
         val deviceNames = camera2Enumerator.deviceNames
-        return deviceNames.firstOrNull { deviceName->
+        return deviceNames.firstOrNull { deviceName ->
             camera2Enumerator.isBackFacing(deviceName)
-        }?.let { backFacingName->
-            camera2Enumerator.createCapturer(backFacingName, object:CameraVideoCapturer.CameraEventsHandler{
-                override fun onCameraError(p0: String?) {
-                    PurpleLogger.current.d(
+        }?.let { backFacingName ->
+            camera2Enumerator.createCapturer(
+                backFacingName,
+                object : CameraVideoCapturer.CameraEventsHandler {
+                    override fun onCameraError(p0: String?) {
+                        PurpleLogger.current.d(
                             "createCapturer",
                             "onCameraError:${p0}"
                         )
-                }
+                    }
 
-                override fun onCameraDisconnected() {
-                    PurpleLogger.current.d(
-                        "createCapturer",
-                        "onCameraDisconnected"
-                    )
-                }
+                    override fun onCameraDisconnected() {
+                        PurpleLogger.current.d(
+                            "createCapturer",
+                            "onCameraDisconnected"
+                        )
+                    }
 
-                override fun onCameraFreezed(p0: String?) {
-                    PurpleLogger.current.d(
-                        "createCapturer",
-                        "onCameraFreezed:${p0}"
-                    )
-                }
+                    override fun onCameraFreezed(p0: String?) {
+                        PurpleLogger.current.d(
+                            "createCapturer",
+                            "onCameraFreezed:${p0}"
+                        )
+                    }
 
-                override fun onCameraOpening(p0: String?) {
-                    PurpleLogger.current.d(
-                        "createCapturer",
-                        "onCameraOpening:${p0}"
-                    )
-                }
+                    override fun onCameraOpening(p0: String?) {
+                        PurpleLogger.current.d(
+                            "createCapturer",
+                            "onCameraOpening:${p0}"
+                        )
+                    }
 
-                override fun onFirstFrameAvailable() {
-                    PurpleLogger.current.d(
-                        "createCapturer",
-                        "onFirstFrameAvailable"
-                    )
-                }
+                    override fun onFirstFrameAvailable() {
+                        PurpleLogger.current.d(
+                            "createCapturer",
+                            "onFirstFrameAvailable"
+                        )
+                    }
 
-                override fun onCameraClosed() {
-                    PurpleLogger.current.d("createCapturer", "onCameraClosed")
-                }
-            })
+                    override fun onCameraClosed() {
+                        PurpleLogger.current.d("createCapturer", "onCameraClosed")
+                    }
+                })
         }
     }
 }
@@ -118,7 +121,7 @@ fun MainScreen() {
         AndroidView(
             factory = ::SurfaceViewRenderer,
             modifier = Modifier.fillMaxSize(),
-            update = { render->
+            update = { render ->
                 PurpleLogger.current.d("MainScreen", "othersCameraView")
                 render.background = ColorDrawable(Color.GRAY)
             })
@@ -127,30 +130,48 @@ fun MainScreen() {
             modifier = Modifier
                 .size(180.dp, 300.dp)
                 .padding(start = 12.dp, top = 12.dp),
-            update = { render->
+            update = { render ->
                 PurpleLogger.current.d("MainScreen", "mineCameraView")
                 render.setMirror(false)
                 val mainActivity = render.context as MainActivity
                 mainActivity.lifecycleScope.launch(Dispatchers.IO) {
-                    mainActivity.createCameraCapture(mainActivity)?.let { backCamera->
-                        val audioSource = mainActivity.peerConnectionFactory.createAudioSource(MediaConstraints())
-                        val videoSource = mainActivity.peerConnectionFactory.createVideoSource(backCamera.isScreencast)
-                        val surfaceTextureHelper2 = SurfaceTextureHelper2.create(mainActivity, "camera_capture_thread", mainActivity.eglBase.eglBaseContext)
-                        backCamera.initialize(surfaceTextureHelper2, mainActivity.applicationContext, videoSource.capturerObserver)
+                    mainActivity.createCameraCapture(mainActivity)?.let { backCamera ->
+                        val audioSource =
+                            mainActivity.peerConnectionFactory.createAudioSource(MediaConstraints())
+                        val videoSource =
+                            mainActivity.peerConnectionFactory.createVideoSource(backCamera.isScreencast)
+                        val surfaceTextureHelper2 = SurfaceTextureHelper2.create(
+                            mainActivity,
+                            "camera_capture_thread",
+                            mainActivity.eglBase.eglBaseContext
+                        )
+                        backCamera.initialize(
+                            surfaceTextureHelper2,
+                            mainActivity.applicationContext,
+                            videoSource.capturerObserver
+                        )
                         backCamera.startCapture(render.measuredWidth, render.measuredHeight, 30)
-                        withContext(Dispatchers.Main){
-                            render.init(mainActivity.eglBase.eglBaseContext, object :RendererCommon.RendererEvents{
-                                override fun onFirstFrameRendered() {
+                        withContext(Dispatchers.Main) {
+                            render.init(
+                                mainActivity.eglBase.eglBaseContext,
+                                object : RendererCommon.RendererEvents {
+                                    override fun onFirstFrameRendered() {
 
-                                }
+                                    }
 
-                                override fun onFrameResolutionChanged(p0: Int, p1: Int, p2: Int) {
+                                    override fun onFrameResolutionChanged(
+                                        p0: Int,
+                                        p1: Int,
+                                        p2: Int
+                                    ) {
 
-                                }
-                            })
+                                    }
+                                })
                         }
-                        val audioTrack = mainActivity.peerConnectionFactory.createAudioTrack("1", audioSource)
-                        val videoTrack = mainActivity.peerConnectionFactory.createVideoTrack("2", videoSource)
+                        val audioTrack =
+                            mainActivity.peerConnectionFactory.createAudioTrack("1", audioSource)
+                        val videoTrack =
+                            mainActivity.peerConnectionFactory.createVideoTrack("2", videoSource)
                         videoTrack.addSink(render)
                     }
                 }
@@ -159,7 +180,7 @@ fun MainScreen() {
     }
 }
 
-object SurfaceTextureHelper2{
+object SurfaceTextureHelper2 {
     @JvmStatic
     fun create(
         context: Context,
@@ -171,7 +192,7 @@ object SurfaceTextureHelper2{
     ): SurfaceTextureHelper? {
         val handlerThread = HandlerThread(threadName)
         handlerThread.setUncaughtExceptionHandler { thread, throwable ->
-            if(throwable.message?.contains("without camera permission") == true){
+            if (throwable.message?.contains("without camera permission") == true) {
                 //it can be toast, because this thread has a looper!
                 Toast.makeText(context, "without camera permission", Toast.LENGTH_SHORT).show()
             }
@@ -190,11 +211,13 @@ object SurfaceTextureHelper2{
                         FrameRefMonitor::class.java
                     )
                 helperConstructor.isAccessible = true
-                helperConstructor.newInstance(sharedContext,
+                helperConstructor.newInstance(
+                    sharedContext,
                     handler,
                     alignTimestamps,
                     yuvConverter,
-                    frameRefMonitor)
+                    frameRefMonitor
+                )
             }.onFailure {
                 Logging.e("SurfaceTextureHelper", "$threadName create failure", it)
                 return@Callable null
@@ -204,8 +227,20 @@ object SurfaceTextureHelper2{
             return@Callable null
         })
     }
+
     @JvmStatic
-    fun create(context: Context, threadName: String, sharedContext: EglBase.Context?): SurfaceTextureHelper? {
-        return create(context, threadName, sharedContext, false, YuvConverter(), null as FrameRefMonitor?)
+    fun create(
+        context: Context,
+        threadName: String,
+        sharedContext: EglBase.Context?
+    ): SurfaceTextureHelper? {
+        return create(
+            context,
+            threadName,
+            sharedContext,
+            false,
+            YuvConverter(),
+            null as FrameRefMonitor?
+        )
     }
 }

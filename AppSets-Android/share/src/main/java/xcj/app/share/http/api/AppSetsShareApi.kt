@@ -2,6 +2,7 @@ package xcj.app.share.http.api
 
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
+import okhttp3.ResponseBody
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.Header
@@ -9,6 +10,8 @@ import retrofit2.http.Headers
 import retrofit2.http.Multipart
 import retrofit2.http.POST
 import retrofit2.http.Part
+import retrofit2.http.Streaming
+import xcj.app.share.http.model.ContentListInfo
 import xcj.app.starter.foundation.http.DesignResponse
 
 /**
@@ -24,43 +27,54 @@ interface AppSetsShareApi {
     @GET("/appsets/share/pin/isneed")
     suspend fun isNeedPin(): DesignResponse<Boolean>
 
-    @Headers("Content-Type:text/plain")
     @POST("/appsets/share/pair")
     suspend fun pair(
-        @Body pin: Int
+        @Header("pin") pin: Int
     ): DesignResponse<Boolean>
 
-    @Headers("Content-Type:text/plain")
     @POST("/appsets/share/pair_response")
     suspend fun pairResponse(
-        @Body token: String
+        @Header("share_token") shareToken: String
     ): DesignResponse<Boolean>
 
     @Headers("Content-Type:text/plain")
     @POST("/appsets/share/text")
     suspend fun postText(
-        @Header("share_token") token: String,
+        @Header("share_token") shareToken: String,
         @Body text: String
     ): DesignResponse<Boolean>
 
     @Multipart
     @POST("/appsets/share/file")
     suspend fun postFile(
-        @Header("share_token") token: String,
+        @Header("share_token") shareToken: String,
         @Part multiPartBodyPart: MultipartBody.Part,
         @Part("description") description: RequestBody
     ): DesignResponse<Boolean>
 
-    @Headers("Content-Type:text/plain")
     @POST("/appsets/share/prepare")
     suspend fun prepareSend(
-        @Header("share_token") token: String
+        @Header("share_token") shareToken: String,
+        @Header("content_list_uri") contentList: String,
     ): DesignResponse<Boolean>
 
-    @Headers("Content-Type:text/plain")
     @POST("/appsets/share/prepare_response")
     suspend fun prepareSendResponse(
-        @Header("share_token") token: String,
-        @Body isAccept: Boolean
+        @Header("share_token") shareToken: String,
+        @Header("is_accept") isAccept: Boolean,
+        @Header("prefer_download_self") isPreferDownloadSelf: Boolean,
     ): DesignResponse<Boolean>
+
+    @Streaming
+    @GET("/appsets/share/content/get")
+    fun getContent(
+        @Header("share_token") shareToken: String,
+        @Header("content_uri") contentUri: String,
+    ): retrofit2.Call<ResponseBody>
+
+    @GET("/appsets/share/contents/get")
+    suspend fun getContentList(
+        @Header("share_token") shareToken: String,
+        @Header("content_list_uri") contentListUri: String,
+    ): DesignResponse<ContentListInfo>
 }

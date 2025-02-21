@@ -3,8 +3,8 @@ package xcj.app.share.wlanp2p.channel
 import android.content.Context
 import android.net.Uri
 import kotlinx.coroutines.delay
-import xcj.app.share.base.DataProgressInfoPool
-import xcj.app.share.base.ProgressListener
+import xcj.app.web.webserver.base.DataProgressInfoPool
+import xcj.app.web.webserver.base.ProgressListener
 import xcj.app.share.wlanp2p.base.DataHandleExceptionListener
 import xcj.app.share.wlanp2p.base.WriteFunction
 import xcj.app.share.wlanp2p.base.WriteMethod
@@ -175,12 +175,10 @@ class ChannelWriteMethod(
         if (!ReadThread.Companion.SYSTEM_CONTENT_TYPES.contains(contentType)) {
             val progressListener = progressListener
             if (progressListener != null) {
-                val progress = ((writtenLength + length) / totalLength.toDouble()) * 100
                 val dataProgressInfo = DataProgressInfoPool.obtainById(uuid)
                 dataProgressInfo.name = name
                 dataProgressInfo.total = totalLength
                 dataProgressInfo.current = writtenLength
-                dataProgressInfo.percentage = progress
                 progressListener.onProgress(dataProgressInfo)
             }
         }

@@ -2,6 +2,7 @@ package xcj.app.share.http
 
 import AppSetsShareClientPreSendSheet
 import AppSetsSharePinSheet
+import android.net.Network
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.MutableState
@@ -12,16 +13,14 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import xcj.app.compose_share.ui.viewmodel.AnyStateViewModel.Companion.bottomSheetState
 import xcj.app.share.base.ClientInfo
-import xcj.app.share.base.ClientSendDataInfo
 import xcj.app.share.base.ContentReceivedListener
 import xcj.app.share.base.DataContent
-import xcj.app.share.base.DataProgressInfo
 import xcj.app.share.base.DataSendContent
 import xcj.app.share.base.DeviceAddress
 import xcj.app.share.base.DeviceIP
 import xcj.app.share.base.DeviceName
-import xcj.app.share.base.ProgressListener
 import xcj.app.share.base.ShareDevice
 import xcj.app.share.base.ShareMethod
 import xcj.app.share.http.common.ServerBootStateInfo
@@ -29,11 +28,12 @@ import xcj.app.share.http.repository.AppSetsShareRepository
 import xcj.app.share.ui.compose.AppSetsShareActivity
 import xcj.app.share.ui.compose.AppSetsShareViewModel
 import xcj.app.share.util.NetworkUtil
-import xcj.app.compose_share.ui.viewmodel.AnyStateViewModel.Companion.bottomSheetState
 import xcj.app.starter.android.util.PurpleLogger
+import xcj.app.starter.server.requestNotNull
 import xcj.app.starter.server.requestRaw
 import xcj.app.starter.test.LocalPurpleCoroutineScope
-import xcj.app.starter.util.ContentType
+import xcj.app.web.webserver.base.DataProgressInfo
+import xcj.app.web.webserver.base.ProgressListener
 import xcj.app.web.webserver.netty.ServerBootStrap
 import java.net.Inet4Address
 import java.net.Inet6Address
@@ -83,7 +83,9 @@ class HttpShareMethod : ShareMethod(), ContentReceivedListener, ServiceListener 
 
     val isNeedPinState: MutableState<Boolean> = mutableStateOf(false)
 
-    val isAutoAcceptState: MutableState<Boolean> = mutableStateOf(true)
+    val isAutoAcceptState: MutableState<Boolean> = mutableStateOf(false)
+
+    val isPreferDownloadSelfState: MutableState<Boolean> = mutableStateOf(true)
 
     val serverBootStateInfoState: MutableState<ServerBootStateInfo> =
         mutableStateOf(ServerBootStateInfo.NotBooted)
@@ -91,6 +93,16 @@ class HttpShareMethod : ShareMethod(), ContentReceivedListener, ServiceListener 
     val sendContentRunnableInfoMap: ConcurrentHashMap<ShareDevice.HttpShareDevice, SendDataRunnableInfo?> =
         ConcurrentHashMap()
 
+    val downloadContentInfoMap: ConcurrentHashMap<ShareDevice.HttpShareDevice, MutableMap<String, DataContent>?> =
+        ConcurrentHashMap()
+
+    override fun onAvailable(network: Network) {
+        super.onAvailable(network)
+    }
+
+    override fun onLost(network: Network) {
+        super.onLost(network)
+    }
 
     @RequiresApi(Build.VERSION_CODES.O)
     override fun init(activity: AppSetsShareActivity, viewModel: AppSetsShareViewModel) {
@@ -114,10 +126,7 @@ class HttpShareMethod : ShareMethod(), ContentReceivedListener, ServiceListener 
                 serverBootStateInfoState.value = makeBootedInfo(allAvailableLocalInetAddresses)
 
                 activity.lifecycleScope.launch {
-                    viewModel.updateIsDiscoveringState(true)
                     startServiceDiscovery(allAvailableLocalInetAddresses)
-                    delay(2000)
-                    viewModel.updateIsDiscoveringState(false)
                 }
             }
 
@@ -127,43 +136,43 @@ class HttpShareMethod : ShareMethod(), ContentReceivedListener, ServiceListener 
                     ServerBootStateInfo.BootFailed(reason, SHARE_SERVER_PORT)
             }
 
-            private fun makeBootedInfo(
-                availableLocalInetAddresses: List<Pair<InetAddress, String>>
-            ): ServerBootStateInfo.Booted {
-
-                val allAvailableAddressInfo = availableLocalInetAddresses.map {
-                    val hostAddress = NetworkUtil.getHostAddress(it.first)
-                    "${it.second} | $hostAddress"
-                }
-                val availableIPSuffixesForDevice = availableLocalInetAddresses.mapNotNull {
-                    val inetAddress = it.first
-                    val hostAddress = NetworkUtil.getHostAddress(inetAddress)
-                    if (inetAddress is Inet4Address && !hostAddress.isEmpty()) {
-                        val lastIndexOf = hostAddress.lastIndexOf('.')
-                        val substring = hostAddress.substring(lastIndexOf + 1)
-                        "#$substring"
-                    } else if (inetAddress is Inet6Address && !hostAddress.isEmpty()) {
-                        if (!hostAddress.startsWith("fe80::")) {
-                            null
-                        } else {
-                            "#${hostAddress.substringAfter("fe80::")}"
-                        }
-                    } else {
-                        null
-                    }
-                }.joinToString(separator = " ", prefix = " ")
-                return ServerBootStateInfo.Booted(
-                    allAvailableAddressInfo,
-                    SHARE_SERVER_PORT,
-                    availableIPSuffixesForDevice
-                )
-            }
-
         }
         serverBootStrap = ServerBootStrap(SHARE_SERVER_PORT)
         activity.lifecycleScope.launch {
             serverBootStrap?.main(activity.application, actionLister)
         }
+    }
+
+    private fun makeBootedInfo(
+        availableLocalInetAddresses: List<Pair<InetAddress, String>>
+    ): ServerBootStateInfo.Booted {
+
+        val allAvailableAddressInfo = availableLocalInetAddresses.map {
+            val hostAddress = NetworkUtil.getHostAddress(it.first)
+            "${it.second} | $hostAddress"
+        }
+        val availableIPSuffixesForDevice = availableLocalInetAddresses.mapNotNull {
+            val inetAddress = it.first
+            val hostAddress = NetworkUtil.getHostAddress(inetAddress)
+            if (inetAddress is Inet4Address && !hostAddress.isEmpty()) {
+                val lastIndexOf = hostAddress.lastIndexOf('.')
+                val substring = hostAddress.substring(lastIndexOf + 1)
+                "#$substring"
+            } else if (inetAddress is Inet6Address && !hostAddress.isEmpty()) {
+                if (!hostAddress.startsWith("fe80::")) {
+                    null
+                } else {
+                    "#${hostAddress.substringAfter("fe80::")}"
+                }
+            } else {
+                null
+            }
+        }.joinToString(separator = " ", prefix = " ")
+        return ServerBootStateInfo.Booted(
+            allAvailableAddressInfo,
+            SHARE_SERVER_PORT,
+            availableIPSuffixesForDevice
+        )
     }
 
     override fun onDestroy(owner: LifecycleOwner) {
@@ -191,8 +200,8 @@ class HttpShareMethod : ShareMethod(), ContentReceivedListener, ServiceListener 
 
         }
         LocalPurpleCoroutineScope.current.launch {
-            serverBootStrap?.close(actionLister)
             cancelServiceDiscovery()
+            serverBootStrap?.close(actionLister)
         }
     }
 
@@ -230,6 +239,7 @@ class HttpShareMethod : ShareMethod(), ContentReceivedListener, ServiceListener 
     private suspend fun startServiceDiscovery(allAvailableLocalInetAddresses: List<Pair<InetAddress, String>>) {
         PurpleLogger.current.d(TAG, "startServiceDiscovery")
         withContext(Dispatchers.IO) {
+            viewModel.updateIsDiscoveringState(true)
             // 创建 JmDNS 实例
             allAvailableLocalInetAddresses.mapNotNull {
                 if (it.first is Inet4Address) {
@@ -268,6 +278,8 @@ class HttpShareMethod : ShareMethod(), ContentReceivedListener, ServiceListener 
                     )
                 }
             }
+            delay(2000)
+            viewModel.updateIsDiscoveringState(false)
         }
     }
 
@@ -388,19 +400,13 @@ class HttpShareMethod : ShareMethod(), ContentReceivedListener, ServiceListener 
         notifyShareDeviceFoundOnJmdns(event.dns, shareDeviceList)
     }
 
-    override fun onContentReceived(contentType: String?, content: Any?) {
-        when (contentType) {
-            ContentType.APPLICATION_TEXT -> {
-                if (content !is DataContent.StringContent) {
-                    return
-                }
+    override fun onContentReceived(content: Any?) {
+        when (content) {
+            is DataContent.StringContent -> {
                 viewModel.onNewReceivedContent(content)
             }
 
-            ContentType.APPLICATION_FILE -> {
-                if (content !is DataContent.FileContent) {
-                    return
-                }
+            is DataContent.FileContent -> {
                 viewModel.onNewReceivedContent(content)
             }
         }
@@ -408,10 +414,6 @@ class HttpShareMethod : ShareMethod(), ContentReceivedListener, ServiceListener 
 
     override fun onShareDeviceClick(shareDevice: ShareDevice, clickType: Int) {
         super.onShareDeviceClick(shareDevice, clickType)
-        val pendingSendContentList = viewModel.pendingSendContentList
-        if (pendingSendContentList.isEmpty()) {
-            return
-        }
         PurpleLogger.current.d(
             TAG,
             "onShareDeviceClick, shareDevice:$shareDevice, clickType:$clickType"
@@ -422,16 +424,36 @@ class HttpShareMethod : ShareMethod(), ContentReceivedListener, ServiceListener 
 
         when (clickType) {
             AppSetsShareActivity.CLICK_TYPE_NORMAL -> {
+                val pendingSendContentList = viewModel.pendingSendContentList
+                if (pendingSendContentList.isEmpty()) {
+                    return
+                }
                 send(listOf(shareDevice))
             }
 
             AppSetsShareActivity.CLICK_TYPE_LONG -> {
-
+                getDeviceContentList(this, shareDevice)
             }
 
             AppSetsShareActivity.CLICK_TYPE_DOUBLE -> {
 
             }
+        }
+    }
+
+    private fun getDeviceContentList(
+        method: HttpShareMethod,
+        shareDevice: ShareDevice.HttpShareDevice
+    ) {
+        activity.lifecycleScope.launch {
+            requestNotNull(
+                action = {
+                    appSetsShareRepository.getContentList(shareDevice, "/")
+                },
+                onSuccess = {
+                    viewModel.updateDeviceContentListMap(shareDevice, it.decode())
+                }
+            )
         }
     }
 
@@ -517,8 +539,11 @@ class HttpShareMethod : ShareMethod(), ContentReceivedListener, ServiceListener 
         }
     }
 
-    fun onSeverPairResponse(token: String, clientInfo: ClientInfo) {
-        PurpleLogger.current.d(TAG, "onSeverPairResponse, token:$token, clientInfo:$clientInfo")
+    fun onSeverPairResponse(shareToken: String, clientInfo: ClientInfo) {
+        PurpleLogger.current.d(
+            TAG,
+            "onSeverPairResponse, shareToken:$shareToken, clientInfo:$clientInfo"
+        )
         val shareDevice = findShareDeviceForClientInfo(clientInfo)
         if (shareDevice == null) {
             PurpleLogger.current.d(
@@ -532,7 +557,7 @@ class HttpShareMethod : ShareMethod(), ContentReceivedListener, ServiceListener 
             "onSeverPairResponse, shareDevice:$shareDevice"
         )
 
-        shareDevice.token = token
+        shareDevice.token = shareToken
         if (shareDevice.isPaired) {
             activity.lifecycleScope.launch {
                 appSetsShareRepository.resumeHandleSend(
@@ -544,10 +569,10 @@ class HttpShareMethod : ShareMethod(), ContentReceivedListener, ServiceListener 
         }
     }
 
-    fun onClientPrepareSend(clientInfo: ClientInfo, clientSendInfo: ClientSendDataInfo) {
+    fun onClientPrepareSend(clientInfo: ClientInfo, contentListUri: String) {
         PurpleLogger.current.d(
             TAG,
-            "onClientPrepareSend, clientInfo:$clientInfo, clientSendInfo:$clientSendInfo"
+            "onClientPrepareSend, clientInfo:$clientInfo, contentListUri:$contentListUri"
         )
         val shareDevice = findShareDeviceForClientInfo(clientInfo)
         if (shareDevice == null) {
@@ -561,8 +586,14 @@ class HttpShareMethod : ShareMethod(), ContentReceivedListener, ServiceListener 
             TAG,
             "onClientPrepareSend, shareDevice:$shareDevice"
         )
+
         if (isAutoAcceptState.value) {
-            handleClientPrepareSendRequest(shareDevice, true)
+            handleClientPrepareSendRequest(
+                shareDevice,
+                true,
+                isPreferDownloadSelfState.value,
+                contentListUri
+            )
         } else {
             val bottomSheetState = viewModel.bottomSheetState()
             bottomSheetState.show {
@@ -571,21 +602,32 @@ class HttpShareMethod : ShareMethod(), ContentReceivedListener, ServiceListener 
                     isAutoAccept = isAutoAcceptState.value,
                     onAcceptClick = { isAccept ->
                         bottomSheetState.hide()
-                        handleClientPrepareSendRequest(shareDevice, isAccept)
+                        handleClientPrepareSendRequest(
+                            shareDevice,
+                            isAccept,
+                            isPreferDownloadSelfState.value,
+                            contentListUri
+                        )
                     },
                     onAutoAcceptChanged = { isAutoAccept ->
                         updateIsAutoAcceptState(isAutoAccept)
+                    },
+                    onContentListShowClick = {
+                        getDeviceContentList(this, shareDevice)
                     }
                 )
             }
         }
-
     }
 
-    fun onServerPrepareSendResponse(clientInfo: ClientInfo, isAccept: Boolean) {
+    fun onServerPrepareSendResponse(
+        clientInfo: ClientInfo,
+        isAccept: Boolean,
+        preferDownloadSelf: Boolean
+    ) {
         PurpleLogger.current.d(
             TAG,
-            "onServerPrepareSendResponse, clientInfo:$clientInfo, isAccept:$isAccept"
+            "onServerPrepareSendResponse, clientInfo:$clientInfo, isAccept:$isAccept, preferDownloadSelf:$preferDownloadSelf"
         )
         val shareDevice = findShareDeviceForClientInfo(clientInfo)
         if (shareDevice == null) {
@@ -599,6 +641,11 @@ class HttpShareMethod : ShareMethod(), ContentReceivedListener, ServiceListener 
             TAG,
             "onServerPrepareSendResponse, shareDevice:$shareDevice"
         )
+
+        if (preferDownloadSelf) {
+            removeSendDataRunnableForDevice(shareDevice, "preferDownloadSelf")
+            return
+        }
         for ((mappedShareDevice, sendDataRunnableInfo) in sendContentRunnableInfoMap) {
             if (mappedShareDevice == shareDevice) {
                 sendDataRunnableInfo?.isAccept = isAccept
@@ -619,26 +666,44 @@ class HttpShareMethod : ShareMethod(), ContentReceivedListener, ServiceListener 
     private fun handleClientPrepareSendRequest(
         shareDevice: ShareDevice.HttpShareDevice,
         isAccept: Boolean,
+        isPreferDownloadSelf: Boolean,
+        contentListUri: String,
     ) {
         activity.lifecycleScope.launch {
             requestRaw(
                 action = {
-                    appSetsShareRepository.prepareSendResponse(shareDevice, isAccept)
+                    appSetsShareRepository.prepareSendResponse(
+                        shareDevice,
+                        isAccept,
+                        isPreferDownloadSelf
+                    )
                 }
             )
+        }
+        if (!isAccept) {
+            return
+        }
+        activity.lifecycleScope.launch {
+            if (isPreferDownloadSelf) {
+                appSetsShareRepository.handleDownload(
+                    this@HttpShareMethod,
+                    shareDevice,
+                    contentListUri
+                )
+            }
         }
     }
 
     private fun handleClientPinRequest(shareDevice: ShareDevice.HttpShareDevice, pin: Int) {
         activity.lifecycleScope.launch {
-            val token = UUID.randomUUID().toString()
+            val shareToken = UUID.randomUUID().toString()
             requestRaw(
                 action = {
-                    appSetsShareRepository.pairResponse(shareDevice, token)
+                    appSetsShareRepository.pairResponse(shareDevice, shareToken)
                 },
                 onSuccess = {
                     shareDevice.pin = pin
-                    shareDevice.token = token
+                    shareDevice.token = shareToken
                 }
             )
         }
@@ -658,6 +723,10 @@ class HttpShareMethod : ShareMethod(), ContentReceivedListener, ServiceListener 
         isAutoAcceptState.value = isAutoAccept
     }
 
+    fun updateIsPreferDownloadSelfState(isPreferDownloadSelf: Boolean) {
+        isPreferDownloadSelfState.value = isPreferDownloadSelf
+    }
+
     fun toggleServer() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
             return
@@ -670,13 +739,36 @@ class HttpShareMethod : ShareMethod(), ContentReceivedListener, ServiceListener 
         }
     }
 
-    fun removeSendDataRunnableForDevice(shareDevice: ShareDevice) {
-        PurpleLogger.current.d(TAG, "removeSendDataRunnableForDevice")
+    fun removeSendDataRunnableForDevice(shareDevice: ShareDevice, by: String) {
+        PurpleLogger.current.d(TAG, "removeSendDataRunnableForDevice, by:$by")
         val v = sendContentRunnableInfoMap.remove(shareDevice)
         if (v != null) {
             PurpleLogger.current.d(TAG, "removeSendDataRunnableForDevice, remove done!")
         } else {
             PurpleLogger.current.d(TAG, "removeSendDataRunnableForDevice, remove nothing!")
         }
+    }
+
+    fun getPendingSendFileList(contentListUri: String): List<DataContent> {
+        return viewModel.pendingSendContentList
+    }
+
+    fun findContentForContentUri(contentUri: String): DataContent? {
+        val dataContent = viewModel.pendingSendContentList.firstOrNull {
+            when (it) {
+                is DataContent.UriContent -> {
+                    it.androidUriFile?.displayName == contentUri
+                }
+
+                is DataContent.FileContent -> {
+                    it.file.name == contentUri
+                }
+
+                else -> {
+                    false
+                }
+            }
+        }
+        return dataContent
     }
 }

@@ -27,9 +27,21 @@ object ShareSystem {
                     "makeFileIfNeeded, file:${file}, not exist create and use it"
                 )
                 if (createFile) {
-                    file.createNewFile()
+                    runCatching {
+                        file.createNewFile()
+                        file.setWritable(true)
+                        return file
+                    }.onFailure {
+                        it.printStackTrace()
+                        PurpleLogger.current.d(
+                            TAG,
+                            "makeFileIfNeeded, file:${file}, failed:${it.message}"
+                        )
+                        return null
+                    }
+                } else {
+                    return file
                 }
-                return file
             }
             if (count > 100000) {
                 return null

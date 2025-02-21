@@ -15,7 +15,7 @@
     <string name="auto_accept">Auto Accept</string>
     <string name="no">No</string>
     <string name="accept">Accept</string>
-    <string name="new_share_content_to_you">New share content to you</string>
+    <string name="new_share_content_to_you">New share content</string>
     <string name="server_status">Server Status</string>
     <string name="need_a_pin">Need a PIN</string>
     <string name="appsets_share_send_tips">Input the content and click any device to send</string>
@@ -42,4 +42,10 @@
 
     <string name="connect_failed">Connection failed</string>
     <string name="please_retry">Please retry</string>
+    <string name="prefer_download_self">Download by Self</string>
+    <string name="share_content_list">Share content list</string>
+    <string name="see_share_content_list">See share content list</string>
+    <string name="no_content">No content!</string>
+    <string name="getting_in">Getting in...</string>
+    <string name="content_save_path">Content save location</string>
 </resources>

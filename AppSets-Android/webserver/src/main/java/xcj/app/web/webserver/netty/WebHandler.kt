@@ -17,14 +17,14 @@ class WebHandler(
         private const val TAG = "WebHandler"
     }
 
-    private val serverInternalErrorResponse = DefaultFullHttpResponse(
+    val serverInternalErrorResponse = DefaultFullHttpResponse(
         HttpVersion.HTTP_1_1,
         HttpResponseStatus.INTERNAL_SERVER_ERROR,
         Unpooled.wrappedBuffer("Server internal error".toByteArray())
     ).apply {
         headers().set(HttpHeaderNames.CONTENT_TYPE, ContentType.TEXT_PLAIN)
     }
-    private val notFoundUriResponse = DefaultFullHttpResponse(
+    val notFoundUriResponse = DefaultFullHttpResponse(
         HttpVersion.HTTP_1_1,
         HttpResponseStatus.OK,
         Unpooled.wrappedBuffer("Not found".toByteArray())
@@ -32,8 +32,19 @@ class WebHandler(
         headers().set(HttpHeaderNames.CONTENT_TYPE, ContentType.TEXT_PLAIN)
     }
 
-    private fun responseNormal(ctx: ChannelHandlerContext, httpResponse: HttpResponse) {
-        ctx.channel().writeAndFlush(httpResponse).addListener(ChannelFutureListener.CLOSE)
+    fun responseNormal(
+        ctx: ChannelHandlerContext,
+        httpRequest: HttpRequest,
+        httpResponse: HttpResponse
+    ) {
+        var channelFuture = ctx.write(httpResponse)
+        channelFuture = ctx.writeAndFlush(LastHttpContent.EMPTY_LAST_CONTENT)
+        if (!HttpUtil.isKeepAlive(httpRequest)) {
+            channelFuture.addListener { future -> ctx.disconnect() }
+        }else{
+            channelFuture.addListener(ChannelFutureListener.CLOSE)
+        }
+
     }
 
     private fun getHandlerMapping(
@@ -82,51 +93,16 @@ class WebHandler(
         val httpResponseWrapper = HttpResponseWrapper(response)
         val handlerMapping = getHandlerMapping(ctx, httpRequestWrapper)
         if (handlerMapping == null) {
-            responseNormal(ctx, notFoundUriResponse)
+            responseNormal(ctx, httpRequestWrapper.httpRequest, notFoundUriResponse)
             return
         }
 
         try {
-            val handleResult =
-                handlerMapping.handle(ctx, httpRequestWrapper, httpResponseWrapper)
-            if (handleResult == HandleResult.EMPTY) {
-                PurpleLogger.current.w(
-                    TAG,
-                    "handleFullHttpRequest, handlerMethod hand result is empty!"
-                )
-                responseNormal(ctx, notFoundUriResponse)
-            } else {
-                val handleHttpResponse = handleResult.getResult()
-                if (handleHttpResponse != null) {
-                    responseNormal(ctx, handleHttpResponse)
-                } else {
-                    responseNormal(ctx, serverInternalErrorResponse)
-                }
-            }
-
+            handlerMapping.handle(this, ctx, httpRequestWrapper, httpResponseWrapper)
         } catch (e: Exception) {
             e.printStackTrace()
             PurpleLogger.current.e(TAG, "handleFullHttpRequest, exception:${e}")
-            responseNormal(ctx, serverInternalErrorResponse)
-        }
-    }
-
-    private fun terminateTransmissionToNextHandlerIfNeeded(
-        ctx: ChannelHandlerContext,
-        method: HandlerMethod
-    ) {
-
-        if (method.isHanlePostFileUri()) {
-            PurpleLogger.current.d(
-                TAG,
-                "terminateTransmissionToNextHandlerIfNeeded, method:$method, true"
-            )
-            ctx.fireChannelReadComplete()
-        } else {
-            PurpleLogger.current.d(
-                TAG,
-                "terminateTransmissionToNextHandlerIfNeeded, method:$method, false"
-            )
+            responseNormal(ctx, httpRequestWrapper.httpRequest, serverInternalErrorResponse)
         }
     }
 
@@ -164,8 +140,6 @@ class WebHandler(
 
     override fun channelReadComplete(ctx: ChannelHandlerContext) {
         super.channelReadComplete(ctx)
-        //ctx.writeAndFlush(Unpooled.EMPTY_BUFFER)
-        //.addListener(ChannelFutureListener.CLOSE)
         PurpleLogger.current.d(TAG, "channelReadComplete")
     }
 

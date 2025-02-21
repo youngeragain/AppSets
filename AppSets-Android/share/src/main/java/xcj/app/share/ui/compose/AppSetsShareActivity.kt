@@ -15,9 +15,9 @@ import kotlinx.coroutines.launch
 import xcj.app.share.base.DataContent
 import xcj.app.share.base.ShareDevice
 import xcj.app.share.base.ShareMethod
+import xcj.app.share.http.HttpShareMethod
 import xcj.app.share.mock.MockShareMethod
 import xcj.app.share.ui.compose.theme.AppSetsTheme
-import xcj.app.share.wlanp2p.WlanP2pShareMethod
 import xcj.app.starter.android.ui.base.DesignComponentActivity
 import xcj.app.starter.android.usecase.PlatformUseCase
 import xcj.app.starter.android.util.PurpleLogger
@@ -71,7 +71,7 @@ class AppSetsShareActivity : DesignComponentActivity() {
         }
         lifecycleScope.launch {
             lifecycle.withCreated {
-                updateShareMethod(WlanP2pShareMethod::class.java)
+                updateShareMethod(HttpShareMethod::class.java)
             }
         }
     }

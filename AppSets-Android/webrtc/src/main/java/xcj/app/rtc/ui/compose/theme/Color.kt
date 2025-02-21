@@ -1,4 +1,4 @@
-package xcj.app.rtc.ui.theme
+package xcj.app.rtc.ui.compose.theme
 
 import androidx.compose.ui.graphics.Color
 

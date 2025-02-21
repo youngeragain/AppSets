@@ -5,9 +5,9 @@ import xcj.app.share.base.ClientInfo
 import xcj.app.share.base.ContentCombiner
 import xcj.app.share.base.ContentReceivedListener
 import xcj.app.share.base.DataContent
-import xcj.app.share.base.DataProgressInfoPool
+import xcj.app.web.webserver.base.DataProgressInfoPool
 import xcj.app.share.base.DeviceNameAddress
-import xcj.app.share.base.ProgressListener
+import xcj.app.web.webserver.base.ProgressListener
 import xcj.app.share.base.ShareSystem
 import xcj.app.share.wlanp2p.base.DataHandleExceptionListener
 import xcj.app.share.wlanp2p.base.ReadMethod
@@ -215,7 +215,6 @@ class StreamReadMethod(
                 dataProgressInfo.name = fileName ?: uuid
                 dataProgressInfo.total = requiredLength
                 dataProgressInfo.current = 0L
-                dataProgressInfo.percentage = 0.00
                 progressListener.onProgress(dataProgressInfo)
             }
         }
@@ -302,12 +301,11 @@ class StreamReadMethod(
                 val header = contentHeader
                 val uuid = header[HEADER_UUID]?.toString() ?: ""
                 val name = header[HEADER_FILE_NAME]?.toString() ?: ""
-                val progress = (readLength / requiredLength.toDouble()) * 100
                 val dataProgressInfo = DataProgressInfoPool.obtainById(uuid)
                 dataProgressInfo.name = name
                 dataProgressInfo.total = requiredLength
                 dataProgressInfo.current = readLength
-                dataProgressInfo.percentage = progress
+
                 progressListener.onProgress(dataProgressInfo)
             }
         }
@@ -329,7 +327,7 @@ class StreamReadMethod(
                         bos?.close()
                         content.out = null
                         content.clientInfo = remoteClientInfo
-                        contentReceivedListener?.onContentReceived(contentType.toString(), content)
+                        contentReceivedListener?.onContentReceived(content)
                     } catch (e: Exception) {
                         PurpleLogger.current.d(TAG, "readContentChunk, exception:${e.message}")
                     }
@@ -408,10 +406,7 @@ class StreamReadMethod(
                             DataContent.StringContent(content.bytes.decodeToString())
 
                         stringContent.clientInfo = remoteClientInfo
-                        contentReceivedListener?.onContentReceived(
-                            contentType.toString(),
-                            stringContent
-                        )
+                        contentReceivedListener?.onContentReceived(stringContent)
                     } catch (e: Exception) {
                         PurpleLogger.current.d(TAG, "readContentChunk, exception:${e.message}")
                     }

@@ -111,8 +111,8 @@ class ServerBootStrap(private val port: Int) {
                         ch.pipeline()
                             .addLast(httpServerCodec)
                             .addLast(httpContentHandler)
-                            .addLast(chunkedWriteHandler)
                             .addLast(httpObjectAggregator)
+                            .addLast(chunkedWriteHandler)
                             .addLast(webHandler)
                     }
                 })

@@ -5,20 +5,23 @@ import android.content.Context
 import android.net.Uri
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import xcj.app.compose_share.ui.viewmodel.AnyStateViewModel
 import xcj.app.share.base.DataContent
-import xcj.app.share.base.DataProgressInfo
 import xcj.app.share.base.DeviceName
 import xcj.app.share.base.ShareDevice
 import xcj.app.share.base.ShareMethod
 import xcj.app.share.http.HttpShareMethod
+import xcj.app.share.http.model.ContentListInfo
 import xcj.app.share.wlanp2p.WlanP2pShareMethod
-import xcj.app.compose_share.ui.viewmodel.AnyStateViewModel
 import xcj.app.starter.android.util.FileUtils
 import xcj.app.starter.android.util.PurpleLogger
+import xcj.app.web.webserver.base.DataProgressInfo
 import java.io.File
 import java.text.DecimalFormat
 
@@ -26,6 +29,7 @@ class AppSetsShareViewModel : AnyStateViewModel() {
 
     companion object {
         private const val TAG = "AppSetsShareViewModel"
+        private const val PROGRESS_UPDATE_MIN_DIFF = 0.05f
     }
 
     private val sendProgressDecimalFormat = DecimalFormat("#.00")
@@ -33,6 +37,8 @@ class AppSetsShareViewModel : AnyStateViewModel() {
 
     val shareMethodTypeState: MutableState<Class<*>> =
         mutableStateOf(WlanP2pShareMethod::class.java)
+
+    val deviceContentListMap: MutableMap<ShareDevice, ContentListInfo> = mutableStateMapOf()
 
     val pendingSendContentList: MutableList<DataContent> = mutableStateListOf()
 
@@ -65,7 +71,7 @@ class AppSetsShareViewModel : AnyStateViewModel() {
             TAG,
             "onNewReceivedContent, content:\n${content}"
         )
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.Main) {
             receivedContentList.add(0, content)
         }
     }
@@ -238,7 +244,7 @@ class AppSetsShareViewModel : AnyStateViewModel() {
             TAG,
             "updateShareDeviceListState, shareDeviceList:\n${shareDeviceList}"
         )
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.Main) {
             shareDeviceListState.value = shareDeviceList
 
         }
@@ -249,7 +255,7 @@ class AppSetsShareViewModel : AnyStateViewModel() {
             TAG,
             "updateShareDeviceState, shareDevice:\n${shareDevice}"
         )
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.Main) {
             mShareDeviceState.value = shareDevice
         }
     }
@@ -272,7 +278,7 @@ class AppSetsShareViewModel : AnyStateViewModel() {
             return
         }
         if (content is Uri) {
-            viewModelScope.launch {
+            viewModelScope.launch(Dispatchers.Main) {
                 val androidUriFile = FileUtils.parseFromAndroidUri(context, content)
                 pendingSendContentList.add(0, DataContent.UriContent(content, androidUriFile))
             }
@@ -285,39 +291,63 @@ class AppSetsShareViewModel : AnyStateViewModel() {
     }
 
     fun updateReceiveDataProgressState(dataProgressInfo: DataProgressInfo) {
-
+        val percentage = dataProgressInfo.percentageInternal
         val oldProgress = receiveDataProgressState.value
-        if (dataProgressInfo.percentage - (oldProgress?.percentage ?: 0.00) < 0.10) {
+        val diff = percentage - (oldProgress?.percentage ?: 0f)
+        if (diff < PROGRESS_UPDATE_MIN_DIFF) {
+            PurpleLogger.current.d(
+                TAG,
+                "updateReceiveDataProgressState, diff is less than $PROGRESS_UPDATE_MIN_DIFF, diff:$diff, ignore, " +
+                        "old:${oldProgress?.percentage}, new:${percentage}, " +
+                        "newTotal:${dataProgressInfo.total}, newCurrent:${dataProgressInfo.current}"
+            )
             return
         }
 
         val progressOverride =
-            receivedProgressDecimalFormat.format(dataProgressInfo.percentage).toDouble()
-        receiveDataProgressState.value = dataProgressInfo.copy(percentage = progressOverride)
-        if (dataProgressInfo.percentage >= 99.9) {
-            viewModelScope.launch {
+            receivedProgressDecimalFormat.format(percentage).toFloat()
+        val progressInfo = dataProgressInfo.copy()
+        progressInfo.percentage = progressOverride
+        viewModelScope.launch(Dispatchers.Main) {
+            PurpleLogger.current.d(
+                TAG,
+                "updateReceiveDataProgressState on ui, progressOverride:$progressOverride"
+            )
+            receiveDataProgressState.value = progressInfo
+            if (percentage >= 99.9) {
                 delay(100)
                 receiveDataProgressState.value = null
             }
-            return
         }
     }
 
     fun updateSendDataProgressState(dataProgressInfo: DataProgressInfo) {
-
+        val percentage = dataProgressInfo.percentageInternal
         val oldProgress = sendDataProgressState.value
-        if (dataProgressInfo.percentage - (oldProgress?.percentage ?: 0.00) < 0.10) {
+        val diff = percentage - (oldProgress?.percentage ?: 0f)
+        if (diff < PROGRESS_UPDATE_MIN_DIFF) {
+            PurpleLogger.current.d(
+                TAG,
+                "updateSendDataProgressState, diff is less than $PROGRESS_UPDATE_MIN_DIFF, diff:$diff, ignore, " +
+                        "old:${oldProgress?.percentage}, new:$percentage, " +
+                        "newTotal:${dataProgressInfo.total}, newCurrent:${dataProgressInfo.current}"
+            )
             return
         }
         val progressOverride =
-            sendProgressDecimalFormat.format(dataProgressInfo.percentage).toDouble()
-        sendDataProgressState.value = dataProgressInfo.copy(percentage = progressOverride)
-        if (dataProgressInfo.percentage >= 99.9) {
-            viewModelScope.launch {
-                delay(100)
+            receivedProgressDecimalFormat.format(percentage).toFloat()
+        val progressInfo = dataProgressInfo.copy()
+        progressInfo.percentage = progressOverride
+        viewModelScope.launch(Dispatchers.Main) {
+            PurpleLogger.current.d(
+                TAG,
+                "updateReceiveDataProgressState on ui, progressOverride:$progressOverride"
+            )
+            sendDataProgressState.value = progressInfo
+            if (percentage >= 99.9) {
+                delay(500)
                 sendDataProgressState.value = null
             }
-            return
         }
     }
 
@@ -334,6 +364,12 @@ class AppSetsShareViewModel : AnyStateViewModel() {
     fun removeAllPendingSendContent() {
         //todo make sync
         pendingSendContentList.clear()
+    }
+
+    fun updateDeviceContentListMap(shareDevice: ShareDevice, contentListInfo: ContentListInfo) {
+        viewModelScope.launch(Dispatchers.Main) {
+            deviceContentListMap.put(shareDevice, contentListInfo)
+        }
     }
 
 }

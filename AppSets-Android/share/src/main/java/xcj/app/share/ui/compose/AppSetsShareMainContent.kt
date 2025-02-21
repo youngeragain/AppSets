@@ -1,12 +1,15 @@
 @file:OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 
 import android.net.wifi.p2p.WifiP2pDevice
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -32,15 +35,19 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.SegmentedButton
@@ -58,6 +65,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -83,6 +91,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.launch
+import xcj.app.compose_share.components.DesignHDivider
+import xcj.app.compose_share.components.DesignTextField
+import xcj.app.compose_share.components.LocalAnyStateProvider
+import xcj.app.compose_share.components.VarBottomSheetContainer
+import xcj.app.compose_share.modifier.combinedClickableSingle
+import xcj.app.share.R
 import xcj.app.share.base.DataContent
 import xcj.app.share.base.ShareDevice
 import xcj.app.share.http.HttpShareMethod
@@ -91,12 +105,6 @@ import xcj.app.share.rpc.RpcShareMethod
 import xcj.app.share.ui.compose.AppSetsShareActivity
 import xcj.app.share.ui.compose.AppSetsShareViewModel
 import xcj.app.share.wlanp2p.WlanP2pShareMethod
-import xcj.app.compose_share.components.DesignHDivider
-import xcj.app.compose_share.components.DesignTextField
-import xcj.app.compose_share.components.LocalAnyStateProvider
-import xcj.app.compose_share.components.VarBottomSheetContainer
-import xcj.app.compose_share.modifier.combinedClickableSingle
-import xcj.app.share.R
 
 data class BoxFocusInfo(
     val receiveBoxFocus: Boolean = false,
@@ -413,15 +421,22 @@ fun AppSetsShareDevicesSpace(
     val boxFocusInfo by viewModel.boxFocusInfo
     val shareMethodType by viewModel.shareMethodTypeState
     val shareDevice by viewModel.mShareDeviceState
-    var showSettings by remember {
+    var isShowSettings by remember {
         mutableStateOf(false)
+    }
+    var isShowDeviceContentList by remember {
+        mutableStateOf(false)
+    }
+    var whichIsShowDeviceContentList: ShareDevice? by remember {
+        mutableStateOf(null)
     }
     Box(
         modifier = Modifier.fillMaxSize()
     ) {
         AnimatedVisibility(
-            modifier = Modifier.fillMaxSize(),
-            visible = boxFocusInfo.devicesBoxFocus
+            visible = boxFocusInfo.devicesBoxFocus,
+            enter = fadeIn(),
+            exit = fadeOut()
         ) {
             LazyVerticalGrid(
                 columns = GridCells.Adaptive(68.dp),
@@ -454,6 +469,10 @@ fun AppSetsShareDevicesSpace(
                                         shareDevice,
                                         AppSetsShareActivity.CLICK_TYPE_LONG
                                     )
+                                    if (shareMethodType == HttpShareMethod::class.java) {
+                                        isShowDeviceContentList = true
+                                        whichIsShowDeviceContentList = shareDevice
+                                    }
                                 },
                                 onDoubleClick = {
                                     hapticFeedback.performHapticFeedback(HapticFeedbackType.TextHandleMove)
@@ -477,8 +496,9 @@ fun AppSetsShareDevicesSpace(
             }
         }
         AnimatedVisibility(
-            modifier = Modifier.fillMaxSize(),
-            visible = shareDeviceList.isEmpty() && boxFocusInfo.devicesBoxFocus,
+            visible = boxFocusInfo.devicesBoxFocus && shareDeviceList.isEmpty(),
+            enter = fadeIn(),
+            exit = fadeOut()
         ) {
             Box(
                 modifier = Modifier
@@ -489,8 +509,9 @@ fun AppSetsShareDevicesSpace(
             }
         }
         AnimatedVisibility(
-            modifier = Modifier.fillMaxSize(),
             visible = !boxFocusInfo.devicesBoxFocus,
+            enter = fadeIn(),
+            exit = fadeOut()
         ) {
             Box(
                 modifier = Modifier
@@ -570,7 +591,7 @@ fun AppSetsShareDevicesSpace(
                 modifier = Modifier
                     .clickable(
                         onClick = {
-                            showSettings = true
+                            isShowSettings = true
                         }
                     )
                     .padding(12.dp),
@@ -579,17 +600,148 @@ fun AppSetsShareDevicesSpace(
             )
         }
         SettingsSheet(
-            showSettings = showSettings,
+            isShow = isShowSettings,
             onDismissRequest = {
-                showSettings = false
+                isShowSettings = false
+            }
+        )
+        DeviceContentListSheet(
+            isShow = isShowDeviceContentList,
+            shareDevice = whichIsShowDeviceContentList,
+            onDismissRequest = {
+                isShowDeviceContentList = false
+                whichIsShowDeviceContentList = null
             }
         )
     }
 }
 
 @Composable
+fun DeviceContentListSheet(
+    isShow: Boolean,
+    shareDevice: ShareDevice?,
+    onDismissRequest: () -> Unit,
+) {
+
+    if (isShow && shareDevice != null) {
+        ModalBottomSheet(
+            sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+            onDismissRequest = onDismissRequest
+        ) {
+            DeviceContentListComponent(
+                shareDevice = shareDevice,
+                isShowBackButton = false
+            )
+        }
+    }
+}
+
+@Composable
+fun DeviceContentListComponent(
+    shareDevice: ShareDevice,
+    isShowBackButton: Boolean,
+    onBackClick: (() -> Unit)? = null
+) {
+    val viewModel = viewModel<AppSetsShareViewModel>()
+    val deviceContentListMap = viewModel.deviceContentListMap
+    val contentListInfo = deviceContentListMap[shareDevice]
+    Column(
+        modifier = Modifier
+            .padding(horizontal = 12.dp)
+            .fillMaxWidth()
+            .animateContentSize(),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Box(modifier = Modifier.fillMaxWidth()) {
+            Text(
+                text = stringResource(R.string.share_content_list), modifier = Modifier.align(
+                    Alignment.Center
+                ),
+                fontWeight = FontWeight.Bold
+            )
+        }
+        ShareDeviceMiddleComponent(modifier = Modifier, shareDevice)
+        DesignHDivider()
+        if (contentListInfo != null) {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                if (contentListInfo.contentList.isEmpty()) {
+                    item {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 36.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(text = stringResource(R.string.no_content), fontSize = 12.sp)
+                        }
+                    }
+                }
+                items(contentListInfo.contentList) { contentUri ->
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Text(
+                            text = contentUri,
+                            fontSize = 12.sp,
+                            maxLines = 4,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        DesignHDivider()
+                    }
+
+                }
+            }
+        } else {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 36.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(text = stringResource(R.string.getting_in), fontSize = 12.sp)
+            }
+
+        }
+
+        if (isShowBackButton) {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(MaterialTheme.shapes.extraLarge)
+                    .clickable(
+                        onClick = {
+                            onBackClick?.invoke()
+                        }
+                    ),
+                colors = CardDefaults.cardColors(),
+                shape = MaterialTheme.shapes.extraLarge
+            ) {
+                Column(
+                    modifier = Modifier
+                        .align(Alignment.CenterHorizontally)
+                        .padding(vertical = 16.dp),
+                ) {
+                    Icon(
+                        painter = painterResource(xcj.app.compose_share.R.drawable.ic_arrow_back_24),
+                        contentDescription = null
+                    )
+                }
+
+            }
+        }
+    }
+}
+
+
+@Composable
 fun SettingsSheet(
-    showSettings: Boolean,
+    isShow: Boolean,
     onDismissRequest: () -> Unit,
 ) {
     val context = LocalContext.current
@@ -598,7 +750,10 @@ fun SettingsSheet(
     val pendingSendContentList = viewModel.pendingSendContentList
     val mShareDevice by viewModel.mShareDeviceState
     val shareMethodType by viewModel.shareMethodTypeState
-    if (showSettings) {
+    val shareMethod by rememberUpdatedState(
+        appSetsShareActivity.getShareMethod()
+    )
+    if (isShow) {
         ModalBottomSheet(
             sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
             onDismissRequest = onDismissRequest
@@ -623,6 +778,16 @@ fun SettingsSheet(
                 Text(
                     modifier = Modifier,
                     text = mShareDevice.deviceName.name,
+                    fontSize = 14.sp,
+                )
+                DesignHDivider()
+                Text(
+                    text = stringResource(R.string.content_save_path),
+                    fontSize = 14.sp,
+                )
+                Text(
+                    modifier = Modifier,
+                    text = shareMethod.shareContentLocationState.value,
                     fontSize = 14.sp,
                 )
                 DesignHDivider()
@@ -734,6 +899,17 @@ fun SettingsSheet(
                                         checked = httpShareMethod.isAutoAcceptState.value,
                                         onCheckedChange = {
                                             httpShareMethod.updateIsAutoAcceptState(it)
+                                        }
+                                    )
+                                }
+
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text(text = stringResource(R.string.prefer_download_self))
+                                    Spacer(modifier = Modifier.weight(1f))
+                                    Switch(
+                                        checked = httpShareMethod.isPreferDownloadSelfState.value,
+                                        onCheckedChange = {
+                                            httpShareMethod.updateIsPreferDownloadSelfState(it)
                                         }
                                     )
                                 }
@@ -932,10 +1108,39 @@ fun AppSetsShareSendSpace(
         modifier = Modifier
             .fillMaxSize()
     ) {
+        AnimatedVisibility(
+            visible = sendDataProgress != null,
+            enter = fadeIn(),
+            exit = fadeOut()
+        ) {
+            Box(modifier = Modifier.fillMaxSize()) {
+                if (sendDataProgress != null) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 6.dp)
+                            .align(Alignment.BottomCenter),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        val contentName =
+                            sendDataProgress?.name
+                        if (!contentName.isNullOrEmpty()) {
+                            Text(text = contentName, fontSize = 6.sp)
+                        }
+                        LinearProgressIndicator(
+                            progress = {
+                                (sendDataProgress?.percentage ?: 0f) / 100f
+                            }
+                        )
+                    }
+                }
+            }
+        }
 
         AnimatedVisibility(
-            modifier = Modifier.fillMaxSize(),
-            visible = boxFocusInfo.sendBoxFocus
+            visible = boxFocusInfo.sendBoxFocus,
+            enter = fadeIn(),
+            exit = fadeOut()
         ) {
             Box(modifier = Modifier.fillMaxSize()) {
                 LazyColumn(
@@ -943,27 +1148,6 @@ fun AppSetsShareSendSpace(
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                     contentPadding = PaddingValues(top = 48.dp, start = 12.dp, end = 12.dp)
                 ) {
-                    item {
-                        if (sendDataProgress != null) {
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(vertical = 6.dp),
-                                horizontalAlignment = Alignment.CenterHorizontally
-                            ) {
-                                val progressText by remember {
-                                    derivedStateOf {
-                                        String.format(
-                                            context.getString(R.string.send_progress_is),
-                                            sendDataProgress?.percentage ?: "/"
-                                        )
-                                    }
-                                }
-                                Text(text = progressText, fontSize = 12.sp)
-                            }
-                        }
-
-                    }
                     itemsIndexed(items = pendingSendContentList) { index, dataContent ->
                         Column(
                             modifier = Modifier
@@ -1068,8 +1252,9 @@ fun AppSetsShareSendSpace(
         }
 
         AnimatedVisibility(
-            modifier = Modifier.fillMaxSize(),
-            visible = pendingSendContentList.isEmpty() && boxFocusInfo.sendBoxFocus
+            visible = pendingSendContentList.isEmpty() && boxFocusInfo.sendBoxFocus,
+            enter = fadeIn(),
+            exit = fadeOut()
         ) {
             Box(modifier = Modifier.fillMaxSize()) {
                 Text(
@@ -1081,8 +1266,9 @@ fun AppSetsShareSendSpace(
         }
 
         AnimatedVisibility(
-            modifier = Modifier.fillMaxSize(),
-            visible = !boxFocusInfo.sendBoxFocus
+            visible = !boxFocusInfo.sendBoxFocus,
+            enter = fadeIn(),
+            exit = fadeOut()
         ) {
             Box(modifier = Modifier.fillMaxSize()) {
                 Column(
@@ -1142,8 +1328,40 @@ fun AppSetsShareReceivedSpace(
             .fillMaxSize()
     ) {
         AnimatedVisibility(
-            modifier = Modifier.fillMaxSize(),
-            visible = boxFocusInfo.receiveBoxFocus
+            visible = receiveDataProgress != null,
+            enter = fadeIn(),
+            exit = fadeOut()
+        ) {
+            Box(
+                modifier = Modifier.fillMaxSize()
+            ) {
+                if (receiveDataProgress != null) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 6.dp)
+                            .align(Alignment.TopCenter),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        LinearProgressIndicator(
+                            progress = {
+                                (receiveDataProgress?.percentage ?: 0f) / 100f
+                            }
+                        )
+                        val contentName =
+                            receiveDataProgress?.name
+                        if (!contentName.isNullOrEmpty()) {
+                            Text(text = contentName, fontSize = 6.sp)
+                        }
+                    }
+                }
+            }
+        }
+
+        AnimatedVisibility(
+            visible = boxFocusInfo.receiveBoxFocus,
+            enter = fadeIn(),
+            exit = fadeOut()
         ) {
             Box(
                 modifier = Modifier.fillMaxSize()
@@ -1154,28 +1372,7 @@ fun AppSetsShareReceivedSpace(
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                     contentPadding = PaddingValues(top = 48.dp, start = 12.dp, end = 12.dp)
                 ) {
-                    item {
-                        if (receiveDataProgress != null) {
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(vertical = 6.dp),
-                                horizontalAlignment = Alignment.CenterHorizontally
-                            ) {
-                                val contentName =
-                                    receiveDataProgress?.name
-                                if (!contentName.isNullOrEmpty()) {
-                                    Text(text = contentName, fontSize = 10.sp)
-                                }
-                                val progressText = String.format(
-                                    context.getString(R.string.received_progress_is),
-                                    receiveDataProgress?.percentage ?: "/"
-                                )
-                                Text(text = progressText, fontSize = 12.sp)
-                            }
-                        }
 
-                    }
                     itemsIndexed(items = receivedContentList) { index, dataContent ->
                         Column(
                             modifier = Modifier
@@ -1183,15 +1380,6 @@ fun AppSetsShareReceivedSpace(
                                 .animateItem(),
                             verticalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
-                            val shareDevice =
-                                appSetsShareActivity.getShareMethod()
-                                    .findShareDeviceForClientInfo(dataContent.clientInfo)
-                            if (shareDevice != null) {
-                                ShareDeviceSmallComponent(
-                                    modifier = Modifier,
-                                    shareDevice = shareDevice
-                                )
-                            }
 
                             when (dataContent) {
                                 is DataContent.StringContent -> {
@@ -1204,6 +1392,15 @@ fun AppSetsShareReceivedSpace(
                                         Column(
                                             modifier = Modifier.weight(1f)
                                         ) {
+                                            val shareDevice =
+                                                appSetsShareActivity.getShareMethod()
+                                                    .findShareDeviceForClientInfo(dataContent.clientInfo)
+                                            if (shareDevice != null) {
+                                                ShareDeviceSmallComponent(
+                                                    modifier = Modifier,
+                                                    shareDevice = shareDevice
+                                                )
+                                            }
                                             Text(
                                                 text = dataContent.content,
                                                 fontSize = 12.sp,
@@ -1211,6 +1408,7 @@ fun AppSetsShareReceivedSpace(
                                                 maxLines = 4,
                                                 overflow = TextOverflow.Ellipsis
                                             )
+
                                         }
                                         FilledTonalButton(
                                             onClick = {
@@ -1239,13 +1437,18 @@ fun AppSetsShareReceivedSpace(
                                         Column(
                                             modifier = Modifier.weight(1f)
                                         ) {
+                                            val shareDevice =
+                                                appSetsShareActivity.getShareMethod()
+                                                    .findShareDeviceForClientInfo(dataContent.clientInfo)
+                                            if (shareDevice != null) {
+                                                ShareDeviceSmallComponent(
+                                                    modifier = Modifier,
+                                                    shareDevice = shareDevice
+                                                )
+                                            }
                                             Text(
                                                 text = dataContent.file.name,
                                                 fontSize = 12.sp,
-                                            )
-                                            Text(
-                                                text = dataContent.file.path,
-                                                fontSize = 10.sp,
                                             )
                                         }
                                         FilledTonalButton(
@@ -1292,8 +1495,9 @@ fun AppSetsShareReceivedSpace(
         }
 
         AnimatedVisibility(
-            modifier = Modifier.fillMaxSize(),
-            visible = receivedContentList.isEmpty() && boxFocusInfo.receiveBoxFocus
+            visible = receivedContentList.isEmpty() && boxFocusInfo.receiveBoxFocus,
+            enter = fadeIn(),
+            exit = fadeOut()
         ) {
             Box(modifier = Modifier.fillMaxSize()) {
                 Text(
@@ -1305,8 +1509,9 @@ fun AppSetsShareReceivedSpace(
         }
 
         AnimatedVisibility(
-            modifier = Modifier.fillMaxSize(),
-            visible = !boxFocusInfo.receiveBoxFocus
+            visible = !boxFocusInfo.receiveBoxFocus,
+            enter = fadeIn(),
+            exit = fadeOut()
         ) {
             Box(modifier = Modifier.fillMaxSize()) {
                 Column(
@@ -1332,6 +1537,7 @@ fun AppSetsShareReceivedSpace(
                 }
             }
         }
+
     }
 }
 
@@ -1382,18 +1588,17 @@ fun getP2pShareDeviceStatus(shareDevice: ShareDevice.P2pShareDevice): Pair<Strin
 @Composable
 fun ShareDeviceSmallComponent(modifier: Modifier, shareDevice: ShareDevice) {
     Row(
-        verticalAlignment = Alignment.CenterVertically,
         modifier = modifier
-            .padding(1.dp)
             .animateContentSize(
                 animationSpec = tween(),
                 alignment = Alignment.TopCenter
             ),
-        horizontalArrangement = Arrangement.spacedBy(4.dp)
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(6.dp)
     ) {
         val deviceIconResource = getDeviceIconResource(shareDevice)
         Icon(
-            modifier = Modifier.size(12.dp),
+            modifier = Modifier.size(16.dp),
             painter = painterResource(deviceIconResource),
             contentDescription = null
         )
@@ -1421,35 +1626,77 @@ fun ShareDeviceSmallComponent(modifier: Modifier, shareDevice: ShareDevice) {
             }
         Text(
             text = rawNameText,
-            fontSize = 8.sp,
+            fontSize = 10.sp,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             softWrap = false
         )
+    }
+}
 
+@Composable
+fun ShareDeviceMiddleComponent(modifier: Modifier, shareDevice: ShareDevice) {
+    Row(
+        modifier = modifier
+            .animateContentSize(
+                animationSpec = tween(),
+                alignment = Alignment.TopCenter
+            ),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(6.dp)
+    ) {
+        val deviceIconResource = getDeviceIconResource(shareDevice)
+        Icon(
+            modifier = Modifier.size(24.dp),
+            painter = painterResource(deviceIconResource),
+            contentDescription = null
+        )
+        val nikeName = shareDevice.deviceName.nikeName
+        if (!nikeName.isNullOrEmpty()) {
+            Text(
+                text = nikeName,
+                fontSize = 12.sp,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                softWrap = false
+            )
+        }
+        val rawNameText =
+            when (shareDevice) {
+                is ShareDevice.P2pShareDevice -> {
+                    val statusInfo =
+                        getP2pShareDeviceStatus(shareDevice)
+                    "${shareDevice.deviceName.rawName} ${statusInfo.second}"
+                }
+
+                else -> {
+                    shareDevice.deviceName.rawName
+                }
+            }
+        Text(
+            text = rawNameText,
+            fontSize = 12.sp,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            softWrap = false
+        )
     }
 }
 
 @Composable
 fun ShareDeviceNormalComponent(modifier: Modifier, shareDevice: ShareDevice) {
     Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
         modifier = modifier
             .padding(vertical = 6.dp)
             .animateContentSize(
                 animationSpec = tween(),
                 alignment = Alignment.TopCenter
-            )
+            ),
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         val deviceIconResource = getDeviceIconResource(shareDevice)
-
         DeviceIcon(
-            modifier = Modifier
-                .border(
-                    1.dp,
-                    MaterialTheme.colorScheme.secondaryContainer,
-                    CircleShape
-                ),
+            modifier = Modifier,
             resource = deviceIconResource
         )
         val nikeName = shareDevice.deviceName.nikeName
@@ -1523,58 +1770,98 @@ fun AppSetsShareClientPreSendSheet(
     isAutoAccept: Boolean,
     onAcceptClick: (Boolean) -> Unit,
     onAutoAcceptChanged: (Boolean) -> Unit,
+    onContentListShowClick: () -> Unit,
 ) {
+    var isShowDeviceContentList by remember {
+        mutableStateOf(false)
+    }
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(12.dp)
+            .animateContentSize()
     ) {
-        Column(
-            modifier = Modifier
-                .align(Alignment.Center)
-                .padding(32.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-
-            Text(
-                text = stringResource(R.string.new_share_content_to_you),
-                fontSize = 22.sp,
-                fontWeight = FontWeight.Bold
-            )
-
-            ShareDeviceNormalComponent(
-                modifier = Modifier.align(Alignment.CenterHorizontally),
-                shareDevice = shareDevice
-            )
-
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                Text(text = stringResource(R.string.auto_accept))
-                Switch(checked = isAutoAccept, onCheckedChange = onAutoAcceptChanged)
-            }
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                FilledTonalButton(
-                    onClick = {
-                        onAcceptClick(false)
-                    }
+        AnimatedContent(isShowDeviceContentList) { targetIsShowDeviceContentList ->
+            if (!targetIsShowDeviceContentList) {
+                Column(
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .padding(32.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Text(stringResource(xcj.app.starter.R.string.reject))
-                }
-                FilledTonalButton(
-                    onClick = {
-                        onAcceptClick(true)
+
+                    Text(
+                        text = stringResource(R.string.new_share_content_to_you),
+                        fontSize = 22.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+
+                    ShareDeviceNormalComponent(
+                        modifier = Modifier.align(Alignment.CenterHorizontally),
+                        shareDevice = shareDevice
+                    )
+
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Text(text = stringResource(R.string.auto_accept))
+                        Switch(checked = isAutoAccept, onCheckedChange = onAutoAcceptChanged)
                     }
-                ) {
-                    Text(stringResource(R.string.accept))
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        FilledTonalButton(
+                            onClick = {
+                                onAcceptClick(false)
+                            }
+                        ) {
+                            Text(stringResource(xcj.app.starter.R.string.reject))
+                        }
+                        FilledTonalButton(
+                            onClick = {
+                                onAcceptClick(true)
+                            }
+                        ) {
+                            Text(stringResource(R.string.accept))
+                        }
+                    }
+
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(MaterialTheme.shapes.extraLarge)
+                            .clickable(
+                                onClick = {
+                                    isShowDeviceContentList = true
+                                    onContentListShowClick()
+                                }
+                            ),
+                        colors = CardDefaults.cardColors(),
+                        shape = MaterialTheme.shapes.extraLarge
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .align(Alignment.CenterHorizontally)
+                                .padding(vertical = 16.dp),
+                        ) {
+                            Text(text = stringResource(R.string.see_share_content_list))
+                        }
+
+                    }
                 }
+            } else {
+                DeviceContentListComponent(
+                    shareDevice = shareDevice,
+                    isShowBackButton = true,
+                    onBackClick = {
+                        isShowDeviceContentList = false
+                    }
+                )
             }
         }
+
     }
 }
 
@@ -1584,12 +1871,11 @@ fun DeviceIcon(modifier: Modifier, resource: Int) {
         modifier = modifier
             .size(42.dp)
             .background(
-                MaterialTheme.colorScheme.outline,
+                MaterialTheme.colorScheme.primaryContainer,
                 CircleShape
             )
-            .clip(CircleShape)
-            .size(42.dp)
-            .background(
+            .border(
+                1.dp,
                 MaterialTheme.colorScheme.outline,
                 CircleShape
             )

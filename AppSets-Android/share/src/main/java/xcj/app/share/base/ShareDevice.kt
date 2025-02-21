@@ -68,6 +68,15 @@ interface ShareDevice {
             sb.append("token:$token")
             return sb.toString()
         }
+
+        fun toClientInfo(port: Int): ClientInfo {
+            val ip4 = deviceAddress.ip4
+            if (ip4.isNullOrEmpty()) {
+                return ClientInfo.NONE_RESOLVED
+            }
+            val host = "$ip4:$port"
+            return ClientInfo(host)
+        }
     }
 
     data class RpcShareDevice(

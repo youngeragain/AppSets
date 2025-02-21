@@ -1,6 +1,8 @@
-package xcj.app.share.base
+package xcj.app.web.webserver.base
 
 import java.util.UUID
+import kotlin.apply
+import kotlin.collections.first
 
 object DataProgressInfoPool {
     //key is UUID
@@ -38,7 +40,6 @@ object DataProgressInfoPool {
         return obtainById(uuid).apply {
             total = 1
             current = 0
-            percentage = 0.00
         }
     }
 
@@ -46,7 +47,6 @@ object DataProgressInfoPool {
         return obtainById(uuid).apply {
             total = 1
             current = 1
-            percentage = 100.00
         }
     }
 }

@@ -15,7 +15,7 @@
     <string name="auto_accept">自动接受</string>
     <string name="no">不</string>
     <string name="accept">接受</string>
-    <string name="new_share_content_to_you">新的分享内容给你</string>
+    <string name="new_share_content_to_you">新的分享内容</string>
     <string name="server_status">服务状态</string>
     <string name="need_a_pin">需要一个PIN</string>
     <string name="appsets_share_send_tips">输入内容，然后点击设备发送</string>
@@ -40,4 +40,10 @@
     <string name="unconnected_or_unknown">未连接或未知</string>
     <string name="connect_failed">连接失败</string>
     <string name="please_retry">请重试</string>
+    <string name="prefer_download_self">由我下载</string>
+    <string name="share_content_list">共享列表</string>
+    <string name="see_share_content_list">查看共享列表</string>
+    <string name="no_content">没有共享数据</string>
+    <string name="getting_in">获取中…</string>
+    <string name="content_save_path">数据保存位置</string>
 </resources>

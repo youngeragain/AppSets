@@ -10,8 +10,8 @@ import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.PlayerView
 import xcj.app.appsets.im.model.CommonURLJson
-import xcj.app.appsets.util.ktx.asContextOrNull
 import xcj.app.appsets.ui.model.SpotLightState
+import xcj.app.appsets.util.ktx.asContextOrNull
 import xcj.app.starter.android.util.PurpleLogger
 
 class LocalExoplayer(
@@ -36,8 +36,9 @@ class LocalExoplayer(
             val playId = videoPlayerState.value.playId
             if (playbackItem != null) {
                 it.addMediaItem(playbackItem!!)
-                if (playbackPosition != 0L)
+                if (playbackPosition != 0L) {
                     it.seekTo(playerCurrentMediaItemIndex, playbackPosition)
+                }
                 it.prepare()
             }
         }

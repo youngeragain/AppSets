@@ -37,21 +37,21 @@ class HandlerMethod(
     val acceptRequestMethodsString: String
         get() = httpMethods.joinToString { it.readableName().uppercase() }
 
-    fun isHanlePostFileUri(): Boolean {
+    fun isHandlePostFileUri(): Boolean {
         return uri == "/appsets/share/file"
     }
 
     fun call(
         ctx: ChannelHandlerContext,
-        httpRequest: HttpRequestWrapper,
-        httResponse: HttpResponseWrapper
+        httpRequestWrapper: HttpRequestWrapper,
+        httResponseWrapper: HttpResponseWrapper
     ): Any? {
         val acceptRequestMethods = httpMethods
         if (acceptRequestMethods.isEmpty()) {
             return null
         }
 
-        val httpMethod = httpRequest.httpRequest.method().name()
+        val httpMethod = httpRequestWrapper.httpRequest.method().name()
         val methodCanAccept = acceptRequestMethods.firstOrNull {
             it.readableName().uppercase() == httpMethod.uppercase()
         } != null
@@ -59,7 +59,7 @@ class HandlerMethod(
             val httpMethodNotSupportString =
                 ("method: ${toString()}, info: only support http request method" +
                         " is:${acceptRequestMethodsString}, " +
-                        "your request method is:${httpRequest.httpRequest.method()}")
+                        "your request method is:${httpRequestWrapper.httpRequest.method()}")
             PurpleLogger.current.d(TAG, httpMethodNotSupportString)
             val exception =
                 DefaultExceptionProvider.provideException(httpMethodNotSupportString)
@@ -69,7 +69,7 @@ class HandlerMethod(
             if (methodArgumentTypes.isEmpty()) {
                 return method.invoke(methodContextObject)
             } else {
-                val methodArgs = buildMethodArgs(this, ctx, httpRequest, httResponse)
+                val methodArgs = buildMethodArgs(this, ctx, httpRequestWrapper, httResponseWrapper)
                 val methodReturnValue = method.invoke(methodContextObject, *methodArgs)
                 releaseIfNeeded(methodArgs)
                 return methodReturnValue
@@ -109,8 +109,8 @@ class HandlerMethod(
     private fun buildMethodArgs(
         handlerMethod: HandlerMethod,
         ctx: ChannelHandlerContext,
-        httpRequest: HttpRequestWrapper,
-        httResponse: HttpResponseWrapper
+        httpRequestWrapper: HttpRequestWrapper,
+        httResponseWrapper: HttpResponseWrapper
     ): Array<Any?> {
         PurpleLogger.current.d(
             TAG,
@@ -124,8 +124,8 @@ class HandlerMethod(
                 ctx,
                 context,
                 jsonTransformer,
-                httpRequest,
-                httResponse,
+                httpRequestWrapper,
+                httResponseWrapper,
                 argumentType,
                 index,
                 argumentAnnotations

@@ -32,8 +32,8 @@ android {
         applicationId = "xcj.app.container"
         minSdk = 24
         targetSdk = 35
-        versionCode = 51
-        versionName = "3.2025.02.16"
+        versionCode = 52
+        versionName = "3.2025.02.22"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         //consumerProguardFiles("consumer-rules.pro")

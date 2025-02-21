@@ -1,3 +1,3 @@
 package xcj.app.rtc.model
 
-data class WebRTCOfferMessage(val type:String, val sdp:String)
+data class WebRTCOfferMessage(val type: String, val sdp: String)

@@ -1,6 +1,12 @@
 package xcj.app.share.base
 
 import BoxFocusInfo
+import android.net.ConnectivityManager
+import android.net.Network
+import android.net.NetworkCapabilities
+import android.net.NetworkRequest
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
@@ -11,11 +17,14 @@ import xcj.app.share.rpc.RpcShareMethod
 import xcj.app.share.ui.compose.AppSetsShareActivity
 import xcj.app.share.ui.compose.AppSetsShareViewModel
 import xcj.app.share.wlanp2p.WlanP2pShareMethod
+import xcj.app.starter.android.util.PurpleLogger
+import xcj.app.web.webserver.base.ProgressListener
 import java.util.concurrent.CopyOnWriteArrayList
 
-abstract class ShareMethod() : DefaultLifecycleObserver {
+abstract class ShareMethod() : ConnectivityManager.NetworkCallback(), DefaultLifecycleObserver {
 
     companion object {
+        private const val TAG = "ShareMethod"
         fun <SM : ShareMethod> createInstanceByType(shareMethodType: Class<SM>): ShareMethod {
             when (shareMethodType) {
                 WlanP2pShareMethod::class.java -> {
@@ -34,22 +43,41 @@ abstract class ShareMethod() : DefaultLifecycleObserver {
         }
     }
 
-    open var mDeviceName: DeviceName = DeviceName.NONE
+    val shareContentLocationState: MutableState<String> = mutableStateOf(ShareSystem.getShareDirPath())
 
-    private val sendProgressListeners: CopyOnWriteArrayList<ProgressListener> =
-        CopyOnWriteArrayList()
-    private val receiveProgressListeners: CopyOnWriteArrayList<ProgressListener> =
-        CopyOnWriteArrayList()
+    open var mDeviceName: DeviceName = DeviceName.NONE
 
     internal lateinit var activity: AppSetsShareActivity
 
     internal lateinit var viewModel: AppSetsShareViewModel
+
+    private lateinit var connectivityManager: ConnectivityManager
+
+    private val sendProgressListeners: CopyOnWriteArrayList<ProgressListener> =
+        CopyOnWriteArrayList()
+
+    private val receiveProgressListeners: CopyOnWriteArrayList<ProgressListener> =
+        CopyOnWriteArrayList()
+
+
+    override fun onAvailable(network: Network) {
+        PurpleLogger.current.d(TAG, "onAvailable, netWork:$network")
+    }
+
+    override fun onLost(network: Network) {
+        PurpleLogger.current.d(TAG, "network, netWork:$network")
+    }
 
     open fun init(activity: AppSetsShareActivity, viewModel: AppSetsShareViewModel) {
         activity.lifecycle.removeObserver(this)
         activity.lifecycle.addObserver(this)
         this.viewModel = viewModel
         this.activity = activity
+        this.connectivityManager = activity.getSystemService(ConnectivityManager::class.java)
+        val networkRequest = NetworkRequest.Builder()
+            .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+            .build()
+        this.connectivityManager.registerNetworkCallback(networkRequest, this)
     }
 
     override fun onDestroy(owner: LifecycleOwner) {
@@ -88,8 +116,10 @@ abstract class ShareMethod() : DefaultLifecycleObserver {
     }
 
     open fun onShareDeviceClick(shareDevice: ShareDevice, clickType: Int) {
-        viewModel.pendingSendContentList.ifEmpty {
-            viewModel.updateBoxFocusInfo(BoxFocusInfo(sendBoxFocus = true))
+        if (clickType == AppSetsShareActivity.CLICK_TYPE_NORMAL) {
+            viewModel.pendingSendContentList.ifEmpty {
+                viewModel.updateBoxFocusInfo(BoxFocusInfo(sendBoxFocus = true))
+            }
         }
     }
 

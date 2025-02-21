@@ -29,8 +29,8 @@ object Estimator {
         ctx: ChannelHandlerContext,
         context: Context,
         contentTransformer: ContentTransformer,
-        httpRequest: HttpRequestWrapper,
-        httpResponse: HttpResponseWrapper,
+        httpRequestWrapper: HttpRequestWrapper,
+        httpResponseWrapper: HttpResponseWrapper,
         paramType: Class<*>,
         paramIndex: Int,
         argumentAnnotations: Array<out Annotation>
@@ -40,16 +40,16 @@ object Estimator {
             "guessValue[${handlerMethod.method.name}], Api Uri:${handlerMethod.uri}, paramIndex:$paramIndex, paramType:$paramType, argumentAnnotations count:${argumentAnnotations.size}"
         )
         if (paramType == HttpRequest::class.java) {
-            return httpRequest.httpRequest
+            return httpRequestWrapper.httpRequest
         }
         if (paramType == HttpRequestWrapper::class.java) {
-            return httpRequest
+            return httpRequestWrapper
         }
         if (paramType == HttpResponse::class.java) {
-            return httpResponse.httpResponse
+            return httpResponseWrapper.httpResponse
         }
         if (paramType == HttpResponseWrapper::class.java) {
-            paramType == httpResponse
+            paramType == httpResponseWrapper
         }
         if (paramType == Context::class.java) {
             val annotationOfHttpHeader: Annotation? =
@@ -79,7 +79,8 @@ object Estimator {
                     RequestInfo::class.java -> {
                         val what = (argumentAnnotation as RequestInfo).what
                         if (what == RequestInfo.WHAT_REQUEST_HOST) {
-                            val host = httpRequest.httpRequest.headers().get(HttpHeaderNames.HOST)
+                            val host =
+                                httpRequestWrapper.httpRequest.headers().get(HttpHeaderNames.HOST)
                             return resolveSimpleValueForType(paramType, host)
                         }
                         if (what == RequestInfo.WHAT_REQUEST_REMOTE_HOST) {
@@ -95,33 +96,35 @@ object Estimator {
 
                     HttpHeader::class.java -> {
                         val header =
-                            httpRequest.httpRequest.headers()
+                            httpRequestWrapper.httpRequest.headers()
                                 .get((argumentAnnotation as HttpHeader).name)
                         return resolveSimpleValueForType(paramType, header)
                     }
 
                     HttpBody::class.java, RequestBody::class.java -> {
                         val contentType =
-                            httpRequest.httpRequest.headers().get(HttpHeaderNames.CONTENT_TYPE)
+                            httpRequestWrapper.httpRequest.headers()
+                                .get(HttpHeaderNames.CONTENT_TYPE)
                                 .lowercase()
                         when (contentType) {
                             ContentType.APPLICATION_JSON -> {
                                 return resolveRawJsonBody(
-                                    httpRequest.httpRequest,
+                                    httpRequestWrapper.httpRequest,
                                     contentTransformer,
                                     paramType
                                 )
                             }
 
                             ContentType.TEXT_PLAIN -> {
-                                val resolveRawTextBody = resolveRawTextBody(httpRequest.httpRequest)
+                                val resolveRawTextBody =
+                                    resolveRawTextBody(httpRequestWrapper.httpRequest)
                                 return resolveSimpleValueForType(paramType, resolveRawTextBody)
                             }
 
                             ContentType.APPLICATION_FORM_DATA -> {
                                 return resolveFormDataBody(
                                     contentTransformer,
-                                    httpRequest.httpRequest,
+                                    httpRequestWrapper.httpRequest,
                                     paramType
                                 )
                             }
@@ -130,11 +133,11 @@ object Estimator {
                         if (contentType.startsWith(ContentType.MULTIPART_FORM_DATA)) {
                             return resolveFormDataFileBody(
                                 contentTransformer,
-                                httpRequest.httpRequest,
+                                httpRequestWrapper.httpRequest,
                                 paramType
                             )
                         }
-                        val resolveRawTextBody = resolveRawTextBody(httpRequest.httpRequest)
+                        val resolveRawTextBody = resolveRawTextBody(httpRequestWrapper.httpRequest)
                         return resolveSimpleValueForType(paramType, resolveRawTextBody)
 
                     }
@@ -143,7 +146,7 @@ object Estimator {
                         //注意最大查询pair限制
                         //http://localhost/querysample?name=tom&age=12&name=jerry&sex=female
                         val queryStringDecoder =
-                            httpRequest.queryStringDecoder
+                            httpRequestWrapper.queryStringDecoder
                         val queryParamsWithName =
                             queryStringDecoder.parameters()[(argumentAnnotation as HttpQueryParam).name]
                         if (queryParamsWithName.isNullOrEmpty()) {
@@ -204,10 +207,7 @@ object Estimator {
         type: Class<*>
     ): FileUploadN? {
         PurpleLogger.current.d(TAG, "resolveFormDataFileBody")
-        var firstUploadN: FileUploadN? = null
-        var fileUploadN: FileUploadN? = null
-        var fileUploadNCount = 0
-
+        val fileUploadList: MutableList<FileUpload> = mutableListOf()
         val defaultHttpDataFactory = DefaultHttpDataFactory(DefaultHttpDataFactory.MINSIZE)
         val shareDirPath = getShareDirPath()
         defaultHttpDataFactory.setBaseDir(shareDirPath)
@@ -224,17 +224,11 @@ object Estimator {
             if (interfaceHttpData !is FileUpload) {
                 continue
             }
-            fileUploadNCount += 1
-            val currentFileUploadN = FileUploadN(interfaceHttpData)
-            if (fileUploadN == null) {
-                firstUploadN = currentFileUploadN
-            }
-            fileUploadN?.next = currentFileUploadN
-            fileUploadN = currentFileUploadN
+            fileUploadList.add(interfaceHttpData)
         }
-        firstUploadN?.amount = fileUploadNCount
-        firstUploadN?.httpPostRequestDecoder = httpPostRequestDecoder
-        return firstUploadN
+        val fileUploadN = FileUploadN(fileUploadList)
+        fileUploadN.httpPostRequestDecoder = httpPostRequestDecoder
+        return fileUploadN
     }
 
     fun getShareDirPath(): String {

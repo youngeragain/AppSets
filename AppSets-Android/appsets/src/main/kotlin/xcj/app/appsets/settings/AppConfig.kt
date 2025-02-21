@@ -14,7 +14,7 @@ object AppConfig {
     private var updateTime: Long = 0
     private var updating = false
 
-    var isTest: Boolean = true
+    var isTest: Boolean = false
 
     var appConfiguration: AppConfiguration = createAppConfiguration()
 

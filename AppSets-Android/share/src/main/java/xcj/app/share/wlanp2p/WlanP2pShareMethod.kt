@@ -33,7 +33,6 @@ import xcj.app.share.base.DataContent
 import xcj.app.share.base.DataSendContent
 import xcj.app.share.base.DeviceName
 import xcj.app.share.base.DeviceNameExchangeListener
-import xcj.app.share.base.ProgressListener
 import xcj.app.share.base.ShareDevice
 import xcj.app.share.base.ShareMethod
 import xcj.app.share.ui.compose.AppSetsShareActivity
@@ -44,7 +43,7 @@ import xcj.app.share.wlanp2p.common.P2pOneThread
 import xcj.app.share.wlanp2p.common.WlanP2pBroadCastReceiver
 import xcj.app.share.wlanp2p.common.WlanP2pEnableInfo
 import xcj.app.starter.android.util.PurpleLogger
-import xcj.app.starter.util.ContentType
+import xcj.app.web.webserver.base.ProgressListener
 
 class WlanP2pShareMethod : ShareMethod(), ContentReceivedListener {
     companion object {
@@ -392,23 +391,17 @@ class WlanP2pShareMethod : ShareMethod(), ContentReceivedListener {
         aNewP2pOneThread.start()
     }
 
-    override fun onContentReceived(contentType: String?, content: Any?) {
+    override fun onContentReceived(content: Any?) {
         PurpleLogger.current.d(
             TAG,
-            "onContentReceived, contentType:$contentType, content:$content"
+            "onContentReceived content:$content"
         )
-        when (contentType) {
-            ContentType.APPLICATION_TEXT -> {
-                if (content !is DataContent.StringContent) {
-                    return
-                }
+        when (content) {
+            is DataContent.StringContent -> {
                 viewModel.onNewReceivedContent(content)
             }
 
-            ContentType.APPLICATION_FILE -> {
-                if (content !is DataContent.FileContent) {
-                    return
-                }
+            is DataContent.FileContent -> {
                 viewModel.onNewReceivedContent(content)
             }
         }
@@ -432,6 +425,10 @@ class WlanP2pShareMethod : ShareMethod(), ContentReceivedListener {
                 if (wifiP2pDevice.status == WifiP2pDevice.CONNECTED ||
                     !shareDevice.deviceName.nikeName.isNullOrEmpty()
                 ) {
+                    val pendingSendContentList = viewModel.pendingSendContentList
+                    if (pendingSendContentList.isEmpty()) {
+                        return
+                    }
                     send(listOf(shareDevice))
                 } else if (wifiP2pDevice.status == WifiP2pDevice.AVAILABLE) {
                     toConnectDevice(shareDevice)

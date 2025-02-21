@@ -14,7 +14,7 @@ object RetrofitProvider {
     private val retrofitMap: LinkedHashMap<String, retrofit2.Retrofit> =
         LinkedHashMap(4, 0.75f, true)
 
-    private val defaultOkHttpClient: OkHttpClient = defaultOkHttpClientBuilder().build()
+    val defaultOkHttpClient: OkHttpClient = defaultOkHttpClientBuilder().build()
 
     private fun makeRetrofitBuilder(): retrofit2.Retrofit.Builder {
         PurpleLogger.current.d(TAG, "makeRetrofitBuilder")
@@ -47,10 +47,18 @@ object RetrofitProvider {
     fun <T> getService(
         baseUrl: String,
         clazz: Class<T>,
-        okHttpClient: OkHttpClient = defaultOkHttpClient
+        okHttpClient: OkHttpClient?,
+        notReuse: Boolean = false
     ): T {
+        if (notReuse) {
+            var okHttpClientOverride = okHttpClient ?: defaultOkHttpClient
+            val retrofit = mRetrofitBuilder.baseUrl(baseUrl).client(okHttpClientOverride).build()
+            return retrofit.create(clazz) as T
+
+        }
         return retrofitMap.getOrPut(baseUrl) {
-            mRetrofitBuilder.baseUrl(baseUrl).client(okHttpClient).build()
+            var okHttpClientOverride = okHttpClient ?: defaultOkHttpClient
+            mRetrofitBuilder.baseUrl(baseUrl).client(okHttpClientOverride).build()
         }.create(clazz) as T
     }
 

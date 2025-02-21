@@ -13,9 +13,10 @@ import okio.Sink
 import okio.buffer
 import okio.source
 import xcj.app.share.base.DataContent
-import xcj.app.share.base.DataProgressInfoPool
-import xcj.app.share.base.ProgressListener
+import xcj.app.starter.android.util.PurpleLogger
 import xcj.app.starter.util.ContentType
+import xcj.app.web.webserver.base.DataProgressInfoPool
+import xcj.app.web.webserver.base.ProgressListener
 import java.io.Closeable
 import java.io.FileDescriptor
 import java.io.FileInputStream
@@ -38,7 +39,7 @@ class ProgressRequestBody(
     }
 
     override fun contentLength(): Long {
-        return requestBody.contentLength()
+        return contentLength1()
     }
 
     fun contentLength1(): Long {
@@ -69,23 +70,21 @@ class ProgressRequestBody(
     private fun sink(sink: Sink): Sink {
         return object : ForwardingSink(sink) {
 
-            var bytesWritten: Long = 0L
-            var contentLength: Long = 0L
+            var totalBytesWritten: Long = 0L
+            val contentLength: Long = contentLength1()
 
             override fun write(source: Buffer, byteCount: Long) {
                 super.write(source, byteCount)
-                if (contentLength == 0L) {
-                    contentLength = contentLength1() // 总长度，只获取一次
-                }
-                bytesWritten += byteCount
-
+                totalBytesWritten += byteCount
+                PurpleLogger.current.d(
+                    TAG,
+                    "write, contentLength:$contentLength, totalBytesWritten:$totalBytesWritten"
+                )
                 val progressListener = progressListener
                 if (progressListener != null) {
                     val dataProgressInfo = DataProgressInfoPool.obtainById(dataContent.id)
                     dataProgressInfo.total = contentLength
-                    dataProgressInfo.current = bytesWritten
-                    dataProgressInfo.percentage =
-                        (bytesWritten / contentLength.toDouble()) * 100
+                    dataProgressInfo.current = totalBytesWritten
                     progressListener.onProgress(dataProgressInfo)
                 }
             }

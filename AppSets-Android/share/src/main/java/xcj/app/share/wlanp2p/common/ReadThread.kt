@@ -1,7 +1,7 @@
 package xcj.app.share.wlanp2p.common
 
 import xcj.app.share.base.ContentReceivedListener
-import xcj.app.share.base.ProgressListener
+import xcj.app.web.webserver.base.ProgressListener
 import xcj.app.share.wlanp2p.base.DataHandleExceptionListener
 import xcj.app.share.wlanp2p.base.ISocketState
 import xcj.app.share.wlanp2p.base.ReadMethod

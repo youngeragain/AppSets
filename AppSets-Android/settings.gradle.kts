@@ -50,7 +50,6 @@ dependencyResolutionManagement {
 
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
-        gradlePluginPortal()
         google()
         mavenCentral()
         maven {
@@ -65,6 +64,9 @@ dependencyResolutionManagement {
         }
         maven {
             url = uri("https://plugins.gradle.org/m2/")
+        }
+        maven {
+            url = uri("https://jcenter.bintray.com/")
         }
         maven {
             name = "MavenLocal"

@@ -1,24 +1,34 @@
+@file:OptIn(ExperimentalEncodingApi::class)
+
 package xcj.app.share.http.service
 
 import android.content.Context
 import xcj.app.share.base.ClientInfo
-import xcj.app.share.base.ClientSendDataInfo
 import xcj.app.share.base.DataContent
-import xcj.app.share.base.DataProgressInfoPool
-import xcj.app.share.base.ShareSystem
 import xcj.app.share.http.HttpShareMethod
+import xcj.app.share.http.common.DataContentReadableData
+import xcj.app.share.http.common.PostFileHelper
+import xcj.app.share.http.model.ContentListInfo
 import xcj.app.share.ui.compose.AppSetsShareActivity
 import xcj.app.starter.android.util.PurpleLogger
 import xcj.app.starter.foundation.http.DesignResponse
-import xcj.app.starter.util.ContentType
+import xcj.app.web.webserver.base.ContentDownloadN
+import xcj.app.web.webserver.base.DataProgressInfoPool
 import xcj.app.web.webserver.base.FileUploadN
+import xcj.app.web.webserver.base.ReadableData
+import java.io.ByteArrayInputStream
+import java.io.InputStream
 import java.util.UUID
+import kotlin.io.encoding.Base64
+import kotlin.io.encoding.ExperimentalEncodingApi
 
 class AppSetsShareServiceImpl : AppSetsShareService {
 
     companion object {
         private const val TAG = "AppSetsShareServiceImpl"
     }
+
+    private val postFileHelper = PostFileHelper()
 
     override fun greeting(context: Context, clientHost: String): DesignResponse<String> {
         return DesignResponse(data = "Hello, AppSets Share!")
@@ -29,11 +39,8 @@ class AppSetsShareServiceImpl : AppSetsShareService {
     }
 
     override fun isNeedPin(context: Context, clientHost: String): DesignResponse<Boolean> {
-        if (context !is AppSetsShareActivity) {
-            return DesignResponse(data = false)
-        }
-        val shareMethod = context.getShareMethod()
-        if (shareMethod !is HttpShareMethod) {
+        val shareMethod = getShareMethod(context)
+        if (shareMethod == null) {
             return DesignResponse(data = false)
         }
         val clientInfo = ClientInfo(clientHost)
@@ -50,11 +57,8 @@ class AppSetsShareServiceImpl : AppSetsShareService {
         clientHost: String,
         pin: Int
     ): DesignResponse<Boolean> {
-        if (context !is AppSetsShareActivity) {
-            return DesignResponse(data = false)
-        }
-        val shareMethod = context.getShareMethod()
-        if (shareMethod !is HttpShareMethod) {
+        val shareMethod = getShareMethod(context)
+        if (shareMethod == null) {
             return DesignResponse(data = false)
         }
         val clientInfo = ClientInfo(clientHost)
@@ -66,156 +70,260 @@ class AppSetsShareServiceImpl : AppSetsShareService {
     override fun pairResponse(
         context: Context,
         clientHost: String,
-        token: String
+        shareToken: String
     ): DesignResponse<Boolean> {
-        if (context !is AppSetsShareActivity) {
-            return DesignResponse(data = false)
-        }
-        val shareMethod = context.getShareMethod()
-        if (shareMethod !is HttpShareMethod) {
+        val shareMethod = getShareMethod(context)
+        if (shareMethod == null) {
             return DesignResponse(data = false)
         }
         PurpleLogger.current.d(
             TAG,
-            "pairResponse, clientHost:$clientHost, token:$token"
+            "pairResponse, clientHost:$clientHost, shareToken:$shareToken"
         )
         val clientInfo = ClientInfo(clientHost)
-        shareMethod.onSeverPairResponse(token, clientInfo)
+        shareMethod.onSeverPairResponse(shareToken, clientInfo)
         return DesignResponse(data = true)
     }
 
     override fun prepareSend(
         context: Context,
         clientHost: String,
-        token: String
+        shareToken: String,
+        contentListUri: String,
     ): DesignResponse<Boolean> {
-        if (context !is AppSetsShareActivity) {
-            return DesignResponse(data = false)
-        }
-        val shareMethod = context.getShareMethod()
-        if (shareMethod !is HttpShareMethod) {
+        val shareMethod = getShareMethod(context)
+        if (shareMethod == null) {
             return DesignResponse(data = false)
         }
         val clientInfo = ClientInfo(clientHost)
-        val clientSendDataInfo = ClientSendDataInfo(emptyList())
         PurpleLogger.current.d(
             TAG,
-            "prepareSend, clientHost:$clientHost, token:$token"
+            "prepareSend, clientHost:$clientHost, shareToken:$shareToken, contentListUri:$contentListUri"
         )
-        shareMethod.onClientPrepareSend(clientInfo, clientSendDataInfo)
+        shareMethod.onClientPrepareSend(clientInfo, contentListUri)
         return DesignResponse(data = true)
     }
 
     override fun prepareSendResponse(
         context: Context,
         clientHost: String,
-        token: String,
-        isAccept: Boolean
+        shareToken: String,
+        isAccept: Boolean,
+        preferDownloadSelf: Boolean,
     ): DesignResponse<Boolean> {
-        if (context !is AppSetsShareActivity) {
-            return DesignResponse(data = false)
-        }
-        val shareMethod = context.getShareMethod()
-        if (shareMethod !is HttpShareMethod) {
+        val shareMethod = getShareMethod(context)
+        if (shareMethod == null) {
             return DesignResponse(data = false)
         }
         val clientInfo = ClientInfo(clientHost)
         PurpleLogger.current.d(
             TAG,
-            "prepareSendResponse, clientHost:$clientHost, token:$token"
+            "prepareSendResponse, clientHost:$clientHost, shareToken:$shareToken"
         )
-        shareMethod.onServerPrepareSendResponse(clientInfo, isAccept)
+        shareMethod.onServerPrepareSendResponse(clientInfo, isAccept, preferDownloadSelf)
         return DesignResponse(data = true)
     }
 
     override fun postText(
         context: Context,
         clientHost: String,
-        token: String,
+        shareToken: String,
         text: String
     ): DesignResponse<Boolean> {
-        if (context !is AppSetsShareActivity) {
-            return DesignResponse(data = false)
-        }
-        val shareMethod = context.getShareMethod()
-        if (shareMethod !is HttpShareMethod) {
+        val shareMethod = getShareMethod(context)
+        if (shareMethod == null) {
             return DesignResponse(data = false)
         }
         val clientInfo = ClientInfo(clientHost)
         val uuid = UUID.randomUUID().toString()
         val dataProgressInfo = DataProgressInfoPool.obtainById(uuid)
-        dataProgressInfo.name = null
+        dataProgressInfo.name = text
         val textLength = text.length.toLong()
         dataProgressInfo.total = textLength
         dataProgressInfo.current = textLength
-        dataProgressInfo.percentage = 100.0
         PurpleLogger.current.d(
             TAG,
-            "postText, clientHost:$clientHost, token:$token, text:$text"
+            "postText, clientHost:$clientHost, shareToken:$shareToken, text:$text"
         )
         shareMethod.dataReceivedProgressListener.onProgress(dataProgressInfo)
-        shareMethod.onContentReceived(
-            ContentType.APPLICATION_TEXT,
-            DataContent.StringContent(text, clientInfo)
-        )
+        shareMethod.onContentReceived(DataContent.StringContent(text, clientInfo))
         return DesignResponse(data = true)
     }
 
     override fun postFile(
         context: Context,
         clientHost: String,
-        token: String,
+        shareToken: String,
         fileUploadN: FileUploadN
     ): DesignResponse<Boolean> {
-        if (context !is AppSetsShareActivity) {
-            return DesignResponse(data = false)
-        }
-        val shareMethod = context.getShareMethod()
-        if (shareMethod !is HttpShareMethod) {
+        val shareMethod = getShareMethod(context)
+        if (shareMethod == null) {
             return DesignResponse(data = false)
         }
         val clientInfo = ClientInfo(clientHost)
         PurpleLogger.current.d(
             TAG,
-            "postFile, clientHost:$clientHost, token:$token, fileUploadN:${fileUploadN}"
+            "postFile, clientHost:$clientHost, shareToken:$shareToken, fileUploadN:${fileUploadN}"
         )
-        saveFileIfNeeded(shareMethod, clientInfo, fileUploadN)
+        val handleResult =
+            postFileHelper.handleFile(context, shareMethod, clientInfo, fileUploadN)
 
-        return DesignResponse(data = true)
+        return DesignResponse(data = handleResult)
     }
 
-    fun saveFileIfNeeded(
-        shareMethod: HttpShareMethod,
-        clientInfo: ClientInfo,
-        fileUploadN: FileUploadN?
-    ) {
-        PurpleLogger.current.d(TAG, "saveFileIfNeeded, fileCount:${fileUploadN?.amount}")
-        var currentFileUploadN: FileUploadN? = fileUploadN
-        do {
-            if (currentFileUploadN == null) {
-                return
-            }
-            val fileUpload = currentFileUploadN.fileUpload
 
-            if (fileUpload.isCompleted) {
-                val fileToSave =
-                    ShareSystem.makeFileIfNeeded(fileUpload.filename, createFile = false)
-                if (fileToSave == null) {
-                    continue
+    override fun postFileChunked(
+        context: Context,
+        clientHost: String,
+        shareToken: String,
+        fileId: String,
+        chunkCount: Int,
+        chunk: Int,
+        fileUploadN: FileUploadN
+    ): DesignResponse<Boolean> {
+        val shareMethod = getShareMethod(context)
+        if (shareMethod == null) {
+            return DesignResponse(data = false)
+        }
+        PurpleLogger.current.d(
+            TAG,
+            "postFileChunked, clientHost:$clientHost, shareToken:$shareToken, fileUploadN:${fileUploadN}"
+        )
+        val handleResult =
+            postFileHelper.handleChunkedFile(context, fileId, chunkCount, chunk, fileUploadN)
+        return DesignResponse(data = handleResult)
+    }
+
+    override fun getContent(
+        context: Context,
+        clientHost: String,
+        shareToken: String,
+        contentUri: String
+    ): DesignResponse<ContentDownloadN> {
+        val shareMethod = getShareMethod(context)
+        if (shareMethod == null) {
+            return DesignResponse(data = null)
+        }
+        val decodeContentUri = Base64.decode(contentUri).decodeToString()
+        val dataContent = findContentForContentUri(shareMethod, decodeContentUri)
+        if (dataContent == null) {
+            return DesignResponse(data = null)
+        }
+        when (dataContent) {
+            is DataContent.FileContent -> {
+                val length = dataContent.file.length()
+                val inputStream: InputStream = dataContent.file.inputStream()
+                val readableData: ReadableData = DataContentReadableData(length, inputStream)
+                val contentDownloadN =
+                    ContentDownloadN(
+                        dataContent.id,
+                        dataContent.name,
+                        readableData,
+                        shareMethod.dataSendProgressListener
+                    )
+                return DesignResponse(data = contentDownloadN)
+            }
+
+            is DataContent.UriContent -> {
+                val dataInputStream: InputStream? =
+                    context.applicationContext.contentResolver.openInputStream(dataContent.uri)
+                if (dataInputStream == null) {
+                    return DesignResponse(data = null)
                 }
-                fileUpload.renameTo(fileToSave)
-
-                val fileId = UUID.randomUUID().toString()
-                val dataProgressInfoForEnd = DataProgressInfoPool.makeEnd(fileId)
-                shareMethod.dataReceivedProgressListener.onProgress(dataProgressInfoForEnd)
-
-                shareMethod.onContentReceived(
-                    ContentType.APPLICATION_FILE,
-                    DataContent.FileContent(fileUpload.file, null, clientInfo)
+                val length = dataContent.androidUriFile?.size ?: 0
+                val readableData: ReadableData = DataContentReadableData(length, dataInputStream)
+                val contentDownloadN = ContentDownloadN(
+                    dataContent.id,
+                    dataContent.name,
+                    readableData,
+                    shareMethod.dataSendProgressListener
                 )
+                return DesignResponse(data = contentDownloadN)
+
             }
-            currentFileUploadN = currentFileUploadN.next
-        } while (currentFileUploadN != null)
+
+            is DataContent.ByteArrayContent -> {
+                val length = dataContent.bytes.size.toLong()
+                val dataInputStream: InputStream = ByteArrayInputStream(dataContent.bytes)
+                val readableData: ReadableData = DataContentReadableData(length, dataInputStream)
+                val contentDownloadN =
+                    ContentDownloadN(
+                        dataContent.id,
+                        dataContent.name,
+                        readableData,
+                        shareMethod.dataSendProgressListener
+                    )
+                return DesignResponse(data = contentDownloadN)
+            }
+
+            else -> {
+                return DesignResponse(data = null)
+            }
+        }
+        return DesignResponse(data = null)
+    }
+
+    override fun getContentList(
+        context: Context,
+        clientHost: String,
+        shareToken: String,
+        contentListUri: String
+    ): DesignResponse<ContentListInfo> {
+        val shareMethod = getShareMethod(context)
+        if (shareMethod == null) {
+            return DesignResponse(data = null)
+        }
+        val dataContentList = findContentListForContentUri(shareMethod, contentListUri)
+        if (dataContentList == null) {
+            return DesignResponse(data = null)
+        }
+        val fileName = dataContentList.mapNotNull {
+            when (it) {
+                is DataContent.UriContent -> {
+                    it.androidUriFile?.displayName
+
+                }
+
+                is DataContent.FileContent -> {
+                    it.file.name
+                }
+
+                else -> {
+                    null
+                }
+            }
+        }
+        val contentListInfo =
+            ContentListInfo(contentListUri, dataContentList.size, fileName).encode()
+        return DesignResponse(data = contentListInfo)
+    }
+
+    private fun getShareMethod(context: Context): HttpShareMethod? {
+        if (context !is AppSetsShareActivity) {
+            return null
+        }
+        val shareMethod = context.getShareMethod()
+        if (shareMethod !is HttpShareMethod) {
+            return null
+        }
+        return shareMethod
+    }
+
+    private fun findContentForContentUri(
+        shareMethod: HttpShareMethod,
+        contentUri: String
+    ): DataContent? {
+        val dataContent = shareMethod.findContentForContentUri(contentUri)
+        return dataContent
+    }
+
+    private fun findContentListForContentUri(
+        shareMethod: HttpShareMethod,
+        contentListUri: String
+    ): List<DataContent>? {
+        val pendingSendFileList = shareMethod.getPendingSendFileList(contentListUri)
+
+        return pendingSendFileList
     }
 
 }
