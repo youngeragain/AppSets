@@ -1,8 +1,12 @@
-package xcj.app.share.base
+package xcj.app.starter.test
 
 import xcj.app.starter.android.util.PurpleLogger
-import xcj.app.starter.test.LocalAndroidContextFileDir
 import java.io.File
+import kotlin.io.extension
+import kotlin.io.nameWithoutExtension
+import kotlin.onFailure
+import kotlin.plus
+import kotlin.runCatching
 
 object ShareSystem {
 

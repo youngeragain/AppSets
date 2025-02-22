@@ -1,7 +1,7 @@
 package xcj.app.share.http.controller
 
 import android.content.Context
-import xcj.app.share.http.model.ContentListInfo
+import xcj.app.share.http.model.ContentInfoListWrapper
 import xcj.app.share.http.service.AppSetsShareService
 import xcj.app.share.http.service.AppSetsShareServiceImpl
 import xcj.app.starter.android.util.PurpleLogger
@@ -88,13 +88,13 @@ class AppSetsShareController {
         @AndroidContext(AndroidContext.TYPE_ACTIVITY) context: Context,
         @RequestInfo(what = RequestInfo.WHAT_REQUEST_REMOTE_HOST) clientHost: String,
         @HttpHeader("share_token") token: String,
-        @HttpHeader("content_list_uri") contentListUri: String
+        @HttpHeader("content_list_id") contentListId: String
     ): DesignResponse<Boolean> {
         PurpleLogger.current.d(
             TAG,
             "prepareSend, context:$context, token:$token, clientHost:$clientHost"
         )
-        return appSetsShareService.prepareSend(context, clientHost, token, contentListUri)
+        return appSetsShareService.prepareSend(context, clientHost, token, contentListId)
     }
 
     @RequestMapping(path = "/appsets/share/prepare_response", [HttpMethod.POST])
@@ -176,13 +176,13 @@ class AppSetsShareController {
         @AndroidContext(AndroidContext.TYPE_ACTIVITY) context: Context,
         @RequestInfo(what = RequestInfo.WHAT_REQUEST_REMOTE_HOST) clientHost: String,
         @HttpHeader("share_token") token: String,
-        @HttpHeader("content_uri") contentUri: String
+        @HttpHeader("content_id") contentId: String
     ): DesignResponse<ContentDownloadN> {
         PurpleLogger.current.d(
             TAG,
             "getContent, context:$context, clientHost:$clientHost"
         )
-        return appSetsShareService.getContent(context, clientHost, token, contentUri)
+        return appSetsShareService.getContent(context, clientHost, token, contentId)
     }
 
     @RequestMapping(path = "/appsets/share/contents/get", [HttpMethod.GET])
@@ -190,13 +190,13 @@ class AppSetsShareController {
         @AndroidContext(AndroidContext.TYPE_ACTIVITY) context: Context,
         @RequestInfo(what = RequestInfo.WHAT_REQUEST_REMOTE_HOST) clientHost: String,
         @HttpHeader("share_token") token: String,
-        @HttpHeader("content_list_uri") contentListUri: String
-    ): DesignResponse<ContentListInfo> {
+        @HttpHeader("content_list_id") contentListId: String
+    ): DesignResponse<ContentInfoListWrapper> {
         PurpleLogger.current.d(
             TAG,
             "getContentList, context:$context, clientHost:$clientHost"
         )
-        return appSetsShareService.getContentList(context, clientHost, token, contentListUri)
+        return appSetsShareService.getContentList(context, clientHost, token, contentListId)
     }
 
 }

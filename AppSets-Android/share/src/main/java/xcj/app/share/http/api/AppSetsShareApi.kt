@@ -11,7 +11,7 @@ import retrofit2.http.Multipart
 import retrofit2.http.POST
 import retrofit2.http.Part
 import retrofit2.http.Streaming
-import xcj.app.share.http.model.ContentListInfo
+import xcj.app.share.http.model.ContentInfoListWrapper
 import xcj.app.starter.foundation.http.DesignResponse
 
 /**
@@ -55,7 +55,7 @@ interface AppSetsShareApi {
     @POST("/appsets/share/prepare")
     suspend fun prepareSend(
         @Header("share_token") shareToken: String,
-        @Header("content_list_uri") contentList: String,
+        @Header("content_list_id") contentListId: String,
     ): DesignResponse<Boolean>
 
     @POST("/appsets/share/prepare_response")
@@ -69,12 +69,12 @@ interface AppSetsShareApi {
     @GET("/appsets/share/content/get")
     fun getContent(
         @Header("share_token") shareToken: String,
-        @Header("content_uri") contentUri: String,
+        @Header("content_id") contentId: String,
     ): retrofit2.Call<ResponseBody>
 
     @GET("/appsets/share/contents/get")
     suspend fun getContentList(
         @Header("share_token") shareToken: String,
-        @Header("content_list_uri") contentListUri: String,
-    ): DesignResponse<ContentListInfo>
+        @Header("content_list_id") contentListId: String,
+    ): DesignResponse<ContentInfoListWrapper>
 }

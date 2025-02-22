@@ -3,12 +3,12 @@ package xcj.app.share.wlanp2p.channel
 import com.google.gson.GsonBuilder
 import xcj.app.share.base.ClientInfo
 import xcj.app.share.base.ContentCombiner
-import xcj.app.share.base.ContentReceivedListener
+import xcj.app.web.webserver.interfaces.ContentReceivedListener
 import xcj.app.share.base.DataContent
 import xcj.app.web.webserver.base.DataProgressInfoPool
 import xcj.app.share.base.DeviceNameAddress
 import xcj.app.web.webserver.base.ProgressListener
-import xcj.app.share.base.ShareSystem
+import xcj.app.starter.test.ShareSystem
 import xcj.app.share.wlanp2p.base.DataHandleExceptionListener
 import xcj.app.share.wlanp2p.base.ReadMethod
 import xcj.app.share.wlanp2p.common.P2pOneThread
@@ -30,7 +30,6 @@ import java.net.Socket
 import java.nio.ByteBuffer
 import java.nio.channels.FileChannel
 import java.nio.channels.SocketChannel
-import java.text.DecimalFormat
 import kotlin.io.outputStream
 
 class ChannelReadMethod(

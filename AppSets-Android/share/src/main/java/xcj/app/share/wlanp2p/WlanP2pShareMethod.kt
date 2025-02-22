@@ -28,7 +28,7 @@ import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import xcj.app.share.base.ClientInfo
-import xcj.app.share.base.ContentReceivedListener
+import xcj.app.web.webserver.interfaces.ContentReceivedListener
 import xcj.app.share.base.DataContent
 import xcj.app.share.base.DataSendContent
 import xcj.app.share.base.DeviceName
@@ -391,7 +391,7 @@ class WlanP2pShareMethod : ShareMethod(), ContentReceivedListener {
         aNewP2pOneThread.start()
     }
 
-    override fun onContentReceived(content: Any?) {
+    override fun onContentReceived(content: Any) {
         PurpleLogger.current.d(
             TAG,
             "onContentReceived content:$content"

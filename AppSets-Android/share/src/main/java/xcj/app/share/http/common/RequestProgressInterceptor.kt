@@ -11,9 +11,17 @@ class RequestProgressInterceptor(
 ) : Interceptor {
     override fun intercept(chain: Interceptor.Chain): Response {
         val originalRequest = chain.request()
+        val requestBody = originalRequest.body
+        if (requestBody == null) {
+            return chain.proceed(originalRequest)
+        }
+        if (requestBody is ProgressRequestBody) {
+            return chain.proceed(originalRequest)
+        }
+        val progressRequestBody = ProgressRequestBody(requestBody, dataContent, progressListener)
         val request =
             originalRequest.newBuilder()
-                .method(originalRequest.method, originalRequest.body)
+                .method(originalRequest.method, progressRequestBody)
                 .build()
         return chain.proceed(request)
 

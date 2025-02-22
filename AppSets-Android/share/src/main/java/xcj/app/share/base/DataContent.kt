@@ -18,7 +18,7 @@ sealed interface DataContent {
         override var clientInfo: ClientInfo = ClientInfo.NONE_RESOLVED,
         override val id: String = UUID.randomUUID().toString()
     ) : DataContent {
-        override val name: String = androidUriFile?.displayName ?: "content_$id"
+        override val name: String = androidUriFile?.displayName ?: ""
     }
 
     //out is FileOutputStream or FileChannel
@@ -44,6 +44,10 @@ sealed interface DataContent {
         override var clientInfo: ClientInfo = ClientInfo.NONE_RESOLVED,
         override val id: String = UUID.randomUUID().toString(),
     ) : DataContent {
-        override val name: String = "byte_$id"
+        override val name: String = if (bytes.size < 1024) {
+            bytes.decodeToString()
+        } else {
+            ""
+        }
     }
 }

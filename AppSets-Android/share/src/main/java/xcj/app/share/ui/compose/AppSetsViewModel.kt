@@ -17,7 +17,7 @@ import xcj.app.share.base.DeviceName
 import xcj.app.share.base.ShareDevice
 import xcj.app.share.base.ShareMethod
 import xcj.app.share.http.HttpShareMethod
-import xcj.app.share.http.model.ContentListInfo
+import xcj.app.share.http.model.ContentInfoListWrapper
 import xcj.app.share.wlanp2p.WlanP2pShareMethod
 import xcj.app.starter.android.util.FileUtils
 import xcj.app.starter.android.util.PurpleLogger
@@ -38,7 +38,7 @@ class AppSetsShareViewModel : AnyStateViewModel() {
     val shareMethodTypeState: MutableState<Class<*>> =
         mutableStateOf(WlanP2pShareMethod::class.java)
 
-    val deviceContentListMap: MutableMap<ShareDevice, ContentListInfo> = mutableStateMapOf()
+    val deviceContentListMap: MutableMap<ShareDevice, ContentInfoListWrapper> = mutableStateMapOf()
 
     val pendingSendContentList: MutableList<DataContent> = mutableStateListOf()
 
@@ -292,7 +292,7 @@ class AppSetsShareViewModel : AnyStateViewModel() {
 
     fun updateReceiveDataProgressState(dataProgressInfo: DataProgressInfo) {
         val percentage = dataProgressInfo.percentageInternal
-        val oldProgress = receiveDataProgressState.value
+        /*val oldProgress = receiveDataProgressState.value
         val diff = percentage - (oldProgress?.percentage ?: 0f)
         if (diff < PROGRESS_UPDATE_MIN_DIFF) {
             PurpleLogger.current.d(
@@ -302,17 +302,17 @@ class AppSetsShareViewModel : AnyStateViewModel() {
                         "newTotal:${dataProgressInfo.total}, newCurrent:${dataProgressInfo.current}"
             )
             return
-        }
+        }*/
 
         val progressOverride =
             receivedProgressDecimalFormat.format(percentage).toFloat()
         val progressInfo = dataProgressInfo.copy()
         progressInfo.percentage = progressOverride
         viewModelScope.launch(Dispatchers.Main) {
-            PurpleLogger.current.d(
+           /* PurpleLogger.current.d(
                 TAG,
                 "updateReceiveDataProgressState on ui, progressOverride:$progressOverride"
-            )
+            )*/
             receiveDataProgressState.value = progressInfo
             if (percentage >= 99.9) {
                 delay(100)
@@ -323,7 +323,7 @@ class AppSetsShareViewModel : AnyStateViewModel() {
 
     fun updateSendDataProgressState(dataProgressInfo: DataProgressInfo) {
         val percentage = dataProgressInfo.percentageInternal
-        val oldProgress = sendDataProgressState.value
+       /* val oldProgress = sendDataProgressState.value
         val diff = percentage - (oldProgress?.percentage ?: 0f)
         if (diff < PROGRESS_UPDATE_MIN_DIFF) {
             PurpleLogger.current.d(
@@ -333,16 +333,16 @@ class AppSetsShareViewModel : AnyStateViewModel() {
                         "newTotal:${dataProgressInfo.total}, newCurrent:${dataProgressInfo.current}"
             )
             return
-        }
+        }*/
         val progressOverride =
             receivedProgressDecimalFormat.format(percentage).toFloat()
         val progressInfo = dataProgressInfo.copy()
         progressInfo.percentage = progressOverride
         viewModelScope.launch(Dispatchers.Main) {
-            PurpleLogger.current.d(
+          /*  PurpleLogger.current.d(
                 TAG,
-                "updateReceiveDataProgressState on ui, progressOverride:$progressOverride"
-            )
+                "updateSendDataProgressState on ui, progressOverride:$progressOverride"
+            )*/
             sendDataProgressState.value = progressInfo
             if (percentage >= 99.9) {
                 delay(500)
@@ -366,9 +366,9 @@ class AppSetsShareViewModel : AnyStateViewModel() {
         pendingSendContentList.clear()
     }
 
-    fun updateDeviceContentListMap(shareDevice: ShareDevice, contentListInfo: ContentListInfo) {
+    fun updateDeviceContentListMap(shareDevice: ShareDevice, contentInfoListWrapper: ContentInfoListWrapper) {
         viewModelScope.launch(Dispatchers.Main) {
-            deviceContentListMap.put(shareDevice, contentListInfo)
+            deviceContentListMap.put(shareDevice, contentInfoListWrapper)
         }
     }
 

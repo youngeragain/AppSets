@@ -1,0 +1,36 @@
+package xcj.app.web.webserver.netty
+
+import io.netty.channel.ChannelHandlerContext
+import io.netty.handler.codec.http.multipart.HttpPostRequestDecoder
+import xcj.app.starter.android.util.PurpleLogger
+import xcj.app.web.webserver.interfaces.ListenersProvider
+
+object HttpFileUploadHelper {
+
+    private const val TAG = "HttpFileUploadHelper"
+
+    fun handleHttpContent(
+        ctx: ChannelHandlerContext,
+        httpRequestWrapper: HttpRequestWrapper,
+        listenersProvider: ListenersProvider?
+    ) {
+        PurpleLogger.current.d(TAG, "handleHttpContent")
+        val httpPostRequestDecoder = httpRequestWrapper.httpPostRequestDecoder
+        if (httpPostRequestDecoder == null) {
+            return
+        }
+        val httpContent = httpRequestWrapper.httpContent
+        if (httpContent != null) {
+            try {
+                httpPostRequestDecoder.offer(httpContent)
+            } catch (e: HttpPostRequestDecoder.ErrorDataDecoderException) {
+                ComposedApiWebHandler.sendBadRequest(ctx)
+                e.printStackTrace()
+            }
+        }
+        val fileUploadN = httpRequestWrapper.fileUploadN
+        if (httpContent != null && fileUploadN != null) {
+            fileUploadN.addHttpContent(httpContent, httpPostRequestDecoder, listenersProvider)
+        }
+    }
+}

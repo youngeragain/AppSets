@@ -1,4 +1,4 @@
-package xcj.app.web.webserver
+package xcj.app.web.webserver.base
 
 import android.content.Context
 import android.os.Build
@@ -17,7 +17,7 @@ object DefaultControllerCollector {
 
     @RequiresApi(Build.VERSION_CODES.O)
     @JvmStatic
-    fun collect(
+    suspend fun collect(
         context: Context,
         packageName: String?,
         vararg args: Any?

@@ -44,7 +44,7 @@ class ProgressRequestBody(
 
     fun contentLength1(): Long {
         if (dataContent is DataContent.UriContent) {
-            return dataContent.androidUriFile?.size ?: contentLength()
+            return dataContent.androidUriFile?.size ?: requestBody.contentLength()
         }
         return requestBody.contentLength()
     }
@@ -76,10 +76,6 @@ class ProgressRequestBody(
             override fun write(source: Buffer, byteCount: Long) {
                 super.write(source, byteCount)
                 totalBytesWritten += byteCount
-                PurpleLogger.current.d(
-                    TAG,
-                    "write, contentLength:$contentLength, totalBytesWritten:$totalBytesWritten"
-                )
                 val progressListener = progressListener
                 if (progressListener != null) {
                     val dataProgressInfo = DataProgressInfoPool.obtainById(dataContent.id)
@@ -130,6 +126,7 @@ fun DataContent.asProgressRequestBody(
 
 fun FileDescriptor.toRequestBody1(contentType: MediaType? = null): RequestBody {
     return object : RequestBody() {
+
         override fun contentType() = contentType
 
         override fun isOneShot(): Boolean = true

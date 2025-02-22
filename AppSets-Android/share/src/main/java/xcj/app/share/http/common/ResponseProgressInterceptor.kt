@@ -11,6 +11,9 @@ class ResponseProgressInterceptor(
 ) : Interceptor {
     override fun intercept(chain: Interceptor.Chain): Response {
         val originalResponse = chain.proceed(chain.request())
+        if (originalResponse.body is ProgressResponseBody) {
+            return originalResponse
+        }
         val progressResponseBody =
             ProgressResponseBody(dataContent, originalResponse.body, progressListener)
         return originalResponse.newBuilder()

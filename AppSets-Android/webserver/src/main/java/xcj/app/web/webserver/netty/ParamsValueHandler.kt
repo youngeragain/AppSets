@@ -3,24 +3,17 @@ package xcj.app.web.webserver.netty
 import android.content.Context
 import io.netty.channel.ChannelHandlerContext
 import io.netty.handler.codec.http.*
-import io.netty.handler.codec.http.multipart.DefaultHttpDataFactory
-import io.netty.handler.codec.http.multipart.FileUpload
 import io.netty.handler.codec.http.multipart.HttpPostRequestDecoder
-import io.netty.handler.codec.http.multipart.InterfaceHttpData
 import xcj.app.starter.android.util.PurpleLogger
-import xcj.app.starter.test.LocalAndroidContextFileDir
 import xcj.app.starter.test.LocalTopActivity
 import xcj.app.starter.util.ContentType
 import xcj.app.web.webserver.base.FileUploadN
 import xcj.app.web.webserver.interfaces.*
-import java.io.File
 import java.net.InetSocketAddress
 
-object Estimator {
+object ParamsValueHandler {
 
-    private const val TAG = "Estimator"
-
-    private val sDefaultHttpDataFactory: ThreadLocal<DefaultHttpDataFactory> = ThreadLocal()
+    private const val TAG = "ParamsValueHandler"
 
     //TODO 判断多个注解到入参变量可能冲突的问题
     @JvmStatic
@@ -117,14 +110,14 @@ object Estimator {
 
                             ContentType.TEXT_PLAIN -> {
                                 val resolveRawTextBody =
-                                    resolveRawTextBody(httpRequestWrapper.httpRequest)
+                                    resolveRawTextBody(httpRequestWrapper)
                                 return resolveSimpleValueForType(paramType, resolveRawTextBody)
                             }
 
                             ContentType.APPLICATION_FORM_DATA -> {
                                 return resolveFormDataBody(
                                     contentTransformer,
-                                    httpRequestWrapper.httpRequest,
+                                    httpRequestWrapper,
                                     paramType
                                 )
                             }
@@ -133,11 +126,11 @@ object Estimator {
                         if (contentType.startsWith(ContentType.MULTIPART_FORM_DATA)) {
                             return resolveFormDataFileBody(
                                 contentTransformer,
-                                httpRequestWrapper.httpRequest,
+                                httpRequestWrapper,
                                 paramType
                             )
                         }
-                        val resolveRawTextBody = resolveRawTextBody(httpRequestWrapper.httpRequest)
+                        val resolveRawTextBody = resolveRawTextBody(httpRequestWrapper)
                         return resolveSimpleValueForType(paramType, resolveRawTextBody)
 
                     }
@@ -183,12 +176,16 @@ object Estimator {
 
     private fun resolveFormDataBody(
         gson: ContentTransformer,
-        httpRequest: HttpRequest,
+        httpRequestWrapper: HttpRequestWrapper,
         type: Class<*>
     ): Any? {
         PurpleLogger.current.d(TAG, "resolveFormDataBody")
         //clearly form data
-        val content = (httpRequest as FullHttpMessage).content()
+        val httpRequest = httpRequestWrapper.httpRequest
+        if (httpRequest !is FullHttpMessage) {
+            return null
+        }
+        val content = httpRequest.content()
         if (!content.isReadable) {
             return null
         }
@@ -201,39 +198,14 @@ object Estimator {
         return null
     }
 
-    private fun resolveFormDataFileBody(
+    fun resolveFormDataFileBody(
         contentTransformer: ContentTransformer,
-        httpRequest: HttpRequest,
+        httpRequestWrapper: HttpRequestWrapper,
         type: Class<*>
     ): FileUploadN? {
         PurpleLogger.current.d(TAG, "resolveFormDataFileBody")
-        val fileUploadList: MutableList<FileUpload> = mutableListOf()
-        val defaultHttpDataFactory = DefaultHttpDataFactory(DefaultHttpDataFactory.MINSIZE)
-        val shareDirPath = getShareDirPath()
-        defaultHttpDataFactory.setBaseDir(shareDirPath)
-        val httpPostRequestDecoder = HttpPostRequestDecoder(
-            defaultHttpDataFactory,
-            httpRequest
-        )
-
-        while (httpPostRequestDecoder.hasNext()) {
-            val interfaceHttpData = httpPostRequestDecoder.next()
-            if (interfaceHttpData.httpDataType != InterfaceHttpData.HttpDataType.FileUpload) {
-                continue
-            }
-            if (interfaceHttpData !is FileUpload) {
-                continue
-            }
-            fileUploadList.add(interfaceHttpData)
-        }
-        val fileUploadN = FileUploadN(fileUploadList)
-        fileUploadN.httpPostRequestDecoder = httpPostRequestDecoder
+        val fileUploadN = httpRequestWrapper.fileUploadN
         return fileUploadN
-    }
-
-    fun getShareDirPath(): String {
-        val path = LocalAndroidContextFileDir.current.appSetsShareDir + File.separator
-        return path
     }
 
     private fun resolveRawJsonBody(
@@ -263,10 +235,10 @@ object Estimator {
     }
 
     private fun resolveRawTextBody(
-        httpRequest: HttpRequest
+        httpRequestWrapper: HttpRequestWrapper
     ): Any? {
         PurpleLogger.current.d(TAG, "resolveRawTextBody")
-        val fullHttpMessage = httpRequest as? FullHttpMessage
+        val fullHttpMessage = httpRequestWrapper.httpRequest as? FullHttpMessage
         if (fullHttpMessage == null) {
             return null
         }

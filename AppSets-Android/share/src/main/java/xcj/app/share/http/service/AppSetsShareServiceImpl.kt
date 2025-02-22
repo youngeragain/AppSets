@@ -3,12 +3,15 @@
 package xcj.app.share.http.service
 
 import android.content.Context
+import android.os.CancellationSignal
+import android.os.ParcelFileDescriptor
 import xcj.app.share.base.ClientInfo
 import xcj.app.share.base.DataContent
 import xcj.app.share.http.HttpShareMethod
 import xcj.app.share.http.common.DataContentReadableData
 import xcj.app.share.http.common.PostFileHelper
-import xcj.app.share.http.model.ContentListInfo
+import xcj.app.share.http.model.ContentInfo
+import xcj.app.share.http.model.ContentInfoListWrapper
 import xcj.app.share.ui.compose.AppSetsShareActivity
 import xcj.app.starter.android.util.PurpleLogger
 import xcj.app.starter.foundation.http.DesignResponse
@@ -17,9 +20,9 @@ import xcj.app.web.webserver.base.DataProgressInfoPool
 import xcj.app.web.webserver.base.FileUploadN
 import xcj.app.web.webserver.base.ReadableData
 import java.io.ByteArrayInputStream
+import java.io.FileInputStream
 import java.io.InputStream
 import java.util.UUID
-import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
 
 class AppSetsShareServiceImpl : AppSetsShareService {
@@ -89,7 +92,7 @@ class AppSetsShareServiceImpl : AppSetsShareService {
         context: Context,
         clientHost: String,
         shareToken: String,
-        contentListUri: String,
+        contentListId: String,
     ): DesignResponse<Boolean> {
         val shareMethod = getShareMethod(context)
         if (shareMethod == null) {
@@ -98,9 +101,9 @@ class AppSetsShareServiceImpl : AppSetsShareService {
         val clientInfo = ClientInfo(clientHost)
         PurpleLogger.current.d(
             TAG,
-            "prepareSend, clientHost:$clientHost, shareToken:$shareToken, contentListUri:$contentListUri"
+            "prepareSend, clientHost:$clientHost, shareToken:$shareToken, contentListId:$contentListId"
         )
-        shareMethod.onClientPrepareSend(clientInfo, contentListUri)
+        shareMethod.onClientPrepareSend(clientInfo, contentListId)
         return DesignResponse(data = true)
     }
 
@@ -198,14 +201,13 @@ class AppSetsShareServiceImpl : AppSetsShareService {
         context: Context,
         clientHost: String,
         shareToken: String,
-        contentUri: String
+        contentId: String
     ): DesignResponse<ContentDownloadN> {
         val shareMethod = getShareMethod(context)
         if (shareMethod == null) {
             return DesignResponse(data = null)
         }
-        val decodeContentUri = Base64.decode(contentUri).decodeToString()
-        val dataContent = findContentForContentUri(shareMethod, decodeContentUri)
+        val dataContent = findContentForContentUri(shareMethod, contentId)
         if (dataContent == null) {
             return DesignResponse(data = null)
         }
@@ -218,26 +220,39 @@ class AppSetsShareServiceImpl : AppSetsShareService {
                     ContentDownloadN(
                         dataContent.id,
                         dataContent.name,
-                        readableData,
-                        shareMethod.dataSendProgressListener
+                        readableData
                     )
                 return DesignResponse(data = contentDownloadN)
             }
 
             is DataContent.UriContent -> {
-                val dataInputStream: InputStream? =
-                    context.applicationContext.contentResolver.openInputStream(dataContent.uri)
-                if (dataInputStream == null) {
+                val cancellationSignal = CancellationSignal()
+                cancellationSignal.setOnCancelListener(object :
+                    CancellationSignal.OnCancelListener {
+                    override fun onCancel() {
+                        PurpleLogger.current.d(TAG, "getContent, CancellationSignal, onCancel")
+                    }
+
+                })
+                val parcelFileDescriptor: ParcelFileDescriptor? =
+                    context.applicationContext.contentResolver.openFileDescriptor(
+                        dataContent.uri,
+                        "r",
+                        cancellationSignal
+                    )
+                if (parcelFileDescriptor == null) {
                     return DesignResponse(data = null)
                 }
+                val fileDescriptor = parcelFileDescriptor.fileDescriptor
+                val fileInputStream = FileInputStream(fileDescriptor)
                 val length = dataContent.androidUriFile?.size ?: 0
-                val readableData: ReadableData = DataContentReadableData(length, dataInputStream)
-                val contentDownloadN = ContentDownloadN(
-                    dataContent.id,
-                    dataContent.name,
-                    readableData,
-                    shareMethod.dataSendProgressListener
-                )
+                val readableData: ReadableData = DataContentReadableData(length, fileInputStream)
+                val contentDownloadN =
+                    ContentDownloadN(
+                        dataContent.id,
+                        dataContent.name,
+                        readableData
+                    )
                 return DesignResponse(data = contentDownloadN)
 
             }
@@ -250,8 +265,7 @@ class AppSetsShareServiceImpl : AppSetsShareService {
                     ContentDownloadN(
                         dataContent.id,
                         dataContent.name,
-                        readableData,
-                        shareMethod.dataSendProgressListener
+                        readableData
                     )
                 return DesignResponse(data = contentDownloadN)
             }
@@ -267,25 +281,38 @@ class AppSetsShareServiceImpl : AppSetsShareService {
         context: Context,
         clientHost: String,
         shareToken: String,
-        contentListUri: String
-    ): DesignResponse<ContentListInfo> {
+        contentListId: String
+    ): DesignResponse<ContentInfoListWrapper> {
         val shareMethod = getShareMethod(context)
         if (shareMethod == null) {
             return DesignResponse(data = null)
         }
-        val dataContentList = findContentListForContentUri(shareMethod, contentListUri)
+        val dataContentList = findContentListForContentUri(shareMethod, contentListId)
         if (dataContentList == null) {
             return DesignResponse(data = null)
         }
-        val fileName = dataContentList.mapNotNull {
+        val contentInfoList = dataContentList.mapNotNull {
             when (it) {
                 is DataContent.UriContent -> {
-                    it.androidUriFile?.displayName
-
+                    ContentInfo(
+                        it.id,
+                        it.androidUriFile?.displayName ?: "",
+                        it.androidUriFile?.size ?: 0,
+                        ContentInfo.TYPE_URI
+                    )
                 }
 
                 is DataContent.FileContent -> {
-                    it.file.name
+                    ContentInfo(it.id, it.file.name, it.file.length(), ContentInfo.TYPE_FILE)
+
+                }
+
+                is DataContent.StringContent -> {
+                    ContentInfo(it.id, it.name, it.content.length.toLong(), ContentInfo.TYPE_STRING)
+                }
+
+                is DataContent.ByteArrayContent -> {
+                    ContentInfo(it.id, it.name, it.bytes.size.toLong(), ContentInfo.TYPE_BYTES)
                 }
 
                 else -> {
@@ -293,9 +320,9 @@ class AppSetsShareServiceImpl : AppSetsShareService {
                 }
             }
         }
-        val contentListInfo =
-            ContentListInfo(contentListUri, dataContentList.size, fileName).encode()
-        return DesignResponse(data = contentListInfo)
+        val contentInfoListWrapper =
+            ContentInfoListWrapper(contentListId, dataContentList.size, contentInfoList).encode()
+        return DesignResponse(data = contentInfoListWrapper)
     }
 
     private fun getShareMethod(context: Context): HttpShareMethod? {

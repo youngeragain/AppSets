@@ -13,7 +13,6 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -46,6 +45,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -72,7 +72,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.onPlaced
 import androidx.compose.ui.platform.LocalClipboardManager
@@ -81,7 +80,6 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -644,31 +642,58 @@ fun DeviceContentListComponent(
 ) {
     val viewModel = viewModel<AppSetsShareViewModel>()
     val deviceContentListMap = viewModel.deviceContentListMap
-    val contentListInfo = deviceContentListMap[shareDevice]
+    val contentInfoList = deviceContentListMap[shareDevice]
     Column(
         modifier = Modifier
-            .padding(horizontal = 12.dp)
+            .padding(start = 12.dp, end = 12.dp, bottom = 12.dp)
             .fillMaxWidth()
             .animateContentSize(),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         Box(modifier = Modifier.fillMaxWidth()) {
-            Text(
-                text = stringResource(R.string.share_content_list), modifier = Modifier.align(
-                    Alignment.Center
+            if (isShowBackButton) {
+                Icon(
+                    modifier = Modifier
+                        .clip(MaterialTheme.shapes.extraLarge)
+                        .clickable(
+                            onClick = {
+                                onBackClick?.invoke()
+                            }
+                        )
+                        .padding(12.dp)
+                        .align(Alignment.TopStart),
+                    painter = painterResource(xcj.app.compose_share.R.drawable.ic_arrow_back_24),
+                    contentDescription = null
+                )
+            }
+            Column(
+                modifier = Modifier.align(
+                    Alignment.TopCenter
                 ),
-                fontWeight = FontWeight.Bold
-            )
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                val titleText = if (contentInfoList?.infoList.isNullOrEmpty()) {
+                    stringResource(R.string.share_content_list)
+                } else {
+                    "${stringResource(R.string.share_content_list)}(${(contentInfoList.infoList.size)})"
+                }
+                Text(
+                    text = titleText,
+                    fontWeight = FontWeight.Bold
+                )
+                ShareDeviceMiddleComponent(modifier = Modifier, shareDevice)
+            }
+
         }
-        ShareDeviceMiddleComponent(modifier = Modifier, shareDevice)
         DesignHDivider()
-        if (contentListInfo != null) {
+        if (contentInfoList != null) {
             LazyColumn(
                 modifier = Modifier
                     .fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                contentPadding = PaddingValues(start = 12.dp, end = 12.dp, bottom = 12.dp)
             ) {
-                if (contentListInfo.contentList.isEmpty()) {
+                if (contentInfoList.infoList.isEmpty()) {
                     item {
                         Box(
                             modifier = Modifier
@@ -680,14 +705,14 @@ fun DeviceContentListComponent(
                         }
                     }
                 }
-                items(contentListInfo.contentList) { contentUri ->
+                items(contentInfoList.infoList) { contentInfo ->
                     Column(
                         modifier = Modifier
                             .fillMaxWidth(),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         Text(
-                            text = contentUri,
+                            text = contentInfo.name,
                             fontSize = 12.sp,
                             maxLines = 4,
                             overflow = TextOverflow.Ellipsis
@@ -707,33 +732,6 @@ fun DeviceContentListComponent(
                 Text(text = stringResource(R.string.getting_in), fontSize = 12.sp)
             }
 
-        }
-
-        if (isShowBackButton) {
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(MaterialTheme.shapes.extraLarge)
-                    .clickable(
-                        onClick = {
-                            onBackClick?.invoke()
-                        }
-                    ),
-                colors = CardDefaults.cardColors(),
-                shape = MaterialTheme.shapes.extraLarge
-            ) {
-                Column(
-                    modifier = Modifier
-                        .align(Alignment.CenterHorizontally)
-                        .padding(vertical = 16.dp),
-                ) {
-                    Icon(
-                        painter = painterResource(xcj.app.compose_share.R.drawable.ic_arrow_back_24),
-                        contentDescription = null
-                    )
-                }
-
-            }
         }
     }
 }
@@ -1741,7 +1739,7 @@ fun AppSetsSharePinSheet(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(12.dp)
+            .padding(start = 12.dp, end = 12.dp, bottom = 12.dp)
     ) {
         Column(
             modifier = Modifier
@@ -1755,10 +1753,13 @@ fun AppSetsSharePinSheet(
                 modifier = Modifier,
                 shareDevice = shareDevice
             )
-            FilledTonalButton(
-                onClick = onConfirmClick
-            ) {
-                Text(stringResource(xcj.app.starter.R.string.ok))
+            FilledTonalIconButton(onClick = onConfirmClick) {
+                Icon(
+                    modifier = Modifier
+                        .padding(12.dp),
+                    painter = painterResource(xcj.app.compose_share.R.drawable.ic_round_check_24),
+                    contentDescription = null
+                )
             }
         }
     }
@@ -1782,75 +1783,16 @@ fun AppSetsShareClientPreSendSheet(
     ) {
         AnimatedContent(isShowDeviceContentList) { targetIsShowDeviceContentList ->
             if (!targetIsShowDeviceContentList) {
-                Column(
-                    modifier = Modifier
-                        .align(Alignment.Center)
-                        .padding(32.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-
-                    Text(
-                        text = stringResource(R.string.new_share_content_to_you),
-                        fontSize = 22.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-
-                    ShareDeviceNormalComponent(
-                        modifier = Modifier.align(Alignment.CenterHorizontally),
-                        shareDevice = shareDevice
-                    )
-
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        Text(text = stringResource(R.string.auto_accept))
-                        Switch(checked = isAutoAccept, onCheckedChange = onAutoAcceptChanged)
+                ShareClientPreSendComponent(
+                    shareDevice = shareDevice,
+                    isAutoAccept = isAutoAccept,
+                    onAcceptClick = onAcceptClick,
+                    onAutoAcceptChanged = onAutoAcceptChanged,
+                    onContentListShowClick = {
+                        isShowDeviceContentList = true
+                        onContentListShowClick()
                     }
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        FilledTonalButton(
-                            onClick = {
-                                onAcceptClick(false)
-                            }
-                        ) {
-                            Text(stringResource(xcj.app.starter.R.string.reject))
-                        }
-                        FilledTonalButton(
-                            onClick = {
-                                onAcceptClick(true)
-                            }
-                        ) {
-                            Text(stringResource(R.string.accept))
-                        }
-                    }
-
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(MaterialTheme.shapes.extraLarge)
-                            .clickable(
-                                onClick = {
-                                    isShowDeviceContentList = true
-                                    onContentListShowClick()
-                                }
-                            ),
-                        colors = CardDefaults.cardColors(),
-                        shape = MaterialTheme.shapes.extraLarge
-                    ) {
-                        Column(
-                            modifier = Modifier
-                                .align(Alignment.CenterHorizontally)
-                                .padding(vertical = 16.dp),
-                        ) {
-                            Text(text = stringResource(R.string.see_share_content_list))
-                        }
-
-                    }
-                }
+                )
             } else {
                 DeviceContentListComponent(
                     shareDevice = shareDevice,
@@ -1861,7 +1803,86 @@ fun AppSetsShareClientPreSendSheet(
                 )
             }
         }
+    }
+}
 
+@Composable
+fun ShareClientPreSendComponent(
+    shareDevice: ShareDevice,
+    isAutoAccept: Boolean,
+    onAcceptClick: (Boolean) -> Unit,
+    onAutoAcceptChanged: (Boolean) -> Unit,
+    onContentListShowClick: () -> Unit,
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = 12.dp, end = 12.dp, bottom = 12.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = stringResource(R.string.new_share_content_to_you),
+            fontSize = 22.sp,
+            fontWeight = FontWeight.Bold
+        )
+
+        ShareDeviceNormalComponent(
+            modifier = Modifier.align(Alignment.CenterHorizontally),
+            shareDevice = shareDevice
+        )
+
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Switch(checked = isAutoAccept, onCheckedChange = onAutoAcceptChanged)
+            Text(text = stringResource(R.string.auto_accept), fontSize = 10.sp)
+        }
+
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            FilledTonalIconButton(onClick = {
+                onAcceptClick(false)
+            }) {
+                Icon(
+                    modifier = Modifier
+                        .padding(12.dp),
+                    painter = painterResource(xcj.app.compose_share.R.drawable.ic_round_close_24),
+                    contentDescription = null
+                )
+            }
+
+            FilledTonalIconButton(onClick = {
+                onAcceptClick(true)
+            }) {
+                Icon(
+                    modifier = Modifier
+                        .padding(12.dp),
+                    painter = painterResource(xcj.app.compose_share.R.drawable.ic_round_check_24),
+                    contentDescription = null
+                )
+            }
+        }
+
+        Card(
+            modifier = Modifier
+                .clickable(
+                    onClick = onContentListShowClick
+                )
+                .clip(MaterialTheme.shapes.large),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
+            shape = MaterialTheme.shapes.large
+        ) {
+            Column(
+                modifier = Modifier
+                    .align(Alignment.CenterHorizontally)
+                    .padding(vertical = 8.dp, horizontal = 12.dp),
+            ) {
+                Text(text = stringResource(R.string.see_share_content_list), fontSize = 12.sp)
+            }
+        }
     }
 }
 
@@ -1871,21 +1892,14 @@ fun DeviceIcon(modifier: Modifier, resource: Int) {
         modifier = modifier
             .size(42.dp)
             .background(
-                MaterialTheme.colorScheme.primaryContainer,
-                CircleShape
-            )
-            .border(
-                1.dp,
-                MaterialTheme.colorScheme.outline,
+                MaterialTheme.colorScheme.secondaryContainer,
                 CircleShape
             )
             .clip(CircleShape),
         contentAlignment = Alignment.Center
     ) {
-        Image(
-            imageVector = ImageVector.vectorResource(id = resource),
-            modifier = Modifier
-                .size(20.dp),
+        Icon(
+            painter = painterResource(resource),
             contentDescription = null
         )
     }

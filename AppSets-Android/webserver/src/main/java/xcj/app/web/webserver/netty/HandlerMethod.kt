@@ -3,10 +3,8 @@ package xcj.app.web.webserver.netty
 import android.content.Context
 import io.netty.channel.ChannelHandlerContext
 import xcj.app.starter.android.util.PurpleLogger
-import xcj.app.web.webserver.base.FileUploadN
 import xcj.app.web.webserver.base.UriSplitResults
 import xcj.app.web.webserver.interfaces.HttpMethod
-import java.io.Closeable
 import java.lang.AutoCloseable
 import java.lang.reflect.Method
 
@@ -24,7 +22,6 @@ class HandlerMethod(
 
     val uriSplitResults: UriSplitResults? = null
 
-
     val methodArgumentTypes: Array<Class<*>>
         get() = method.parameterTypes ?: emptyArray()
 
@@ -37,14 +34,10 @@ class HandlerMethod(
     val acceptRequestMethodsString: String
         get() = httpMethods.joinToString { it.readableName().uppercase() }
 
-    fun isHandlePostFileUri(): Boolean {
-        return uri == "/appsets/share/file"
-    }
-
     fun call(
         ctx: ChannelHandlerContext,
         httpRequestWrapper: HttpRequestWrapper,
-        httResponseWrapper: HttpResponseWrapper
+        httpResponseWrapper: HttpResponseWrapper
     ): Any? {
         val acceptRequestMethods = httpMethods
         if (acceptRequestMethods.isEmpty()) {
@@ -52,10 +45,10 @@ class HandlerMethod(
         }
 
         val httpMethod = httpRequestWrapper.httpRequest.method().name()
-        val methodCanAccept = acceptRequestMethods.firstOrNull {
+        val firstCanAcceptMethod = acceptRequestMethods.firstOrNull {
             it.readableName().uppercase() == httpMethod.uppercase()
-        } != null
-        if (!methodCanAccept) {
+        }
+        if (firstCanAcceptMethod == null) {
             val httpMethodNotSupportString =
                 ("method: ${toString()}, info: only support http request method" +
                         " is:${acceptRequestMethodsString}, " +
@@ -65,44 +58,44 @@ class HandlerMethod(
                 DefaultExceptionProvider.provideException(httpMethodNotSupportString)
             return exception
         }
-        runCatching {
-            if (methodArgumentTypes.isEmpty()) {
+        if (methodArgumentTypes.isEmpty()) {
+            try {
                 return method.invoke(methodContextObject)
-            } else {
-                val methodArgs = buildMethodArgs(this, ctx, httpRequestWrapper, httResponseWrapper)
-                val methodReturnValue = method.invoke(methodContextObject, *methodArgs)
-                releaseIfNeeded(methodArgs)
-                return methodReturnValue
+            } catch (e: Exception) {
+                e.printStackTrace()
+                PurpleLogger.current.d(TAG, "invoke failed:${e.message}")
+                val exception =
+                    DefaultExceptionProvider.provideException("Server Error")
+                return exception
             }
-        }.onFailure {
-            it.printStackTrace()
-            PurpleLogger.current.d(TAG, "invoke failed:${it}")
-            val exception =
-                DefaultExceptionProvider.provideException("Server Error")
-            return exception
+        } else {
+            var methodArgs: Array<Any?>? = null
+            try {
+                methodArgs = buildMethodArgs(this, ctx, httpRequestWrapper, httpResponseWrapper)
+                val methodReturnValue = method.invoke(methodContextObject, *methodArgs)
+                return methodReturnValue
+            } catch (e: Exception) {
+                e.printStackTrace()
+                PurpleLogger.current.d(TAG, "invoke failed:${e.message}")
+                val exception =
+                    DefaultExceptionProvider.provideException("Server Error")
+                return exception
+            } finally {
+                releaseArgsIfNeeded(methodArgs)
+            }
         }
         return null
     }
 
-    private fun releaseIfNeeded(values: Array<Any?>) {
-        PurpleLogger.current.d(TAG, "releaseIfNeeded")
-        var hasFileUploadN = false
-        values.forEach { value ->
-            if (value is Closeable) {
-                value.close()
-            } else if (value is AutoCloseable) {
-                value.close()
-            }
-            if (value is FileUploadN) {
-                hasFileUploadN = true
-            }
+    private fun releaseArgsIfNeeded(values: Array<Any?>?) {
+        PurpleLogger.current.d(TAG, "releaseArgsIfNeeded")
+        if (values.isNullOrEmpty()) {
+            return
         }
-        if (hasFileUploadN) {
-            PurpleLogger.current.d(
-                TAG,
-                "releaseIfNeeded, found a fileFileUploadN, make System GC once if needed!"
-            )
-            System.gc()
+        values.forEach { value ->
+            if (value is AutoCloseable) {
+                value.close()
+            }
         }
     }
 
@@ -119,7 +112,7 @@ class HandlerMethod(
         val methodArgs: Array<Any?> = Array(methodArgumentTypes.size) { t -> t }
         for ((index, argumentType) in methodArgumentTypes.withIndex()) {
             val argumentAnnotations = methodArgumentAnnotations[index]
-            val guessedValue = Estimator.guessValue(
+            val guessedValue = ParamsValueHandler.guessValue(
                 handlerMethod,
                 ctx,
                 context,

@@ -19,15 +19,6 @@ object AppConfig {
     var appConfiguration: AppConfiguration = createAppConfiguration()
 
     private fun createAppConfiguration(): AppConfiguration {
-        return AppConfiguration(
-            canSignUp = true,
-            apiSchema = "https",
-            apiHost = "8.137.93.144",
-            apiPort = 3401,
-            apiUrl = "",
-            appsetsAppId = "APPSETS2023071579019880338529",
-            imBrokerProperties = ""
-        )
         return if (isTest) {
             AppConfiguration(
                 canSignUp = true,

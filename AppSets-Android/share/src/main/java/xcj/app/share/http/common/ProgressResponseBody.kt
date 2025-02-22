@@ -44,9 +44,7 @@ class ProgressResponseBody(
 
             override fun read(sink: Buffer, byteCount: Long): Long {
                 val bytesRead = super.read(sink, byteCount)
-                if (bytesRead == -1L) {
-                    totalBytesRead += 0
-                } else {
+                if (bytesRead > 0) {
                     totalBytesRead += bytesRead
                 }
                 val progressListener = progressListener
@@ -57,7 +55,6 @@ class ProgressResponseBody(
                     dataProgressInfo.current = totalBytesRead
                     progressListener.onProgress(dataProgressInfo)
                 }
-
                 return bytesRead
             }
         }

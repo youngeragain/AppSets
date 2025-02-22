@@ -1,7 +1,7 @@
 package xcj.app.share.http.service
 
 import android.content.Context
-import xcj.app.share.http.model.ContentListInfo
+import xcj.app.share.http.model.ContentInfoListWrapper
 import xcj.app.starter.foundation.http.DesignResponse
 import xcj.app.web.webserver.base.ContentDownloadN
 import xcj.app.web.webserver.base.FileUploadN
@@ -29,7 +29,7 @@ interface AppSetsShareService {
         context: Context,
         clientHost: String,
         token: String,
-        contentListUri: String
+        contentListId: String
     ): DesignResponse<Boolean>
 
     fun prepareSendResponse(
@@ -68,13 +68,13 @@ interface AppSetsShareService {
         context: Context,
         clientHost: String,
         token: String,
-        contentUri: String
+        contentId: String
     ): DesignResponse<ContentDownloadN>
 
     fun getContentList(
         context: Context,
         clientHost: String,
         token: String,
-        contentListUri: String
-    ): DesignResponse<ContentListInfo>
+        contentListId: String
+    ): DesignResponse<ContentInfoListWrapper>
 }

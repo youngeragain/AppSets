@@ -3,7 +3,6 @@
 package xcj.app.share.http.repository
 
 import android.content.Context
-import android.os.Build
 import androidx.lifecycle.lifecycleScope
 import io.netty.handler.codec.http.HttpHeaderNames
 import kotlinx.coroutines.Dispatchers
@@ -21,19 +20,23 @@ import retrofit2.Response
 import xcj.app.share.base.DataContent
 import xcj.app.share.base.DataSendContent
 import xcj.app.share.base.ShareDevice
-import xcj.app.share.base.ShareSystem
 import xcj.app.share.http.HttpShareMethod
 import xcj.app.share.http.api.AppSetsShareApi
 import xcj.app.share.http.common.ResponseProgressInterceptor
 import xcj.app.share.http.common.asProgressRequestBody
-import xcj.app.share.http.model.ContentListInfo
+import xcj.app.share.http.model.ContentInfo
+import xcj.app.share.http.model.ContentInfoListWrapper
 import xcj.app.starter.android.util.PurpleLogger
 import xcj.app.starter.foundation.http.DesignResponse
 import xcj.app.starter.server.RetrofitProvider
+import xcj.app.starter.test.ShareSystem
 import xcj.app.starter.util.ContentType
 import xcj.app.web.webserver.base.DataProgressInfoPool
-import java.nio.file.Files
+import java.io.File
+import java.io.FileOutputStream
+import java.io.InputStream
 import java.util.UUID
+import java.util.concurrent.TimeUnit
 import kotlin.collections.component1
 import kotlin.collections.component2
 import kotlin.io.encoding.ExperimentalEncodingApi
@@ -47,6 +50,7 @@ class AppSetsShareRepository() {
 
     private fun buildApi(
         shareDevice: ShareDevice,
+        port: Int,
         okHttpClient: OkHttpClient? = null
     ): AppSetsShareApi? {
         PurpleLogger.current.d(TAG, "buildApi, shareDevice:$shareDevice")
@@ -62,15 +66,16 @@ class AppSetsShareRepository() {
             baseUrlStringBuilder.append(ip4)
         } else {
             val ip6 = shareDevice.deviceAddress.ip6
-            if (!ip6.isNullOrEmpty()) {
-                PurpleLogger.current.d(TAG, "buildApi, use device ip6:$ip6")
-                baseUrlStringBuilder.append("[")
-                baseUrlStringBuilder.append(ip6)
-                baseUrlStringBuilder.append("]")
+            if (ip6.isNullOrEmpty()) {
+                return null
             }
+            PurpleLogger.current.d(TAG, "buildApi, use device ip6:$ip6")
+            baseUrlStringBuilder.append("[")
+            baseUrlStringBuilder.append(ip6)
+            baseUrlStringBuilder.append("]")
         }
         baseUrlStringBuilder.append(":")
-        baseUrlStringBuilder.append(HttpShareMethod.SHARE_SERVER_PORT)
+        baseUrlStringBuilder.append(port)
         var baseUrl = baseUrlStringBuilder.toString()
 
         //test
@@ -110,16 +115,6 @@ class AppSetsShareRepository() {
         val dataContent = dataSendContent.content
 
         when (dataContent) {
-            is DataContent.StringContent -> {
-                PurpleLogger.current.d(TAG, "sendContent, StringContent")
-                postText(context, shareMethod, dataSendContent.dstDevice, dataContent)
-            }
-
-            is DataContent.ByteArrayContent -> {
-                PurpleLogger.current.d(TAG, "sendContent, ByteArrayContent")
-                postByteArray(context, shareMethod, dataSendContent.dstDevice, dataContent)
-            }
-
             is DataContent.FileContent -> {
                 PurpleLogger.current.d(TAG, "sendContent, FileContent")
                 postFile(context, shareMethod, dataSendContent.dstDevice, dataContent)
@@ -130,6 +125,17 @@ class AppSetsShareRepository() {
                 postUri(context, shareMethod, dataSendContent.dstDevice, dataContent)
             }
 
+            is DataContent.ByteArrayContent -> {
+                PurpleLogger.current.d(TAG, "sendContent, ByteArrayContent")
+                postByteArray(context, shareMethod, dataSendContent.dstDevice, dataContent)
+            }
+
+            is DataContent.StringContent -> {
+                PurpleLogger.current.d(TAG, "sendContent, StringContent")
+                postText(context, shareMethod, dataSendContent.dstDevice, dataContent)
+            }
+
+
             else -> {
                 PurpleLogger.current.d(TAG, "sendContent, not implementation!")
             }
@@ -137,7 +143,7 @@ class AppSetsShareRepository() {
     }
 
     suspend fun isNeedPin(shareDevice: ShareDevice.HttpShareDevice) = withContext(Dispatchers.IO) {
-        val api = buildApi(shareDevice)
+        val api = buildApi(shareDevice, HttpShareMethod.SHARE_SERVER_API_PORT)
         if (api == null) {
             return@withContext DesignResponse.NOT_FOUND
         }
@@ -146,7 +152,7 @@ class AppSetsShareRepository() {
     }
 
     suspend fun pair(shareDevice: ShareDevice.HttpShareDevice) = withContext(Dispatchers.IO) {
-        val api = buildApi(shareDevice)
+        val api = buildApi(shareDevice, HttpShareMethod.SHARE_SERVER_API_PORT)
         if (api == null) {
             return@withContext DesignResponse.NOT_FOUND
         }
@@ -159,7 +165,7 @@ class AppSetsShareRepository() {
     suspend fun pairResponse(shareDevice: ShareDevice.HttpShareDevice, shareToken: String) =
         withContext(Dispatchers.IO) {
 
-            val api = buildApi(shareDevice)
+            val api = buildApi(shareDevice, HttpShareMethod.SHARE_SERVER_API_PORT)
             if (api == null) {
                 return@withContext DesignResponse.NOT_FOUND
             }
@@ -179,7 +185,7 @@ class AppSetsShareRepository() {
     ) =
         withContext(Dispatchers.IO) {
 
-            val api = buildApi(shareDevice)
+            val api = buildApi(shareDevice, HttpShareMethod.SHARE_SERVER_API_PORT)
             if (api == null) {
                 return@withContext DesignResponse.NOT_FOUND
             }
@@ -187,11 +193,11 @@ class AppSetsShareRepository() {
                 TAG,
                 "postText, shareDevice:$shareDevice dataContent:$dataContent"
             )
-            val dataProgressForStart = DataProgressInfoPool.makeStart(dataContent.id)
-            shareMethod.dataSendProgressListener.onProgress(dataProgressForStart)
+            val dataProgressInfoForStart = DataProgressInfoPool.makeStart(dataContent.id)
+            shareMethod.dataSendProgressListener.onProgress(dataProgressInfoForStart)
             api.postText(shareToken = shareDevice.token ?: "", text = dataContent.content)
-            val dataProgressForEnd = DataProgressInfoPool.makeStart(dataContent.id)
-            shareMethod.dataSendProgressListener.onProgress(dataProgressForEnd)
+            val dataProgressInfoForEnd = DataProgressInfoPool.makeEnd(dataContent.id)
+            shareMethod.dataSendProgressListener.onProgress(dataProgressInfoForEnd)
         }
 
     suspend fun postByteArray(
@@ -202,7 +208,7 @@ class AppSetsShareRepository() {
     ) =
         withContext(Dispatchers.IO) {
 
-            val api = buildApi(shareDevice)
+            val api = buildApi(shareDevice, HttpShareMethod.SHARE_SERVER_FILE_API_PORT)
             if (api == null) {
                 return@withContext DesignResponse.NOT_FOUND
             }
@@ -246,7 +252,7 @@ class AppSetsShareRepository() {
     ) =
         withContext(Dispatchers.IO) {
 
-            val api = buildApi(shareDevice)
+            val api = buildApi(shareDevice, HttpShareMethod.SHARE_SERVER_FILE_API_PORT)
             if (api == null) {
                 return@withContext DesignResponse.NOT_FOUND
             }
@@ -266,7 +272,11 @@ class AppSetsShareRepository() {
             }
             // 创建 MultipartBody.Part
             val multiPartBodyPart =
-                MultipartBody.Part.createFormData("file", dataContent.file.name, requestBody)
+                MultipartBody.Part.createFormData(
+                    dataContent.file.name,
+                    dataContent.file.name,
+                    requestBody
+                )
             val multiPartBodyPartDescription =
                 "file description".toRequestBody(ContentType.TEXT_PLAIN.toMediaTypeOrNull())
 
@@ -285,7 +295,7 @@ class AppSetsShareRepository() {
     ) =
         withContext(Dispatchers.IO) {
 
-            val api = buildApi(shareDevice)
+            val api = buildApi(shareDevice, HttpShareMethod.SHARE_SERVER_FILE_API_PORT)
             if (api == null) {
                 return@withContext DesignResponse.NOT_FOUND
             }
@@ -299,6 +309,7 @@ class AppSetsShareRepository() {
                 PurpleLogger.current.d(TAG, "postUri, requestBody is null")
                 return@withContext DesignResponse.BAD_REQUEST
             }
+
             val uriFileName =
                 dataContent.androidUriFile?.displayName ?: UUID.randomUUID().toString()
 
@@ -307,7 +318,7 @@ class AppSetsShareRepository() {
                 "postUri, shareDevice:$shareDevice uri:${dataContent.uri}, uriFileName:$uriFileName"
             )
             val multiPartBodyPart =
-                MultipartBody.Part.createFormData("file", uriFileName, requestBody)
+                MultipartBody.Part.createFormData(uriFileName, uriFileName, requestBody)
             val multiPartBodyPartDescription =
                 "file description".toRequestBody(ContentType.TEXT_PLAIN.toMediaTypeOrNull())
 
@@ -321,15 +332,15 @@ class AppSetsShareRepository() {
             designResponse
         }
 
-    suspend fun prepareSend(shareDevice: ShareDevice.HttpShareDevice) =
+    suspend fun prepareSend(shareDevice: ShareDevice.HttpShareDevice, contentListId: String) =
         withContext(Dispatchers.IO) {
 
-            val api = buildApi(shareDevice)
+            val api = buildApi(shareDevice, HttpShareMethod.SHARE_SERVER_API_PORT)
             if (api == null) {
                 return@withContext DesignResponse.NOT_FOUND
             }
             PurpleLogger.current.d(TAG, "sendPrepareSend, shareDevice:$shareDevice")
-            api.prepareSend(shareToken = shareDevice.token ?: "", "/")
+            api.prepareSend(shareToken = shareDevice.token ?: "", contentListId = contentListId)
         }
 
     suspend fun prepareSendResponse(
@@ -339,7 +350,7 @@ class AppSetsShareRepository() {
     ) =
         withContext(Dispatchers.IO) {
 
-            val api = buildApi(shareDevice)
+            val api = buildApi(shareDevice, HttpShareMethod.SHARE_SERVER_API_PORT)
             if (api == null) {
                 return@withContext DesignResponse.NOT_FOUND
             }
@@ -357,6 +368,7 @@ class AppSetsShareRepository() {
     suspend fun resumeHandleSend(
         shareMethod: HttpShareMethod,
         shareDevice: ShareDevice.HttpShareDevice,
+        contentListId: String,
         by: String
     ) {
         PurpleLogger.current.d(TAG, "resumeHandleSend, shareDevice:$shareDevice, by:$by")
@@ -364,7 +376,12 @@ class AppSetsShareRepository() {
         val sendContentRunnableInfoMap = shareMethod.sendContentRunnableInfoMap
         for ((mappedShareDevice, sendDataRunnableInfo) in sendContentRunnableInfoMap) {
             if (shareDevice == mappedShareDevice) {
-                handleSendForDevice(shareMethod, mappedShareDevice, sendDataRunnableInfo)
+                handleSendForDevice(
+                    shareMethod,
+                    mappedShareDevice,
+                    sendDataRunnableInfo,
+                    contentListId
+                )
                 break
             }
         }
@@ -376,7 +393,11 @@ class AppSetsShareRepository() {
      * 2.请求对方接受状态，等待接受响应
      * 3.发起业务传输
      */
-    suspend fun handleSend(shareMethod: HttpShareMethod, sendDirect: Boolean = false) =
+    suspend fun handleSend(
+        shareMethod: HttpShareMethod,
+        contentListId: String,
+        sendDirect: Boolean = false
+    ) =
         coroutineScope {
             PurpleLogger.current.d(TAG, "handleSend")
             val sendContentRunnableInfoMap = shareMethod.sendContentRunnableInfoMap
@@ -387,10 +408,11 @@ class AppSetsShareRepository() {
                             shareMethod,
                             mappedShareDevice,
                             sendDataRunnableInfo,
+                            contentListId,
                             sendDirect
                         )
                     } else {
-                        checkDevicePin(shareMethod, mappedShareDevice)
+                        checkDevicePin(shareMethod, mappedShareDevice, contentListId)
                     }
                 }
             }
@@ -400,6 +422,7 @@ class AppSetsShareRepository() {
         shareMethod: HttpShareMethod,
         shareDevice: ShareDevice.HttpShareDevice,
         sendDataRunnableInfo: HttpShareMethod.SendDataRunnableInfo?,
+        contentListId: String,
         sendDirect: Boolean = false
     ) {
         PurpleLogger.current.d(TAG, "handleSendForDevice, shareDevice:$shareDevice")
@@ -438,7 +461,7 @@ class AppSetsShareRepository() {
                 TAG,
                 "handleSendForDevice, shareDevice not accept, do prepareSend action"
             )
-            prepareSend(shareDevice)
+            prepareSend(shareDevice, contentListId = contentListId)
             return
         }
 
@@ -451,7 +474,8 @@ class AppSetsShareRepository() {
 
     suspend fun checkDevicePin(
         shareMethod: HttpShareMethod,
-        shareDevice: ShareDevice.HttpShareDevice
+        shareDevice: ShareDevice.HttpShareDevice,
+        contentListId: String
     ) {
         PurpleLogger.current.d(TAG, "checkDevicePin, shareDevice:$shareDevice")
         val needPinResponse = isNeedPin(shareDevice)
@@ -462,47 +486,61 @@ class AppSetsShareRepository() {
         shareDevice.isNeedPin = needPin
         PurpleLogger.current.d(TAG, "checkDevicePin, shareDevice:$shareDevice")
 
-        resumeHandleSend(shareMethod, shareDevice, "checkDevicePin")
+        resumeHandleSend(shareMethod, shareDevice, contentListId, "checkDevicePin")
     }
 
     suspend fun handleDownload(
         shareMethod: HttpShareMethod,
         shareDevice: ShareDevice.HttpShareDevice,
-        contentListUri: String
+        contentListId: String
     ) = coroutineScope {
         PurpleLogger.current.d(TAG, "handleDownload")
-        val designResponse = getContentList(shareDevice, contentListUri)
+        val designResponse = getContentList(shareDevice, contentListId = contentListId)
         if (designResponse == DesignResponse.NOT_FOUND) {
             return@coroutineScope
         }
-        val enCodeContentList = designResponse.data?.contentList//this is encode
-        if (enCodeContentList.isNullOrEmpty()) {
+        val encodeContentInfoList = designResponse.data?.infoList//contentInfo's name is encoded
+        if (encodeContentInfoList.isNullOrEmpty()) {
             return@coroutineScope
         }
 
-        val clientInfo = shareDevice.toClientInfo(HttpShareMethod.SHARE_SERVER_PORT)
+        val clientInfo = shareDevice.toClientInfo(HttpShareMethod.SHARE_SERVER_API_PORT)
 
-        val dataContentMap = mutableMapOf<String, DataContent>()
-        shareMethod.downloadContentInfoMap.put(shareDevice, dataContentMap)
-        enCodeContentList.forEach { encodeContentUri ->
-            val defaultOkHttpClientBuilder = RetrofitProvider.defaultOkHttpClientBuilder()
-            val decodeContentUri =
-                kotlin.io.encoding.Base64.decode(encodeContentUri.toByteArray()).decodeToString()
-            val contentFile = ShareSystem.makeFileIfNeeded(decodeContentUri, createFile = false)
-            if (contentFile != null) {
 
-                val fileContent = DataContent.FileContent(contentFile, clientInfo = clientInfo)
-                dataContentMap.put(encodeContentUri, fileContent)
+        encodeContentInfoList.forEach { encodeContentInfo ->
+            val decodeContentInfo = encodeContentInfo.decode()
+            when (encodeContentInfo.type) {
+                ContentInfo.TYPE_FILE, ContentInfo.TYPE_URI -> {
+                    val contentFile =
+                        ShareSystem.makeFileIfNeeded(decodeContentInfo.name, createFile = false)
+                    if (contentFile != null) {
+                        launch {
+                            val fileContent =
+                                DataContent.FileContent(contentFile, clientInfo = clientInfo)
+                            getContent(
+                                shareMethod,
+                                shareDevice,
+                                decodeContentInfo,
+                                fileContent
 
-                val responseProgressInterceptor = ResponseProgressInterceptor(
-                    fileContent,
-                    shareMethod.dataReceivedProgressListener
-                )
-                defaultOkHttpClientBuilder.addInterceptor(responseProgressInterceptor)
+                            )
+                        }
+                    }
+                }
 
-                launch {
-                    val okHttpClient = defaultOkHttpClientBuilder.build()
-                    getContent(shareMethod, shareDevice, encodeContentUri, okHttpClient)
+                ContentInfo.TYPE_STRING -> {
+                    launch {
+                        val stringContent = DataContent.StringContent(
+                            encodeContentInfo.name,
+                            clientInfo = clientInfo
+                        )
+                        getContent(
+                            shareMethod,
+                            shareDevice,
+                            encodeContentInfo,
+                            stringContent
+                        )
+                    }
                 }
             }
         }
@@ -510,48 +548,69 @@ class AppSetsShareRepository() {
 
     suspend fun getContentList(
         shareDevice: ShareDevice.HttpShareDevice,
-        contentListUri: String
-    ): DesignResponse<ContentListInfo> =
+        contentListId: String
+    ): DesignResponse<ContentInfoListWrapper> =
         withContext(Dispatchers.IO) {
-            val api = buildApi(shareDevice)
+            val api = buildApi(shareDevice, HttpShareMethod.SHARE_SERVER_API_PORT)
             if (api == null) {
                 return@withContext DesignResponse(data = null)
             }
             PurpleLogger.current.d(
                 TAG,
-                "getContentList, shareDevice:$shareDevice contentListUri:$contentListUri"
+                "getContentList, shareDevice:$shareDevice contentListId:$contentListId"
             )
             val designResponse = api.getContentList(
                 shareToken = shareDevice.token ?: "",
-                contentListUri = contentListUri,
+                contentListId = contentListId,
             )
-            designResponse.data
             return@withContext designResponse
         }
 
     suspend fun getContent(
         shareMethod: HttpShareMethod,
         shareDevice: ShareDevice.HttpShareDevice,
-        contentUri: String,
-        okHttpClient: OkHttpClient? = null
+        contentInfo: ContentInfo,
+        tempDataContent: DataContent
     ) = withContext(Dispatchers.IO) {
-
-        val api = buildApi(shareDevice, okHttpClient)
-        if (api == null) {
-            return@withContext DesignResponse.NOT_FOUND
-        }
         PurpleLogger.current.d(
             TAG,
-            "getContent, shareDevice:$shareDevice contentUri:$contentUri"
+            "getContent, shareDevice:$shareDevice contentInfo:$contentInfo"
         )
-        val call = api.getContent(
-            shareToken = shareDevice.token ?: "",
-            contentUri,
+
+        if (contentInfo.type == ContentInfo.TYPE_STRING) {
+            val dataProgressInfoForStart = DataProgressInfoPool.makeStart(contentInfo.id)
+            shareMethod.dataReceivedProgressListener.onProgress(dataProgressInfoForStart)
+            val dataProgressInfoForEnd = DataProgressInfoPool.makeEnd(contentInfo.id)
+            shareMethod.dataReceivedProgressListener.onProgress(dataProgressInfoForEnd)
+            shareMethod.onContentReceived(tempDataContent)
+            return@withContext
+        }
+
+        val responseProgressInterceptor = ResponseProgressInterceptor(
+            tempDataContent,
+            shareMethod.dataReceivedProgressListener
         )
+        val defaultOkHttpClientBuilder = RetrofitProvider.defaultOkHttpClientBuilder()
+        defaultOkHttpClientBuilder.apply {
+            callTimeout(5, TimeUnit.SECONDS)
+            webSocketCloseTimeout(1, TimeUnit.DAYS)
+            connectTimeout(1, TimeUnit.DAYS)
+            readTimeout(1, TimeUnit.DAYS)
+            writeTimeout(1, TimeUnit.DAYS)
+        }
+        defaultOkHttpClientBuilder.addInterceptor(responseProgressInterceptor)
+        val okHttpClient = defaultOkHttpClientBuilder.build()
+
+        val api = buildApi(shareDevice, HttpShareMethod.SHARE_SERVER_FILE_API_PORT, okHttpClient)
+        if (api == null) {
+            return@withContext
+        }
+
+        val call = api.getContent(shareToken = shareDevice.token ?: "", contentId = contentInfo.id)
         call.enqueue(object : retrofit2.Callback<ResponseBody> {
             override fun onResponse(
                 call: Call<ResponseBody?>,
-                response: Response<ResponseBody?>
+                response: Response<ResponseBody>
             ) {
                 if (!response.isSuccessful) {
                     PurpleLogger.current.d(
@@ -559,7 +618,14 @@ class AppSetsShareRepository() {
                     )
                     return
                 }
-                saveContentResponseToFile(shareMethod, shareDevice, call.request(), response)
+                val request = call.request()
+                saveContentResponseToFile(
+                    shareMethod,
+                    shareDevice,
+                    tempDataContent,
+                    request,
+                    response
+                )
             }
 
             override fun onFailure(call: Call<ResponseBody?>, tr: Throwable) {
@@ -573,23 +639,16 @@ class AppSetsShareRepository() {
     private fun saveContentResponseToFile(
         shareMethod: HttpShareMethod,
         shareDevice: ShareDevice.HttpShareDevice,
+        tempDataContent: DataContent,
         request: Request,
-        response: Response<ResponseBody?>
+        response: Response<ResponseBody>
     ) {
-        PurpleLogger.current.d(TAG, "saveContentResponseToFile")
-        val contentUri = request.headers["content_uri"]
-        if (contentUri.isNullOrEmpty()) {
+        PurpleLogger.current.d(TAG, "saveContentResponseToFile, tempDataContent:$tempDataContent")
+        val contentId = request.headers["content_id"]
+        if (contentId.isNullOrEmpty()) {
             return
         }
-        val dataContentMap = shareMethod.downloadContentInfoMap.get(shareDevice)
-        if (dataContentMap.isNullOrEmpty()) {
-            return
-        }
-        val dataContent = dataContentMap[contentUri]
-        if (dataContent == null) {
-            return
-        }
-        if (dataContent !is DataContent.FileContent) {
+        if (tempDataContent !is DataContent.FileContent) {
             return
         }
         val responseBody = response.body()
@@ -609,18 +668,12 @@ class AppSetsShareRepository() {
         PurpleLogger.current.d(
             TAG,
             "saveContentResponseToFile, attachmentFileName:$attachmentFileName, " +
-                    "dataContent.file.name:${dataContent.file.name}"
+                    "dataContent.file.name:${tempDataContent.file.name}"
         )
-
-
-        shareMethod.activity.lifecycleScope.launch(Dispatchers.IO) {
+        shareMethod.activity.lifecycleScope.launch {
             runCatching {
-                val inputStream = responseBody.byteStream()
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    val fileToSave = dataContent.file
-                    Files.copy(inputStream, fileToSave.toPath())
-                }
-                inputStream.close()
+                val fileToSave = tempDataContent.file
+                saveFile(responseBody, fileToSave)
             }.onFailure { tr ->
                 tr.printStackTrace()
                 PurpleLogger.current.d(
@@ -630,9 +683,29 @@ class AppSetsShareRepository() {
                 PurpleLogger.current.d(
                     TAG, "saveContentResponseToFile, onSuccess"
                 )
-                shareMethod.onContentReceived(dataContent)
+                shareMethod.onContentReceived(tempDataContent)
             }
         }
     }
 
+    private suspend fun saveFile(body: ResponseBody, file: File) = withContext(Dispatchers.IO) {
+        var inputStream: InputStream? = null
+        var outputStream: FileOutputStream? = null
+        try {
+            inputStream = body.byteStream()
+            outputStream = FileOutputStream(file)
+            val buffer = ByteArray(8 * 1024)
+            var bytesRead = 0
+            while (true) {
+                bytesRead = inputStream.read(buffer)
+                if (bytesRead == -1) {
+                    break
+                }
+                outputStream.write(buffer, 0, bytesRead)
+            }
+        } finally {
+            inputStream?.close()
+            outputStream?.close()
+        }
+    }
 }
