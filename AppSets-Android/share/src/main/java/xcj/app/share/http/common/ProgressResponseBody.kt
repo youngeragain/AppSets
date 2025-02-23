@@ -1,6 +1,8 @@
 package xcj.app.share.http.common
 
+import io.netty.handler.codec.http.HttpHeaderNames
 import okhttp3.MediaType
+import okhttp3.Response
 import okhttp3.ResponseBody
 import okio.Buffer
 import okio.BufferedSource
@@ -13,16 +15,24 @@ import xcj.app.web.webserver.base.ProgressListener
 
 class ProgressResponseBody(
     private val dataContent: DataContent,
-    private val responseBody: ResponseBody,
+    private val originalResponse: Response,
     private val progressListener: ProgressListener?
 ) : ResponseBody() {
     companion object {
         private const val TAG = "ProgressResponseBody"
     }
 
+    private val responseBody = originalResponse.body
+
+    private val contentLengthInHeader =
+        originalResponse.headers[HttpHeaderNames.CONTENT_LENGTH.toString()]?.toLongOrNull()
+
     private var bufferedSource: BufferedSource? = null
 
     override fun contentLength(): Long {
+        if (contentLengthInHeader != null) {
+            return contentLengthInHeader
+        }
         return responseBody.contentLength()
     }
 
@@ -40,10 +50,13 @@ class ProgressResponseBody(
     private fun source(source: Source): Source {
         return object : ForwardingSource(source) {
             var totalBytesRead = 0L
-            val contentLength = contentLength()
+            var contentLength = 0L
 
             override fun read(sink: Buffer, byteCount: Long): Long {
                 val bytesRead = super.read(sink, byteCount)
+                if (contentLength == 0L) {
+                    contentLength = contentLength()
+                }
                 if (bytesRead > 0) {
                     totalBytesRead += bytesRead
                 }

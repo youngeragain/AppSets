@@ -10,7 +10,7 @@ import xcj.app.web.webserver.base.FileUploadN
 import java.io.Closeable
 
 class HttpRequestWrapper(
-    val httpRequest: HttpRequest,
+    var httpRequest: HttpRequest,
     val queryStringDecoder: QueryStringDecoder,
     val port: Int
 ) : Closeable {
@@ -22,14 +22,12 @@ class HttpRequestWrapper(
     var fileUploadN: FileUploadN? = null
 
     var httpContent: HttpContent? = null
-    var lastHttpContent: LastHttpContent? = null
 
     override fun close() {
         PurpleLogger.current.d(TAG, "close")
         httpPostRequestDecoder?.destroy()
         httpPostRequestDecoder = null
         httpContent = null
-        lastHttpContent = null
         fileUploadN?.close()
     }
 }

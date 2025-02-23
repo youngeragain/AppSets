@@ -10,7 +10,7 @@ import xcj.app.share.wlanp2p.base.WriteFunction
 import xcj.app.share.wlanp2p.base.WriteMethod
 import xcj.app.share.wlanp2p.common.ReadThread
 import xcj.app.share.wlanp2p.common.WriteThread
-import xcj.app.starter.android.util.FileUtils
+import xcj.app.starter.android.util.FileUtil
 import xcj.app.starter.android.util.PurpleLogger
 import xcj.app.starter.util.ByteUtil
 import xcj.app.starter.util.ContentType
@@ -168,7 +168,7 @@ class StreamWriteMethod(
     }
 
     override suspend fun writeUriContent(context: Context, uri: Uri) {
-        val androidUriFile = FileUtils.parseFromAndroidUri(context, uri)
+        val androidUriFile = FileUtil.parseFromAndroidUri(context, uri)
         if (androidUriFile == null) {
             PurpleLogger.current.d(
                 TAG,

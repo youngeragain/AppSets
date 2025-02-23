@@ -15,7 +15,7 @@ class ResponseProgressInterceptor(
             return originalResponse
         }
         val progressResponseBody =
-            ProgressResponseBody(dataContent, originalResponse.body, progressListener)
+            ProgressResponseBody(dataContent, originalResponse, progressListener)
         return originalResponse.newBuilder()
             .body(progressResponseBody)
             .build()

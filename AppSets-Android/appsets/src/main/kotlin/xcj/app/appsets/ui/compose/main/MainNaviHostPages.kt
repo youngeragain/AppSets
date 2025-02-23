@@ -147,7 +147,7 @@ import xcj.app.starter.android.usecase.PlatformUseCase
 import xcj.app.starter.android.util.LocalMessager
 import xcj.app.starter.android.util.PurpleLogger
 import xcj.app.starter.test.ComposeEvent
-import xcj.app.starter.test.LocalPurpleEventProvider
+import xcj.app.starter.test.LocalPurpleEventPublisher
 import xcj.app.starter.test.NaviHostParams
 
 private const val TAG = "MainNaviHostPages"
@@ -1126,7 +1126,7 @@ fun publishComposeNaviHostFormedEvent(navController: NavHostController, builder:
     PurpleLogger.current.d(TAG, "publishComposeNaviHostFormedEvent")
     val naviHostParams = NaviHostParams(navController, builder)
     val composeEvent = ComposeEvent(ComposeEvent.EVENT_NAVI_HOST_FORMED, naviHostParams)
-    LocalPurpleEventProvider.current.publishEvent(composeEvent)
+    LocalPurpleEventPublisher.current.publishEvent(composeEvent)
 }
 
 /**

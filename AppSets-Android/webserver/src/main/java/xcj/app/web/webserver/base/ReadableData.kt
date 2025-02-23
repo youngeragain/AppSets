@@ -1,5 +1,6 @@
 package xcj.app.web.webserver.base
 
+import java.io.Closeable
 import java.io.InputStream
 
 interface ReadableData {
@@ -7,6 +8,6 @@ interface ReadableData {
 }
 
 interface InputStreamReadableData : ReadableData {
-
+    fun getRelatedCloseable(): Closeable?
     fun getInputStream(): InputStream
 }

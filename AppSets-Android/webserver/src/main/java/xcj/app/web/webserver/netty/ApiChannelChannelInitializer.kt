@@ -18,7 +18,6 @@ class ApiChannelChannelInitializer(
             ComposedApiWebHandler(apiPort, handlerMappings, listenersProvider)
         ch.pipeline()
             .addLast(httpServerCodec)
-            .addLast()
             .addLast(httpObjectAggregator)
             .addLast(composedApiWebHandler)
     }

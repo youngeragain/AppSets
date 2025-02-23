@@ -60,7 +60,7 @@ class MainService : Service() {
         val notification = NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle(getString(xcj.app.appsets.R.string.foreground_service))
             .setContentText(getString(xcj.app.appsets.R.string.service_running))
-            .setSmallIcon(xcj.app.appsets.R.drawable.ic_appsets_44)
+            .setSmallIcon(xcj.app.compose_share.R.drawable.ic_appsets_44)
             .setSound(null)
             .setSilent(true)
             .build()

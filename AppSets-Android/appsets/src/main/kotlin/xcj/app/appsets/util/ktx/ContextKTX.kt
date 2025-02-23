@@ -138,28 +138,30 @@ suspend fun Context.getSystemFileUris(
         while (it.moveToNext()) {
             val mediaStoreDataUri = MediaStoreDataUri()
             projections.forEach { projection ->
-                val index = it.getColumnIndexOrThrow(projection)
-                when (projection) {
-                    MediaStore.MediaColumns.DATA -> {
-                        val path = it.getString(index)
-                        if (!path.isNullOrEmpty()) {
-                            mediaStoreDataUri.uri = Uri.fromFile(File(path))
+                val index = it.getColumnIndex(projection)
+                if (index != -1) {
+                    when (projection) {
+                        MediaStore.MediaColumns.DATA -> {
+                            val path = it.getString(index)
+                            if (!path.isNullOrEmpty()) {
+                                mediaStoreDataUri.uri = Uri.fromFile(File(path))
+                            }
                         }
-                    }
 
-                    MediaStore.MediaColumns.DISPLAY_NAME -> {
-                        mediaStoreDataUri.displayName = it.getString(index)
-                    }
+                        MediaStore.MediaColumns.DISPLAY_NAME -> {
+                            mediaStoreDataUri.displayName = it.getString(index)
+                        }
 
-                    MediaStore.MediaColumns.SIZE -> {
-                        val size = it.getLong(index)
-                        mediaStoreDataUri.size = size
-                        mediaStoreDataUri.sizeReadable =
-                            ByteUtil.getNetFileSizeDescription(size)
-                    }
+                        MediaStore.MediaColumns.SIZE -> {
+                            val size = it.getLong(index)
+                            mediaStoreDataUri.size = size
+                            mediaStoreDataUri.sizeReadable =
+                                ByteUtil.getNetFileSizeDescription(size)
+                        }
 
-                    MediaStore.MediaColumns.DATE_ADDED -> {
-                        mediaStoreDataUri.date = it.getString(index)
+                        MediaStore.MediaColumns.DATE_ADDED -> {
+                            mediaStoreDataUri.date = it.getString(index)
+                        }
                     }
                 }
             }
@@ -211,9 +213,12 @@ suspend fun Context.queryUriFileName(uri: Uri): String? = withContext(Dispatcher
         if (!moveToNext) {
             return@withContext null
         }
-        val index = it.getColumnIndexOrThrow(MediaStore.Files.FileColumns.DISPLAY_NAME)
-        val name = it.getString(index)
-        return@withContext name
+        val projection = projections.first()
+        val index = it.getColumnIndexOrThrow(projection)
+        if (index != -1) {
+            val name = it.getString(index)
+            return@withContext name
+        }
     }
     return@withContext null
 }

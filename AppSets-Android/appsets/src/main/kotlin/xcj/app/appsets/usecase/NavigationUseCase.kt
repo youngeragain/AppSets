@@ -36,7 +36,7 @@ class NavigationUseCase : IComposeDispose {
                 ),
                 TabAction.SampleTabAction(
                     route = PageRouteNames.CreateAppPage,
-                    icon = xcj.app.appsets.R.drawable.ic_appsets_plus,
+                    icon = xcj.app.compose_share.R.drawable.ic_appsets_plus,
                     action = TabAction.ACTION_ADD,
                     description = "create application"
                 )
@@ -60,7 +60,7 @@ class NavigationUseCase : IComposeDispose {
                 TabAction.SampleTabAction(
                     route = PageRouteNames.CreateScreenPage,
                     action = TabAction.ACTION_ADD,
-                    icon = xcj.app.appsets.R.drawable.ic_appsets_plus,
+                    icon = xcj.app.compose_share.R.drawable.ic_appsets_plus,
                     description = "add screen"
                 )
             )
@@ -73,7 +73,7 @@ class NavigationUseCase : IComposeDispose {
                 TabAction.SampleTabAction(
                     route = null,
                     action = TabAction.ACTION_ADD,
-                    icon = xcj.app.appsets.R.drawable.ic_appsets_plus,
+                    icon = xcj.app.compose_share.R.drawable.ic_appsets_plus,
                     description = "add actions"
                 )
             )

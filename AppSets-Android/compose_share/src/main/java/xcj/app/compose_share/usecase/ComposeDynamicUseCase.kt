@@ -10,7 +10,7 @@ import xcj.app.compose_share.dynamic.ComposeMethodsAware
 import xcj.app.compose_share.dynamic.ComposeMethodsWrapper
 import xcj.app.compose_share.dynamic.PluginsRegistry
 import xcj.app.starter.android.usecase.PlatformUseCase
-import xcj.app.starter.android.util.FileUtils
+import xcj.app.starter.android.util.FileUtil
 import xcj.app.starter.android.util.PurpleLogger
 import xcj.app.starter.test.LocalAndroidContextFileDir
 import xcj.app.starter.util.ContentType
@@ -36,7 +36,7 @@ class ComposeDynamicUseCase(
     }
 
     fun onAddClick(context: Context) {
-        PlatformUseCase.openSystemFileProviderForOldVersion(
+        PlatformUseCase.openSystemFileProvider(
             context, PlatformUseCase.REQUEST_CODE_FOR_FILE_PROVIDER,
             ContentType.APPLICATION_ANDROID_PACKAGE
         )
@@ -51,7 +51,7 @@ class ComposeDynamicUseCase(
         if (requestCode != PlatformUseCase.REQUEST_CODE_FOR_FILE_PROVIDER || resultCode != Activity.RESULT_OK || data == null || data.data == null) {
             return
         }
-        val desFilePath = FileUtils.copyFileToInternalStorage(
+        val desFilePath = FileUtil.copyFileToInternalStorage(
             context,
             data.data!!,
             LocalAndroidContextFileDir.current.dynamicAARDir,

@@ -199,7 +199,7 @@ class MediaPlayback101Service : MediaLibraryService() {
             val builder =
                 NotificationCompat.Builder(this@MediaPlayback101Service, CHANNEL_ID)
                     .setContentIntent(pendingIntent)
-                    .setSmallIcon(xcj.app.appsets.R.drawable.ic_launcher_foreground)
+                    .setSmallIcon(xcj.app.compose_share.R.drawable.ic_launcher_foreground)
                     .setContentTitle(getString(xcj.app.appsets.R.string.notification_content_title))
                     .setStyle(
                         NotificationCompat.BigTextStyle()

@@ -1,5 +1,7 @@
 package xcj.app.web.webserver.netty
 
+import io.netty.buffer.ByteBufAllocator
+import io.netty.buffer.EmptyByteBuf
 import io.netty.buffer.Unpooled
 import io.netty.channel.ChannelFutureListener
 import io.netty.channel.ChannelHandlerContext
@@ -21,7 +23,6 @@ class ComposedApiWebHandler(
 
     companion object {
         private const val TAG = "ComposedApiWebHandler"
-
         val serverInternalErrorResponse: HttpResponse
             get() = DefaultFullHttpResponse(
                 HttpVersion.HTTP_1_1,
@@ -61,11 +62,13 @@ class ComposedApiWebHandler(
             httpResponse: HttpResponse
         ) {
             PurpleLogger.current.d(TAG, "responseNormal, uri:${httpRequest.uri()}")
+            if (!HttpUtil.isContentLengthSet(httpResponse) && httpResponse is FullHttpResponse) {
+                val length = httpResponse.content().writerIndex()
+                httpResponse.headers().set(HttpHeaderNames.CONTENT_LENGTH, length)
+            }
             var channelFuture = ctx.write(httpResponse)
             channelFuture = ctx.writeAndFlush(LastHttpContent.EMPTY_LAST_CONTENT)
             if (!HttpUtil.isKeepAlive(httpRequest)) {
-                channelFuture.addListener(ChannelFutureListener.CLOSE)
-            } else {
                 channelFuture.addListener(ChannelFutureListener.CLOSE)
             }
         }
@@ -94,34 +97,37 @@ class ComposedApiWebHandler(
     override fun channelRead0(ctx: ChannelHandlerContext, msg: HttpObject) {
         if (msg is FullHttpRequest) {
             handleFullHttpRequest(ctx, msg)
-        } else {
-            if (msg is HttpRequest) {
-                handleHttpRequest(ctx, msg)
-            }
-            if (msg is HttpContent) {
-                handleHttpContent(ctx, msg)
-            }
-            if (msg is LastHttpContent) {
-                handleLastHttpContent(ctx, msg)
-            }
+            return
+        }
+        if (msg is HttpRequest) {
+            handleHttpRequest(ctx, msg)
+        }
+        if (msg is HttpContent) {
+            handleHttpContent(ctx, msg)
+        }
+        if (msg is LastHttpContent) {
+            handleLastHttpContent(ctx, msg)
         }
     }
 
     private fun handleFullHttpRequest(
         ctx: ChannelHandlerContext,
-        fullHttpRequest: FullHttpRequest
+        httpRequest: FullHttpRequest
     ) {
         PurpleLogger.current.d(TAG, "handleFullHttpRequest")
-        val uri = fullHttpRequest.uri()
+        if (HttpUtil.is100ContinueExpected(httpRequest)) {
+            ComposedApiWebHandler.send100Continue(ctx)
+        }
+        val uri = httpRequest.uri()
         val queryStringDecoder = QueryStringDecoder(uri)
 
         val response = DefaultFullHttpResponse(
             HttpVersion.HTTP_1_1,
             HttpResponseStatus.OK,
-            Unpooled.wrappedBuffer(byteArrayOf())
+            EmptyByteBuf(ByteBufAllocator.DEFAULT)
         )
 
-        val httpRequestWrapper = HttpRequestWrapper(fullHttpRequest, queryStringDecoder, port)
+        val httpRequestWrapper = HttpRequestWrapper(httpRequest, queryStringDecoder, port)
         val httpResponseWrapper = HttpResponseWrapper(response)
         val handlerMapping = getHandlerMapping(ctx, httpRequestWrapper)
         if (handlerMapping == null) {
@@ -137,6 +143,7 @@ class ComposedApiWebHandler(
             responseNormal(ctx, httpRequestWrapper.httpRequest, serverInternalErrorResponse)
         }
     }
+
 
     private fun handleLastHttpContent(
         ctx: ChannelHandlerContext,
@@ -157,19 +164,19 @@ class ComposedApiWebHandler(
             return
         }
         if (!content.decoderResult().isSuccess) {
-            sendBadRequest(ctx)
+            ComposedApiWebHandler.sendBadRequest(ctx)
             return
         }
-        httpRequestWrapper.lastHttpContent = content
+        //httpRequestWrapper.httpContent = content
         try {
-            handlerMapping.handle(ctx, httpRequestWrapper, httpResponseWrapper, listenersProvider)
+            //handlerMapping.handle(ctx, httpRequestWrapper, httpResponseWrapper, listenersProvider)
         } catch (e: Exception) {
             e.printStackTrace()
             PurpleLogger.current.e(TAG, "handleLastHttpContent, exception:${e.message}")
-            responseNormal(
+            ComposedApiWebHandler.responseNormal(
                 ctx,
                 httpRequestWrapper.httpRequest,
-                serverInternalErrorResponse
+                ComposedApiWebHandler.serverInternalErrorResponse
             )
         } finally {
             reset()
@@ -184,11 +191,13 @@ class ComposedApiWebHandler(
         httpResponseWrapper = null
     }
 
+    /**
+     * @param content maybe LastHttContent
+     */
     private fun handleHttpContent(
         ctx: ChannelHandlerContext,
         content: HttpContent
     ) {
-        PurpleLogger.current.d(TAG, "handleHttpContent")
         val handlerMapping = handlerMapping
         if (handlerMapping == null) {
             return
@@ -208,10 +217,10 @@ class ComposedApiWebHandler(
         } catch (e: Exception) {
             e.printStackTrace()
             PurpleLogger.current.e(TAG, "handleHttpContent, exception:${e.message}")
-            responseNormal(
+            ComposedApiWebHandler.responseNormal(
                 ctx,
                 httpRequestWrapper.httpRequest,
-                serverInternalErrorResponse
+                ComposedApiWebHandler.serverInternalErrorResponse
             )
         }
     }
@@ -222,7 +231,7 @@ class ComposedApiWebHandler(
     ) {
         PurpleLogger.current.d(TAG, "handleHttpRequest")
         if (HttpUtil.is100ContinueExpected(httpRequest)) {
-            send100Continue(ctx)
+            ComposedApiWebHandler.send100Continue(ctx)
         }
         val uri = httpRequest.uri()
         val queryStringDecoder = QueryStringDecoder(uri)
@@ -237,24 +246,33 @@ class ComposedApiWebHandler(
         val httpResponseWrapper = HttpResponseWrapper(response)
         val handlerMapping = getHandlerMapping(ctx, httpRequestWrapper)
         if (handlerMapping == null) {
-            responseNormal(
+            ComposedApiWebHandler.responseNormal(
                 ctx,
                 httpRequestWrapper.httpRequest,
-                notFoundUriResponse
+                ComposedApiWebHandler.notFoundUriResponse
             )
             return
         }
         try {
-            val defaultHttpDataFactory = DefaultHttpDataFactory(true)
-            val shareDirPath = ShareSystem.getShareDirPath()
-            defaultHttpDataFactory.setBaseDir(shareDirPath)
-            val decoder = HttpPostRequestDecoder(defaultHttpDataFactory, httpRequest)
 
+            val defaultHttpDataFactory = DefaultHttpDataFactory(true)
+
+            val decoder = HttpPostRequestDecoder(defaultHttpDataFactory, httpRequest)
             httpRequestWrapper.httpPostRequestDecoder = decoder
-            if (HttpUtil.isContentLengthSet(httpRequest)) {
-                val length =
-                    httpRequest.headers().get(HttpHeaderNames.CONTENT_LENGTH).toLongOrNull() ?: 0
-                httpRequestWrapper.fileUploadN = FileUploadN(length, 0)
+            if (decoder.isMultipart) {
+                val shareDirPath = ShareSystem.getShareDirPath()
+                defaultHttpDataFactory.setBaseDir(shareDirPath)
+
+                val fileUploadN = FileUploadN()
+
+                httpRequestWrapper.fileUploadN = fileUploadN
+                if (HttpUtil.isContentLengthSet(httpRequest)) {
+                    val length =
+                        httpRequest.headers().get(HttpHeaderNames.CONTENT_LENGTH).toLongOrNull()
+                            ?: 0
+                    fileUploadN.total = length
+
+                }
             }
 
             this.handlerMapping = handlerMapping
@@ -263,7 +281,7 @@ class ComposedApiWebHandler(
 
         } catch (e: HttpPostRequestDecoder.ErrorDataDecoderException) {
             e.printStackTrace()
-            sendBadRequest(ctx)
+            ComposedApiWebHandler.sendBadRequest(ctx)
             return
         }
     }

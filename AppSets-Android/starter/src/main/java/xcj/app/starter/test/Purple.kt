@@ -35,7 +35,7 @@ class Purple {
         }
 
         LocalPurple.provide(simplePurpleContext)
-        LocalPurpleEventProvider.provide(simplePurpleContext)
+        LocalPurpleEventPublisher.provide(simplePurpleContext)
 
         LocalPurpleCoroutineScope.current.launch(Dispatchers.IO) {
             simplePurpleContext.onInit()

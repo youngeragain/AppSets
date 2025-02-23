@@ -55,7 +55,7 @@ interface AppSetsShareApi {
     @POST("/appsets/share/prepare")
     suspend fun prepareSend(
         @Header("share_token") shareToken: String,
-        @Header("content_list_id") contentListId: String,
+        @Header("uri") uri: String,
     ): DesignResponse<Boolean>
 
     @POST("/appsets/share/prepare_response")
@@ -72,9 +72,10 @@ interface AppSetsShareApi {
         @Header("content_id") contentId: String,
     ): retrofit2.Call<ResponseBody>
 
-    @GET("/appsets/share/contents/get")
+    @POST("/appsets/share/contents/get")
     suspend fun getContentList(
         @Header("share_token") shareToken: String,
-        @Header("content_list_id") contentListId: String,
+        @Header("uri") uri: String,
+        @Body text: String = "Test Body",
     ): DesignResponse<ContentInfoListWrapper>
 }

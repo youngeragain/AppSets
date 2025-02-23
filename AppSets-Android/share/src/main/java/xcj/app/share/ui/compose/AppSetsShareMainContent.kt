@@ -13,6 +13,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -88,6 +89,7 @@ import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import coil3.compose.AsyncImage
 import kotlinx.coroutines.launch
 import xcj.app.compose_share.components.DesignHDivider
 import xcj.app.compose_share.components.DesignTextField
@@ -103,6 +105,7 @@ import xcj.app.share.rpc.RpcShareMethod
 import xcj.app.share.ui.compose.AppSetsShareActivity
 import xcj.app.share.ui.compose.AppSetsShareViewModel
 import xcj.app.share.wlanp2p.WlanP2pShareMethod
+import xcj.app.starter.android.AppDefinition
 
 data class BoxFocusInfo(
     val receiveBoxFocus: Boolean = false,
@@ -648,7 +651,7 @@ fun DeviceContentListComponent(
             .padding(start = 12.dp, end = 12.dp, bottom = 12.dp)
             .fillMaxWidth()
             .animateContentSize(),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         Box(modifier = Modifier.fillMaxWidth()) {
             if (isShowBackButton) {
@@ -660,16 +663,13 @@ fun DeviceContentListComponent(
                                 onBackClick?.invoke()
                             }
                         )
-                        .padding(12.dp)
                         .align(Alignment.TopStart),
                     painter = painterResource(xcj.app.compose_share.R.drawable.ic_arrow_back_24),
                     contentDescription = null
                 )
             }
             Column(
-                modifier = Modifier.align(
-                    Alignment.TopCenter
-                ),
+                modifier = Modifier.align(Alignment.TopCenter),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 val titleText = if (contentInfoList?.infoList.isNullOrEmpty()) {
@@ -681,24 +681,38 @@ fun DeviceContentListComponent(
                     text = titleText,
                     fontWeight = FontWeight.Bold
                 )
-                ShareDeviceMiddleComponent(modifier = Modifier, shareDevice)
             }
 
         }
+        Row {
+            ShareDeviceSmallComponent(modifier = Modifier, shareDevice)
+            Spacer(modifier = Modifier.weight(1f))
+        }
         DesignHDivider()
-        if (contentInfoList != null) {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-                contentPadding = PaddingValues(start = 12.dp, end = 12.dp, bottom = 12.dp)
-            ) {
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+            contentPadding = PaddingValues(bottom = 12.dp)
+        ) {
+            if (contentInfoList == null) {
+                item {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 36.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(text = stringResource(R.string.getting_in), fontSize = 12.sp)
+                    }
+                }
+            } else {
                 if (contentInfoList.infoList.isEmpty()) {
                     item {
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(vertical = 36.dp),
+                                .padding(horizontal = 12.dp, vertical = 36.dp),
                             contentAlignment = Alignment.Center
                         ) {
                             Text(text = stringResource(R.string.no_content), fontSize = 12.sp)
@@ -709,9 +723,10 @@ fun DeviceContentListComponent(
                     Column(
                         modifier = Modifier
                             .fillMaxWidth(),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                        verticalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
                         Text(
+                            modifier = Modifier.padding(horizontal = 12.dp),
                             text = contentInfo.name,
                             fontSize = 12.sp,
                             maxLines = 4,
@@ -721,15 +736,6 @@ fun DeviceContentListComponent(
                     }
 
                 }
-            }
-        } else {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 36.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(text = stringResource(R.string.getting_in), fontSize = 12.sp)
             }
 
         }
@@ -1731,39 +1737,117 @@ fun ShareDeviceNormalComponent(modifier: Modifier, shareDevice: ShareDevice) {
 }
 
 @Composable
+fun AppSetsShareExternalContentTipsSheet(
+    fromAppDefinition: AppDefinition?,
+    onConfirmClick: (Int) -> Unit,
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = 12.dp, end = 12.dp, bottom = 12.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        if (fromAppDefinition != null) {
+            AsyncImage(
+                model = fromAppDefinition.icon,
+                contentDescription = fromAppDefinition.description,
+                modifier = Modifier
+                    .size(42.dp)
+                    .clip(MaterialTheme.shapes.large)
+                    .border(
+                        1.dp,
+                        MaterialTheme.colorScheme.outline,
+                        MaterialTheme.shapes.large
+                    ),
+            )
+            Text(text = fromAppDefinition.name ?: "")
+        } else {
+            Icon(
+                modifier = Modifier
+                    .size(32.dp),
+                painter = painterResource(xcj.app.compose_share.R.drawable.ic_web_stories_24),
+                contentDescription = null
+            )
+        }
+        Text(
+            text = stringResource(R.string.external_content),
+            fontSize = 22.sp,
+            fontWeight = FontWeight.Bold
+        )
+
+        Text(
+            text = stringResource(R.string.how_to), fontSize = 16.sp,
+            fontWeight = FontWeight.Bold
+        )
+
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                FilledTonalIconButton(onClick = {
+                    onConfirmClick(AppSetsShareActivity.EXTERNAL_CONTENT_HANDLE_BY_APPSETS)
+                }) {
+                    Icon(
+                        modifier = Modifier,
+                        painter = painterResource(xcj.app.compose_share.R.drawable.ic_appsets_44),
+                        contentDescription = null
+                    )
+                }
+                Text("AppSets", fontSize = 12.sp)
+            }
+            Column(
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                FilledTonalIconButton(onClick = {
+                    onConfirmClick(AppSetsShareActivity.EXTERNAL_CONTENT_HANDLE_BY_LOCAL_SHARE)
+                }) {
+                    Icon(
+                        modifier = Modifier,
+                        painter = painterResource(xcj.app.compose_share.R.drawable.ic_round_swap_calls_24),
+                        contentDescription = null
+                    )
+                }
+                Text("Local Share", fontSize = 12.sp)
+            }
+        }
+
+    }
+}
+
+@Composable
 fun AppSetsSharePinSheet(
     shareDevice: ShareDevice,
     pin: Int,
     onConfirmClick: () -> Unit,
 ) {
-    Box(
+    Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(start = 12.dp, end = 12.dp, bottom = 12.dp)
+            .padding(start = 12.dp, end = 12.dp, bottom = 12.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Column(
-            modifier = Modifier
-                .align(Alignment.Center)
-                .padding(32.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(text = "PIN: $pin", fontSize = 22.sp, fontWeight = FontWeight.Bold)
-            ShareDeviceNormalComponent(
-                modifier = Modifier,
-                shareDevice = shareDevice
+        Text(text = "PIN: $pin", fontSize = 22.sp, fontWeight = FontWeight.Bold)
+        FilledTonalIconButton(onClick = onConfirmClick) {
+            Icon(
+                modifier = Modifier
+                    .size(32.dp),
+                painter = painterResource(xcj.app.compose_share.R.drawable.ic_round_check_24),
+                contentDescription = null
             )
-            FilledTonalIconButton(onClick = onConfirmClick) {
-                Icon(
-                    modifier = Modifier
-                        .padding(12.dp),
-                    painter = painterResource(xcj.app.compose_share.R.drawable.ic_round_check_24),
-                    contentDescription = null
-                )
-            }
+        }
+        Row {
+            ShareDeviceSmallComponent(modifier = Modifier, shareDevice)
+            Spacer(modifier = Modifier.weight(1f))
         }
     }
 }
+
 
 @Composable
 fun AppSetsShareClientPreSendSheet(
@@ -1818,25 +1902,37 @@ fun ShareClientPreSendComponent(
         modifier = Modifier
             .fillMaxWidth()
             .padding(start = 12.dp, end = 12.dp, bottom = 12.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(
-            text = stringResource(R.string.new_share_content_to_you),
-            fontSize = 22.sp,
-            fontWeight = FontWeight.Bold
-        )
-
-        ShareDeviceNormalComponent(
-            modifier = Modifier.align(Alignment.CenterHorizontally),
-            shareDevice = shareDevice
-        )
-
         Column(
+            modifier = Modifier
+                .fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Switch(checked = isAutoAccept, onCheckedChange = onAutoAcceptChanged)
-            Text(text = stringResource(R.string.auto_accept), fontSize = 10.sp)
+            Text(
+                text = stringResource(R.string.new_share_content_to_you),
+                fontSize = 22.sp,
+                fontWeight = FontWeight.Bold
+            )
+        }
+
+        Card(
+            modifier = Modifier
+                .clip(MaterialTheme.shapes.large)
+                .clickable(
+                    onClick = onContentListShowClick
+                ),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
+            shape = MaterialTheme.shapes.large
+        ) {
+            Column(
+                modifier = Modifier
+                    .align(Alignment.CenterHorizontally)
+                    .padding(vertical = 8.dp, horizontal = 12.dp),
+            ) {
+                Text(text = stringResource(R.string.see_share_content_list), fontSize = 12.sp)
+            }
         }
 
         Row(
@@ -1848,7 +1944,7 @@ fun ShareClientPreSendComponent(
             }) {
                 Icon(
                     modifier = Modifier
-                        .padding(12.dp),
+                        .size(32.dp),
                     painter = painterResource(xcj.app.compose_share.R.drawable.ic_round_close_24),
                     contentDescription = null
                 )
@@ -1859,28 +1955,22 @@ fun ShareClientPreSendComponent(
             }) {
                 Icon(
                     modifier = Modifier
-                        .padding(12.dp),
+                        .size(32.dp),
                     painter = painterResource(xcj.app.compose_share.R.drawable.ic_round_check_24),
                     contentDescription = null
                 )
             }
         }
 
-        Card(
-            modifier = Modifier
-                .clickable(
-                    onClick = onContentListShowClick
-                )
-                .clip(MaterialTheme.shapes.large),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
-            shape = MaterialTheme.shapes.large
-        ) {
-            Column(
-                modifier = Modifier
-                    .align(Alignment.CenterHorizontally)
-                    .padding(vertical = 8.dp, horizontal = 12.dp),
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            ShareDeviceSmallComponent(modifier = Modifier, shareDevice)
+            Spacer(modifier = Modifier.weight(1f))
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
             ) {
-                Text(text = stringResource(R.string.see_share_content_list), fontSize = 12.sp)
+                Text(text = stringResource(R.string.auto_accept), fontSize = 10.sp)
+                Switch(checked = isAutoAccept, onCheckedChange = onAutoAcceptChanged)
             }
         }
     }

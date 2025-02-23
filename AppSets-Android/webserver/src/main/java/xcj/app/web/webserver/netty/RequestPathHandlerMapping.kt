@@ -1,14 +1,20 @@
 package xcj.app.web.webserver.netty
 
+import io.netty.buffer.ByteBuf
+import io.netty.buffer.ByteBufAllocator
+import io.netty.buffer.EmptyByteBuf
 import io.netty.buffer.Unpooled
 import io.netty.channel.ChannelFutureListener
 import io.netty.channel.ChannelHandlerContext
 import io.netty.channel.ChannelProgressiveFuture
 import io.netty.channel.ChannelProgressiveFutureListener
 import io.netty.channel.DefaultFileRegion
+import io.netty.handler.codec.http.DefaultFullHttpRequest
 import io.netty.handler.codec.http.DefaultFullHttpResponse
 import io.netty.handler.codec.http.DefaultHttpResponse
+import io.netty.handler.codec.http.EmptyHttpHeaders
 import io.netty.handler.codec.http.HttpChunkedInput
+import io.netty.handler.codec.http.HttpContent
 import io.netty.handler.codec.http.HttpHeaderNames
 import io.netty.handler.codec.http.HttpHeaderValues
 import io.netty.handler.codec.http.HttpRequest
@@ -17,6 +23,7 @@ import io.netty.handler.codec.http.HttpResponseStatus
 import io.netty.handler.codec.http.HttpUtil
 import io.netty.handler.codec.http.HttpVersion
 import io.netty.handler.codec.http.LastHttpContent
+import io.netty.handler.stream.ChunkedInput
 import io.netty.handler.stream.ChunkedStream
 import xcj.app.starter.android.util.PurpleLogger
 import xcj.app.starter.foundation.http.DesignResponse
@@ -24,10 +31,12 @@ import xcj.app.starter.util.ContentType
 import xcj.app.web.webserver.base.ContentDownloadN
 import xcj.app.web.webserver.base.DataProgressInfoPool
 import xcj.app.web.webserver.base.InputStreamReadableData
+import xcj.app.web.webserver.base.ProgressListener
 import xcj.app.web.webserver.interfaces.ListenersProvider
+import java.io.Closeable
 import java.io.File
-import java.io.FileInputStream
 import java.lang.reflect.ParameterizedType
+import java.util.UUID
 
 class RequestPathHandlerMapping(
     val fixedUriHandlerMethodMap: Map<String, HandlerMethod>,
@@ -35,7 +44,6 @@ class RequestPathHandlerMapping(
 ) : HandlerMapping {
     companion object {
         private const val TAG = "RequestPathHandlerMapping"
-        private val EMPTY_BYTES = byteArrayOf()
     }
 
     override fun handle(
@@ -46,10 +54,6 @@ class RequestPathHandlerMapping(
     ) {
         val handlerMethod = getHandlerMethod(httpRequestWrapper)
         if (handlerMethod == null) {
-            PurpleLogger.current.d(
-                TAG,
-                "handle, handlerMethod is null!"
-            )
             ComposedApiWebHandler.responseNormal(
                 ctx,
                 httpRequestWrapper.httpRequest,
@@ -74,10 +78,8 @@ class RequestPathHandlerMapping(
         handlerMethod: HandlerMethod,
         listenersProvider: ListenersProvider?
     ) {
-        PurpleLogger.current.d(TAG, "handleInternal")
         val httpContent = httpRequestWrapper.httpContent
-        val httpPostRequestDecoder = httpRequestWrapper.httpPostRequestDecoder
-        if (httpContent != null && httpPostRequestDecoder != null) {
+        if (httpContent != null) {
             handleFileApiInternal(
                 ctx,
                 httpRequestWrapper,
@@ -103,22 +105,46 @@ class RequestPathHandlerMapping(
         handlerMethod: HandlerMethod,
         listenersProvider: ListenersProvider?
     ) {
-        val lastHttpContent = httpRequestWrapper.lastHttpContent
-        if (lastHttpContent == null) {
-            PurpleLogger.current.d(TAG, "handleFileApiInternal, handle HttpContent")
-            HttpFileUploadHelper.handleHttpContent(ctx, httpRequestWrapper, listenersProvider)
-        } else {
-            PurpleLogger.current.d(TAG, "handleFileApiInternal, handle LastHttpContent")
-            val returnValue = handlerMethod.call(ctx, httpRequestWrapper, httpResponseWrapper)
-            handleMethodReturn(
-                ctx,
-                handlerMethod,
-                httpRequestWrapper,
-                httpResponseWrapper,
-                returnValue,
-                listenersProvider
-            )
+        HttpFileUploadHelper.handleHttpContent(ctx, httpRequestWrapper, listenersProvider)
+        val httpContent = httpRequestWrapper.httpContent
+        if (httpContent == null) {
+            return
         }
+        if (httpContent !is LastHttpContent) {
+            return
+        }
+        PurpleLogger.current.d(
+            TAG,
+            "handleFileApiInternal, handle LastHttpContent, uri:${httpRequestWrapper.httpRequest.uri()}"
+        )
+
+        val httpPostRequestDecoder = httpRequestWrapper.httpPostRequestDecoder
+        if (httpPostRequestDecoder != null) {
+            val currentPartialHttpData =
+                httpPostRequestDecoder.currentPartialHttpData()
+            if (currentPartialHttpData != null) {
+                val rawHttpRequest = httpRequestWrapper.httpRequest
+                val defaultFullHttpRequest = DefaultFullHttpRequest(
+                    rawHttpRequest.protocolVersion(),
+                    rawHttpRequest.method(),
+                    rawHttpRequest.uri(),
+                    EmptyByteBuf(ByteBufAllocator.DEFAULT),
+                    rawHttpRequest.headers(), EmptyHttpHeaders.INSTANCE
+                )
+                //defaultFullHttpRequest.replace()
+                httpRequestWrapper.httpRequest = defaultFullHttpRequest
+            }
+        }
+
+        val returnValue = handlerMethod.call(ctx, httpRequestWrapper, httpResponseWrapper)
+        handleMethodReturn(
+            ctx,
+            handlerMethod,
+            httpRequestWrapper,
+            httpResponseWrapper,
+            returnValue,
+            listenersProvider
+        )
     }
 
     private fun handleApiInternal(
@@ -128,7 +154,6 @@ class RequestPathHandlerMapping(
         handlerMethod: HandlerMethod,
         listenersProvider: ListenersProvider?
     ) {
-        PurpleLogger.current.d(TAG, "handleApiInternal")
         val response = httpResponseWrapper.httpResponse
         if (response !is DefaultFullHttpResponse) {
             return
@@ -154,7 +179,11 @@ class RequestPathHandlerMapping(
         returnValue: Any?,
         listenersProvider: ListenersProvider?
     ) {
-        PurpleLogger.current.d(TAG, "handleMethodReturn")
+        PurpleLogger.current.d(
+            TAG,
+            "handleMethodReturn, uri:${httpRequestWrapper.httpRequest.uri()}"
+        )
+        var returnValueOverride: Any? = returnValue
         val response = httpResponseWrapper.httpResponse
         if (response !is DefaultFullHttpResponse) {
             return
@@ -162,7 +191,7 @@ class RequestPathHandlerMapping(
         val httpHeaders = response.headers()
 
         if (HttpUtil.isKeepAlive(httpRequestWrapper.httpRequest)) {
-            httpHeaders.set(HttpHeaderNames.CONNECTION, HttpHeaderValues.KEEP_ALIVE)
+            HttpUtil.setKeepAlive(httpRequestWrapper.httpRequest, true)
         }
         val guessContentType = getContentType(handlerMethod)
         if (!guessContentType.isNullOrEmpty()) {
@@ -171,20 +200,24 @@ class RequestPathHandlerMapping(
         if (returnValue is Exception) {
             PurpleLogger.current.d(
                 TAG,
-                "handleInternal, returnValue is Exception:${returnValue.message}"
+                "handleMethodReturn, returnValue is Exception:${returnValue.message}"
             )
+            returnValueOverride = DesignResponse(info = returnValue.message, data = null, code = -1)
+            val bytes = handlerMethod.jsonTransformer.toString(returnValueOverride)
+                .toByteArray()
+            val responseBody = Unpooled.wrappedBuffer(bytes)
+            val newResponse = response.replace(responseBody)
             ComposedApiWebHandler.responseNormal(
                 ctx,
                 httpRequestWrapper.httpRequest,
-                ComposedApiWebHandler.serverInternalErrorResponse
+                newResponse
             )
             return
         }
 
-        if (returnValue == null) {
-            val bytes = EMPTY_BYTES
-            httpHeaders.set(HttpHeaderNames.CONTENT_LENGTH, bytes.size)
-            val responseBody = Unpooled.wrappedBuffer(bytes)
+        if (returnValueOverride == null) {
+            httpHeaders.set(HttpHeaderNames.CONTENT_LENGTH, 0)
+            val responseBody = EmptyByteBuf(ByteBufAllocator.DEFAULT)
             val newResponse = response.replace(responseBody)
             ComposedApiWebHandler.responseNormal(ctx, httpRequestWrapper.httpRequest, newResponse)
             return
@@ -200,7 +233,7 @@ class RequestPathHandlerMapping(
             String::class.java,
             Enum::class.java,
                 -> {
-                val bytes = returnValue.toString().toByteArray()
+                val bytes = returnValueOverride.toString().toByteArray()
                 httpHeaders.set(HttpHeaderNames.CONTENT_LENGTH, bytes.size)
                 val responseBody = Unpooled.wrappedBuffer(bytes)
                 val newResponse = response.replace(responseBody)
@@ -215,9 +248,8 @@ class RequestPathHandlerMapping(
             Nothing::class.java,
             Unit::class.java,
             Void::class.java -> {
-                val bytes = EMPTY_BYTES
-                httpHeaders.set(HttpHeaderNames.CONTENT_LENGTH, bytes.size)
-                val responseBody = Unpooled.wrappedBuffer(bytes)
+                httpHeaders.set(HttpHeaderNames.CONTENT_LENGTH, 0)
+                val responseBody = EmptyByteBuf(ByteBufAllocator.DEFAULT)
                 val newResponse = response.replace(responseBody)
                 ComposedApiWebHandler.responseNormal(
                     ctx,
@@ -227,7 +259,7 @@ class RequestPathHandlerMapping(
             }
 
             File::class.java -> {
-                val file = returnValue as File
+                val file = returnValueOverride as File
                 handleFileContentResponse(
                     ctx,
                     httpRequestWrapper.httpRequest,
@@ -238,7 +270,7 @@ class RequestPathHandlerMapping(
             }
 
             ByteArray::class.java -> {
-                val bytes = returnValue as ByteArray
+                val bytes = returnValueOverride as ByteArray
                 val responseBody = Unpooled.wrappedBuffer(bytes)
                 val newResponse = response.replace(responseBody)
                 ComposedApiWebHandler.responseNormal(
@@ -249,7 +281,7 @@ class RequestPathHandlerMapping(
             }
 
             DesignResponse::class.java -> {
-                val designResponse = returnValue as DesignResponse<*>
+                val designResponse = returnValueOverride as DesignResponse<*>
                 val data = designResponse.data
                 val parameterizedType = handlerMethod.method.genericReturnType as ParameterizedType
                 val designResponseValueType = parameterizedType.actualTypeArguments[0]
@@ -265,7 +297,7 @@ class RequestPathHandlerMapping(
                                 listenersProvider
                             )
                         } else {
-                            val bytes = handlerMethod.jsonTransformer.toString(returnValue)
+                            val bytes = handlerMethod.jsonTransformer.toString(returnValueOverride)
                                 .toByteArray()
                             val responseBody = Unpooled.wrappedBuffer(bytes)
                             val newResponse = response.replace(responseBody)
@@ -288,7 +320,7 @@ class RequestPathHandlerMapping(
                                 listenersProvider
                             )
                         } else {
-                            val bytes = handlerMethod.jsonTransformer.toString(returnValue)
+                            val bytes = handlerMethod.jsonTransformer.toString(returnValueOverride)
                                 .toByteArray()
                             val responseBody = Unpooled.wrappedBuffer(bytes)
                             val newResponse = response.replace(responseBody)
@@ -301,7 +333,7 @@ class RequestPathHandlerMapping(
                     }
 
                     else -> {
-                        val bytes = handlerMethod.jsonTransformer.toString(returnValue)
+                        val bytes = handlerMethod.jsonTransformer.toString(returnValueOverride)
                             .toByteArray()
                         val responseBody = Unpooled.wrappedBuffer(bytes)
                         val newResponse = response.replace(responseBody)
@@ -316,7 +348,7 @@ class RequestPathHandlerMapping(
             }
 
             else -> {
-                val bytes = handlerMethod.jsonTransformer.toString(returnValue)
+                val bytes = handlerMethod.jsonTransformer.toString(returnValueOverride)
                     .toByteArray()
                 val responseBody = Unpooled.wrappedBuffer(bytes)
                 val newResponse = response.replace(responseBody)
@@ -359,46 +391,24 @@ class RequestPathHandlerMapping(
 
         when (readableData) {
             is InputStreamReadableData -> {
-
                 val inputStream = readableData.getInputStream()
-                if (inputStream is FileInputStream) {
-                    val fileInputStream = inputStream
-                    val chunkSize = 8 * 1024
-                    val chunkedStream = ChunkedStream(fileInputStream, chunkSize)
-                    val httpChunkedInput = HttpChunkedInput(chunkedStream)
-                    val sendFileChannelFuture =
-                        ctx.write(httpChunkedInput, ctx.newProgressivePromise())
-                    sendFileChannelFuture.addListener(object : ChannelProgressiveFutureListener {
-                        override fun operationProgressed(
-                            future: ChannelProgressiveFuture?,
-                            progress: Long,
-                            total: Long
-                        ) {
-                            val progressListener = listenersProvider?.getSendProgressListener()
-                            if (progressListener != null) {
-                                val dataProgressInfo =
-                                    DataProgressInfoPool.obtainById(contentDownloadN.id)
-                                dataProgressInfo.name = contentDownloadN.name
-                                dataProgressInfo.total = length
-                                dataProgressInfo.current = progress
-                                progressListener.onProgress(dataProgressInfo)
-                            }
-                        }
-
-                        override fun operationComplete(future: ChannelProgressiveFuture) {
-                            PurpleLogger.current.d(
-                                TAG,
-                                "operationComplete, contentDownloadN: id:${contentDownloadN.id}, " +
-                                        "name:${contentDownloadN.name}"
-                            )
-                        }
-                    })
-                    val lastContentFuture = ctx.writeAndFlush(LastHttpContent.EMPTY_LAST_CONTENT)
-                    if (!HttpUtil.isKeepAlive(httpRequest)) {
-                        lastContentFuture.addListener(ChannelFutureListener.CLOSE)
-                    } else {
-                        lastContentFuture.addListener(ChannelFutureListener.CLOSE)
-                    }
+                val relatedCloseable = readableData.getRelatedCloseable()
+                val chunkSize = 8 * 1024
+                val chunkedStream = ChunkedStream(inputStream, chunkSize)
+                val httpChunkedInput = MyHttpChunkedInput(chunkedStream, length)
+                val sendFileChannelFuture =
+                    ctx.write(httpChunkedInput, ctx.newProgressivePromise())
+                val progressiveFutureListener = ContentDownloadProgressListener(
+                    contentDownloadN.id,
+                    contentDownloadN.name,
+                    length,
+                    relatedCloseable,
+                    listenersProvider?.getSendProgressListener()
+                )
+                sendFileChannelFuture.addListener(progressiveFutureListener)
+                val lastContentFuture = ctx.writeAndFlush(LastHttpContent.EMPTY_LAST_CONTENT)
+                if (!HttpUtil.isKeepAlive(httpRequest)) {
+                    lastContentFuture.addListener(ChannelFutureListener.CLOSE)
                 }
             }
         }
@@ -427,35 +437,21 @@ class RequestPathHandlerMapping(
         )
         headers.set(HttpHeaderNames.CONTENT_LENGTH, file.length())
 
-        ctx.write(dataContentResponse)
+        ctx.writeAndFlush(dataContentResponse)
 
         val inputStream = file.inputStream()
         val defaultFileRegion = DefaultFileRegion(inputStream.channel, 0, length)
         val sendFileChannelFuture = ctx.write(defaultFileRegion, ctx.newProgressivePromise())
-        sendFileChannelFuture.addListener(object : ChannelProgressiveFutureListener {
-            override fun operationProgressed(
-                future: ChannelProgressiveFuture?,
-                progress: Long,
-                total: Long
-            ) {
-                PurpleLogger.current.d(
-                    TAG,
-                    "operationProgressed: file:$file, total:${total} progress:$progress"
-                )
-            }
-
-            override fun operationComplete(future: ChannelProgressiveFuture) {
-                PurpleLogger.current.d(
-                    TAG,
-                    "operationProgressed: file:$file"
-                )
-                inputStream.close()
-            }
-        })
+        val progressiveFutureListener = ContentDownloadProgressListener(
+            UUID.randomUUID().toString(),
+            file.name,
+            length,
+            null,
+            listenersProvider?.getSendProgressListener()
+        )
+        sendFileChannelFuture.addListener(progressiveFutureListener)
         val lastContentFuture = ctx.writeAndFlush(LastHttpContent.EMPTY_LAST_CONTENT)
         if (!HttpUtil.isKeepAlive(httpRequest)) {
-            lastContentFuture.addListener(ChannelFutureListener.CLOSE)
-        } else {
             lastContentFuture.addListener(ChannelFutureListener.CLOSE)
         }
     }
@@ -524,5 +520,68 @@ class RequestPathHandlerMapping(
                 return ContentType.APPLICATION_JSON
             }
         }
+    }
+}
+
+class ContentDownloadProgressListener(
+    private val id: String,
+    private val name: String,
+    private val length: Long,
+    private val relatedCloseable: Closeable?,
+    private val progressListener: ProgressListener?
+) : ChannelProgressiveFutureListener {
+    companion object {
+        private const val TAG = "ContentDownloadProgressListener"
+    }
+
+    override fun operationProgressed(
+        future: ChannelProgressiveFuture?,
+        progress: Long,
+        total: Long
+    ) {
+        if (progressListener != null) {
+            val dataProgressInfo =
+                DataProgressInfoPool.obtainById(id)
+            dataProgressInfo.name = name
+            dataProgressInfo.total = if (total != -1L) {
+                total
+            } else {
+                length
+            }
+            dataProgressInfo.current = progress
+            progressListener.onProgress(dataProgressInfo)
+        }
+    }
+
+    override fun operationComplete(future: ChannelProgressiveFuture) {
+        PurpleLogger.current.d(TAG, "operationComplete, id:${id}, name:${name}")
+        relatedCloseable?.close()
+        future.removeListener(this)
+    }
+}
+
+class MyHttpChunkedInput(input: ChunkedInput<ByteBuf>, private val dataLength: Long? = null) :
+    HttpChunkedInput(input) {
+    companion object {
+        private const val TAG = "MyHttpChunkedInput"
+    }
+
+    override fun readChunk(allocator: ByteBufAllocator?): HttpContent? {
+        val readChunk = super.readChunk(allocator)
+        return readChunk
+
+    }
+
+    override fun length(): Long {
+        val superLength = super.length()
+        val returnLength = dataLength ?: superLength
+        PurpleLogger.current.d(TAG, "length, superLength:$superLength, returnLength:$returnLength")
+        return superLength
+    }
+
+    override fun close() {
+        val progress = progress()
+        PurpleLogger.current.d(TAG, "close, progress:$progress")
+        super.close()
     }
 }

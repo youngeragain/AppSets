@@ -29,7 +29,7 @@ interface AppSetsShareService {
         context: Context,
         clientHost: String,
         token: String,
-        contentListId: String
+        uri: String
     ): DesignResponse<Boolean>
 
     fun prepareSendResponse(
@@ -75,6 +75,6 @@ interface AppSetsShareService {
         context: Context,
         clientHost: String,
         token: String,
-        contentListId: String
+        uri: String
     ): DesignResponse<ContentInfoListWrapper>
 }

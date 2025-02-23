@@ -46,4 +46,6 @@
     <string name="no_content">没有共享数据</string>
     <string name="getting_in">获取中…</string>
     <string name="content_save_path">数据保存位置</string>
+    <string name="external_content">外部内容</string>
+    <string name="how_to">下一步怎么做?</string>
 </resources>

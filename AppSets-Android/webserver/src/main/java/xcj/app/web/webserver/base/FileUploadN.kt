@@ -12,13 +12,13 @@ import java.io.File
 import java.util.UUID
 
 class FileUploadN(
-    val total: Long,
-    var current: Long,
     val id: String = UUID.randomUUID().toString()
 ) : Closeable {
     companion object {
         private const val TAG = "FileUploadN"
     }
+    var current: Long = 0L
+    var total: Long = 0L
 
     private val files: MutableSet<File> = mutableSetOf()
 
@@ -28,6 +28,7 @@ class FileUploadN(
         listenersProvider: ListenersProvider?
     ) {
         val currentPartialHttpData = httpPostRequestDecoder.currentPartialHttpData()
+
         if (currentPartialHttpData is FileUpload) {
             val currentFileUpload = currentPartialHttpData
             current = currentFileUpload.length()
@@ -39,7 +40,6 @@ class FileUploadN(
                 dataProgressInfo.current = current
                 receiveProgressListener.onProgress(dataProgressInfo)
             }
-            currentPartialHttpData.filename
         }
         try {
             while (httpPostRequestDecoder.hasNext()) {
@@ -50,26 +50,23 @@ class FileUploadN(
                 if (interfaceHttpData !is FileUpload) {
                     continue
                 }
-
                 val fileUpload = interfaceHttpData
                 if (interfaceHttpData.isCompleted) {
-
-
+                    val fileToSave =
+                        ShareSystem.makeFileIfNeeded(fileUpload.filename, createFile = false)
+                    if (fileToSave != null) {
+                        fileUpload.renameTo(fileToSave)
+                        files.add(fileToSave)
+                    }
+                    PurpleLogger.current.d(TAG, "addHttpContent, release fileUpload")
+                    //fileUpload.release()
                 }
-                val fileToSave =
-                    ShareSystem.makeFileIfNeeded(fileUpload.filename, createFile = false)
-                if (fileToSave != null) {
-                    fileUpload.renameTo(fileToSave)
-                    files.add(fileToSave)
-                }
-                PurpleLogger.current.d(TAG, "addHttpContent, release fileUpload")
-                //fileUpload.release()
+
             }
         } catch (e: Exception) {
             e.printStackTrace()
             PurpleLogger.current.d(TAG, "addHttpContent, failed, ${e.message}")
         } finally {
-            PurpleLogger.current.d(TAG, "addHttpContent, release httpContent")
             //httpContent.release()
         }
     }

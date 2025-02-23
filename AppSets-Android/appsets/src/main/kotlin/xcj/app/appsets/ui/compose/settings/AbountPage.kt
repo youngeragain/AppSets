@@ -51,7 +51,7 @@ fun AboutPage(
         Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
             Image(
                 modifier = Modifier.align(Alignment.CenterHorizontally),
-                painter = painterResource(xcj.app.appsets.R.drawable.ic_launcher_foreground),
+                painter = painterResource(xcj.app.compose_share.R.drawable.ic_launcher_foreground),
                 contentDescription = null
             )
             var historyExpandState by remember {

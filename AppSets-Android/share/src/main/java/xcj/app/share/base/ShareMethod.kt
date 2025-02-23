@@ -44,7 +44,7 @@ abstract class ShareMethod() : ConnectivityManager.NetworkCallback(), DefaultLif
         }
     }
 
-    val shareContentLocationState: MutableState<String> = mutableStateOf(ShareSystem.getShareDirPath())
+    val shareContentLocationState: MutableState<String> = mutableStateOf("")
 
     open var mDeviceName: DeviceName = DeviceName.NONE
 
@@ -72,6 +72,7 @@ abstract class ShareMethod() : ConnectivityManager.NetworkCallback(), DefaultLif
     open fun init(activity: AppSetsShareActivity, viewModel: AppSetsShareViewModel) {
         activity.lifecycle.removeObserver(this)
         activity.lifecycle.addObserver(this)
+        shareContentLocationState.value = ShareSystem.getShareDirPath()
         this.viewModel = viewModel
         this.activity = activity
         this.connectivityManager = activity.getSystemService(ConnectivityManager::class.java)

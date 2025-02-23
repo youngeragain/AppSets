@@ -50,7 +50,7 @@ class HandlerMethod(
         }
         if (firstCanAcceptMethod == null) {
             val httpMethodNotSupportString =
-                ("method: ${toString()}, info: only support http request method" +
+                ("method: ${toString()} only support http request method" +
                         " is:${acceptRequestMethodsString}, " +
                         "your request method is:${httpRequestWrapper.httpRequest.method()}")
             PurpleLogger.current.d(TAG, httpMethodNotSupportString)
@@ -134,7 +134,7 @@ class HandlerMethod(
     }
 
     override fun toString(): String {
-        return uri
+        return "uri:$uri"
     }
 }
 

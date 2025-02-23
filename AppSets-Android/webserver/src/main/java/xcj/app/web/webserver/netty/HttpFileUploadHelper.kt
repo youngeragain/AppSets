@@ -2,7 +2,6 @@ package xcj.app.web.webserver.netty
 
 import io.netty.channel.ChannelHandlerContext
 import io.netty.handler.codec.http.multipart.HttpPostRequestDecoder
-import xcj.app.starter.android.util.PurpleLogger
 import xcj.app.web.webserver.interfaces.ListenersProvider
 
 object HttpFileUploadHelper {
@@ -14,7 +13,6 @@ object HttpFileUploadHelper {
         httpRequestWrapper: HttpRequestWrapper,
         listenersProvider: ListenersProvider?
     ) {
-        PurpleLogger.current.d(TAG, "handleHttpContent")
         val httpPostRequestDecoder = httpRequestWrapper.httpPostRequestDecoder
         if (httpPostRequestDecoder == null) {
             return

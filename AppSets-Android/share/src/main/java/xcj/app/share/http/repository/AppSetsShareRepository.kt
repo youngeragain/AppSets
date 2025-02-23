@@ -3,6 +3,7 @@
 package xcj.app.share.http.repository
 
 import android.content.Context
+import android.os.Build
 import androidx.lifecycle.lifecycleScope
 import io.netty.handler.codec.http.HttpHeaderNames
 import kotlinx.coroutines.Dispatchers
@@ -34,8 +35,9 @@ import xcj.app.starter.util.ContentType
 import xcj.app.web.webserver.base.DataProgressInfoPool
 import java.io.File
 import java.io.FileOutputStream
-import java.io.InputStream
+import java.nio.file.Files
 import java.util.UUID
+import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import kotlin.collections.component1
 import kotlin.collections.component2
@@ -47,6 +49,8 @@ class AppSetsShareRepository() {
     companion object {
         private const val TAG = "AppSetsShareRepository"
     }
+
+    private val saveFileExecutors = Executors.newScheduledThreadPool(2)
 
     private fun buildApi(
         shareDevice: ShareDevice,
@@ -101,9 +105,11 @@ class AppSetsShareRepository() {
         context: Context,
         shareMethod: HttpShareMethod,
         dataSendContentList: List<DataSendContent.HttpContent>
-    ) {
+    ) = coroutineScope {
         dataSendContentList.forEach { dataSendContent ->
-            sendContent(context, shareMethod, dataSendContent)
+            launch {
+                sendContent(context, shareMethod, dataSendContent)
+            }
         }
     }
 
@@ -151,16 +157,18 @@ class AppSetsShareRepository() {
         return@withContext api.isNeedPin()
     }
 
-    suspend fun pair(shareDevice: ShareDevice.HttpShareDevice) = withContext(Dispatchers.IO) {
-        val api = buildApi(shareDevice, HttpShareMethod.SHARE_SERVER_API_PORT)
-        if (api == null) {
-            return@withContext DesignResponse.NOT_FOUND
+    suspend fun pair(shareDevice: ShareDevice.HttpShareDevice, pin: Int) =
+        withContext(Dispatchers.IO) {
+            val api = buildApi(shareDevice, HttpShareMethod.SHARE_SERVER_API_PORT)
+            if (api == null) {
+                return@withContext DesignResponse.NOT_FOUND
+            }
+            PurpleLogger.current.d(TAG, "pair, shareDevice:$shareDevice")
+
+            api.pair(pin = pin)
+
+            shareDevice.pin = pin
         }
-        PurpleLogger.current.d(TAG, "pair, shareDevice:$shareDevice")
-        val pinNumber = Random.nextInt(100, 10000)
-        shareDevice.pin = pinNumber
-        api.pair(pin = pinNumber)
-    }
 
     suspend fun pairResponse(shareDevice: ShareDevice.HttpShareDevice, shareToken: String) =
         withContext(Dispatchers.IO) {
@@ -226,7 +234,7 @@ class AppSetsShareRepository() {
                 PurpleLogger.current.d(TAG, "postByteArray, requestBody is null")
                 return@withContext DesignResponse.BAD_REQUEST
             }
-            // 创建 MultipartBody.Part
+
             val multiPartBodyPart =
                 MultipartBody.Part.createFormData(
                     "bytes",
@@ -234,7 +242,7 @@ class AppSetsShareRepository() {
                     requestBody
                 )
             val multiPartBodyPartDescription =
-                "postByteArray description".toRequestBody(ContentType.TEXT_PLAIN.toMediaTypeOrNull())
+                "bytes description".toRequestBody(ContentType.TEXT_PLAIN.toMediaTypeOrNull())
 
             api.postFile(
                 shareToken = shareDevice.token ?: "",
@@ -270,7 +278,7 @@ class AppSetsShareRepository() {
                 PurpleLogger.current.d(TAG, "postFile, requestBody is null")
                 return@withContext DesignResponse.BAD_REQUEST
             }
-            // 创建 MultipartBody.Part
+
             val multiPartBodyPart =
                 MultipartBody.Part.createFormData(
                     dataContent.file.name,
@@ -328,11 +336,10 @@ class AppSetsShareRepository() {
                     multiPartBodyPart = multiPartBodyPart,
                     description = multiPartBodyPartDescription
                 )
-            //requestBody.close()
             designResponse
         }
 
-    suspend fun prepareSend(shareDevice: ShareDevice.HttpShareDevice, contentListId: String) =
+    suspend fun prepareSend(shareDevice: ShareDevice.HttpShareDevice, uri: String) =
         withContext(Dispatchers.IO) {
 
             val api = buildApi(shareDevice, HttpShareMethod.SHARE_SERVER_API_PORT)
@@ -340,7 +347,7 @@ class AppSetsShareRepository() {
                 return@withContext DesignResponse.NOT_FOUND
             }
             PurpleLogger.current.d(TAG, "sendPrepareSend, shareDevice:$shareDevice")
-            api.prepareSend(shareToken = shareDevice.token ?: "", contentListId = contentListId)
+            api.prepareSend(shareToken = shareDevice.token ?: "", uri = uri)
         }
 
     suspend fun prepareSendResponse(
@@ -365,28 +372,6 @@ class AppSetsShareRepository() {
             )
         }
 
-    suspend fun resumeHandleSend(
-        shareMethod: HttpShareMethod,
-        shareDevice: ShareDevice.HttpShareDevice,
-        contentListId: String,
-        by: String
-    ) {
-        PurpleLogger.current.d(TAG, "resumeHandleSend, shareDevice:$shareDevice, by:$by")
-        //todo why key is same, but no value get
-        val sendContentRunnableInfoMap = shareMethod.sendContentRunnableInfoMap
-        for ((mappedShareDevice, sendDataRunnableInfo) in sendContentRunnableInfoMap) {
-            if (shareDevice == mappedShareDevice) {
-                handleSendForDevice(
-                    shareMethod,
-                    mappedShareDevice,
-                    sendDataRunnableInfo,
-                    contentListId
-                )
-                break
-            }
-        }
-    }
-
     /**
      * 发送前检查
      * 1.对方是否需要配对，如需配对，则先发起配对请求，等待配对响应
@@ -395,34 +380,67 @@ class AppSetsShareRepository() {
      */
     suspend fun handleSend(
         shareMethod: HttpShareMethod,
-        contentListId: String,
+        uri: String,
         sendDirect: Boolean = false
-    ) =
-        coroutineScope {
-            PurpleLogger.current.d(TAG, "handleSend")
-            val sendContentRunnableInfoMap = shareMethod.sendContentRunnableInfoMap
-            for ((mappedShareDevice, sendDataRunnableInfo) in sendContentRunnableInfoMap) {
-                launch {
-                    if (sendDirect) {
-                        handleSendForDevice(
-                            shareMethod,
-                            mappedShareDevice,
-                            sendDataRunnableInfo,
-                            contentListId,
-                            sendDirect
-                        )
-                    } else {
-                        checkDevicePin(shareMethod, mappedShareDevice, contentListId)
-                    }
-                }
+    ) = coroutineScope {
+        PurpleLogger.current.d(TAG, "handleSend")
+        val sendContentRunnableInfoMap = shareMethod.sendContentRunnableInfoMap
+        for ((mappedShareDevice, sendDataRunnableInfo) in sendContentRunnableInfoMap) {
+            launch {
+                resumeHandleSend(
+                    shareMethod,
+                    mappedShareDevice,
+                    uri,
+                    "handleSend",
+                    sendDirect,
+                    sendDataRunnableInfo
+                )
             }
         }
+    }
+
+    suspend fun resumeHandleSend(
+        shareMethod: HttpShareMethod,
+        shareDevice: ShareDevice.HttpShareDevice,
+        uri: String,
+        by: String,
+        sendDirect: Boolean = false,
+        sendDataRunnableInfo: HttpShareMethod.SendDataRunnableInfo? = null,
+    ) {
+        PurpleLogger.current.d(TAG, "resumeHandleSend, shareDevice:$shareDevice, by:$by")
+
+        if (sendDataRunnableInfo != null) {
+            handleSendForDevice(
+                shareMethod,
+                shareDevice,
+                sendDataRunnableInfo,
+                uri,
+                sendDirect
+            )
+            return
+        }
+
+        //todo why key is same, but no value get
+        val sendContentRunnableInfoMap = shareMethod.sendContentRunnableInfoMap
+        for ((mappedShareDevice, sendDataRunnableInfo) in sendContentRunnableInfoMap) {
+            if (shareDevice != mappedShareDevice) {
+                continue
+            }
+            handleSendForDevice(
+                shareMethod,
+                mappedShareDevice,
+                sendDataRunnableInfo,
+                uri,
+                sendDirect
+            )
+        }
+    }
 
     private suspend fun handleSendForDevice(
         shareMethod: HttpShareMethod,
         shareDevice: ShareDevice.HttpShareDevice,
         sendDataRunnableInfo: HttpShareMethod.SendDataRunnableInfo?,
-        contentListId: String,
+        uri: String,
         sendDirect: Boolean = false
     ) {
         PurpleLogger.current.d(TAG, "handleSendForDevice, shareDevice:$shareDevice")
@@ -443,39 +461,49 @@ class AppSetsShareRepository() {
                 TAG,
                 "handleSendForDevice, sendDirect is true, run sendDataRunnable"
             )
-            sendDataRunnableInfo.sendDataRunnable()
-            sendDataRunnableInfo.isCalled = true
+            sendDataRunnableInfo.run()
             shareMethod.removeSendDataRunnableForDevice(shareDevice, "sendDataRunnable Called")
             return
         }
+        PurpleLogger.current.d(TAG, "checkDevicePin, shareDevice:$shareDevice")
+        if (!shareDevice.isPaired) {
+            val needPinResponse = isNeedPin(shareDevice)
+            if (needPinResponse == DesignResponse.NOT_FOUND) {
+                return
+            }
+            val needPin = needPinResponse.data == true
+            shareDevice.isNeedPin = needPin
+        }
+
         if (shareDevice.isNeedPin && !shareDevice.isPaired) {
             PurpleLogger.current.d(
                 TAG,
                 "handleSendForDevice, shareDevice not paired, do pair action"
             )
-            pair(shareDevice)
+            val pinNumber = Random.nextInt(100, 10000)
+            pair(shareDevice, pinNumber)
             return
         }
+
         if (!sendDataRunnableInfo.isAccept) {
             PurpleLogger.current.d(
                 TAG,
                 "handleSendForDevice, shareDevice not accept, do prepareSend action"
             )
-            prepareSend(shareDevice, contentListId = contentListId)
+            prepareSend(shareDevice, uri = uri)
             return
         }
 
         PurpleLogger.current.d(TAG, "handleSendForDevice, run sendDataRunnable")
 
-        sendDataRunnableInfo.sendDataRunnable()
-        sendDataRunnableInfo.isCalled = true
+        sendDataRunnableInfo.run()
         shareMethod.removeSendDataRunnableForDevice(shareDevice, "sendDataRunnable Called")
     }
 
     suspend fun checkDevicePin(
         shareMethod: HttpShareMethod,
         shareDevice: ShareDevice.HttpShareDevice,
-        contentListId: String
+        uri: String
     ) {
         PurpleLogger.current.d(TAG, "checkDevicePin, shareDevice:$shareDevice")
         val needPinResponse = isNeedPin(shareDevice)
@@ -486,16 +514,16 @@ class AppSetsShareRepository() {
         shareDevice.isNeedPin = needPin
         PurpleLogger.current.d(TAG, "checkDevicePin, shareDevice:$shareDevice")
 
-        resumeHandleSend(shareMethod, shareDevice, contentListId, "checkDevicePin")
+        resumeHandleSend(shareMethod, shareDevice, uri, "checkDevicePin")
     }
 
     suspend fun handleDownload(
         shareMethod: HttpShareMethod,
         shareDevice: ShareDevice.HttpShareDevice,
-        contentListId: String
+        uri: String
     ) = coroutineScope {
         PurpleLogger.current.d(TAG, "handleDownload")
-        val designResponse = getContentList(shareDevice, contentListId = contentListId)
+        val designResponse = getContentList(shareDevice, uri = uri)
         if (designResponse == DesignResponse.NOT_FOUND) {
             return@coroutineScope
         }
@@ -548,7 +576,7 @@ class AppSetsShareRepository() {
 
     suspend fun getContentList(
         shareDevice: ShareDevice.HttpShareDevice,
-        contentListId: String
+        uri: String
     ): DesignResponse<ContentInfoListWrapper> =
         withContext(Dispatchers.IO) {
             val api = buildApi(shareDevice, HttpShareMethod.SHARE_SERVER_API_PORT)
@@ -557,11 +585,11 @@ class AppSetsShareRepository() {
             }
             PurpleLogger.current.d(
                 TAG,
-                "getContentList, shareDevice:$shareDevice contentListId:$contentListId"
+                "getContentList, shareDevice:$shareDevice uri:$uri"
             )
             val designResponse = api.getContentList(
                 shareToken = shareDevice.token ?: "",
-                contentListId = contentListId,
+                uri = uri,
             )
             return@withContext designResponse
         }
@@ -671,29 +699,80 @@ class AppSetsShareRepository() {
                     "dataContent.file.name:${tempDataContent.file.name}"
         )
         shareMethod.activity.lifecycleScope.launch {
-            runCatching {
-                val fileToSave = tempDataContent.file
-                saveFile(responseBody, fileToSave)
+            saveFileWithCoroutine(
+                responseBody,
+                tempDataContent.file
+            ).onSuccess {
+                PurpleLogger.current.d(
+                    TAG, "saveContentResponseToFile, onSuccess"
+                )
+                shareMethod.onContentReceived(tempDataContent)
             }.onFailure { tr ->
                 tr.printStackTrace()
                 PurpleLogger.current.d(
                     TAG, "saveContentResponseToFile, onFailure: " + tr.message
                 )
-            }.onSuccess {
-                PurpleLogger.current.d(
-                    TAG, "saveContentResponseToFile, onSuccess"
-                )
-                shareMethod.onContentReceived(tempDataContent)
             }
         }
     }
 
-    private suspend fun saveFile(body: ResponseBody, file: File) = withContext(Dispatchers.IO) {
-        var inputStream: InputStream? = null
-        var outputStream: FileOutputStream? = null
-        try {
-            inputStream = body.byteStream()
-            outputStream = FileOutputStream(file)
+    private fun saveFileWithExecutors(
+        body: ResponseBody,
+        file: File,
+        onResult: (Result<Any>) -> Unit
+    ) {
+        saveFileExecutors.submit {
+            val result = saveFile(body, file)
+            onResult(result)
+        }
+    }
+
+    private suspend fun saveFileWithCoroutine(
+        body: ResponseBody,
+        file: File
+    ) = withContext(Dispatchers.IO) {
+        return@withContext saveFile(body, file)
+    }
+
+    private fun saveFile0WithExecutors(
+        body: ResponseBody,
+        file: File,
+        onResult: (Result<Any>) -> Unit
+    ) {
+        saveFileExecutors.submit {
+            val result = saveFile0(body, file)
+            onResult(result)
+        }
+    }
+
+    private suspend fun saveFile0WithCoroutine(
+        body: ResponseBody,
+        file: File,
+        onResult: (Result<Any>) -> Unit
+    ) = withContext(Dispatchers.IO) {
+        return@withContext saveFile0(body, file)
+    }
+
+    private fun saveFile(
+        body: ResponseBody,
+        file: File,
+    ): Result<Any> {
+        return runCatching {
+            val inputStream = body.byteStream()
+            inputStream.use {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    Files.copy(it, file.toPath())
+                } else {
+
+                }
+            }
+        }
+    }
+
+    private fun saveFile0(body: ResponseBody, file: File): Result<Any> {
+        return runCatching {
+            val inputStream = body.byteStream()
+            val outputStream = FileOutputStream(file)
             val buffer = ByteArray(8 * 1024)
             var bytesRead = 0
             while (true) {
@@ -703,9 +782,8 @@ class AppSetsShareRepository() {
                 }
                 outputStream.write(buffer, 0, bytesRead)
             }
-        } finally {
-            inputStream?.close()
-            outputStream?.close()
+            inputStream.close()
+            outputStream.close()
         }
     }
 }

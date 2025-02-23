@@ -3,8 +3,6 @@ package xcj.app.web.webserver.netty
 import io.netty.channel.ChannelInitializer
 import io.netty.channel.socket.SocketChannel
 import io.netty.handler.codec.http.HttpServerCodec
-import io.netty.handler.logging.LogLevel
-import io.netty.handler.logging.LoggingHandler
 import io.netty.handler.stream.ChunkedWriteHandler
 import xcj.app.web.webserver.interfaces.ListenersProvider
 

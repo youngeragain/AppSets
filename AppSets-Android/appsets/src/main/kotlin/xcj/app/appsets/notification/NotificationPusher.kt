@@ -314,7 +314,7 @@ class NotificationPusher() {
         val notificationBuilder =
             NotificationCompat
                 .Builder(context, NotificationChannels.CHANNEL_ID_CONVERSATION_1)
-                .setSmallIcon(xcj.app.appsets.R.drawable.ic_appsets_44)
+                .setSmallIcon(xcj.app.compose_share.R.drawable.ic_appsets_44)
                 .setContentTitle(contentTitle)
                 .setContentText(contentText)
                 .setPriority(NotificationCompat.PRIORITY_DEFAULT)

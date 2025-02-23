@@ -10,6 +10,18 @@ import java.util.Enumeration
 object NetworkUtil {
 
     private const val TAG = "NetworkUtils"
+    private const val PREFIX_LOOPBACK = "lo"
+    private const val PREFIX_DUMMY = "dummy"
+    private const val PREFIX_MOBILE_DATA_RMNET = "rmnet"
+    private const val PREFIX_MOBILE_DATA_PPP = "ppp"
+    private const val PREFIX_TUN = "tun"
+    private const val PREFIX_BLUETOOTH_BT = "bt"
+    private const val PREFIX_BLUETOOTH_HCI = "hci"
+    private const val PREFIX_WLAN_WLAN = "wlan"
+    private const val PREFIX_WLAN_WLP = "wlpXsY"
+    private const val PREFIX_ETHERNET_ETH = "eth"
+    private const val PREFIX_ETHERNET_ENP = "wlpXsY"
+    private const val PREFIX_WIFI_AP = "ap"
 
     /**
      * key is InetAddress, value is InetAddress's NetworkInterface Human readable name
@@ -34,10 +46,11 @@ object NetworkUtil {
                     !networkInterface.isUp ||
                     networkInterface.isLoopback ||
                     networkInterface.isVirtual ||
-                    networkInterface.name.startsWith("lo") ||
-                    networkInterface.name.startsWith("dummy") ||
-                    networkInterface.name.startsWith("rmnet") ||
-                    networkInterface.name.startsWith("ppp")
+                    networkInterface.name.startsWith(PREFIX_LOOPBACK) ||
+                    networkInterface.name.startsWith(PREFIX_DUMMY) ||
+                    networkInterface.name.startsWith(PREFIX_MOBILE_DATA_RMNET) ||
+                    networkInterface.name.startsWith(PREFIX_MOBILE_DATA_PPP) ||
+                    networkInterface.name.startsWith(PREFIX_TUN)
                 ) {
                     continue
                 }
@@ -74,31 +87,36 @@ object NetworkUtil {
     }
 
     private fun getNetworkInterfaceHumanReadableName(networkInterface: NetworkInterface): String {
-        val prefix = if (networkInterface.displayName.startsWith("ap")) {
-            "Hotspot-"
-        } else if (networkInterface.displayName.startsWith("rmnet") || networkInterface.displayName.startsWith(
-                "ppp"
-            )
-        ) {
-            "Mobile Data-"
-        } else if (networkInterface.displayName.startsWith("eth") || networkInterface.displayName.startsWith(
-                "enpXsY"
-            )
-        ) {
-            "Ethernet-"
-        } else if (networkInterface.displayName.startsWith("wlan") || networkInterface.displayName.startsWith(
-                "wlpXsY"
-            )
-        ) {
-            "WIFI-"
-        } else if (networkInterface.displayName.startsWith("bt") || networkInterface.displayName.startsWith(
-                "hci"
-            )
-        ) {
-            "Bluetooth-"
-        } else {
-            ""
-        }
+        val prefix =
+            if (networkInterface.displayName.startsWith(PREFIX_WIFI_AP)) {
+                "Hotspot-"
+            } else if (
+                networkInterface.displayName.startsWith(PREFIX_MOBILE_DATA_RMNET) ||
+                networkInterface.displayName.startsWith(PREFIX_MOBILE_DATA_PPP)
+            ) {
+                "Mobile Data-"
+            } else if (
+                networkInterface.displayName.startsWith(PREFIX_ETHERNET_ETH) ||
+                networkInterface.displayName.startsWith(PREFIX_ETHERNET_ENP)
+            ) {
+                "Ethernet-"
+            } else if (
+                networkInterface.displayName.startsWith(PREFIX_WLAN_WLAN) ||
+                networkInterface.displayName.startsWith(PREFIX_WLAN_WLP)
+            ) {
+                "WIFI-"
+            } else if (
+                networkInterface.displayName.startsWith(PREFIX_BLUETOOTH_BT) ||
+                networkInterface.displayName.startsWith(PREFIX_BLUETOOTH_HCI)
+            ) {
+                "Bluetooth-"
+            } else if (
+                networkInterface.displayName.startsWith(PREFIX_TUN)
+            ) {
+                "TUNNEL-"
+            } else {
+                ""
+            }
         return "$prefix${networkInterface.displayName}"
     }
 

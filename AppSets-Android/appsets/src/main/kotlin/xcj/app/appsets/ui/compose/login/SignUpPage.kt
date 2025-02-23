@@ -485,7 +485,7 @@ fun SignUpIndicator(loginSignUpState: LoginSignUpState) {
                 ) {
                     Image(
                         modifier = Modifier.size(68.dp),
-                        painter = painterResource(xcj.app.appsets.R.drawable.ic_launcher_foreground),
+                        painter = painterResource(xcj.app.compose_share.R.drawable.ic_launcher_foreground),
                         contentDescription = null
                     )
                     val tipsIntRes = loginSignUpState.tips

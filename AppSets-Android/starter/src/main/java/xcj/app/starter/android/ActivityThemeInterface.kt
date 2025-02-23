@@ -5,7 +5,10 @@ import androidx.lifecycle.ViewModel
 
 interface ActivityThemeInterface {
 
-    fun <I> getActivityResultLauncher(inputClazz: Class<I>): ActivityResultLauncher<*>? = null
+    fun <I> getActivityResultLauncher(
+        inputClazz: Class<I>,
+        requestPrams:Any?,
+    ): ActivityResultLauncher<*>? = null
 
     fun makeActivityResultLauncher() {
 

@@ -24,7 +24,7 @@ import xcj.app.io.tencent.STSCredentialProvider
 import xcj.app.io.tencent.TencentCosInfoProvider
 import xcj.app.io.tencent.TencentCosRegionBucket
 import xcj.app.starter.android.ktx.startWithHttpSchema
-import xcj.app.starter.android.util.FileUtils
+import xcj.app.starter.android.util.FileUtil
 import xcj.app.starter.android.util.LocalMessager
 import xcj.app.starter.android.util.PurpleLogger
 import xcj.app.starter.foundation.staticProvider
@@ -222,7 +222,7 @@ class SimpleFileIO : FileIO {
         uploadOptions: ObjectUploadOptions?,
         resultListener: Any?
     ) {
-        val file = FileUtils.parseFromAndroidUri(context, uri)?.file
+        val file = FileUtil.parseFromAndroidUri(context, uri)?.file
         if (file == null) {
             PurpleLogger.current.d(TAG, "uploadWithUri, file is null, return")
             return

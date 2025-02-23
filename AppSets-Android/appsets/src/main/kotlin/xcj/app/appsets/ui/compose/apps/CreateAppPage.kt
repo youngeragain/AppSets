@@ -516,7 +516,7 @@ fun CreateApplicationIndicator(createApplicationState: CreateApplicationState) {
                 ) {
                     Image(
                         modifier = Modifier.size(68.dp),
-                        painter = painterResource(xcj.app.appsets.R.drawable.ic_launcher_foreground),
+                        painter = painterResource(xcj.app.compose_share.R.drawable.ic_launcher_foreground),
                         contentDescription = null
                     )
                     Text(stringResource(xcj.app.appsets.R.string.processing), fontSize = 12.sp)

@@ -59,11 +59,18 @@ class HttpShareMethod : ShareMethod(), ContentReceivedListener, ServiceListener,
     }
 
     data class SendDataRunnableInfo(
-        val sendDataRunnable: SuspendRunnable,
         var isAccept: Boolean = false,
         var isCalled: Boolean = false,
         var isFinished: Boolean = false
-    )
+    ) {
+        var sendDataRunnable: SuspendRunnable? = null
+        var next: SendDataRunnableInfo? = null
+
+        suspend fun run() {
+            sendDataRunnable?.invoke()
+            isCalled = true
+        }
+    }
 
     private val appSetsShareRepository = AppSetsShareRepository()
 
@@ -149,9 +156,15 @@ class HttpShareMethod : ShareMethod(), ContentReceivedListener, ServiceListener,
             }
 
         }
-        serverBootStrap = ServerBootStrap(SHARE_SERVER_API_PORT, SHARE_SERVER_FILE_API_PORT, this)
+        serverBootStrap = ServerBootStrap()
         activity.lifecycleScope.launch {
-            serverBootStrap?.main(activity.application, actionLister)
+            serverBootStrap?.main(
+                activity.application,
+                SHARE_SERVER_API_PORT,
+                SHARE_SERVER_FILE_API_PORT,
+                this@HttpShareMethod,
+                actionLister
+            )
         }
     }
 
@@ -460,7 +473,7 @@ class HttpShareMethod : ShareMethod(), ContentReceivedListener, ServiceListener,
         activity.lifecycleScope.launch {
             requestNotNull(
                 action = {
-                    appSetsShareRepository.getContentList(shareDevice, contentListId = "/")
+                    appSetsShareRepository.getContentList(shareDevice, uri = "/")
                 },
                 onSuccess = {
                     viewModel.updateDeviceContentListMap(shareDevice, it.decode())
@@ -483,7 +496,7 @@ class HttpShareMethod : ShareMethod(), ContentReceivedListener, ServiceListener,
         activity.lifecycleScope.launch {
             appSetsShareRepository.handleSend(
                 this@HttpShareMethod,
-                contentListId = "/",
+                uri = "/",
                 sendDirect = false
             )
         }
@@ -497,14 +510,11 @@ class HttpShareMethod : ShareMethod(), ContentReceivedListener, ServiceListener,
             val dataSendContentList = sendContentList.map { dataContent ->
                 DataSendContent.HttpContent(shareDevice, dataContent)
             }
-            val sendContentRunnable: SuspendRunnable = {
-                requestRaw(
-                    action = {
-                        appSetsShareRepository.sendContentList(activity, this, dataSendContentList)
-                    }
-                )
+            val sendDataRunnableInfo = SendDataRunnableInfo()
+            val sendContentRunnable: SuspendRunnable = suspend {
+                appSetsShareRepository.sendContentList(activity, this, dataSendContentList)
             }
-            val sendDataRunnableInfo = SendDataRunnableInfo(sendContentRunnable)
+            sendDataRunnableInfo.sendDataRunnable = sendContentRunnable
             sendContentRunnableInfoMap.put(shareDevice, sendDataRunnableInfo)
         }
     }
@@ -527,6 +537,24 @@ class HttpShareMethod : ShareMethod(), ContentReceivedListener, ServiceListener,
         return isNeedPin
     }
 
+    fun showPinToServerSheet(shareDevice: ShareDevice.HttpShareDevice) {
+        PurpleLogger.current.d(
+            TAG,
+            "onClientRequestPair, shareDevice:$shareDevice"
+        )
+        //todo
+        /*val bottomSheetState = viewModel.bottomSheetState()
+        bottomSheetState.show {
+            AppSetsSharePinSheet(
+                shareDevice = shareDevice,
+                pin = 0,
+                onConfirmClick = {
+
+                }
+            )
+        }*/
+    }
+
     fun onClientRequestPair(pin: Int, clientInfo: ClientInfo) {
         PurpleLogger.current.d(
             TAG,
@@ -545,6 +573,10 @@ class HttpShareMethod : ShareMethod(), ContentReceivedListener, ServiceListener,
             "onClientRequestPair, shareDevice:$shareDevice"
         )
 
+        showPinToClientSheet(shareDevice, pin)
+    }
+
+    private fun showPinToClientSheet(shareDevice: ShareDevice.HttpShareDevice, pin:Int){
         val bottomSheetState = viewModel.bottomSheetState()
         bottomSheetState.show {
             AppSetsSharePinSheet(
@@ -582,17 +614,17 @@ class HttpShareMethod : ShareMethod(), ContentReceivedListener, ServiceListener,
                 appSetsShareRepository.resumeHandleSend(
                     shareMethod = this@HttpShareMethod,
                     shareDevice = shareDevice,
-                    contentListId = "/",
+                    uri = "/",
                     by = "onSeverPairResponse"
                 )
             }
         }
     }
 
-    fun onClientPrepareSend(clientInfo: ClientInfo, contentListId: String) {
+    fun onClientPrepareSend(clientInfo: ClientInfo, uri: String) {
         PurpleLogger.current.d(
             TAG,
-            "onClientPrepareSend, clientInfo:$clientInfo, contentListId:$contentListId"
+            "onClientPrepareSend, clientInfo:$clientInfo, uri:$uri"
         )
         val shareDevice = findShareDeviceForClientInfo(clientInfo)
         if (shareDevice == null) {
@@ -612,7 +644,7 @@ class HttpShareMethod : ShareMethod(), ContentReceivedListener, ServiceListener,
                 shareDevice,
                 true,
                 isPreferDownloadSelfState.value,
-                contentListId
+                uri
             )
         } else {
             val bottomSheetState = viewModel.bottomSheetState()
@@ -626,7 +658,7 @@ class HttpShareMethod : ShareMethod(), ContentReceivedListener, ServiceListener,
                             shareDevice,
                             isAccept,
                             isPreferDownloadSelfState.value,
-                            contentListId
+                            uri
                         )
                     },
                     onAutoAcceptChanged = { isAutoAccept ->
@@ -677,7 +709,7 @@ class HttpShareMethod : ShareMethod(), ContentReceivedListener, ServiceListener,
                 appSetsShareRepository.resumeHandleSend(
                     shareMethod = this@HttpShareMethod,
                     shareDevice = shareDevice,
-                    contentListId = "/",
+                    uri = "/",
                     by = "onServerPrepareSendResponse"
                 )
             }
@@ -688,7 +720,7 @@ class HttpShareMethod : ShareMethod(), ContentReceivedListener, ServiceListener,
         shareDevice: ShareDevice.HttpShareDevice,
         isAccept: Boolean,
         isPreferDownloadSelf: Boolean,
-        contentListId: String,
+        uri: String,
     ) {
         activity.lifecycleScope.launch {
             requestRaw(
@@ -709,7 +741,7 @@ class HttpShareMethod : ShareMethod(), ContentReceivedListener, ServiceListener,
                 appSetsShareRepository.handleDownload(
                     this@HttpShareMethod,
                     shareDevice,
-                    contentListId
+                    uri
                 )
             }
         }
@@ -770,7 +802,7 @@ class HttpShareMethod : ShareMethod(), ContentReceivedListener, ServiceListener,
         }
     }
 
-    fun getPendingSendFileList(contentListUri: String): List<DataContent> {
+    fun getPendingSendFileList(uri: String): List<DataContent> {
         return viewModel.pendingSendContentList
     }
 

@@ -80,7 +80,10 @@ abstract class DesignFragmentActivity :
         )
     }
 
-    override fun <I> getActivityResultLauncher(inputClazz: Class<I>): ActivityResultLauncher<*>? {
+    override fun <I> getActivityResultLauncher(
+        inputClazz: Class<I>,
+        requestPrams: Any?
+    ): ActivityResultLauncher<*>? {
         return null
     }
 

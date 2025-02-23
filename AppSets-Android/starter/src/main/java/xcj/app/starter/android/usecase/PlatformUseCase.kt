@@ -4,6 +4,8 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
+import android.provider.DocumentsContract
 import android.provider.Settings
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
@@ -75,7 +77,36 @@ class PlatformUseCase {
             }
         }
 
-        fun openSystemFileProviderForOldVersion(
+        fun makeFileSelectionIntent(
+            mimeType: String = "*/*",
+            multiSelect: Boolean
+        ): Intent {
+            return Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+                addCategory(Intent.CATEGORY_OPENABLE)
+                if (multiSelect) {
+                    putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
+                }
+                type = mimeType
+                addFlags(
+                    Intent.FLAG_GRANT_READ_URI_PERMISSION or
+                            Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                )
+            }
+        }
+
+        fun makeOpenDirectoryIntent(pickerInitialUri: Uri? = null): Intent {
+            val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE).apply {
+                // Optionally, specify a URI for the directory that should be opened in
+                // the system file picker when it loads.
+
+                if (pickerInitialUri != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    putExtra(DocumentsContract.EXTRA_INITIAL_URI, pickerInitialUri)
+                }
+            }
+            return intent
+        }
+
+        fun openSystemFileProvider(
             context: Context,
             requestCode: Int,
             mimeType: String = "*/*",
@@ -84,23 +115,13 @@ class PlatformUseCase {
             if (context !is Activity) {
                 return
             }
-            val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
-                addCategory(Intent.CATEGORY_OPENABLE)
-                if (multiSelect) {
-                    putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
-                }
-                type = mimeType
-                addFlags(
-                    Intent.FLAG_GRANT_READ_URI_PERMISSION or
-                            Intent.FLAG_GRANT_WRITE_URI_PERMISSION
-                )
-            }
+            val intent = makeFileSelectionIntent(mimeType, multiSelect)
             runCatching {
                 context.startActivityForResult(intent, requestCode)
             }
         }
 
-        fun openSystemFileProviderForNewVersion(
+        fun openSystemFileProvider(
             context: Context,
             mimeType: String = "*/*",
             multiSelect: Boolean = false
@@ -108,20 +129,33 @@ class PlatformUseCase {
             if (context !is ActivityThemeInterface) {
                 return
             }
-            val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
-                addCategory(Intent.CATEGORY_OPENABLE)
-                if (multiSelect) {
-                    putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
-                }
-                type = mimeType
-                addFlags(
-                    Intent.FLAG_GRANT_READ_URI_PERMISSION or
-                            Intent.FLAG_GRANT_WRITE_URI_PERMISSION
-                )
-            }
+            val intent = makeFileSelectionIntent(mimeType, multiSelect)
             val activityResultLauncher =
-                context.getActivityResultLauncher<Intent>(Intent::class.java) as? ActivityResultLauncher<Intent>
-            activityResultLauncher?.launch(intent)
+                context.getActivityResultLauncher<Intent>(
+                    Intent::class.java,
+                    null
+                ) as? ActivityResultLauncher<Intent>
+            runCatching {
+                activityResultLauncher?.launch(intent)
+            }
+        }
+
+        fun openSystemFileProviderToOpenDirectory(
+            context: Context,
+            pickerInitialUri: Uri? = null
+        ) {
+            if (context !is ActivityThemeInterface) {
+                return
+            }
+            val intent = makeOpenDirectoryIntent(pickerInitialUri)
+            val activityResultLauncher =
+                context.getActivityResultLauncher<Intent>(
+                    Intent::class.java,
+                    null
+                ) as? ActivityResultLauncher<Intent>
+            runCatching {
+                activityResultLauncher?.launch(intent)
+            }
         }
     }
 }

@@ -1,6 +1,7 @@
 package xcj.app.share.http.common
 
 import android.content.Context
+import android.os.ParcelFileDescriptor
 import okhttp3.MediaType
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody
@@ -20,13 +21,14 @@ import xcj.app.web.webserver.base.ProgressListener
 import java.io.Closeable
 import java.io.FileDescriptor
 import java.io.FileInputStream
+import java.io.InputStream
 
 class ProgressRequestBody(
     private val requestBody: RequestBody,
     private val dataContent: DataContent,
     private val progressListener: ProgressListener?,
-    private val closeable: Closeable? = null
-) : RequestBody(), Closeable {
+    private val relatedCloseable: Closeable? = null
+) : RequestBody() {
 
     companion object {
         private const val TAG = "ProgressRequestBody"
@@ -49,11 +51,13 @@ class ProgressRequestBody(
         return requestBody.contentLength()
     }
 
-    override fun close() {
-        closeable?.close()
+    fun close() {
+        PurpleLogger.current.d(TAG, "close")
+        relatedCloseable?.close()
     }
 
     override fun writeTo(sink: BufferedSink) {
+        PurpleLogger.current.d(TAG, "writeTo")
         if (bufferedSink == null) {
             // 将传入的 Sink 包装成 CountingSink
             bufferedSink = sink(sink).buffer()
@@ -71,10 +75,13 @@ class ProgressRequestBody(
         return object : ForwardingSink(sink) {
 
             var totalBytesWritten: Long = 0L
-            val contentLength: Long = contentLength1()
+            var contentLength: Long = 0L
 
             override fun write(source: Buffer, byteCount: Long) {
                 super.write(source, byteCount)
+                if (contentLength == 0L) {
+                    contentLength = contentLength1()
+                }
                 totalBytesWritten += byteCount
                 val progressListener = progressListener
                 if (progressListener != null) {
@@ -100,15 +107,15 @@ fun DataContent.asProgressRequestBody(
         }
 
         is DataContent.UriContent -> {
-            val parcelFileDescriptor =
-                context.applicationContext.contentResolver.openFileDescriptor(this.uri, "r")
-            if (parcelFileDescriptor == null) {
+            val inputStream =
+                context.applicationContext.contentResolver.openInputStream(this.uri)
+            if (inputStream == null) {
                 return null
             }
 
             val requestBody =
-                parcelFileDescriptor.fileDescriptor.toRequestBody1(ContentType.MULTIPART_FORM_DATA.toMediaTypeOrNull())
-            return ProgressRequestBody(requestBody, this, progressListener, parcelFileDescriptor)
+                inputStream.toRequestBody(ContentType.MULTIPART_FORM_DATA.toMediaTypeOrNull())
+            return ProgressRequestBody(requestBody, this, progressListener)
         }
 
         is DataContent.ByteArrayContent -> {
@@ -122,6 +129,36 @@ fun DataContent.asProgressRequestBody(
     }
 
     return null
+}
+
+fun InputStream.toRequestBody(contentType: MediaType? = null): RequestBody {
+    return object : RequestBody() {
+
+        override fun contentType() = contentType
+
+        override fun isOneShot(): Boolean = true
+
+        override fun writeTo(sink: BufferedSink) {
+            use {
+                sink.writeAll(it.source())
+            }
+        }
+    }
+}
+
+fun ParcelFileDescriptor.toRequestBody(contentType: MediaType? = null): RequestBody {
+    return object : RequestBody() {
+
+        override fun contentType() = contentType
+
+        override fun isOneShot(): Boolean = true
+
+        override fun writeTo(sink: BufferedSink) {
+            FileInputStream(fileDescriptor).use {
+                sink.writeAll(it.source())
+            }
+        }
+    }
 }
 
 fun FileDescriptor.toRequestBody1(contentType: MediaType? = null): RequestBody {

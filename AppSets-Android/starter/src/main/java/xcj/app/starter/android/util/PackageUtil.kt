@@ -67,14 +67,14 @@ object PackageUtil {
                     val appDefinition = AppDefinition(
                         UUID.randomUUID().toString()
                     )
-                    appDefinition.applicationInfo = it.activityInfo.applicationInfo
+                    val applicationInfo = it.activityInfo.applicationInfo
+                    appDefinition.applicationInfo = applicationInfo
                     appDefinition.name =
-                        it.activityInfo.applicationInfo.loadLabel(context.packageManager).toString()
+                        applicationInfo.loadLabel(context.packageManager).toString()
                             .trim()
-                            .toString().trim()
 
                     appDefinition.icon =
-                        it.activityInfo.applicationInfo.loadIcon(context.packageManager)
+                        applicationInfo.loadIcon(context.packageManager)
                     appDefinition
                 }
             }

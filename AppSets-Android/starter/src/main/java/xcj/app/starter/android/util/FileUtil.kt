@@ -22,7 +22,7 @@ import java.lang.NumberFormatException
 import java.util.Objects
 import kotlin.math.min
 
-object FileUtils {
+object FileUtil {
 
     private const val TAG = "FileUtils"
 
@@ -255,15 +255,18 @@ object FileUtils {
         selection: String?,
         selectionArgs: Array<String?>?
     ): String? {
-        val column = "_data"
-        val projection = arrayOf<String?>(column)
+        val projections = arrayOf<String?>(FileColumns.DATA)
         context.contentResolver.query(
-            uri, projection,
+            uri, projections,
             selection, selectionArgs, null
         )?.use {
             if (it.moveToFirst()) {
-                val index = it.getColumnIndexOrThrow(column)
-                return it.getString(index)
+                val projection = projections.first()
+                val index = it.getColumnIndex(projection)
+                if (index != -1) {
+                    return it.getString(index)
+                }
+                return null
             }
         }
         return null
@@ -412,70 +415,97 @@ object FileUtils {
     }
 
     @JvmStatic
-    suspend fun parseFromAndroidUri(context: Context, uri: Uri): AndroidUriFile? = withContext(
-        Dispatchers.IO
-    ) {
-        if (uri.scheme == SCHEMA_FIlE) {
-            val path = uri.path
-            if (path.isNullOrEmpty()) {
-                PurpleLogger.current.d(
-                    TAG,
-                    "fromAndroidUri, uri content file path is null or empty! return"
-                )
-                return@withContext null
-            }
-            val file = File(path)
-            file.setReadable(true)
-            PurpleLogger.current.d(
-                TAG,
-                "fromAndroidUri, uri content file path:${file}"
-            )
-            val length = file.length()
-            return@withContext AndroidUriFile(file.nameWithoutExtension, file, length)
-        } else {
-            val projections =
-                arrayOf(FileColumns.DATA, FileColumns.DISPLAY_NAME, FileColumns.SIZE)
-            val cursor = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                context.contentResolver.query(uri, projections, null, null)
-            } else {
-                context.contentResolver.query(uri, projections, null, null, null, null)
-            }
-
-            if (cursor == null) {
-                PurpleLogger.current.d(TAG, "fromAndroidUri, cursor is null, uri:${uri}, return")
-                return@withContext null
-            }
-            cursor.use {
-                if (!cursor.moveToFirst()) {
+    suspend fun parseFromAndroidUri(context: Context, uri: Uri): AndroidUriFile? =
+        withContext(Dispatchers.IO) {
+            if (uri.scheme == SCHEMA_FIlE) {
+                val path = uri.path
+                if (path.isNullOrEmpty()) {
+                    PurpleLogger.current.d(
+                        TAG,
+                        "fromAndroidUri, uri content file path is null or empty! return"
+                    )
                     return@withContext null
                 }
-                val androidUriFile = AndroidUriFile()
-                projections.forEach { projection ->
-                    val index = it.getColumnIndexOrThrow(projection)
-                    when (projection) {
-                        FileColumns.DATA -> {
-                            val path = it.getString(index)
-                            if (!path.isNullOrEmpty()) {
-                                androidUriFile.file = File(path)
+                val file = File(path)
+                file.setReadable(true)
+                PurpleLogger.current.d(
+                    TAG,
+                    "fromAndroidUri, uri content file path:${file}"
+                )
+                val length = file.length()
+                return@withContext AndroidUriFile(file.nameWithoutExtension, file, length)
+            } else {
+                val projections =
+                    arrayOf(FileColumns.DATA, FileColumns.DISPLAY_NAME, FileColumns.SIZE)
+                val cursor = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    context.contentResolver.query(uri, projections, null, null)
+                } else {
+                    context.contentResolver.query(uri, projections, null, null, null, null)
+                }
+
+                if (cursor == null) {
+                    PurpleLogger.current.d(
+                        TAG,
+                        "fromAndroidUri, cursor is null, uri:${uri}, return"
+                    )
+                    return@withContext null
+                }
+                cursor.use {
+                    if (!cursor.moveToFirst()) {
+                        return@withContext null
+                    }
+                    val androidUriFile = AndroidUriFile()
+                    projections.forEach { projection ->
+                        val index = it.getColumnIndex(projection)
+                        if (index != -1) {
+                            when (projection) {
+                                FileColumns.DATA -> {
+                                    val path = it.getString(index)
+                                    if (!path.isNullOrEmpty()) {
+                                        androidUriFile.file = File(path)
+                                    }
+                                }
+
+                                FileColumns.DISPLAY_NAME -> {
+                                    androidUriFile.displayName = it.getString(index)
+                                }
+
+                                FileColumns.SIZE -> {
+                                    val size = it.getLong(index)
+                                    androidUriFile.size = size
+                                    androidUriFile.sizeReadable =
+                                        ByteUtil.getNetFileSizeDescription(size)
+                                }
                             }
                         }
 
-                        FileColumns.DISPLAY_NAME -> {
-                            androidUriFile.displayName = it.getString(index)
-                        }
-
-                        FileColumns.SIZE -> {
-                            val size = it.getLong(index)
-                            androidUriFile.size = size
-                            androidUriFile.sizeReadable = ByteUtil.getNetFileSizeDescription(size)
-                        }
                     }
+                    return@withContext androidUriFile
                 }
-                return@withContext androidUriFile
-            }
 
+            }
+            return@withContext null
         }
-        return@withContext null
+
+    fun isDirectoryUriByType(context: Context, uri: Uri?): Boolean {
+        if (uri == null) {
+            return false // Uri 为空，肯定不是文件夹
+        }
+
+        val contentResolver = context.contentResolver
+        val mimeType = contentResolver.getType(uri)
+
+        if (mimeType == null) {
+            return false
+        }
+        // 常见的文件夹 MIME 类型，可能需要根据实际情况扩展
+        if (mimeType == DocumentsContract.Document.MIME_TYPE_DIR ||  // Document Provider 文件夹的 MIME 类型
+            mimeType.startsWith("vnd.android.document/directory") || // 某些 Document Provider 可能使用这种前缀
+            mimeType == "application/vnd.google-apps.folder"
+        ) { // Google Drive Folder
+            return true
+        }
+        return false // 无法确定或 MIME 类型不是文件夹类型，认为不是文件夹
     }
 }
 

@@ -35,7 +35,7 @@ val LocalPurple = staticProvider<PurpleContext>().apply {
 }
 
 @JvmField
-val LocalPurpleEventProvider = staticProvider<PurpleEventPublisher>().apply {
+val LocalPurpleEventPublisher = staticProvider<PurpleEventPublisher>().apply {
     //Please provide this value in due course
 }
 
