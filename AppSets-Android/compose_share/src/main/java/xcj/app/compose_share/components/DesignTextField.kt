@@ -83,7 +83,7 @@ fun DesignTextField(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AppSetsTextFieldNormal(
+fun SearchTextField(
     value: String,
     onValueChange: (String) -> Unit,
     modifier: Modifier = Modifier,

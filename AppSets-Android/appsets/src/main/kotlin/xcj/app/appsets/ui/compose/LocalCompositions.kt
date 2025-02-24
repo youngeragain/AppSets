@@ -2,6 +2,8 @@ package xcj.app.appsets.ui.compose
 
 import androidx.activity.OnBackPressedDispatcher
 import androidx.compose.runtime.staticCompositionLocalOf
+import xcj.app.appsets.ui.compose.quickstep.QuickStepContentHandler
+import xcj.app.appsets.ui.compose.quickstep.QuickStepContentHandlerRegistry
 import xcj.app.appsets.usecase.ActivityLifecycleUseCase
 import xcj.app.appsets.usecase.AppCreationUseCase
 import xcj.app.appsets.usecase.AppsUseCase
@@ -69,6 +71,9 @@ val LocalUseCaseOfUserInfo =
 
 val LocalUseCaseOfNowSpaceContent =
     staticCompositionLocalOf<NowSpaceContentUseCase> { error("No NowSpaceContentUseCase provided") }
+
+val LocalQuickStepContentHandlerRegistry =
+    staticCompositionLocalOf<QuickStepContentHandlerRegistry> { QuickStepContentHandlerRegistry() }
 
 //提供所有需要登录拦截页面名
 val LocalPageRouteNameNeedLoggedProvider = staticCompositionLocalOf {

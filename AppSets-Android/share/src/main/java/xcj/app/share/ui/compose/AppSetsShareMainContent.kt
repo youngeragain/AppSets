@@ -1791,9 +1791,9 @@ fun AppSetsShareExternalContentTipsSheet(
                 FilledTonalIconButton(onClick = {
                     onConfirmClick(AppSetsShareActivity.EXTERNAL_CONTENT_HANDLE_BY_APPSETS)
                 }) {
-                    Icon(
+                    Image(
                         modifier = Modifier,
-                        painter = painterResource(xcj.app.compose_share.R.drawable.ic_appsets_44),
+                        painter = painterResource(xcj.app.compose_share.R.drawable.ic_launcher_foreground),
                         contentDescription = null
                     )
                 }

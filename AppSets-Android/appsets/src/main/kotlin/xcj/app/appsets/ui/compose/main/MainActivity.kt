@@ -5,21 +5,30 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.Parcelable
 import android.view.MotionEvent
 import android.window.OnBackInvokedDispatcher
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.withCreated
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import xcj.app.appsets.notification.NotificationPusher
+import xcj.app.appsets.ui.compose.quickstep.QuickStepContent
+import xcj.app.appsets.ui.compose.quickstep.QuickStepSheet
+import xcj.app.appsets.ui.compose.quickstep.TextQuickStepContent
+import xcj.app.appsets.ui.compose.quickstep.UriQuickStepContent
 import xcj.app.appsets.ui.compose.theme.AppSetsTheme
 import xcj.app.appsets.ui.viewmodel.MainViewModel
 import xcj.app.appsets.util.SplashScreenHelper
+import xcj.app.compose_share.ui.viewmodel.AnyStateViewModel.Companion.bottomSheetState
 import xcj.app.starter.android.ui.base.DesignComponentActivity
 import xcj.app.starter.android.util.PurpleLogger
+import xcj.app.starter.util.ContentType
 
 class MainActivity : DesignComponentActivity() {
 
@@ -48,16 +57,22 @@ class MainActivity : DesignComponentActivity() {
         }
         lifecycleScope.launch {
             lifecycle.withCreated {
-                viewModel.onActivityCreated(this@MainActivity)
-                viewModel.handleIntent(intent)
                 createBroadcastReceiver()
+                viewModel.onActivityCreated(this@MainActivity)
+                lifecycleScope.launch {
+                    viewModel.handleIntent(intent)
+                    handleExternalShareContentIfNeeded(intent)
+                }
             }
         }
     }
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
-        viewModel.handleIntent(intent)
+        lifecycleScope.launch {
+            viewModel.handleIntent(intent)
+            handleExternalShareContentIfNeeded(intent)
+        }
     }
 
 
@@ -119,6 +134,58 @@ class MainActivity : DesignComponentActivity() {
         super.onDestroy()
         if (::mImMessageNotificationIntentReceiver.isInitialized) {
             unregisterReceiver(mImMessageNotificationIntentReceiver)
+        }
+    }
+
+    suspend fun handleExternalShareContentIfNeeded(intent: Intent?) {
+        if (intent == null) {
+            return
+        }
+        when (intent.action) {
+            Intent.ACTION_SEND -> {
+                if (ContentType.TEXT_PLAIN == intent.type) {
+                    handleIntentExternalContent(intent, true, false)
+                } else {
+                    handleIntentExternalContent(intent, false, false)
+                }
+            }
+
+            Intent.ACTION_SEND_MULTIPLE -> {
+                handleIntentExternalContent(intent, false, true)
+            }
+        }
+    }
+
+    private suspend fun handleIntentExternalContent(
+        intent: Intent, isText: Boolean, isMulti: Boolean
+    ) {
+        val quickStepContentList = mutableListOf<QuickStepContent>()
+        if (isText) {
+            intent.getStringExtra(Intent.EXTRA_TEXT)?.let { text ->
+                val textQuickStepContent = TextQuickStepContent(text)
+                quickStepContentList.add(textQuickStepContent)
+            }
+        } else {
+            if (!isMulti) {
+                (intent.getParcelableExtra<Parcelable>(Intent.EXTRA_STREAM) as? Uri)?.let { uri ->
+                    val textQuickStepContent = UriQuickStepContent(uri)
+                    quickStepContentList.add(textQuickStepContent)
+                }
+            } else {
+                intent.getParcelableArrayListExtra<Parcelable>(Intent.EXTRA_STREAM)
+                    ?.mapNotNull {
+                        it as? Uri
+                    }?.forEach { uri ->
+                        val textQuickStepContent = UriQuickStepContent(uri)
+                        quickStepContentList.add(textQuickStepContent)
+                    }
+            }
+        }
+        //remove this
+        delay(200)
+        var bottomSheetState = viewModel.bottomSheetState()
+        bottomSheetState.show {
+            QuickStepSheet(quickStepContentList)
         }
     }
 }

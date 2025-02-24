@@ -7,6 +7,8 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.AnimationState
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.animateTo
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -24,10 +26,12 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.windowInsetsTopHeight
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -35,11 +39,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.BlurEffect
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
@@ -59,6 +65,7 @@ import xcj.app.appsets.im.message.ImMessage
 import xcj.app.appsets.im.message.SystemMessage
 import xcj.app.appsets.im.model.FriendRequestJson
 import xcj.app.appsets.im.model.GroupRequestJson
+import xcj.app.appsets.ui.compose.LocalQuickStepContentHandlerRegistry
 import xcj.app.appsets.ui.compose.LocalUseCaseOfActivityLifecycle
 import xcj.app.appsets.ui.compose.LocalUseCaseOfAppCreation
 import xcj.app.appsets.ui.compose.LocalUseCaseOfApps
@@ -75,8 +82,10 @@ import xcj.app.appsets.ui.compose.LocalUseCaseOfSearch
 import xcj.app.appsets.ui.compose.LocalUseCaseOfSystem
 import xcj.app.appsets.ui.compose.LocalUseCaseOfUserInfo
 import xcj.app.appsets.ui.compose.PageRouteNames
+import xcj.app.appsets.ui.compose.conversation.quickstep.ConversationQuickStepHandler
 import xcj.app.appsets.ui.compose.custom_component.AnyImage
 import xcj.app.appsets.ui.compose.media.video.fall.MediaFallActivity
+import xcj.app.appsets.ui.compose.outside.quickstep.OutSideQuickStepHandler
 import xcj.app.appsets.ui.compose.settings.LiteSettingsDialog
 import xcj.app.appsets.ui.model.NowSpaceObjectState
 import xcj.app.appsets.ui.model.NowSpaceObjectState.NewImMessage
@@ -99,6 +108,15 @@ private const val TAG = "MainPages"
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun MainPages() {
+    val localQuickStepContentHandlerRegistry = LocalQuickStepContentHandlerRegistry.current
+    DisposableEffect(Unit) {
+        localQuickStepContentHandlerRegistry.addContentHandler(ConversationQuickStepHandler())
+        localQuickStepContentHandlerRegistry.addContentHandler(OutSideQuickStepHandler())
+        onDispose {
+            localQuickStepContentHandlerRegistry.removeAll()
+        }
+    }
+
     val viewModel = viewModel<MainViewModel>()
     CompositionLocalProvider(
         LocalUseCaseOfNavigation provides viewModel.navigationUseCase,
@@ -117,12 +135,14 @@ fun MainPages() {
         LocalUseCaseOfApps provides viewModel.appsUseCase,
         LocalUseCaseOfUserInfo provides viewModel.userInfoUseCase,
         LocalUseCaseOfNowSpaceContent provides viewModel.nowSpaceContentUseCase,
-        LocalAnyStateProvider provides viewModel,
+        LocalAnyStateProvider provides viewModel
     ) {
-
         val navController = rememberNavController()
 
-        Box(modifier = Modifier.fillMaxSize()) {
+        val backgroundModifier = makeBackgroundModifier()
+        Box(
+            modifier = backgroundModifier
+        ) {
             MainScaffoldContainer(navController = navController)
 
             ImmerseContentContainer(navController = navController)
@@ -131,6 +151,38 @@ fun MainPages() {
 
         }
     }
+}
+
+@Composable
+fun makeBackgroundModifier(): Modifier {
+    val localAnyStateProvider = LocalAnyStateProvider.current
+    val bottomSheetState = localAnyStateProvider.bottomSheetState()
+    val scale = if (bottomSheetState.isShow) {
+        0.9f
+    } else {
+        1f
+    }
+    val offsetY = if (bottomSheetState.isShow) {
+        (68).dp
+    } else {
+        0.dp
+    }
+    val shapeDp = if (bottomSheetState.isShow) {
+        32.dp
+    } else {
+        0.dp
+    }
+    val shapeState by animateDpAsState(shapeDp, animationSpec = tween())
+    val offsetYState by animateDpAsState(offsetY, animationSpec = tween())
+    val scaleState by animateFloatAsState(scale, animationSpec = tween())
+
+    val clipShape = RoundedCornerShape(shapeState)
+
+    return Modifier
+        .fillMaxSize()
+        .offset(y = offsetYState)
+        .scale(scaleState)
+        .clip(clipShape)
 }
 
 @Composable

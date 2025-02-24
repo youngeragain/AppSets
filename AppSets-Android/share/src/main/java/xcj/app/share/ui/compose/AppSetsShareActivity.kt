@@ -271,15 +271,17 @@ class AppSetsShareActivity : DesignComponentActivity() {
                 }
 
                 EXTERNAL_CONTENT_HANDLE_BY_APPSETS -> {
-                    val intent = Intent()
+                    val outIntent = Intent()
                     val component = ComponentName(
                         "xcj.app.container",
                         "xcj.app.appsets.ui.compose.main.MainActivity"
                     )
-                    intent.setComponent(component)
-                    intent.putExtras(intent)
+                    outIntent.setComponent(component)
+                    outIntent.action = intent.action
+                    outIntent.type = intent.type
+                    outIntent.putExtras(intent)
                     runCatching {
-                        startActivity(intent)
+                        startActivity(outIntent)
                     }
                 }
             }

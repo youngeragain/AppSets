@@ -72,7 +72,7 @@ import xcj.app.appsets.server.model.UserInfo
 import xcj.app.appsets.ui.compose.LocalUseCaseOfSearch
 import xcj.app.appsets.ui.compose.PageRouteNames
 import xcj.app.compose_share.components.DesignHDivider
-import xcj.app.compose_share.components.AppSetsTextFieldNormal
+import xcj.app.compose_share.components.SearchTextField
 import xcj.app.appsets.ui.compose.custom_component.HideNavBarWhenOnLaunch
 import xcj.app.appsets.ui.compose.custom_component.AnyImage
 import xcj.app.appsets.ui.compose.outside.ScreenComponent
@@ -180,7 +180,7 @@ fun SearchPageTop(
             bottomEnd = 8.dp.value
         )
     )
-    AppSetsTextFieldNormal(
+    SearchTextField(
         value = inputContent.text,
         onValueChange = {
             inputContent = TextFieldValue(it)
