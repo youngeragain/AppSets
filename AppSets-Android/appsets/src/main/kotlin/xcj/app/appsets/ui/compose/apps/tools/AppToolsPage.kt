@@ -22,9 +22,11 @@ import xcj.app.appsets.ui.compose.custom_component.HideNavBarWhenOnLaunch
 import xcj.app.compose_share.components.BackActionTopBar
 import xcj.app.compose_share.components.DesignHDivider
 
+const val TOOL_TYPE = "tool_type"
+
 const val TOOL_TYPE_AppSets_Compose_plugin = "AppSets_Compose_Plugin"
-const val TOOL_TYPE_AppSets_TRANSFORM = "AppSets_Transform"
-const val TOOL_TYPE_AppSets_WEATHER = "AppSets_Weather"
+const val TOOL_TYPE_AppSets_Transform = "AppSets_Transform"
+const val TOOL_TYPE_AppSets_Weather = "AppSets_Weather"
 const val TOOL_TYPE_AppSets_Share = "AppSets_Share"
 const val TOOL_TYPE_AppSets_Proxy = "AppSets_Proxy"
 const val TOOL_TYPE_AppSets_Launcher = "AppSets_Launcher"
@@ -63,14 +65,14 @@ fun generateAppToolList(): List<AppTool> {
                 AppTool(
                     xcj.app.compose_share.R.drawable.ic_outline_qr_code_24,
                     xcj.app.appsets.R.string.transform_content,
-                    TOOL_TYPE_AppSets_TRANSFORM
+                    TOOL_TYPE_AppSets_Transform
                 )
             )
             add(
                 AppTool(
                     xcj.app.compose_share.R.drawable.ic_cloud_24,
                     xcj.app.appsets.R.string.weather,
-                    TOOL_TYPE_AppSets_WEATHER
+                    TOOL_TYPE_AppSets_Weather
                 )
             )
             add(
@@ -86,7 +88,10 @@ fun generateAppToolList(): List<AppTool> {
 }
 
 @Composable
-fun AppToolsPage(onBackClick: () -> Unit, onToolClick: (String) -> Unit) {
+fun AppToolsPage(
+    onBackClick: () -> Unit,
+    onToolClick: (String) -> Unit
+) {
     HideNavBarWhenOnLaunch()
     Column {
         BackActionTopBar(

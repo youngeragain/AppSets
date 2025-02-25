@@ -5,6 +5,7 @@ object Constants {
     const val STR_EMPTY = ""
     const val STR_NULL_LOWERCASE = "null"
 
+    const val QUICK_STEP_CONTENT = "QUICK_STEP_CONTENT"
     const val APP_THEME = "APP_THEME"
     const val APP_INFO = "APP_INFO"
     const val PLATFORM_ID = "platform_id"

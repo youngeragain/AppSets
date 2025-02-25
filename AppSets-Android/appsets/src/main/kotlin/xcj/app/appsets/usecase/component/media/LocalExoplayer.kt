@@ -2,6 +2,7 @@ package xcj.app.appsets.usecase.component.media
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.net.Uri
 import androidx.compose.runtime.MutableState
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
@@ -9,7 +10,7 @@ import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.PlayerView
-import xcj.app.appsets.im.model.CommonURLJson
+import xcj.app.appsets.im.model.CommonURIJson
 import xcj.app.appsets.ui.model.SpotLightState
 import xcj.app.appsets.util.ktx.asContextOrNull
 import xcj.app.starter.android.util.PurpleLogger
@@ -127,7 +128,7 @@ class LocalExoplayer(
     }
 
     fun playVideo(
-        videoJson: CommonURLJson,
+        videoUriJson: CommonURIJson,
         addToList: Boolean = false,
         playWhenReady: Boolean = true
     ) {
@@ -137,7 +138,7 @@ class LocalExoplayer(
                 playVideo, 
                 playerCurrentMediaItemIndex:${playerCurrentMediaItemIndex}
                 playbackPosition:${playbackPosition},
-                videoJson:$videoJson,
+                videoJson:$videoUriJson,
                 exoPlayer:$exoPlayer
             """.trimIndent()
         )
@@ -145,15 +146,16 @@ class LocalExoplayer(
         if (exoPlayer == null) {
             return
         }
-        if (videoJson.id == videoPlayerState.value.playId
+        if (videoUriJson.id == videoPlayerState.value.playId
             && (exoPlayer.isPlaying || exoPlayer.isLoading)
         ) {
             return
         }
         videoPlayerState.apply {
-            value = value.copy(playId = videoJson.id)
+            value = value.copy(playId = videoUriJson.id)
         }
-        val mediaItem = MediaItem.fromUri(videoJson.url)
+        val mediaItem = MediaItem.fromUri(videoUriJson.uri)
+
         if (addToList) {
             exoPlayer.addMediaItem(mediaItem)
         } else {

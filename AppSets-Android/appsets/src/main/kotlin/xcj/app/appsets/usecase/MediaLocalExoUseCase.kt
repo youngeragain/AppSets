@@ -4,7 +4,7 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.LifecycleOwner
 import androidx.media3.ui.PlayerView
-import xcj.app.appsets.im.model.CommonURLJson
+import xcj.app.appsets.im.model.CommonURIJson
 import xcj.app.appsets.ui.compose.media.video.fall.VideoMediaContent
 import xcj.app.appsets.ui.model.SpotLightState
 import xcj.app.appsets.usecase.component.media.LocalExoplayer
@@ -27,12 +27,12 @@ class MediaLocalExoUseCase() : IComposeDispose {
         owner.lifecycle.addObserver(localExoPlayer)
     }
 
-    fun playVideo(videoJson: CommonURLJson, playWhenReady: Boolean) {
+    fun playVideo(videoUriJson: CommonURIJson, playWhenReady: Boolean) {
         PurpleLogger.current.d(
             TAG,
             "playVideo, localExoPlayer.hashcode:${localExoPlayer.hashCode()}"
         )
-        localExoPlayer.playVideo(videoJson, playWhenReady = playWhenReady)
+        localExoPlayer.playVideo(videoUriJson, playWhenReady = playWhenReady)
     }
 
     fun requestStop() {
@@ -43,7 +43,7 @@ class MediaLocalExoUseCase() : IComposeDispose {
         PurpleLogger.current.d(TAG, "prepareUriVideo")
         runCatching {
             val videoURLJson =
-                CommonURLJson(
+                CommonURIJson(
                     videoMediaContent.id,
                     videoMediaContent.mediaContent.name ?: "",
                     videoMediaContent.mediaContent.uri

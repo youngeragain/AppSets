@@ -222,7 +222,7 @@ class SimpleFileIO : FileIO {
         uploadOptions: ObjectUploadOptions?,
         resultListener: Any?
     ) {
-        val file = FileUtil.parseFromAndroidUri(context, uri)?.file
+        val file = FileUtil.parseUriToAndroidUriFile(context, uri)?.file
         if (file == null) {
             PurpleLogger.current.d(TAG, "uploadWithUri, file is null, return")
             return

@@ -6,7 +6,7 @@ import androidx.annotation.OptIn
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.ui.PlayerView
 import com.google.gson.Gson
-import xcj.app.appsets.im.model.CommonURLJson
+import xcj.app.appsets.im.model.CommonURIJson
 import xcj.app.appsets.usecase.MediaLocalExoUseCase
 import xcj.app.starter.android.ui.base.DesignViewModel
 import xcj.app.starter.android.util.PurpleLogger
@@ -17,7 +17,7 @@ class MediaPlaybackViewModel : DesignViewModel() {
         private const val TAG = "ExoPlayerViewModel"
     }
 
-    private var videoJson: CommonURLJson? = null
+    private var videoUriJson: CommonURIJson? = null
 
     val mediaLocalExoUseCase: MediaLocalExoUseCase = MediaLocalExoUseCase()
 
@@ -25,13 +25,13 @@ class MediaPlaybackViewModel : DesignViewModel() {
         PurpleLogger.current.d(TAG, "init, hash:${hashCode()}")
     }
 
-    fun initVideoJson(videoJson: String?) {
-        if (videoJson.isNullOrEmpty()) {
+    fun initVideoJson(videoUriJson: String?) {
+        if (videoUriJson.isNullOrEmpty()) {
             return
         }
         runCatching {
-            this.videoJson =
-                Gson().fromJson(videoJson, CommonURLJson::class.java)
+            this.videoUriJson =
+                Gson().fromJson(videoUriJson, CommonURIJson::class.java)
         }
     }
 
@@ -44,8 +44,8 @@ class MediaPlaybackViewModel : DesignViewModel() {
     }
 
     fun play() {
-        var videoURLJson = videoJson ?: return
-        mediaLocalExoUseCase.playVideo(videoURLJson, true)
+        var videoURIJson = videoUriJson ?: return
+        mediaLocalExoUseCase.playVideo(videoURIJson, true)
     }
 
     fun onActivityCreated(activity: ComponentActivity) {

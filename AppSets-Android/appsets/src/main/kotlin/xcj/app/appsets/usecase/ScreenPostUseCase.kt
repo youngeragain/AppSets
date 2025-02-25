@@ -8,15 +8,20 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
-import xcj.app.starter.server.requestNotNull
-import xcj.app.appsets.util.ktx.toastSuspend
 import xcj.app.appsets.server.repository.GenerationAIRepository
 import xcj.app.appsets.server.repository.ScreenRepository
 import xcj.app.appsets.ui.compose.content_selection.ContentSelectionVarargs
+import xcj.app.appsets.ui.compose.quickstep.QuickStepContent
+import xcj.app.appsets.ui.compose.quickstep.TextQuickStepContent
+import xcj.app.appsets.ui.compose.quickstep.UriQuickStepContent
 import xcj.app.appsets.ui.model.PostScreen
 import xcj.app.appsets.ui.model.PostScreenState
+import xcj.app.appsets.util.ktx.toastSuspend
+import xcj.app.appsets.util.model.MediaStoreDataUri
 import xcj.app.appsets.util.model.UriProvider
 import xcj.app.compose_share.dynamic.IComposeDispose
+import xcj.app.starter.server.requestNotNull
+import xcj.app.starter.util.ContentType
 
 class ScreenPostUseCase(
     private val coroutineScope: CoroutineScope,
@@ -147,6 +152,27 @@ class ScreenPostUseCase(
             this.postScreenState.value = postScreenState.copy(postScreen = newPostScreen)
         } else {
             null
+        }
+    }
+
+    fun updateWithQuickStepContentIfNeeded(quickStepContents: List<QuickStepContent>?) {
+        if (quickStepContents.isNullOrEmpty()) {
+            return
+        }
+        quickStepContents.filterIsInstance<TextQuickStepContent>().forEach { quickStepContent ->
+            onInputContent(quickStepContent.text)
+        }
+        val uriQuickStepContents = quickStepContents.filterIsInstance<UriQuickStepContent>()
+        uriQuickStepContents.forEach { quickStepContent ->
+            if (ContentType.isImage(quickStepContent.uriContentType)) {
+                val mediaStoreDataUri = MediaStoreDataUri.fromUri(quickStepContent.uri)
+                val uriProviderList = listOf(mediaStoreDataUri)
+                updateSelectPictures(uriProviderList)
+            } else if (ContentType.isVideo(quickStepContent.uriContentType)) {
+                val mediaStoreDataUri = MediaStoreDataUri.fromUri(quickStepContent.uri)
+                val uriProviderList = listOf(mediaStoreDataUri)
+                updateSelectVideo(uriProviderList)
+            }
         }
     }
 

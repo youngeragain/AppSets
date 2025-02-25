@@ -91,8 +91,19 @@ class AppSetsShareActivity : DesignComponentActivity() {
         }
         lifecycleScope.launch {
             lifecycle.withCreated {
-                updateShareMethod(HttpShareMethod::class.java)
-                handleExternalShareContentIfNeeded(intent)
+                lifecycleScope.launch {
+                    val hasExternalContent = handleExternalShareContentIfNeeded(
+                        intent,
+                        onHandleCallback = { handleType ->
+                            if (handleType == EXTERNAL_CONTENT_HANDLE_BY_LOCAL_SHARE) {
+                                updateShareMethod(HttpShareMethod::class.java)
+                            }
+                        }
+                    )
+                    if (!hasExternalContent) {
+                        updateShareMethod(HttpShareMethod::class.java)
+                    }
+                }
             }
         }
     }
@@ -100,7 +111,7 @@ class AppSetsShareActivity : DesignComponentActivity() {
     override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
         lifecycleScope.launch {
-            handleExternalShareContentIfNeeded(intent)
+            handleExternalShareContentIfNeeded(intent, onHandleCallback = {})
         }
     }
 
@@ -225,32 +236,38 @@ class AppSetsShareActivity : DesignComponentActivity() {
         getShareMethod().sendAll()
     }
 
-
-    fun handleExternalShareContentIfNeeded(intent: Intent?) {
+    private suspend fun handleExternalShareContentIfNeeded(
+        intent: Intent?,
+        onHandleCallback: (Int) -> Unit
+    ): Boolean {
         if (intent == null) {
-            return
+            return false
         }
         when (intent.action) {
             Intent.ACTION_SEND -> {
-                if (ContentType.TEXT_PLAIN == intent.type) {
-                    handleIntentExternalContent(intent, true, false)
-                } else {
-                    handleIntentExternalContent(intent, false, false)
-                }
+                handleIntentExternalContent(intent, false, onHandleCallback)
+                return true
             }
 
             Intent.ACTION_SEND_MULTIPLE -> {
-                handleIntentExternalContent(intent, false, true)
+                handleIntentExternalContent(intent, true, onHandleCallback)
+                return true
             }
         }
+        return false
     }
 
 
-    private fun handleIntentExternalContent(intent: Intent, isText: Boolean, isMulti: Boolean) {
+    private suspend fun handleIntentExternalContent(
+        intent: Intent,
+        isMulti: Boolean,
+        onHandleCallback: (Int) -> Unit
+    ) {
         val contentConfirmCallBack: (Int) -> Unit = { handleType ->
+            onHandleCallback(handleType)
             when (handleType) {
                 EXTERNAL_CONTENT_HANDLE_BY_LOCAL_SHARE -> {
-                    if (isText) {
+                    if (intent.type == ContentType.TEXT_PLAIN) {
                         intent.getStringExtra(Intent.EXTRA_TEXT)?.let { text ->
                             viewModel.addPendingContent(this, text, CONTENT_FORM_OTHER_APP)
                         }

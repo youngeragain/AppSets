@@ -2,6 +2,7 @@ package xcj.app.appsets.ui.compose
 
 import androidx.activity.OnBackPressedDispatcher
 import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.navigation.NavHostController
 import xcj.app.appsets.ui.compose.quickstep.QuickStepContentHandler
 import xcj.app.appsets.ui.compose.quickstep.QuickStepContentHandlerRegistry
 import xcj.app.appsets.usecase.ActivityLifecycleUseCase
@@ -73,7 +74,10 @@ val LocalUseCaseOfNowSpaceContent =
     staticCompositionLocalOf<NowSpaceContentUseCase> { error("No NowSpaceContentUseCase provided") }
 
 val LocalQuickStepContentHandlerRegistry =
-    staticCompositionLocalOf<QuickStepContentHandlerRegistry> { QuickStepContentHandlerRegistry() }
+    staticCompositionLocalOf<QuickStepContentHandlerRegistry> { error("No QuickStepContentHandlerRegistry provided") }
+
+val LocalNavHostController =
+    staticCompositionLocalOf<NavHostController> { error("No NavHostController provided") }
 
 //提供所有需要登录拦截页面名
 val LocalPageRouteNameNeedLoggedProvider = staticCompositionLocalOf {

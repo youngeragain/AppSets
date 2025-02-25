@@ -1,6 +1,5 @@
-package xcj.app.appsets.ui.compose.conversation.quickstep
+package xcj.app.appsets.ui.compose.apps.quickstep
 
-import android.os.Parcelable
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -25,31 +24,40 @@ import androidx.core.os.bundleOf
 import xcj.app.appsets.constants.Constants
 import xcj.app.appsets.ui.compose.LocalNavHostController
 import xcj.app.appsets.ui.compose.PageRouteNames
+import xcj.app.appsets.ui.compose.apps.tools.TOOL_TYPE
+import xcj.app.appsets.ui.compose.apps.tools.TOOL_TYPE_AppSets_Transform
 import xcj.app.appsets.ui.compose.main.navigateWithBundle
 import xcj.app.appsets.ui.compose.quickstep.QuickStepContent
 import xcj.app.appsets.ui.compose.quickstep.QuickStepContentHandler
+import xcj.app.appsets.ui.compose.quickstep.TextQuickStepContent
+import xcj.app.compose_share.R
 
-class ConversationQuickStepHandler : QuickStepContentHandler {
+class ToolContentTransformQuickStepHandler : QuickStepContentHandler {
 
     private var mQuickStepContents: List<QuickStepContent>? = null
 
     override fun getName(): String {
-        return "Conversation"
+        return "Transform"
     }
 
     override fun getCategory(): String {
-        return "Social"
+        return "Tool"
     }
 
     override fun accept(contents: List<QuickStepContent>): Boolean {
-        mQuickStepContents = contents
-        return true
+        val firstTextQuickStepContent = contents.firstOrNull { it is TextQuickStepContent }
+        val accept = firstTextQuickStepContent != null
+        if (accept) {
+            mQuickStepContents = contents
+        }
+        return accept
     }
+
 
     override fun getContent(onClick: () -> Unit): @Composable (() -> Unit) {
         val contentCompose = @Composable {
             val navController = LocalNavHostController.current
-            ConversationQuickStepHandlerContent(
+            ToolContentTransformQuickStepHandlerContent(
                 name = getName(),
                 onClick = {
                     val quickStepContents = mQuickStepContents?.let {
@@ -57,14 +65,16 @@ class ConversationQuickStepHandler : QuickStepContentHandler {
                             addAll(it)
                         }
                     }
+
                     if (quickStepContents == null) {
-                        return@ConversationQuickStepHandlerContent
+                        return@ToolContentTransformQuickStepHandlerContent
                     }
                     navigateWithBundle(
                         navController,
-                        PageRouteNames.ConversationOverviewPage,
+                        PageRouteNames.AppToolsDetailsPage,
                         bundleCreator = {
                             bundleOf().apply {
+                                putString(TOOL_TYPE, TOOL_TYPE_AppSets_Transform)
                                 putParcelableArrayList(
                                     Constants.QUICK_STEP_CONTENT,
                                     quickStepContents
@@ -81,13 +91,14 @@ class ConversationQuickStepHandler : QuickStepContentHandler {
 }
 
 @Composable
-private fun ConversationQuickStepHandlerContent(
+fun ToolContentTransformQuickStepHandlerContent(
     name: String,
     onClick: () -> Unit
 ) {
     Column(
         modifier = Modifier.widthIn(max = 180.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         Card(
             modifier = Modifier
@@ -102,12 +113,12 @@ private fun ConversationQuickStepHandlerContent(
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Icon(
-                    painter = painterResource(xcj.app.compose_share.R.drawable.ic_bubble_chart_24),
+                    painter = painterResource(R.drawable.ic_outline_qr_code_24),
                     contentDescription = null
                 )
                 Column {
                     Text(text = name, fontSize = 12.sp)
-                    Text(text = "Send To People", fontSize = 10.sp)
+                    Text(text = "Content Transform", fontSize = 10.sp)
                 }
                 Spacer(modifier = Modifier.widthIn(12.dp))
             }

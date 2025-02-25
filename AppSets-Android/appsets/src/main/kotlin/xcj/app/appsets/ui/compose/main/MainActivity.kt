@@ -27,6 +27,7 @@ import xcj.app.appsets.ui.viewmodel.MainViewModel
 import xcj.app.appsets.util.SplashScreenHelper
 import xcj.app.compose_share.ui.viewmodel.AnyStateViewModel.Companion.bottomSheetState
 import xcj.app.starter.android.ui.base.DesignComponentActivity
+import xcj.app.starter.android.util.FileUtil
 import xcj.app.starter.android.util.PurpleLogger
 import xcj.app.starter.util.ContentType
 
@@ -143,24 +144,23 @@ class MainActivity : DesignComponentActivity() {
         }
         when (intent.action) {
             Intent.ACTION_SEND -> {
-                if (ContentType.TEXT_PLAIN == intent.type) {
-                    handleIntentExternalContent(intent, true, false)
-                } else {
-                    handleIntentExternalContent(intent, false, false)
-                }
+                handleIntentExternalContent(intent, false)
             }
 
             Intent.ACTION_SEND_MULTIPLE -> {
-                handleIntentExternalContent(intent, false, true)
+                handleIntentExternalContent(intent, true)
             }
         }
     }
 
     private suspend fun handleIntentExternalContent(
-        intent: Intent, isText: Boolean, isMulti: Boolean
+        intent: Intent, isMulti: Boolean
     ) {
+        //remove this
+        delay(200)
+
         val quickStepContentList = mutableListOf<QuickStepContent>()
-        if (isText) {
+        if (intent.type == ContentType.TEXT_PLAIN) {
             intent.getStringExtra(Intent.EXTRA_TEXT)?.let { text ->
                 val textQuickStepContent = TextQuickStepContent(text)
                 quickStepContentList.add(textQuickStepContent)
@@ -168,21 +168,25 @@ class MainActivity : DesignComponentActivity() {
         } else {
             if (!isMulti) {
                 (intent.getParcelableExtra<Parcelable>(Intent.EXTRA_STREAM) as? Uri)?.let { uri ->
-                    val textQuickStepContent = UriQuickStepContent(uri)
-                    quickStepContentList.add(textQuickStepContent)
+                    val contentType = contentResolver.getType(uri) ?: ContentType.ALL
+                    val androidUriFile = FileUtil.parseUriToAndroidUriFile(this, uri)
+                    val uriQuickStepContent = UriQuickStepContent(uri, androidUriFile, contentType)
+                    quickStepContentList.add(uriQuickStepContent)
                 }
             } else {
                 intent.getParcelableArrayListExtra<Parcelable>(Intent.EXTRA_STREAM)
                     ?.mapNotNull {
                         it as? Uri
                     }?.forEach { uri ->
-                        val textQuickStepContent = UriQuickStepContent(uri)
-                        quickStepContentList.add(textQuickStepContent)
+                        val contentType = contentResolver.getType(uri) ?: ContentType.ALL
+                        val androidUriFile = FileUtil.parseUriToAndroidUriFile(this, uri)
+                        val uriQuickStepContent =
+                            UriQuickStepContent(uri, androidUriFile, contentType)
+                        quickStepContentList.add(uriQuickStepContent)
                     }
             }
         }
-        //remove this
-        delay(200)
+
         var bottomSheetState = viewModel.bottomSheetState()
         bottomSheetState.show {
             QuickStepSheet(quickStepContentList)

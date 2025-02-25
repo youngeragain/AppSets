@@ -185,7 +185,7 @@ class ChannelWriteMethod(
     }
 
     override suspend fun writeUriContent(context: Context, uri: Uri) {
-        val androidUriFile = FileUtil.parseFromAndroidUri(context, uri)
+        val androidUriFile = FileUtil.parseUriToAndroidUriFile(context, uri)
         if (androidUriFile == null) {
             PurpleLogger.current.d(
                 TAG,

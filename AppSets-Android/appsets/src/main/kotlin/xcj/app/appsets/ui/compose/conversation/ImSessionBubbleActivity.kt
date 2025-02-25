@@ -32,7 +32,7 @@ import xcj.app.appsets.im.message.MusicMessage
 import xcj.app.appsets.im.message.SystemMessage
 import xcj.app.appsets.im.message.VideoMessage
 import xcj.app.appsets.im.message.VoiceMessage
-import xcj.app.appsets.im.model.CommonURLJson
+import xcj.app.appsets.im.model.CommonURIJson
 import xcj.app.appsets.server.model.Application
 import xcj.app.appsets.ui.compose.LocalUseCaseOfActivityLifecycle
 import xcj.app.appsets.ui.compose.LocalUseCaseOfConversation
@@ -178,12 +178,12 @@ fun ImSessionBubbleNaviHostPages(navController: NavHostController) {
                     onImMessageContentClick = { imMessage ->
                         when (imMessage) {
                             is MusicMessage, is VoiceMessage -> {
-                                val commonURLJson = CommonURLJson(
+                                val commonURIJson = CommonURIJson(
                                     imMessage.id,
                                     imMessage.metadata.description,
                                     imMessage.metadata.url ?: ""
                                 )
-                                mediaRemoteExoUseCase.playOrPauseAudio(commonURLJson)
+                                mediaRemoteExoUseCase.playOrPauseAudio(commonURIJson)
                             }
 
                             is VideoMessage -> {
@@ -281,12 +281,12 @@ fun ImSessionBubbleNaviHostPages(navController: NavHostController) {
                     onImMessageContentClick = { imMessage ->
                         when (imMessage) {
                             is MusicMessage, is VoiceMessage -> {
-                                val commonURLJson = CommonURLJson(
+                                val commonURIJson = CommonURIJson(
                                     imMessage.id,
                                     imMessage.metadata.description,
                                     imMessage.metadata.url ?: ""
                                 )
-                                mediaRemoteExoUseCase.playOrPauseAudio(commonURLJson)
+                                mediaRemoteExoUseCase.playOrPauseAudio(commonURIJson)
                             }
 
                             is VideoMessage -> {

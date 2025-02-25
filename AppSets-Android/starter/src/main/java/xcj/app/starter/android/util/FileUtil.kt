@@ -415,7 +415,7 @@ object FileUtil {
     }
 
     @JvmStatic
-    suspend fun parseFromAndroidUri(context: Context, uri: Uri): AndroidUriFile? =
+    suspend fun parseUriToAndroidUriFile(context: Context, uri: Uri): AndroidUriFile? =
         withContext(Dispatchers.IO) {
             if (uri.scheme == SCHEMA_FIlE) {
                 val path = uri.path

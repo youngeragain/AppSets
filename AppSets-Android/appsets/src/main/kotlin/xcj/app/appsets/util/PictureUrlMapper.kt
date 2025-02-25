@@ -11,7 +11,7 @@ import xcj.app.appsets.im.message.SystemMessage
 import xcj.app.appsets.im.message.TextMessage
 import xcj.app.appsets.im.message.VideoMessage
 import xcj.app.appsets.im.message.VideoMessageMetadata
-import xcj.app.appsets.im.model.CommonURLJson
+import xcj.app.appsets.im.model.CommonURIJson
 import xcj.app.appsets.im.model.FriendRequestJson
 import xcj.app.appsets.im.model.GroupRequestJson
 import xcj.app.appsets.server.model.Application
@@ -91,7 +91,7 @@ object PictureUrlMapper {
                 mapForMessageToInfo(any, simpleFileIO)
             }
 
-            is CommonURLJson -> {
+            is CommonURIJson -> {
                 mapForCommonURLJson(any, simpleFileIO)
             }
 
@@ -156,10 +156,10 @@ object PictureUrlMapper {
 
     @JvmStatic
     private suspend fun mapForCommonURLJson(
-        commonURLJson: CommonURLJson,
+        commonURIJson: CommonURIJson,
         fileIO: SimpleFileIO
     ) {
-        commonURLJson.bioUrl = fileIO.generatePreSign(commonURLJson.url) ?: commonURLJson.url
+        commonURIJson.bioUrl = fileIO.generatePreSign(commonURIJson.uri) ?: commonURIJson.uri
     }
 
     @JvmStatic

@@ -288,7 +288,7 @@ class AppSetsShareViewModel : AnyStateViewModel() {
 
                 }
                 viewModelScope.launch(Dispatchers.Main) {
-                    val androidUriFile = FileUtil.parseFromAndroidUri(context, content)
+                    val androidUriFile = FileUtil.parseUriToAndroidUriFile(context, content)
                     pendingSendContentList.add(0, DataContent.UriContent(content, androidUriFile))
                 }
             }

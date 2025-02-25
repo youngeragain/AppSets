@@ -58,21 +58,23 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import xcj.app.appsets.ui.compose.LocalUseCaseOfScreenPost
-import xcj.app.compose_share.components.DesignTextField
-import xcj.app.appsets.ui.compose.custom_component.HideNavBarWhenOnLaunch
-import xcj.app.appsets.ui.compose.custom_component.AnyImage
 import xcj.app.appsets.ui.compose.content_selection.ContentSelectionVarargs
+import xcj.app.appsets.ui.compose.custom_component.AnyImage
+import xcj.app.appsets.ui.compose.custom_component.HideNavBarWhenOnLaunch
+import xcj.app.appsets.ui.compose.quickstep.QuickStepContent
 import xcj.app.appsets.ui.model.PostScreen
 import xcj.app.appsets.ui.model.PostScreenState
 import xcj.app.appsets.util.model.MediaStoreDataUri
 import xcj.app.appsets.util.model.UriProvider
 import xcj.app.compose_share.components.BackActionTopBar
+import xcj.app.compose_share.components.DesignTextField
 
 private const val TAG = "CreateScreenPage"
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CreateScreenPage(
+    quickStepContents: List<QuickStepContent>?,
     onBackClick: (Boolean) -> Unit,
     onConfirmClick: () -> Unit,
     onIsPublicClick: (Boolean) -> Unit,
@@ -88,7 +90,9 @@ fun CreateScreenPage(
 
     HideNavBarWhenOnLaunch()
     val screenPostUseCase = LocalUseCaseOfScreenPost.current
-
+    LaunchedEffect(Unit) {
+        screenPostUseCase.updateWithQuickStepContentIfNeeded(quickStepContents)
+    }
     DisposableEffect(key1 = true, effect = {
         onDispose {
             screenPostUseCase.onComposeDispose("page dispose")

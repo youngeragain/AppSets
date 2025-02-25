@@ -24,7 +24,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import xcj.app.appsets.constants.Constants
-import xcj.app.appsets.im.model.CommonURLJson
+import xcj.app.appsets.im.model.CommonURIJson
 import xcj.app.appsets.util.ktx.asContextOrNull
 import xcj.app.appsets.service.MediaPlayback101Service
 import xcj.app.appsets.ui.model.SpotLightState
@@ -198,7 +198,7 @@ class RemoteExoplayer(
         audioPlayerState.value = oldState.copy(playbackState = state)
     }
 
-    fun playAudio(mediaJson: CommonURLJson) {
+    fun playAudio(mediaJson: CommonURIJson) {
         PurpleLogger.current.d(TAG, "playAudio, mediaController:$controller")
         if (!isBound()) {
             return
@@ -216,7 +216,7 @@ class RemoteExoplayer(
             .setExtras(Bundle().apply {
                 putString(
                     android.media.MediaMetadata.METADATA_KEY_MEDIA_ID,
-                    mediaJson.url
+                    mediaJson.uri
                 )
             })
             .build()
@@ -225,7 +225,7 @@ class RemoteExoplayer(
             mediaMetadata = mediaMetadata
         )
         val commandBundle = Bundle().apply {
-            putString("url", mediaJson.url)
+            putString("url", mediaJson.uri)
         }
         controller.sendCustomCommand(
             SessionCommand("set_playback_item", commandBundle),
@@ -233,7 +233,7 @@ class RemoteExoplayer(
         )
     }
 
-    fun playOrPauseAudio(musicURLJson: CommonURLJson) {
+    fun playOrPauseAudio(musicURLJson: CommonURIJson) {
         val oldState = audioPlayerState.value
         if (oldState.id == musicURLJson.id) {
             if (isPlaying) {

@@ -11,7 +11,13 @@ import xcj.app.starter.android.util.PurpleLogger
 class MediaStoreDataUri() : UriProvider {
     companion object {
         private const val TAG = "MediaStoreDataUriWrapper"
+        fun fromUri(uri: Uri): MediaStoreDataUri {
+            return MediaStoreDataUri().apply {
+                this.uri = uri
+            }
+        }
     }
+
     var uri: Uri? = null
     var date: String? = null
     var displayName: String? = null

@@ -4,7 +4,7 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.LifecycleOwner
 import kotlinx.coroutines.CoroutineScope
-import xcj.app.appsets.im.model.CommonURLJson
+import xcj.app.appsets.im.model.CommonURIJson
 import xcj.app.appsets.server.model.MediaContent
 import xcj.app.appsets.server.repository.AppSetsRepository
 import xcj.app.appsets.ui.model.SpotLightState
@@ -37,11 +37,11 @@ class MediaRemoteExoUseCase(
         remoteExoplayer.pause()
     }
 
-    fun playAudio(musicURLJson: CommonURLJson) {
+    fun playAudio(musicURLJson: CommonURIJson) {
         remoteExoplayer.playAudio(musicURLJson)
     }
 
-    fun playOrPauseAudio(musicURLJson: CommonURLJson) {
+    fun playOrPauseAudio(musicURLJson: CommonURIJson) {
         remoteExoplayer.playOrPauseAudio(musicURLJson)
     }
 

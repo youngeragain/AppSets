@@ -74,7 +74,7 @@ import xcj.app.appsets.im.message.MusicMessage
 import xcj.app.appsets.im.message.SystemMessage
 import xcj.app.appsets.im.message.VideoMessage
 import xcj.app.appsets.im.message.VoiceMessage
-import xcj.app.appsets.im.model.CommonURLJson
+import xcj.app.appsets.im.model.CommonURIJson
 import xcj.app.appsets.purple_module.ModuleConstant
 import xcj.app.appsets.server.model.Application
 import xcj.app.appsets.server.model.GroupInfo
@@ -104,6 +104,7 @@ import xcj.app.appsets.ui.compose.apps.CreateAppPage
 import xcj.app.appsets.ui.compose.apps.DownloadBottomSheetComponent
 import xcj.app.appsets.ui.compose.apps.tools.AppToolsDetailsPage
 import xcj.app.appsets.ui.compose.apps.tools.AppToolsPage
+import xcj.app.appsets.ui.compose.apps.tools.TOOL_TYPE
 import xcj.app.appsets.ui.compose.apps.tools.TOOL_TYPE_AppSets_Compose_plugin
 import xcj.app.appsets.ui.compose.apps.tools.TOOL_TYPE_AppSets_Launcher
 import xcj.app.appsets.ui.compose.apps.tools.TOOL_TYPE_AppSets_Proxy
@@ -126,6 +127,7 @@ import xcj.app.appsets.ui.compose.outside.RestrictedContentDialog
 import xcj.app.appsets.ui.compose.outside.ScreenDetailsPage
 import xcj.app.appsets.ui.compose.outside.ScreenEditPage
 import xcj.app.appsets.ui.compose.privacy.PrivacyPage
+import xcj.app.appsets.ui.compose.quickstep.QuickStepContent
 import xcj.app.appsets.ui.compose.search.SearchPage
 import xcj.app.appsets.ui.compose.settings.AboutPage
 import xcj.app.appsets.ui.compose.settings.SettingsPage
@@ -433,6 +435,10 @@ fun MainNaviHostPages(navController: NavHostController) {
             }
 
             composable(PageRouteNames.CreateScreenPage) {
+
+                val quickStepContents =
+                    it.arguments?.getParcelableArrayList<QuickStepContent>(Constants.QUICK_STEP_CONTENT)
+
                 LoginInterceptorPage(
                     navController = navController,
                     navBackStackEntry = it,
@@ -444,6 +450,7 @@ fun MainNaviHostPages(navController: NavHostController) {
                     val systemUseCase = LocalUseCaseOfSystem.current
                     val anyStateProvider = LocalAnyStateProvider.current
                     CreateScreenPage(
+                        quickStepContents = quickStepContents,
                         onBackClick = { shouldRefresh ->
                             if (shouldRefresh) {
                                 screenUseCase.loadOutSideScreens()
@@ -525,12 +532,12 @@ fun MainNaviHostPages(navController: NavHostController) {
                         onImMessageContentClick = { imMessage ->
                             when (imMessage) {
                                 is MusicMessage, is VoiceMessage -> {
-                                    val commonURLJson = CommonURLJson(
+                                    val commonURIJson = CommonURIJson(
                                         imMessage.id,
                                         imMessage.metadata.description,
                                         imMessage.metadata.url ?: ""
                                     )
-                                    mediaRemoteExoUseCase.playOrPauseAudio(commonURLJson)
+                                    mediaRemoteExoUseCase.playOrPauseAudio(commonURIJson)
                                 }
 
                                 is VideoMessage -> {
@@ -663,12 +670,12 @@ fun MainNaviHostPages(navController: NavHostController) {
                         onImMessageContentClick = { imMessage ->
                             when (imMessage) {
                                 is MusicMessage, is VoiceMessage -> {
-                                    val commonURLJson = CommonURLJson(
+                                    val commonURIJson = CommonURIJson(
                                         imMessage.id,
                                         imMessage.metadata.description,
                                         imMessage.metadata.url ?: ""
                                     )
-                                    mediaRemoteExoUseCase.playOrPauseAudio(commonURLJson)
+                                    mediaRemoteExoUseCase.playOrPauseAudio(commonURIJson)
                                 }
 
                                 is VideoMessage -> {
@@ -833,11 +840,14 @@ fun MainNaviHostPages(navController: NavHostController) {
                             }
 
                             else -> {
-                                navController.navigate(
-                                    String.format(
-                                        PageRouteNames.AppToolsDetailsPageTemplate,
-                                        type
-                                    )
+                                navigateWithBundle(
+                                    navController,
+                                    PageRouteNames.AppToolsDetailsPage,
+                                    bundleCreator = {
+                                        bundleOf().apply {
+                                            putString(TOOL_TYPE, type)
+                                        }
+                                    }
                                 )
                             }
                         }
@@ -846,9 +856,12 @@ fun MainNaviHostPages(navController: NavHostController) {
             }
 
             composable(PageRouteNames.AppToolsDetailsPage) {
-                val type = it.arguments?.getString("type")
+                val type = it.arguments?.getString(TOOL_TYPE)
+                val quickStepContents =
+                    it.arguments?.getParcelableArrayList<QuickStepContent>(Constants.QUICK_STEP_CONTENT)
                 AppToolsDetailsPage(
                     type = type,
+                    quickStepContents = quickStepContents,
                     onBackClick = navController::navigateUp
                 )
             }
@@ -1225,19 +1238,37 @@ fun navigateToAppDetailsPage(
     navController: NavHostController,
     appsUseCase: AppsUseCase,
     application: Application
+) {
+    navigateWithBundle(
+        navController,
+        PageRouteNames.AppDetailsPage,
+        bundleCreator = {
+            bundleOf().apply {
+                val overrideApplication =
+                    (appsUseCase.findApplicationById(application) ?: application)
+                putParcelable(Constants.APP_INFO, overrideApplication)
+            }
+        }
+    )
+}
+
+@SuppressLint("RestrictedApi")
+fun navigateWithBundle(
+    navController: NavHostController,
+    route: String,
+    bundleCreator: () -> Bundle
 ): Boolean {
-    val destinationId = navController.findDestination(PageRouteNames.AppDetailsPage)?.id
+    val destinationId = navController.findDestination(route)?.id
     if (destinationId == null) {
-        PurpleLogger.current.d(TAG, "navigateToAppDetailsPage, destinationId is null, return")
+        PurpleLogger.current.d(
+            TAG,
+            "navigateWithBundle, route:$route, destinationId is null, return"
+        )
         return false
     }
     val navDirections: NavDirections = object : NavDirections {
         override val actionId: Int = destinationId
-        override val arguments: Bundle = bundleOf().apply {
-            val overrideApplication =
-                (appsUseCase.findApplicationById(application) ?: application)
-            putParcelable(Constants.APP_INFO, overrideApplication)
-        }
+        override val arguments: Bundle = bundleCreator()
     }
     navController.navigate(navDirections)
     return true
@@ -1439,9 +1470,9 @@ fun showWebBrowserDialog(context: Context, anyStateProvider: AnyStateProvider, d
 }
 
 fun navigateToVideoPlaybackActivity(context: Context, playbackContent: Any) {
-    val commonURLJson = when (playbackContent) {
+    val commonURIJson = when (playbackContent) {
         is ScreenMediaFileUrl -> {
-            CommonURLJson(
+            CommonURIJson(
                 playbackContent.mediaFileUrl,
                 playbackContent.mediaDescription,
                 playbackContent.mediaFileUrl
@@ -1449,7 +1480,7 @@ fun navigateToVideoPlaybackActivity(context: Context, playbackContent: Any) {
         }
 
         is VideoMessage -> {
-            CommonURLJson(
+            CommonURIJson(
                 playbackContent.id,
                 playbackContent.metadata.description,
                 playbackContent.metadata.url ?: ""
@@ -1457,17 +1488,18 @@ fun navigateToVideoPlaybackActivity(context: Context, playbackContent: Any) {
         }
 
         is MediaStoreDataUri -> {
-            CommonURLJson(
+            CommonURIJson(
                 playbackContent.uri?.path ?: "",
                 playbackContent.displayName ?: "",
-                playbackContent.uri?.path ?: "",
+                playbackContent.uri.toString(),
+                true
             )
         }
 
         else -> return
     }
     val intent = Intent(context, MediaPlaybackActivity::class.java).apply {
-        val videoJson = Gson().toJson(commonURLJson)
+        val videoJson = Gson().toJson(commonURIJson)
         putExtra(MediaPlaybackActivity.KEY_VIDEO_JSON_DATA, videoJson)
     }
     context.startActivity(intent)

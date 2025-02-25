@@ -65,6 +65,7 @@ import xcj.app.appsets.im.message.ImMessage
 import xcj.app.appsets.im.message.SystemMessage
 import xcj.app.appsets.im.model.FriendRequestJson
 import xcj.app.appsets.im.model.GroupRequestJson
+import xcj.app.appsets.ui.compose.LocalNavHostController
 import xcj.app.appsets.ui.compose.LocalQuickStepContentHandlerRegistry
 import xcj.app.appsets.ui.compose.LocalUseCaseOfActivityLifecycle
 import xcj.app.appsets.ui.compose.LocalUseCaseOfAppCreation
@@ -82,10 +83,12 @@ import xcj.app.appsets.ui.compose.LocalUseCaseOfSearch
 import xcj.app.appsets.ui.compose.LocalUseCaseOfSystem
 import xcj.app.appsets.ui.compose.LocalUseCaseOfUserInfo
 import xcj.app.appsets.ui.compose.PageRouteNames
+import xcj.app.appsets.ui.compose.apps.quickstep.ToolContentTransformQuickStepHandler
 import xcj.app.appsets.ui.compose.conversation.quickstep.ConversationQuickStepHandler
 import xcj.app.appsets.ui.compose.custom_component.AnyImage
 import xcj.app.appsets.ui.compose.media.video.fall.MediaFallActivity
 import xcj.app.appsets.ui.compose.outside.quickstep.OutSideQuickStepHandler
+import xcj.app.appsets.ui.compose.quickstep.QuickStepContentHandlerRegistry
 import xcj.app.appsets.ui.compose.settings.LiteSettingsDialog
 import xcj.app.appsets.ui.model.NowSpaceObjectState
 import xcj.app.appsets.ui.model.NowSpaceObjectState.NewImMessage
@@ -108,16 +111,12 @@ private const val TAG = "MainPages"
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun MainPages() {
-    val localQuickStepContentHandlerRegistry = LocalQuickStepContentHandlerRegistry.current
-    DisposableEffect(Unit) {
-        localQuickStepContentHandlerRegistry.addContentHandler(ConversationQuickStepHandler())
-        localQuickStepContentHandlerRegistry.addContentHandler(OutSideQuickStepHandler())
-        onDispose {
-            localQuickStepContentHandlerRegistry.removeAll()
-        }
-    }
 
     val viewModel = viewModel<MainViewModel>()
+    val navController = rememberNavController()
+    val quickStepContentHandlerRegistry = remember {
+        QuickStepContentHandlerRegistry()
+    }
     CompositionLocalProvider(
         LocalUseCaseOfNavigation provides viewModel.navigationUseCase,
         LocalUseCaseOfActivityLifecycle provides viewModel.activityLifecycleUseCase,
@@ -135,10 +134,10 @@ fun MainPages() {
         LocalUseCaseOfApps provides viewModel.appsUseCase,
         LocalUseCaseOfUserInfo provides viewModel.userInfoUseCase,
         LocalUseCaseOfNowSpaceContent provides viewModel.nowSpaceContentUseCase,
-        LocalAnyStateProvider provides viewModel
+        LocalNavHostController provides navController,
+        LocalAnyStateProvider provides viewModel,
+        LocalQuickStepContentHandlerRegistry provides quickStepContentHandlerRegistry
     ) {
-        val navController = rememberNavController()
-
         val backgroundModifier = makeBackgroundModifier()
         Box(
             modifier = backgroundModifier
@@ -206,17 +205,13 @@ fun ImmerseContentContainer(
     }
 }
 
-
-private fun ComposeContainerState.mapToBackEventState(): BackEventCompat {
-    val ps = this as ProgressedComposeContainerState
-    return ps.progressState.value as BackEventCompat
-}
-
 @Composable
 fun OnScaffoldLaunch(navController: NavController) {
     val systemUseCase = LocalUseCaseOfSystem.current
     val navigationUseCase = LocalUseCaseOfNavigation.current
     val anyStateProvider = LocalAnyStateProvider.current
+    val localQuickStepContentHandlerRegistry = LocalQuickStepContentHandlerRegistry.current
+
     LaunchedEffect(key1 = systemUseCase.newVersionState, block = {
         if (systemUseCase.newVersionState.value?.forceUpdate == true) {
             delay(200)
@@ -235,8 +230,15 @@ fun OnScaffoldLaunch(navController: NavController) {
                 )
             }
         navController.addOnDestinationChangedListener(destinationChangedListener)
+
+        localQuickStepContentHandlerRegistry.addContentHandler(ToolContentTransformQuickStepHandler())
+        localQuickStepContentHandlerRegistry.addContentHandler(ConversationQuickStepHandler())
+        localQuickStepContentHandlerRegistry.addContentHandler(OutSideQuickStepHandler())
+
         onDispose {
             navController.removeOnDestinationChangedListener(destinationChangedListener)
+
+            localQuickStepContentHandlerRegistry.removeAll()
         }
     })
 }
@@ -246,32 +248,10 @@ fun OnScaffoldLaunch(navController: NavController) {
 fun MainScaffoldContainer(navController: NavHostController) {
     OnScaffoldLaunch(navController)
     val onTabClick = rememberNavigationBarOnTabClickListener(navController)
-    val anyStateProvider = LocalAnyStateProvider.current
-    val immerseContentState = anyStateProvider.immerseContentState()
-    val renderEffectAnimateState = remember {
-        AnimationState(0f)
-    }
-    val scope = rememberCoroutineScope()
-    LaunchedEffect(immerseContentState.isShow) {
-        scope.launch {
-            val target = if (immerseContentState.isShow) {
-                35f
-            } else {
-                0f
-            }
-            renderEffectAnimateState.animateTo(target)
-        }
-    }
+    val scaffoldModifier = getScaffoldModifier()
+
     Scaffold(
-        modifier = Modifier.graphicsLayer {
-            if (immerseContentState.isShow) {
-                renderEffect =
-                    BlurEffect(
-                        renderEffectAnimateState.value,
-                        renderEffectAnimateState.value
-                    )
-            }
-        },
+        modifier = scaffoldModifier,
         bottomBar = {
             NavigationBar(
                 navController = navController,
@@ -289,6 +269,35 @@ fun MainScaffoldContainer(navController: NavHostController) {
             )
             NowSpace(navController)
             MainNaviHostPages(navController = navController)
+        }
+    }
+}
+
+@Composable
+fun getScaffoldModifier(): Modifier {
+    val anyStateProvider = LocalAnyStateProvider.current
+    val immerseContentState = anyStateProvider.immerseContentState()
+    val renderEffectAnimateState = remember {
+        AnimationState(0f)
+    }
+    val scope = rememberCoroutineScope()
+    LaunchedEffect(immerseContentState.isShow) {
+        scope.launch {
+            val target = if (immerseContentState.isShow) {
+                35f
+            } else {
+                0f
+            }
+            renderEffectAnimateState.animateTo(target)
+        }
+    }
+    return Modifier.graphicsLayer {
+        if (immerseContentState.isShow) {
+            renderEffect =
+                BlurEffect(
+                    renderEffectAnimateState.value,
+                    renderEffectAnimateState.value
+                )
         }
     }
 }
@@ -575,4 +584,9 @@ fun MessageQuickAccessBar(
         }
         DesignHDivider()
     }
+}
+
+private fun ComposeContainerState.mapToBackEventState(): BackEventCompat {
+    val ps = this as ProgressedComposeContainerState
+    return ps.progressState.value as BackEventCompat
 }

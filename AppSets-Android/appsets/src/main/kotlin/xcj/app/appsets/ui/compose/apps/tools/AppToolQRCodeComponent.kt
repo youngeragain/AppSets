@@ -59,15 +59,17 @@ import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import xcj.app.compose_share.components.DesignHDivider
-import xcj.app.compose_share.components.DesignTextField
 import xcj.app.appsets.ui.compose.custom_component.AnyImage
+import xcj.app.appsets.ui.compose.quickstep.QuickStepContent
+import xcj.app.appsets.ui.compose.quickstep.TextQuickStepContent
 import xcj.app.appsets.usecase.QRCodeUseCase
 import xcj.app.appsets.util.encrypt.AESHelper
 import xcj.app.appsets.util.encrypt.EncryptionUtil
 import xcj.app.appsets.util.encrypt.RSAHelper
 import xcj.app.appsets.util.message_digest.MessageDigestUtil
 import xcj.app.compose_share.components.BackActionTopBar
+import xcj.app.compose_share.components.DesignHDivider
+import xcj.app.compose_share.components.DesignTextField
 import java.io.File
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
@@ -93,24 +95,41 @@ sealed class TransformedContent(val transformedContent: String?, val bitmap: Bit
 
 @OptIn(ExperimentalEncodingApi::class)
 @Composable
-fun AppToolQRCodeComponent(onBackClick: () -> Unit) {
+fun AppToolQRCodeComponent(
+    quickStepContents: List<QuickStepContent>?,
+    onBackClick: () -> Unit
+) {
     Column {
         BackActionTopBar(
             onBackClick = onBackClick,
             backButtonRightText = stringResource(xcj.app.appsets.R.string.transform_content)
         )
-        Box(Modifier.weight(1f)) {
+        Box(modifier = Modifier.weight(1f)) {
             val scope = rememberCoroutineScope()
             var transformType by rememberSaveable {
                 mutableStateOf("None")
             }
             var content by rememberSaveable {
-                mutableStateOf("")
+                val initString: String =
+                    if (quickStepContents.isNullOrEmpty()) {
+                        ""
+                    } else {
+                        val textQuickStepContents =
+                            quickStepContents.filterIsInstance<TextQuickStepContent>()
+                        if (!textQuickStepContents.isEmpty()) {
+                            val content = textQuickStepContents.joinToString { it.text }
+                            content
+                        } else {
+                            ""
+                        }
+                    }
+                mutableStateOf(initString)
             }
 
             var transformedContent: TransformedContent by remember {
                 mutableStateOf(TransformedContent.SimpleContent("", null))
             }
+
 
             val transformRunnable: suspend CoroutineScope.() -> Unit = remember {
                 {
@@ -367,6 +386,7 @@ fun TransformedQRPage(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 DesignTextField(
+                    modifier = Modifier.fillMaxWidth(),
                     value = content,
                     placeholder = {
                         Text(stringResource(xcj.app.appsets.R.string.text_based_content))
