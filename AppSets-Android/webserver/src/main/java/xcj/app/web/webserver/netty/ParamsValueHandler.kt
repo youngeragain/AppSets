@@ -42,7 +42,7 @@ object ParamsValueHandler {
             return httpResponseWrapper.httpResponse
         }
         if (paramType == HttpResponseWrapper::class.java) {
-            paramType == httpResponseWrapper
+            return httpResponseWrapper
         }
         if (paramType == Context::class.java) {
             val annotationOfHttpHeader: Annotation? =

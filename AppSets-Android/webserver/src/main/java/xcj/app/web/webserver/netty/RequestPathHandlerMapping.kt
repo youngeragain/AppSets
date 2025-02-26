@@ -191,7 +191,7 @@ class RequestPathHandlerMapping(
         val httpHeaders = response.headers()
 
         if (HttpUtil.isKeepAlive(httpRequestWrapper.httpRequest)) {
-            HttpUtil.setKeepAlive(httpRequestWrapper.httpRequest, true)
+            HttpUtil.setKeepAlive(response, true)
         }
         val guessContentType = getContentType(handlerMethod)
         if (!guessContentType.isNullOrEmpty()) {
