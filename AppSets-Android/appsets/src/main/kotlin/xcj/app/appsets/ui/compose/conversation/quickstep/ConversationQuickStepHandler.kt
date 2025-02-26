@@ -1,6 +1,6 @@
 package xcj.app.appsets.ui.compose.conversation.quickstep
 
-import android.os.Parcelable
+import android.content.Context
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -19,6 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.os.bundleOf
@@ -29,16 +30,16 @@ import xcj.app.appsets.ui.compose.main.navigateWithBundle
 import xcj.app.appsets.ui.compose.quickstep.QuickStepContent
 import xcj.app.appsets.ui.compose.quickstep.QuickStepContentHandler
 
-class ConversationQuickStepHandler : QuickStepContentHandler {
+class ConversationQuickStepHandler(context: Context) : QuickStepContentHandler(context) {
 
     private var mQuickStepContents: List<QuickStepContent>? = null
 
     override fun getName(): String {
-        return "Conversation"
+        return context.getString(xcj.app.appsets.R.string.conversation)
     }
 
     override fun getCategory(): String {
-        return "Social"
+        return context.getString(xcj.app.appsets.R.string.social)
     }
 
     override fun accept(contents: List<QuickStepContent>): Boolean {
@@ -107,7 +108,10 @@ private fun ConversationQuickStepHandlerContent(
                 )
                 Column {
                     Text(text = name, fontSize = 12.sp)
-                    Text(text = "Send To People", fontSize = 10.sp)
+                    Text(
+                        text = stringResource(xcj.app.appsets.R.string.send_to_people),
+                        fontSize = 10.sp
+                    )
                 }
                 Spacer(modifier = Modifier.widthIn(12.dp))
             }

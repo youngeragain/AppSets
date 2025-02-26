@@ -1,10 +1,11 @@
 package xcj.app.appsets.ui.compose.quickstep
 
+import android.content.Context
 import androidx.compose.runtime.Composable
 
-interface QuickStepContentHandler {
-    fun getName(): String
-    fun getCategory(): String
-    fun accept(contents: List<QuickStepContent>): Boolean
-    fun getContent(onClick: () -> Unit): @Composable () -> Unit
+abstract class QuickStepContentHandler(val context: Context) {
+    abstract fun getName(): String
+    abstract fun getCategory(): String
+    abstract fun accept(contents: List<QuickStepContent>): Boolean
+    abstract fun getContent(onClick: () -> Unit): @Composable () -> Unit
 }

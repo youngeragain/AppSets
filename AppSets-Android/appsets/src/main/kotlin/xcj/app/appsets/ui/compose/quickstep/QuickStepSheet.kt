@@ -29,6 +29,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextOverflow
@@ -77,7 +78,7 @@ fun QuickStepSheet(
 
             },
             placeholder = {
-                Text(text = "Search Quick Step", fontSize = 12.sp)
+                Text(text = stringResource(xcj.app.appsets.R.string.search_quick_step), fontSize = 12.sp)
             },
             modifier = Modifier
                 .fillMaxWidth()

@@ -1,5 +1,6 @@
 package xcj.app.appsets.ui.compose.apps.quickstep
 
+import android.content.Context
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -18,6 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.os.bundleOf
@@ -32,16 +34,16 @@ import xcj.app.appsets.ui.compose.quickstep.QuickStepContentHandler
 import xcj.app.appsets.ui.compose.quickstep.TextQuickStepContent
 import xcj.app.compose_share.R
 
-class ToolContentTransformQuickStepHandler : QuickStepContentHandler {
+class ToolContentTransformQuickStepHandler(context: Context) : QuickStepContentHandler(context) {
 
     private var mQuickStepContents: List<QuickStepContent>? = null
 
     override fun getName(): String {
-        return "Transform"
+        return context.getString(xcj.app.appsets.R.string.transform_content)
     }
 
     override fun getCategory(): String {
-        return "Tool"
+        return context.getString(xcj.app.appsets.R.string.tools)
     }
 
     override fun accept(contents: List<QuickStepContent>): Boolean {
@@ -118,7 +120,10 @@ fun ToolContentTransformQuickStepHandlerContent(
                 )
                 Column {
                     Text(text = name, fontSize = 12.sp)
-                    Text(text = "Content Transform", fontSize = 10.sp)
+                    Text(
+                        text = stringResource(xcj.app.appsets.R.string.transform_content),
+                        fontSize = 10.sp
+                    )
                 }
                 Spacer(modifier = Modifier.widthIn(12.dp))
             }

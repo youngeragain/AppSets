@@ -412,5 +412,10 @@
     <string name="invalid">无效</string>
     <string name="unknown_state">未知状态</string>
     <string name="not_compatible">无法兼容</string>
+    <string name="out_side">外面</string>
+    <string name="social">社交</string>
+    <string name="search_quick_step">搜索快捷</string>
+    <string name="conversation">对话</string>
+    <string name="send_to_people">发给别人</string>
 
 </resources>

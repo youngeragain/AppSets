@@ -207,6 +207,7 @@ fun ImmerseContentContainer(
 
 @Composable
 fun OnScaffoldLaunch(navController: NavController) {
+    val context = LocalContext.current
     val systemUseCase = LocalUseCaseOfSystem.current
     val navigationUseCase = LocalUseCaseOfNavigation.current
     val anyStateProvider = LocalAnyStateProvider.current
@@ -231,9 +232,9 @@ fun OnScaffoldLaunch(navController: NavController) {
             }
         navController.addOnDestinationChangedListener(destinationChangedListener)
 
-        localQuickStepContentHandlerRegistry.addContentHandler(ToolContentTransformQuickStepHandler())
-        localQuickStepContentHandlerRegistry.addContentHandler(ConversationQuickStepHandler())
-        localQuickStepContentHandlerRegistry.addContentHandler(OutSideQuickStepHandler())
+        localQuickStepContentHandlerRegistry.addContentHandler(ToolContentTransformQuickStepHandler(context))
+        localQuickStepContentHandlerRegistry.addContentHandler(ConversationQuickStepHandler(context))
+        localQuickStepContentHandlerRegistry.addContentHandler(OutSideQuickStepHandler(context))
 
         onDispose {
             navController.removeOnDestinationChangedListener(destinationChangedListener)

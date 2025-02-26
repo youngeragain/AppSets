@@ -412,4 +412,9 @@
     <string name="invalid">Invalidate</string>
     <string name="unknown_state">Unknown state</string>
     <string name="not_compatible">Not compatible</string>
+    <string name="out_side">Out side</string>
+    <string name="social">Social</string>
+    <string name="search_quick_step">Search Quick Step</string>
+    <string name="conversation">Conversation</string>
+    <string name="send_to_people">Send To People</string>
 </resources>
