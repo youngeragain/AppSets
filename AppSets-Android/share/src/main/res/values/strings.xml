@@ -48,5 +48,6 @@
     <string name="no_content">No content!</string>
     <string name="getting_in">Getting in…</string>
     <string name="content_save_path">Content save location</string>
+    <string name="share_device_connect_tips">Make sure you are connected to WIFI or device hotspot, and you can also scan nearby devices.</string>
 
 </resources>

@@ -27,7 +27,7 @@ class CameraComposeViewModel : AnyStateViewModel() {
         UserRepository.getInstance()
     )
 
-    fun updateCode(barcode: Barcode) {
-        qrCodeUseCase.onScannedBarcode(barcode)
+    fun updateCode(cameraActivity: CameraComposeActivity, barcode: Barcode) {
+        qrCodeUseCase.onScannedBarcode(cameraActivity, barcode)
     }
 }

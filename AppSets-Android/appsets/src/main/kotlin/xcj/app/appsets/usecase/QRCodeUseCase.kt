@@ -4,15 +4,9 @@ import android.app.Activity.RESULT_OK
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
-import android.graphics.Color.BLACK
-import android.graphics.Color.WHITE
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import com.google.mlkit.vision.barcode.common.Barcode
-import com.google.zxing.BarcodeFormat
-import com.google.zxing.EncodeHintType
-import com.google.zxing.MultiFormatWriter
-import com.google.zxing.common.BitMatrix
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -27,12 +21,11 @@ import xcj.app.appsets.server.repository.UserRepository
 import xcj.app.appsets.ui.compose.camera.CameraComposeActivity
 import xcj.app.appsets.ui.model.LoginSignUpState
 import xcj.app.compose_share.dynamic.IComposeDispose
-import xcj.app.starter.android.ktx.dp
 import xcj.app.starter.android.util.PurpleLogger
 import xcj.app.starter.foundation.http.DesignResponse
 import xcj.app.starter.server.requestNotNull
 import xcj.app.starter.server.requestNotNullRaw
-import java.util.EnumMap
+import xcj.app.starter.util.QrCodeUtil
 
 sealed interface QRCodeInfoScannedState {
     val scanCount: Int
@@ -53,7 +46,6 @@ sealed interface QRCodeInfoScannedState {
     ) : QRCodeInfoScannedState
 }
 
-
 class QRCodeUseCase(
     private val coroutineScope: CoroutineScope,
     private val loginSignUpState: MutableState<LoginSignUpState>,
@@ -65,6 +57,7 @@ class QRCodeUseCase(
         const val APPSETS_DESIGN_URI_QRCODE_PREFIX = "asqr"
         const val APPSETS_DESIGN_URI_SPLIT_CHAR = ":"
         const val QR_USED_FOR_LOGIN = "login"
+        const val QR_USED_FOR_APPSETS_SHARE = "appsets_share"
         const val PROVIDER_ID = "providerId"
         const val CODE = "code"
         const val STATE = "state"
@@ -74,40 +67,6 @@ class QRCodeUseCase(
         const val QR_STATE_NEW = "0"
         const val QR_STATE_SCANNED = "1"
         const val QR_STATE_CONFIRMED = "2"
-
-        suspend fun encodeAsBitmap(content: String): Bitmap? = withContext(Dispatchers.Default) {
-            if (content.length > 512) {
-                return@withContext null
-            }
-            val hints: MutableMap<EncodeHintType?, Any?> = EnumMap(EncodeHintType::class.java)
-            hints[EncodeHintType.CHARACTER_SET] = Charsets.UTF_8.name()
-            val result: BitMatrix? = runCatching {
-                val dimension = 150.dp()
-                MultiFormatWriter().encode(
-                    content,
-                    BarcodeFormat.QR_CODE,
-                    dimension,
-                    dimension,
-                    hints
-                )
-            }.getOrNull()
-            if (result == null) {
-                return@withContext null
-            }
-            val width = result.width
-            val height = result.height
-            val pixels = IntArray(width * height)
-            for (y in 0 until height) {
-                val offset = y * width
-                for (x in 0 until width) {
-                    pixels[offset + x] = if (result[x, y]) BLACK else WHITE
-                }
-            }
-            val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_4444)
-            bitmap.setPixels(pixels, 0, width, 0, 0, width, height)
-            return@withContext bitmap
-        }
-
     }
 
     private var updateQRCodeStateJob: Job? = null
@@ -150,7 +109,7 @@ class QRCodeUseCase(
             APPSETS_DESIGN_URI_SPLIT_CHAR,
             state
         )
-        val qrcodeBitmap = encodeAsBitmap(qrcodeRawContent) ?: return
+        val qrcodeBitmap = QrCodeUtil.encodeAsBitmap(qrcodeRawContent) ?: return
 
         withContext(Dispatchers.Main) {
             generatedQRCodeInfo.value = QRCodeInfoScannedState.AppSetsQRCodeInfo(
@@ -279,7 +238,7 @@ class QRCodeUseCase(
         }
     }
 
-    fun onScannedBarcode(barcode: Barcode) {
+    fun onScannedBarcode(cameraActivity: CameraComposeActivity, barcode: Barcode) {
         PurpleLogger.current.d(TAG, "onScannedBarcode")
         val barRawString = barcode.rawValue
         //asqr:login:provider_id:code:state
@@ -294,28 +253,44 @@ class QRCodeUseCase(
             makeOthersQRCodeInfo(barRawString)
             return
         }
-        val userFor = split[1]
-        if (userFor == QR_USED_FOR_LOGIN) {
-            if (split.size == 5) {
-                val qrCodeProviderId = split[2]
-                val qrCodeCode = split[3]
-                val qrCodeCodeState = split[4]
-                PurpleLogger.current.d(TAG, "onScannedBarcode, update scanned qrcode info!")
-                val scanCount =
-                    (scannedQRCodeInfo.value?.scanCount ?: 0) + 1
-                scannedQRCodeInfo.value = QRCodeInfoScannedState.AppSetsQRCodeInfo(
-                    providerId = qrCodeProviderId,
-                    code = qrCodeCode,
-                    state = qrCodeCodeState,
-                    scanCount = scanCount,
-                )
-            } else {
-                val scanCount =
-                    (scannedQRCodeInfo.value?.scanCount ?: 0) + 1
-                scannedQRCodeInfo.value = QRCodeInfoScannedState.AppSetsQRCodeInfo(
-                    scanCount = scanCount,
-                    isCompatible = false
-                )
+        val usedFor = split[1]
+        when (usedFor) {
+            QR_USED_FOR_APPSETS_SHARE -> {
+                PurpleLogger.current.d(TAG, "onScannedBarcode, for appsets share")
+                val deviceAddresses = split.subList(2, split.size).toTypedArray()
+                val intent = Intent()
+                intent.putExtra("APPSETS_SHARE_DEVICE_ADDRESSES", deviceAddresses)
+                cameraActivity.setResult(RESULT_OK, intent)
+                cameraActivity.finish()
+            }
+
+            QR_USED_FOR_LOGIN -> {
+                PurpleLogger.current.d(TAG, "onScannedBarcode, for appsets login")
+                if (split.size == 5) {
+                    val qrCodeProviderId = split[2]
+                    val qrCodeCode = split[3]
+                    val qrCodeCodeState = split[4]
+                    PurpleLogger.current.d(TAG, "onScannedBarcode, update scanned qrcode info!")
+                    val scanCount =
+                        (scannedQRCodeInfo.value?.scanCount ?: 0) + 1
+                    scannedQRCodeInfo.value = QRCodeInfoScannedState.AppSetsQRCodeInfo(
+                        providerId = qrCodeProviderId,
+                        code = qrCodeCode,
+                        state = qrCodeCodeState,
+                        scanCount = scanCount,
+                    )
+                } else {
+                    val scanCount =
+                        (scannedQRCodeInfo.value?.scanCount ?: 0) + 1
+                    scannedQRCodeInfo.value = QRCodeInfoScannedState.AppSetsQRCodeInfo(
+                        scanCount = scanCount,
+                        isCompatible = false
+                    )
+                }
+            }
+
+            else -> {
+                PurpleLogger.current.d(TAG, "onScannedBarcode, for appsets others")
             }
         }
     }
@@ -361,7 +336,8 @@ class QRCodeUseCase(
 
     fun onActivityResult(context: Context, requestCode: Int, resultCode: Int, intent: Intent) {
         if (requestCode != CameraComposeActivity.REQUEST_CODE ||
-            resultCode != RESULT_OK) {
+            resultCode != RESULT_OK
+        ) {
             return
         }
         val providerId = intent.getStringExtra(PROVIDER_ID) ?: return

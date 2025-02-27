@@ -142,7 +142,7 @@ dependencies {
 
     implementation(libs.google.barcode.scanning)
     implementation(libs.rabbit.amqp)
-    implementation(libs.zxing)
+
     implementation(libs.haze)
     implementation(libs.haze.materials)
 

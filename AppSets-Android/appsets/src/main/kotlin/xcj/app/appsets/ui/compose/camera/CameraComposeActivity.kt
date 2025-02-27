@@ -13,6 +13,7 @@ import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.barcode.common.Barcode
 import xcj.app.appsets.ui.compose.theme.AppSetsTheme
 import xcj.app.starter.android.ui.base.DesignComponentActivity
+import xcj.app.starter.android.util.PurpleLogger
 import kotlin.collections.first
 
 class CameraComposeActivity : DesignComponentActivity() {
@@ -53,8 +54,8 @@ class CameraComposeActivity : DesignComponentActivity() {
                     listOf(barcodeScanner),
                     COORDINATE_SYSTEM_VIEW_REFERENCED,
                     ContextCompat.getMainExecutor(this@CameraComposeActivity)
-                ) { result: MlKitAnalyzer.Result? ->
-                    val barcodeResults = result?.getValue(barcodeScanner)
+                ) { result: MlKitAnalyzer.Result ->
+                    val barcodeResults = result.getValue(barcodeScanner)
                     if ((barcodeResults == null) ||
                         (barcodeResults.isEmpty()) ||
                         (barcodeResults.first() == null)
@@ -62,7 +63,7 @@ class CameraComposeActivity : DesignComponentActivity() {
                         previewView.overlay.clear()
                         return@MlKitAnalyzer
                     }
-                    viewModel.updateCode(barcodeResults[0])
+                    viewModel.updateCode(this@CameraComposeActivity, barcodeResults[0])
                 }
             )
         }

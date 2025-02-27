@@ -11,6 +11,7 @@ import retrofit2.http.Multipart
 import retrofit2.http.POST
 import retrofit2.http.Part
 import retrofit2.http.Streaming
+import xcj.app.share.base.ShareDevice
 import xcj.app.share.http.model.ContentInfoListWrapper
 import xcj.app.starter.foundation.http.DesignResponse
 
@@ -75,7 +76,12 @@ interface AppSetsShareApi {
     @POST("/appsets/share/contents/get")
     suspend fun getContentList(
         @Header("share_token") shareToken: String,
-        @Header("uri") uri: String,
-        @Body text: String = "Test Body",
+        @Header("uri") uri: String
     ): DesignResponse<ContentInfoListWrapper>
+
+    @Headers("Content-Type:application/json")
+    @POST("/appsets/share/device/info/exchange")
+    suspend fun exchangeDeviceInfo(
+        @Body shareDevice: ShareDevice.HttpShareDevice,
+    ): DesignResponse<ShareDevice.HttpShareDevice>
 }

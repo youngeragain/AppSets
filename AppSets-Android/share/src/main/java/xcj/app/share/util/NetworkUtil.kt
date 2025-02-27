@@ -26,13 +26,13 @@ object NetworkUtil {
     /**
      * key is InetAddress, value is InetAddress's NetworkInterface Human readable name
      */
-    fun getAllAvailableLocalInetAddresses(): List<Pair<InetAddress, String>> {
-        val ipAddresses = mutableListOf<Pair<InetAddress, String>>()
+    fun getAllAvailableLocalInetAddresses(): List<Pair<InetAddress, NetworkInterface>> {
+        val result = mutableListOf<Pair<InetAddress, NetworkInterface>>()
         try {
             val networkInterfaces: Enumeration<NetworkInterface>? =
                 NetworkInterface.getNetworkInterfaces()
             if (networkInterfaces == null) {
-                return ipAddresses
+                return result
             }
             while (networkInterfaces.hasMoreElements()) {
                 val networkInterface = networkInterfaces.nextElement()
@@ -70,11 +70,7 @@ object NetworkUtil {
                     if (!inetAddress.isLoopbackAddress && (inetAddress.isSiteLocalAddress || inetAddress.isLinkLocalAddress)) {
                         val hostAddress = inetAddress.hostAddress
                         if (!hostAddress.isNullOrEmpty()) {
-                            ipAddresses.add(
-                                inetAddress to getNetworkInterfaceHumanReadableName(
-                                    networkInterface
-                                )
-                            )
+                            result.add(inetAddress to networkInterface)
                         }
                     }
                 }
@@ -83,10 +79,10 @@ object NetworkUtil {
             e.printStackTrace()
         }
 
-        return ipAddresses
+        return result
     }
 
-    private fun getNetworkInterfaceHumanReadableName(networkInterface: NetworkInterface): String {
+    fun getNetworkInterfaceHumanReadableName(networkInterface: NetworkInterface): String {
         val prefix =
             if (networkInterface.displayName.startsWith(PREFIX_WIFI_AP)) {
                 "Hotspot-"

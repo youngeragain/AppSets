@@ -1517,12 +1517,8 @@ fun navigateToCameraActivity(context: Context, navController: NavController) {
         navController.navigate(PageRouteNames.PrivacyPage)
         return
     }
-    context.startActivityForResult(
-        Intent(
-            context,
-            CameraComposeActivity::class.java
-        ), CameraComposeActivity.REQUEST_CODE
-    )
+    val intent = Intent(context, CameraComposeActivity::class.java)
+    context.startActivityForResult(intent, CameraComposeActivity.REQUEST_CODE)
 }
 
 fun navigateToAppSetsLauncherActivity(context: Context) {

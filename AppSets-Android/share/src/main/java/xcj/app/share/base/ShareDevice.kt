@@ -48,10 +48,14 @@ interface ShareDevice {
         override var deviceName: DeviceName,
         override var deviceAddress: DeviceAddress = DeviceAddress.NONE,
         override var deviceType: Int = DEVICE_TYPE_PHONE,
+        @Transient
         val jmDNS: JmDNS? = null,
+        @Transient
         var isNeedPin: Boolean = false,
+        @Transient
         var pin: Int = 0,
         //if paired, the server will send token to client, client should update this value
+        @Transient
         var token: String? = null
     ) : ShareDevice {
         val isPaired: Boolean

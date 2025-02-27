@@ -46,6 +46,51 @@ import kotlin.random.Random
 
 class AppSetsShareRepository() {
 
+    fun interface BaseUrlProvider {
+        fun getBaseUrl(): String?
+    }
+
+    class StringBaseUrlProvider(
+        private val address: String,
+        private val port: Int
+    ) : BaseUrlProvider {
+        override fun getBaseUrl(): String? {
+            return "http://$address:$port"
+        }
+    }
+
+    class ShareDeviceBaseUrlProvider(
+        private val shareDevice: ShareDevice.HttpShareDevice,
+        private val port: Int
+    ) : BaseUrlProvider {
+        override fun getBaseUrl(): String? {
+            if (shareDevice.deviceAddress.ips.isEmpty()) {
+                PurpleLogger.current.d(TAG, "buildApi, device ips is empty, return")
+                return null
+            }
+            val baseUrlStringBuilder = StringBuilder()
+            baseUrlStringBuilder.append("http://")
+            val ip4 = shareDevice.deviceAddress.ip4
+            if (!ip4.isNullOrEmpty()) {
+                PurpleLogger.current.d(TAG, "buildApi, use device ip4:$ip4")
+                baseUrlStringBuilder.append(ip4)
+            } else {
+                val ip6 = shareDevice.deviceAddress.ip6
+                if (ip6.isNullOrEmpty()) {
+                    return null
+                }
+                PurpleLogger.current.d(TAG, "buildApi, use device ip6:$ip6")
+                baseUrlStringBuilder.append("[")
+                baseUrlStringBuilder.append(ip6)
+                baseUrlStringBuilder.append("]")
+            }
+            baseUrlStringBuilder.append(":")
+            baseUrlStringBuilder.append(port)
+            val baseUrl = baseUrlStringBuilder.toString()
+            return baseUrl
+        }
+    }
+
     companion object {
         private const val TAG = "AppSetsShareRepository"
     }
@@ -53,35 +98,14 @@ class AppSetsShareRepository() {
     private val saveFileExecutors = Executors.newScheduledThreadPool(2)
 
     private fun buildApi(
-        shareDevice: ShareDevice,
-        port: Int,
+        baseUrlProvider: BaseUrlProvider,
         okHttpClient: OkHttpClient? = null
     ): AppSetsShareApi? {
-        PurpleLogger.current.d(TAG, "buildApi, shareDevice:$shareDevice")
-        if (shareDevice.deviceAddress.ips.isEmpty()) {
-            PurpleLogger.current.d(TAG, "buildApi, device ips is empty, return")
+        PurpleLogger.current.d(TAG, "buildApi, baseUrlProvider:$baseUrlProvider")
+        val baseUrl = baseUrlProvider.getBaseUrl()
+        if (baseUrl.isNullOrEmpty()) {
             return null
         }
-        val baseUrlStringBuilder = StringBuilder()
-        baseUrlStringBuilder.append("http://")
-        val ip4 = shareDevice.deviceAddress.ip4
-        if (!ip4.isNullOrEmpty()) {
-            PurpleLogger.current.d(TAG, "buildApi, use device ip4:$ip4")
-            baseUrlStringBuilder.append(ip4)
-        } else {
-            val ip6 = shareDevice.deviceAddress.ip6
-            if (ip6.isNullOrEmpty()) {
-                return null
-            }
-            PurpleLogger.current.d(TAG, "buildApi, use device ip6:$ip6")
-            baseUrlStringBuilder.append("[")
-            baseUrlStringBuilder.append(ip6)
-            baseUrlStringBuilder.append("]")
-        }
-        baseUrlStringBuilder.append(":")
-        baseUrlStringBuilder.append(port)
-        var baseUrl = baseUrlStringBuilder.toString()
-
         //test
         //baseUrl = "http://192.168.198.62:8090"
 
@@ -149,7 +173,9 @@ class AppSetsShareRepository() {
     }
 
     suspend fun isNeedPin(shareDevice: ShareDevice.HttpShareDevice) = withContext(Dispatchers.IO) {
-        val api = buildApi(shareDevice, HttpShareMethod.SHARE_SERVER_API_PORT)
+        val urlProvider =
+            ShareDeviceBaseUrlProvider(shareDevice, HttpShareMethod.SHARE_SERVER_API_PORT)
+        val api = buildApi(urlProvider)
         if (api == null) {
             return@withContext DesignResponse.NOT_FOUND
         }
@@ -159,7 +185,9 @@ class AppSetsShareRepository() {
 
     suspend fun pair(shareDevice: ShareDevice.HttpShareDevice, pin: Int) =
         withContext(Dispatchers.IO) {
-            val api = buildApi(shareDevice, HttpShareMethod.SHARE_SERVER_API_PORT)
+            val urlProvider =
+                ShareDeviceBaseUrlProvider(shareDevice, HttpShareMethod.SHARE_SERVER_API_PORT)
+            val api = buildApi(urlProvider)
             if (api == null) {
                 return@withContext DesignResponse.NOT_FOUND
             }
@@ -172,8 +200,9 @@ class AppSetsShareRepository() {
 
     suspend fun pairResponse(shareDevice: ShareDevice.HttpShareDevice, shareToken: String) =
         withContext(Dispatchers.IO) {
-
-            val api = buildApi(shareDevice, HttpShareMethod.SHARE_SERVER_API_PORT)
+            val urlProvider =
+                ShareDeviceBaseUrlProvider(shareDevice, HttpShareMethod.SHARE_SERVER_API_PORT)
+            val api = buildApi(urlProvider)
             if (api == null) {
                 return@withContext DesignResponse.NOT_FOUND
             }
@@ -192,8 +221,9 @@ class AppSetsShareRepository() {
         dataContent: DataContent.StringContent
     ) =
         withContext(Dispatchers.IO) {
-
-            val api = buildApi(shareDevice, HttpShareMethod.SHARE_SERVER_API_PORT)
+            val urlProvider =
+                ShareDeviceBaseUrlProvider(shareDevice, HttpShareMethod.SHARE_SERVER_API_PORT)
+            val api = buildApi(urlProvider)
             if (api == null) {
                 return@withContext DesignResponse.NOT_FOUND
             }
@@ -215,8 +245,9 @@ class AppSetsShareRepository() {
         dataContent: DataContent.ByteArrayContent
     ) =
         withContext(Dispatchers.IO) {
-
-            val api = buildApi(shareDevice, HttpShareMethod.SHARE_SERVER_FILE_API_PORT)
+            val urlProvider =
+                ShareDeviceBaseUrlProvider(shareDevice, HttpShareMethod.SHARE_SERVER_FILE_API_PORT)
+            val api = buildApi(urlProvider)
             if (api == null) {
                 return@withContext DesignResponse.NOT_FOUND
             }
@@ -259,8 +290,9 @@ class AppSetsShareRepository() {
         dataContent: DataContent.FileContent
     ) =
         withContext(Dispatchers.IO) {
-
-            val api = buildApi(shareDevice, HttpShareMethod.SHARE_SERVER_FILE_API_PORT)
+            val urlProvider =
+                ShareDeviceBaseUrlProvider(shareDevice, HttpShareMethod.SHARE_SERVER_FILE_API_PORT)
+            val api = buildApi(urlProvider)
             if (api == null) {
                 return@withContext DesignResponse.NOT_FOUND
             }
@@ -302,8 +334,9 @@ class AppSetsShareRepository() {
         dataContent: DataContent.UriContent
     ) =
         withContext(Dispatchers.IO) {
-
-            val api = buildApi(shareDevice, HttpShareMethod.SHARE_SERVER_FILE_API_PORT)
+            val urlProvider =
+                ShareDeviceBaseUrlProvider(shareDevice, HttpShareMethod.SHARE_SERVER_FILE_API_PORT)
+            val api = buildApi(urlProvider)
             if (api == null) {
                 return@withContext DesignResponse.NOT_FOUND
             }
@@ -341,8 +374,9 @@ class AppSetsShareRepository() {
 
     suspend fun prepareSend(shareDevice: ShareDevice.HttpShareDevice, uri: String) =
         withContext(Dispatchers.IO) {
-
-            val api = buildApi(shareDevice, HttpShareMethod.SHARE_SERVER_API_PORT)
+            val urlProvider =
+                ShareDeviceBaseUrlProvider(shareDevice, HttpShareMethod.SHARE_SERVER_API_PORT)
+            val api = buildApi(urlProvider)
             if (api == null) {
                 return@withContext DesignResponse.NOT_FOUND
             }
@@ -356,8 +390,9 @@ class AppSetsShareRepository() {
         isPreferDownloadSelf: Boolean
     ) =
         withContext(Dispatchers.IO) {
-
-            val api = buildApi(shareDevice, HttpShareMethod.SHARE_SERVER_API_PORT)
+            val urlProvider =
+                ShareDeviceBaseUrlProvider(shareDevice, HttpShareMethod.SHARE_SERVER_API_PORT)
+            val api = buildApi(urlProvider)
             if (api == null) {
                 return@withContext DesignResponse.NOT_FOUND
             }
@@ -371,6 +406,34 @@ class AppSetsShareRepository() {
                 isPreferDownloadSelf = isPreferDownloadSelf
             )
         }
+
+    suspend fun exchangeDeviceInfo(
+        shareMethod: HttpShareMethod,
+        address: String,
+    ) = withContext(
+        Dispatchers.IO
+    ) {
+        val currentShareDevice = shareMethod.getCurrentShareDevice()
+        if (currentShareDevice == null) {
+            return@withContext
+        }
+        val urlProvider =
+            StringBaseUrlProvider(address, HttpShareMethod.SHARE_SERVER_API_PORT)
+        val api = buildApi(urlProvider)
+        if (api == null) {
+            return@withContext
+        }
+
+        PurpleLogger.current.d(
+            TAG,
+            "exchangeDeviceInfo, address:$address, currentShareDevice:$currentShareDevice"
+        )
+        val designResponse = api.exchangeDeviceInfo(currentShareDevice)
+        val httpShareDevice = designResponse.data
+        if (httpShareDevice != null) {
+            shareMethod.exchangeDeviceInfo(httpShareDevice)
+        }
+    }
 
     /**
      * 发送前检查
@@ -579,7 +642,9 @@ class AppSetsShareRepository() {
         uri: String
     ): DesignResponse<ContentInfoListWrapper> =
         withContext(Dispatchers.IO) {
-            val api = buildApi(shareDevice, HttpShareMethod.SHARE_SERVER_API_PORT)
+            val urlProvider =
+                ShareDeviceBaseUrlProvider(shareDevice, HttpShareMethod.SHARE_SERVER_API_PORT)
+            val api = buildApi(urlProvider)
             if (api == null) {
                 return@withContext DesignResponse(data = null)
             }
@@ -628,8 +693,9 @@ class AppSetsShareRepository() {
         }
         defaultOkHttpClientBuilder.addInterceptor(responseProgressInterceptor)
         val okHttpClient = defaultOkHttpClientBuilder.build()
-
-        val api = buildApi(shareDevice, HttpShareMethod.SHARE_SERVER_FILE_API_PORT, okHttpClient)
+        val urlProvider =
+            ShareDeviceBaseUrlProvider(shareDevice, HttpShareMethod.SHARE_SERVER_FILE_API_PORT)
+        val api = buildApi(urlProvider, okHttpClient)
         if (api == null) {
             return@withContext
         }

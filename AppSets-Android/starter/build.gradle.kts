@@ -54,6 +54,8 @@ dependencies {
     api(libs.okhttp.logging)
     api(libs.retrofit.kotlin.coroutines.adapter)
 
+    api(libs.zxing)
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

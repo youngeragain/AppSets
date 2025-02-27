@@ -1,6 +1,7 @@
 package xcj.app.share.http.service
 
 import android.content.Context
+import xcj.app.share.base.ShareDevice
 import xcj.app.share.http.model.ContentInfoListWrapper
 import xcj.app.starter.foundation.http.DesignResponse
 import xcj.app.web.webserver.base.ContentDownloadN
@@ -28,14 +29,14 @@ interface AppSetsShareService {
     fun prepareSend(
         context: Context,
         clientHost: String,
-        token: String,
+        shareToken: String,
         uri: String
     ): DesignResponse<Boolean>
 
     fun prepareSendResponse(
         context: Context,
         clientHost: String,
-        token: String,
+        shareToken: String,
         isAccept: Boolean,
         preferDownloadSelf: Boolean,
     ): DesignResponse<Boolean>
@@ -43,21 +44,21 @@ interface AppSetsShareService {
     fun postText(
         context: Context,
         clientHost: String,
-        token: String,
+        shareToken: String,
         text: String
     ): DesignResponse<Boolean>
 
     fun postFile(
         context: Context,
         clientHost: String,
-        token: String,
+        shareToken: String,
         fileUploadN: FileUploadN
     ): DesignResponse<Boolean>
 
     fun postFileChunked(
         context: Context,
         clientHost: String,
-        token: String,
+        shareToken: String,
         fileId: String,
         chunkCount: Int,
         chunk: Int,
@@ -67,14 +68,20 @@ interface AppSetsShareService {
     fun getContent(
         context: Context,
         clientHost: String,
-        token: String,
+        shareToken: String,
         contentId: String
     ): DesignResponse<ContentDownloadN>
 
     fun getContentList(
         context: Context,
         clientHost: String,
-        token: String,
+        shareToken: String,
         uri: String
     ): DesignResponse<ContentInfoListWrapper>
+
+    fun exchangeDeviceInfo(
+        context: Context,
+        clientHost: String,
+        device: ShareDevice.HttpShareDevice
+    ): DesignResponse<ShareDevice.HttpShareDevice>
 }

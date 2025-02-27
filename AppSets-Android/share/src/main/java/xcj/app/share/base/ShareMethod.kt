@@ -152,4 +152,8 @@ abstract class ShareMethod() : ConnectivityManager.NetworkCallback(), DefaultLif
         return null
     }
 
+    open fun onScanShareDeviceAddress(address: Array<String>?) {
+
+    }
+
 }

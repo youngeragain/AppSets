@@ -8,6 +8,8 @@ import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.view.MotionEvent
 import android.window.OnBackInvokedDispatcher
 import androidx.activity.compose.setContent
@@ -58,9 +60,12 @@ class MainActivity : DesignComponentActivity() {
             lifecycle.withCreated {
                 createBroadcastReceiver()
                 viewModel.onActivityCreated(this@MainActivity)
-                lifecycleScope.launch {
-                    viewModel.handleIntent(intent)
-                    handleExternalShareContentIfNeeded(intent)
+                viewModel.handleIntent(intent)
+
+                Handler(Looper.getMainLooper()).post {
+                    lifecycleScope.launch {
+                        handleExternalShareContentIfNeeded(intent)
+                    }
                 }
             }
         }
@@ -68,12 +73,11 @@ class MainActivity : DesignComponentActivity() {
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
+        viewModel.handleIntent(intent)
         lifecycleScope.launch {
-            viewModel.handleIntent(intent)
             handleExternalShareContentIfNeeded(intent)
         }
     }
-
 
     @SuppressLint("UnspecifiedRegisterReceiverFlag")
     private fun createBroadcastReceiver() {

@@ -1,6 +1,7 @@
 package xcj.app.share.ui.compose
 
 import AppSetsShareMainContent
+import android.content.ComponentName
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
@@ -41,6 +42,7 @@ class AppSetsShareActivity : DesignComponentActivity() {
         const val CONTENT_FORM_APP = 0
         const val CONTENT_FORM_SYSTEM_APP = 1
         const val CONTENT_FORM_OTHER_APP = 2
+
     }
 
     private val viewModel: AppSetsShareViewModel by viewModels<AppSetsShareViewModel>()
@@ -80,14 +82,15 @@ class AppSetsShareActivity : DesignComponentActivity() {
                     onShareDeviceClick = ::onShareDeviceClick,
                     onAddFileContentClick = ::onAddFileContentClick,
                     onAddTextContentClick = ::onAddTextContentClick,
-                    onContentViewClick = ::onContentViewClick
+                    onContentViewClick = ::onContentViewClick,
+                    onScanClick = ::onScanClick
                 )
             }
         }
         lifecycleScope.launch {
             lifecycle.withCreated {
+                updateShareMethod(HttpShareMethod::class.java)
                 lifecycleScope.launch {
-                    updateShareMethod(HttpShareMethod::class.java)
                     handleExternalShareContentIfNeeded(intent)
                 }
             }
@@ -98,6 +101,40 @@ class AppSetsShareActivity : DesignComponentActivity() {
         super.onNewIntent(intent)
         lifecycleScope.launch {
             handleExternalShareContentIfNeeded(intent)
+        }
+    }
+
+    private fun onScanClick() {
+        val platformPermissionsUsageOfCamera =
+            PlatformUseCase.providePlatformPermissions(this).firstOrNull {
+                it.name == getString(xcj.app.starter.R.string.camera)
+            }
+        if (platformPermissionsUsageOfCamera == null) {
+            return
+        }
+        if (!platformPermissionsUsageOfCamera.granted) {
+            val permissionsToRequest =
+                platformPermissionsUsageOfCamera.androidDefinitionNames.toMutableList().apply {
+                    val relatives = platformPermissionsUsageOfCamera.relativeAndroidDefinitionNames
+                    if (!relatives.isNullOrEmpty()) {
+                        addAll(relatives)
+                    }
+                }
+            PlatformUseCase.requestPermission(this, permissionsToRequest)
+            return
+        }
+        val intent = Intent()
+        val componentName = ComponentName(
+            "xcj.app.container",
+            "xcj.app.appsets.ui.compose.camera.CameraComposeActivity"
+        )
+        intent.setComponent(componentName)
+        runCatching {
+            val activityResultLauncher = getActivityResultLauncher<Intent>(Intent::class.java, null) as? ActivityResultLauncher<Intent>
+            activityResultLauncher?.launch(intent)
+        }.onFailure {
+            it.printStackTrace()
+            PurpleLogger.current.d(TAG, "onScanClick, start CameraActivity failed!, ${it.message}")
         }
     }
 
@@ -133,21 +170,28 @@ class AppSetsShareActivity : DesignComponentActivity() {
             if (result.resultCode != RESULT_OK) {
                 return@ActivityResultCallback
             }
-            val data: Intent? = result.data
-            if (data == null) {
+            val returnIntent: Intent? = result.data
+            if (returnIntent == null) {
                 return@ActivityResultCallback
             }
-            // 处理选择的多个文件
-            val clipData = data.clipData
-            if (clipData != null) {
-                for (i in 0 until clipData.itemCount) {
-                    val uri: Uri = clipData.getItemAt(i).uri
-                    // 使用 URI 处理文件，例如获取文件路径、读取文件内容等
+            val hasShareDeviceAddress = returnIntent.hasExtra("APPSETS_SHARE_DEVICE_ADDRESSES")
+            if(hasShareDeviceAddress){
+                val shareDeviceAddresses =
+                    returnIntent.getStringArrayExtra("APPSETS_SHARE_DEVICE_ADDRESSES")
+                getShareMethod().onScanShareDeviceAddress(shareDeviceAddresses)
+            }else{
+                // 处理选择的多个文件
+                val clipData = returnIntent.clipData
+                if (clipData != null) {
+                    for (i in 0 until clipData.itemCount) {
+                        val uri: Uri = clipData.getItemAt(i).uri
+                        // 使用 URI 处理文件，例如获取文件路径、读取文件内容等
+                        handleFileUri(uri)
+                    }
+                } else if (returnIntent.data != null) {
+                    val uri: Uri = returnIntent.data!!
                     handleFileUri(uri)
                 }
-            } else if (data.data != null) {
-                val uri: Uri = data.data!!
-                handleFileUri(uri)
             }
         }
         intentResultLauncher = registerForActivityResult(contract, activityResultCallback)
@@ -222,33 +266,29 @@ class AppSetsShareActivity : DesignComponentActivity() {
         getShareMethod().sendAll()
     }
 
-    private suspend fun handleExternalShareContentIfNeeded(
+    private fun handleExternalShareContentIfNeeded(
         intent: Intent?
     ) {
         if (intent == null) {
             return
         }
         when (intent.action) {
-            Intent.ACTION_SEND -> {
-                handleIntentExternalContent(intent, false)
-            }
-
-            Intent.ACTION_SEND_MULTIPLE -> {
-                handleIntentExternalContent(intent, true)
+            Intent.ACTION_SEND, Intent.ACTION_SEND_MULTIPLE -> {
+                handleIntentExternalContent(intent)
             }
         }
     }
 
 
-    private suspend fun handleIntentExternalContent(
-        intent: Intent,
-        isMulti: Boolean
+    private fun handleIntentExternalContent(
+        intent: Intent
     ) {
         if (intent.type == ContentType.TEXT_PLAIN) {
             intent.getStringExtra(Intent.EXTRA_TEXT)?.let { text ->
                 viewModel.addPendingContent(this, text, CONTENT_FORM_OTHER_APP)
             }
         } else {
+            val isMulti = intent.action == Intent.ACTION_SEND_MULTIPLE
             if (!isMulti) {
                 (intent.getParcelableExtra<Parcelable>(Intent.EXTRA_STREAM) as? Uri)?.let { uri ->
                     viewModel.addPendingContent(this, uri, CONTENT_FORM_OTHER_APP)

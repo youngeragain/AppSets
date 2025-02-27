@@ -46,4 +46,5 @@
     <string name="no_content">没有共享数据</string>
     <string name="getting_in">获取中…</string>
     <string name="content_save_path">数据保存位置</string>
+    <string name="share_device_connect_tips">确保已连接到WIFI或设备热点，你也可以扫描附近设备。</string>
 </resources>

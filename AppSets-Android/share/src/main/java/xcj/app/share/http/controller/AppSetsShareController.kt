@@ -1,6 +1,7 @@
 package xcj.app.share.http.controller
 
 import android.content.Context
+import xcj.app.share.base.ShareDevice
 import xcj.app.share.http.model.ContentInfoListWrapper
 import xcj.app.share.http.service.AppSetsShareService
 import xcj.app.share.http.service.AppSetsShareServiceImpl
@@ -13,6 +14,7 @@ import xcj.app.web.webserver.interfaces.Controller
 import xcj.app.web.webserver.interfaces.HttpBody
 import xcj.app.web.webserver.interfaces.HttpHeader
 import xcj.app.web.webserver.interfaces.HttpMethod
+import xcj.app.web.webserver.interfaces.RequestBody
 import xcj.app.web.webserver.interfaces.RequestInfo
 import xcj.app.web.webserver.interfaces.RequestMapping
 
@@ -87,32 +89,32 @@ class AppSetsShareController {
     fun prepareSend(
         @AndroidContext(AndroidContext.TYPE_ACTIVITY) context: Context,
         @RequestInfo(what = RequestInfo.WHAT_REQUEST_REMOTE_HOST) clientHost: String,
-        @HttpHeader("share_token") token: String,
+        @HttpHeader("share_token") shareToken: String,
         @HttpHeader("uri") uri: String
     ): DesignResponse<Boolean> {
         PurpleLogger.current.d(
             TAG,
-            "prepareSend, context:$context, token:$token, clientHost:$clientHost"
+            "prepareSend, context:$context, shareToken:$shareToken, clientHost:$clientHost"
         )
-        return appSetsShareService.prepareSend(context, clientHost, token, uri)
+        return appSetsShareService.prepareSend(context, clientHost, shareToken, uri)
     }
 
     @RequestMapping(path = "/appsets/share/prepare_response", [HttpMethod.POST])
     fun prepareSendResponse(
         @AndroidContext(AndroidContext.TYPE_ACTIVITY) context: Context,
         @RequestInfo(what = RequestInfo.WHAT_REQUEST_REMOTE_HOST) clientHost: String,
-        @HttpHeader("share_token") token: String,
+        @HttpHeader("share_token") shareToken: String,
         @HttpHeader("is_accept") isAccept: Boolean,
         @HttpHeader("prefer_download_self") preferDownloadSelf: Boolean,
     ): DesignResponse<Boolean> {
         PurpleLogger.current.d(
             TAG,
-            "prepareSendResponse, context:$context, token:$token, clientHost:$clientHost, isAccept:$isAccept, preferDownloadSelf:$preferDownloadSelf"
+            "prepareSendResponse, context:$context, shareToken:$shareToken, clientHost:$clientHost, isAccept:$isAccept, preferDownloadSelf:$preferDownloadSelf"
         )
         return appSetsShareService.prepareSendResponse(
             context,
             clientHost,
-            token,
+            shareToken,
             isAccept,
             preferDownloadSelf
         )
@@ -122,35 +124,35 @@ class AppSetsShareController {
     fun postText(
         @AndroidContext(AndroidContext.TYPE_ACTIVITY) context: Context,
         @RequestInfo(what = RequestInfo.WHAT_REQUEST_REMOTE_HOST) clientHost: String,
-        @HttpHeader("share_token") token: String,
+        @HttpHeader("share_token") shareToken: String,
         @HttpBody(HttpBody.TYPE_RAW_TEXT) text: String
     ): DesignResponse<Boolean> {
         PurpleLogger.current.d(
             TAG,
             "postText, context:$context, text:$text, clientHost:$clientHost"
         )
-        return appSetsShareService.postText(context, clientHost, token, text)
+        return appSetsShareService.postText(context, clientHost, shareToken, text)
     }
 
     @RequestMapping(path = "/appsets/share/file", [HttpMethod.POST])
     fun postFile(
         @AndroidContext(AndroidContext.TYPE_ACTIVITY) context: Context,
         @RequestInfo(what = RequestInfo.WHAT_REQUEST_REMOTE_HOST) clientHost: String,
-        @HttpHeader("share_token") token: String,
+        @HttpHeader("share_token") shareToken: String,
         @HttpBody(HttpBody.TYPE_FILE) fileUploadN: FileUploadN
     ): DesignResponse<Boolean> {
         PurpleLogger.current.d(
             TAG,
             "postFile, context:$context, fileUploadN:$fileUploadN, clientHost:$clientHost"
         )
-        return appSetsShareService.postFile(context, clientHost, token, fileUploadN)
+        return appSetsShareService.postFile(context, clientHost, shareToken, fileUploadN)
     }
 
     @RequestMapping(path = "/appsets/share/file/trunked", [HttpMethod.POST])
     fun postFileChunked(
         @AndroidContext(AndroidContext.TYPE_ACTIVITY) context: Context,
         @RequestInfo(what = RequestInfo.WHAT_REQUEST_REMOTE_HOST) clientHost: String,
-        @HttpHeader("share_token") token: String,
+        @HttpHeader("share_token") shareToken: String,
         @HttpHeader("file_id") fileId: String,
         @HttpHeader("chunk_count") chunkCount: Int,
         @HttpHeader("chunk") chunk: Int,
@@ -163,7 +165,7 @@ class AppSetsShareController {
         return appSetsShareService.postFileChunked(
             context,
             clientHost,
-            token,
+            shareToken,
             fileId,
             chunkCount,
             chunk,
@@ -175,28 +177,43 @@ class AppSetsShareController {
     fun getContent(
         @AndroidContext(AndroidContext.TYPE_ACTIVITY) context: Context,
         @RequestInfo(what = RequestInfo.WHAT_REQUEST_REMOTE_HOST) clientHost: String,
-        @HttpHeader("share_token") token: String,
+        @HttpHeader("share_token") shareToken: String,
         @HttpHeader("content_id") contentId: String
     ): DesignResponse<ContentDownloadN> {
         PurpleLogger.current.d(
             TAG,
             "getContent, context:$context, clientHost:$clientHost"
         )
-        return appSetsShareService.getContent(context, clientHost, token, contentId)
+        return appSetsShareService.getContent(context, clientHost, shareToken, contentId)
     }
 
     @RequestMapping(path = "/appsets/share/contents/get", [HttpMethod.POST])
     fun getContentList(
         @AndroidContext(AndroidContext.TYPE_ACTIVITY) context: Context,
         @RequestInfo(what = RequestInfo.WHAT_REQUEST_REMOTE_HOST) clientHost: String,
-        @HttpHeader("share_token") token: String,
+        @HttpHeader("share_token") shareToken: String,
         @HttpHeader("uri") uri: String
     ): DesignResponse<ContentInfoListWrapper> {
         PurpleLogger.current.d(
             TAG,
             "getContentList, context:$context, clientHost:$clientHost"
         )
-        return appSetsShareService.getContentList(context, clientHost, token, uri)
+        return appSetsShareService.getContentList(context, clientHost, shareToken, uri)
     }
+
+
+    @RequestMapping(path = "/appsets/share/device/info/exchange", [HttpMethod.POST])
+    fun exchangeDeviceInfo(
+        @AndroidContext(AndroidContext.TYPE_ACTIVITY) context: Context,
+        @RequestInfo(what = RequestInfo.WHAT_REQUEST_REMOTE_HOST) clientHost: String,
+        @RequestBody shareDevice: ShareDevice.HttpShareDevice
+    ): DesignResponse<ShareDevice.HttpShareDevice> {
+        PurpleLogger.current.d(
+            TAG,
+            "exchangeDeviceInfo, context:$context, clientHost:$clientHost"
+        )
+        return appSetsShareService.exchangeDeviceInfo(context, clientHost, shareDevice)
+    }
+
 
 }

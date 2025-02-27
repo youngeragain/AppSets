@@ -1,5 +1,6 @@
 @file:OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 
+import android.graphics.Bitmap
 import android.net.wifi.p2p.WifiP2pDevice
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
@@ -11,9 +12,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -90,13 +89,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil3.compose.AsyncImage
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import xcj.app.compose_share.components.DesignHDivider
 import xcj.app.compose_share.components.DesignTextField
 import xcj.app.compose_share.components.LocalAnyStateProvider
 import xcj.app.compose_share.components.VarBottomSheetContainer
 import xcj.app.compose_share.modifier.combinedClickableSingle
-import xcj.app.share.R
 import xcj.app.share.base.DataContent
 import xcj.app.share.base.ShareDevice
 import xcj.app.share.http.HttpShareMethod
@@ -105,13 +104,17 @@ import xcj.app.share.rpc.RpcShareMethod
 import xcj.app.share.ui.compose.AppSetsShareActivity
 import xcj.app.share.ui.compose.AppSetsShareViewModel
 import xcj.app.share.wlanp2p.WlanP2pShareMethod
-import xcj.app.starter.android.AppDefinition
+import xcj.app.starter.util.QrCodeUtil
 
 data class BoxFocusInfo(
     val receiveBoxFocus: Boolean = false,
     val devicesBoxFocus: Boolean = false,
     val sendBoxFocus: Boolean = false
-)
+) {
+    fun isAllNotFocus(): Boolean {
+        return !receiveBoxFocus && !devicesBoxFocus && !sendBoxFocus
+    }
+}
 
 @Composable
 fun AppSetsShareMainContent(
@@ -122,6 +125,7 @@ fun AppSetsShareMainContent(
     onAddFileContentClick: () -> Unit,
     onAddTextContentClick: (String) -> Unit,
     onContentViewClick: (DataContent) -> Unit,
+    onScanClick: () -> Unit
 ) {
     val viewModel = viewModel<AppSetsShareViewModel>()
     CompositionLocalProvider(
@@ -133,7 +137,8 @@ fun AppSetsShareMainContent(
                     AppSetsShareDevicesSpace(
                         onDiscoveryClick = onDiscoveryClick,
                         onCloseEstablishCLick = onCloseEstablishCLick,
-                        onShareDeviceClick = onShareDeviceClick
+                        onShareDeviceClick = onShareDeviceClick,
+                        onScanClick = onScanClick
                     )
                 },
                 receivedSpaceContent = {
@@ -328,7 +333,7 @@ fun AppSetsShareContainer(
                         modifier = Modifier
                             .fillMaxSize()
                             .background(
-                                MaterialTheme.colorScheme.background,
+                                MaterialTheme.colorScheme.surface,
                                 MaterialTheme.shapes.extraLarge
                             )
                             .clip(MaterialTheme.shapes.extraLarge)
@@ -360,7 +365,7 @@ fun AppSetsShareContainer(
                         modifier = Modifier
                             .fillMaxSize()
                             .background(
-                                MaterialTheme.colorScheme.background,
+                                MaterialTheme.colorScheme.surface,
                                 MaterialTheme.shapes.extraLarge
                             )
                             .clip(MaterialTheme.shapes.extraLarge)
@@ -393,7 +398,7 @@ fun AppSetsShareContainer(
                         modifier = Modifier
                             .fillMaxSize()
                             .background(
-                                MaterialTheme.colorScheme.background,
+                                MaterialTheme.colorScheme.surface,
                                 MaterialTheme.shapes.extraLarge
                             )
                             .clip(MaterialTheme.shapes.extraLarge)
@@ -411,6 +416,7 @@ fun AppSetsShareDevicesSpace(
     onDiscoveryClick: () -> Unit,
     onCloseEstablishCLick: () -> Unit,
     onShareDeviceClick: (ShareDevice, Int) -> Unit,
+    onScanClick: () -> Unit
 ) {
     val hapticFeedback = LocalHapticFeedback.current
     val context = LocalContext.current
@@ -422,6 +428,9 @@ fun AppSetsShareDevicesSpace(
     val boxFocusInfo by viewModel.boxFocusInfo
     val shareMethodType by viewModel.shareMethodTypeState
     val shareDevice by viewModel.mShareDeviceState
+
+    val scope = rememberCoroutineScope()
+
     var isShowSettings by remember {
         mutableStateOf(false)
     }
@@ -431,6 +440,37 @@ fun AppSetsShareDevicesSpace(
     var whichIsShowDeviceContentList: ShareDevice? by remember {
         mutableStateOf(null)
     }
+
+    var isShowQrCode by remember {
+        mutableStateOf(false)
+    }
+
+    var qrCodeBitmap: Bitmap? by remember {
+        mutableStateOf(null)
+    }
+
+    LaunchedEffect(isShowQrCode) {
+        if (!isShowQrCode) {
+            return@LaunchedEffect
+        }
+        val shareMethod = appSetsShareActivity.getShareMethod()
+        if (shareMethod !is HttpShareMethod) {
+            return@LaunchedEffect
+        }
+        val serverBootStateInfo = shareMethod.serverBootStateInfoState.value
+        if (serverBootStateInfo !is ServerBootStateInfo.Booted) {
+            return@LaunchedEffect
+        }
+        scope.launch {
+            val shareQrCodeContent = serverBootStateInfo.availableDeviceIp.joinToString(
+                separator = ":",
+                prefix = "asqr:appsets_share:"
+            ) { it.ip }
+            qrCodeBitmap = QrCodeUtil.encodeAsBitmap(shareQrCodeContent)
+        }
+    }
+
+
     Box(
         modifier = Modifier.fillMaxSize()
     ) {
@@ -506,7 +546,7 @@ fun AppSetsShareDevicesSpace(
                     .fillMaxSize(),
                 contentAlignment = Alignment.Center
             ) {
-                Text(text = stringResource(R.string.no_devices))
+                Text(text = stringResource(xcj.app.share.R.string.no_devices))
             }
         }
         AnimatedVisibility(
@@ -543,20 +583,32 @@ fun AppSetsShareDevicesSpace(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            Image(
-                                modifier = Modifier.rotate(rotateSate),
-                                painter = painterResource(xcj.app.compose_share.R.drawable.ic_round_refresh_24),
-                                contentDescription = null
-                            )
-                            val tipsText = if (shareDeviceList.isEmpty()) {
-                                stringResource(R.string.devices)
+                        AnimatedContent(isShowQrCode) { targetIsShowQrCode ->
+                            if (!targetIsShowQrCode) {
+                                Row(
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                ) {
+                                    Icon(
+                                        modifier = Modifier.rotate(rotateSate),
+                                        painter = painterResource(xcj.app.compose_share.R.drawable.ic_round_refresh_24),
+                                        contentDescription = null
+                                    )
+                                    val tipsText = if (shareDeviceList.isEmpty()) {
+                                        stringResource(xcj.app.share.R.string.devices)
+                                    } else {
+                                        "${stringResource(xcj.app.share.R.string.devices)}(${shareDeviceList.size})"
+                                    }
+                                    Text(text = tipsText)
+                                }
                             } else {
-                                "${stringResource(R.string.devices)}(${shareDeviceList.size})"
+                                AsyncImage(
+                                    model = qrCodeBitmap,
+                                    modifier = Modifier
+                                        .size(98.dp)
+                                        .clip(MaterialTheme.shapes.extraLarge),
+                                    contentDescription = null
+                                )
                             }
-                            Text(text = tipsText)
                         }
                     }
                     Text(
@@ -583,12 +635,66 @@ fun AppSetsShareDevicesSpace(
             }
         }
 
-        Box(
+        var shouldShowTips by remember {
+            mutableStateOf(false)
+        }
+        LaunchedEffect(isDiscovering, shareDeviceList) {
+            scope.launch {
+                delay(5000)
+                shouldShowTips = shareDeviceList.isEmpty()
+            }
+        }
+        AnimatedVisibility(
+            visible = boxFocusInfo.isAllNotFocus() && shareDeviceList.isEmpty() && shouldShowTips,
+            enter = fadeIn(),
+            exit = fadeOut()
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(horizontal = 24.dp, vertical = 12.dp),
+                    text = stringResource(xcj.app.share.R.string.share_device_connect_tips),
+                    fontSize = 10.sp,
+                    textAlign = TextAlign.Center
+                )
+            }
+        }
+
+        Row(
             modifier = Modifier
                 .align(Alignment.TopEnd)
-                .padding(12.dp)
+                .padding(horizontal = 12.dp)
+                .animateContentSize(animationSpec = tween()),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Image(
+            if (shareMethodType == HttpShareMethod::class.java && !boxFocusInfo.devicesBoxFocus) {
+                Icon(
+                    modifier = Modifier
+                        .clickable(
+                            onClick = onScanClick
+                        )
+                        .padding(12.dp),
+                    painter = painterResource(xcj.app.compose_share.R.drawable.ic_outline_qr_code_scanner_24),
+                    contentDescription = null
+                )
+                Icon(
+                    modifier = Modifier
+                        .clickable(
+                            onClick = {
+                                isShowQrCode = !isShowQrCode
+                            }
+                        )
+                        .padding(12.dp),
+                    painter = painterResource(xcj.app.compose_share.R.drawable.ic_outline_qr_code_24),
+                    contentDescription = null
+                )
+            }
+            Icon(
                 modifier = Modifier
                     .clickable(
                         onClick = {
@@ -673,9 +779,9 @@ fun DeviceContentListComponent(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 val titleText = if (contentInfoList?.infoList.isNullOrEmpty()) {
-                    stringResource(R.string.share_content_list)
+                    stringResource(xcj.app.share.R.string.share_content_list)
                 } else {
-                    "${stringResource(R.string.share_content_list)}(${(contentInfoList.infoList.size)})"
+                    "${stringResource(xcj.app.share.R.string.share_content_list)}(${(contentInfoList.infoList.size)})"
                 }
                 Text(
                     text = titleText,
@@ -703,7 +809,10 @@ fun DeviceContentListComponent(
                             .padding(vertical = 36.dp),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text(text = stringResource(R.string.getting_in), fontSize = 12.sp)
+                        Text(
+                            text = stringResource(xcj.app.share.R.string.getting_in),
+                            fontSize = 12.sp
+                        )
                     }
                 }
             } else {
@@ -715,7 +824,10 @@ fun DeviceContentListComponent(
                                 .padding(horizontal = 12.dp, vertical = 36.dp),
                             contentAlignment = Alignment.Center
                         ) {
-                            Text(text = stringResource(R.string.no_content), fontSize = 12.sp)
+                            Text(
+                                text = stringResource(xcj.app.share.R.string.no_content),
+                                fontSize = 12.sp
+                            )
                         }
                     }
                 }
@@ -770,13 +882,13 @@ fun SettingsSheet(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Text(
-                    text = stringResource(R.string.share_settings),
+                    text = stringResource(xcj.app.share.R.string.share_settings),
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Bold
                 )
                 DesignHDivider()
                 Text(
-                    text = stringResource(R.string.nike_name),
+                    text = stringResource(xcj.app.share.R.string.nike_name),
                     fontSize = 14.sp,
                 )
                 Text(
@@ -786,7 +898,7 @@ fun SettingsSheet(
                 )
                 DesignHDivider()
                 Text(
-                    text = stringResource(R.string.content_save_path),
+                    text = stringResource(xcj.app.share.R.string.content_save_path),
                     fontSize = 14.sp,
                 )
                 Text(
@@ -796,7 +908,7 @@ fun SettingsSheet(
                 )
                 DesignHDivider()
                 Text(
-                    text = stringResource(R.string.share_method),
+                    text = stringResource(xcj.app.share.R.string.share_method),
                     fontSize = 14.sp,
                 )
                 val shareMethods = remember {
@@ -847,7 +959,7 @@ fun SettingsSheet(
                             Box {
                                 Column {
                                     Text(
-                                        text = stringResource(R.string.appsets_share_wlanp2p_usage_tips),
+                                        text = stringResource(xcj.app.share.R.string.appsets_share_wlanp2p_usage_tips),
                                         fontSize = 12.sp
                                     )
                                     val wlanP2pShareMethod =
@@ -886,7 +998,7 @@ fun SettingsSheet(
 
 
                                 Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Text(text = stringResource(R.string.need_a_pin))
+                                    Text(text = stringResource(xcj.app.share.R.string.need_a_pin))
                                     Spacer(modifier = Modifier.weight(1f))
                                     Switch(
                                         checked = httpShareMethod.isNeedPinState.value,
@@ -897,7 +1009,7 @@ fun SettingsSheet(
                                 }
 
                                 Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Text(text = stringResource(R.string.auto_accept))
+                                    Text(text = stringResource(xcj.app.share.R.string.auto_accept))
                                     Spacer(modifier = Modifier.weight(1f))
                                     Switch(
                                         checked = httpShareMethod.isAutoAcceptState.value,
@@ -908,7 +1020,7 @@ fun SettingsSheet(
                                 }
 
                                 Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Text(text = stringResource(R.string.prefer_download_self))
+                                    Text(text = stringResource(xcj.app.share.R.string.prefer_download_self))
                                     Spacer(modifier = Modifier.weight(1f))
                                     Switch(
                                         checked = httpShareMethod.isPreferDownloadSelfState.value,
@@ -919,7 +1031,7 @@ fun SettingsSheet(
                                 }
 
                                 Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Text(text = stringResource(R.string.server_status))
+                                    Text(text = stringResource(xcj.app.share.R.string.server_status))
                                     Spacer(modifier = Modifier.weight(1f))
                                     Switch(
                                         checked = serverBootStateInfo is ServerBootStateInfo.Booted,
@@ -932,7 +1044,7 @@ fun SettingsSheet(
                                 when (serverBootStateInfo) {
                                     is ServerBootStateInfo.NotBooted -> {
                                         Text(
-                                            stringResource(R.string.server_is_not_boot),
+                                            stringResource(xcj.app.share.R.string.server_is_not_boot),
                                             fontSize = 12.sp
                                         )
                                     }
@@ -940,7 +1052,7 @@ fun SettingsSheet(
                                     is ServerBootStateInfo.Booted -> {
                                         Column {
                                             Text(
-                                                stringResource(R.string.server_booted),
+                                                stringResource(xcj.app.share.R.string.server_booted),
                                                 fontSize = 12.sp
                                             )
                                             val serverInfo =
@@ -954,7 +1066,7 @@ fun SettingsSheet(
                                     is ServerBootStateInfo.BootFailed -> {
                                         Text(
                                             stringResource(
-                                                R.string.sever_boot_failed,
+                                                xcj.app.share.R.string.sever_boot_failed,
                                                 serverBootStateInfo.reason ?: ""
                                             ),
                                             fontSize = 12.sp
@@ -1076,7 +1188,7 @@ fun AppSetsShareActionsSpace(
                     },
                     placeholder = {
                         Text(
-                            text = stringResource(R.string.appsets_share_send_tips),
+                            text = stringResource(xcj.app.share.R.string.appsets_share_send_tips),
                             fontSize = 12.sp
                         )
                     },
@@ -1163,7 +1275,7 @@ fun AppSetsShareSendSpace(
                                 is DataContent.StringContent -> {
                                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                         Text(text = "${index + 1}", fontSize = 10.sp)
-                                        Image(
+                                        Icon(
                                             painter = painterResource(xcj.app.compose_share.R.drawable.ic_notes_24),
                                             contentDescription = "text"
                                         )
@@ -1193,7 +1305,7 @@ fun AppSetsShareSendSpace(
                                 is DataContent.FileContent -> {
                                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                         Text(text = "${index + 1}", fontSize = 10.sp)
-                                        Image(
+                                        Icon(
                                             painter = painterResource(xcj.app.compose_share.R.drawable.ic_insert_drive_file_24),
                                             contentDescription = "file"
                                         )
@@ -1220,7 +1332,7 @@ fun AppSetsShareSendSpace(
                                 is DataContent.UriContent -> {
                                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                         Text(text = "${index + 1}", fontSize = 10.sp)
-                                        Image(
+                                        Icon(
                                             painter = painterResource(xcj.app.compose_share.R.drawable.ic_insert_drive_file_24),
                                             contentDescription = "file"
                                         )
@@ -1263,7 +1375,7 @@ fun AppSetsShareSendSpace(
             Box(modifier = Modifier.fillMaxSize()) {
                 Text(
                     modifier = Modifier.align(Alignment.Center),
-                    text = stringResource(R.string.content_here_can_send),
+                    text = stringResource(xcj.app.share.R.string.content_here_can_send),
                     fontSize = 12.sp
                 )
             }
@@ -1279,7 +1391,7 @@ fun AppSetsShareSendSpace(
                     modifier = Modifier
                         .align(Alignment.Center)
                         .padding(12.dp)
-                        .animateContentSize(animationSpec = tween(), alignment = Alignment.Center),
+                        .animateContentSize(animationSpec = tween()),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
@@ -1287,14 +1399,14 @@ fun AppSetsShareSendSpace(
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        Image(
+                        Icon(
                             painter = painterResource(xcj.app.compose_share.R.drawable.ic_call_made_24),
                             contentDescription = null
                         )
                         val tipsText = if (pendingSendContentList.isEmpty()) {
-                            stringResource(R.string.send_space)
+                            stringResource(xcj.app.share.R.string.send_space)
                         } else {
-                            "${stringResource(R.string.send_space)}(${pendingSendContentList.size})"
+                            "${stringResource(xcj.app.share.R.string.send_space)}(${pendingSendContentList.size})"
                         }
                         Text(text = tipsText)
                     }
@@ -1389,7 +1501,7 @@ fun AppSetsShareReceivedSpace(
                                 is DataContent.StringContent -> {
                                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                         Text(text = "${index + 1}", fontSize = 10.sp)
-                                        Image(
+                                        Icon(
                                             painter = painterResource(xcj.app.compose_share.R.drawable.ic_notes_24),
                                             contentDescription = "text"
                                         )
@@ -1424,7 +1536,7 @@ fun AppSetsShareReceivedSpace(
                                             }
                                         ) {
                                             Text(
-                                                text = stringResource(R.string.copy),
+                                                text = stringResource(xcj.app.share.R.string.copy),
                                                 fontSize = 12.sp
                                             )
                                         }
@@ -1434,7 +1546,7 @@ fun AppSetsShareReceivedSpace(
                                 is DataContent.FileContent -> {
                                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                         Text(text = "${index + 1}", fontSize = 10.sp)
-                                        Image(
+                                        Icon(
                                             painter = painterResource(xcj.app.compose_share.R.drawable.ic_insert_drive_file_24),
                                             contentDescription = "file"
                                         )
@@ -1461,7 +1573,7 @@ fun AppSetsShareReceivedSpace(
                                             }
                                         ) {
                                             Text(
-                                                text = stringResource(R.string.view),
+                                                text = stringResource(xcj.app.share.R.string.view),
                                                 fontSize = 12.sp
                                             )
                                         }
@@ -1481,7 +1593,7 @@ fun AppSetsShareReceivedSpace(
                             .align(Alignment.TopEnd)
                             .padding(12.dp)
                     ) {
-                        Image(
+                        Icon(
                             modifier = Modifier
                                 .align(Alignment.TopEnd)
                                 .clickable(
@@ -1506,7 +1618,7 @@ fun AppSetsShareReceivedSpace(
             Box(modifier = Modifier.fillMaxSize()) {
                 Text(
                     modifier = Modifier.align(Alignment.Center),
-                    text = stringResource(R.string.show_content_here_when_received),
+                    text = stringResource(xcj.app.share.R.string.show_content_here_when_received),
                     fontSize = 12.sp
                 )
             }
@@ -1527,14 +1639,14 @@ fun AppSetsShareReceivedSpace(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        Image(
+                        Icon(
                             painter = painterResource(xcj.app.compose_share.R.drawable.ic_call_received_24),
                             contentDescription = null
                         )
                         val tipsText = if (receivedContentList.isEmpty()) {
-                            stringResource(R.string.receive_space)
+                            stringResource(xcj.app.share.R.string.receive_space)
                         } else {
-                            "${stringResource(R.string.receive_space)}(${receivedContentList.size})"
+                            "${stringResource(xcj.app.share.R.string.receive_space)}(${receivedContentList.size})"
                         }
                         Text(text = tipsText)
                     }
@@ -1551,40 +1663,40 @@ fun getP2pShareDeviceStatus(shareDevice: ShareDevice.P2pShareDevice): Pair<Strin
         WifiP2pDevice.AVAILABLE -> {
             Pair(
                 "Available",
-                stringResource(R.string.available)
+                stringResource(xcj.app.share.R.string.available)
             )
         }
 
         WifiP2pDevice.INVITED -> {
             Pair(
                 "Invited",
-                stringResource(R.string.invited)
+                stringResource(xcj.app.share.R.string.invited)
             )
         }
 
         WifiP2pDevice.CONNECTED -> {
             Pair(
                 "Connected",
-                stringResource(R.string.connected)
+                stringResource(xcj.app.share.R.string.connected)
             )
         }
 
         WifiP2pDevice.FAILED -> {
             Pair(
                 "Failed",
-                stringResource(R.string.failed)
+                stringResource(xcj.app.share.R.string.failed)
             )
         }
 
         WifiP2pDevice.UNAVAILABLE -> {
             Pair(
                 "Unavailable",
-                stringResource(R.string.not_available)
+                stringResource(xcj.app.share.R.string.not_available)
             )
         }
 
         else -> {
-            Pair("", stringResource(R.string.unconnected_or_unknown))
+            Pair("", stringResource(xcj.app.share.R.string.unconnected_or_unknown))
         }
     }
 }
@@ -1828,7 +1940,7 @@ fun ShareClientPreSendComponent(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = stringResource(R.string.new_share_content_to_you),
+                text = stringResource(xcj.app.share.R.string.new_share_content_to_you),
                 fontSize = 22.sp,
                 fontWeight = FontWeight.Bold
             )
@@ -1848,7 +1960,10 @@ fun ShareClientPreSendComponent(
                     .align(Alignment.CenterHorizontally)
                     .padding(vertical = 8.dp, horizontal = 12.dp),
             ) {
-                Text(text = stringResource(R.string.see_share_content_list), fontSize = 12.sp)
+                Text(
+                    text = stringResource(xcj.app.share.R.string.see_share_content_list),
+                    fontSize = 12.sp
+                )
             }
         }
 
@@ -1886,7 +2001,7 @@ fun ShareClientPreSendComponent(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(6.dp)
             ) {
-                Text(text = stringResource(R.string.auto_accept), fontSize = 10.sp)
+                Text(text = stringResource(xcj.app.share.R.string.auto_accept), fontSize = 10.sp)
                 Switch(checked = isAutoAccept, onCheckedChange = onAutoAcceptChanged)
             }
         }

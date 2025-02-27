@@ -32,13 +32,14 @@ import xcj.app.starter.server.requestNotNull
 import xcj.app.starter.server.requestRaw
 import xcj.app.starter.test.LocalPurpleCoroutineScope
 import xcj.app.web.webserver.base.DataProgressInfo
-import xcj.app.web.webserver.interfaces.ProgressListener
 import xcj.app.web.webserver.interfaces.ContentReceivedListener
 import xcj.app.web.webserver.interfaces.ListenersProvider
+import xcj.app.web.webserver.interfaces.ProgressListener
 import xcj.app.web.webserver.netty.ServerBootStrap
 import java.net.Inet4Address
 import java.net.Inet6Address
 import java.net.InetAddress
+import java.net.NetworkInterface
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 import javax.jmdns.JmDNS
@@ -169,31 +170,49 @@ class HttpShareMethod : ShareMethod(), ContentReceivedListener, ServiceListener,
     }
 
     private fun makeBootedInfo(
-        availableLocalInetAddresses: List<Pair<InetAddress, String>>
+        availableLocalInetAddresses: List<Pair<InetAddress, NetworkInterface>>
     ): ServerBootStateInfo.Booted {
+        val allAvailableDeviceIp = mutableListOf<DeviceIP>()
+        val allAvailableAddressInfo = mutableListOf<String>()
 
-        val allAvailableAddressInfo = availableLocalInetAddresses.map {
-            val hostAddress = NetworkUtil.getHostAddress(it.first)
-            "${it.second} | $hostAddress"
-        }
-        val availableIPSuffixesForDevice = availableLocalInetAddresses.mapNotNull {
+        val allAvailableIPSuffixes = mutableListOf<String>()
+        availableLocalInetAddresses.forEach {
             val inetAddress = it.first
+            val networkInterface = it.second
             val hostAddress = NetworkUtil.getHostAddress(inetAddress)
+
+
             if (inetAddress is Inet4Address && !hostAddress.isEmpty()) {
+                val deviceIP = DeviceIP(ip = hostAddress)
+                allAvailableDeviceIp.add(deviceIP)
+
+                val humanReadableName =
+                    NetworkUtil.getNetworkInterfaceHumanReadableName(networkInterface)
+                val availableAddress = "$humanReadableName | $hostAddress"
+                allAvailableAddressInfo.add(availableAddress)
+
                 val lastIndexOf = hostAddress.lastIndexOf('.')
                 val substring = hostAddress.substring(lastIndexOf + 1)
-                "#$substring"
-            } else if (inetAddress is Inet6Address && !hostAddress.isEmpty()) {
-                if (!hostAddress.startsWith("fe80::")) {
-                    null
-                } else {
-                    "#${hostAddress.substringAfter("fe80::")}"
-                }
-            } else {
-                null
+                val availableIPSuffix = "#$substring"
+                allAvailableIPSuffixes.add(availableIPSuffix)
             }
-        }.joinToString(separator = " ", prefix = " ")
+            /* else if (inetAddress is Inet6Address && !hostAddress.isEmpty()) {
+                if (hostAddress.startsWith("fe80::")) {
+                    val availableIPSuffix = "#${hostAddress.substringAfter("fe80::")}"
+                    allAvailableIPSuffixes.add(availableIPSuffix)
+                }
+            }*/
+        }
+
+        val currentShareDevice = getCurrentShareDevice()
+        val deviceAddress = DeviceAddress(allAvailableDeviceIp)
+        currentShareDevice?.deviceAddress = deviceAddress
+
+        val availableIPSuffixesForDevice =
+            allAvailableIPSuffixes.joinToString(separator = " ", prefix = " ")
+
         return ServerBootStateInfo.Booted(
+            allAvailableDeviceIp,
             allAvailableAddressInfo,
             SHARE_SERVER_API_PORT,
             availableIPSuffixesForDevice
@@ -261,7 +280,7 @@ class HttpShareMethod : ShareMethod(), ContentReceivedListener, ServiceListener,
         }
     }
 
-    private suspend fun startServiceDiscovery(allAvailableLocalInetAddresses: List<Pair<InetAddress, String>>) {
+    private suspend fun startServiceDiscovery(allAvailableLocalInetAddresses: List<Pair<InetAddress, NetworkInterface>>) {
         PurpleLogger.current.d(TAG, "startServiceDiscovery")
         withContext(Dispatchers.IO) {
             viewModel.updateIsDiscoveringState(true)
@@ -377,10 +396,7 @@ class HttpShareMethod : ShareMethod(), ContentReceivedListener, ServiceListener,
             TAG,
             "notifyShareDeviceFoundOnJmdns, jmDNS:$jmDNS, shareDeviceList:$shareDeviceList"
         )
-        viewModel.updateShareDeviceListWithDiff(
-            this@HttpShareMethod,
-            shareDeviceList
-        )
+        viewModel.updateShareDeviceListWithDiff(this@HttpShareMethod, shareDeviceList)
     }
 
     override fun serviceResolved(event: ServiceEvent) {
@@ -576,7 +592,7 @@ class HttpShareMethod : ShareMethod(), ContentReceivedListener, ServiceListener,
         showPinToClientSheet(shareDevice, pin)
     }
 
-    private fun showPinToClientSheet(shareDevice: ShareDevice.HttpShareDevice, pin:Int){
+    private fun showPinToClientSheet(shareDevice: ShareDevice.HttpShareDevice, pin: Int) {
         val bottomSheetState = viewModel.bottomSheetState()
         bottomSheetState.show {
             AppSetsSharePinSheet(
@@ -767,6 +783,21 @@ class HttpShareMethod : ShareMethod(), ContentReceivedListener, ServiceListener,
         return super.findShareDeviceForClientInfo(clientInfo) as? ShareDevice.HttpShareDevice
     }
 
+    override fun onScanShareDeviceAddress(addresses: Array<String>?) {
+        if (addresses.isNullOrEmpty()) {
+            return
+        }
+        addresses.forEach { address ->
+            activity.lifecycleScope.launch {
+                requestRaw(
+                    action = {
+                        appSetsShareRepository.exchangeDeviceInfo(this@HttpShareMethod, address)
+                    }
+                )
+            }
+        }
+    }
+
 
     fun updateIsNeedPinState(isNeedPin: Boolean) {
         isNeedPinState.value = isNeedPin
@@ -811,5 +842,15 @@ class HttpShareMethod : ShareMethod(), ContentReceivedListener, ServiceListener,
             it.id == contentId
         }
         return dataContent
+    }
+
+    fun exchangeDeviceInfo(shareDevice: ShareDevice.HttpShareDevice): ShareDevice.HttpShareDevice? {
+        viewModel.updateShareDeviceListWithDiff(this, listOf(shareDevice))
+        return getCurrentShareDevice()
+    }
+
+    fun getCurrentShareDevice(): ShareDevice.HttpShareDevice? {
+        val mShareDevice = viewModel.mShareDeviceState.value
+        return mShareDevice as? ShareDevice.HttpShareDevice
     }
 }

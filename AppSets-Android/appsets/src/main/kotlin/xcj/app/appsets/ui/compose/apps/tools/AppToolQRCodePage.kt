@@ -70,6 +70,7 @@ import xcj.app.appsets.util.message_digest.MessageDigestUtil
 import xcj.app.compose_share.components.BackActionTopBar
 import xcj.app.compose_share.components.DesignHDivider
 import xcj.app.compose_share.components.DesignTextField
+import xcj.app.starter.util.QrCodeUtil
 import java.io.File
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
@@ -139,7 +140,7 @@ fun AppToolQRCodePage(
                                 val outContent =
                                     MessageDigestUtil.transformWithMD5(content)?.outContent
                                 val qrBitmap = outContent?.let {
-                                    QRCodeUseCase.encodeAsBitmap(it)
+                                    QrCodeUtil.encodeAsBitmap(it)
                                 }
                                 transformedContent = TransformedContent.SimpleContent(
                                     outContent,
@@ -151,7 +152,7 @@ fun AppToolQRCodePage(
                                 val outContent =
                                     MessageDigestUtil.transformWithSHA256(content)?.outContent
                                 val qrBitmap = outContent?.let {
-                                    QRCodeUseCase.encodeAsBitmap(it)
+                                    QrCodeUtil.encodeAsBitmap(it)
                                 }
                                 transformedContent = TransformedContent.SimpleContent(
                                     outContent,
@@ -161,7 +162,7 @@ fun AppToolQRCodePage(
 
                             "Base64" -> {
                                 val outContent = Base64.encode(content.encodeToByteArray())
-                                val qrBitmap = QRCodeUseCase.encodeAsBitmap(outContent)
+                                val qrBitmap = QrCodeUtil.encodeAsBitmap(outContent)
                                 transformedContent = TransformedContent.SimpleContent(
                                     outContent,
                                     qrBitmap
@@ -176,7 +177,7 @@ fun AppToolQRCodePage(
                                 }
                                 val outContent = encryptionResult?.outContentBase64
                                 val qrBitmap = outContent?.let {
-                                    QRCodeUseCase.encodeAsBitmap(it)
+                                    QrCodeUtil.encodeAsBitmap(it)
                                 }
                                 transformedContent = TransformedContent.AESContent(
                                     outContent,
@@ -189,7 +190,7 @@ fun AppToolQRCodePage(
                                 val encryptionResult = EncryptionUtil.encryptWithRSA(content)
                                 val outContent = encryptionResult?.outContentBase64
                                 val qrBitmap = outContent?.let {
-                                    QRCodeUseCase.encodeAsBitmap(it)
+                                    QrCodeUtil.encodeAsBitmap(it)
                                 }
                                 transformedContent = TransformedContent.RSAContent(
                                     outContent,
@@ -199,7 +200,7 @@ fun AppToolQRCodePage(
                             }
 
                             else -> {
-                                val qrBitmap = QRCodeUseCase.encodeAsBitmap(content)
+                                val qrBitmap = QrCodeUtil.encodeAsBitmap(content)
                                 transformedContent =
                                     TransformedContent.SimpleContent(content, qrBitmap)
                             }

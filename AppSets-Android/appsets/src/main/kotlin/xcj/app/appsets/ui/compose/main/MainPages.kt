@@ -291,7 +291,7 @@ fun getScaffoldModifier(): Modifier {
     LaunchedEffect(immerseContentState.isShow) {
         scope.launch {
             val target = if (immerseContentState.isShow) {
-                50f
+                30f
             } else {
                 0f
             }
@@ -303,8 +303,7 @@ fun getScaffoldModifier(): Modifier {
             renderEffect =
                 BlurEffect(
                     renderEffectAnimateState.value,
-                    renderEffectAnimateState.value,
-                    TileMode.Decal
+                    renderEffectAnimateState.value
                 )
         }
     }

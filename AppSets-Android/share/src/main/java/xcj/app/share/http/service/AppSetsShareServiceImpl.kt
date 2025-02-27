@@ -5,6 +5,7 @@ package xcj.app.share.http.service
 import android.content.Context
 import xcj.app.share.base.ClientInfo
 import xcj.app.share.base.DataContent
+import xcj.app.share.base.ShareDevice
 import xcj.app.share.http.HttpShareMethod
 import xcj.app.share.http.common.DataContentReadableData
 import xcj.app.share.http.common.PostFileHelper
@@ -224,7 +225,7 @@ class AppSetsShareServiceImpl : AppSetsShareService {
 
             is DataContent.UriContent -> {
                 val inputStream: InputStream? =
-                    context.applicationContext.contentResolver.openInputStream(dataContent.uri,)
+                    context.applicationContext.contentResolver.openInputStream(dataContent.uri)
                 if (inputStream == null) {
                     return DesignResponse(data = null)
                 }
@@ -335,6 +336,19 @@ class AppSetsShareServiceImpl : AppSetsShareService {
         val pendingSendFileList = shareMethod.getPendingSendFileList(uri)
 
         return pendingSendFileList
+    }
+
+    override fun exchangeDeviceInfo(
+        context: Context,
+        clientHost: String,
+        device: ShareDevice.HttpShareDevice
+    ): DesignResponse<ShareDevice.HttpShareDevice> {
+        val shareMethod = getShareMethod(context)
+        if (shareMethod == null) {
+            return DesignResponse(data = null)
+        }
+        val currentDeviceInfo = shareMethod.exchangeDeviceInfo(device)
+        return DesignResponse(data = currentDeviceInfo)
     }
 
 }
