@@ -830,7 +830,7 @@ fun MainNaviHostPages(navController: NavHostController) {
                             }
 
                             TOOL_TYPE_AppSets_Share -> {
-                                navigateToAppSetsShareActivity(context)
+                                navigateToAppSetsShareActivity(context, null)
                             }
 
                             TOOL_TYPE_AppSets_Launcher -> {
@@ -1560,7 +1560,7 @@ fun navigateToAppSetsVpnActivity(context: Context) {
     }
 }
 
-fun navigateToAppSetsShareActivity(context: Context) {
+fun navigateToAppSetsShareActivity(context: Context, intentN: Intent?) {
     val intent = Intent()
     val componentName =
         ComponentName(
@@ -1568,6 +1568,11 @@ fun navigateToAppSetsShareActivity(context: Context) {
             "xcj.app.share.ui.compose.AppSetsShareActivity"
         )
     intent.setComponent(componentName)
+    intentN?.let {
+        intent.type = it.type
+        intent.action = it.action
+        intent.putExtras(it)
+    }
     runCatching {
         context.startActivity(intent)
     }.onFailure {

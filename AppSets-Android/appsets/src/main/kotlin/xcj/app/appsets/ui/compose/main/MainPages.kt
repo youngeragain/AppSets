@@ -84,6 +84,8 @@ import xcj.app.appsets.ui.compose.LocalUseCaseOfSearch
 import xcj.app.appsets.ui.compose.LocalUseCaseOfSystem
 import xcj.app.appsets.ui.compose.LocalUseCaseOfUserInfo
 import xcj.app.appsets.ui.compose.PageRouteNames
+import xcj.app.appsets.ui.compose.apps.quickstep.ToolAppSetsShareQuickStepHandler
+import xcj.app.appsets.ui.compose.apps.quickstep.ToolAppSetsShareQuickStepHandlerContent
 import xcj.app.appsets.ui.compose.apps.quickstep.ToolContentTransformQuickStepHandler
 import xcj.app.appsets.ui.compose.apps.quickstep.ToolIntentCallerQuickStepHandler
 import xcj.app.appsets.ui.compose.conversation.quickstep.ConversationQuickStepHandler
@@ -235,6 +237,7 @@ fun OnScaffoldLaunch(navController: NavController) {
         navController.addOnDestinationChangedListener(destinationChangedListener)
 
         localQuickStepContentHandlerRegistry.addContentHandler(ToolContentTransformQuickStepHandler(context))
+        localQuickStepContentHandlerRegistry.addContentHandler(ToolAppSetsShareQuickStepHandler(context))
         localQuickStepContentHandlerRegistry.addContentHandler(ToolIntentCallerQuickStepHandler(context))
         localQuickStepContentHandlerRegistry.addContentHandler(ConversationQuickStepHandler(context))
         localQuickStepContentHandlerRegistry.addContentHandler(OutSideQuickStepHandler(context))

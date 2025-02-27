@@ -19,15 +19,15 @@ class QuickStepContentHandlerRegistry {
     }
 
     fun findHandlers(
-        quickStepContents: List<QuickStepContent>,
+        quickStepContentHolder: QuickStepContentHolder,
         searchContent: String
     ): List<QuickStepContentHandler> {
         val quickStepContentHandlers = quickStepContentHandlers
         val filtered = quickStepContentHandlers.filter {
-            if (quickStepContents.isEmpty()) {
+            if (quickStepContentHolder.quickStepContents.isEmpty()) {
                 true
             } else {
-                it.accept(quickStepContents)
+                it.accept(quickStepContentHolder)
             }
         }.filter {
             if (searchContent.isEmpty()) {

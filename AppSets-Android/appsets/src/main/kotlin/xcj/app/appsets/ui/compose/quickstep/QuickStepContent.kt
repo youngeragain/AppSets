@@ -1,5 +1,6 @@
 package xcj.app.appsets.ui.compose.quickstep
 
+import android.content.Intent
 import android.net.Uri
 import android.os.Parcel
 import android.os.Parcelable
@@ -80,3 +81,8 @@ class UriQuickStepContent(
         }
     }
 }
+
+data class QuickStepContentHolder(
+    val intent:Intent,
+    val quickStepContents: List<QuickStepContent>
+)

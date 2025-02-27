@@ -421,5 +421,9 @@
     <string name="deeplink">深层链接</string>
     <string name="call">调用</string>
     <string name="history">历史</string>
+    <string name="external_content">外部内容</string>
+    <string name="how_to">下一步怎么做?</string>
+    <string name="nearby_share">就近分享</string>
+    <string name="quick_step">快捷</string>
 
 </resources>

@@ -48,6 +48,5 @@
     <string name="no_content">No content!</string>
     <string name="getting_in">Getting in…</string>
     <string name="content_save_path">Content save location</string>
-    <string name="external_content">External Content</string>
-    <string name="how_to">How to?</string>
+
 </resources>

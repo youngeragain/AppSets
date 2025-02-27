@@ -19,7 +19,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.os.bundleOf
@@ -29,21 +28,26 @@ import xcj.app.appsets.ui.compose.PageRouteNames
 import xcj.app.appsets.ui.compose.main.navigateWithBundle
 import xcj.app.appsets.ui.compose.quickstep.QuickStepContent
 import xcj.app.appsets.ui.compose.quickstep.QuickStepContentHandler
+import xcj.app.appsets.ui.compose.quickstep.QuickStepContentHolder
 
 class ConversationQuickStepHandler(context: Context) : QuickStepContentHandler(context) {
 
-    private var mQuickStepContents: List<QuickStepContent>? = null
+    private var mQuickStepContentHolder: QuickStepContentHolder? = null
 
     override fun getName(): String {
         return context.getString(xcj.app.appsets.R.string.conversation)
+    }
+
+    override fun getDescription(): String {
+        return context.getString(xcj.app.appsets.R.string.send_to_people)
     }
 
     override fun getCategory(): String {
         return context.getString(xcj.app.appsets.R.string.social)
     }
 
-    override fun accept(contents: List<QuickStepContent>): Boolean {
-        mQuickStepContents = contents
+    override fun accept(quickStepContentHolder: QuickStepContentHolder): Boolean {
+        mQuickStepContentHolder = quickStepContentHolder
         return true
     }
 
@@ -52,8 +56,9 @@ class ConversationQuickStepHandler(context: Context) : QuickStepContentHandler(c
             val navController = LocalNavHostController.current
             ConversationQuickStepHandlerContent(
                 name = getName(),
+                description = getDescription(),
                 onClick = {
-                    val quickStepContents = mQuickStepContents?.let {
+                    val quickStepContents = mQuickStepContentHolder?.quickStepContents?.let {
                         arrayListOf<QuickStepContent>().apply {
                             addAll(it)
                         }
@@ -84,6 +89,7 @@ class ConversationQuickStepHandler(context: Context) : QuickStepContentHandler(c
 @Composable
 private fun ConversationQuickStepHandlerContent(
     name: String,
+    description: String,
     onClick: () -> Unit
 ) {
     Column(
@@ -109,7 +115,7 @@ private fun ConversationQuickStepHandlerContent(
                 Column {
                     Text(text = name, fontSize = 12.sp)
                     Text(
-                        text = stringResource(xcj.app.appsets.R.string.send_to_people),
+                        text = description,
                         fontSize = 10.sp
                     )
                 }

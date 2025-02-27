@@ -19,7 +19,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.os.bundleOf
@@ -29,25 +28,30 @@ import xcj.app.appsets.ui.compose.PageRouteNames
 import xcj.app.appsets.ui.compose.main.navigateWithBundle
 import xcj.app.appsets.ui.compose.quickstep.QuickStepContent
 import xcj.app.appsets.ui.compose.quickstep.QuickStepContentHandler
+import xcj.app.appsets.ui.compose.quickstep.QuickStepContentHolder
 import xcj.app.appsets.ui.compose.quickstep.TextQuickStepContent
 import xcj.app.appsets.ui.compose.quickstep.UriQuickStepContent
 import xcj.app.starter.util.ContentType
 
 class OutSideQuickStepHandler(context: Context) : QuickStepContentHandler(context) {
 
-    private var mQuickStepContents: List<QuickStepContent>? = null
+    private var mQuickStepContentHolder: QuickStepContentHolder? = null
 
     override fun getName(): String {
         return context.getString(xcj.app.appsets.R.string.out_side)
+    }
+
+    override fun getDescription(): String {
+        return context.getString(xcj.app.appsets.R.string.create_screen)
     }
 
     override fun getCategory(): String {
         return context.getString(xcj.app.appsets.R.string.social)
     }
 
-    override fun accept(contents: List<QuickStepContent>): Boolean {
+    override fun accept(quickStepContentHolder: QuickStepContentHolder): Boolean {
         var accept = false
-        for (content in contents) {
+        for (content in quickStepContentHolder.quickStepContents) {
             if (content is TextQuickStepContent) {
                 accept = true
                 break
@@ -63,7 +67,7 @@ class OutSideQuickStepHandler(context: Context) : QuickStepContentHandler(contex
             }
         }
         if (accept) {
-            mQuickStepContents = contents
+            mQuickStepContentHolder = quickStepContentHolder
         }
         return accept
     }
@@ -73,8 +77,9 @@ class OutSideQuickStepHandler(context: Context) : QuickStepContentHandler(contex
             val navController = LocalNavHostController.current
             OutSideQuickStepHandlerContent(
                 name = getName(),
+                description = getDescription(),
                 onClick = {
-                    val quickStepContents = mQuickStepContents?.let {
+                    val quickStepContents = mQuickStepContentHolder?.quickStepContents?.let {
                         arrayListOf<QuickStepContent>().apply {
                             addAll(it)
                         }
@@ -105,6 +110,7 @@ class OutSideQuickStepHandler(context: Context) : QuickStepContentHandler(contex
 @Composable
 fun OutSideQuickStepHandlerContent(
     name: String,
+    description: String,
     onClick: () -> Unit
 ) {
     Column(
@@ -131,7 +137,7 @@ fun OutSideQuickStepHandlerContent(
                 Column {
                     Text(text = name, fontSize = 12.sp)
                     Text(
-                        text = stringResource(xcj.app.appsets.R.string.create_screen),
+                        text = description,
                         fontSize = 10.sp
                     )
                 }

@@ -1,10 +1,7 @@
 package xcj.app.share.ui.compose
 
-import AppSetsShareExternalContentTipsSheet
 import AppSetsShareMainContent
-import android.content.ComponentName
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
 import android.os.Parcelable
@@ -18,19 +15,16 @@ import androidx.core.content.FileProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.withCreated
 import kotlinx.coroutines.launch
-import xcj.app.compose_share.ui.viewmodel.AnyStateViewModel.Companion.bottomSheetState
 import xcj.app.share.base.DataContent
 import xcj.app.share.base.ShareDevice
 import xcj.app.share.base.ShareMethod
 import xcj.app.share.http.HttpShareMethod
 import xcj.app.share.mock.MockShareMethod
 import xcj.app.share.ui.compose.theme.AppSetsTheme
-import xcj.app.starter.android.AppDefinition
 import xcj.app.starter.android.ui.base.DesignComponentActivity
 import xcj.app.starter.android.usecase.PlatformUseCase
 import xcj.app.starter.android.util.PurpleLogger
 import xcj.app.starter.util.ContentType
-import java.util.UUID
 import kotlin.getValue
 
 class AppSetsShareActivity : DesignComponentActivity() {
@@ -47,9 +41,6 @@ class AppSetsShareActivity : DesignComponentActivity() {
         const val CONTENT_FORM_APP = 0
         const val CONTENT_FORM_SYSTEM_APP = 1
         const val CONTENT_FORM_OTHER_APP = 2
-
-        const val EXTERNAL_CONTENT_HANDLE_BY_APPSETS = 0
-        const val EXTERNAL_CONTENT_HANDLE_BY_LOCAL_SHARE = 1
     }
 
     private val viewModel: AppSetsShareViewModel by viewModels<AppSetsShareViewModel>()
@@ -96,17 +87,8 @@ class AppSetsShareActivity : DesignComponentActivity() {
         lifecycleScope.launch {
             lifecycle.withCreated {
                 lifecycleScope.launch {
-                    val hasExternalContent = handleExternalShareContentIfNeeded(
-                        intent,
-                        onHandleCallback = { handleType ->
-                            if (handleType == EXTERNAL_CONTENT_HANDLE_BY_LOCAL_SHARE) {
-                                updateShareMethod(HttpShareMethod::class.java)
-                            }
-                        }
-                    )
-                    if (!hasExternalContent) {
-                        updateShareMethod(HttpShareMethod::class.java)
-                    }
+                    updateShareMethod(HttpShareMethod::class.java)
+                    handleExternalShareContentIfNeeded(intent)
                 }
             }
         }
@@ -115,7 +97,7 @@ class AppSetsShareActivity : DesignComponentActivity() {
     override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
         lifecycleScope.launch {
-            handleExternalShareContentIfNeeded(intent, onHandleCallback = {})
+            handleExternalShareContentIfNeeded(intent)
         }
     }
 
@@ -241,105 +223,44 @@ class AppSetsShareActivity : DesignComponentActivity() {
     }
 
     private suspend fun handleExternalShareContentIfNeeded(
-        intent: Intent?,
-        onHandleCallback: (Int) -> Unit
-    ): Boolean {
+        intent: Intent?
+    ) {
         if (intent == null) {
-            return false
+            return
         }
         when (intent.action) {
             Intent.ACTION_SEND -> {
-                handleIntentExternalContent(intent, false, onHandleCallback)
-                return true
+                handleIntentExternalContent(intent, false)
             }
 
             Intent.ACTION_SEND_MULTIPLE -> {
-                handleIntentExternalContent(intent, true, onHandleCallback)
-                return true
+                handleIntentExternalContent(intent, true)
             }
         }
-        return false
     }
 
 
     private suspend fun handleIntentExternalContent(
         intent: Intent,
-        isMulti: Boolean,
-        onHandleCallback: (Int) -> Unit
+        isMulti: Boolean
     ) {
-        val contentConfirmCallBack: (Int) -> Unit = { handleType ->
-            onHandleCallback(handleType)
-            when (handleType) {
-                EXTERNAL_CONTENT_HANDLE_BY_LOCAL_SHARE -> {
-                    if (intent.type == ContentType.TEXT_PLAIN) {
-                        intent.getStringExtra(Intent.EXTRA_TEXT)?.let { text ->
-                            viewModel.addPendingContent(this, text, CONTENT_FORM_OTHER_APP)
-                        }
-                    } else {
-                        if (!isMulti) {
-                            (intent.getParcelableExtra<Parcelable>(Intent.EXTRA_STREAM) as? Uri)?.let { uri ->
-                                viewModel.addPendingContent(this, uri, CONTENT_FORM_OTHER_APP)
-                            }
-                        } else {
-                            intent.getParcelableArrayListExtra<Parcelable>(Intent.EXTRA_STREAM)
-                                ?.mapNotNull {
-                                    it as? Uri
-                                }?.let { uris ->
-                                    viewModel.addPendingContent(this, uris, CONTENT_FORM_OTHER_APP)
-                                }
-                        }
-                    }
-                }
-
-                EXTERNAL_CONTENT_HANDLE_BY_APPSETS -> {
-                    val outIntent = Intent()
-                    val component = ComponentName(
-                        "xcj.app.container",
-                        "xcj.app.appsets.ui.compose.main.MainActivity"
-                    )
-                    outIntent.setComponent(component)
-                    outIntent.action = intent.action
-                    outIntent.type = intent.type
-                    outIntent.putExtras(intent)
-                    runCatching {
-                        startActivity(outIntent)
-                    }
-                }
+        if (intent.type == ContentType.TEXT_PLAIN) {
+            intent.getStringExtra(Intent.EXTRA_TEXT)?.let { text ->
+                viewModel.addPendingContent(this, text, CONTENT_FORM_OTHER_APP)
             }
-        }
-        val fromAppDefinition = getCallActivityAppDefinition()
-        val bottomSheetState = viewModel.bottomSheetState()
-        bottomSheetState.show {
-            AppSetsShareExternalContentTipsSheet(
-                fromAppDefinition = fromAppDefinition,
-                onConfirmClick = { handleType ->
-                    bottomSheetState.hide()
-                    contentConfirmCallBack(handleType)
-                }
-            )
-        }
-    }
-
-    private fun getCallActivityAppDefinition(): AppDefinition? {
-        val callingPackage = getCallingPackage()
-        return if (callingPackage != null) {
-            getAppNameFromPackageName(callingPackage)
         } else {
-            null
-        }
-    }
-
-    private fun getAppNameFromPackageName(packageName: String): AppDefinition? {
-        try {
-            val appInfo = packageManager.getApplicationInfo(packageName, 0)
-            val appDefinition = AppDefinition(UUID.randomUUID().toString())
-            appDefinition.applicationInfo = appInfo
-            appDefinition.name = appInfo.loadLabel(packageManager).toString().trim()
-            appDefinition.icon = appInfo.loadIcon(packageManager)
-            return appDefinition
-        } catch (e: PackageManager.NameNotFoundException) {
-            e.printStackTrace()
-            return null
+            if (!isMulti) {
+                (intent.getParcelableExtra<Parcelable>(Intent.EXTRA_STREAM) as? Uri)?.let { uri ->
+                    viewModel.addPendingContent(this, uri, CONTENT_FORM_OTHER_APP)
+                }
+            } else {
+                intent.getParcelableArrayListExtra<Parcelable>(Intent.EXTRA_STREAM)
+                    ?.mapNotNull {
+                        it as? Uri
+                    }?.let { uris ->
+                        viewModel.addPendingContent(this, uris, CONTENT_FORM_OTHER_APP)
+                    }
+            }
         }
     }
 }

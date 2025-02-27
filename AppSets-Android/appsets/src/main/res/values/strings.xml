@@ -421,4 +421,8 @@
     <string name="deeplink">DeepLink</string>
     <string name="call">Call</string>
     <string name="history">History</string>
+    <string name="external_content">External Content</string>
+    <string name="how_to">How to?</string>
+    <string name="nearby_share">Nearby Share</string>
+    <string name="quick_step">Quick Step</string>
 </resources>

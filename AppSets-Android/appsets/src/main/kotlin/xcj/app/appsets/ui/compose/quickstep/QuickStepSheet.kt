@@ -23,6 +23,7 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -42,8 +43,9 @@ import xcj.app.starter.util.ContentType
 
 @Composable
 fun QuickStepSheet(
-    quickStepContentList: List<QuickStepContent>
+    quickStepContentHolder: QuickStepContentHolder
 ) {
+    val newQuickStepContentHolder by rememberUpdatedState(quickStepContentHolder)
     val requester = remember {
         FocusRequester()
     }
@@ -53,8 +55,10 @@ fun QuickStepSheet(
     val quickStepContentHandlerRegistry = LocalQuickStepContentHandlerRegistry.current
     val filteredContentHandlersMap by remember {
         derivedStateOf {
-            quickStepContentHandlerRegistry.findHandlers(quickStepContentList, searchContent.text)
-                .groupBy { it.getCategory() }
+            quickStepContentHandlerRegistry.findHandlers(
+                newQuickStepContentHolder,
+                searchContent.text
+            ).groupBy { it.getCategory() }
         }
     }
     val filteredContentHandlerCategories = filteredContentHandlersMap.keys.toList()
@@ -64,10 +68,11 @@ fun QuickStepSheet(
             .padding(horizontal = 12.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
+
         LazyRow(
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            items(quickStepContentList) { quickStepContent ->
+            items(newQuickStepContentHolder.quickStepContents) { quickStepContent ->
                 QuickStepContentComponent(quickStepContent)
             }
         }
@@ -78,7 +83,10 @@ fun QuickStepSheet(
 
             },
             placeholder = {
-                Text(text = stringResource(xcj.app.appsets.R.string.search_quick_step), fontSize = 12.sp)
+                Text(
+                    text = stringResource(xcj.app.appsets.R.string.search_quick_step),
+                    fontSize = 12.sp
+                )
             },
             modifier = Modifier
                 .fillMaxWidth()
@@ -103,7 +111,8 @@ fun QuickStepSheet(
                     FlowRow(
                         modifier = Modifier
                             .fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         val contentHandlers = filteredContentHandlersMap[contentHandlerCategory]
                         contentHandlers?.forEach { contentHandler ->
@@ -187,6 +196,5 @@ fun QuickStepContentComponent(quickStepContent: QuickStepContent) {
                 contentDescription = null
             )
         }
-
     }
 }

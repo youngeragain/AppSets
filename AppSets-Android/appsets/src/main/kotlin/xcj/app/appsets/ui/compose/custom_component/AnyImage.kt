@@ -10,6 +10,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import coil3.compose.AsyncImage
+import coil3.request.CachePolicy
 import coil3.request.ImageRequest
 import coil3.request.crossfade
 import xcj.app.starter.android.ktx.startWithHttpSchema
@@ -27,6 +28,7 @@ fun AnyImage(
             AsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)
                     .data(any)
+                    .diskCachePolicy(CachePolicy.DISABLED)
                     .crossfade(true)
                     .build(),
                 contentDescription = null,

@@ -31,26 +31,32 @@ import xcj.app.appsets.ui.compose.apps.tools.TOOL_TYPE_AppSets_Intent_Caller
 import xcj.app.appsets.ui.compose.main.navigateWithBundle
 import xcj.app.appsets.ui.compose.quickstep.QuickStepContent
 import xcj.app.appsets.ui.compose.quickstep.QuickStepContentHandler
+import xcj.app.appsets.ui.compose.quickstep.QuickStepContentHolder
 import xcj.app.appsets.ui.compose.quickstep.TextQuickStepContent
 import xcj.app.compose_share.R
 
 class ToolIntentCallerQuickStepHandler(context: Context) : QuickStepContentHandler(context) {
 
-    private var mQuickStepContents: List<QuickStepContent>? = null
+    private var mQuickStepContentHolder: QuickStepContentHolder? = null
 
     override fun getName(): String {
         return context.getString(xcj.app.appsets.R.string.intent_caller)
+    }
+
+    override fun getDescription(): String {
+        return context.getString(xcj.app.appsets.R.string.deeplink)
     }
 
     override fun getCategory(): String {
         return context.getString(xcj.app.appsets.R.string.tools)
     }
 
-    override fun accept(contents: List<QuickStepContent>): Boolean {
-        val firstTextQuickStepContent = contents.firstOrNull { it is TextQuickStepContent }
+    override fun accept(quickStepContentHolder: QuickStepContentHolder): Boolean {
+        val firstTextQuickStepContent =
+            quickStepContentHolder.quickStepContents.firstOrNull { it is TextQuickStepContent }
         val accept = firstTextQuickStepContent != null
         if (accept) {
-            mQuickStepContents = contents
+            mQuickStepContentHolder = quickStepContentHolder
         }
         return accept
     }
@@ -61,8 +67,9 @@ class ToolIntentCallerQuickStepHandler(context: Context) : QuickStepContentHandl
             val navController = LocalNavHostController.current
             ToolIntentCallerQuickStepHandlerContent(
                 name = getName(),
+                description = getDescription(),
                 onClick = {
-                    val quickStepContents = mQuickStepContents?.let {
+                    val quickStepContents = mQuickStepContentHolder?.quickStepContents?.let {
                         arrayListOf<QuickStepContent>().apply {
                             addAll(it)
                         }
@@ -95,6 +102,7 @@ class ToolIntentCallerQuickStepHandler(context: Context) : QuickStepContentHandl
 @Composable
 fun ToolIntentCallerQuickStepHandlerContent(
     name: String,
+    description: String,
     onClick: () -> Unit
 ) {
     Column(
@@ -121,7 +129,7 @@ fun ToolIntentCallerQuickStepHandlerContent(
                 Column {
                     Text(text = name, fontSize = 12.sp)
                     Text(
-                        text = stringResource(xcj.app.appsets.R.string.deeplink),
+                        text = description,
                         fontSize = 10.sp
                     )
                 }

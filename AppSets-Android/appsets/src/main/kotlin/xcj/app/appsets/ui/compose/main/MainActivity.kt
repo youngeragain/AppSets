@@ -5,36 +5,34 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import android.net.Uri
+import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
-import android.os.Parcelable
 import android.view.MotionEvent
 import android.window.OnBackInvokedDispatcher
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.withCreated
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import xcj.app.appsets.notification.NotificationPusher
-import xcj.app.appsets.ui.compose.quickstep.QuickStepContent
-import xcj.app.appsets.ui.compose.quickstep.QuickStepSheet
-import xcj.app.appsets.ui.compose.quickstep.TextQuickStepContent
-import xcj.app.appsets.ui.compose.quickstep.UriQuickStepContent
 import xcj.app.appsets.ui.compose.theme.AppSetsTheme
 import xcj.app.appsets.ui.viewmodel.MainViewModel
 import xcj.app.appsets.util.SplashScreenHelper
 import xcj.app.compose_share.ui.viewmodel.AnyStateViewModel.Companion.bottomSheetState
+import xcj.app.starter.android.AppDefinition
 import xcj.app.starter.android.ui.base.DesignComponentActivity
-import xcj.app.starter.android.util.FileUtil
 import xcj.app.starter.android.util.PurpleLogger
-import xcj.app.starter.util.ContentType
+import java.util.UUID
 
 class MainActivity : DesignComponentActivity() {
 
     companion object {
         private const val TAG = "MainActivity"
+        const val EXTERNAL_CONTENT_HANDLE_BY_APPSETS = 0
+        const val EXTERNAL_CONTENT_HANDLE_BY_LOCAL_SHARE = 1
     }
 
     private lateinit var mImMessageNotificationIntentReceiver: BroadcastReceiver
@@ -138,58 +136,69 @@ class MainActivity : DesignComponentActivity() {
         }
     }
 
-    suspend fun handleExternalShareContentIfNeeded(intent: Intent?) {
+    private suspend fun handleExternalShareContentIfNeeded(intent: Intent?) {
         if (intent == null) {
             return
         }
         when (intent.action) {
-            Intent.ACTION_SEND -> {
-                handleIntentExternalContent(intent, false)
-            }
-
-            Intent.ACTION_SEND_MULTIPLE -> {
-                handleIntentExternalContent(intent, true)
+            Intent.ACTION_SEND, Intent.ACTION_SEND_MULTIPLE -> {
+                handleIntentExternalContent(intent)
             }
         }
     }
 
     private suspend fun handleIntentExternalContent(
-        intent: Intent, isMulti: Boolean
+        intent: Intent
     ) {
-        //remove this
-        delay(200)
-
-        val quickStepContentList = mutableListOf<QuickStepContent>()
-        if (intent.type == ContentType.TEXT_PLAIN) {
-            intent.getStringExtra(Intent.EXTRA_TEXT)?.let { text ->
-                val textQuickStepContent = TextQuickStepContent(text)
-                quickStepContentList.add(textQuickStepContent)
-            }
-        } else {
-            if (!isMulti) {
-                (intent.getParcelableExtra<Parcelable>(Intent.EXTRA_STREAM) as? Uri)?.let { uri ->
-                    val contentType = contentResolver.getType(uri) ?: ContentType.ALL
-                    val androidUriFile = FileUtil.parseUriToAndroidUriFile(this, uri)
-                    val uriQuickStepContent = UriQuickStepContent(uri, androidUriFile, contentType)
-                    quickStepContentList.add(uriQuickStepContent)
-                }
-            } else {
-                intent.getParcelableArrayListExtra<Parcelable>(Intent.EXTRA_STREAM)
-                    ?.mapNotNull {
-                        it as? Uri
-                    }?.forEach { uri ->
-                        val contentType = contentResolver.getType(uri) ?: ContentType.ALL
-                        val androidUriFile = FileUtil.parseUriToAndroidUriFile(this, uri)
-                        val uriQuickStepContent =
-                            UriQuickStepContent(uri, androidUriFile, contentType)
-                        quickStepContentList.add(uriQuickStepContent)
-                    }
-            }
-        }
-
-        var bottomSheetState = viewModel.bottomSheetState()
+        val fromAppDefinition = getCallActivityAppDefinition()
+        val bottomSheetState = viewModel.bottomSheetState()
         bottomSheetState.show {
-            QuickStepSheet(quickStepContentList)
+            ExternalContentContainerSheet(
+                intent = intent,
+                fromAppDefinition = fromAppDefinition,
+                onConfirmClick = { handleType ->
+                    when (handleType) {
+                        EXTERNAL_CONTENT_HANDLE_BY_LOCAL_SHARE -> {
+                            bottomSheetState.hide()
+                            handleExternalDataByAppSetsShare(intent)
+
+                        }
+
+                        EXTERNAL_CONTENT_HANDLE_BY_APPSETS -> {
+                        }
+                    }
+                }
+            )
         }
     }
+
+    private fun handleExternalDataByAppSetsShare(intent: Intent) {
+        navigateToAppSetsShareActivity(this, intent)
+    }
+
+    private suspend fun getCallActivityAppDefinition(): AppDefinition? {
+        val callingPackage = getCallingPackage()
+        return if (callingPackage != null) {
+            getAppNameFromPackageName(callingPackage)
+        } else {
+            null
+        }
+    }
+
+    private suspend fun getAppNameFromPackageName(packageName: String): AppDefinition? =
+        withContext(
+            Dispatchers.IO
+        ) {
+            try {
+                val appInfo = packageManager.getApplicationInfo(packageName, 0)
+                val appDefinition = AppDefinition(UUID.randomUUID().toString())
+                appDefinition.applicationInfo = appInfo
+                appDefinition.name = appInfo.loadLabel(packageManager).toString().trim()
+                appDefinition.icon = appInfo.loadIcon(packageManager)
+                return@withContext appDefinition
+            } catch (e: PackageManager.NameNotFoundException) {
+                e.printStackTrace()
+                return@withContext null
+            }
+        }
 }

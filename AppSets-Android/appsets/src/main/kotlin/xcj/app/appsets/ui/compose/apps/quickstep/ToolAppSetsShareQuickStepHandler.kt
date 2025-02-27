@@ -19,32 +19,24 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.os.bundleOf
-import xcj.app.appsets.constants.Constants
-import xcj.app.appsets.ui.compose.LocalNavHostController
-import xcj.app.appsets.ui.compose.PageRouteNames
-import xcj.app.appsets.ui.compose.apps.tools.TOOL_TYPE
-import xcj.app.appsets.ui.compose.apps.tools.TOOL_TYPE_AppSets_Transform
-import xcj.app.appsets.ui.compose.main.navigateWithBundle
+import xcj.app.appsets.ui.compose.main.navigateToAppSetsShareActivity
 import xcj.app.appsets.ui.compose.quickstep.QuickStepContent
 import xcj.app.appsets.ui.compose.quickstep.QuickStepContentHandler
 import xcj.app.appsets.ui.compose.quickstep.QuickStepContentHolder
-import xcj.app.appsets.ui.compose.quickstep.TextQuickStepContent
 import xcj.app.compose_share.R
 
-class ToolContentTransformQuickStepHandler(context: Context) : QuickStepContentHandler(context) {
+class ToolAppSetsShareQuickStepHandler(context: Context) : QuickStepContentHandler(context) {
 
     private var mQuickStepContentHolder: QuickStepContentHolder? = null
 
     override fun getName(): String {
-        return context.getString(xcj.app.appsets.R.string.transform_content)
+        return context.getString(xcj.app.appsets.R.string.appsets_share)
     }
 
     override fun getDescription(): String {
-        return context.getString(xcj.app.appsets.R.string.transform_content)
+        return context.getString(xcj.app.appsets.R.string.nearby_share)
     }
 
     override fun getCategory(): String {
@@ -52,20 +44,14 @@ class ToolContentTransformQuickStepHandler(context: Context) : QuickStepContentH
     }
 
     override fun accept(quickStepContentHolder: QuickStepContentHolder): Boolean {
-        val firstTextQuickStepContent =
-            quickStepContentHolder.quickStepContents.firstOrNull { it is TextQuickStepContent }
-        val accept = firstTextQuickStepContent != null
-        if (accept) {
-            mQuickStepContentHolder = quickStepContentHolder
-        }
-        return accept
+        mQuickStepContentHolder = quickStepContentHolder
+        return true
     }
 
 
     override fun getContent(onClick: () -> Unit): @Composable (() -> Unit) {
         val contentCompose = @Composable {
-            val navController = LocalNavHostController.current
-            ToolContentTransformQuickStepHandlerContent(
+            ToolAppSetsShareQuickStepHandlerContent(
                 name = getName(),
                 description = getDescription(),
                 onClick = {
@@ -76,21 +62,9 @@ class ToolContentTransformQuickStepHandler(context: Context) : QuickStepContentH
                     }
 
                     if (quickStepContents == null) {
-                        return@ToolContentTransformQuickStepHandlerContent
+                        return@ToolAppSetsShareQuickStepHandlerContent
                     }
-                    navigateWithBundle(
-                        navController,
-                        PageRouteNames.AppToolsDetailsPage,
-                        bundleCreator = {
-                            bundleOf().apply {
-                                putString(TOOL_TYPE, TOOL_TYPE_AppSets_Transform)
-                                putParcelableArrayList(
-                                    Constants.QUICK_STEP_CONTENT,
-                                    quickStepContents
-                                )
-                            }
-                        }
-                    )
+                    navigateToAppSetsShareActivity(context, mQuickStepContentHolder?.intent)
                 }
             )
         }
@@ -100,9 +74,9 @@ class ToolContentTransformQuickStepHandler(context: Context) : QuickStepContentH
 }
 
 @Composable
-fun ToolContentTransformQuickStepHandlerContent(
+fun ToolAppSetsShareQuickStepHandlerContent(
     name: String,
-    description:String,
+    description: String,
     onClick: () -> Unit
 ) {
     Column(
@@ -123,7 +97,7 @@ fun ToolContentTransformQuickStepHandlerContent(
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Icon(
-                    painter = painterResource(R.drawable.ic_outline_qr_code_24),
+                    painter = painterResource(R.drawable.ic_round_swap_calls_24),
                     contentDescription = null
                 )
                 Column {
