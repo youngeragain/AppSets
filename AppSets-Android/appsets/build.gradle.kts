@@ -138,6 +138,8 @@ dependencies {
     implementation(libs.coil.gif)
     implementation(libs.coil.video)
 
+    implementation(libs.telephoto.zoomable)
+
     implementation(libs.google.barcode.scanning)
     implementation(libs.rabbit.amqp)
     implementation(libs.zxing)
@@ -157,4 +159,11 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
+
+    val composeBom = platform(libs.androidx.compose.bom)
+    testImplementation(composeBom)
+    androidTestImplementation(composeBom)
+    androidTestImplementation(libs.androidx.ui.test.junit4)
+    debugImplementation(libs.androidx.ui.tooling)
+    debugImplementation(libs.androidx.ui.test.manifest)
 }

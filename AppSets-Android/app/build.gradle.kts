@@ -52,7 +52,13 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            signingConfig = signingConfigs.getByName("release")
+            runCatching {
+                signingConfigs.getByName("release")
+            }.onSuccess {
+                signingConfig = it
+            }.onFailure {
+                println("Release signing config not found!")
+            }
         }
         debug {
             isShrinkResources = false

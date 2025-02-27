@@ -47,6 +47,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.BlurEffect
+import androidx.compose.ui.graphics.TileMode
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
@@ -84,6 +85,7 @@ import xcj.app.appsets.ui.compose.LocalUseCaseOfSystem
 import xcj.app.appsets.ui.compose.LocalUseCaseOfUserInfo
 import xcj.app.appsets.ui.compose.PageRouteNames
 import xcj.app.appsets.ui.compose.apps.quickstep.ToolContentTransformQuickStepHandler
+import xcj.app.appsets.ui.compose.apps.quickstep.ToolIntentCallerQuickStepHandler
 import xcj.app.appsets.ui.compose.conversation.quickstep.ConversationQuickStepHandler
 import xcj.app.appsets.ui.compose.custom_component.AnyImage
 import xcj.app.appsets.ui.compose.media.video.fall.MediaFallActivity
@@ -233,6 +235,7 @@ fun OnScaffoldLaunch(navController: NavController) {
         navController.addOnDestinationChangedListener(destinationChangedListener)
 
         localQuickStepContentHandlerRegistry.addContentHandler(ToolContentTransformQuickStepHandler(context))
+        localQuickStepContentHandlerRegistry.addContentHandler(ToolIntentCallerQuickStepHandler(context))
         localQuickStepContentHandlerRegistry.addContentHandler(ConversationQuickStepHandler(context))
         localQuickStepContentHandlerRegistry.addContentHandler(OutSideQuickStepHandler(context))
 
@@ -285,7 +288,7 @@ fun getScaffoldModifier(): Modifier {
     LaunchedEffect(immerseContentState.isShow) {
         scope.launch {
             val target = if (immerseContentState.isShow) {
-                35f
+                50f
             } else {
                 0f
             }
@@ -297,7 +300,8 @@ fun getScaffoldModifier(): Modifier {
             renderEffect =
                 BlurEffect(
                     renderEffectAnimateState.value,
-                    renderEffectAnimateState.value
+                    renderEffectAnimateState.value,
+                    TileMode.Decal
                 )
         }
     }

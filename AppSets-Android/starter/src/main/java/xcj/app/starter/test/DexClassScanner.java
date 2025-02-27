@@ -39,6 +39,16 @@ public class DexClassScanner {
         return allClassByAnnotation;
     }
 
+    public static <C> @Nullable List<Class<C>> collectClassByInterface(
+            Context context,
+            String packageName,
+            Class<C> interfaceclass) {
+        DexClassScanner.setClassLoader(context.getApplicationContext());
+        List<Class<C>> allClassByInterface = DexClassScanner.getAllClassByInterface(interfaceclass, packageName);
+        DexClassScanner.setClassLoader((Context) null);
+        return allClassByInterface;
+    }
+
     /**
      * 默认情况下有可能ClassLoader获取失败
      * 调用该函数确保ClassLoader能获取到

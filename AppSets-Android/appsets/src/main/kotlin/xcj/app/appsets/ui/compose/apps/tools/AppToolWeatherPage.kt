@@ -42,18 +42,18 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-
 import xcj.app.appsets.server.model.WeatherInfo
 import xcj.app.appsets.ui.compose.LocalUseCaseOfSystem
-import xcj.app.compose_share.components.DesignTextField
 import xcj.app.compose_share.components.BackActionTopBar
+import xcj.app.compose_share.components.DesignTextField
 import java.util.Calendar
 
 @Composable
-fun AppToolWeatherComponent(onBackClick: () -> Unit) {
+fun AppToolWeatherPage(onBackClick: () -> Unit) {
     Column {
         BackActionTopBar(
-            onBackClick = onBackClick
+            onBackClick = onBackClick,
+            backButtonRightText = stringResource(xcj.app.appsets.R.string.weather)
         )
         Box(Modifier.weight(1f)) {
             val configuration = LocalConfiguration.current

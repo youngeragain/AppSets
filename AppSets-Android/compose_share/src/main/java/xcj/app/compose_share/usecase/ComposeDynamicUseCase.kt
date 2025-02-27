@@ -6,6 +6,7 @@ import android.content.Intent
 import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.LifecycleObserver
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 import xcj.app.compose_share.dynamic.ComposeMethodsAware
 import xcj.app.compose_share.dynamic.ComposeMethodsWrapper
 import xcj.app.compose_share.dynamic.PluginsRegistry
@@ -32,39 +33,51 @@ class ComposeDynamicUseCase(
     }
 
     fun doLoad() {
-        PluginsRegistry.loadMethodsToContainer(coroutineScope, this)
+        coroutineScope.launch {
+            PluginsRegistry.loadMethodsToContainer(this@ComposeDynamicUseCase)
+        }
     }
 
     fun onAddClick(context: Context) {
         PlatformUseCase.openSystemFileProvider(
-            context, PlatformUseCase.REQUEST_CODE_FOR_FILE_PROVIDER,
+            context,
+            PlatformUseCase.REQUEST_CODE_FOR_FILE_PROVIDER,
             ContentType.APPLICATION_ANDROID_PACKAGE
         )
     }
 
-    fun onExternalAARFileSelectActivityResult(
+    fun onActivityResult(
         context: Context,
         requestCode: Int,
         resultCode: Int,
-        data: Intent?
+        data: Intent
     ) {
-        if (requestCode != PlatformUseCase.REQUEST_CODE_FOR_FILE_PROVIDER || resultCode != Activity.RESULT_OK || data == null || data.data == null) {
+        val fileUri = data.data
+        if (requestCode != PlatformUseCase.REQUEST_CODE_FOR_FILE_PROVIDER ||
+            resultCode != Activity.RESULT_OK ||
+            fileUri == null
+        ) {
             return
         }
-        val desFilePath = FileUtil.copyFileToInternalStorage(
-            context,
-            data.data!!,
-            LocalAndroidContextFileDir.current.dynamicAARDir,
-            null
-        )
-        if (desFilePath.isNullOrEmpty()) {
-            PurpleLogger.current.d(
-                TAG,
-                "onExternalAARFileSelectActivityResult early return, desFilePath is null"
+        coroutineScope.launch {
+            val desFilePath = FileUtil.copyFileToInternalStorage(
+                context,
+                fileUri,
+                LocalAndroidContextFileDir.current.dynamicAARDir,
+                null
             )
-            return
+            if (desFilePath.isNullOrEmpty()) {
+                PurpleLogger.current.d(
+                    TAG,
+                    "onExternalAARFileSelectActivityResult early return, desFilePath is null"
+                )
+                return@launch
+            }
+            val result = PluginsRegistry.registerAARFromExternal(desFilePath)
+            if (result) {
+                doLoad()
+            }
         }
-        PluginsRegistry.registerAARFromExternal(desFilePath, ::doLoad)
     }
 
     fun onDeleteClick(wrapper: ComposeMethodsWrapper) {

@@ -30,6 +30,7 @@ const val TOOL_TYPE_AppSets_Weather = "AppSets_Weather"
 const val TOOL_TYPE_AppSets_Share = "AppSets_Share"
 const val TOOL_TYPE_AppSets_Proxy = "AppSets_Proxy"
 const val TOOL_TYPE_AppSets_Launcher = "AppSets_Launcher"
+const val TOOL_TYPE_AppSets_Intent_Caller = "AppSets_Intent_Caller"
 
 
 data class AppTool(
@@ -80,6 +81,13 @@ fun generateAppToolList(): List<AppTool> {
                     xcj.app.compose_share.R.drawable.ic_home_24,
                     xcj.app.appsets.R.string.appsets_launcher,
                     TOOL_TYPE_AppSets_Launcher
+                )
+            )
+            add(
+                AppTool(
+                    xcj.app.compose_share.R.drawable.ic_call_made_24,
+                    xcj.app.appsets.R.string.intent_caller,
+                    TOOL_TYPE_AppSets_Intent_Caller
                 )
             )
         }

@@ -62,11 +62,11 @@ dependencies {
     api(libs.androidx.navigation.ui.ktx)
     api(libs.androidx.navigation.compose)
 
-    testApi(composeBom)
-    androidTestApi(composeBom)
-    androidTestApi(libs.androidx.ui.test.junit4)
-    debugApi(libs.androidx.ui.tooling)
-    debugApi(libs.androidx.ui.test.manifest)
+    testImplementation(composeBom)
+    androidTestImplementation(composeBom)
+    androidTestImplementation(libs.androidx.ui.test.junit4)
+    debugImplementation(libs.androidx.ui.tooling)
+    debugImplementation(libs.androidx.ui.test.manifest)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

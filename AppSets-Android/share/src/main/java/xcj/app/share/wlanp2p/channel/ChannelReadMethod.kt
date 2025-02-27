@@ -7,7 +7,7 @@ import xcj.app.web.webserver.interfaces.ContentReceivedListener
 import xcj.app.share.base.DataContent
 import xcj.app.web.webserver.base.DataProgressInfoPool
 import xcj.app.share.base.DeviceNameAddress
-import xcj.app.web.webserver.base.ProgressListener
+import xcj.app.web.webserver.interfaces.ProgressListener
 import xcj.app.starter.test.ShareSystem
 import xcj.app.share.wlanp2p.base.DataHandleExceptionListener
 import xcj.app.share.wlanp2p.base.ReadMethod

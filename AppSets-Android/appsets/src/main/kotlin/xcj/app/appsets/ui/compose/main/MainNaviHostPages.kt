@@ -63,6 +63,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.google.gson.Gson
 import kotlinx.coroutines.launch
+import me.saket.telephoto.zoomable.rememberZoomableState
+import me.saket.telephoto.zoomable.zoomable
 import xcj.app.appsets.constants.Constants
 import xcj.app.appsets.im.Bio
 import xcj.app.appsets.im.InputSelector
@@ -1158,13 +1160,7 @@ fun NaviHostBackHandlerInterceptor(navController: NavHostController) {
         )
         val progressedComposeContainerState = immerseContentState as ProgressedComposeContainerState
         progressedComposeContainerState.markStarted()
-        it.collect {
-            PurpleLogger.current.d(
-                TAG,
-                "NaviHostBackHandlerInterceptor onFlow:$it"
-            )
-            progressedComposeContainerState.emit(it)
-        }
+        it.collect(progressedComposeContainerState)
         progressedComposeContainerState.hide()
 
     }
@@ -1353,7 +1349,8 @@ fun <D> showPictureViewDialog(
             ) { pageIndex ->
                 AnyImage(
                     modifier = Modifier
-                        .fillMaxSize(),
+                        .fillMaxSize()
+                        .zoomable(rememberZoomableState()),
                     any = dataList[pageIndex],
                     contentScale = ContentScale.FillWidth
                 )
@@ -1391,7 +1388,7 @@ fun <D> showPictureViewDialog(
                 val rotationAnimate = animateFloatAsState(
                     targetValue = rotation.floatValue,
                     label = "degree_animate",
-                    animationSpec = tween(650)
+                    animationSpec = tween(300)
                 )
 
                 LaunchedEffect(true) {

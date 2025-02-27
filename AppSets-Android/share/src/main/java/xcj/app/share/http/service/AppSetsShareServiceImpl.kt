@@ -3,8 +3,6 @@
 package xcj.app.share.http.service
 
 import android.content.Context
-import android.os.CancellationSignal
-import android.os.ParcelFileDescriptor
 import xcj.app.share.base.ClientInfo
 import xcj.app.share.base.DataContent
 import xcj.app.share.http.HttpShareMethod
@@ -20,7 +18,6 @@ import xcj.app.web.webserver.base.DataProgressInfoPool
 import xcj.app.web.webserver.base.FileUploadN
 import xcj.app.web.webserver.base.ReadableData
 import java.io.ByteArrayInputStream
-import java.io.FileInputStream
 import java.io.InputStream
 import java.util.UUID
 import kotlin.io.encoding.ExperimentalEncodingApi

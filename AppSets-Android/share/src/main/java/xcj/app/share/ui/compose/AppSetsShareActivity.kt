@@ -36,6 +36,10 @@ import kotlin.getValue
 class AppSetsShareActivity : DesignComponentActivity() {
     companion object {
         private const val TAG = "AppSetsShareActivity"
+
+        const val INTENT_ACTION = "xcj.app.share"
+        const val INTENT_CATEGORY = "xcj.app.share.main"
+
         const val CLICK_TYPE_NORMAL = 0
         const val CLICK_TYPE_LONG = 1
         const val CLICK_TYPE_DOUBLE = 2

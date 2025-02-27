@@ -43,7 +43,7 @@ import xcj.app.share.wlanp2p.common.P2pOneThread
 import xcj.app.share.wlanp2p.common.WlanP2pBroadCastReceiver
 import xcj.app.share.wlanp2p.common.WlanP2pEnableInfo
 import xcj.app.starter.android.util.PurpleLogger
-import xcj.app.web.webserver.base.ProgressListener
+import xcj.app.web.webserver.interfaces.ProgressListener
 
 class WlanP2pShareMethod : ShareMethod(), ContentReceivedListener {
     companion object {

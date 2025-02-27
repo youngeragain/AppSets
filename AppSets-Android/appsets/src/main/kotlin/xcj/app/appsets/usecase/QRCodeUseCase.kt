@@ -1,6 +1,8 @@
 package xcj.app.appsets.usecase
 
+import android.app.Activity.RESULT_OK
 import android.content.Context
+import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Color.BLACK
 import android.graphics.Color.WHITE
@@ -19,16 +21,17 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import xcj.app.appsets.account.LocalAccountManager
-import xcj.app.starter.server.requestNotNull
-import xcj.app.starter.server.requestNotNullRaw
 import xcj.app.appsets.server.model.UserInfo
 import xcj.app.appsets.server.repository.QRCodeRepository
 import xcj.app.appsets.server.repository.UserRepository
+import xcj.app.appsets.ui.compose.camera.CameraComposeActivity
 import xcj.app.appsets.ui.model.LoginSignUpState
 import xcj.app.compose_share.dynamic.IComposeDispose
 import xcj.app.starter.android.ktx.dp
 import xcj.app.starter.android.util.PurpleLogger
 import xcj.app.starter.foundation.http.DesignResponse
+import xcj.app.starter.server.requestNotNull
+import xcj.app.starter.server.requestNotNullRaw
 import java.util.EnumMap
 
 sealed interface QRCodeInfoScannedState {
@@ -354,5 +357,15 @@ class QRCodeUseCase(
     override fun onComposeDispose(by: String?) {
         updateQRCodeStateJob?.cancel()
         generatedQRCodeInfo.value = null
+    }
+
+    fun onActivityResult(context: Context, requestCode: Int, resultCode: Int, intent: Intent) {
+        if (requestCode != CameraComposeActivity.REQUEST_CODE ||
+            resultCode != RESULT_OK) {
+            return
+        }
+        val providerId = intent.getStringExtra(PROVIDER_ID) ?: return
+        val code = intent.getStringExtra(CODE) ?: return
+        continueQueryQRCodeStatus(providerId, code)
     }
 }

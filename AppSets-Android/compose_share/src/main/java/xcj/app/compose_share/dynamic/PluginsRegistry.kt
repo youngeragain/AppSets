@@ -3,9 +3,8 @@ package xcj.app.compose_share.dynamic
 import com.google.gson.Gson
 import dalvik.system.DexClassLoader
 import kotlinx.coroutines.CoroutineExceptionHandler
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import xcj.app.compose_share.purple_module.MySharedPreferences
 import xcj.app.starter.android.util.PurpleLogger
 import xcj.app.starter.test.DexClassScanner
@@ -14,32 +13,34 @@ import java.io.File
 
 object PluginsRegistry : IPluginsRegistry {
     private const val TAG = "PluginsRegistry"
-    fun loadMethodsToContainer(
-        coroutineScope: CoroutineScope,
-        composeMethodsAware: ComposeMethodsAware
-    ) {
-        PurpleLogger.current.d(TAG, "loadMethodsToContainer")
-        coroutineScope.launch(Dispatchers.IO + CoroutineExceptionHandler { _, throwable ->
-            PurpleLogger.current.d(
-                TAG,
-                "exception occur from coroutineScope, throwable:${throwable.message}"
-            )
-        }) {
+    suspend fun loadMethodsToContainer(composeMethodsAware: ComposeMethodsAware) {
+        withContext(
+            Dispatchers.IO +
+                    CoroutineExceptionHandler { _, throwable ->
+                        throwable.printStackTrace()
+                        PurpleLogger.current.d(
+                            TAG,
+                            "exception occur from coroutineScope, throwable:${throwable.message}"
+                        )
+                    }
+        ) {
+            PurpleLogger.current.d(TAG, "loadMethodsToContainer")
             val methodsContainer: MutableList<ComposeMethodsWrapper> =
                 mutableListOf()
-            val defaultComposeDynamicLoader = DefaultComposeDynamicLoader(composeMethodsAware)
+
             val loadAllAAR = loadAllAAR<IComposeMethods>()
             if (loadAllAAR.isNullOrEmpty()) {
                 composeMethodsAware.setMethodsContainer(methodsContainer)
-            } else {
-                loadAllAAR.forEach { (aarName, clazzList) ->
-                    clazzList?.forEach { iComposeMethod ->
-                        defaultComposeDynamicLoader.loadByClass(
-                            methodsContainer,
-                            aarName,
-                            iComposeMethod
-                        )
-                    }
+                return@withContext
+            }
+            val defaultComposeDynamicLoader = DefaultComposeDynamicLoader(composeMethodsAware)
+            loadAllAAR.forEach { (aarName, clazzList) ->
+                clazzList?.forEach { iComposeMethod ->
+                    defaultComposeDynamicLoader.loadByClass(
+                        methodsContainer,
+                        aarName,
+                        iComposeMethod
+                    )
                 }
             }
         }
@@ -89,38 +90,40 @@ object PluginsRegistry : IPluginsRegistry {
         return aarClazzListMap
     }
 
-    fun registerAARFromExternal(filePath: String, onLoadSuccess: (() -> Unit)? = null) {
+    fun registerAARFromExternal(filePath: String): Boolean {
         val file = File(filePath)
         PurpleLogger.current.d(
             TAG,
             "registerAARFromExternal, file.exist:${file.exists()}"
         )
         if (!file.exists()) {
-            return
+            return false
         }
         val dynamicAARDir = LocalAndroidContextFileDir.current.dynamicAARDir
         if (dynamicAARDir.isNullOrEmpty()) {
-            return
+            return false
         }
         val dir = File(dynamicAARDir)
         if (!dir.exists() || !dir.isDirectory) {
-            return
+            return false
         }
         runCatching {
             val result = registerByAAR(file.path)
             if (result) {
                 PurpleLogger.current.d(TAG, "loadAARFromExternal success!")
-                onLoadSuccess?.invoke()
             } else {
                 PurpleLogger.current.d(TAG, "loadAARFromExternal failed!")
                 //file.delete()
             }
+            return result
         }.onFailure {
+            it.printStackTrace()
             PurpleLogger.current.d(
                 TAG,
                 "loadAARFromExternal failed! exception " + it.message
             )
         }
+        return false
     }
 
     override fun registerByAAR(aarPath: String): Boolean {
@@ -160,6 +163,7 @@ object PluginsRegistry : IPluginsRegistry {
             DexClassScanner.setDexClassLoader(null)
             allIComposeMethods
         }.onFailure {
+            it.printStackTrace()
             PurpleLogger.current.d(
                 TAG,
                 "Load IComposeMethod failed!" + it.message

@@ -32,7 +32,7 @@ import xcj.app.starter.server.requestNotNull
 import xcj.app.starter.server.requestRaw
 import xcj.app.starter.test.LocalPurpleCoroutineScope
 import xcj.app.web.webserver.base.DataProgressInfo
-import xcj.app.web.webserver.base.ProgressListener
+import xcj.app.web.webserver.interfaces.ProgressListener
 import xcj.app.web.webserver.interfaces.ContentReceivedListener
 import xcj.app.web.webserver.interfaces.ListenersProvider
 import xcj.app.web.webserver.netty.ServerBootStrap

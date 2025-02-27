@@ -4,7 +4,7 @@ import android.content.Context
 import android.net.Uri
 import kotlinx.coroutines.delay
 import xcj.app.web.webserver.base.DataProgressInfoPool
-import xcj.app.web.webserver.base.ProgressListener
+import xcj.app.web.webserver.interfaces.ProgressListener
 import xcj.app.share.wlanp2p.base.DataHandleExceptionListener
 import xcj.app.share.wlanp2p.base.WriteFunction
 import xcj.app.share.wlanp2p.base.WriteMethod

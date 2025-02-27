@@ -8,7 +8,7 @@ import xcj.app.share.base.DeviceIP
 import xcj.app.share.base.DeviceName
 import xcj.app.share.base.DeviceNameAddress
 import xcj.app.share.base.DeviceNameExchangeListener
-import xcj.app.web.webserver.base.ProgressListener
+import xcj.app.web.webserver.interfaces.ProgressListener
 import xcj.app.share.base.ShareDevice
 import xcj.app.starter.test.ShareSystem
 import xcj.app.share.wlanp2p.base.DataHandleExceptionListener

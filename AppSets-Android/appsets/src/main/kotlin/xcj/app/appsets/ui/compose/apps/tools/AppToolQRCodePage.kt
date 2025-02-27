@@ -95,7 +95,7 @@ sealed class TransformedContent(val transformedContent: String?, val bitmap: Bit
 
 @OptIn(ExperimentalEncodingApi::class)
 @Composable
-fun AppToolQRCodeComponent(
+fun AppToolQRCodePage(
     quickStepContents: List<QuickStepContent>?,
     onBackClick: () -> Unit
 ) {

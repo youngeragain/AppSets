@@ -7,7 +7,7 @@ import xcj.app.share.base.DataContent
 import xcj.app.share.base.DataSendContent
 import xcj.app.share.base.DeviceAddress
 import xcj.app.share.base.DeviceNameAddress
-import xcj.app.web.webserver.base.ProgressListener
+import xcj.app.web.webserver.interfaces.ProgressListener
 import xcj.app.share.base.ShareDevice
 import xcj.app.share.wlanp2p.base.DataHandleExceptionListener
 import xcj.app.share.wlanp2p.base.ISocketState

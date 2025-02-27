@@ -34,11 +34,11 @@ abstract class AbstractComposeMethods : IComposeMethods {
     override fun onComposeDispose(by: String?) {
         val statesHolder = getStatesHolder()
         PurpleLogger.current.d(TAG, "onComposeDispose by:${by}")
-        if (!statesHolder.reusable()) {
-            statesHolder.onDestroy()
-            loader = null
-        } else {
+        if (statesHolder.reusable()) {
             statesHolder.onTempDestroy()
+            return
         }
+        statesHolder.onDestroy()
+        loader = null
     }
 }

@@ -6,7 +6,7 @@ String apkOutPutFileName = null
 
 
 def getLocalProperty(key) {
-    InputStream inputStream = rootProject.file('local.properties').newDataInputStream();
+    InputStream inputStream = rootProject.file('local.properties').newDataInputStream()
     Properties properties = new Properties()
     properties.load(inputStream)
     if (properties.containsKey(key)) {
@@ -28,32 +28,35 @@ android.applicationVariants.configureEach { variant ->
 gradle.projectsEvaluated {
     project.gradle.taskGraph.whenReady {
         def assembleReleaseTasks = getTasksByName("assembleRelease", false)
-        if (assembleReleaseTasks != null && assembleReleaseTasks.size() == 1) {
-            def assembleReleaseTask = assembleReleaseTasks[0]
-            assembleReleaseTask.doLast {
-                println("assembleRelease:" + "do custom Last" + apkOutPutFilePath)
-                if (apkOutPutFilePath == null) {
-                    return
-                }
-                if (apkOutPutFileName == null)
-                    return
-                def file = new File(apkOutPutFilePath)
-                if (!file.exists())
-                    return
-                try {
-                    def appsetsAchivesPath = getLocalProperty("appsets_achives_path")
-                    if (appsetsAchivesPath != null) {
-                        def copyDestinationFile = new File(appsetsAchivesPath + apkOutPutFileName)
-
-                        Files.copy(file.toPath(), copyDestinationFile.toPath(), StandardCopyOption.REPLACE_EXISTING)
-                    }
-
-                } catch (Exception ex) {
-                    println "exception when copy:" + ex.message
-                }
-            }
-        } else {
+        if (assembleReleaseTasks == null || assembleReleaseTasks.size() != 1) {
             println("=======> task assembleRelease not find in project:app")
+            return
+        }
+
+        def assembleReleaseTask = assembleReleaseTasks[0]
+        assembleReleaseTask.doLast {
+            println("assembleRelease:" + "do custom Last" + apkOutPutFilePath)
+            if (apkOutPutFilePath == null) {
+                return
+            }
+            if (apkOutPutFileName == null) {
+                return
+            }
+            def file = new File(apkOutPutFilePath)
+            if (!file.exists()) {
+                return
+            }
+            try {
+                def appsetsAchievesPath = getLocalProperty("appsets_achieves_path")
+                if (appsetsAchievesPath != null) {
+                    def copyDestinationFile = new File(appsetsAchievesPath + apkOutPutFileName)
+
+                    Files.copy(file.toPath(), copyDestinationFile.toPath(), StandardCopyOption.REPLACE_EXISTING)
+                }
+
+            } catch (Exception ex) {
+                println "exception when copy:" + ex.message
+            }
         }
     }
 }

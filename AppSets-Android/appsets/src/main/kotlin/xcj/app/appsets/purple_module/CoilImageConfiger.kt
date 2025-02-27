@@ -6,6 +6,8 @@ import coil3.ImageLoader
 import coil3.SingletonImageLoader
 import coil3.gif.AnimatedImageDecoder
 import coil3.gif.GifDecoder
+import coil3.request.CachePolicy
+import coil3.size.Precision
 import coil3.video.VideoFrameDecoder
 
 fun configCoil(context: Context) {
@@ -19,6 +21,8 @@ fun configCoil(context: Context) {
                 }
                 add(VideoFrameDecoder.Factory())
             }
+            .diskCachePolicy(CachePolicy.DISABLED)
+            .precision(Precision.INEXACT)
             .build()
     }
 }

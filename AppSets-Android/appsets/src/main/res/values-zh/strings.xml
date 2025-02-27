@@ -417,5 +417,9 @@
     <string name="search_quick_step">搜索快捷</string>
     <string name="conversation">对话</string>
     <string name="send_to_people">发给别人</string>
+    <string name="intent_caller">意图调用</string>
+    <string name="deeplink">深层链接</string>
+    <string name="call">调用</string>
+    <string name="history">历史</string>
 
 </resources>

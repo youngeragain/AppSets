@@ -61,6 +61,10 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <data android:mimeType="*/*" />
             </intent-filter>
+            <intent-filter>
+                <action android:name="xcj.app.share" />
+                <category android:name="xcj.app.share.main" />
+            </intent-filter>
         </activity>
     </application>
 </manifest>

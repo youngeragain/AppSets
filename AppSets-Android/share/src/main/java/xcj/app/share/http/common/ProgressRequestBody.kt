@@ -17,7 +17,7 @@ import xcj.app.share.base.DataContent
 import xcj.app.starter.android.util.PurpleLogger
 import xcj.app.starter.util.ContentType
 import xcj.app.web.webserver.base.DataProgressInfoPool
-import xcj.app.web.webserver.base.ProgressListener
+import xcj.app.web.webserver.interfaces.ProgressListener
 import java.io.Closeable
 import java.io.FileDescriptor
 import java.io.FileInputStream

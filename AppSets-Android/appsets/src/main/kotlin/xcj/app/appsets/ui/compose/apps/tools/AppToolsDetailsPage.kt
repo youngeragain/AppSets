@@ -16,18 +16,25 @@ fun AppToolsDetailsPage(
     Box {
         when (type) {
             TOOL_TYPE_AppSets_Proxy -> {
-                AppToolAppSetsProxyComponent(onBackClick = onBackClick)
+                AppToolAppSetsProxyPage(onBackClick = onBackClick)
             }
 
             TOOL_TYPE_AppSets_Transform -> {
-                AppToolQRCodeComponent(
+                AppToolQRCodePage(
                     quickStepContents = quickStepContents,
                     onBackClick = onBackClick
                 )
             }
 
             TOOL_TYPE_AppSets_Weather -> {
-                AppToolWeatherComponent(onBackClick = onBackClick)
+                AppToolWeatherPage(onBackClick = onBackClick)
+            }
+
+            TOOL_TYPE_AppSets_Intent_Caller -> {
+                AppToolIntentCallerPage(
+                    quickStepContents = quickStepContents,
+                    onBackClick = onBackClick
+                )
             }
         }
     }

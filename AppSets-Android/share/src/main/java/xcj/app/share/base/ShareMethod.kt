@@ -19,7 +19,7 @@ import xcj.app.share.ui.compose.AppSetsShareViewModel
 import xcj.app.share.wlanp2p.WlanP2pShareMethod
 import xcj.app.starter.android.util.PurpleLogger
 import xcj.app.starter.test.ShareSystem
-import xcj.app.web.webserver.base.ProgressListener
+import xcj.app.web.webserver.interfaces.ProgressListener
 import java.util.concurrent.CopyOnWriteArrayList
 
 abstract class ShareMethod() : ConnectivityManager.NetworkCallback(), DefaultLifecycleObserver {

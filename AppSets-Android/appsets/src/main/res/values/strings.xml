@@ -417,4 +417,8 @@
     <string name="search_quick_step">Search Quick Step</string>
     <string name="conversation">Conversation</string>
     <string name="send_to_people">Send To People</string>
+    <string name="intent_caller">Intent Caller</string>
+    <string name="deeplink">DeepLink</string>
+    <string name="call">Call</string>
+    <string name="history">History</string>
 </resources>

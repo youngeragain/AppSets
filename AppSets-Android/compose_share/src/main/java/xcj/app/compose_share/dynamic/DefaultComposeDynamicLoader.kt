@@ -6,7 +6,6 @@ import android.widget.TextView
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.viewinterop.AndroidView
 import xcj.app.starter.android.util.PurpleLogger
-import java.lang.reflect.InvocationTargetException
 
 class DefaultComposeDynamicLoader(composeMethodsAware: ComposeMethodsAware) :
     ComposeDynamicLoader(composeMethodsAware) {
@@ -20,8 +19,9 @@ class DefaultComposeDynamicLoader(composeMethodsAware: ComposeMethodsAware) :
         aarName: String?, clazz: Class<I>
     ) {
         //TODO 添加使用注解的解析逻辑
-        if (!AbstractComposeMethods::class.java.isAssignableFrom(clazz))
+        if (!AbstractComposeMethods::class.java.isAssignableFrom(clazz)) {
             return
+        }
         try {
             PurpleLogger.current.d(
                 TAG,
@@ -52,25 +52,29 @@ class DefaultComposeDynamicLoader(composeMethodsAware: ComposeMethodsAware) :
                 Context::class.java
             )
             val compose: @Composable () -> Unit = {
-                AndroidView(factory = { context ->
-                    val view = try {
-                        declaredMethod.invoke(composeMethodInstance, context) as View
-                    } catch (e: InvocationTargetException) {
-                        PurpleLogger.current.d(
-                            TAG,
-                            "IComposeMethods method(:content) invoke failed:" + e.message
-                        )
-                        TextView(context).apply {
-                            text = "compose parse error"
+                AndroidView(
+                    factory = { context ->
+                        val view = runCatching {
+                            declaredMethod.invoke(composeMethodInstance, context) as? View
+                        }.onFailure {
+                            PurpleLogger.current.d(
+                                TAG,
+                                "IComposeMethods method(:content) invoke failed:" + it.message
+                            )
+                        }.getOrNull() ?: run {
+                            TextView(context).apply {
+                                text = "compose parse error"
+                            }
                         }
+                        view
                     }
-                    view
-                })
+                )
             }
             val composeMethodsWrapper = ComposeMethodsWrapper(composeMethodInstance, compose)
             methodsContainer.add(composeMethodsWrapper)
             composeMethodsAware.setMethodsContainer(methodsContainer)
         } catch (e: Exception) {
+            e.printStackTrace()
             PurpleLogger.current.d(TAG, "loadByClass parse error:" + e.message)
         }
     }

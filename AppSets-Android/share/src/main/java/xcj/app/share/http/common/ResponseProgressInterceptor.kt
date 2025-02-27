@@ -3,7 +3,7 @@ package xcj.app.share.http.common
 import okhttp3.Interceptor
 import okhttp3.Response
 import xcj.app.share.base.DataContent
-import xcj.app.web.webserver.base.ProgressListener
+import xcj.app.web.webserver.interfaces.ProgressListener
 
 class ResponseProgressInterceptor(
     private val dataContent: DataContent,

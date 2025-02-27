@@ -87,7 +87,7 @@ include(":share")
 include(":proxy")
 include(":baselineprofile")
 
-//include(":compose_addons")
+include(":compose_addons")
 //include(":binder")
 //include(":purple_native")
 //include(":webrtc")

@@ -30,7 +30,7 @@ object FileUtil {
 
     @JvmStatic
     @SuppressLint("NewApi")
-    fun getPath(context: Context, uri: Uri): String? {
+    suspend fun getPath(context: Context, uri: Uri): String? {
         // check here to KITKAT or new version
         val isNewerThanKitKat = true
         var selection: String? = null
@@ -126,7 +126,7 @@ object FileUtil {
         }
 
 
-        if ("content".equals(uri.getScheme(), ignoreCase = true)) {
+        if ("content".equals(uri.scheme, ignoreCase = true)) {
             if (isGooglePhotosUri(uri)) {
                 return uri.lastPathSegment
             }
@@ -234,7 +234,7 @@ object FileUtil {
             PurpleLogger.current.d(TAG, "File Size:" + file.length(), null)
             inputStream.close()
             outputStream.close()
-            PurpleLogger.current.d(TAG, "File Path:" + file.getPath(), null)
+            PurpleLogger.current.d(TAG, "File Path:" + file.path, null)
         } catch (e: Exception) {
             PurpleLogger.current.d(TAG, "Exception" + e.message, null)
         } finally {
@@ -244,7 +244,7 @@ object FileUtil {
     }
 
     @JvmStatic
-    private fun getFilePathForWhatsApp(context: Context, uri: Uri): String? {
+    private suspend fun getFilePathForWhatsApp(context: Context, uri: Uri): String? {
         return copyFileToInternalStorage(context, uri, null, "whatsapp")
     }
 
@@ -274,22 +274,22 @@ object FileUtil {
 
     @JvmStatic
     private fun isExternalStorageDocument(uri: Uri): Boolean {
-        return "com.android.externalstorage.documents" == uri.getAuthority()
+        return "com.android.externalstorage.documents" == uri.authority
     }
 
     @JvmStatic
     private fun isDownloadsDocument(uri: Uri): Boolean {
-        return "com.android.providers.downloads.documents" == uri.getAuthority()
+        return "com.android.providers.downloads.documents" == uri.authority
     }
 
     @JvmStatic
     private fun isMediaDocument(uri: Uri): Boolean {
-        return "com.android.providers.media.documents" == uri.getAuthority()
+        return "com.android.providers.media.documents" == uri.authority
     }
 
     @JvmStatic
     private fun isGooglePhotosUri(uri: Uri): Boolean {
-        return "com.google.android.apps.photos.content" == uri.getAuthority()
+        return "com.google.android.apps.photos.content" == uri.authority
     }
 
     @JvmStatic
@@ -310,12 +310,12 @@ object FileUtil {
      * @return
      */
     @JvmStatic
-    fun copyFileToInternalStorage(
+    suspend fun copyFileToInternalStorage(
         context: Context,
         uri: Uri,
         pathName: String?,
         newDirName: String?
-    ): String? {
+    ): String? = withContext(Dispatchers.IO) {
         var pathName = pathName
         val cursor = context.contentResolver.query(
             uri, arrayOf<String>(
@@ -328,7 +328,7 @@ object FileUtil {
                 "copyFileToInternalStorage early return, cursor is null",
                 null
             )
-            return null
+            return@withContext null
         }
         /*
      * Get the column indexes of the data in the Cursor,
@@ -343,7 +343,7 @@ object FileUtil {
         //String size = (Long.toString(returnCursor.getLong(sizeIndex)));
         var output: File?
         if (pathName == null) {
-            pathName = context.getFilesDir().getPath()
+            pathName = context.filesDir.path
         }
         if (!TextUtils.isEmpty(newDirName)) {
             val dir = File(pathName + File.separator + newDirName)
@@ -362,7 +362,7 @@ object FileUtil {
                     "copyFileToInternalStorage early return, input stream is null ",
                     null
                 )
-                return null
+                return@withContext null
             }
             val outputStream = FileOutputStream(output)
             var read = 0
@@ -374,7 +374,7 @@ object FileUtil {
 
             inputStream.close()
             outputStream.close()
-            return output.path
+            return@withContext output.path
         } catch (e: Exception) {
             PurpleLogger.current.d(
                 TAG,
@@ -384,7 +384,7 @@ object FileUtil {
         } finally {
             cursor.close()
         }
-        return null
+        return@withContext null
     }
 
     @JvmStatic

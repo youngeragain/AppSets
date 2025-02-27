@@ -11,7 +11,7 @@ import okio.Source
 import okio.buffer
 import xcj.app.share.base.DataContent
 import xcj.app.web.webserver.base.DataProgressInfoPool
-import xcj.app.web.webserver.base.ProgressListener
+import xcj.app.web.webserver.interfaces.ProgressListener
 
 class ProgressResponseBody(
     private val dataContent: DataContent,

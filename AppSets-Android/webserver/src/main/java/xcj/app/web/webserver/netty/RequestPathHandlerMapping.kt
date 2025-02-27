@@ -31,7 +31,7 @@ import xcj.app.starter.util.ContentType
 import xcj.app.web.webserver.base.ContentDownloadN
 import xcj.app.web.webserver.base.DataProgressInfoPool
 import xcj.app.web.webserver.base.InputStreamReadableData
-import xcj.app.web.webserver.base.ProgressListener
+import xcj.app.web.webserver.interfaces.ProgressListener
 import xcj.app.web.webserver.interfaces.ListenersProvider
 import java.io.Closeable
 import java.io.File

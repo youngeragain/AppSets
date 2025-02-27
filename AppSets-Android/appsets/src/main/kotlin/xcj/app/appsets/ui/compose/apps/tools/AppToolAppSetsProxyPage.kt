@@ -5,7 +5,7 @@ import androidx.compose.runtime.Composable
 import xcj.app.compose_share.components.BackActionTopBar
 
 @Composable
-fun AppToolAppSetsProxyComponent(onBackClick: () -> Unit) {
+fun AppToolAppSetsProxyPage(onBackClick: () -> Unit) {
     Column {
         BackActionTopBar(
             onBackClick = onBackClick

@@ -1,6 +1,5 @@
 package xcj.app.appsets.ui.viewmodel
 
-import android.app.Activity.RESULT_OK
 import android.content.Context
 import android.content.Intent
 import androidx.activity.ComponentActivity
@@ -14,7 +13,6 @@ import xcj.app.appsets.server.repository.SearchRepository
 import xcj.app.appsets.server.repository.UserRepository
 import xcj.app.appsets.ui.base.BaseIMViewModel
 import xcj.app.appsets.ui.compose.PageRouteNames
-import xcj.app.appsets.ui.compose.camera.CameraComposeActivity
 import xcj.app.appsets.ui.compose.content_selection.ContentSelectionResults
 import xcj.app.appsets.ui.compose.content_selection.ContentSelectionVarargs
 import xcj.app.appsets.usecase.AppCreationUseCase
@@ -98,20 +96,11 @@ class MainViewModel : BaseIMViewModel() {
     }
 
     fun dispatchActivityResult(context: Context, requestCode: Int, resultCode: Int, data: Intent?) {
-        if (requestCode == CameraComposeActivity.REQUEST_CODE) {
-            if (resultCode == RESULT_OK && data != null) {
-                val providerId = data.getStringExtra(QRCodeUseCase.PROVIDER_ID) ?: return
-                val code = data.getStringExtra(QRCodeUseCase.CODE) ?: return
-                qrCodeUseCase.continueQueryQRCodeStatus(providerId, code)
-            }
-        } else {
-            composeDynamicUseCase.onExternalAARFileSelectActivityResult(
-                context,
-                requestCode,
-                resultCode,
-                data
-            )
+        if (data == null) {
+            return
         }
+        qrCodeUseCase.onActivityResult(context, requestCode, resultCode, data)
+        composeDynamicUseCase.onActivityResult(context, requestCode, resultCode, data)
     }
 
     override fun dispatchContentSelectedResult(
