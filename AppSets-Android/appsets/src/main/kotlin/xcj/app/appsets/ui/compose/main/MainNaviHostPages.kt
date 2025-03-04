@@ -169,12 +169,12 @@ fun MainNaviHostPages(navController: NavHostController) {
     Box {
         DesignNaviHost(
             navController = navController,
-            startDestination = PageRouteNames.AppSetsCenterPage,
+            startDestination = PageRouteNames.AppsCenterPage,
         ) {
 
             publishComposeNaviHostFormedEvent(navController, this)
 
-            composable(PageRouteNames.AppSetsCenterPage) {
+            composable(PageRouteNames.AppsCenterPage) {
                 val context = LocalContext.current
                 val appsUseCase = LocalUseCaseOfApps.current
                 val conversationUseCase = LocalUseCaseOfConversation.current

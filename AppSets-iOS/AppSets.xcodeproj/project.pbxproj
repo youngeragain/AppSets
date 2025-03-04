@@ -141,7 +141,7 @@
 		CCA57E992B39B01C00106A92 /* StartAppsPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCA57E982B39B01C00106A92 /* StartAppsPage.swift */; };
 		CCA57EA12B39B16200106A92 /* UserProfilePage.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCA57EA02B39B16200106A92 /* UserProfilePage.swift */; };
 		CCA57EA52B39B1A200106A92 /* WebPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCA57EA42B39B1A200106A92 /* WebPage.swift */; };
-		CCA57EA82B39B1F000106A92 /* WLANP2PPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCA57EA72B39B1F000106A92 /* WLANP2PPage.swift */; };
+		CCA57EA82B39B1F000106A92 /* SharePage.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCA57EA72B39B1F000106A92 /* SharePage.swift */; };
 		CCA57EAB2B39B65500106A92 /* BackActionTopBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCA57EAA2B39B65500106A92 /* BackActionTopBar.swift */; };
 		CCA57EAF2B39C43B00106A92 /* Screen.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCA57EAE2B39C43B00106A92 /* Screen.swift */; };
 		CCA57EB12B39C5DB00106A92 /* ScreenInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCA57EB02B39C5DB00106A92 /* ScreenInfo.swift */; };
@@ -164,6 +164,48 @@
 		CCA9C9D42C48D52C0013947B /* Triple.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCA9C9D32C48D52C0013947B /* Triple.swift */; };
 		CCA9C9D72C491EB20013947B /* PurpleLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCA9C9D62C491EB20013947B /* PurpleLogger.swift */; };
 		CCB011EE2D153F3900E7C74E /* AppConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCB011ED2D153F2F00E7C74E /* AppConfig.swift */; };
+		CCC9229A2D7476FD0060285A /* ShareMethod.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCC922992D7476F70060285A /* ShareMethod.swift */; };
+		CCC9229C2D74771A0060285A /* HttpShareMethod.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCC9229B2D7477160060285A /* HttpShareMethod.swift */; };
+		CCC9229F2D7477F80060285A /* Lifecycle.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCC9229E2D7477EA0060285A /* Lifecycle.swift */; };
+		CCC922A12D7478520060285A /* SwiftUILifecycle.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCC922A02D7478420060285A /* SwiftUILifecycle.swift */; };
+		CCC922A32D74793E0060285A /* ServerBootStrap.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCC922A22D7479370060285A /* ServerBootStrap.swift */; };
+		CCC922A52D7483370060285A /* Hummingbird in Frameworks */ = {isa = PBXBuildFile; productRef = CCC922A42D7483370060285A /* Hummingbird */; };
+		CCC922A72D7483370060285A /* HummingbirdCore in Frameworks */ = {isa = PBXBuildFile; productRef = CCC922A62D7483370060285A /* HummingbirdCore */; };
+		CCC922A92D7483370060285A /* HummingbirdHTTP2 in Frameworks */ = {isa = PBXBuildFile; productRef = CCC922A82D7483370060285A /* HummingbirdHTTP2 */; };
+		CCC922AB2D7483370060285A /* HummingbirdRouter in Frameworks */ = {isa = PBXBuildFile; productRef = CCC922AA2D7483370060285A /* HummingbirdRouter */; };
+		CCC922AD2D7483370060285A /* HummingbirdTesting in Frameworks */ = {isa = PBXBuildFile; productRef = CCC922AC2D7483370060285A /* HummingbirdTesting */; };
+		CCC922AF2D7483370060285A /* HummingbirdTLS in Frameworks */ = {isa = PBXBuildFile; productRef = CCC922AE2D7483370060285A /* HummingbirdTLS */; };
+		CCC922B12D75825B0060285A /* Discovery.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCC922B02D7582580060285A /* Discovery.swift */; };
+		CCC922B42D75B15E0060285A /* AppSetsShareController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCC922B32D75B1520060285A /* AppSetsShareController.swift */; };
+		CCC922B72D75B9970060285A /* BooleanResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCC922B62D75B9970060285A /* BooleanResponse.swift */; };
+		CCC922BA2D75BBFB0060285A /* ContentInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCC922B92D75BBF90060285A /* ContentInfo.swift */; };
+		CCC922BC2D75BC050060285A /* ContentInfoListWrapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCC922BB2D75BC050060285A /* ContentInfoListWrapper.swift */; };
+		CCC922BF2D75BC280060285A /* ContentInfoListResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCC922BE2D75BC270060285A /* ContentInfoListResponse.swift */; };
+		CCC922C12D75BC9B0060285A /* AppSetsShareService.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCC922C02D75BC9A0060285A /* AppSetsShareService.swift */; };
+		CCC922C42D75BD810060285A /* ShareDevice.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCC922C32D75BD7C0060285A /* ShareDevice.swift */; };
+		CCC922C62D75BDBB0060285A /* DeviceName.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCC922C52D75BDB80060285A /* DeviceName.swift */; };
+		CCC922C82D75BE4F0060285A /* DevcieAddress.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCC922C72D75BE4B0060285A /* DevcieAddress.swift */; };
+		CCC922CA2D75BE630060285A /* DeviceIP.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCC922C92D75BE620060285A /* DeviceIP.swift */; };
+		CCC922CC2D75BF090060285A /* HttpShareDevice.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCC922CB2D75BF000060285A /* HttpShareDevice.swift */; };
+		CCC922CE2D75BFA60060285A /* AppSetsShareServiceImpl.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCC922CD2D75BFA60060285A /* AppSetsShareServiceImpl.swift */; };
+		CCC922D02D75C0360060285A /* FileUploadN.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCC922CF2D75C0340060285A /* FileUploadN.swift */; };
+		CCC922D22D75C05A0060285A /* ContentDownloadN.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCC922D12D75C05A0060285A /* ContentDownloadN.swift */; };
+		CCC922D42D75C09F0060285A /* ContentDownloadNResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCC922D32D75C09B0060285A /* ContentDownloadNResponse.swift */; };
+		CCC922D62D75C7D10060285A /* DeviceInfoResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCC922D52D75C7D10060285A /* DeviceInfoResponse.swift */; };
+		CCC922D92D75D53A0060285A /* NameGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCC922D82D75D5330060285A /* NameGenerator.swift */; };
+		CCC922DB2D75D6510060285A /* VendorUtil.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCC922DA2D75D64E0060285A /* VendorUtil.swift */; };
+		CCC922DE2D76DA9E0060285A /* Color.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCC922DD2D76DA9B0060285A /* Color.swift */; };
+		CCC922E02D76DAA70060285A /* Shape.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCC922DF2D76DAA30060285A /* Shape.swift */; };
+		CCC922E22D76DAAE0060285A /* Type.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCC922E12D76DAAD0060285A /* Type.swift */; };
+		CCC922E42D76DAB60060285A /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCC922E32D76DAB40060285A /* Theme.swift */; };
+		CCC922E62D76DAF00060285A /* ColorSchema.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCC922E52D76DAEA0060285A /* ColorSchema.swift */; };
+		CCC922E82D76E5CE0060285A /* SwiftUITheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCC922E72D76E5CD0060285A /* SwiftUITheme.swift */; };
+		CCC922EA2D76E5EE0060285A /* SwiftUIShapes.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCC922E92D76E5E90060285A /* SwiftUIShapes.swift */; };
+		CCC922EC2D76E60A0060285A /* SwiftUITypography.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCC922EB2D76E6050060285A /* SwiftUITypography.swift */; };
+		CCC922EF2D76E6720060285A /* SwiftUIShape.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCC922EE2D76E66E0060285A /* SwiftUIShape.swift */; };
+		CCC922F12D76E6A70060285A /* SwiftUICornerBasedShape.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCC922F02D76E69E0060285A /* SwiftUICornerBasedShape.swift */; };
+		CCC922F32D7702A00060285A /* UIColorExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCC922F22D7702920060285A /* UIColorExtension.swift */; };
+		CCC922F52D77163E0060285A /* SwiftUISize.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCC922F42D77163B0060285A /* SwiftUISize.swift */; };
 		CCD62ED42C3E9B93009796B0 /* UserInfoUseCase.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCD62ED32C3E9B93009796B0 /* UserInfoUseCase.swift */; };
 		CCD62ED62C3EDAF8009796B0 /* AnyEXT.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCD62ED52C3EDAF8009796B0 /* AnyEXT.swift */; };
 		CCDA66062C33EF8700D9FA27 /* Pair.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCDA66052C33EF8700D9FA27 /* Pair.swift */; };
@@ -324,7 +366,7 @@
 		CCA57E982B39B01C00106A92 /* StartAppsPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StartAppsPage.swift; sourceTree = "<group>"; };
 		CCA57EA02B39B16200106A92 /* UserProfilePage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserProfilePage.swift; sourceTree = "<group>"; };
 		CCA57EA42B39B1A200106A92 /* WebPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebPage.swift; sourceTree = "<group>"; };
-		CCA57EA72B39B1F000106A92 /* WLANP2PPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WLANP2PPage.swift; sourceTree = "<group>"; };
+		CCA57EA72B39B1F000106A92 /* SharePage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharePage.swift; sourceTree = "<group>"; };
 		CCA57EAA2B39B65500106A92 /* BackActionTopBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackActionTopBar.swift; sourceTree = "<group>"; };
 		CCA57EAE2B39C43B00106A92 /* Screen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Screen.swift; sourceTree = "<group>"; };
 		CCA57EB02B39C5DB00106A92 /* ScreenInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenInfo.swift; sourceTree = "<group>"; };
@@ -349,6 +391,42 @@
 		CCA9C9D32C48D52C0013947B /* Triple.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Triple.swift; sourceTree = "<group>"; };
 		CCA9C9D62C491EB20013947B /* PurpleLogger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PurpleLogger.swift; sourceTree = "<group>"; };
 		CCB011ED2D153F2F00E7C74E /* AppConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConfig.swift; sourceTree = "<group>"; };
+		CCC922992D7476F70060285A /* ShareMethod.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareMethod.swift; sourceTree = "<group>"; };
+		CCC9229B2D7477160060285A /* HttpShareMethod.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HttpShareMethod.swift; sourceTree = "<group>"; };
+		CCC9229E2D7477EA0060285A /* Lifecycle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Lifecycle.swift; sourceTree = "<group>"; };
+		CCC922A02D7478420060285A /* SwiftUILifecycle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftUILifecycle.swift; sourceTree = "<group>"; };
+		CCC922A22D7479370060285A /* ServerBootStrap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerBootStrap.swift; sourceTree = "<group>"; };
+		CCC922B02D7582580060285A /* Discovery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Discovery.swift; sourceTree = "<group>"; };
+		CCC922B32D75B1520060285A /* AppSetsShareController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSetsShareController.swift; sourceTree = "<group>"; };
+		CCC922B62D75B9970060285A /* BooleanResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BooleanResponse.swift; sourceTree = "<group>"; };
+		CCC922B92D75BBF90060285A /* ContentInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentInfo.swift; sourceTree = "<group>"; };
+		CCC922BB2D75BC050060285A /* ContentInfoListWrapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentInfoListWrapper.swift; sourceTree = "<group>"; };
+		CCC922BE2D75BC270060285A /* ContentInfoListResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentInfoListResponse.swift; sourceTree = "<group>"; };
+		CCC922C02D75BC9A0060285A /* AppSetsShareService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSetsShareService.swift; sourceTree = "<group>"; };
+		CCC922C32D75BD7C0060285A /* ShareDevice.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareDevice.swift; sourceTree = "<group>"; };
+		CCC922C52D75BDB80060285A /* DeviceName.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceName.swift; sourceTree = "<group>"; };
+		CCC922C72D75BE4B0060285A /* DevcieAddress.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DevcieAddress.swift; sourceTree = "<group>"; };
+		CCC922C92D75BE620060285A /* DeviceIP.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceIP.swift; sourceTree = "<group>"; };
+		CCC922CB2D75BF000060285A /* HttpShareDevice.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HttpShareDevice.swift; sourceTree = "<group>"; };
+		CCC922CD2D75BFA60060285A /* AppSetsShareServiceImpl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSetsShareServiceImpl.swift; sourceTree = "<group>"; };
+		CCC922CF2D75C0340060285A /* FileUploadN.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileUploadN.swift; sourceTree = "<group>"; };
+		CCC922D12D75C05A0060285A /* ContentDownloadN.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentDownloadN.swift; sourceTree = "<group>"; };
+		CCC922D32D75C09B0060285A /* ContentDownloadNResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentDownloadNResponse.swift; sourceTree = "<group>"; };
+		CCC922D52D75C7D10060285A /* DeviceInfoResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceInfoResponse.swift; sourceTree = "<group>"; };
+		CCC922D82D75D5330060285A /* NameGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NameGenerator.swift; sourceTree = "<group>"; };
+		CCC922DA2D75D64E0060285A /* VendorUtil.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VendorUtil.swift; sourceTree = "<group>"; };
+		CCC922DD2D76DA9B0060285A /* Color.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Color.swift; sourceTree = "<group>"; };
+		CCC922DF2D76DAA30060285A /* Shape.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Shape.swift; sourceTree = "<group>"; };
+		CCC922E12D76DAAD0060285A /* Type.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Type.swift; sourceTree = "<group>"; };
+		CCC922E32D76DAB40060285A /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
+		CCC922E52D76DAEA0060285A /* ColorSchema.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorSchema.swift; sourceTree = "<group>"; };
+		CCC922E72D76E5CD0060285A /* SwiftUITheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftUITheme.swift; sourceTree = "<group>"; };
+		CCC922E92D76E5E90060285A /* SwiftUIShapes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftUIShapes.swift; sourceTree = "<group>"; };
+		CCC922EB2D76E6050060285A /* SwiftUITypography.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftUITypography.swift; sourceTree = "<group>"; };
+		CCC922EE2D76E66E0060285A /* SwiftUIShape.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftUIShape.swift; sourceTree = "<group>"; };
+		CCC922F02D76E69E0060285A /* SwiftUICornerBasedShape.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftUICornerBasedShape.swift; sourceTree = "<group>"; };
+		CCC922F22D7702920060285A /* UIColorExtension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIColorExtension.swift; sourceTree = "<group>"; };
+		CCC922F42D77163B0060285A /* SwiftUISize.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftUISize.swift; sourceTree = "<group>"; };
 		CCD62ED32C3E9B93009796B0 /* UserInfoUseCase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserInfoUseCase.swift; sourceTree = "<group>"; };
 		CCD62ED52C3EDAF8009796B0 /* AnyEXT.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnyEXT.swift; sourceTree = "<group>"; };
 		CCDA66052C33EF8700D9FA27 /* Pair.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Pair.swift; sourceTree = "<group>"; };
@@ -366,7 +444,13 @@
 				CC952E7D2B41BC87003EE5C7 /* NIO in Frameworks */,
 				CC952E7F2B41BC87003EE5C7 /* NIOConcurrencyHelpers in Frameworks */,
 				CC952E832B41BC87003EE5C7 /* NIOEmbedded in Frameworks */,
+				CCC922AD2D7483370060285A /* HummingbirdTesting in Frameworks */,
 				5D3E254A98D28BD879D4AC15 /* Pods_AppSets.framework in Frameworks */,
+				CCC922AF2D7483370060285A /* HummingbirdTLS in Frameworks */,
+				CCC922AB2D7483370060285A /* HummingbirdRouter in Frameworks */,
+				CCC922A72D7483370060285A /* HummingbirdCore in Frameworks */,
+				CCC922A92D7483370060285A /* HummingbirdHTTP2 in Frameworks */,
+				CCC922A52D7483370060285A /* Hummingbird in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -575,6 +659,7 @@
 			children = (
 				CC40FECE2C3B04A6008493B3 /* DesignResponse.swift */,
 				CC40FED92C3CF8BE008493B3 /* StringResponse.swift */,
+				CCC922B62D75B9970060285A /* BooleanResponse.swift */,
 				CC40FED02C3B0F40008493B3 /* Methods.swift */,
 			);
 			path = http;
@@ -900,12 +985,16 @@
 			path = web;
 			sourceTree = "<group>";
 		};
-		CCA57EA62B39B1AD00106A92 /* wlanp2p */ = {
+		CCA57EA62B39B1AD00106A92 /* share */ = {
 			isa = PBXGroup;
 			children = (
-				CCA57EA72B39B1F000106A92 /* WLANP2PPage.swift */,
+				CCC922D72D75D52B0060285A /* util */,
+				CCC9229D2D7477830060285A /* mock */,
+				CCC922982D7476D70060285A /* http */,
+				CCC922972D7476CD0060285A /* base */,
+				CCA57EA72B39B1F000106A92 /* SharePage.swift */,
 			);
-			path = wlanp2p;
+			path = share;
 			sourceTree = "<group>";
 		};
 		CCA57EA92B39B63100106A92 /* components */ = {
@@ -929,6 +1018,7 @@
 		CCA9C9B92C44C53F0013947B /* swiftui */ = {
 			isa = PBXGroup;
 			children = (
+				CCC922DC2D76DA780060285A /* theme */,
 				CCA9C9BA2C44C56D0013947B /* groups */,
 				CCA57E712B3753EA00106A92 /* start */,
 				CCA57E832B39AB8100106A92 /* apps */,
@@ -943,7 +1033,7 @@
 				CCA57E972B39AFBA00106A92 /* privacy */,
 				CCA57E9B2B39B10200106A92 /* user */,
 				CCA57EA22B39B17E00106A92 /* web */,
-				CCA57EA62B39B1AD00106A92 /* wlanp2p */,
+				CCA57EA62B39B1AD00106A92 /* share */,
 				CCA57EA92B39B63100106A92 /* components */,
 			);
 			path = swiftui;
@@ -1005,9 +1095,119 @@
 			path = settings;
 			sourceTree = "<group>";
 		};
+		CCC922972D7476CD0060285A /* base */ = {
+			isa = PBXGroup;
+			children = (
+				CCC922D12D75C05A0060285A /* ContentDownloadN.swift */,
+				CCC922CF2D75C0340060285A /* FileUploadN.swift */,
+				CCC922CB2D75BF000060285A /* HttpShareDevice.swift */,
+				CCC922C92D75BE620060285A /* DeviceIP.swift */,
+				CCC922C72D75BE4B0060285A /* DevcieAddress.swift */,
+				CCC922C52D75BDB80060285A /* DeviceName.swift */,
+				CCC922C32D75BD7C0060285A /* ShareDevice.swift */,
+				CCC922992D7476F70060285A /* ShareMethod.swift */,
+			);
+			path = base;
+			sourceTree = "<group>";
+		};
+		CCC922982D7476D70060285A /* http */ = {
+			isa = PBXGroup;
+			children = (
+				CCC922BD2D75BC1F0060285A /* response */,
+				CCC922B82D75BBE90060285A /* model */,
+				CCC922B52D75B16B0060285A /* service */,
+				CCC922B22D75B1460060285A /* controller */,
+				CCC922B02D7582580060285A /* Discovery.swift */,
+				CCC922A22D7479370060285A /* ServerBootStrap.swift */,
+				CCC9229B2D7477160060285A /* HttpShareMethod.swift */,
+			);
+			path = http;
+			sourceTree = "<group>";
+		};
+		CCC9229D2D7477830060285A /* mock */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = mock;
+			sourceTree = "<group>";
+		};
+		CCC922B22D75B1460060285A /* controller */ = {
+			isa = PBXGroup;
+			children = (
+				CCC922B32D75B1520060285A /* AppSetsShareController.swift */,
+			);
+			path = controller;
+			sourceTree = "<group>";
+		};
+		CCC922B52D75B16B0060285A /* service */ = {
+			isa = PBXGroup;
+			children = (
+				CCC922C02D75BC9A0060285A /* AppSetsShareService.swift */,
+				CCC922CD2D75BFA60060285A /* AppSetsShareServiceImpl.swift */,
+			);
+			path = service;
+			sourceTree = "<group>";
+		};
+		CCC922B82D75BBE90060285A /* model */ = {
+			isa = PBXGroup;
+			children = (
+				CCC922BB2D75BC050060285A /* ContentInfoListWrapper.swift */,
+				CCC922B92D75BBF90060285A /* ContentInfo.swift */,
+			);
+			path = model;
+			sourceTree = "<group>";
+		};
+		CCC922BD2D75BC1F0060285A /* response */ = {
+			isa = PBXGroup;
+			children = (
+				CCC922D32D75C09B0060285A /* ContentDownloadNResponse.swift */,
+				CCC922BE2D75BC270060285A /* ContentInfoListResponse.swift */,
+				CCC922D52D75C7D10060285A /* DeviceInfoResponse.swift */,
+			);
+			path = response;
+			sourceTree = "<group>";
+		};
+		CCC922D72D75D52B0060285A /* util */ = {
+			isa = PBXGroup;
+			children = (
+				CCC922D82D75D5330060285A /* NameGenerator.swift */,
+			);
+			path = util;
+			sourceTree = "<group>";
+		};
+		CCC922DC2D76DA780060285A /* theme */ = {
+			isa = PBXGroup;
+			children = (
+				CCC922ED2D76E64B0060285A /* foundation */,
+				CCC922E32D76DAB40060285A /* Theme.swift */,
+				CCC922E12D76DAAD0060285A /* Type.swift */,
+				CCC922DF2D76DAA30060285A /* Shape.swift */,
+				CCC922DD2D76DA9B0060285A /* Color.swift */,
+			);
+			path = theme;
+			sourceTree = "<group>";
+		};
+		CCC922ED2D76E64B0060285A /* foundation */ = {
+			isa = PBXGroup;
+			children = (
+				CCC922F22D7702920060285A /* UIColorExtension.swift */,
+				CCC922F02D76E69E0060285A /* SwiftUICornerBasedShape.swift */,
+				CCC922EE2D76E66E0060285A /* SwiftUIShape.swift */,
+				CCC922E52D76DAEA0060285A /* ColorSchema.swift */,
+				CCC922EB2D76E6050060285A /* SwiftUITypography.swift */,
+				CCC922E92D76E5E90060285A /* SwiftUIShapes.swift */,
+				CCC922E72D76E5CD0060285A /* SwiftUITheme.swift */,
+				CCC922F42D77163B0060285A /* SwiftUISize.swift */,
+			);
+			path = foundation;
+			sourceTree = "<group>";
+		};
 		CCDA66042C33EF6D00D9FA27 /* util */ = {
 			isa = PBXGroup;
 			children = (
+				CCC922DA2D75D64E0060285A /* VendorUtil.swift */,
+				CCC922A02D7478420060285A /* SwiftUILifecycle.swift */,
+				CCC9229E2D7477EA0060285A /* Lifecycle.swift */,
 				CCA9C9D92C491F310013947B /* log */,
 				CCA9C9D82C491EE60013947B /* lang */,
 				CCA9C9D52C491E260013947B /* extension */,
@@ -1054,6 +1254,12 @@
 				CC952E802B41BC87003EE5C7 /* NIOCore */,
 				CC952E822B41BC87003EE5C7 /* NIOEmbedded */,
 				CC952E842B41BC87003EE5C7 /* NIOFoundationCompat */,
+				CCC922A42D7483370060285A /* Hummingbird */,
+				CCC922A62D7483370060285A /* HummingbirdCore */,
+				CCC922A82D7483370060285A /* HummingbirdHTTP2 */,
+				CCC922AA2D7483370060285A /* HummingbirdRouter */,
+				CCC922AC2D7483370060285A /* HummingbirdTesting */,
+				CCC922AE2D7483370060285A /* HummingbirdTLS */,
 			);
 			productName = AppSets;
 			productReference = CC9517FB2B27393E0054E257 /* AppSets.app */;
@@ -1130,6 +1336,9 @@
 			mainGroup = CC9517F22B27393E0054E257;
 			packageReferences = (
 				CC952E7B2B41BC87003EE5C7 /* XCRemoteSwiftPackageReference "swift-nio" */,
+				CCC922902D7466920060285A /* XCRemoteSwiftPackageReference "swift-collections" */,
+				CCC922912D74669F0060285A /* XCRemoteSwiftPackageReference "swift-atomics" */,
+				CCC922962D7472A70060285A /* XCRemoteSwiftPackageReference "hummingbird" */,
 			);
 			productRefGroup = CC9517FC2B27393E0054E257 /* Products */;
 			projectDirPath = "";
@@ -1222,20 +1431,29 @@
 				CCA57E8F2B39ADA200106A92 /* SignUpPage.swift in Sources */,
 				CC40FEDC2C3CFBC3008493B3 /* DesignHttp.swift in Sources */,
 				CCB011EE2D153F3900E7C74E /* AppConfig.swift in Sources */,
+				CCC922B12D75825B0060285A /* Discovery.swift in Sources */,
 				CC40FED82C3CF445008493B3 /* AppSetsApiImpl.swift in Sources */,
 				CCE3EB2F2CB51BF700F86323 /* Result.swift in Sources */,
 				CCD62ED62C3EDAF8009796B0 /* AnyEXT.swift in Sources */,
+				CCC922E02D76DAA70060285A /* Shape.swift in Sources */,
+				CCC922EF2D76E6720060285A /* SwiftUIShape.swift in Sources */,
+				CCC922BF2D75BC280060285A /* ContentInfoListResponse.swift in Sources */,
 				CC40FED42C3CF356008493B3 /* AppSetsRepository.swift in Sources */,
 				CCA9C9B42C438CCF0013947B /* ImMessageDesignType.swift in Sources */,
 				CCA57E962B39AF1B00106A92 /* SettingsPage.swift in Sources */,
 				CC40FEF92C3D26FB008493B3 /* Session.swift in Sources */,
 				CC04BF2B2C4256A7005B7A11 /* UserInfoDao.swift in Sources */,
+				CCC922C12D75BC9B0060285A /* AppSetsShareService.swift in Sources */,
+				CCC922DE2D76DA9E0060285A /* Color.swift in Sources */,
 				CC667FE02C36DC4A00DEBAC0 /* UserLoginUseCase.swift in Sources */,
+				CCC922F52D77163E0060285A /* SwiftUISize.swift in Sources */,
 				CC04BF1B2C418237005B7A11 /* UserChatGroupInfosResponse.swift in Sources */,
 				CC40FF132C3D4C74008493B3 /* InputSelector.swift in Sources */,
 				CCA9C9CC2C44EE0A0013947B /* BaseApiImpl.swift in Sources */,
 				CCA9C9D22C457CBD0013947B /* StartUseCase.swift in Sources */,
 				CCD62ED42C3E9B93009796B0 /* UserInfoUseCase.swift in Sources */,
+				CCC922BC2D75BC050060285A /* ContentInfoListWrapper.swift in Sources */,
+				CCC922F32D7702A00060285A /* UIColorExtension.swift in Sources */,
 				CC04BF222C41848A005B7A11 /* WorkerData.swift in Sources */,
 				CC04BF4B2C429295005B7A11 /* NowSpaceContentUseCase.swift in Sources */,
 				CCA57E742B37545D00106A92 /* PinedAppsComponent.swift in Sources */,
@@ -1243,11 +1461,15 @@
 				CC04BF172C413135005B7A11 /* AppToolsPage.swift in Sources */,
 				CCA57E942B39AF0A00106A92 /* MediaFallPage.swift in Sources */,
 				CC40FF092C3D3A3A008493B3 /* RabbitMQBrokerProperty.swift in Sources */,
+				CCC922D42D75C09F0060285A /* ContentDownloadNResponse.swift in Sources */,
+				CCC922CC2D75BF090060285A /* HttpShareDevice.swift in Sources */,
 				CC667FE92C36DDCA00DEBAC0 /* ModuleConstant.swift in Sources */,
+				CCC922BA2D75BBFB0060285A /* ContentInfo.swift in Sources */,
 				CC0DB1002C37BA7D004CB0C8 /* LocalDataProvider.swift in Sources */,
 				CC9518012B27393E0054E257 /* MainPage.swift in Sources */,
 				CC40FF0F2C3D3AE3008493B3 /* BrokerTest.swift in Sources */,
 				CC40FEDA2C3CF8BE008493B3 /* StringResponse.swift in Sources */,
+				CCC922D22D75C05A0060285A /* ContentDownloadN.swift in Sources */,
 				CC40FECC2C3B03EE008493B3 /* AppSetsApi.swift in Sources */,
 				CC04BF0E2C4066DA005B7A11 /* LastSyncWorker.swift in Sources */,
 				CC40FEF32C3D1D78008493B3 /* StringEXT.swift in Sources */,
@@ -1258,6 +1480,8 @@
 				CC667FF22C36EB1300DEBAC0 /* LocalAccountManager.swift in Sources */,
 				CCA9C9CA2C44EC350013947B /* ScreensResponse.swift in Sources */,
 				CC04BEF32C3FEB33005B7A11 /* ContextImpl.swift in Sources */,
+				CCC9229F2D7477F80060285A /* Lifecycle.swift in Sources */,
+				CCC922CA2D75BE630060285A /* DeviceIP.swift in Sources */,
 				CC40FEE22C3D09BB008493B3 /* UserApiImpl.swift in Sources */,
 				CCA57E6E2B3745B200106A92 /* MediaPlaybackUseCase.swift in Sources */,
 				CC40FEFD2C3D27A6008493B3 /* ImMessage.swift in Sources */,
@@ -1275,6 +1499,7 @@
 				CCA57E6C2B37439200106A92 /* MediaPage.swift in Sources */,
 				CC11CE742B2DE332005A96AB /* AppsCenterPage.swift in Sources */,
 				CC40FF172C3D556B008493B3 /* Application.swift in Sources */,
+				CCC922E22D76DAAE0060285A /* Type.swift in Sources */,
 				CC1906E42C3F9D9D00A95609 /* PrivacyPage.swift in Sources */,
 				CC667FED2C36DFFE00DEBAC0 /* StaticProvider.swift in Sources */,
 				CC667FFA2C36ED2200DEBAC0 /* Bio.swift in Sources */,
@@ -1284,7 +1509,9 @@
 				CC04BF432C426C3F005B7A11 /* MockTables.swift in Sources */,
 				CC1906DC2C3F84CD00A95609 /* ObservableList.swift in Sources */,
 				CCA57E782B375A2F00106A92 /* ReversedSpaceComponent.swift in Sources */,
+				CCC922B42D75B15E0060285A /* AppSetsShareController.swift in Sources */,
 				CC40FEE82C3D1121008493B3 /* APISuffix.swift in Sources */,
+				CCC922F12D76E6A70060285A /* SwiftUICornerBasedShape.swift in Sources */,
 				CCA9C9C62C44CDFE0013947B /* SpotLightResponse.swift in Sources */,
 				CC04BEFA2C3FF3FF005B7A11 /* IBinder.swift in Sources */,
 				CC667FE22C36DCB000DEBAC0 /* Context.swift in Sources */,
@@ -1295,23 +1522,29 @@
 				CCDA66062C33EF8700D9FA27 /* Pair.swift in Sources */,
 				CC04BF0B2C40213D005B7A11 /* Mockable.swift in Sources */,
 				CCA57E762B37570700106A92 /* RecommendItemsComponent.swift in Sources */,
+				CCC922D92D75D53A0060285A /* NameGenerator.swift in Sources */,
 				CC04BF2D2C4256B8005B7A11 /* GroupInfoDao.swift in Sources */,
 				CC04BF3F2C4268EA005B7A11 /* UserInfoRepository.swift in Sources */,
 				CC04BEF82C3FEF7A005B7A11 /* Intent.swift in Sources */,
 				CC04BF092C4020F9005B7A11 /* MockIOS.swift in Sources */,
-				CCA57EA82B39B1F000106A92 /* WLANP2PPage.swift in Sources */,
+				CCA57EA82B39B1F000106A92 /* SharePage.swift in Sources */,
 				CCA57EA52B39B1A200106A92 /* WebPage.swift in Sources */,
 				CC04BF312C4256F8005B7A11 /* UserRelation.swift in Sources */,
 				CC04BF3D2C425A16005B7A11 /* MockDatabase.swift in Sources */,
+				CCC922A12D7478520060285A /* SwiftUILifecycle.swift in Sources */,
+				CCC9229C2D74771A0060285A /* HttpShareMethod.swift in Sources */,
 				CCA57E702B3745DB00106A92 /* RemotePlayer.swift in Sources */,
 				CC1906DE2C3F8EA600A95609 /* LoginInterceptorPage.swift in Sources */,
 				CC40FF012C3D29E6008493B3 /* MessageFromInfo.swift in Sources */,
 				CCA57EBD2B3C6EE000106A92 /* ScreenList.swift in Sources */,
 				CC9518672B289E620054E257 /* OutSidePage.swift in Sources */,
 				CC04BEFE2C400EBC005B7A11 /* ScreenDetailsPage.swift in Sources */,
+				CCC922EC2D76E60A0060285A /* SwiftUITypography.swift in Sources */,
 				CC04BEEF2C3FB5A5005B7A11 /* UserInfoResponse.swift in Sources */,
 				CC1906E22C3F965500A95609 /* LocalCompositions.swift in Sources */,
+				CCC922D62D75C7D10060285A /* DeviceInfoResponse.swift in Sources */,
 				CC40FEF52C3D2592008493B3 /* Resources.swift in Sources */,
+				CCC922A32D74793E0060285A /* ServerBootStrap.swift in Sources */,
 				CC04BF022C4013D0005B7A11 /* SearchUseCase.swift in Sources */,
 				CCA57E822B37625E00106A92 /* WordOfDayComponent.swift in Sources */,
 				CC04BEF62C3FEB6C005B7A11 /* MainService.swift in Sources */,
@@ -1322,6 +1555,8 @@
 				CCA57E682B3723F900106A92 /* PageRouteNameProvider.swift in Sources */,
 				CC11CE782B2DEC7D005A96AB /* SearchPage.swift in Sources */,
 				CC9517FF2B27393E0054E257 /* AppSetsApp.swift in Sources */,
+				CCC922C82D75BE4F0060285A /* DevcieAddress.swift in Sources */,
+				CCC922D02D75C0360060285A /* FileUploadN.swift in Sources */,
 				CCA9C9B82C439FDC0013947B /* RMQConstants.swift in Sources */,
 				CC04BF492C428ADF005B7A11 /* FlatImMessageRepository.swift in Sources */,
 				CCA9C9D42C48D52C0013947B /* Triple.swift in Sources */,
@@ -1329,12 +1564,16 @@
 				CC04BF122C4115A6005B7A11 /* ServerSyncWorker.swift in Sources */,
 				CC40FEE42C3D0C15008493B3 /* DeviceInfoProvider.swift in Sources */,
 				CCA9C9C02C44C73B0013947B /* ApplicationsResponse.swift in Sources */,
+				CCC922E62D76DAF00060285A /* ColorSchema.swift in Sources */,
+				CCC922CE2D75BFA60060285A /* AppSetsShareServiceImpl.swift in Sources */,
 				CC40FF0B2C3D3A53008493B3 /* RabbitMQBrokerConfig.swift in Sources */,
 				CC04BF242C4185A8005B7A11 /* WorkerParameters.swift in Sources */,
 				CC04BF002C40116F005B7A11 /* ScreenEditPage.swift in Sources */,
 				CC1906E82C3FA27500A95609 /* AppDetailsPage.swift in Sources */,
 				CC667FEF2C36E2E800DEBAC0 /* Exceptions.swift in Sources */,
 				CCA57E802B37609E00106A92 /* PopulateSearchComponent.swift in Sources */,
+				CCC922C62D75BDBB0060285A /* DeviceName.swift in Sources */,
+				CCC922C42D75BD810060285A /* ShareDevice.swift in Sources */,
 				CC40FF152C3D5311008493B3 /* GroupInfo.swift in Sources */,
 				CC667FEB2C36DE5A00DEBAC0 /* PurpleLoggerForIOS.swift in Sources */,
 				CCA57E922B39AED900106A92 /* ConversationDetailsPage.swift in Sources */,
@@ -1346,11 +1585,15 @@
 				CC4C36172C33A7070099EA4A /* RabbitMQBroker.swift in Sources */,
 				CC9518652B289D450054E257 /* StartPage.swift in Sources */,
 				CC40FEEB2C3D11FB008493B3 /* MD5Helper.swift in Sources */,
+				CCC9229A2D7476FD0060285A /* ShareMethod.swift in Sources */,
 				CC40FEE62C3D0EA0008493B3 /* ApiDesignEncodeStr.swift in Sources */,
+				CCC922EA2D76E5EE0060285A /* SwiftUIShapes.swift in Sources */,
 				CC1906EA2C3FA29200A95609 /* CreateAppPage.swift in Sources */,
 				CCA57E7C2B375BFF00106A92 /* BingWallpaperComponent.swift in Sources */,
 				CC11CE762B2DE707005A96AB /* StandardSearchBar.swift in Sources */,
+				CCC922E42D76DAB60060285A /* Theme.swift in Sources */,
 				CCA57E992B39B01C00106A92 /* StartAppsPage.swift in Sources */,
+				CCC922B72D75B9970060285A /* BooleanResponse.swift in Sources */,
 				CC40FECF2C3B04A6008493B3 /* DesignResponse.swift in Sources */,
 				CCA57EAB2B39B65500106A92 /* BackActionTopBar.swift in Sources */,
 				CC04BF2F2C4256C4005B7A11 /* UserRelationDao.swift in Sources */,
@@ -1360,10 +1603,12 @@
 				CCA9C9C22C44C89C0013947B /* AppsUseCase.swift in Sources */,
 				CC04BF412C426AF9005B7A11 /* GroupInfoRepository.swift in Sources */,
 				CC04BF142C4115B5005B7A11 /* LocalSyncWorker.swift in Sources */,
+				CCC922DB2D75D6510060285A /* VendorUtil.swift in Sources */,
 				CCA9C9C42C44CA4C0013947B /* SpotLight.swift in Sources */,
 				CCA9C9B62C439CF40013947B /* AppSettings.swift in Sources */,
 				CC04BF1D2C418393005B7A11 /* ListenableWorker.swift in Sources */,
 				CC4C36152C33A3070099EA4A /* MessageBroker.swift in Sources */,
+				CCC922E82D76E5CE0060285A /* SwiftUITheme.swift in Sources */,
 				CCA57EC12B3DA67000106A92 /* MainViewModel.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1585,6 +1830,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"AppSets/Preview Content\"";
+				DEVELOPMENT_TEAM = U6CFD85HNG;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = AppSets/Info.plist;
@@ -1748,8 +1994,32 @@
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/apple/swift-nio.git";
 			requirement = {
-				kind = exactVersion;
-				version = 2.62.0;
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.62.0;
+			};
+		};
+		CCC922902D7466920060285A /* XCRemoteSwiftPackageReference "swift-collections" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/apple/swift-collections.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.1.4;
+			};
+		};
+		CCC922912D74669F0060285A /* XCRemoteSwiftPackageReference "swift-atomics" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/apple/swift-atomics.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.2.0;
+			};
+		};
+		CCC922962D7472A70060285A /* XCRemoteSwiftPackageReference "hummingbird" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/hummingbird-project/hummingbird.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.9.0;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
@@ -1779,6 +2049,36 @@
 			isa = XCSwiftPackageProductDependency;
 			package = CC952E7B2B41BC87003EE5C7 /* XCRemoteSwiftPackageReference "swift-nio" */;
 			productName = NIOFoundationCompat;
+		};
+		CCC922A42D7483370060285A /* Hummingbird */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = CCC922962D7472A70060285A /* XCRemoteSwiftPackageReference "hummingbird" */;
+			productName = Hummingbird;
+		};
+		CCC922A62D7483370060285A /* HummingbirdCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = CCC922962D7472A70060285A /* XCRemoteSwiftPackageReference "hummingbird" */;
+			productName = HummingbirdCore;
+		};
+		CCC922A82D7483370060285A /* HummingbirdHTTP2 */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = CCC922962D7472A70060285A /* XCRemoteSwiftPackageReference "hummingbird" */;
+			productName = HummingbirdHTTP2;
+		};
+		CCC922AA2D7483370060285A /* HummingbirdRouter */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = CCC922962D7472A70060285A /* XCRemoteSwiftPackageReference "hummingbird" */;
+			productName = HummingbirdRouter;
+		};
+		CCC922AC2D7483370060285A /* HummingbirdTesting */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = CCC922962D7472A70060285A /* XCRemoteSwiftPackageReference "hummingbird" */;
+			productName = HummingbirdTesting;
+		};
+		CCC922AE2D7483370060285A /* HummingbirdTLS */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = CCC922962D7472A70060285A /* XCRemoteSwiftPackageReference "hummingbird" */;
+			productName = HummingbirdTLS;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

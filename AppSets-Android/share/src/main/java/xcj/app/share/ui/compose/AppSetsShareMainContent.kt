@@ -1718,7 +1718,7 @@ fun ShareDeviceSmallComponent(modifier: Modifier, shareDevice: ShareDevice) {
             painter = painterResource(deviceIconResource),
             contentDescription = null
         )
-        val nikeName = shareDevice.deviceName.nikeName
+        val nikeName = shareDevice.deviceName.nickName
         if (!nikeName.isNullOrEmpty()) {
             Text(
                 text = nikeName,
@@ -1767,7 +1767,7 @@ fun ShareDeviceMiddleComponent(modifier: Modifier, shareDevice: ShareDevice) {
             painter = painterResource(deviceIconResource),
             contentDescription = null
         )
-        val nikeName = shareDevice.deviceName.nikeName
+        val nikeName = shareDevice.deviceName.nickName
         if (!nikeName.isNullOrEmpty()) {
             Text(
                 text = nikeName,
@@ -1815,7 +1815,7 @@ fun ShareDeviceNormalComponent(modifier: Modifier, shareDevice: ShareDevice) {
             modifier = Modifier,
             resource = deviceIconResource
         )
-        val nikeName = shareDevice.deviceName.nikeName
+        val nikeName = shareDevice.deviceName.nickName
         if (!nikeName.isNullOrEmpty()) {
             Text(
                 text = nikeName,

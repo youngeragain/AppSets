@@ -11,7 +11,7 @@ struct PageRouteNameProvider {
     static let PrivacyPage = "Others/PrivacyPage"
     static let StartPage = "Main/StartPage"
     static let StartAppsPage = "Main/StartAppsPage"
-    static let AppsPage = "Main/AppsPage"
+    static let AppsCenterPage = "Main/AppsCenterPage"
     static let OutSidePage = "Main/OutSidePage"
     static let ConversationOverviewPage = "Main/ConversationOverviewPage"
     static let ConversationDetailsPage = "Main/ConversationDetailsPage"

@@ -62,6 +62,9 @@ dependencies {
     api(libs.androidx.navigation.ui.ktx)
     api(libs.androidx.navigation.compose)
 
+    api(libs.haze)
+    api(libs.haze.materials)
+
     testImplementation(composeBom)
     androidTestImplementation(composeBom)
     androidTestImplementation(libs.androidx.ui.test.junit4)

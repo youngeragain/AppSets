@@ -55,7 +55,7 @@ struct ConversationDetailsPage: View {
                             Text(ImMessageStatic.readableContent(message) ?? "")
                         }
                         .padding(10)
-                        .background(Color(UIColor.separator))
+                        .background(Theme.colorSchema.outline)
                         .clipShape(RoundedRectangle(cornerRadius: 12))
                     }
 
@@ -114,7 +114,7 @@ struct ConversationDetailsPage: View {
                                     placeholder: {
                                         Circle()
                                             .frame(width: 16, height: 16, alignment: .center)
-                                            .foregroundColor(Color(UIColor.separator))
+                                            .foregroundColor(Theme.colorSchema.outline)
                                     }
                                 )
                                 Text(session.imObj.name).font(.system(size: 10)).lineLimit(1)
@@ -125,7 +125,7 @@ struct ConversationDetailsPage: View {
                                     RoundedRectangle(cornerRadius: 24, style: .continuous)
                                         .stroke()
                                         .cornerRadius(24)
-                                        .foregroundColor(Color(UIColor.separator))
+                                        .foregroundColor(Theme.colorSchema.outline)
                                 }
                             ).onTapGesture {
                                 sessionSearchKeywords = ""
@@ -188,20 +188,20 @@ struct ConversationDetailsPage: View {
                                     })
                             }
                         }
-                        Divider()
+                        Divider().foregroundColor(Theme.colorSchema.outline)
                         HStack(spacing: 12) {
                             SwiftUI.Image("drawable/add_circle-add_circle_symbol")
                                 .resizable()
                                 .scaledToFit()
                                 .fontWeight(.light)
                                 .frame(width: 20, height: 20)
-                                .foregroundColor(Color(UIColor.separator))
+                                .foregroundColor(Theme.colorSchema.primary)
                             SwiftUI.Image("drawable/mic-mic_symbol")
                                 .resizable()
                                 .scaledToFit()
                                 .fontWeight(.light)
                                 .frame(width: 20, height: 20)
-                                .foregroundColor(Color(UIColor.separator))
+                                .foregroundColor(Theme.colorSchema.primary)
                             Spacer()
                         }.padding(.init(top: 0, leading: 12, bottom: 24, trailing: 12))
                     }

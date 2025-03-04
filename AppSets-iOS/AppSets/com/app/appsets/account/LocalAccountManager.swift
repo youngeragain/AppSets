@@ -14,9 +14,9 @@ enum LoginStatusState{
     
     case TempLogged(userInfo:UserInfo, token:String)
     
-    case NotLogged(UserInfo:UserInfo)
+    case NotLogged(userInfo:UserInfo)
     
-    case Expired(UserInfo:UserInfo)
+    case Expired(userInfo:UserInfo)
     
     case LoggingIn(useInfo:UserInfo)
     
@@ -46,7 +46,7 @@ class LocalAccountManager: ObservableObject {
         
     }
 
-    @Published var loginStatusState:LoginStatusState = LoginStatusState.NotLogged(UserInfo:UserInfo.defaultUser())
+    @Published var loginStatusState:LoginStatusState = LoginStatusState.NotLogged(userInfo:UserInfo.defaultUser())
     
     var userInfo:UserInfo {
         get{
@@ -161,7 +161,7 @@ class LocalAccountManager: ObservableObject {
     
     func onUserLogout(by: String = LOGOUT_BY_MANUALLY){
         PurpleLogger.current.d(LocalAccountManager.TAG, "onUseLogout, by:\(by)")
-        loginStatusState = LoginStatusState.NotLogged(UserInfo: UserInfo.defaultUser())
+        loginStatusState = LoginStatusState.NotLogged(userInfo: UserInfo.defaultUser())
         LocalMessager.post(LocalAccountManager.MESSAGE_KEY_ON_LOGOUT_ACTION, by)
         LocalDataProvider.clear()
         MockDatabase.Instance.clearAllTables()

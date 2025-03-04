@@ -8,18 +8,20 @@
 import SwiftUI
 
 struct AppsCenterPage: View {
-    
+    private static let TAG = "AppsCenterPage"
+
     @ObservedObject var appsUseCase: AppsUseCase
-    
+
     let onBioClickListener: (any Bio) -> Void
-    
+
     init(appsUseCase: AppsUseCase, onBioClick: @escaping (any Bio) -> Void) {
         self.appsUseCase = appsUseCase
-        self.onBioClickListener = onBioClick
+        onBioClickListener = onBioClick
+        PurpleLogger.current.d(AppsCenterPage.TAG, "init")
     }
-    
+
     func ApplicationItem(_ application: Application) -> some View {
-        VStack(alignment: .center, spacing: 12){
+        VStack(alignment: .center, spacing: 12) {
             AsyncImage(
                 url: URL(string: application.iconUrl ?? ""),
                 content: { image in
@@ -27,33 +29,33 @@ struct AppsCenterPage: View {
                         .resizable()
                         .scaledToFit()
                         .frame(width: 68, height: 68, alignment: .center)
-                        .clipShape(RoundedRectangle(cornerRadius: 16))
+                        .clipShape(RoundedRectangle(cornerRadius: 24))
                 },
                 placeholder: {
-                    RoundedRectangle(cornerRadius: 16)
+                    RoundedRectangle(cornerRadius: 24)
                         .frame(width: 68, height: 68, alignment: .center)
-                        .foregroundColor(Color(UIColor.separator))
+                        .foregroundColor(Theme.colorSchema.outline)
                 }
             )
             Text(application.name ?? "")
                 .frame(maxWidth: 78)
                 .font(.system(size: 12))
                 .lineLimit(2)
-        }.padding(.init(top: 8, leading: 8, bottom: 8, trailing: 8)).onTapGesture {
+        }.padding(.init(top: 12, leading: 12, bottom: 12, trailing: 12)).onTapGesture {
             onBioClickListener(application)
         }
     }
-    
+
     var body: some View {
-        VStack{
-            ScrollView(.vertical){
-                Spacer().frame(height: 68)
-                VStack(spacing: 12){
-                    ForEach(appsUseCase.applications.indices, id:\.self) { vIndex in
-                        ScrollView(.horizontal){
-                            HStack(spacing: 12){
+        VStack {
+            ScrollView(.vertical) {
+                Spacer().frame(height: 52)
+                VStack(spacing: 12) {
+                    ForEach(appsUseCase.applications.indices, id: \.self) { vIndex in
+                        ScrollView(.horizontal) {
+                            HStack(spacing: 12) {
                                 let appCategory = appsUseCase.applications[vIndex]
-                                ForEach(appCategory.applications.indices, id:\.self){ hIndex in
+                                ForEach(appCategory.applications.indices, id: \.self) { hIndex in
                                     let application = appCategory.applications[hIndex]
                                     ApplicationItem(application)
                                 }
@@ -63,7 +65,6 @@ struct AppsCenterPage: View {
                 }
                 Spacer().frame(height: 128)
             }.scrollIndicators(.hidden)
-           
         }
         .frame(minWidth: 0, maxWidth: .infinity, minHeight: 0, maxHeight: .infinity)
         .edgesIgnoringSafeArea(.all)
@@ -76,8 +77,7 @@ struct AppsCenterPage: View {
 #Preview {
     AppsCenterPage(
         appsUseCase: AppsUseCase(),
-        onBioClick: { bio in
-                
+        onBioClick: { _ in
         }
     )
 }

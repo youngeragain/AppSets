@@ -24,38 +24,45 @@ struct Screen: View {
                 ScreenPictures(pictures: screenInfo.mediaFileUrls ?? [])
                 if let screenContent = screenInfo.screenContent {
                     if(!screenContent.isEmpty){
-                        Text(screenContent).padding(.init(top: 0, leading: 14, bottom: 0, trailing: 0))
+                        Text(screenContent)
+                            .padding(.init(top: 0, leading: 14, bottom: 0, trailing: 0))
                     }
                 }
                 if let associateTopics = screenInfo.associateTopics {
                     if (!associateTopics.isEmpty) {
-                        Text(associateTopics).padding(.init(top: 0, leading: 14, bottom: 0, trailing: 0)).font(.system(size: 12))
+                        Text(associateTopics)
+                            .padding(.init(top: 0, leading: 14, bottom: 0, trailing: 0))
+                            .font(.system(size: 12))
                     }
                 }
                 
                 if let associateUsers = screenInfo.associateUsers {
                     if !associateUsers.isEmpty {
-                        Text(associateUsers).padding(.init(top: 0, leading: 14, bottom: 0, trailing: 0)).font(.system(size: 12))
+                        Text(associateUsers)
+                            .padding(.init(top: 0, leading: 14, bottom: 0, trailing: 0))
+                            .font(.system(size: 12))
                     }
                 }
                 
                 HStack{
-                    Text(screenInfo.postTime ?? "").font(.system(size: 12)).font(.system(size: 12))
+                    Text(screenInfo.postTime ?? "")
+                        .font(.system(size: 12))
                     Spacer()
                     HStack(spacing:12){
-                        Text(screenInfo.userInfo?.name ?? "").font(.system(size: 12)).font(.system(size: 12))
+                        Text(screenInfo.userInfo?.name ?? "")
+                            .font(.system(size: 12))
                         AsyncImage(
                             url: URL(string: screenInfo.userInfo?.avatarUrl ?? ""),
                             content: { image in
                                 image
                                     .resizable()
                                     .scaledToFit()
-                                    .frame(width: 16, height: 16, alignment: .center)
-                                    .clipShape(RoundedRectangle(cornerRadius: 6))
+                                    .frame(width: 24, height: 24, alignment: .center)
+                                    .clipShape(RoundedRectangle(cornerRadius: 12))
                             },
                             placeholder: {
-                                RoundedRectangle(cornerRadius: 6)
-                                    .frame(width: 16, height: 16, alignment: .center)
+                                RoundedRectangle(cornerRadius: 12)
+                                    .frame(width: 24, height: 24, alignment: .center)
                                     .foregroundColor(Color(UIColor.separator))
                             }
                         )
@@ -67,13 +74,13 @@ struct Screen: View {
             .overlay(
                 content: {
                     RoundedRectangle(
-                        cornerSize: CGSize(width: 16, height: 16)
+                        cornerSize: CGSize(width: 32, height: 32)
                     )
                     .stroke()
-                    .foregroundColor(Color(UIColor.separator))
+                    .foregroundColor(Theme.colorSchema.outline)
                 }
             )
-            .padding(10)
+            .padding(12)
             .onTapGesture(perform: {
                 onBioClickListener(screenInfo)
             })
@@ -99,12 +106,12 @@ struct ScreenPictures: View {
                                     .resizable()
                                     .scaledToFit()
                                     .frame(width: 110, height: 110, alignment: .center)
-                                    .clipShape(RoundedRectangle(cornerRadius: 6))
+                                    .clipShape(RoundedRectangle(cornerRadius: 12))
                             },
                             placeholder: {
-                                RoundedRectangle(cornerRadius: 6)
+                                RoundedRectangle(cornerRadius: 12)
                                     .frame(width: 110, height: 110, alignment: .center)
-                                    .foregroundColor(Color(UIColor.separator))
+                                    .foregroundColor(Theme.colorSchema.outline)
                             }
                         )
                     }

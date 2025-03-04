@@ -18,13 +18,29 @@ struct BackActionTopBar<V, V2>: View where V: View, V2: View {
     
     @ViewBuilder let customEndContent: (()-> V2)?
     
+    init(
+        backText: String?,
+        onBackClick: @escaping () -> Void,
+        @ViewBuilder customCenterView centerView: @escaping (()-> V) = {VStack{}},
+        @ViewBuilder customEndView endView: @escaping (()-> V2) = {VStack{}}
+    ) {
+        self.backButtonRightText = backText
+        self.onBackClickListener = onBackClick
+        self.customCenterContent = centerView
+        self.customEndContent = endView
+    }
+    
     var body: some View {
         VStack(spacing: 12){
             HStack{
                 HStack{
                     Spacer().frame(width: 12)
                     SwiftUI.Image("drawable/arrow_back-arrow_back_symbol")
-                        .fontWeight(.thin)
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: Theme.size.iconSizeNormal, height: Theme.size.iconSizeNormal)
+                        .fontWeight(.light)
+                        .padding(12)
                         .onTapGesture {
                             onBackClickListener()
                         }
@@ -48,21 +64,10 @@ struct BackActionTopBar<V, V2>: View where V: View, V2: View {
                     Spacer().frame(width: 12)
                 }
             }
-            Divider()
+            Divider().foregroundColor(Theme.colorSchema.outline)
         }
     }
     
-    init(
-        backText: String?,
-        onBackClick: @escaping () -> Void,
-        @ViewBuilder customCenterView centerView: @escaping (()-> V) = {VStack{}},
-        @ViewBuilder customEndView endView: @escaping (()-> V2) = {VStack{}}
-    ) {
-        self.backButtonRightText = backText
-        self.onBackClickListener = onBackClick
-        self.customCenterContent = centerView
-        self.customEndContent = endView
-    }
 }
 
 #Preview {

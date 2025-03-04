@@ -7,7 +7,7 @@ import javax.jmdns.JmDNS
 interface ShareDevice {
     companion object {
         const val RAW_NAME = "rawName"
-        const val NICK_NAME = "nikeName"
+        const val NICK_NAME = "nickName"
         const val DEVICE_TYPE_PHONE = 0
         const val DEVICE_TYPE_TABLET = 1
         const val DEVICE_TYPE_COMPUTER = 2

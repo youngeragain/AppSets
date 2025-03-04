@@ -5,10 +5,10 @@ import xcj.app.starter.util.VendorUtil
 
 data class DeviceName(
     var rawName: String,
-    var nikeName: String? = null
+    var nickName: String? = null
 ) {
     val name: String
-        get() = nikeName ?: rawName
+        get() = nickName ?: rawName
 
     companion object {
         val NONE: DeviceName

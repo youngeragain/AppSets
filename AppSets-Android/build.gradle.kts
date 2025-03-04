@@ -11,8 +11,3 @@ plugins {
     alias(libs.plugins.google.android.libraries.mapsplatform.secrets.gradle.plugin) apply false
 
 }
-
-/*
-tasks.register("clean", Delete) {
-    delete rootProject.getLayout().getBuildDirectory()
-}*/

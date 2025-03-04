@@ -8,31 +8,30 @@
 import SwiftUI
 
 struct AppDetailsPage: View {
-    
     @EnvironmentObject var viewModel: MainViewModel
-    
+
     let application: Application?
-    
-    let onBackClickListener: ()-> Void
-    
+
+    let onBackClickListener: () -> Void
+
     let onShowApplicationCreatorClickLister: (String?) -> Void
-    
+
     let onJoinToChatClickLister: (Application) -> Void
-    
+
     @State var currentPlatformIndex = 0
     @State var currentPlatformVersionIndex = 0
-    
-    init(application: Application?, onBackClick: @escaping () -> Void, onShowApplicationCreatorClick: @escaping (String?)->Void, onJoinToChatClick: @escaping (Application) -> Void) {
+
+    init(application: Application?, onBackClick: @escaping () -> Void, onShowApplicationCreatorClick: @escaping (String?) -> Void, onJoinToChatClick: @escaping (Application) -> Void) {
         self.application = application
-        self.onBackClickListener = onBackClick
-        self.onShowApplicationCreatorClickLister = onShowApplicationCreatorClick
-        self.onJoinToChatClickLister = onJoinToChatClick
+        onBackClickListener = onBackClick
+        onShowApplicationCreatorClickLister = onShowApplicationCreatorClick
+        onJoinToChatClickLister = onJoinToChatClick
     }
-    
+
     var body: some View {
-        VStack{
-            VStack(spacing:12){
-                Spacer().frame(height: 68)
+        VStack {
+            VStack(spacing: 12) {
+                Spacer().frame(height: 52)
                 BackActionTopBar(
                     backText: application?.name ?? "",
                     onBackClick: onBackClickListener,
@@ -42,7 +41,7 @@ struct AppDetailsPage: View {
                                 if let app = application {
                                     onJoinToChatClickLister(app)
                                 }
-                                
+
                             },
                             label: {
                                 Text("chat")
@@ -55,8 +54,7 @@ struct AppDetailsPage: View {
                             })
                     }
                 )
-                VStack(spacing: 16){
-
+                VStack(spacing: 16) {
                     AsyncImage(
                         url: URL(string: application?.iconUrl ?? ""),
                         content: { image in
@@ -69,16 +67,14 @@ struct AppDetailsPage: View {
                         placeholder: {
                             RoundedRectangle(cornerRadius: 32)
                                 .frame(width: 250, height: 250, alignment: .center)
-                                .foregroundColor(Color(UIColor.separator))
+                                .foregroundColor(Theme.colorSchema.outline)
                         }
                     )
-                
                 }
                 if let downloadInfoList = application?.platforms?[currentPlatformIndex].versionInfos?[currentPlatformVersionIndex].downloadInfo {
-                    if(!downloadInfoList.isEmpty){
+                    if !downloadInfoList.isEmpty {
                         Button(
                             action: {
-                                
                             },
                             label: {
                                 Text("get")
@@ -86,40 +82,40 @@ struct AppDetailsPage: View {
                                     .padding(.init(top: 8, leading: 12, bottom: 8, trailing: 12))
                                     .background(
                                         RoundedRectangle(cornerRadius: 16)
-                                            .foregroundColor(.blue)
+                                            .foregroundColor(Theme.colorSchema.primary)
                                     )
                             })
                     }
                 }
-                
-                VStack{
-                    HStack{
+
+                VStack {
+                    HStack {
                         Spacer()
                         Text("Creator Information")
                         Spacer()
                     }
                     .padding()
-                    .background(RoundedRectangle(cornerRadius: 12).foregroundColor(Color(uiColor: .separator)))
+                    .background(RoundedRectangle(cornerRadius: 12).foregroundColor(Theme.colorSchema.outline))
                 }.padding()
-                VStack{
-                    VStack(spacing: 6){
-                        HStack{
-                            VStack(alignment: .leading, spacing: 4){
-                                Text("Category").font(.system(size:14, weight:.bold))
+                VStack {
+                    VStack(spacing: 6) {
+                        HStack {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("Category").font(.system(size: 14, weight: .bold))
                                 Text(application?.category ?? "").font(.system(size: 12))
                             }
                             Spacer()
                         }
-                        HStack{
-                            VStack(alignment: .leading, spacing: 4){
-                                Text("Website").font(.system(size:14, weight:.bold))
+                        HStack {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("Website").font(.system(size: 14, weight: .bold))
                                 Text(application?.website ?? "").font(.system(size: 12))
                             }
                             Spacer()
                         }
-                        HStack{
-                            VStack(alignment: .leading, spacing: 4){
-                                Text("Developer Information").font(.system(size:14, weight:.bold))
+                        HStack {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("Developer Information").font(.system(size: 14, weight: .bold))
                                 Text(application?.developerInfo ?? "").font(.system(size: 12))
                             }
                             Spacer()
@@ -130,7 +126,7 @@ struct AppDetailsPage: View {
                         content: {
                             RoundedRectangle(cornerRadius: 16, style: .continuous)
                                 .stroke()
-                                .foregroundColor(Color(uiColor: .separator))
+                                .foregroundColor(Theme.colorSchema.outline)
                                 .cornerRadius(16)
                         }
                     )
@@ -146,13 +142,11 @@ struct AppDetailsPage: View {
     AppDetailsPage(
         application: Application(),
         onBackClick: {
-        
         },
-        onShowApplicationCreatorClick: { uid in
-            
+        onShowApplicationCreatorClick: { _ in
+
         },
-        onJoinToChatClick: { application in
-            
+        onJoinToChatClick: { _ in
         }
     )
 }

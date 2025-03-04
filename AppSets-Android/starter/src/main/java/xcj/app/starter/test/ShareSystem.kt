@@ -12,6 +12,7 @@ object ShareSystem {
 
     private const val TAG = "ShareSystem"
     const val SHARE_SYSTEM_CLOSE = "appsets/share/system/close"
+    private const val MAX_FILE_NAME_TIMES_TO_FIND = 10000
 
     fun getShareDirPath(): String {
         val path = LocalAndroidContextFileDir.current.appSetsShareDir + File.separator
@@ -47,7 +48,7 @@ object ShareSystem {
                     return file
                 }
             }
-            if (count > 100000) {
+            if (count > MAX_FILE_NAME_TIMES_TO_FIND) {
                 return null
             }
             PurpleLogger.current.d(

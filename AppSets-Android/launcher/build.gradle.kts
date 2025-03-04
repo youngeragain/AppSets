@@ -1,5 +1,6 @@
 plugins {
     alias(libs.plugins.android.library)
+    //alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.ksp)
@@ -55,8 +56,14 @@ android {
 }
 
 dependencies {
-    compileOnly(project(":starter"))
-    compileOnly(project(":compose_share"))
+    val isLib = true
+    if (isLib) {
+        compileOnly(project(":starter"))
+        compileOnly(project(":compose_share"))
+    } else {
+        implementation(project(":starter"))
+        implementation(project(":compose_share"))
+    }
 
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.livedata.ktx)

@@ -49,23 +49,26 @@ struct LoginInterceptorPage<V:View>: View {
             HStack{
                 Spacer()
                 VStack(spacing: 24){
+                    Spacer()
                     Button(
                         action: onLoginClickListener,
                         label: {
-                            Text("Require Login to AppSets")
+                            Text("Require Login to AppSets").tint(Theme.colorSchema.primary)
                         }
                     )
+                    Spacer()
                     Button(
                         action: onBackClickListener,
                         label: {
                             SwiftUI.Image("drawable/arrow_back_ios_arrow_back_ios_symbol")
-                                .tint(.white)
+                                .tint(Theme.colorSchema.onSurface)
                                 .padding([.leading, .trailing], 16)
                                 .padding([.top, .bottom], 14)
-                                .background(Circle().foregroundColor(.blue))
+                                .background(Circle().foregroundColor(Theme.colorSchema.secondaryContainer))
                             .cornerRadius(12) /// make the background rounded
                         }
                     )
+                    Spacer().frame(height: 32)
                     
                 }
                 .frame(alignment: /*@START_MENU_TOKEN@*/.center/*@END_MENU_TOKEN@*/)

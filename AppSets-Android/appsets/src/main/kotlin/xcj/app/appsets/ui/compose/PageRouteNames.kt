@@ -16,7 +16,7 @@ object PageRouteNames {
     const val SettingsPage = "Main/SettingsPage"
     const val AboutPage = "Main/AboutPage"
 
-    const val AppSetsCenterPage = "Main/AppSetsCenterPage"
+    const val AppsCenterPage = "Main/AppsCenterPage"
     const val AppDetailsPage = "Main/AppDetailsPage/{appid}"
     const val CreateAppPage = "Main/CreateAppPage/{appid}"
     const val CreateAppPageTemplate = "Main/CreateAppPage/%s"

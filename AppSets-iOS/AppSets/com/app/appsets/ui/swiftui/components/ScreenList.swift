@@ -21,7 +21,7 @@ struct ScreenList: View {
     var body: some View {
         ZStack{
             ScrollView(.vertical){
-                Spacer().frame(height: 68)
+                Spacer().frame(height: 52)
                 VStack(spacing: 8){
                     ForEach(screens.indices, id:\.self){ index in
                         Screen(

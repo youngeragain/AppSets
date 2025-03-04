@@ -143,9 +143,6 @@ dependencies {
     implementation(libs.google.barcode.scanning)
     implementation(libs.rabbit.amqp)
 
-    implementation(libs.haze)
-    implementation(libs.haze.materials)
-
     //implementation(libs.hilt.android)
     //implementation(libs.hilt.lifecycle.viewmodel)
     //ksp(libs.hilt.android.complier)

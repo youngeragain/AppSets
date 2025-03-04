@@ -60,7 +60,9 @@ class StartUseCase(
     }
 
     private suspend fun updateAllApps(allApps: MutableList<AppDefinition>) {
-        allApps.addAll(PackageUtil.getLauncherIntentAppDefinitionList(LocalApplication.current))
+        PackageUtil.getLauncherIntentAppDefinitionList(LocalApplication.current).collect{
+            allApps.addAll(it)
+        }
     }
 
     private fun updateRecommendItems(

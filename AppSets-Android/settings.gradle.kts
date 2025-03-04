@@ -1,3 +1,31 @@
+data class ProjectWrapper(val name: String, val enable: Boolean = true, val isLib: Boolean = true) {
+    companion object {
+
+        fun get(name: String): ProjectWrapper? {
+            return all().firstOrNull { it.name == name }
+        }
+
+        fun all(): List<ProjectWrapper> {
+            return listOf<ProjectWrapper>(
+                ProjectWrapper(":app", enable = true, isLib = false),
+                ProjectWrapper(":starter", enable = true),
+                ProjectWrapper(":appsets", enable = true),
+                ProjectWrapper(":io", enable = true),
+                ProjectWrapper(":compose_share", enable = true),
+                ProjectWrapper(":launcher", enable = true),
+                ProjectWrapper(":webserver", enable = true),
+                ProjectWrapper(":share", enable = true),
+                ProjectWrapper(":proxy", enable = true),
+                ProjectWrapper(":baselineprofile", enable = true),
+                ProjectWrapper(":compose_addons", enable = false),
+                ProjectWrapper(":binder", enable = false),
+                ProjectWrapper(":purple_native", enable = false),
+                ProjectWrapper(":webrtc", enable = false),
+            )
+        }
+    }
+}
+
 pluginManagement {
 
     /**
@@ -76,18 +104,9 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "AppSets-Android"
-include(":app")
-include(":starter")
-include(":appsets")
-include(":io")
-include(":compose_share")
-include(":launcher")
-include(":webserver")
-include(":share")
-include(":proxy")
-include(":baselineprofile")
 
-include(":compose_addons")
-//include(":binder")
-//include(":purple_native")
-//include(":webrtc")
+ProjectWrapper.all().forEach { projectWrapper ->
+    if (projectWrapper.enable) {
+        include(projectWrapper.name)
+    }
+}

@@ -148,7 +148,7 @@ class AppSetsShareController {
         return appSetsShareService.postFile(context, clientHost, shareToken, fileUploadN)
     }
 
-    @RequestMapping(path = "/appsets/share/file/trunked", [HttpMethod.POST])
+    @RequestMapping(path = "/appsets/share/file/chunked", [HttpMethod.POST])
     fun postFileChunked(
         @AndroidContext(AndroidContext.TYPE_ACTIVITY) context: Context,
         @RequestInfo(what = RequestInfo.WHAT_REQUEST_REMOTE_HOST) clientHost: String,

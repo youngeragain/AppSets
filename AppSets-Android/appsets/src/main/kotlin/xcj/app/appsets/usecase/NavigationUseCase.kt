@@ -24,7 +24,7 @@ class NavigationUseCase : IComposeDispose {
             return
         }
         val appsTab = TabItem.SampleTabItem(
-            routeName = PageRouteNames.AppSetsCenterPage,
+            routeName = PageRouteNames.AppsCenterPage,
             icon = xcj.app.compose_share.R.drawable.ic_outline_shopping_bag_24,
             isSelect = true,
             actions = mutableListOf(
@@ -83,7 +83,7 @@ class NavigationUseCase : IComposeDispose {
     }
 
     fun invalidateTabItems(
-        currentRoute: String? = PageRouteNames.AppSetsCenterPage,
+        currentRoute: String? = PageRouteNames.AppsCenterPage,
         by: String?
     ) {
         PurpleLogger.current.d(

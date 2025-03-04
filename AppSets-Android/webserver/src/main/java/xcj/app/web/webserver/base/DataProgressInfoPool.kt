@@ -9,10 +9,6 @@ object DataProgressInfoPool {
     private val pool: LinkedHashMap<String, DataProgressInfo> =
         LinkedHashMap<String, DataProgressInfo>(16, 0.75f, true)
 
-    fun cleanup() {
-        pool.clear()
-    }
-
     fun obtain(): DataProgressInfo {
         if (pool.isEmpty) {
             val uuid = UUID.randomUUID().toString()
@@ -48,5 +44,9 @@ object DataProgressInfoPool {
             total = 1
             current = 1
         }
+    }
+
+    fun clear() {
+        pool.clear()
     }
 }

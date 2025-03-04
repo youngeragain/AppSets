@@ -8,6 +8,9 @@ import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
 import android.content.pm.PackageManager.MATCH_ALL
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.withContext
 import xcj.app.starter.android.AppDefinition
 import java.util.UUID
@@ -46,8 +49,8 @@ object PackageUtil {
 
     @SuppressLint("QueryPermissionsNeeded")
     @JvmStatic
-    suspend fun getLauncherIntentAppDefinitionList(context: Context): List<AppDefinition> =
-        withContext(Dispatchers.IO) {
+    fun getLauncherIntentAppDefinitionList(context: Context): Flow<List<AppDefinition>> =
+        flow<List<AppDefinition>> {
             PurpleLogger.current.d(TAG, "getLauncherIntentAppDefinitionList 1")
             val packageManager: PackageManager = context.packageManager
             val minePackageName = context.packageName
@@ -59,26 +62,30 @@ object PackageUtil {
             val queryIntentActivities =
                 packageManager.queryIntentActivities(launcherIntent, MATCH_ALL)
             PurpleLogger.current.d(TAG, "getLauncherIntentAppDefinitionList 3")
-            val appDefinitions = mutableListOf<AppDefinition>()
-            queryIntentActivities.mapNotNullTo(appDefinitions) {
-                if (it.activityInfo.packageName == minePackageName) {
-                    null
-                } else {
-                    val appDefinition = AppDefinition(
-                        UUID.randomUUID().toString()
-                    )
-                    val applicationInfo = it.activityInfo.applicationInfo
-                    appDefinition.applicationInfo = applicationInfo
-                    appDefinition.name =
-                        applicationInfo.loadLabel(context.packageManager).toString()
-                            .trim()
 
-                    appDefinition.icon =
-                        applicationInfo.loadIcon(context.packageManager)
-                    appDefinition
+            val chunkedIntents = queryIntentActivities.chunked(10)
+            chunkedIntents.forEach { chunkedIntent ->
+                val chunkedAppDefinitions = chunkedIntent.mapNotNull { resolveInfo ->
+                    if (resolveInfo.activityInfo.packageName == minePackageName) {
+                        null
+                    } else {
+                        val appDefinition = AppDefinition(
+                            UUID.randomUUID().toString()
+                        )
+                        val applicationInfo = resolveInfo.activityInfo.applicationInfo
+                        appDefinition.applicationInfo = applicationInfo
+                        appDefinition.name =
+                            applicationInfo.loadLabel(context.packageManager).toString()
+                                .trim()
+
+                        appDefinition.icon =
+                            applicationInfo.loadIcon(context.packageManager)
+                        appDefinition
+                    }
                 }
+                emit(chunkedAppDefinitions)
+                delay(50)
             }
             PurpleLogger.current.d(TAG, "getLauncherIntentAppDefinitionList 4")
-            return@withContext appDefinitions
         }
 }

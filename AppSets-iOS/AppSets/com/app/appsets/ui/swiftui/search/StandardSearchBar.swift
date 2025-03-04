@@ -8,51 +8,47 @@
 import SwiftUI
 
 struct StandardSearchBar: View {
-    
     @ObservedObject var brokerTest: BrokerTest
-    
+
     let onClickListener: (String) -> Void
-    
+
     init(onClick: @escaping (String) -> Void) {
-        self.onClickListener = onClick
+        onClickListener = onClick
         brokerTest = BrokerTest.Instance
     }
-    
+
     var body: some View {
-        VStack{
-            HStack{
+        VStack {
+            HStack {
                 Button(
                     action: {
                         onClickListener("SearchBarIcon")
                     }
-                ){
-                    HStack{
-                        Spacer().frame(width: 12)
+                ) {
+                    HStack {
                         SwiftUI.Image("drawable/search-search_symbol")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: Theme.size.iconSizeNormal, height: Theme.size.iconSizeNormal)
                             .fontWeight(.light)
-                            .foregroundColor(.init(UIColor.black))
-                        Text("seach")
-                            .foregroundColor(.init(UIColor.black))
+                            .tint(Theme.colorSchema.onSurface)
+
+                        Text("seach").foregroundColor(Theme.colorSchema.onSurface)
                     }
-                    .frame(minWidth:100, maxWidth: 150, minHeight: 40, maxHeight: 40, alignment:.leading)
-                    .background(
-                        content: {
-                            RoundedRectangle(cornerRadius: 20)
-                                .foregroundColor(Color(UIColor.separator))
-                        }
-                    )
+                    .frame(minWidth: 100, maxWidth: 150, alignment: .leading)
                 }
-                
-                Button(
-                    action:{
-                        onClickListener("UserIcon")
-                    }
-                ){
-                    if LocalAccountManager.Instance.isLogged() {
-                        
-                        let borderColor = if(brokerTest.isOnline){
+                .padding(12)
+                .background(Theme.colorSchema.outline.clipShape(RoundedRectangle(cornerRadius: 24)))
+
+                if LocalAccountManager.Instance.isLogged() {
+                    Button(
+                        action: {
+                            onClickListener("UserIcon")
+                        }
+                    ) {
+                        let borderColor = if brokerTest.isOnline {
                             Color.green
-                        }else{
+                        } else {
                             Color.red
                         }
                         AsyncImage(
@@ -61,26 +57,39 @@ struct StandardSearchBar: View {
                                 image
                                     .resizable()
                                     .scaledToFit()
-                                    .frame(width: 40, height: 40, alignment: .center)
+                                    .frame(width: (Theme.size.iconSizeNormal * 2) - 2, height: (Theme.size.iconSizeNormal * 2) - 2)
                                     .clipShape(Circle())
                             },
                             placeholder: {
                                 SwiftUI.Image("drawable/face-face_symbol")
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: Theme.size.iconSizeNormal, height: Theme.size.iconSizeNormal)
+                                    .padding(11)
                                     .fontWeight(.light)
-                                    .foregroundColor(.init(UIColor.black))
-                                    .padding(12)
+                                    .tint(Theme.colorSchema.onSurface)
                             }
                         ).overlay {
                             Circle().stroke(borderColor, lineWidth: 2)
                         }
-                    }else{
-                        SwiftUI.Image("drawable/face-face_symbol")
-                            .fontWeight(.light)
-                            .foregroundColor(.init(UIColor.separator))
-                            .padding(12)
                     }
+
+                } else {
+                    Button(
+                        action: {
+                            onClickListener("UserIcon")
+                        }
+                    ) {
+                        SwiftUI.Image("drawable/face-face_symbol")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: Theme.size.iconSizeNormal, height: Theme.size.iconSizeNormal)
+                            .fontWeight(.light)
+                            .tint(Theme.colorSchema.onSurface)
+                    }
+                    .padding(12)
+                    .background(Theme.colorSchema.outline.clipShape(Circle()))
                 }
-                .background(Circle().foregroundColor(Color(UIColor.separator)))
             }
             Spacer().frame(height: 6)
         }
@@ -88,5 +97,5 @@ struct StandardSearchBar: View {
 }
 
 #Preview {
-    StandardSearchBar(onClick: { tab in })
+    StandardSearchBar(onClick: { _ in })
 }

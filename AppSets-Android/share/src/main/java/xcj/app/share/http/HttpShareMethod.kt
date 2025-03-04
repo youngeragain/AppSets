@@ -115,7 +115,6 @@ class HttpShareMethod : ShareMethod(), ContentReceivedListener, ServiceListener,
         return dataSendProgressListener
     }
 
-
     override fun onAvailable(network: Network) {
         super.onAvailable(network)
     }
@@ -272,7 +271,7 @@ class HttpShareMethod : ShareMethod(), ContentReceivedListener, ServiceListener,
             viewModel.updateIsDiscoveringState(true)
             withContext(Dispatchers.IO) {
                 jmDNSMap.values.forEach {
-                    it.requestServiceInfo(DNS_SERVER_TYPE, mDeviceName.nikeName)
+                    it.requestServiceInfo(DNS_SERVER_TYPE, mDeviceName.nickName)
                 }
             }
             delay(2000)
@@ -296,14 +295,14 @@ class HttpShareMethod : ShareMethod(), ContentReceivedListener, ServiceListener,
                 // 创建服务信息
                 val serviceInfo = ServiceInfo.create(
                     DNS_SERVER_TYPE,
-                    mDeviceName.nikeName,
+                    mDeviceName.nickName,
                     DNS_SERVER_PORT,
                     0,
                     0,
                     false,
                     mapOf<String, String?>(
                         ShareDevice.RAW_NAME to mDeviceName.rawName,
-                        ShareDevice.NICK_NAME to mDeviceName.nikeName
+                        ShareDevice.NICK_NAME to mDeviceName.nickName
                     )
                 )
                 // 注册服务
@@ -404,6 +403,7 @@ class HttpShareMethod : ShareMethod(), ContentReceivedListener, ServiceListener,
         val rawName = event.info.getPropertyString(ShareDevice.RAW_NAME)
         val nickName = event.info.getPropertyString(ShareDevice.NICK_NAME)
         if (rawName.isNullOrEmpty() || nickName.isNullOrEmpty()) {
+            PurpleLogger.current.d(TAG, "serviceResolved, rawName isNullOrEmpty or nickName isNullOrEmpty, return")
             return
         }
         val deviceName = DeviceName(rawName, nickName)
@@ -427,6 +427,7 @@ class HttpShareMethod : ShareMethod(), ContentReceivedListener, ServiceListener,
             deviceIP
         }
         if (isSelf) {
+            PurpleLogger.current.d(TAG, "serviceResolved, isSelf, return")
             return
         }
         val deviceAddress = DeviceAddress(ips = ips)

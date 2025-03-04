@@ -183,7 +183,7 @@ class AppSetsShareViewModel : AnyStateViewModel() {
                                 TAG,
                                 "updateShareDeviceListWithDiff, upcomingDevice:${upcomingDevice.deviceName} has and old exist!, only change old deviceName"
                             )
-                            if (existed.deviceName.nikeName.isNullOrEmpty()) {
+                            if (existed.deviceName.nickName.isNullOrEmpty()) {
                                 val newToAdd = existed.copy(deviceName = upcomingDevice.deviceName)
                                 newShareDeviceList.add(newToAdd)
                             } else {

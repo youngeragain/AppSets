@@ -39,7 +39,7 @@ class AppConfig {
     var appConfiguration: AppConfiguration = AppConfiguration(
         canSignUp: true,
         apiSchema: "https",
-        apiHost: "192.168.63.199",
+        apiHost: "192.168.15.184",
         apiPort: 8084,
         apiUrl: "",
         appSetsAppId: "APPSETS2023071579019880338529",

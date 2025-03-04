@@ -30,12 +30,12 @@ struct ConversationOverviewPage: View {
                         .resizable()
                         .scaledToFit()
                         .frame(width: 48, height: 48, alignment: .center)
-                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                        .clipShape(RoundedRectangle(cornerRadius: 16))
                 },
                 placeholder: {
-                    RoundedRectangle(cornerRadius: 12)
+                    RoundedRectangle(cornerRadius: 16)
                         .frame(width: 48, height: 48, alignment: .center)
-                        .foregroundColor(Color(UIColor.separator))
+                        .foregroundColor(Theme.colorSchema.outline)
                 }
             )
             let messages = session.conversationState.messages
@@ -110,34 +110,34 @@ struct ConversationOverviewPage: View {
     
     func AddActionssSpaceContent() -> some View {
         VStack{
+            Spacer().frame(height: 52)
             if (conversationUseCase.isShowAddActions) {
-                Spacer().frame(height: 68)
-                VStack(spacing: 12){
-                    Spacer().frame(height: 4)
-                    HStack{
-                        Text("Add Friend").font(.system(size: 12))
-                        Spacer()
-                    }.padding().background(Color(uiColor: .white)).clipShape(RoundedRectangle(cornerRadius: 12))
-                    HStack{
-                        Text("Add Group").font(.system(size: 12))
-                        Spacer()
-                    }.padding().background(Color(uiColor: .white)).clipShape(RoundedRectangle(cornerRadius: 12))
-                    HStack{
-                        Text("Create Group").font(.system(size: 12))
-                        Spacer()
-                    }.padding().background(Color(uiColor: .white)).clipShape(RoundedRectangle(cornerRadius: 12))
-                    Spacer().frame(height: 4)
+                VStack{
+                    VStack(spacing: 12){
+                        Spacer().frame(height: 4)
+                        HStack{
+                            Text("Add Friend").font(.system(size: 12))
+                            Spacer()
+                        }.padding().background(Theme.colorSchema.surface).clipShape(RoundedRectangle(cornerRadius: 24))
+                        HStack{
+                            Text("Add Group").font(.system(size: 12))
+                            Spacer()
+                        }.padding().background(Theme.colorSchema.surface).clipShape(RoundedRectangle(cornerRadius: 24))
+                        HStack{
+                            Text("Create Group").font(.system(size: 12))
+                            Spacer()
+                        }.padding().background(Theme.colorSchema.surface).clipShape(RoundedRectangle(cornerRadius: 24))
+                        Spacer().frame(height: 4)
+                    }.padding()
+                        .background(Theme.colorSchema.secondaryContainer).clipShape(RoundedRectangle(cornerRadius: 24))
                 }.padding()
-                    .background(Color(uiColor: .separator)).clipShape(RoundedRectangle(cornerRadius: 12))
             }
         }
-        .padding()
     }
     
     var body: some View {
-        VStack{
+        VStack(spacing: 12){
             AddActionssSpaceContent()
-            Spacer().frame(height: 42)
             HStack(){
                 Spacer().frame(width: 12)
                 ForEach(conversationUseCase.tabs, id: \.type){ tab in
@@ -150,18 +150,18 @@ struct ConversationOverviewPage: View {
                         label: {
                             if conversationUseCase.currentTab == tab.type {
                                 Text(tab.name)
-                                    .tint(.white)
-                                    .font(.system(size: 12))
-                                    .padding(.init(top: 6, leading: 12, bottom: 6, trailing: 12))
-                                    .background(Color(uiColor: .separator))
+                                    .tint(Theme.colorSchema.onSurface)
+                                    .font(.system(size: 14))
+                                    .padding(12)
+                                    .background(Theme.colorSchema.secondaryContainer)
                                     .clipShape(RoundedRectangle(cornerSize: CGSize(width: 24, height: 24)))
                             }else{
                                 Text(tab.name)
-                                    .tint(.black)
-                                    .font(.system(size: 12))
-                                    .padding(.init(top: 6, leading: 12, bottom: 6, trailing: 12))
+                                    .tint(Theme.colorSchema.onSurface)
+                                    .font(.system(size: 14))
+                                    .padding(12)
                                     .overlay(
-                                        RoundedRectangle(cornerSize: CGSize(width: 24, height: 24)).stroke(Color(UIColor.separator))
+                                        RoundedRectangle(cornerSize: CGSize(width: 24, height: 24)).stroke(Theme.colorSchema.outline)
                                     )
                             }
                             
@@ -170,8 +170,8 @@ struct ConversationOverviewPage: View {
                 }
             }.frame(maxWidth: /*@START_MENU_TOKEN@*/.infinity/*@END_MENU_TOKEN@*/, alignment: .leading)
             
-            Spacer().frame(height: 12)
-            Divider()
+            Divider().foregroundColor(Theme.colorSchema.outline)
+            
             let sessions = conversationUseCase.currentTabSessions()
             if sessions.elements.isEmpty {
                 VStack(alignment: .center){

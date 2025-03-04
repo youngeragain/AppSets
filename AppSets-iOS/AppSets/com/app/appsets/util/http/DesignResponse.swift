@@ -6,15 +6,14 @@
 //
 
 import Foundation
+import Hummingbird
 
-protocol DesignResponse<D>: Codable where D : Codable {
-    
+protocol DesignResponse<D>: ResponseCodable, Codable where D: Codable {
     associatedtype D
-    
-    var code:Int { get set }
-    
-    var info:String? { get set }
-    
-    var data:D? { get set }
-    
+
+    var code: Int { get set }
+
+    var info: String? { get set }
+
+    var data: D? { get set }
 }

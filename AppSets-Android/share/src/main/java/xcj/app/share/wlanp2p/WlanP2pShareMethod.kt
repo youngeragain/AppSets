@@ -423,7 +423,7 @@ class WlanP2pShareMethod : ShareMethod(), ContentReceivedListener {
         when (clickType) {
             AppSetsShareActivity.CLICK_TYPE_NORMAL -> {
                 if (wifiP2pDevice.status == WifiP2pDevice.CONNECTED ||
-                    !shareDevice.deviceName.nikeName.isNullOrEmpty()
+                    !shareDevice.deviceName.nickName.isNullOrEmpty()
                 ) {
                     val pendingSendContentList = viewModel.pendingSendContentList
                     if (pendingSendContentList.isEmpty()) {

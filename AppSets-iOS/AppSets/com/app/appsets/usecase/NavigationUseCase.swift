@@ -14,9 +14,9 @@ class NavigationUseCase: ObservableObject {
     
     var tabItems: Array<TabItem> = []
     
-    private var routes: [String] = [PageRouteNameProvider.OutSidePage]
+    private var routes: [String] = [PageRouteNameProvider.AppsCenterPage]
     
-    @Published var route: String = PageRouteNameProvider.OutSidePage
+    @Published var route: String = PageRouteNameProvider.AppsCenterPage
     
     @Published var visible: Bool = true
     
@@ -31,7 +31,7 @@ class NavigationUseCase: ObservableObject {
     func initTabItems(){
         PurpleLogger.current.d(NavigationUseCase.TAG, "initTabItems")
      
-        var tab2 = TabItem(icon:"drawable/shopping_bag-shopping_bag_symbol", route: PageRouteNameProvider.AppsPage)
+        var tab2 = TabItem(icon:"drawable/shopping_bag-shopping_bag_symbol", route: PageRouteNameProvider.AppsCenterPage)
         var tab2Actions: [TabAction] = []
         let tab2Action1 = TabAction(icon: "drawable/architecture_architecture_symbol", route: PageRouteNameProvider.AppToolsPage)
         let tab2Action2 = TabAction(icon: "drawable/ic_appsets_plus", route: PageRouteNameProvider.CreateAppPage)

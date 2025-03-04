@@ -2,15 +2,21 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>CFBundleExecutable</key>
+	<string></string>
 	<key>NSAppTransportSecurity</key>
 	<dict/>
 	<key>Allow Arbitrary Loads</key>
 	<true/>
 	<key>NSLocalNetworkUsageDescription</key>
-	<string>App need interNetwork.</string>
+	<string>App need access Local Network.</string>
 	<key>NSFileProviderDomainUsageDescription</key>
 	<string></string>
 	<key>CFBundleIdentifier</key>
 	<string></string>
+	<key>NSBonjourServices</key>
+	<array>
+		<string>_http._tcp</string>
+	</array>
 </dict>
 </plist>

@@ -43,5 +43,4 @@ object ContentType {
         return contentType.startsWith(AUDIO_PREFIX)
     }
 
-
 }

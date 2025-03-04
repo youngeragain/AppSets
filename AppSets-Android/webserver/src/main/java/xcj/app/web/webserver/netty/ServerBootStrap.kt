@@ -43,8 +43,8 @@ class ServerBootStrap() {
         }
     }
 
-    private suspend fun closeOldIfNeed() {
-        PurpleLogger.current.d(TAG, "closeOldIfNeed")
+    private suspend fun closeOldIfNeeded() {
+        PurpleLogger.current.d(TAG, "closeOldIfNeeded")
         close(null)
     }
 
@@ -59,7 +59,7 @@ class ServerBootStrap() {
         withContext(Dispatchers.IO) {
             PurpleLogger.current.d(TAG, "main")
 
-            closeOldIfNeed()
+            closeOldIfNeeded()
 
             val handlerMappings = buildHandlerMappings(application)
             if (handlerMappings == null) {

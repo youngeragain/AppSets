@@ -54,7 +54,7 @@ struct SearchPage: View {
     
     var body: some View {
         VStack{
-            Spacer().frame(height: 68)
+            Spacer().frame(height: 52)
             TextField(
                 text: $searchString,
                 prompt: Text("search"),

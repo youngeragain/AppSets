@@ -7,23 +7,26 @@
 
 import SwiftUI
 
-
 struct CreateAppPage: View {
-    
-    let onBackClickListener: ()-> Void
-    
+    let onBackClickListener: () -> Void
+
     init(onBackClick: @escaping () -> Void) {
-        self.onBackClickListener = onBackClick
+        onBackClickListener = onBackClick
     }
-    
+
     var body: some View {
-        VStack{
+        VStack {
+            Spacer().frame(height: 52)
             BackActionTopBar(
                 backText: nil,
                 onBackClick: onBackClickListener
             )
-            ZStack{
-                Text("CreateAppPage").frame(alignment: .center)
+            VStack {
+                Spacer()
+                ZStack {
+                    Text("CreateAppPage").frame(alignment: .center)
+                }
+                Spacer()
             }
         }
         .frame(minWidth: 0, maxWidth: .infinity, minHeight: 0, maxHeight: .infinity)
@@ -33,7 +36,5 @@ struct CreateAppPage: View {
 
 #Preview {
     CreateAppPage(onBackClick: {
-        
     })
 }
-
