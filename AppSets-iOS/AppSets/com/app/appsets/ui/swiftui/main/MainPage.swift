@@ -7,21 +7,6 @@
 
 import SwiftUI
 
-struct Animal {
-    public static let Dog = Animal()
-    public static let Cat = Animal()
-}
-
-class AnimalHelepr {
-    func injectAnimal(_ animal: Animal) {
-    }
-
-    public static func doSomething() {
-        // “.”符号用户快速对应类的访问静态变量
-        AnimalHelepr().injectAnimal(.Dog)
-    }
-}
-
 struct MainPage: View {
     public static let TAG = "MainPage"
 
