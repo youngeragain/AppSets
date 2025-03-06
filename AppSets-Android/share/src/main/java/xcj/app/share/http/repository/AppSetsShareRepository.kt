@@ -23,6 +23,8 @@ import xcj.app.share.base.DataSendContent
 import xcj.app.share.base.ShareDevice
 import xcj.app.share.http.HttpShareMethod
 import xcj.app.share.http.api.AppSetsShareApi
+import xcj.app.share.http.base.HttpContent
+import xcj.app.share.http.base.HttpShareDevice
 import xcj.app.share.http.common.ResponseProgressInterceptor
 import xcj.app.share.http.common.asProgressRequestBody
 import xcj.app.share.http.model.ContentInfo
@@ -60,7 +62,7 @@ class AppSetsShareRepository() {
     }
 
     class ShareDeviceBaseUrlProvider(
-        private val shareDevice: ShareDevice.HttpShareDevice,
+        private val shareDevice: HttpShareDevice,
         private val port: Int
     ) : BaseUrlProvider {
         override fun getBaseUrl(): String? {
@@ -128,7 +130,7 @@ class AppSetsShareRepository() {
     suspend fun sendContentList(
         context: Context,
         shareMethod: HttpShareMethod,
-        dataSendContentList: List<DataSendContent.HttpContent>
+        dataSendContentList: List<HttpContent>
     ) = coroutineScope {
         dataSendContentList.forEach { dataSendContent ->
             launch {
@@ -140,7 +142,7 @@ class AppSetsShareRepository() {
     suspend fun sendContent(
         context: Context,
         shareMethod: HttpShareMethod,
-        dataSendContent: DataSendContent.HttpContent
+        dataSendContent: HttpContent
     ) {
         val dataContent = dataSendContent.content
 
@@ -172,7 +174,7 @@ class AppSetsShareRepository() {
         }
     }
 
-    suspend fun isNeedPin(shareDevice: ShareDevice.HttpShareDevice) = withContext(Dispatchers.IO) {
+    suspend fun isNeedPin(shareDevice: HttpShareDevice) = withContext(Dispatchers.IO) {
         val urlProvider =
             ShareDeviceBaseUrlProvider(shareDevice, HttpShareMethod.SHARE_SERVER_API_PORT)
         val api = buildApi(urlProvider)
@@ -183,7 +185,7 @@ class AppSetsShareRepository() {
         return@withContext api.isNeedPin()
     }
 
-    suspend fun pair(shareDevice: ShareDevice.HttpShareDevice, pin: Int) =
+    suspend fun pair(shareDevice: HttpShareDevice, pin: Int) =
         withContext(Dispatchers.IO) {
             val urlProvider =
                 ShareDeviceBaseUrlProvider(shareDevice, HttpShareMethod.SHARE_SERVER_API_PORT)
@@ -198,7 +200,7 @@ class AppSetsShareRepository() {
             shareDevice.pin = pin
         }
 
-    suspend fun pairResponse(shareDevice: ShareDevice.HttpShareDevice, shareToken: String) =
+    suspend fun pairResponse(shareDevice: HttpShareDevice, shareToken: String) =
         withContext(Dispatchers.IO) {
             val urlProvider =
                 ShareDeviceBaseUrlProvider(shareDevice, HttpShareMethod.SHARE_SERVER_API_PORT)
@@ -217,7 +219,7 @@ class AppSetsShareRepository() {
     suspend fun postText(
         context: Context,
         shareMethod: HttpShareMethod,
-        shareDevice: ShareDevice.HttpShareDevice,
+        shareDevice: HttpShareDevice,
         dataContent: DataContent.StringContent
     ) =
         withContext(Dispatchers.IO) {
@@ -241,7 +243,7 @@ class AppSetsShareRepository() {
     suspend fun postByteArray(
         context: Context,
         shareMethod: HttpShareMethod,
-        shareDevice: ShareDevice.HttpShareDevice,
+        shareDevice: HttpShareDevice,
         dataContent: DataContent.ByteArrayContent
     ) =
         withContext(Dispatchers.IO) {
@@ -286,7 +288,7 @@ class AppSetsShareRepository() {
     suspend fun postFile(
         context: Context,
         shareMethod: HttpShareMethod,
-        shareDevice: ShareDevice.HttpShareDevice,
+        shareDevice: HttpShareDevice,
         dataContent: DataContent.FileContent
     ) =
         withContext(Dispatchers.IO) {
@@ -330,7 +332,7 @@ class AppSetsShareRepository() {
     suspend fun postUri(
         context: Context,
         shareMethod: HttpShareMethod,
-        shareDevice: ShareDevice.HttpShareDevice,
+        shareDevice: HttpShareDevice,
         dataContent: DataContent.UriContent
     ) =
         withContext(Dispatchers.IO) {
@@ -372,7 +374,7 @@ class AppSetsShareRepository() {
             designResponse
         }
 
-    suspend fun prepareSend(shareDevice: ShareDevice.HttpShareDevice, uri: String) =
+    suspend fun prepareSend(shareDevice: HttpShareDevice, uri: String) =
         withContext(Dispatchers.IO) {
             val urlProvider =
                 ShareDeviceBaseUrlProvider(shareDevice, HttpShareMethod.SHARE_SERVER_API_PORT)
@@ -385,7 +387,7 @@ class AppSetsShareRepository() {
         }
 
     suspend fun prepareSendResponse(
-        shareDevice: ShareDevice.HttpShareDevice,
+        shareDevice: HttpShareDevice,
         isAccept: Boolean,
         isPreferDownloadSelf: Boolean
     ) =
@@ -464,7 +466,7 @@ class AppSetsShareRepository() {
 
     suspend fun resumeHandleSend(
         shareMethod: HttpShareMethod,
-        shareDevice: ShareDevice.HttpShareDevice,
+        shareDevice: HttpShareDevice,
         uri: String,
         by: String,
         sendDirect: Boolean = false,
@@ -501,7 +503,7 @@ class AppSetsShareRepository() {
 
     private suspend fun handleSendForDevice(
         shareMethod: HttpShareMethod,
-        shareDevice: ShareDevice.HttpShareDevice,
+        shareDevice: HttpShareDevice,
         sendDataRunnableInfo: HttpShareMethod.SendDataRunnableInfo?,
         uri: String,
         sendDirect: Boolean = false
@@ -565,7 +567,7 @@ class AppSetsShareRepository() {
 
     suspend fun checkDevicePin(
         shareMethod: HttpShareMethod,
-        shareDevice: ShareDevice.HttpShareDevice,
+        shareDevice: HttpShareDevice,
         uri: String
     ) {
         PurpleLogger.current.d(TAG, "checkDevicePin, shareDevice:$shareDevice")
@@ -582,7 +584,7 @@ class AppSetsShareRepository() {
 
     suspend fun handleDownload(
         shareMethod: HttpShareMethod,
-        shareDevice: ShareDevice.HttpShareDevice,
+        shareDevice: HttpShareDevice,
         uri: String
     ) = coroutineScope {
         PurpleLogger.current.d(TAG, "handleDownload")
@@ -638,7 +640,7 @@ class AppSetsShareRepository() {
     }
 
     suspend fun getContentList(
-        shareDevice: ShareDevice.HttpShareDevice,
+        shareDevice: HttpShareDevice,
         uri: String
     ): DesignResponse<ContentInfoListWrapper> =
         withContext(Dispatchers.IO) {
@@ -661,7 +663,7 @@ class AppSetsShareRepository() {
 
     suspend fun getContent(
         shareMethod: HttpShareMethod,
-        shareDevice: ShareDevice.HttpShareDevice,
+        shareDevice: HttpShareDevice,
         contentInfo: ContentInfo,
         tempDataContent: DataContent
     ) = withContext(Dispatchers.IO) {
@@ -732,7 +734,7 @@ class AppSetsShareRepository() {
 
     private fun saveContentResponseToFile(
         shareMethod: HttpShareMethod,
-        shareDevice: ShareDevice.HttpShareDevice,
+        shareDevice: HttpShareDevice,
         tempDataContent: DataContent,
         request: Request,
         response: Response<ResponseBody>

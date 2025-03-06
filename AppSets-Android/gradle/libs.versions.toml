@@ -2,7 +2,7 @@
 project_test = true
 
 [versions]
-agp = "8.8.2"
+agp = "8.9.0"
 kotlin = "2.1.0"
 cor-ktx = "1.15.0"
 junit = "4.13.2"

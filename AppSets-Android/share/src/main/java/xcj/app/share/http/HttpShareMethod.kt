@@ -9,20 +9,22 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import xcj.app.compose_share.ui.viewmodel.AnyStateViewModel.Companion.bottomSheetState
 import xcj.app.share.base.ClientInfo
 import xcj.app.share.base.DataContent
 import xcj.app.share.base.DataSendContent
 import xcj.app.share.base.DeviceAddress
 import xcj.app.share.base.DeviceIP
-import xcj.app.share.base.DeviceName
 import xcj.app.share.base.ShareDevice
 import xcj.app.share.base.ShareMethod
+import xcj.app.share.http.base.HttpContent
+import xcj.app.share.http.base.HttpShareDevice
 import xcj.app.share.http.common.ServerBootStateInfo
+import xcj.app.share.http.discovery.BonjourDiscovery
+import xcj.app.share.http.discovery.Discovery
+import xcj.app.share.http.discovery.DiscoveryEndpoint
 import xcj.app.share.http.repository.AppSetsShareRepository
 import xcj.app.share.ui.compose.AppSetsShareActivity
 import xcj.app.share.ui.compose.AppSetsShareViewModel
@@ -37,24 +39,17 @@ import xcj.app.web.webserver.interfaces.ListenersProvider
 import xcj.app.web.webserver.interfaces.ProgressListener
 import xcj.app.web.webserver.netty.ServerBootStrap
 import java.net.Inet4Address
-import java.net.Inet6Address
 import java.net.InetAddress
 import java.net.NetworkInterface
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
-import javax.jmdns.JmDNS
-import javax.jmdns.ServiceEvent
-import javax.jmdns.ServiceInfo
-import javax.jmdns.ServiceListener
 
 typealias SuspendRunnable = suspend () -> Unit
 
-class HttpShareMethod : ShareMethod(), ContentReceivedListener, ServiceListener, ListenersProvider {
+class HttpShareMethod : ShareMethod(), ContentReceivedListener, ListenersProvider {
     companion object {
         private const val TAG = "HttpShareMethod"
         const val NAME = "HTTP"
-        private const val DNS_SERVER_PORT = 11100
-        private const val DNS_SERVER_TYPE = "_http._tcp.local."
         const val SHARE_SERVER_API_PORT = 11101
         const val SHARE_SERVER_FILE_API_PORT = 11102
     }
@@ -75,7 +70,7 @@ class HttpShareMethod : ShareMethod(), ContentReceivedListener, ServiceListener,
 
     private val appSetsShareRepository = AppSetsShareRepository()
 
-    private var jmDNSMap: MutableMap<String, JmDNS> = mutableMapOf()
+    private var discovery: Discovery? = null
 
     private var serverBootStrap: ServerBootStrap? = null
 
@@ -100,7 +95,7 @@ class HttpShareMethod : ShareMethod(), ContentReceivedListener, ServiceListener,
     val serverBootStateInfoState: MutableState<ServerBootStateInfo> =
         mutableStateOf(ServerBootStateInfo.NotBooted)
 
-    val sendContentRunnableInfoMap: ConcurrentHashMap<ShareDevice.HttpShareDevice, SendDataRunnableInfo?> =
+    val sendContentRunnableInfoMap: ConcurrentHashMap<HttpShareDevice, SendDataRunnableInfo?> =
         ConcurrentHashMap()
 
     override fun getContentReceivedListener(): ContentReceivedListener? {
@@ -127,10 +122,13 @@ class HttpShareMethod : ShareMethod(), ContentReceivedListener, ServiceListener,
     override fun init(activity: AppSetsShareActivity, viewModel: AppSetsShareViewModel) {
         super.init(activity, viewModel)
         PurpleLogger.current.d(TAG, "init")
-        val shareDevice =
-            ShareDevice.HttpShareDevice(deviceName = mDeviceName)
-        viewModel.updateShareDeviceState(shareDevice)
         open()
+    }
+
+    override fun updateShareDevice() {
+        val shareDevice =
+            HttpShareDevice(deviceName = mDeviceName)
+        viewModel.updateShareDeviceState(shareDevice)
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
@@ -145,7 +143,7 @@ class HttpShareMethod : ShareMethod(), ContentReceivedListener, ServiceListener,
                 serverBootStateInfoState.value = makeBootedInfo(allAvailableLocalInetAddresses)
 
                 activity.lifecycleScope.launch {
-                    startServiceDiscovery(allAvailableLocalInetAddresses)
+                    startDiscoveryService(allAvailableLocalInetAddresses)
                 }
             }
 
@@ -243,203 +241,82 @@ class HttpShareMethod : ShareMethod(), ContentReceivedListener, ServiceListener,
 
         }
         LocalPurpleCoroutineScope.current.launch {
-            cancelServiceDiscovery()
+            stopDiscoveryService()
             serverBootStrap?.close(actionLister)
         }
     }
 
-    private suspend fun cancelServiceDiscovery() {
-        PurpleLogger.current.d(TAG, "cancelServiceDiscovery")
-        withContext(Dispatchers.IO) {
-            runCatching {
-                jmDNSMap.values.forEach {
-                    it.removeServiceListener(DNS_SERVER_TYPE, this@HttpShareMethod)
-                    it.unregisterAllServices()
-                    it.close()
-                }
-
-            }.onSuccess {
-                PurpleLogger.current.d(TAG, "cancelServiceDiscovery, success")
-            }.onFailure {
-                PurpleLogger.current.d(TAG, "cancelServiceDiscovery, failed!")
-            }
-        }
+    private suspend fun stopDiscoveryService() {
+        PurpleLogger.current.d(TAG, "stopDiscoveryService")
+        discovery?.stopService()
     }
 
     override fun discovery() {
         activity.lifecycleScope.launch {
             viewModel.updateIsDiscoveringState(true)
-            withContext(Dispatchers.IO) {
-                jmDNSMap.values.forEach {
-                    it.requestServiceInfo(DNS_SERVER_TYPE, mDeviceName.nickName)
-                }
-            }
+            discovery?.startDiscovery()
             delay(2000)
             viewModel.updateIsDiscoveringState(false)
         }
     }
 
-    private suspend fun startServiceDiscovery(allAvailableLocalInetAddresses: List<Pair<InetAddress, NetworkInterface>>) {
-        PurpleLogger.current.d(TAG, "startServiceDiscovery")
-        withContext(Dispatchers.IO) {
-            viewModel.updateIsDiscoveringState(true)
-            // 创建 JmDNS 实例
-            allAvailableLocalInetAddresses.mapNotNull {
-                if (it.first is Inet4Address) {
-                    it.first
-                } else {
-                    null
-                }
-            }.forEach { inet4Address ->
-                val jmdns = JmDNS.create(inet4Address)
-                // 创建服务信息
-                val serviceInfo = ServiceInfo.create(
-                    DNS_SERVER_TYPE,
-                    mDeviceName.nickName,
-                    DNS_SERVER_PORT,
-                    0,
-                    0,
-                    false,
-                    mapOf<String, String?>(
-                        ShareDevice.RAW_NAME to mDeviceName.rawName,
-                        ShareDevice.NICK_NAME to mDeviceName.nickName
-                    )
-                )
-                // 注册服务
-                runCatching {
-                    jmdns.registerService(serviceInfo)
-                    PurpleLogger.current.d(
-                        TAG,
-                        "startServiceDiscovery, Listening for HTTP services... on hostAddress:${inet4Address.hostAddress}"
-                    )
-                    jmdns.addServiceListener(DNS_SERVER_TYPE, this@HttpShareMethod) // 添加服务监听器
-                    jmDNSMap.put(inet4Address.hostAddress ?: "", jmdns)
-                }.onSuccess {
-                    PurpleLogger.current.d(
-                        TAG,
-                        "startServiceDiscovery, Service registered:${serviceInfo.qualifiedName},  on hostAddress:${inet4Address.hostAddress}"
-                    )
-                }
-            }
-            delay(2000)
-            viewModel.updateIsDiscoveringState(false)
-        }
-    }
-
-    override fun serviceAdded(event: ServiceEvent) {
-        PurpleLogger.current.d(TAG, "serviceAdded, $event")
-    }
-
-    override fun serviceRemoved(event: ServiceEvent) {
-        PurpleLogger.current.d(TAG, "serviceRemoved, $event")
-        val serviceInfos = event.dns.list(DNS_SERVER_TYPE, 2000)
-        PurpleLogger.current.d(TAG, "serviceRemoved, serviceInfos:${serviceInfos.joinToString()}")
-
-        val shareDeviceListInJmdns = mutableListOf<ShareDevice.HttpShareDevice>()
-        serviceInfos.forEach { serviceInfo ->
-            val rawName = serviceInfo.getPropertyString(ShareDevice.RAW_NAME)
-            val nickName = serviceInfo.getPropertyString(ShareDevice.NICK_NAME)
-            if (!rawName.isNullOrEmpty() && !nickName.isNullOrEmpty()) {
-                val deviceName = DeviceName(rawName, nickName)
-                val ips = serviceInfo.inetAddresses.mapNotNull {
-                    val deviceIP = if (it is Inet4Address) {
-                        DeviceIP(it.hostAddress ?: "", DeviceIP.IP_4)
-                    } else if (it is Inet6Address) {
-                        DeviceIP(it.hostAddress ?: "", DeviceIP.IP_6)
-                    } else {
-                        null
-                    }
-                    deviceIP
-                }
-                val deviceAddress = DeviceAddress(ips = ips)
-                shareDeviceListInJmdns.add(ShareDevice.HttpShareDevice(deviceName, deviceAddress))
+    private suspend fun startDiscoveryService(inetAddresses: List<Pair<InetAddress, NetworkInterface>>) {
+        PurpleLogger.current.d(TAG, "startDiscoveryService")
+        viewModel.updateIsDiscoveringState(true)
+        // 创建 JmDNS 实例
+        val inetAddresses = inetAddresses.mapNotNull {
+            if (it.first is Inet4Address) {
+                it.first
+            } else {
+                null
             }
         }
-
-        notifyShareDeviceRemovedOnJmdns(event.dns, shareDeviceListInJmdns)
+        val bonjourDiscovery = BonjourDiscovery(this)
+        discovery = bonjourDiscovery
+        bonjourDiscovery.startService(inetAddresses)
+        delay(2000)
+        viewModel.updateIsDiscoveringState(false)
     }
 
-    private fun notifyShareDeviceRemovedOnJmdns(
-        jmDNS: JmDNS,
-        shareDeviceListInJmdns: MutableList<ShareDevice.HttpShareDevice>
+    fun notifyShareDeviceRemovedOnDiscovery(
+        discoveryEndpoint: DiscoveryEndpoint,
+        shareDeviceList: MutableList<HttpShareDevice>
     ) {
         PurpleLogger.current.d(
             TAG,
-            "notifyShareDeviceRemoved, jmDNS:$jmDNS, shareDeviceListInJmdns:$shareDeviceListInJmdns"
+            "notifyShareDeviceRemovedOnDiscovery, discoveryEndpoint:$discoveryEndpoint, " +
+                    "shareDeviceList:$shareDeviceList"
         )
 
-        val newShareDeviceList = mutableListOf<ShareDevice.HttpShareDevice>()
-        val shareDeviceListInJmdnsRawNameMap =
-            shareDeviceListInJmdns.associateBy { it.deviceName.rawName }
+        val newShareDeviceList = mutableListOf<HttpShareDevice>()
+        val shareDeviceListInDiscoveryEndpointRawNameMap =
+            shareDeviceList.associateBy { it.deviceName.rawName }
 
         val oldShareDeviceList =
-            viewModel.shareDeviceListState.value.filterIsInstance<ShareDevice.HttpShareDevice>()
-        val oldShareDeviceListJmdnsMap = oldShareDeviceList.groupBy { it.jmDNS }
-        val notJmdnsShareDeviceList =
-            oldShareDeviceListJmdnsMap.filter { it.key != jmDNS }.flatMap { it.value }
-        newShareDeviceList.addAll(notJmdnsShareDeviceList)
+            viewModel.shareDeviceListState.value.filterIsInstance<HttpShareDevice>()
+        val oldShareDeviceListJmdnsMap = oldShareDeviceList.groupBy { it.discoveryEndPoint }
+        val notDiscoveryEndpointShareDeviceList =
+            oldShareDeviceListJmdnsMap.filter { it.key?.endpointHash() != discoveryEndpoint.endpointHash() }
+                .flatMap { it.value }
+        newShareDeviceList.addAll(notDiscoveryEndpointShareDeviceList)
 
-        oldShareDeviceListJmdnsMap.get(jmDNS)?.forEach {
-            if (shareDeviceListInJmdnsRawNameMap.containsKey(it.deviceName.rawName)) {
+        oldShareDeviceListJmdnsMap[discoveryEndpoint]?.forEach {
+            if (shareDeviceListInDiscoveryEndpointRawNameMap.containsKey(it.deviceName.rawName)) {
                 newShareDeviceList.add(it)
             }
         }
         viewModel.updateShareDeviceListState(newShareDeviceList)
     }
 
-    private fun notifyShareDeviceFoundOnJmdns(
-        jmDNS: JmDNS,
-        shareDeviceList: List<ShareDevice.HttpShareDevice>
+    fun notifyShareDeviceFoundOnDiscovery(
+        discoveryEndpoint: DiscoveryEndpoint,
+        shareDeviceList: List<HttpShareDevice>
     ) {
         PurpleLogger.current.d(
             TAG,
-            "notifyShareDeviceFoundOnJmdns, jmDNS:$jmDNS, shareDeviceList:$shareDeviceList"
+            "notifyShareDeviceFoundOnDiscovery, discoveryEndpoint:$discoveryEndpoint, shareDeviceList:$shareDeviceList"
         )
         viewModel.updateShareDeviceListWithDiff(this@HttpShareMethod, shareDeviceList)
-    }
-
-    override fun serviceResolved(event: ServiceEvent) {
-        PurpleLogger.current.d(TAG, "serviceResolved, $event")
-        val rawName = event.info.getPropertyString(ShareDevice.RAW_NAME)
-        val nickName = event.info.getPropertyString(ShareDevice.NICK_NAME)
-        if (rawName.isNullOrEmpty() || nickName.isNullOrEmpty()) {
-            PurpleLogger.current.d(TAG, "serviceResolved, rawName isNullOrEmpty or nickName isNullOrEmpty, return")
-            return
-        }
-        val deviceName = DeviceName(rawName, nickName)
-        val serverBootStateInfo = serverBootStateInfoState.value
-        var isSelf = false
-        val ips = event.info.inetAddresses.mapNotNull {
-            val deviceIP = if (it is Inet4Address) {
-                DeviceIP(it.hostAddress ?: "", DeviceIP.IP_4)
-            } else if (it is Inet6Address) {
-                DeviceIP(it.hostAddress ?: "", DeviceIP.IP_6)
-            } else {
-                null
-            }
-            if (deviceIP != null && serverBootStateInfo is ServerBootStateInfo.Booted) {
-                val contains =
-                    serverBootStateInfo.availableAddressInfo.firstOrNull { it.contains(deviceIP.ip) } != null
-                if (contains) {
-                    isSelf = true
-                }
-            }
-            deviceIP
-        }
-        if (isSelf) {
-            PurpleLogger.current.d(TAG, "serviceResolved, isSelf, return")
-            return
-        }
-        val deviceAddress = DeviceAddress(ips = ips)
-        val shareDeviceList = mutableListOf<ShareDevice.HttpShareDevice>()
-        shareDeviceList.add(
-            ShareDevice.HttpShareDevice(
-                deviceName,
-                deviceAddress,
-                jmDNS = event.dns
-            )
-        )
-        notifyShareDeviceFoundOnJmdns(event.dns, shareDeviceList)
     }
 
     override fun onContentReceived(content: Any) {
@@ -460,7 +337,7 @@ class HttpShareMethod : ShareMethod(), ContentReceivedListener, ServiceListener,
             TAG,
             "onShareDeviceClick, shareDevice:$shareDevice, clickType:$clickType"
         )
-        if (shareDevice !is ShareDevice.HttpShareDevice) {
+        if (shareDevice !is HttpShareDevice) {
             return
         }
 
@@ -485,7 +362,7 @@ class HttpShareMethod : ShareMethod(), ContentReceivedListener, ServiceListener,
 
     private fun getDeviceContentList(
         method: HttpShareMethod,
-        shareDevice: ShareDevice.HttpShareDevice
+        shareDevice: HttpShareDevice
     ) {
         activity.lifecycleScope.launch {
             requestNotNull(
@@ -523,9 +400,9 @@ class HttpShareMethod : ShareMethod(), ContentReceivedListener, ServiceListener,
         shareDevices: List<ShareDevice>,
         sendContentList: MutableList<DataContent>
     ) {
-        shareDevices.filterIsInstance<ShareDevice.HttpShareDevice>().forEach { shareDevice ->
+        shareDevices.filterIsInstance<HttpShareDevice>().forEach { shareDevice ->
             val dataSendContentList = sendContentList.map { dataContent ->
-                DataSendContent.HttpContent(shareDevice, dataContent)
+                HttpContent(shareDevice, dataContent)
             }
             val sendDataRunnableInfo = SendDataRunnableInfo()
             val sendContentRunnable: SuspendRunnable = suspend {
@@ -554,7 +431,7 @@ class HttpShareMethod : ShareMethod(), ContentReceivedListener, ServiceListener,
         return isNeedPin
     }
 
-    fun showPinToServerSheet(shareDevice: ShareDevice.HttpShareDevice) {
+    fun showPinToServerSheet(shareDevice: HttpShareDevice) {
         PurpleLogger.current.d(
             TAG,
             "onClientRequestPair, shareDevice:$shareDevice"
@@ -593,7 +470,7 @@ class HttpShareMethod : ShareMethod(), ContentReceivedListener, ServiceListener,
         showPinToClientSheet(shareDevice, pin)
     }
 
-    private fun showPinToClientSheet(shareDevice: ShareDevice.HttpShareDevice, pin: Int) {
+    private fun showPinToClientSheet(shareDevice: HttpShareDevice, pin: Int) {
         val bottomSheetState = viewModel.bottomSheetState()
         bottomSheetState.show {
             AppSetsSharePinSheet(
@@ -696,7 +573,8 @@ class HttpShareMethod : ShareMethod(), ContentReceivedListener, ServiceListener,
     ) {
         PurpleLogger.current.d(
             TAG,
-            "onServerPrepareSendResponse, clientInfo:$clientInfo, isAccept:$isAccept, preferDownloadSelf:$preferDownloadSelf"
+            "onServerPrepareSendResponse, clientInfo:$clientInfo, isAccept:$isAccept, " +
+                    "preferDownloadSelf:$preferDownloadSelf"
         )
         val shareDevice = findShareDeviceForClientInfo(clientInfo)
         if (shareDevice == null) {
@@ -734,7 +612,7 @@ class HttpShareMethod : ShareMethod(), ContentReceivedListener, ServiceListener,
     }
 
     private fun handleClientPrepareSendRequest(
-        shareDevice: ShareDevice.HttpShareDevice,
+        shareDevice: HttpShareDevice,
         isAccept: Boolean,
         isPreferDownloadSelf: Boolean,
         uri: String,
@@ -764,7 +642,7 @@ class HttpShareMethod : ShareMethod(), ContentReceivedListener, ServiceListener,
         }
     }
 
-    private fun handleClientPinRequest(shareDevice: ShareDevice.HttpShareDevice, pin: Int) {
+    private fun handleClientPinRequest(shareDevice: HttpShareDevice, pin: Int) {
         activity.lifecycleScope.launch {
             val shareToken = UUID.randomUUID().toString()
             requestRaw(
@@ -780,8 +658,8 @@ class HttpShareMethod : ShareMethod(), ContentReceivedListener, ServiceListener,
     }
 
 
-    override fun findShareDeviceForClientInfo(clientInfo: ClientInfo): ShareDevice.HttpShareDevice? {
-        return super.findShareDeviceForClientInfo(clientInfo) as? ShareDevice.HttpShareDevice
+    override fun findShareDeviceForClientInfo(clientInfo: ClientInfo): HttpShareDevice? {
+        return super.findShareDeviceForClientInfo(clientInfo) as? HttpShareDevice
     }
 
     override fun onScanShareDeviceAddress(addresses: Array<String>?) {
@@ -845,13 +723,13 @@ class HttpShareMethod : ShareMethod(), ContentReceivedListener, ServiceListener,
         return dataContent
     }
 
-    fun exchangeDeviceInfo(shareDevice: ShareDevice.HttpShareDevice): ShareDevice.HttpShareDevice? {
+    fun exchangeDeviceInfo(shareDevice: HttpShareDevice): HttpShareDevice? {
         viewModel.updateShareDeviceListWithDiff(this, listOf(shareDevice))
         return getCurrentShareDevice()
     }
 
-    fun getCurrentShareDevice(): ShareDevice.HttpShareDevice? {
+    fun getCurrentShareDevice(): HttpShareDevice? {
         val mShareDevice = viewModel.mShareDeviceState.value
-        return mShareDevice as? ShareDevice.HttpShareDevice
+        return mShareDevice as? HttpShareDevice
     }
 }

@@ -2,6 +2,7 @@ package xcj.app.share.http.controller
 
 import android.content.Context
 import xcj.app.share.base.ShareDevice
+import xcj.app.share.http.base.HttpShareDevice
 import xcj.app.share.http.model.ContentInfoListWrapper
 import xcj.app.share.http.service.AppSetsShareService
 import xcj.app.share.http.service.AppSetsShareServiceImpl
@@ -206,8 +207,8 @@ class AppSetsShareController {
     fun exchangeDeviceInfo(
         @AndroidContext(AndroidContext.TYPE_ACTIVITY) context: Context,
         @RequestInfo(what = RequestInfo.WHAT_REQUEST_REMOTE_HOST) clientHost: String,
-        @RequestBody shareDevice: ShareDevice.HttpShareDevice
-    ): DesignResponse<ShareDevice.HttpShareDevice> {
+        @RequestBody shareDevice: HttpShareDevice
+    ): DesignResponse<HttpShareDevice> {
         PurpleLogger.current.d(
             TAG,
             "exchangeDeviceInfo, context:$context, clientHost:$clientHost"

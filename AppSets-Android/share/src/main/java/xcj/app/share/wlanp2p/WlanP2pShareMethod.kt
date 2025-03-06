@@ -28,9 +28,7 @@ import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import xcj.app.share.base.ClientInfo
-import xcj.app.web.webserver.interfaces.ContentReceivedListener
 import xcj.app.share.base.DataContent
-import xcj.app.share.base.DataSendContent
 import xcj.app.share.base.DeviceName
 import xcj.app.share.base.DeviceNameExchangeListener
 import xcj.app.share.base.ShareDevice
@@ -39,10 +37,13 @@ import xcj.app.share.ui.compose.AppSetsShareActivity
 import xcj.app.share.ui.compose.AppSetsShareViewModel
 import xcj.app.share.wlanp2p.base.ISocketExceptionListener
 import xcj.app.share.wlanp2p.base.LogicEstablishListener
+import xcj.app.share.wlanp2p.base.P2pShareDevice
+import xcj.app.share.wlanp2p.base.WlanP2pContent
 import xcj.app.share.wlanp2p.common.P2pOneThread
 import xcj.app.share.wlanp2p.common.WlanP2pBroadCastReceiver
 import xcj.app.share.wlanp2p.common.WlanP2pEnableInfo
 import xcj.app.starter.android.util.PurpleLogger
+import xcj.app.web.webserver.interfaces.ContentReceivedListener
 import xcj.app.web.webserver.interfaces.ProgressListener
 
 class WlanP2pShareMethod : ShareMethod(), ContentReceivedListener {
@@ -92,10 +93,13 @@ class WlanP2pShareMethod : ShareMethod(), ContentReceivedListener {
     ) {
         super.init(activity, appSetsShareViewModel)
         PurpleLogger.current.d(TAG, "init")
-        val shareDevice =
-            ShareDevice.P2pShareDevice(deviceName = mDeviceName)
-        viewModel.updateShareDeviceState(shareDevice)
         open()
+    }
+
+    override fun updateShareDevice() {
+        val shareDevice =
+            P2pShareDevice(deviceName = mDeviceName)
+        viewModel.updateShareDeviceState(shareDevice)
     }
 
     override fun open() {
@@ -138,10 +142,10 @@ class WlanP2pShareMethod : ShareMethod(), ContentReceivedListener {
                 return@PeerListListener
             }
             val p2pShareDevice =
-                viewModel.mShareDeviceState.value as? ShareDevice.P2pShareDevice
+                viewModel.mShareDeviceState.value as? P2pShareDevice
             val wifiP2pGroup = p2pShareDevice?.wifiP2pGroup
             val shareDeviceList = wifiP2pDeviceList.map { wifiP2PDevice ->
-                ShareDevice.P2pShareDevice(
+                P2pShareDevice(
                     wifiP2PDevice,
                     wifiP2pGroup,
                     DeviceName(wifiP2PDevice.deviceName)
@@ -170,15 +174,12 @@ class WlanP2pShareMethod : ShareMethod(), ContentReceivedListener {
                 return@DeviceInfoListener
             }
             val p2pShareDevice =
-                viewModel.mShareDeviceState.value as? ShareDevice.P2pShareDevice
-            val newShareDevice = if (p2pShareDevice != null) {
-                p2pShareDevice.copy(wifiP2pDevice = wifiP2pDevice)
-            } else {
-                ShareDevice.P2pShareDevice(
+                viewModel.mShareDeviceState.value as? P2pShareDevice
+            val newShareDevice = p2pShareDevice?.copy(wifiP2pDevice = wifiP2pDevice)
+                ?: P2pShareDevice(
                     wifiP2pDevice = wifiP2pDevice,
                     deviceName = mDeviceName
                 )
-            }
             viewModel.updateShareDeviceState(newShareDevice)
 
         }
@@ -188,7 +189,7 @@ class WlanP2pShareMethod : ShareMethod(), ContentReceivedListener {
                 return@GroupInfoListener
             }
             val p2pShareDevice =
-                viewModel.mShareDeviceState.value as? ShareDevice.P2pShareDevice
+                viewModel.mShareDeviceState.value as? P2pShareDevice
             if (p2pShareDevice == null) {
                 return@GroupInfoListener
             }
@@ -248,7 +249,7 @@ class WlanP2pShareMethod : ShareMethod(), ContentReceivedListener {
     }
 
     @SuppressLint("MissingPermission")
-    private fun removeClientIfNeeded(shareDevice: ShareDevice.P2pShareDevice) {
+    private fun removeClientIfNeeded(shareDevice: P2pShareDevice) {
         if (!isGroupOwner) {
             return
         }
@@ -290,10 +291,10 @@ class WlanP2pShareMethod : ShareMethod(), ContentReceivedListener {
             PurpleLogger.current.d(TAG, "send, sendContentList is empty, return")
             return
         }
-        shareDevices.filterIsInstance<ShareDevice.P2pShareDevice>().forEach { shareDevice ->
+        shareDevices.filterIsInstance<P2pShareDevice>().forEach { shareDevice ->
             sendContentList.forEach { dataContent ->
                 val dataSendContent =
-                    DataSendContent.WlanP2pContent(shareDevice, dataContent)
+                    WlanP2pContent(shareDevice, dataContent)
                 activity.lifecycleScope.launch {
                     p2pOneThread?.writeContent(activity, dataSendContent)
                 }
@@ -315,10 +316,10 @@ class WlanP2pShareMethod : ShareMethod(), ContentReceivedListener {
 
     private fun doLogicConnect() {
         val mySelfShareDevice = viewModel.mShareDeviceState.value
-        if (mySelfShareDevice !is ShareDevice.P2pShareDevice) {
+        if (mySelfShareDevice !is P2pShareDevice) {
             PurpleLogger.current.d(
                 TAG,
-                "doLogicConnect, shareDevice is not ShareDevice.P2pShareDevice, return"
+                "doLogicConnect, shareDevice is not P2pShareDevice, return"
             )
             return
         }
@@ -413,7 +414,7 @@ class WlanP2pShareMethod : ShareMethod(), ContentReceivedListener {
             TAG,
             "onShareDeviceClick, shareDevice:$shareDevice, clickType:$clickType"
         )
-        if (shareDevice !is ShareDevice.P2pShareDevice) {
+        if (shareDevice !is P2pShareDevice) {
             return
         }
         val wifiP2pDevice = shareDevice.wifiP2pDevice
@@ -448,7 +449,7 @@ class WlanP2pShareMethod : ShareMethod(), ContentReceivedListener {
     }
 
     @SuppressLint("MissingPermission")
-    private fun toConnectDevice(shareDevice: ShareDevice.P2pShareDevice) {
+    private fun toConnectDevice(shareDevice: P2pShareDevice) {
         if (!checkConditions()) {
             return
         }
@@ -519,7 +520,7 @@ class WlanP2pShareMethod : ShareMethod(), ContentReceivedListener {
     }
 
     @SuppressLint("MissingPermission")
-    private fun disconnect(shareDevice: ShareDevice.P2pShareDevice) {
+    private fun disconnect(shareDevice: P2pShareDevice) {
         if (!checkConditions()) {
             return
         }
@@ -536,7 +537,7 @@ class WlanP2pShareMethod : ShareMethod(), ContentReceivedListener {
         }
     }
 
-    private fun closeClientThread(shareDevice: ShareDevice.P2pShareDevice) {
+    private fun closeClientThread(shareDevice: P2pShareDevice) {
         p2pOneThread?.close(shareDevice)
     }
 
@@ -758,12 +759,12 @@ class WlanP2pShareMethod : ShareMethod(), ContentReceivedListener {
     fun updateShareDeviceState(wifiP2pDevice: WifiP2pDevice) {
         val appSetsViewModel = viewModel
         val shareDevice = appSetsViewModel.mShareDeviceState.value
-        if (shareDevice is ShareDevice.P2pShareDevice) {
+        if (shareDevice is P2pShareDevice) {
             appSetsViewModel.updateShareDeviceState(shareDevice.copy(wifiP2pDevice = wifiP2pDevice))
         }
     }
 
-    override fun findShareDeviceForClientInfo(clientInfo: ClientInfo): ShareDevice.P2pShareDevice? {
-        return super.findShareDeviceForClientInfo(clientInfo) as? ShareDevice.P2pShareDevice
+    override fun findShareDeviceForClientInfo(clientInfo: ClientInfo): P2pShareDevice? {
+        return super.findShareDeviceForClientInfo(clientInfo) as? P2pShareDevice
     }
 }

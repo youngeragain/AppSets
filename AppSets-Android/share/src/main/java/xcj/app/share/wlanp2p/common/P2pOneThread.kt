@@ -15,6 +15,8 @@ import xcj.app.share.wlanp2p.base.DataHandleExceptionListener
 import xcj.app.share.wlanp2p.base.ISocketExceptionListener
 import xcj.app.share.wlanp2p.base.IThreadWriter
 import xcj.app.share.wlanp2p.base.LogicEstablishListener
+import xcj.app.share.wlanp2p.base.P2pShareDevice
+import xcj.app.share.wlanp2p.base.WlanP2pContent
 import xcj.app.starter.android.util.PurpleLogger
 import xcj.app.starter.util.ContentType
 import java.io.Closeable
@@ -24,7 +26,7 @@ import java.net.ServerSocket
 import java.net.Socket
 
 class P2pOneThread(
-    private val shareDevice: ShareDevice.P2pShareDevice,
+    private val shareDevice: P2pShareDevice,
     private val host: String? = null,
     private val port: Int = SERVER_PORT,
     private val readProgressListener: ProgressListener?,
@@ -48,7 +50,7 @@ class P2pOneThread(
     //if is client this will be Socket
     private var socket: Closeable? = null
 
-    private val clientRWThreadMap: MutableMap<ShareDevice.P2pShareDevice, ClientRWThread> =
+    private val clientRWThreadMap: MutableMap<P2pShareDevice, ClientRWThread> =
         mutableMapOf()
 
     private var serverClosed = true
@@ -57,8 +59,11 @@ class P2pOneThread(
 
     override suspend fun writeContent(
         context: Context,
-        dataSendContent: DataSendContent.WlanP2pContent
+        dataSendContent: DataSendContent
     ) {
+        if(dataSendContent !is WlanP2pContent){
+            return
+        }
         if (isServer) {
             if (serverClosed) {
                 return
@@ -156,7 +161,7 @@ class P2pOneThread(
 
     private fun setupSocketStream(
         clientSocket: Socket,
-        currentDeviceShareDevice: ShareDevice.P2pShareDevice
+        currentDeviceShareDevice: P2pShareDevice
     ) {
         try {
             PurpleLogger.current.d(
@@ -200,7 +205,7 @@ class P2pOneThread(
             if (isServer) {
                 val deviceIPS = listOf(DeviceIP(ip = clientSocket.inetAddress.hostAddress ?: ""))
                 val deviceAddress = DeviceAddress(ips = deviceIPS)
-                val mockShareDeviceForClient = ShareDevice.P2pShareDevice(
+                val mockShareDeviceForClient = P2pShareDevice(
                     deviceName = DeviceName.NONE,
                     deviceAddress = deviceAddress
                 )
@@ -244,7 +249,7 @@ class P2pOneThread(
         }
     }
 
-    fun close(shareDevice: ShareDevice.P2pShareDevice? = null) {
+    fun close(shareDevice: P2pShareDevice? = null) {
         if (shareDevice != null) {
             closeServerClientThreadForDevice(shareDevice)
         } else {
@@ -280,7 +285,7 @@ class P2pOneThread(
         }
     }
 
-    private fun closeServerClientThreadForDevice(shareDevice: ShareDevice.P2pShareDevice) {
+    private fun closeServerClientThreadForDevice(shareDevice: P2pShareDevice) {
         PurpleLogger.current.d(
             TAG,
             "closeServerClientThreadForDevice, shareDevice:$shareDevice"

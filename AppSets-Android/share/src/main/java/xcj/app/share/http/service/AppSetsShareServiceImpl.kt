@@ -7,6 +7,7 @@ import xcj.app.share.base.ClientInfo
 import xcj.app.share.base.DataContent
 import xcj.app.share.base.ShareDevice
 import xcj.app.share.http.HttpShareMethod
+import xcj.app.share.http.base.HttpShareDevice
 import xcj.app.share.http.common.DataContentReadableData
 import xcj.app.share.http.common.PostFileHelper
 import xcj.app.share.http.model.ContentInfo
@@ -341,8 +342,8 @@ class AppSetsShareServiceImpl : AppSetsShareService {
     override fun exchangeDeviceInfo(
         context: Context,
         clientHost: String,
-        device: ShareDevice.HttpShareDevice
-    ): DesignResponse<ShareDevice.HttpShareDevice> {
+        device: HttpShareDevice
+    ): DesignResponse<HttpShareDevice> {
         val shareMethod = getShareMethod(context)
         if (shareMethod == null) {
             return DesignResponse(data = null)

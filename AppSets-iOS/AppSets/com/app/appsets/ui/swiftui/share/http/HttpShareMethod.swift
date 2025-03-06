@@ -4,58 +4,77 @@
 //
 //  Created by caiju Xu on 2025/3/2.
 //
+import Foundation
 
-
-class HttpShareMethod : ShareMethod {
-    
+class HttpShareMethod: ShareMethod {
     private static let TAG = "HttpShareMethod"
+    public static var INSTANCE = HttpShareMethod(viewModel: ShareViewModel.INSTANCE)
+
+    private var serverBootStrap: ServerBootStrap? = nil
+
+    private var discovery: Discovery? = nil
+
+    override init(viewModel: ShareViewModel) {
+        super.init(viewModel: viewModel)
+    }
     
-    private var serverBootStrap : ServerBootStrap? = nil
-    
+    deinit{
+        PurpleLogger.current.d(HttpShareMethod.TAG, "deinit")
+    }
+
     override func initMethod() {
+        updateDeviceName()
         open()
     }
     
-    func open(){
+    func open() {
         PurpleLogger.current.d(HttpShareMethod.TAG, "open")
-        if(serverBootStrap != nil){
-            return
-        }
-       
-        deviceName = DeviceName.RANDOM
-        struct Listener : ServerBootStrap.ActionListener {
-            let deviceName:DeviceName
+        struct Listener: ServerBootStrap.ActionListener {
+            let httpShareMethod: HttpShareMethod
             func onSuccess() {
                 PurpleLogger.current.d(HttpShareMethod.TAG, "open, success")
-                startServiceDiscovery()
+                httpShareMethod.startDiscoveryService()
             }
+
             func onFailure(reason: String?) {
                 PurpleLogger.current.d(HttpShareMethod.TAG, "open, failure")
             }
-            
-            func startServiceDiscovery(){
-                let discoery = Discovery()
-                discoery.start(deviceName: deviceName)
-            }
         }
-        let actionListener = Listener(deviceName: deviceName)
+        let actionListener = Listener(httpShareMethod: self)
         serverBootStrap = ServerBootStrap()
-        serverBootStrap?.main(actionListenr: actionListener)
+        serverBootStrap?.main(actionListener: actionListener)
     }
-    
-   
-    
+
+    func startDiscoveryService() {
+        let discovery = BonjourDiscovery(httpShareMethod: self)
+        self.discovery = discovery
+        discovery.startService()
+        discovery.startDiscovery()
+    }
+
     override func destroy() {
-        struct Listener : ServerBootStrap.ActionListener {
+        PurpleLogger.current.d(HttpShareMethod.TAG, "destroy, discovery:\(String(describing: discovery))")
+        struct Listener: ServerBootStrap.ActionListener {
             func onSuccess() {
                 PurpleLogger.current.d(HttpShareMethod.TAG, "destroy, success")
             }
+
             func onFailure(reason: String?) {
-                PurpleLogger.current.d(HttpShareMethod.TAG, "destroy, failure")
+                PurpleLogger.current.d(HttpShareMethod.TAG, "destroy, failure, \(String(describing: reason))")
             }
         }
+        discovery?.stopService()
         let actionListener = Listener()
-        serverBootStrap?.close(actionListenr: actionListener)
+        serverBootStrap?.close(actionListener: actionListener)
     }
     
+    override func updateDeviceName() {
+        super.updateDeviceName()
+        let shareDevice = HttpShareDevice(
+            deviceTyp: ShareDeviceStatic.DEVICE_TYPE_PHONE,
+            deviceName: deviceName,
+            deviceAddress: DevcieAddress.NONE
+        )
+        viewModel.updateShareDevice(shareDevice)
+    }
 }

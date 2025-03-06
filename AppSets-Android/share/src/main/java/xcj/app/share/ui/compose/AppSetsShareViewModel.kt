@@ -12,13 +12,16 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import xcj.app.compose_share.ui.viewmodel.AnyStateViewModel
+import xcj.app.share.base.BasicShareDevice
 import xcj.app.share.base.DataContent
 import xcj.app.share.base.DeviceName
 import xcj.app.share.base.ShareDevice
 import xcj.app.share.base.ShareMethod
 import xcj.app.share.http.HttpShareMethod
+import xcj.app.share.http.base.HttpShareDevice
 import xcj.app.share.http.model.ContentInfoListWrapper
 import xcj.app.share.wlanp2p.WlanP2pShareMethod
+import xcj.app.share.wlanp2p.base.P2pShareDevice
 import xcj.app.starter.android.util.FileUtil
 import xcj.app.starter.android.util.PurpleLogger
 import xcj.app.web.webserver.base.DataProgressInfo
@@ -46,7 +49,7 @@ class AppSetsShareViewModel : AnyStateViewModel() {
 
     val isDiscoveringState: MutableState<Boolean> = mutableStateOf(false)
 
-    val mShareDeviceState: MutableState<ShareDevice> = mutableStateOf(ShareDevice.Base())
+    val mShareDeviceState: MutableState<ShareDevice> = mutableStateOf(BasicShareDevice())
 
     val shareDeviceListState: MutableState<List<ShareDevice>> = mutableStateOf(emptyList())
 
@@ -84,7 +87,7 @@ class AppSetsShareViewModel : AnyStateViewModel() {
         when (shareMethod) {
             is WlanP2pShareMethod -> {
                 val shareDeviceList =
-                    shareDeviceListState.value.filterIsInstance<ShareDevice.P2pShareDevice>()
+                    shareDeviceListState.value.filterIsInstance<P2pShareDevice>()
                 if (!shareDeviceList.isEmpty()) {
                     PurpleLogger.current.d(
                         TAG,
@@ -131,7 +134,7 @@ class AppSetsShareViewModel : AnyStateViewModel() {
 
         if (mySelfShareDevice.deviceName.rawName == deviceName.rawName) {
             when (mySelfShareDevice) {
-                is ShareDevice.P2pShareDevice -> {
+                is P2pShareDevice -> {
 
                     val newMySelfShareDeviceP2pShareDevice =
                         mySelfShareDevice.copy(deviceName = deviceName)
@@ -142,7 +145,7 @@ class AppSetsShareViewModel : AnyStateViewModel() {
                     )
                 }
 
-                is ShareDevice.HttpShareDevice -> {
+                is HttpShareDevice -> {
 
                 }
             }
@@ -171,10 +174,10 @@ class AppSetsShareViewModel : AnyStateViewModel() {
                 val newShareDeviceList = mutableListOf<ShareDevice>()
 
                 val wifiP2pDeviceMapShareDevice =
-                    shareDeviceList.filterIsInstance<ShareDevice.P2pShareDevice>()
+                    shareDeviceList.filterIsInstance<P2pShareDevice>()
                         .associateBy { it.deviceName.rawName }
 
-                upcomingDevices.filterIsInstance<ShareDevice.P2pShareDevice>()
+                upcomingDevices.filterIsInstance<P2pShareDevice>()
                     .forEach { upcomingDevice ->
                         val existed =
                             wifiP2pDeviceMapShareDevice[upcomingDevice.deviceName.rawName]
@@ -206,7 +209,7 @@ class AppSetsShareViewModel : AnyStateViewModel() {
                 val newShareDeviceList = mutableListOf<ShareDevice>()
 
                 val httpDeviceMapShareDevice =
-                    shareDeviceList.filterIsInstance<ShareDevice.HttpShareDevice>()
+                    shareDeviceList.filterIsInstance<HttpShareDevice>()
                         .associateBy { it.deviceName.rawName }
                 val upcomingDeviceMap = upcomingDevices.associateBy { it.deviceName.rawName }
                 httpDeviceMapShareDevice.forEach {

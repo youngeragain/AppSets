@@ -29,7 +29,7 @@ struct AppSetsShareController<ReqContext: RequestContext> {
     }
 
     private func findContext() -> any Context {
-        return ContextImpl()
+        return LocalContext.current
     }
 
     private func findClientHost(_ request: Request, reqContext: ReqContext) -> String {

@@ -13,35 +13,48 @@ class ServerBootStrap {
         func onFailure(reason: String?)
     }
 
-    func main(actionListenr: ActionListener?) {
-        let thread = Thread {
-            Task.detached {
-                do {
-                    let router = Router()
-                    let appSetsShareController = AppSetsShareController<BasicRequestContext>()
-                    appSetsShareController.addRoutes(to: router.group("/"))
-                    // create application using router
-                    let app = Hummingbird.Application(
-                        router: router,
-                        configuration: .init(address: .hostname("0.0.0.0", port: 11101))
-                    )
-                    // run hummingbird application
-                    actionListenr?.onSuccess()
-                    try await app.runService()
-                } catch {
-                    actionListenr?.onFailure(reason: nil)
-                }
+    private static let TAG = "ServerBootStrap"
+
+    private var app: (any Hummingbird.ApplicationProtocol)? = nil
+
+    func main(actionListener: ActionListener?) {
+        PurpleLogger.current.d(ServerBootStrap.TAG, "main")
+        Task.detached {
+            do {
+                self.close(actionListener: nil)
+
+                let router = Router()
+                let appSetsShareController = AppSetsShareController<BasicRequestContext>()
+                appSetsShareController.addRoutes(to: router.group("/"))
+                // create application using router
+                let app = Hummingbird.Application(
+                    router: router,
+                    configuration: .init(address: .hostname("0.0.0.0", port: 11101))
+                )
+                self.app = app
+                // run hummingbird application
+                actionListener?.onSuccess()
+                try await app.runService()
+            } catch let e {
+                actionListener?.onFailure(reason: e.localizedDescription)
             }
         }
-        thread.name = "humingBirdThread"
-        thread.start()
     }
 
-    func close(actionListenr: ActionListener?) {
+    func close(actionListener: ActionListener?) {
+        PurpleLogger.current.d(ServerBootStrap.TAG, "close")
+        if app == nil {
+            return
+        }
         Task.detached(
             operation: {
-                try await EventLoopGroupProvider.singleton.eventLoopGroup.shutdownGracefully()
-                actionListenr?.onSuccess()
+                do {
+                    try await self.app?.eventLoopGroup.shutdownGracefully()
+                    self.app = nil
+                    actionListener?.onSuccess()
+                } catch let e {
+                    actionListener?.onFailure(reason: e.localizedDescription)
+                }
             }
         )
     }

@@ -12,6 +12,8 @@ import xcj.app.share.base.ShareDevice
 import xcj.app.share.wlanp2p.base.DataHandleExceptionListener
 import xcj.app.share.wlanp2p.base.ISocketState
 import xcj.app.share.wlanp2p.base.IThreadWriter
+import xcj.app.share.wlanp2p.base.P2pShareDevice
+import xcj.app.share.wlanp2p.base.WlanP2pContent
 import xcj.app.share.wlanp2p.base.WriteFunction
 import xcj.app.share.wlanp2p.base.WriteMethod
 import xcj.app.share.wlanp2p.channel.ChannelWriteMethod
@@ -22,7 +24,7 @@ import java.io.File
 import java.net.Socket
 
 class WriteThread(
-    private val shareDevice: ShareDevice.P2pShareDevice,
+    private val shareDevice: P2pShareDevice,
     private val socket: Socket,
     progressListener: ProgressListener?,
     private val dataHandleExceptionListener: DataHandleExceptionListener?
@@ -243,7 +245,7 @@ class WriteThread(
 
     override suspend fun writeContent(
         context: Context,
-        dataSendContent: DataSendContent.WlanP2pContent
+        dataSendContent: DataSendContent
     ) {
         val dataContent = dataSendContent.content
         when (dataContent) {

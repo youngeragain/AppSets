@@ -12,6 +12,7 @@ import retrofit2.http.POST
 import retrofit2.http.Part
 import retrofit2.http.Streaming
 import xcj.app.share.base.ShareDevice
+import xcj.app.share.http.base.HttpShareDevice
 import xcj.app.share.http.model.ContentInfoListWrapper
 import xcj.app.starter.foundation.http.DesignResponse
 
@@ -82,6 +83,6 @@ interface AppSetsShareApi {
     @Headers("Content-Type:application/json")
     @POST("/appsets/share/device/info/exchange")
     suspend fun exchangeDeviceInfo(
-        @Body shareDevice: ShareDevice.HttpShareDevice,
-    ): DesignResponse<ShareDevice.HttpShareDevice>
+        @Body shareDevice: HttpShareDevice,
+    ): DesignResponse<HttpShareDevice>
 }

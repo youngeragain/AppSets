@@ -104,6 +104,7 @@ import xcj.app.share.rpc.RpcShareMethod
 import xcj.app.share.ui.compose.AppSetsShareActivity
 import xcj.app.share.ui.compose.AppSetsShareViewModel
 import xcj.app.share.wlanp2p.WlanP2pShareMethod
+import xcj.app.share.wlanp2p.base.P2pShareDevice
 import xcj.app.starter.util.QrCodeUtil
 
 data class BoxFocusInfo(
@@ -969,7 +970,7 @@ fun SettingsSheet(
                                     }
                                     val wifiP2PEnableInfoState by wlanP2pShareMethod.wifiP2PEnableInfoState
                                     val p2pShareDevice =
-                                        (mShareDevice as? ShareDevice.P2pShareDevice)
+                                        (mShareDevice as? P2pShareDevice)
                                     if (p2pShareDevice == null) {
                                         return@Box
                                     }
@@ -1658,7 +1659,7 @@ fun AppSetsShareReceivedSpace(
 }
 
 @Composable
-fun getP2pShareDeviceStatus(shareDevice: ShareDevice.P2pShareDevice): Pair<String, String> {
+fun getP2pShareDeviceStatus(shareDevice: P2pShareDevice): Pair<String, String> {
     return when (shareDevice.wifiP2pDevice?.status) {
         WifiP2pDevice.AVAILABLE -> {
             Pair(
@@ -1730,7 +1731,7 @@ fun ShareDeviceSmallComponent(modifier: Modifier, shareDevice: ShareDevice) {
         }
         val rawNameText =
             when (shareDevice) {
-                is ShareDevice.P2pShareDevice -> {
+                is P2pShareDevice -> {
                     val statusInfo =
                         getP2pShareDeviceStatus(shareDevice)
                     "${shareDevice.deviceName.rawName} ${statusInfo.second}"
@@ -1779,7 +1780,7 @@ fun ShareDeviceMiddleComponent(modifier: Modifier, shareDevice: ShareDevice) {
         }
         val rawNameText =
             when (shareDevice) {
-                is ShareDevice.P2pShareDevice -> {
+                is P2pShareDevice -> {
                     val statusInfo =
                         getP2pShareDeviceStatus(shareDevice)
                     "${shareDevice.deviceName.rawName} ${statusInfo.second}"
@@ -1827,7 +1828,7 @@ fun ShareDeviceNormalComponent(modifier: Modifier, shareDevice: ShareDevice) {
         }
         val rawNameText =
             when (shareDevice) {
-                is ShareDevice.P2pShareDevice -> {
+                is P2pShareDevice -> {
                     val statusInfo =
                         getP2pShareDeviceStatus(shareDevice)
                     "${shareDevice.deviceName.rawName} ${statusInfo.second}"

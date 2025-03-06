@@ -8,12 +8,21 @@ import Foundation
 import SwiftUI
 
 class ShareMethod: SwiftUILifecycle, ObservableObject {
-    @Published var deviceName: DeviceName = DeviceName.NONE
+    public static let TAG_B = "ShareMethod"
+    var deviceName: DeviceName = DeviceName.NONE
+    
+    let viewModel: ShareViewModel
+    
+    init(viewModel: ShareViewModel) {
+        self.viewModel = viewModel
+    }
 
     func initMethod() {
+        
     }
 
     func onAppear() {
+        initMethod()
     }
 
     func onDisappear() {
@@ -28,5 +37,12 @@ class ShareMethod: SwiftUILifecycle, ObservableObject {
     }
 
     func destroy() {
+        
+    }
+    
+    func updateDeviceName(){
+        PurpleLogger.current.d(ShareMethod.TAG_B, "updateDeviceName, before name:\(deviceName.nickName)")
+        deviceName = DeviceName.RANDOM
+        PurpleLogger.current.d(ShareMethod.TAG_B, "updateDeviceName, after name:\(deviceName.nickName)")
     }
 }

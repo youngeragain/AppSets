@@ -2,6 +2,7 @@ package xcj.app.share.http.service
 
 import android.content.Context
 import xcj.app.share.base.ShareDevice
+import xcj.app.share.http.base.HttpShareDevice
 import xcj.app.share.http.model.ContentInfoListWrapper
 import xcj.app.starter.foundation.http.DesignResponse
 import xcj.app.web.webserver.base.ContentDownloadN
@@ -82,6 +83,6 @@ interface AppSetsShareService {
     fun exchangeDeviceInfo(
         context: Context,
         clientHost: String,
-        device: ShareDevice.HttpShareDevice
-    ): DesignResponse<ShareDevice.HttpShareDevice>
+        device: HttpShareDevice
+    ): DesignResponse<HttpShareDevice>
 }

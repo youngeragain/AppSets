@@ -5,14 +5,13 @@
 //  Created by caiju Xu on 2024/7/15.
 //
 
-import Foundation
 import Alamofire
+import Foundation
 
 class BaseApiImpl {
-    
     private static let TAG = "BaseApiImpl"
-    
-    func getResponse<T:DesignResponse>(
+
+    func getResponse<T: DesignResponse>(
         _ t: T.Type = T.self,
         url: String,
         method: HTTPMethod = .get,
@@ -32,7 +31,7 @@ class BaseApiImpl {
                 .serializingDecodable(T.self)
                 .value
             return response
-        }catch let error {
+        } catch let error {
             PurpleLogger.current.d(
                 BaseApiImpl.TAG,
                 """
@@ -43,7 +42,7 @@ class BaseApiImpl {
         }
         return BaseApiImpl.ErrorResponse(t) as! T
     }
-    
+
     private static func ErrorResponse<T>(_ t: T.Type) -> any DesignResponse {
         switch t {
         case is StringResponse.Type:

@@ -81,6 +81,11 @@ abstract class ShareMethod() : ConnectivityManager.NetworkCallback(), DefaultLif
             .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
             .build()
         this.connectivityManager.registerNetworkCallback(networkRequest, this)
+        updateShareDevice()
+    }
+
+    open fun updateShareDevice(){
+
     }
 
     override fun onDestroy(owner: LifecycleOwner) {

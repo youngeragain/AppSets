@@ -61,6 +61,13 @@
 		CC1906E42C3F9D9D00A95609 /* PrivacyPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC1906E32C3F9D9D00A95609 /* PrivacyPage.swift */; };
 		CC1906E82C3FA27500A95609 /* AppDetailsPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC1906E72C3FA27500A95609 /* AppDetailsPage.swift */; };
 		CC1906EA2C3FA29200A95609 /* CreateAppPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC1906E92C3FA29200A95609 /* CreateAppPage.swift */; };
+		CC2A19DC2D79AC93002B4BE2 /* BonjourDiscovery.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC2A19DB2D79AC91002B4BE2 /* BonjourDiscovery.swift */; };
+		CC2A19DE2D79AE0C002B4BE2 /* BonjourServicePublisher_NW.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC2A19DD2D79AE0B002B4BE2 /* BonjourServicePublisher_NW.swift */; };
+		CC2A19E02D79AE24002B4BE2 /* BonjourServiceBrowser_NW.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC2A19DF2D79AE24002B4BE2 /* BonjourServiceBrowser_NW.swift */; };
+		CC2A19E22D79B7CF002B4BE2 /* DiscoveryEndpoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC2A19E12D79B7B9002B4BE2 /* DiscoveryEndpoint.swift */; };
+		CC2A19E42D79B83E002B4BE2 /* BonjourDiscoveryEndpoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC2A19E32D79B834002B4BE2 /* BonjourDiscoveryEndpoint.swift */; };
+		CC2A19E62D79B9F4002B4BE2 /* ShareViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC2A19E52D79B9F3002B4BE2 /* ShareViewModel.swift */; };
+		CC2A19E82D79BA46002B4BE2 /* BasicShareDevice.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC2A19E72D79BA45002B4BE2 /* BasicShareDevice.swift */; };
 		CC40FECC2C3B03EE008493B3 /* AppSetsApi.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC40FECB2C3B03EE008493B3 /* AppSetsApi.swift */; };
 		CC40FECF2C3B04A6008493B3 /* DesignResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC40FECE2C3B04A6008493B3 /* DesignResponse.swift */; };
 		CC40FED12C3B0F40008493B3 /* Methods.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC40FED02C3B0F40008493B3 /* Methods.swift */; };
@@ -285,6 +292,13 @@
 		CC1906E32C3F9D9D00A95609 /* PrivacyPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivacyPage.swift; sourceTree = "<group>"; };
 		CC1906E72C3FA27500A95609 /* AppDetailsPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDetailsPage.swift; sourceTree = "<group>"; };
 		CC1906E92C3FA29200A95609 /* CreateAppPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateAppPage.swift; sourceTree = "<group>"; };
+		CC2A19DB2D79AC91002B4BE2 /* BonjourDiscovery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BonjourDiscovery.swift; sourceTree = "<group>"; };
+		CC2A19DD2D79AE0B002B4BE2 /* BonjourServicePublisher_NW.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BonjourServicePublisher_NW.swift; sourceTree = "<group>"; };
+		CC2A19DF2D79AE24002B4BE2 /* BonjourServiceBrowser_NW.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BonjourServiceBrowser_NW.swift; sourceTree = "<group>"; };
+		CC2A19E12D79B7B9002B4BE2 /* DiscoveryEndpoint.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiscoveryEndpoint.swift; sourceTree = "<group>"; };
+		CC2A19E32D79B834002B4BE2 /* BonjourDiscoveryEndpoint.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BonjourDiscoveryEndpoint.swift; sourceTree = "<group>"; };
+		CC2A19E52D79B9F3002B4BE2 /* ShareViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareViewModel.swift; sourceTree = "<group>"; };
+		CC2A19E72D79BA45002B4BE2 /* BasicShareDevice.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BasicShareDevice.swift; sourceTree = "<group>"; };
 		CC40FECB2C3B03EE008493B3 /* AppSetsApi.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSetsApi.swift; sourceTree = "<group>"; };
 		CC40FECE2C3B04A6008493B3 /* DesignResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignResponse.swift; sourceTree = "<group>"; };
 		CC40FED02C3B0F40008493B3 /* Methods.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Methods.swift; sourceTree = "<group>"; };
@@ -641,6 +655,19 @@
 			path = usecase;
 			sourceTree = "<group>";
 		};
+		CC2A19DA2D79AC7D002B4BE2 /* discovery */ = {
+			isa = PBXGroup;
+			children = (
+				CC2A19E32D79B834002B4BE2 /* BonjourDiscoveryEndpoint.swift */,
+				CC2A19E12D79B7B9002B4BE2 /* DiscoveryEndpoint.swift */,
+				CC2A19DF2D79AE24002B4BE2 /* BonjourServiceBrowser_NW.swift */,
+				CC2A19DD2D79AE0B002B4BE2 /* BonjourServicePublisher_NW.swift */,
+				CC2A19DB2D79AC91002B4BE2 /* BonjourDiscovery.swift */,
+				CCC922B02D7582580060285A /* Discovery.swift */,
+			);
+			path = discovery;
+			sourceTree = "<group>";
+		};
 		CC40FECA2C3AFD88008493B3 /* api */ = {
 			isa = PBXGroup;
 			children = (
@@ -988,6 +1015,7 @@
 		CCA57EA62B39B1AD00106A92 /* share */ = {
 			isa = PBXGroup;
 			children = (
+				CC2A19E52D79B9F3002B4BE2 /* ShareViewModel.swift */,
 				CCC922D72D75D52B0060285A /* util */,
 				CCC9229D2D7477830060285A /* mock */,
 				CCC922982D7476D70060285A /* http */,
@@ -1098,6 +1126,7 @@
 		CCC922972D7476CD0060285A /* base */ = {
 			isa = PBXGroup;
 			children = (
+				CC2A19E72D79BA45002B4BE2 /* BasicShareDevice.swift */,
 				CCC922D12D75C05A0060285A /* ContentDownloadN.swift */,
 				CCC922CF2D75C0340060285A /* FileUploadN.swift */,
 				CCC922CB2D75BF000060285A /* HttpShareDevice.swift */,
@@ -1113,11 +1142,11 @@
 		CCC922982D7476D70060285A /* http */ = {
 			isa = PBXGroup;
 			children = (
+				CC2A19DA2D79AC7D002B4BE2 /* discovery */,
 				CCC922BD2D75BC1F0060285A /* response */,
 				CCC922B82D75BBE90060285A /* model */,
 				CCC922B52D75B16B0060285A /* service */,
 				CCC922B22D75B1460060285A /* controller */,
-				CCC922B02D7582580060285A /* Discovery.swift */,
 				CCC922A22D7479370060285A /* ServerBootStrap.swift */,
 				CCC9229B2D7477160060285A /* HttpShareMethod.swift */,
 			);
@@ -1430,6 +1459,7 @@
 				CCA57EAF2B39C43B00106A92 /* Screen.swift in Sources */,
 				CCA57E8F2B39ADA200106A92 /* SignUpPage.swift in Sources */,
 				CC40FEDC2C3CFBC3008493B3 /* DesignHttp.swift in Sources */,
+				CC2A19DE2D79AE0C002B4BE2 /* BonjourServicePublisher_NW.swift in Sources */,
 				CCB011EE2D153F3900E7C74E /* AppConfig.swift in Sources */,
 				CCC922B12D75825B0060285A /* Discovery.swift in Sources */,
 				CC40FED82C3CF445008493B3 /* AppSetsApiImpl.swift in Sources */,
@@ -1485,6 +1515,7 @@
 				CC40FEE22C3D09BB008493B3 /* UserApiImpl.swift in Sources */,
 				CCA57E6E2B3745B200106A92 /* MediaPlaybackUseCase.swift in Sources */,
 				CC40FEFD2C3D27A6008493B3 /* ImMessage.swift in Sources */,
+				CC2A19E02D79AE24002B4BE2 /* BonjourServiceBrowser_NW.swift in Sources */,
 				CCA9C9D02C44F0DE0013947B /* Nothing.swift in Sources */,
 				CC40FEED2C3D12CA008493B3 /* UserLoginRepository.swift in Sources */,
 				CC40FEFF2C3D2983008493B3 /* ContentType.swift in Sources */,
@@ -1492,6 +1523,7 @@
 				CC667FF82C36ECBC00DEBAC0 /* UserInfo.swift in Sources */,
 				CC04BF192C418191005B7A11 /* UserFriendsReponse.swift in Sources */,
 				CC40FEE02C3D094D008493B3 /* UserApi.swift in Sources */,
+				CC2A19E42D79B83E002B4BE2 /* BonjourDiscoveryEndpoint.swift in Sources */,
 				CC04BF452C426C49005B7A11 /* MockTable.swift in Sources */,
 				CC04BF3A2C425997005B7A11 /* UserRelationDaoImpl.swift in Sources */,
 				CC11CE6D2B2D53DF005A96AB /* NavigationUseCase.swift in Sources */,
@@ -1528,6 +1560,7 @@
 				CC04BEF82C3FEF7A005B7A11 /* Intent.swift in Sources */,
 				CC04BF092C4020F9005B7A11 /* MockIOS.swift in Sources */,
 				CCA57EA82B39B1F000106A92 /* SharePage.swift in Sources */,
+				CC2A19E62D79B9F4002B4BE2 /* ShareViewModel.swift in Sources */,
 				CCA57EA52B39B1A200106A92 /* WebPage.swift in Sources */,
 				CC04BF312C4256F8005B7A11 /* UserRelation.swift in Sources */,
 				CC04BF3D2C425A16005B7A11 /* MockDatabase.swift in Sources */,
@@ -1552,6 +1585,7 @@
 				CCA9C9CE2C44EFCC0013947B /* NullReponse.swift in Sources */,
 				CC04BF102C406703005B7A11 /* Worker.swift in Sources */,
 				CC04BF042C401C54005B7A11 /* RelationsUseCase.swift in Sources */,
+				CC2A19E22D79B7CF002B4BE2 /* DiscoveryEndpoint.swift in Sources */,
 				CCA57E682B3723F900106A92 /* PageRouteNameProvider.swift in Sources */,
 				CC11CE782B2DEC7D005A96AB /* SearchPage.swift in Sources */,
 				CC9517FF2B27393E0054E257 /* AppSetsApp.swift in Sources */,
@@ -1570,6 +1604,7 @@
 				CC04BF242C4185A8005B7A11 /* WorkerParameters.swift in Sources */,
 				CC04BF002C40116F005B7A11 /* ScreenEditPage.swift in Sources */,
 				CC1906E82C3FA27500A95609 /* AppDetailsPage.swift in Sources */,
+				CC2A19E82D79BA46002B4BE2 /* BasicShareDevice.swift in Sources */,
 				CC667FEF2C36E2E800DEBAC0 /* Exceptions.swift in Sources */,
 				CCA57E802B37609E00106A92 /* PopulateSearchComponent.swift in Sources */,
 				CCC922C62D75BDBB0060285A /* DeviceName.swift in Sources */,
@@ -1591,6 +1626,7 @@
 				CC1906EA2C3FA29200A95609 /* CreateAppPage.swift in Sources */,
 				CCA57E7C2B375BFF00106A92 /* BingWallpaperComponent.swift in Sources */,
 				CC11CE762B2DE707005A96AB /* StandardSearchBar.swift in Sources */,
+				CC2A19DC2D79AC93002B4BE2 /* BonjourDiscovery.swift in Sources */,
 				CCC922E42D76DAB60060285A /* Theme.swift in Sources */,
 				CCA57E992B39B01C00106A92 /* StartAppsPage.swift in Sources */,
 				CCC922B72D75B9970060285A /* BooleanResponse.swift in Sources */,

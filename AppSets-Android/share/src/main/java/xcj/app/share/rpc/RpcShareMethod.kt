@@ -2,6 +2,7 @@ package xcj.app.share.rpc
 
 import xcj.app.share.base.ShareDevice
 import xcj.app.share.base.ShareMethod
+import xcj.app.share.rpc.base.RpcShareDevice
 import xcj.app.share.ui.compose.AppSetsShareActivity
 import xcj.app.share.ui.compose.AppSetsShareViewModel
 import xcj.app.starter.android.util.PurpleLogger
@@ -15,8 +16,11 @@ class RpcShareMethod : ShareMethod() {
     override fun init(activity: AppSetsShareActivity, viewModel: AppSetsShareViewModel) {
         super.init(activity, viewModel)
         PurpleLogger.current.d(TAG, "init")
+    }
+
+    override fun updateShareDevice() {
         val shareDevice =
-            ShareDevice.RpcShareDevice(deviceName = mDeviceName)
+            RpcShareDevice(deviceName = mDeviceName)
         viewModel.updateShareDeviceState(shareDevice)
     }
 

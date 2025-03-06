@@ -6,6 +6,6 @@ import xcj.app.share.base.DataSendContent
 interface IThreadWriter {
     suspend fun writeContent(
         context: Context,
-        dataSendContent: DataSendContent.WlanP2pContent
+        dataSendContent: DataSendContent
     )
 }
