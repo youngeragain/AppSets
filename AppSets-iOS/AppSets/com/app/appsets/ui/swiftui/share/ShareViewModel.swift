@@ -6,30 +6,60 @@
 //
 import SwiftUI
 
-class ShareViewModel: ObservableObject {
-    
+@Observable
+class ShareViewModel {
+    private static let TAG = "ShareViewModel"
+
     public static var INSTANCE = ShareViewModel()
+
+    var boxFocusInfo: BoxFocusInfo = BoxFocusInfo()
+
+    var mShareDevice: ShareDevice = BasicShareDevice()
+
+    var shareDeviceList: ObservableList<ShareDevice> = ObservableList()
+
+    var pendingSendContentList: ObservableList<any DataContent> = ObservableList()
     
-    @Published var mShareDevice: ShareDevice = BasicShareDevice()
-    @Published var shareDeviceList: [ShareDevice] = []
+    var receivedContentList: ObservableList<any DataContent> = ObservableList()
 
     func updateShareDevice(_ shareDevice: ShareDevice) {
         mShareDevice = shareDevice
     }
 
     func updateShareDeviceList(_ shareDeviceList: [ShareDevice]) {
-        shareDeviceList.forEach { shareDevice in
-            self.shareDeviceList.append(shareDevice)
-        }
+        _ = self.shareDeviceList.clear()
+        self.shareDeviceList.addAll(shareDeviceList)
+        PurpleLogger.current.d(ShareViewModel.TAG, "updateShareDeviceList, count\(self.shareDeviceList.count())")
     }
 
     func addShareDevice(_ shareDevice: ShareDevice) {
-        shareDeviceList.append(shareDevice)
+        _ = shareDeviceList.add(shareDevice)
     }
 
     func removeShareDevice(_ deviceName: DeviceName) {
-        shareDeviceList.removeAll { shareDevice in
+        shareDeviceList.removeIf { shareDevice in
             shareDevice.deviceName.rawName == deviceName.rawName
         }
     }
+
+    func updateBoxFocusInfo(_ boxFocusInfo: BoxFocusInfo) {
+        self.boxFocusInfo = boxFocusInfo
+    }
+
+    func addPendingContent(_ content: Any) {
+        if(content is String){
+            let dataContent = StringDataContent(content: content as! String)
+            _ = pendingSendContentList.add(dataContent)
+        }
+       
+    }
+    
+    func removeAllPendingSendContent(){
+        _ = pendingSendContentList.clear()
+    }
+    
+    func onContentReceived(_ content: any DataContent){
+        _ = receivedContentList.add(content)
+    }
+    
 }

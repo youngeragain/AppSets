@@ -8,34 +8,36 @@
 import SwiftUI
 
 struct OutSidePage: View {
-    
-    @ObservedObject var screenUseCase: ScreenUseCase
-    
+    @Environment(MainViewModel.self) var viewModel: MainViewModel
+ 
     let onBioClickListener: (any Bio) -> Void
     
-    init(screenUseCase: ScreenUseCase, onBioClick: @escaping (any Bio) -> Void) {
-        self.screenUseCase = screenUseCase
+    init(onBioClick: @escaping (any Bio) -> Void) {
         self.onBioClickListener = onBioClick
     }
     
     var body: some View {
         VStack{
-            ScreenList(
-                screens: screenUseCase.userScreens,
-                onBioClick: onBioClickListener
-            )
+            let screenUseCase = viewModel.screenUseCase
+            VStack{
+               
+                ScreenList(
+                    screens: screenUseCase.userScreens,
+                    onBioClick: onBioClickListener
+                )
+            }
+            .frame(minWidth: 0, maxWidth: .infinity, minHeight: 0, maxHeight: .infinity)
+            .edgesIgnoringSafeArea(.all)
+            .onAppear{
+                screenUseCase.loadOutSideScreen()
+            }
         }
-        .frame(minWidth: 0, maxWidth: .infinity, minHeight: 0, maxHeight: .infinity)
-        .edgesIgnoringSafeArea(.all)
-        .onAppear{
-            screenUseCase.loadOutSideScreen()
-        }
+        
     }
 }
 
 #Preview {
     OutSidePage(
-        screenUseCase: ScreenUseCase(),
         onBioClick: { bio in
         
         }

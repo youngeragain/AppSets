@@ -7,15 +7,16 @@
 
 import Foundation
 
-class MediaPlaybackUseCase: ObservableObject {
+@Observable
+class MediaPlaybackUseCase {
     
     private static let TAG = "MediaPlaybackUseCase"
     
     private let remotePlayer:RemotePlayer = RemotePlayer()
     
-    @Published var isPlaying:Bool = false
+    var isPlaying:Bool = false
     
-    @Published var currentSong: Song = Song(
+    var currentSong: Song = Song(
             title: "See You Again",
             artist: "Artist",
             imageUrl: "drawable/pic_see_you_again",

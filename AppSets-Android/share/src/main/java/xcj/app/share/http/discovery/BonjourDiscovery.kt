@@ -32,18 +32,20 @@ class BonjourDiscovery(
     override suspend fun startService(inetAddressList: List<InetAddress>) = withContext(
         Dispatchers.IO
     ) {
+        val currentShareDevice = httpShareMethod.getCurrentShareDevice() ?: return@withContext
         inetAddressList.forEach { inetAddress ->
             val jmdns = JmDNS.create(inetAddress)
             val serviceInfo = ServiceInfo.create(
                 BONJOUR_SERVER_TYPE,
-                httpShareMethod.mDeviceName.nickName,
+                currentShareDevice.deviceName.nickName,
                 BONJOUR_PORT,
                 0,
                 0,
                 false,
                 mapOf<String, String?>(
-                    ShareDevice.RAW_NAME to httpShareMethod.mDeviceName.rawName,
-                    ShareDevice.NICK_NAME to httpShareMethod.mDeviceName.nickName
+                    ShareDevice.RAW_NAME to currentShareDevice.deviceName.rawName,
+                    ShareDevice.NICK_NAME to currentShareDevice.deviceName.nickName,
+                    ShareDevice.DEVICE_TYPE to currentShareDevice.deviceType.toString()
                 )
             )
             runCatching {
@@ -109,9 +111,12 @@ class BonjourDiscovery(
         )
 
         val shareDeviceListInDiscoveryEndPoint = mutableListOf<HttpShareDevice>()
+        val bonjourDiscoveryEndpoint = BonjourDiscoveryEndpoint(jmDNS)
         serviceInfos.forEach { serviceInfo ->
             val rawName = serviceInfo.getPropertyString(ShareDevice.RAW_NAME)
             val nickName = serviceInfo.getPropertyString(ShareDevice.NICK_NAME)
+            val deviceType = serviceInfo.getPropertyString(ShareDevice.DEVICE_TYPE)?.toIntOrNull()
+                ?: ShareDevice.DEVICE_TYPE_PHONE
             if (!rawName.isNullOrEmpty() && !nickName.isNullOrEmpty()) {
                 val deviceName = DeviceName(rawName, nickName)
                 val ips = serviceInfo.inetAddresses.mapNotNull {
@@ -125,10 +130,12 @@ class BonjourDiscovery(
                     deviceIP
                 }
                 val deviceAddress = DeviceAddress(ips = ips)
-                shareDeviceListInDiscoveryEndPoint.add(HttpShareDevice(deviceName, deviceAddress))
+                val httpShareDevice =
+                    HttpShareDevice(deviceName, deviceAddress, deviceType, bonjourDiscoveryEndpoint)
+                shareDeviceListInDiscoveryEndPoint.add(httpShareDevice)
             }
         }
-        val bonjourDiscoveryEndpoint = BonjourDiscoveryEndpoint(jmDNS)
+
         httpShareMethod.notifyShareDeviceRemovedOnDiscovery(
             bonjourDiscoveryEndpoint,
             shareDeviceListInDiscoveryEndPoint
@@ -138,6 +145,8 @@ class BonjourDiscovery(
     private fun parseServiceInfo(jmDNS: JmDNS, serviceInfo: ServiceInfo) {
         val rawName = serviceInfo.getPropertyString(ShareDevice.RAW_NAME)
         val nickName = serviceInfo.getPropertyString(ShareDevice.NICK_NAME)
+        val deviceType = serviceInfo.getPropertyString(ShareDevice.DEVICE_TYPE)?.toIntOrNull()
+            ?: ShareDevice.DEVICE_TYPE_PHONE
         if (rawName.isNullOrEmpty() || nickName.isNullOrEmpty()) {
             PurpleLogger.current.d(
                 TAG,
@@ -172,14 +181,19 @@ class BonjourDiscovery(
         val deviceAddress = DeviceAddress(ips = ips)
         val shareDeviceListInEndPoint = mutableListOf<HttpShareDevice>()
         val bonjourDiscoveryEndpoint = BonjourDiscoveryEndpoint(jmDNS)
-        shareDeviceListInEndPoint.add(
-            HttpShareDevice(
-                deviceName,
-                deviceAddress,
-                discoveryEndPoint = bonjourDiscoveryEndpoint
-            )
+        val httpShareDevice = HttpShareDevice(
+            deviceName,
+            deviceAddress,
+            deviceType,
+            bonjourDiscoveryEndpoint
         )
-        httpShareMethod.notifyShareDeviceFoundOnDiscovery(bonjourDiscoveryEndpoint, shareDeviceListInEndPoint)
+        shareDeviceListInEndPoint.add(
+            httpShareDevice
+        )
+        httpShareMethod.notifyShareDeviceFoundOnDiscovery(
+            bonjourDiscoveryEndpoint,
+            shareDeviceListInEndPoint
+        )
     }
 
     override fun serviceResolved(event: ServiceEvent) {

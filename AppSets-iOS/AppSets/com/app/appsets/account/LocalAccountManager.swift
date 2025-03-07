@@ -22,7 +22,8 @@ enum LoginStatusState{
     
 }
 
-class LocalAccountManager: ObservableObject {
+@Observable
+class LocalAccountManager {
     
     private static let TAG = "LocalAccountManager"
     
@@ -46,7 +47,7 @@ class LocalAccountManager: ObservableObject {
         
     }
 
-    @Published var loginStatusState:LoginStatusState = LoginStatusState.NotLogged(userInfo:UserInfo.defaultUser())
+    var loginStatusState:LoginStatusState = LoginStatusState.NotLogged(userInfo:UserInfo.defaultUser())
     
     var userInfo:UserInfo {
         get{

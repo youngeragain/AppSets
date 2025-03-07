@@ -8,7 +8,8 @@
 import SwiftUI
 
 struct ConversationDetailsPage: View {
-    @ObservedObject var conversationUseCase: ConversationUseCase
+    
+    @Environment(MainViewModel.self) var viewModel: MainViewModel
 
     let onBackClickListener: () -> Void
 
@@ -20,8 +21,8 @@ struct ConversationDetailsPage: View {
 
     @State private var keyboardHeight: CGFloat = 0
 
-    init(conversationUseCase: ConversationUseCase, onBackClick: @escaping () -> Void) {
-        self.conversationUseCase = conversationUseCase
+    init(onBackClick: @escaping () -> Void) {
+      
         onBackClickListener = onBackClick
         inputContent = inputContent
     }
@@ -69,169 +70,173 @@ struct ConversationDetailsPage: View {
     }
 
     var body: some View {
-        VStack {
-            Spacer().frame(height: 68)
-            BackActionTopBar(
-                backText: nil,
-                onBackClick: onBackClickListener,
-                customCenterView: {
-                    HStack(spacing: 12) {
-                        AsyncImage(
-                            url: URL(string: conversationUseCase.currentSession?.imObj.avatarUrl ?? ""),
-                            content: { image in
-                                image
-                                    .resizable()
-                                    .scaledToFit()
-                                    .frame(width: 20, height: 20, alignment: .center)
-                                    .clipShape(RoundedRectangle(cornerRadius: 6))
-                            },
-                            placeholder: {
-                                RoundedRectangle(cornerRadius: 6)
-                                    .frame(width: 20, height: 20, alignment: .center)
-                                    .foregroundColor(Color(UIColor.separator))
-                            }
-                        )
-                        Text(conversationUseCase.currentSession?.imObj.name ?? "").font(.system(size: 12)).lineLimit(1)
+        VStack{
+            let conversationUseCase = viewModel.conversationUseCase
+            VStack {
+                Spacer().frame(height: 68)
+                BackActionTopBar(
+                    backText: nil,
+                    onBackClick: onBackClickListener,
+                    customCenterView: {
+                        HStack(spacing: 12) {
+                            AsyncImage(
+                                url: URL(string: conversationUseCase.currentSession?.imObj.avatarUrl ?? ""),
+                                content: { image in
+                                    image
+                                        .resizable()
+                                        .scaledToFit()
+                                        .frame(width: 20, height: 20, alignment: .center)
+                                        .clipShape(RoundedRectangle(cornerRadius: 6))
+                                },
+                                placeholder: {
+                                    RoundedRectangle(cornerRadius: 6)
+                                        .frame(width: 20, height: 20, alignment: .center)
+                                        .foregroundColor(Color(UIColor.separator))
+                                }
+                            )
+                            Text(conversationUseCase.currentSession?.imObj.name ?? "").font(.system(size: 12)).lineLimit(1)
+                        }
                     }
-                }
-            )
-            let allSimpleSessions = conversationUseCase.getAllSimpleSessionsByKeywords(sessionSearchKeywords)
-            if !allSimpleSessions.isEmpty {
-                ScrollView(.horizontal) {
-                    HStack(spacing: 12) {
-                        Spacer().frame(width: 6)
-                        ForEach(allSimpleSessions) { session in
-                            HStack(spacing: 6) {
-                                AsyncImage(
-                                    url: URL(string: session.imObj.avatarUrl ?? ""),
-                                    content: { image in
-                                        image
-                                            .resizable()
-                                            .scaledToFit()
-                                            .frame(width: 16, height: 16, alignment: .center)
-                                            .clipShape(Circle())
-                                    },
-                                    placeholder: {
-                                        Circle()
-                                            .frame(width: 16, height: 16, alignment: .center)
+                )
+                let allSimpleSessions = conversationUseCase.getAllSimpleSessionsByKeywords(sessionSearchKeywords)
+                if !allSimpleSessions.isEmpty {
+                    ScrollView(.horizontal) {
+                        HStack(spacing: 12) {
+                            Spacer().frame(width: 6)
+                            ForEach(allSimpleSessions) { session in
+                                HStack(spacing: 6) {
+                                    AsyncImage(
+                                        url: URL(string: session.imObj.avatarUrl ?? ""),
+                                        content: { image in
+                                            image
+                                                .resizable()
+                                                .scaledToFit()
+                                                .frame(width: 16, height: 16, alignment: .center)
+                                                .clipShape(Circle())
+                                        },
+                                        placeholder: {
+                                            Circle()
+                                                .frame(width: 16, height: 16, alignment: .center)
+                                                .foregroundColor(Theme.colorSchema.outline)
+                                        }
+                                    )
+                                    Text(session.imObj.name).font(.system(size: 10)).lineLimit(1)
+                                }
+                                .padding([.all], 8)
+                                .overlay(
+                                    content: {
+                                        RoundedRectangle(cornerRadius: 24, style: .continuous)
+                                            .stroke()
+                                            .cornerRadius(24)
                                             .foregroundColor(Theme.colorSchema.outline)
                                     }
-                                )
-                                Text(session.imObj.name).font(.system(size: 10)).lineLimit(1)
-                            }
-                            .padding([.all], 8)
-                            .overlay(
-                                content: {
-                                    RoundedRectangle(cornerRadius: 24, style: .continuous)
-                                        .stroke()
-                                        .cornerRadius(24)
-                                        .foregroundColor(Theme.colorSchema.outline)
+                                ).onTapGesture {
+                                    sessionSearchKeywords = ""
+                                    conversationUseCase.updateCurrentSessionBySession(session)
                                 }
-                            ).onTapGesture {
-                                sessionSearchKeywords = ""
-                                conversationUseCase.updateCurrentSessionBySession(session)
                             }
+                            Spacer().frame(width: 6)
                         }
-                        Spacer().frame(width: 6)
-                    }
-                }.scrollIndicators(.hidden)
-            }
+                    }.scrollIndicators(.hidden)
+                }
 
-            ScrollViewReader { proxy in
-                VStack {
-                    ScrollView {
-                        LazyVStack {
-                            if let session = conversationUseCase.currentSession {
-                                ForEach(session.conversationState.messages.elements.indices, id: \.self) { index in
-                                    let message = session.conversationState.messages.elements[index]
-                                    ImMessageItemWrapperComponent(message).id(index)
+                ScrollViewReader { proxy in
+                    VStack {
+                        ScrollView {
+                            LazyVStack {
+                                if let session = conversationUseCase.currentSession {
+                                    ForEach(session.conversationState.messages.elements.indices, id: \.self) { index in
+                                        let message = session.conversationState.messages.elements[index]
+                                        ImMessageItemWrapperComponent(message).id(index)
+                                    }
                                 }
+                                Spacer()
                             }
-                            Spacer()
                         }
-                    }
-                    VStack(spacing: 12) {
-                        HStack {
-                            TextField(
-                                text: $inputContent,
-                                prompt: Text("Text Something"),
-                                label: {
-                                    Text(inputContent).lineLimit(3)
-                                }
-                            ).focused($isFocused)
-                                .padding([.all], 16)
-                            if !String.isNullOrEmpty(inputContent) {
-                                Button(
-                                    action: {
-                                        conversationUseCase.onSendMessage(LocalContext.current, InputSelector.TEXT, inputContent)
-                                        DispatchQueue.global().async {
-                                            Thread.sleep(forTimeInterval: 200)
-                                            guard let session = conversationUseCase.currentSession else {
-                                                return
-                                            }
-                                            if session.conversationState.messages.elements.isEmpty {
-                                                return
-                                            }
-                                            DispatchQueue.main.async {
-                                                proxy.scrollTo(session.conversationState.messages.elements.count - 1)
-                                            }
-                                        }
-                                    },
+                        VStack(spacing: 12) {
+                            HStack {
+                                TextField(
+                                    text: $inputContent,
+                                    prompt: Text("Text Something"),
                                     label: {
-                                        Text("send")
-                                            .tint(.white)
-                                            .padding(.init(top: 8, leading: 12, bottom: 8, trailing: 12))
-                                            .background(
-                                                RoundedRectangle(cornerRadius: 16)
-                                                    .foregroundColor(.blue)
-                                            )
-                                    })
+                                        Text(inputContent).lineLimit(3)
+                                    }
+                                ).focused($isFocused)
+                                    .padding([.all], 16)
+                                if !String.isNullOrEmpty(inputContent) {
+                                    Button(
+                                        action: {
+                                            conversationUseCase.onSendMessage(LocalContext.current, InputSelector.TEXT, inputContent)
+                                            DispatchQueue.global().async {
+                                                Thread.sleep(forTimeInterval: 200)
+                                                guard let session = conversationUseCase.currentSession else {
+                                                    return
+                                                }
+                                                if session.conversationState.messages.elements.isEmpty {
+                                                    return
+                                                }
+                                                DispatchQueue.main.async {
+                                                    proxy.scrollTo(session.conversationState.messages.elements.count - 1)
+                                                }
+                                            }
+                                        },
+                                        label: {
+                                            Text("send")
+                                                .tint(.white)
+                                                .padding(.init(top: 8, leading: 12, bottom: 8, trailing: 12))
+                                                .background(
+                                                    RoundedRectangle(cornerRadius: 16)
+                                                        .foregroundColor(.blue)
+                                                )
+                                        })
+                                }
                             }
+                            Divider().foregroundColor(Theme.colorSchema.outline)
+                            HStack(spacing: 12) {
+                                SwiftUI.Image("drawable/add_circle-add_circle_symbol")
+                                    .resizable()
+                                    .scaledToFit()
+                                    .fontWeight(.light)
+                                    .frame(width: 20, height: 20)
+                                    .foregroundColor(Theme.colorSchema.primary)
+                                SwiftUI.Image("drawable/mic-mic_symbol")
+                                    .resizable()
+                                    .scaledToFit()
+                                    .fontWeight(.light)
+                                    .frame(width: 20, height: 20)
+                                    .foregroundColor(Theme.colorSchema.primary)
+                                Spacer()
+                            }.padding(.init(top: 0, leading: 12, bottom: 24, trailing: 12))
                         }
-                        Divider().foregroundColor(Theme.colorSchema.outline)
-                        HStack(spacing: 12) {
-                            SwiftUI.Image("drawable/add_circle-add_circle_symbol")
-                                .resizable()
-                                .scaledToFit()
-                                .fontWeight(.light)
-                                .frame(width: 20, height: 20)
-                                .foregroundColor(Theme.colorSchema.primary)
-                            SwiftUI.Image("drawable/mic-mic_symbol")
-                                .resizable()
-                                .scaledToFit()
-                                .fontWeight(.light)
-                                .frame(width: 20, height: 20)
-                                .foregroundColor(Theme.colorSchema.primary)
-                            Spacer()
-                        }.padding(.init(top: 0, leading: 12, bottom: 24, trailing: 12))
-                    }
-                    .padding()
-                }.offset(x: 0, y: -keyboardHeight)
-            }
-        }
-        .frame(minWidth: 0, maxWidth: .infinity, minHeight: 0, maxHeight: .infinity)
-        .edgesIgnoringSafeArea(.all)
-        .scrollDismissesKeyboard(ScrollDismissesKeyboardMode.automatic)
-        .onAppear {
-            NotificationCenter.default.addObserver(forName: UIResponder.keyboardWillShowNotification, object: nil, queue: .main) { notification in
-                if let height = getKeyboardHeight(from: notification) {
-                    withAnimation{
-                        keyboardHeight = height
-                    }
-                    
+                        .padding()
+                    }.offset(x: 0, y: -keyboardHeight)
                 }
             }
+            .frame(minWidth: 0, maxWidth: .infinity, minHeight: 0, maxHeight: .infinity)
+            .edgesIgnoringSafeArea(.all)
+            .scrollDismissesKeyboard(ScrollDismissesKeyboardMode.automatic)
+            .onAppear {
+                NotificationCenter.default.addObserver(forName: UIResponder.keyboardWillShowNotification, object: nil, queue: .main) { notification in
+                    if let height = getKeyboardHeight(from: notification) {
+                        withAnimation{
+                            keyboardHeight = height
+                        }
+                        
+                    }
+                }
 
-            NotificationCenter.default.addObserver(forName: UIResponder.keyboardWillHideNotification, object: nil, queue: .main) { _ in
-                withAnimation{
-                    keyboardHeight = 0
+                NotificationCenter.default.addObserver(forName: UIResponder.keyboardWillHideNotification, object: nil, queue: .main) { _ in
+                    withAnimation{
+                        keyboardHeight = 0
+                    }
                 }
             }
+            .onDisappear {
+                conversationUseCase.onDispose()
+                NotificationCenter.default.removeObserver(self) // 移除观察者
+            }
         }
-        .onDisappear {
-            conversationUseCase.onDispose()
-            NotificationCenter.default.removeObserver(self) // 移除观察者
-        }
+        
     }
 }
 
@@ -245,7 +250,6 @@ func getKeyboardHeight(from notification: Notification) -> CGFloat? {
 
 #Preview {
     ConversationDetailsPage(
-        conversationUseCase: ConversationUseCase(topSpaceContentUseCase: NowSpaceContentUseCase()),
         onBackClick: {
         }
     )

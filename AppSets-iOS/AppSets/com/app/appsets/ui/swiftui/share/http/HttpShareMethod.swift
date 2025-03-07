@@ -71,10 +71,15 @@ class HttpShareMethod: ShareMethod {
     override func updateDeviceName() {
         super.updateDeviceName()
         let shareDevice = HttpShareDevice(
-            deviceTyp: ShareDeviceStatic.DEVICE_TYPE_PHONE,
             deviceName: deviceName,
-            deviceAddress: DevcieAddress.NONE
+            deviceAddress: DevcieAddress.NONE,
+            deviceType: ShareDevice.DEVICE_TYPE_PHONE
         )
         viewModel.updateShareDevice(shareDevice)
+    }
+    
+    func notifyShareDeviceChangedOnDiscovery(_ shareDeviceList:[ShareDevice]){
+        PurpleLogger.current.d(HttpShareMethod.TAG, "notifyShareDeviceChangedOnDiscovery")
+        viewModel.updateShareDeviceList(shareDeviceList)
     }
 }

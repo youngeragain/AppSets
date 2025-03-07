@@ -7,7 +7,8 @@
 
 import Foundation
 
-class MainViewModel: ObservableObject {
+@Observable
+class MainViewModel {
     
     private static let TAG = "MainViewModel"
     

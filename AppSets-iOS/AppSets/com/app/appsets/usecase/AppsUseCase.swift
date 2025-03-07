@@ -7,11 +7,12 @@
 
 import Foundation
 
-class AppsUseCase : ObservableObject{
+@Observable
+class AppsUseCase {
     
     private static let TAG = "AppsUseCase"
     
-    @Published var applications: [AppWithCategory] = []
+    var applications: [AppWithCategory] = []
     
     private var application: Application? = nil
     
@@ -31,11 +32,13 @@ class AppsUseCase : ObservableObject{
         PurpleLogger.current.d(AppsUseCase.TAG, "loadInitialData")
         Task {
             if let applications = await AppSetsRepository().getIndexApplications(context) {
-                DispatchQueue.main.async {
-                    self.applications = applications
-                }
+                self.updateApplications(applications)
             }
         }
+    }
+    
+    func updateApplications(_ applications:[AppWithCategory]){
+        self.applications = applications
     }
     
 }

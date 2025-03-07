@@ -8,15 +8,20 @@
 import SwiftUI
 
 struct LoginPage: View {
-    @ObservedObject var userLoginUseCase: UserLoginUserCase
+    
+    @Environment(MainViewModel.self) var viewModel: MainViewModel
 
     @State private var account: String = ""
 
     @State private var password: String = ""
 
-    let onBackClickListener: () -> Void
+    var onBackClickListener: () -> Void
 
     let context: Context = LocalContext.current
+    
+    init(onBackClick: @escaping () -> Void) {
+        self.onBackClickListener = onBackClick
+    }
 
     var body: some View {
         VStack(alignment: .leading) {
@@ -61,6 +66,7 @@ struct LoginPage: View {
                         .stroke(Theme.colorSchema.outline, lineWidth: 1)
                 )
                 Button(action: {
+                    let userLoginUseCase = viewModel.userLoginUseCase
                     userLoginUseCase.login(
                         context: context,
                         account: account,
@@ -104,16 +110,10 @@ struct LoginPage: View {
             }
         }.safeAreaPadding().padding()
     }
-
-    init(userLoginUseCase: UserLoginUserCase, onBackClick: @escaping () -> Void) {
-        self.userLoginUseCase = userLoginUseCase
-        onBackClickListener = onBackClick
-    }
 }
 
 #Preview {
     LoginPage(
-        userLoginUseCase: UserLoginUserCase(),
         onBackClick: {
         }
     )

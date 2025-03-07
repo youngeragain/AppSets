@@ -12,14 +12,9 @@ struct AppSetsApp: App {
         
     private let viewModel: MainViewModel
 
-    
     var body: some Scene {
         WindowGroup {
-            MainPage(
-                navigationUseCase: viewModel.navigationUseCase,
-                nowSpaceContentUseCase: viewModel.nowSpaceContentUseCase,
-                conversationUseCase: viewModel.conversationUseCase
-            ).environmentObject(viewModel)
+            MainPage().environment(viewModel)
         }
     }
     

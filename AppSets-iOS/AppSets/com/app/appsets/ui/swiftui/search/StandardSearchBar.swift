@@ -8,13 +8,12 @@
 import SwiftUI
 
 struct StandardSearchBar: View {
-    @ObservedObject var brokerTest: BrokerTest
+    var brokerTest: BrokerTest = BrokerTest.Instance
 
     let onClickListener: (String) -> Void
 
     init(onClick: @escaping (String) -> Void) {
         onClickListener = onClick
-        brokerTest = BrokerTest.Instance
     }
 
     var body: some View {
@@ -33,9 +32,9 @@ struct StandardSearchBar: View {
                             .fontWeight(.light)
                             .tint(Theme.colorSchema.onSurface)
 
-                        Text("seach").foregroundColor(Theme.colorSchema.onSurface)
+                        Text("seach").font(.system(size: 12)).foregroundColor(Theme.colorSchema.onSurface)
                     }
-                    .frame(minWidth: 100, maxWidth: 150, alignment: .leading)
+                    .frame(minWidth: 70, maxWidth: 120, alignment: .leading)
                 }
                 .padding(12)
                 .background(Theme.colorSchema.outline.clipShape(RoundedRectangle(cornerRadius: 24)))

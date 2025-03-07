@@ -134,7 +134,11 @@ struct AppSetsShareController<ReqContext: RequestContext> {
         let clientHost = findClientHost(request, reqContext: reqContext)
         let deviceName = DeviceName.NONE
         let deviceAddress = DevcieAddress.NONE
-        let device = HttpShareDevice(deviceTyp: ShareDeviceStatic.DEVICE_TYPE_PHONE, deviceName: deviceName, deviceAddress: deviceAddress)
+        let device = HttpShareDevice(
+            deviceName: deviceName,
+            deviceAddress: deviceAddress,
+            deviceType: ShareDevice.DEVICE_TYPE_PHONE
+        )
         return await service.exchangeDeviceInfo(context: context, clientHost: clientHost, device: device)
     }
 }

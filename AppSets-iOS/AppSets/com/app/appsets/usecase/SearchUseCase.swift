@@ -7,4 +7,5 @@
 
 import Foundation
 
-class SearchUseCase : ObservableObject {}
+@Observable
+class SearchUseCase {}

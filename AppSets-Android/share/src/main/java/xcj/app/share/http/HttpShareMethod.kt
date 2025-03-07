@@ -14,7 +14,6 @@ import kotlinx.coroutines.launch
 import xcj.app.compose_share.ui.viewmodel.AnyStateViewModel.Companion.bottomSheetState
 import xcj.app.share.base.ClientInfo
 import xcj.app.share.base.DataContent
-import xcj.app.share.base.DataSendContent
 import xcj.app.share.base.DeviceAddress
 import xcj.app.share.base.DeviceIP
 import xcj.app.share.base.ShareDevice
@@ -322,11 +321,11 @@ class HttpShareMethod : ShareMethod(), ContentReceivedListener, ListenersProvide
     override fun onContentReceived(content: Any) {
         when (content) {
             is DataContent.StringContent -> {
-                viewModel.onNewReceivedContent(content)
+                viewModel.onContentReceived(content)
             }
 
             is DataContent.FileContent -> {
-                viewModel.onNewReceivedContent(content)
+                viewModel.onContentReceived(content)
             }
         }
     }

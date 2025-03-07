@@ -13,7 +13,7 @@ class BonjourServicePublisher_NW {
     private var listener: NWListener?
 
     func publishService(port: UInt16, deviceName: DeviceName) {
-        PurpleLogger.current.d(BonjourServicePublisher_NW.TAG, "publishService, deviceName:\(deviceName.nickName)")
+        PurpleLogger.current.d(BonjourServicePublisher_NW.TAG, "publishService, deviceName:\(String(describing: deviceName.nickName))")
         do {
             // 1. 创建 NWListener 对象
             let options = NWProtocolTCP.Options()
@@ -23,7 +23,12 @@ class BonjourServicePublisher_NW {
             var service = NWListener.Service(name: deviceName.nickName, type: "_http._tcp", domain: "local.")
 
             // 可选: 设置 TXT 记录
-            var txtRecord: [String: String] = ["rawName": deviceName.rawName, "nickName": deviceName.nickName ?? ""] // 示例 TXT 记录
+            var txtRecord: [String: String] = [
+                ShareDevice.RAW_NAME: deviceName.rawName,
+                ShareDevice.NICK_NAME: deviceName.nickName ?? "",
+                ShareDevice.DEVICE_TYPE: ShareDevice.DEVICE_TYPE_PHONE.description
+                
+            ] // 示例 TXT 记录
             service.txtRecordObject = NWTXTRecord(txtRecord)
 
             // 2. 配置 Bonjour 服务

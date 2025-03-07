@@ -8,7 +8,8 @@
 import Foundation
 import SwiftUI
 
-class NavigationUseCase: ObservableObject {
+@Observable
+class NavigationUseCase {
     
     private static let TAG = "NavigationUseCase"
     
@@ -16,9 +17,9 @@ class NavigationUseCase: ObservableObject {
     
     private var routes: [String] = [PageRouteNameProvider.AppsCenterPage]
     
-    @Published var route: String = PageRouteNameProvider.AppsCenterPage
+    var route: String = PageRouteNameProvider.AppsCenterPage
     
-    @Published var visible: Bool = true
+    var visible: Bool = true
     
     init() {
         initTabItems()

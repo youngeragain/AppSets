@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct AppDetailsPage: View {
-    @EnvironmentObject var viewModel: MainViewModel
+    @Environment(MainViewModel.self) var viewModel: MainViewModel
 
     let application: Application?
 
@@ -21,7 +21,11 @@ struct AppDetailsPage: View {
     @State var currentPlatformIndex = 0
     @State var currentPlatformVersionIndex = 0
 
-    init(application: Application?, onBackClick: @escaping () -> Void, onShowApplicationCreatorClick: @escaping (String?) -> Void, onJoinToChatClick: @escaping (Application) -> Void) {
+    init(application: Application?,
+         onBackClick: @escaping () -> Void,
+         onShowApplicationCreatorClick: @escaping (String?) -> Void,
+         onJoinToChatClick: @escaping (Application) -> Void
+    ) {
         self.application = application
         onBackClickListener = onBackClick
         onShowApplicationCreatorClickLister = onShowApplicationCreatorClick

@@ -8,7 +8,7 @@
 
 "account" = "账号";
 "password" = "密码";
-"ok" = "确认";
+"ok" = "确定";
 "sign_up" = "注册";
 "login" = "登录";
 "login_with_qrcode" = "二维码登录";

@@ -8,16 +8,14 @@
 import SwiftUI
 
 struct ConversationOverviewPage: View {
-    
-    @ObservedObject var conversationUseCase: ConversationUseCase
-    
+    @Environment(MainViewModel.self) var viewModel: MainViewModel
+   
     let onSessionClick: (Session)-> Void
     
     init(
-        conversationUseCase: ConversationUseCase,
         onSessionClick: @escaping (Session) -> Void
     ) {
-        self.conversationUseCase = conversationUseCase
+    
         self.onSessionClick = onSessionClick
     }
     
@@ -110,6 +108,7 @@ struct ConversationOverviewPage: View {
     
     func AddActionssSpaceContent() -> some View {
         VStack{
+            let conversationUseCase = viewModel.conversationUseCase
             Spacer().frame(height: 52)
             if (conversationUseCase.isShowAddActions) {
                 VStack{
@@ -137,6 +136,7 @@ struct ConversationOverviewPage: View {
     
     var body: some View {
         VStack(spacing: 12){
+            let conversationUseCase = viewModel.conversationUseCase
             AddActionssSpaceContent()
             HStack(){
                 Spacer().frame(width: 12)
@@ -206,7 +206,6 @@ struct ConversationOverviewPage: View {
 
 #Preview {
     ConversationOverviewPage(
-        conversationUseCase: ConversationUseCase(topSpaceContentUseCase: NowSpaceContentUseCase()),
         onSessionClick: { session in
             
         }

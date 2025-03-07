@@ -399,11 +399,11 @@ class WlanP2pShareMethod : ShareMethod(), ContentReceivedListener {
         )
         when (content) {
             is DataContent.StringContent -> {
-                viewModel.onNewReceivedContent(content)
+                viewModel.onContentReceived(content)
             }
 
             is DataContent.FileContent -> {
-                viewModel.onNewReceivedContent(content)
+                viewModel.onContentReceived(content)
             }
         }
     }

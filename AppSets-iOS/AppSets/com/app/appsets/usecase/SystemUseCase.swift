@@ -39,14 +39,14 @@ class SystemUseCase {
     
     public static func startServiceToSyncAllFromServer(_ context: Context) {
         PurpleLogger.current.d(SystemUseCase.TAG, "startServiceToSyncAllFromServer")
-        var intent = Intent(context: context, componentType: MainService.self)
+        let intent = Intent(context: context, componentType: MainService.self)
         intent.putString(MainService.WHAT_TO_DO, MainService.DO_TO_SYNC_USER_DATA_FROM_SERVER)
         context.startService(intent)
     }
     
     public static func startServiceToSyncAllFromLocal(_ context: Context) {
         PurpleLogger.current.d(SystemUseCase.TAG, "startServiceToSyncAllFromLocal")
-        var intent = Intent(context: context, componentType: MainService.self)
+        let intent = Intent(context: context, componentType: MainService.self)
         intent.putString(MainService.WHAT_TO_DO, MainService.DO_TO_SYNC_USER_DATA_FROM_LOCAL)
         context.startService(intent)
     }

@@ -7,53 +7,48 @@
 
 import SwiftUI
 
-protocol SearchResult{
-  
+protocol SearchResult {
 }
 
-struct ScreenForSearch:SearchResult{
-
-     let userScreenInfo:ScreenInfo? = nil
+struct ScreenForSearch: SearchResult {
+    let userScreenInfo: ScreenInfo? = nil
 }
 
-struct UserInfoForSearch:SearchResult{
-    let userInfo:UserInfo? = nil
+struct UserInfoForSearch: SearchResult {
+    let userInfo: UserInfo? = nil
 }
 
-struct ApplicationForSearch:SearchResult{
-    let application:String? = nil
+struct ApplicationForSearch: SearchResult {
+    let application: String? = nil
 }
 
-struct GroupInfoForSearch:SearchResult{
-    let groupInfo:String? = nil
+struct GroupInfoForSearch: SearchResult {
+    let groupInfo: String? = nil
 }
-
 
 struct SearchPage: View {
-
-    @State var searchResults:[SearchResult] = [
+    @Environment(MainViewModel.self) var viewModel: MainViewModel
+    
+    @State var searchResults: [SearchResult] = [
         ScreenForSearch(),
         UserInfoForSearch(),
         ApplicationForSearch(),
-        GroupInfoForSearch()
+        GroupInfoForSearch(),
     ]
-    
-    @State var searchString:String = ""
-    
-    let onBackClickListener: ()-> Void
-    
-    let onSearchClickListener: ()-> Void
-    
-    @ObservedObject var searchUseCase: SearchUseCase
-    
-    init(searchUseCase:SearchUseCase, onBackClick: @escaping () -> Void, onSearchClick: @escaping () -> Void) {
-        self.searchUseCase = searchUseCase
+
+    @State var searchString: String = ""
+
+    let onBackClickListener: () -> Void
+
+    let onSearchClickListener: () -> Void
+
+    init(onBackClick: @escaping () -> Void, onSearchClick: @escaping () -> Void) {
         self.onBackClickListener = onBackClick
         self.onSearchClickListener = onSearchClick
     }
-    
+
     var body: some View {
-        VStack{
+        VStack {
             Spacer().frame(height: 52)
             TextField(
                 text: $searchString,
@@ -65,7 +60,7 @@ struct SearchPage: View {
             .padding(.init(top: 0, leading: 46, bottom: 0, trailing: 46))
             .overlay(
                 content: {
-                    HStack{
+                    HStack {
                         SwiftUI.Image("drawable/arrow_back-arrow_back_symbol")
                             .fontWeight(.light)
                             .padding()
@@ -83,7 +78,7 @@ struct SearchPage: View {
                     RoundedRectangle(cornerRadius: 36)
                         .stroke()
                         .foregroundColor(Color(UIColor.separator))
-            })
+                })
             .padding(.init(top: 24, leading: 12, bottom: 0, trailing: 12))
             Spacer()
         }
@@ -94,12 +89,9 @@ struct SearchPage: View {
 
 #Preview {
     SearchPage(
-        searchUseCase: SearchUseCase(), 
         onBackClick: {
-            
         },
         onSearchClick: {
-            
         }
     )
 }

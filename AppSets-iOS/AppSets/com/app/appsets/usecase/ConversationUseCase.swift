@@ -13,7 +13,8 @@ struct Tab {
     let type: String
 }
 
-class ConversationUseCase: ObservableObject {
+@Observable
+class ConversationUseCase {
     private static let TAG = "ConversationUseCase"
 
     public static let USER = "user"
@@ -34,18 +35,18 @@ class ConversationUseCase: ObservableObject {
         self.topSpaceContentUseCase = topSpaceContentUseCase
     }
 
-    @Published public var sessionsMap: [String: ObservableList<Session>] = [
+    public var sessionsMap: [String: ObservableList<Session>] = [
         ConversationUseCase.USER: ObservableList<Session>(),
         ConversationUseCase.GROUP: ObservableList<Session>(),
         ConversationUseCase.SYSTEM: ObservableList<Session>(),
         ConversationUseCase.AI: ObservableList<Session>(),
     ]
 
-    @Published public var currentSession: Session? = nil
+    public var currentSession: Session?
 
-    @Published public var currentTab: String = USER
+    public var currentTab: String = USER
 
-    @Published public var isShowAddActions: Bool = false
+    public var isShowAddActions: Bool = false
 
     func toggleShowAddActions() {
         withAnimation {
@@ -75,20 +76,20 @@ class ConversationUseCase: ObservableObject {
     func initSessions() {
         let t = Thread.current
         PurpleLogger.current.d(ConversationUseCase.TAG, "initSessions, thread:\(t.description)")
-        DispatchQueue.main.async{
+        DispatchQueue.main.async {
             let userSessions = self.sessionsMap[ConversationUseCase.USER]!
             let userInfoRepository = UserInfoRepository()
             let relatedUsers = userInfoRepository.getRelatedUserList()
             PurpleLogger.current.d(
                 ConversationUseCase.TAG,
-                "initSessions, RelatedUsers:\(relatedUsers.map({user in Pair(user.uid, user.name) }))"
+                "initSessions, RelatedUsers:\(relatedUsers.map({ user in Pair(user.uid, user.name) }))"
             )
             self.fillImMessageToSessions(userSessions, relatedUsers)
 
             let unRelatedUsers = userInfoRepository.getUnRelatedUserList()
             PurpleLogger.current.d(
                 ConversationUseCase.TAG,
-                "initSessions, unRelatedUsers:\(unRelatedUsers.map({user in Pair(user.uid, user.name) })))"
+                "initSessions, unRelatedUsers:\(unRelatedUsers.map({ user in Pair(user.uid, user.name) })))"
             )
             self.fillImMessageToSessions(userSessions, unRelatedUsers)
 
@@ -98,17 +99,17 @@ class ConversationUseCase: ObservableObject {
             let relatedGroups = groupInfoRepository.getRelatedGroupList()
             PurpleLogger.current.d(
                 ConversationUseCase.TAG,
-                "initSessions, relatedGroups:\(relatedGroups.map({group in Pair(group.groupId, group.name) })))"
+                "initSessions, relatedGroups:\(relatedGroups.map({ group in Pair(group.groupId, group.name) })))"
             )
             self.fillImMessageToSessions(groupSessions, relatedGroups)
 
             let unRelatedGroups = groupInfoRepository.getUnRelatedGroupList()
             PurpleLogger.current.d(
                 ConversationUseCase.TAG,
-                "initSessions, unRelatedGroups:\(unRelatedGroups.map({group in Pair(group.groupId, group.name) }))"
+                "initSessions, unRelatedGroups:\(unRelatedGroups.map({ group in Pair(group.groupId, group.name) }))"
             )
             self.fillImMessageToSessions(groupSessions, unRelatedGroups)
-            
+
             self.updateSessionMapForPublish()
         }
     }
@@ -122,13 +123,13 @@ class ConversationUseCase: ObservableObject {
             return
         }
         sessionHolderList.forEach { sessionHolder in
-            
+
             if let bio = sessionHolder as? any Bio {
                 let imObj = ImObjStatic.fromBio(bio)
                 let conversationState = ConversationState()
                 let session = Session(imObj: imObj, conversation: conversationState)
                 ImSessionHolderStatic.updateSession(sessionHolder, session)
-                //sessionHolder.session = session
+                // sessionHolder.session = session
                 fillPageImMessageToSessions(sessionHolder, page: 1, pageSize: 20)
                 _ = sessionList.add(session)
             }
@@ -268,7 +269,6 @@ class ConversationUseCase: ObservableObject {
                 self.updateSessionMapForPublish()
             }
         }
-        
     }
 
     private func findSessionByImObj(_ imObj: ImObj? = nil) -> Session? {

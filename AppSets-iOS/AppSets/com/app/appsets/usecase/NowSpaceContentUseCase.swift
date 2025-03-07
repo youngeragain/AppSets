@@ -27,11 +27,12 @@ struct NowSpaceNULL: NowSpaceState {
     
 }
 
-class NowSpaceContentUseCase : ObservableObject {
+@Observable
+class NowSpaceContentUseCase {
     
-    private static let TAG = "NowSpaceUseCase"
+    private static let TAG = "NowSpaceContentUseCase"
     
-    @Published var content: any NowSpaceState = NowSpaceNULL()
+    var content: any NowSpaceState = NowSpaceNULL()
     
     func onNewImMessage(session: Session, imMessage: any ImMessage) {
         PurpleLogger.current.d(NowSpaceContentUseCase.TAG, "onNewImMessage")

@@ -7,11 +7,12 @@
 
 import Foundation
 
-class ScreenUseCase: ObservableObject {
+@Observable
+class ScreenUseCase {
     
     private static let TAG = "ScreenUseCase"
     
-    @Published var userScreens:[ScreenInfo] = []
+    var userScreens:[ScreenInfo] = []
     
     private let screenRepository: ScreenRepository = ScreenRepository()
     
@@ -19,16 +20,14 @@ class ScreenUseCase: ObservableObject {
         PurpleLogger.current.d(ScreenUseCase.TAG, "loadOutSideScreen")
         Task {
             if let systemScreens = await screenRepository.getIndexRecommendScreens(){
-                DispatchQueue.main.async {
-                    self.updateScreens(systemScreens)
-                }
+                self.updateScreens(systemScreens)
             }
         }
     }
     
-    @MainActor
-    private func updateScreens(_ new:[ScreenInfo]){
-        userScreens = new
+    //@MainActor
+    private func updateScreens(_ screens:[ScreenInfo]){
+        userScreens = screens
     }
     
 }

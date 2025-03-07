@@ -7,7 +7,8 @@
 import Foundation
 import SwiftUI
 
-class ShareMethod: SwiftUILifecycle, ObservableObject {
+@Observable
+class ShareMethod: SwiftUILifecycle {
     public static let TAG_B = "ShareMethod"
     var deviceName: DeviceName = DeviceName.NONE
     

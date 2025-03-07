@@ -7,7 +7,8 @@
 
 import Foundation
 
-class BrokerTest: ObservableObject {
+@Observable
+class BrokerTest {
     
     private static let TAG = "BrokerTest"
     
@@ -15,7 +16,7 @@ class BrokerTest: ObservableObject {
     
     private let broker: RabbitMQBroker = RabbitMQBroker()
     
-    @Published var isOnline: Bool = false
+    var isOnline: Bool = false
     
     func changeOnline(_ new:Bool){
         DispatchQueue.main.async {

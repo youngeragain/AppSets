@@ -11,17 +11,17 @@ struct UserProfilePage: View {
     
     private let userProfileFeatures:[String] = ["Application", "Screen", "Followers/Followed", "Update", "Chat", "Add"]
     
-    let userInfoUseCase: UserInfoUseCase
+    @Environment(MainViewModel.self) var viewModel: MainViewModel
     
     let onBackClickListener: ()-> Void
     
-    init(userInfoUseCase: UserInfoUseCase, onBackClick: @escaping () -> Void) {
-        self.userInfoUseCase = userInfoUseCase
+    init(onBackClick: @escaping () -> Void) {
         self.onBackClickListener = onBackClick
     }
     
     var body: some View {
         VStack(spacing:12){
+            let userInfoUseCase = viewModel.userInfoUseCase
             Spacer().frame(height: 68)
             BackActionTopBar(
                 backText: nil,
@@ -68,7 +68,6 @@ struct UserProfilePage: View {
 
 #Preview {
     UserProfilePage(
-        userInfoUseCase: UserInfoUseCase(),
         onBackClick: {
         
         }

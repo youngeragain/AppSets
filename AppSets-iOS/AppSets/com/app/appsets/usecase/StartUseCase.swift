@@ -41,11 +41,12 @@ struct AudioPlayerState : SpotLightsState {
     
 }
 
-class StartUseCase : ObservableObject {
+@Observable
+class StartUseCase {
     
     private static let TAG = "StartUseCase"
     
-    @Published var spotLightsState: [any SpotLightsState] = []
+    var spotLightsState: [any SpotLightsState] = []
     
     func doInitData(_ context: Context) {
         loadSpotLight(context)

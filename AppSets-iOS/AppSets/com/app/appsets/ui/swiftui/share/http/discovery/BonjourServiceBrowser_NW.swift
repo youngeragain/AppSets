@@ -11,13 +11,17 @@ import Network
 class BonjourServiceBrowser_NW {
     private static let TAG = "BonjourServiceBrowser_NW"
     // 自定义代理协议 (Network 框架版本)
-    protocol BonjourServiceBrowserDelegate_NW: AnyObject {
-        func bonjourBrowser_NW(_ browser: BonjourServiceBrowser_NW, didUpdateServices services: [NWBrowser.Result])
+    protocol BonjourServiceListener {
+        func onServicesChanged(_ services: [NWBrowser.Result])
     }
 
     private var browser: NWBrowser?
-    private var discoveredServices_NW: [NWBrowser.Result] = []
-    private var delegate_NW: BonjourServiceBrowserDelegate_NW? // 自定义代理 (Network 框架版本)
+    private var discoveredServices: [NWBrowser.Result] = []
+    private var servicesListener: BonjourServiceListener? // 自定义代理 (Network 框架版本)
+    
+    func setServicesListener(_ listener:BonjourServiceListener?){
+        servicesListener = listener
+    }
 
     func startBrowsing() {
         browser?.cancel()
@@ -25,7 +29,7 @@ class BonjourServiceBrowser_NW {
         // 1. 创建 NWBrowser 对象
         let newBrowser = NWBrowser(for: .bonjourWithTXTRecord(type: "_http._tcp", domain: "local."), using: .tcp)
         browser = newBrowser
-        discoveredServices_NW = [] // 清空已发现服务列表
+        discoveredServices = [] // 清空已发现服务列表
 
         // 2. 开始浏览特定类型的 Bonjour 服务
         newBrowser.browseResultsChangedHandler = { _, changes in
@@ -34,12 +38,12 @@ class BonjourServiceBrowser_NW {
                 switch change {
                 case let .added(foundResult):
                     PurpleLogger.current.d(BonjourServiceBrowser_NW.TAG, "added Bonjour service (Network): \(foundResult)")
-                    self.discoveredServices_NW.append(foundResult) // 添加到已发现服务列表
-                    self.delegate_NW?.bonjourBrowser_NW(self, didUpdateServices: self.discoveredServices_NW) // 通知代理
+                    self.discoveredServices.append(foundResult) // 添加到已发现服务列表
+                    self.servicesListener?.onServicesChanged(self.discoveredServices) // 通知代理
                 case let .removed(removedResult):
                     PurpleLogger.current.d(BonjourServiceBrowser_NW.TAG, "removed Bonjour service (Network): \(removedResult)")
-                    self.discoveredServices_NW.removeAll { $0 == removedResult } // 从已发现服务列表中移除
-                    self.delegate_NW?.bonjourBrowser_NW(self, didUpdateServices: self.discoveredServices_NW) // 通知代理
+                    self.discoveredServices.removeAll { $0 == removedResult } // 从已发现服务列表中移除
+                    self.servicesListener?.onServicesChanged(self.discoveredServices) // 通知代理
                 case let .changed(old, new, flag):
                     PurpleLogger.current.d(BonjourServiceBrowser_NW.TAG, "changed Bonjour service (Network): \(old) \(new) \(flag)")
 
@@ -57,6 +61,6 @@ class BonjourServiceBrowser_NW {
         PurpleLogger.current.d(BonjourServiceBrowser_NW.TAG, "stopBrowsing")
         browser?.cancel()
         browser = nil
-        discoveredServices_NW = []
+        discoveredServices = []
     }
 }

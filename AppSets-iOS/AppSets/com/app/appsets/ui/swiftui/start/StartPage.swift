@@ -8,38 +8,36 @@
 import SwiftUI
 
 struct StartPage: View {
-    
-    @EnvironmentObject var viewModel: MainViewModel
-    
-    @ObservedObject var startUseCase: StartUseCase
-    
+    @Environment(MainViewModel.self) var viewModel: MainViewModel
+
     var body: some View {
-        ScrollView{
-            VStack(){
+        ScrollView {
+            VStack {
+                let startUseCase = viewModel.startUseCase
                 Spacer().frame(height: 68)
                 let spotLightsState = startUseCase.spotLightsState
-                ForEach(spotLightsState.indices, id:\.self) { index in
+                ForEach(spotLightsState.indices, id: \.self) { index in
                     let state = spotLightsState[index]
-                    HStack{
+                    HStack {
                         switch state {
                         case is ReversedSpaceState:
                             ReversedSpaceComponent()
-                            
+
                         case is AudioPlayerState:
-                            MediaComponent(mediaPlaybackUseCase: viewModel.mediaPlaybackUseCase)
-                            
+                            MediaComponent()
+
                         case is PinnedAppState:
                             PinedAppsComponent(state: state as! PinnedAppState)
-                            
+
                         case is RecommendedItemState:
                             RecommendItemsComponent(state: state as! RecommendedItemState)
-                            
+
                         case is BingWallpaperState:
                             BingWallpaperComponent(state: state as! BingWallpaperState)
-                            
+
                         case is WordOfTheDayState:
                             WordOfDayComponent(state: state as! WordOfTheDayState)
-                            
+
                         case is PopularSearchState:
                             PopulateSearchComponent(state: state as! PopularSearchState)
                         default:
@@ -55,11 +53,9 @@ struct StartPage: View {
 
 #Preview {
     let mainViewModel = MainViewModel()
-    StartPage(
-        startUseCase: StartUseCase()
-    )
-    .environmentObject(mainViewModel)
-    .onAppear(perform: {
-        LocalContext.provide(t: ContextImpl())
-    })
+    StartPage()
+        .environment(mainViewModel)
+        .onAppear(perform: {
+            LocalContext.provide(t: ContextImpl())
+        })
 }

@@ -72,7 +72,10 @@ struct AppSetsShareServiceImpl: AppSetsShareService {
         let deviceName = DeviceName.NONE
         let deviceAddress = DevcieAddress.NONE
         let device = HttpShareDevice(
-            deviceTyp: ShareDeviceStatic.DEVICE_TYPE_PHONE, deviceName: deviceName, deviceAddress: deviceAddress)
+             deviceName: deviceName,
+             deviceAddress: deviceAddress,
+             deviceType: ShareDevice.DEVICE_TYPE_PHONE
+        )
         return DeviceInfoResponse(code: 0, data: device)
     }
 }

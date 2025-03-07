@@ -10,15 +10,11 @@ import SwiftUI
 struct MainPage: View {
     public static let TAG = "MainPage"
 
-    @EnvironmentObject var viewModel: MainViewModel
-
-    @ObservedObject var navigationUseCase: NavigationUseCase
-
-    @ObservedObject var nowSpaceContentUseCase: NowSpaceContentUseCase
-
-    @ObservedObject var conversationUseCase: ConversationUseCase
+    @Environment(MainViewModel.self) var viewModel: MainViewModel
 
     @State var isShowSettingsLiteDialog: Bool = false
+
+    var brokerTest: BrokerTest = BrokerTest.Instance
 
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -30,7 +26,7 @@ struct MainPage: View {
         }
         .background(Theme.colorSchema.background)
         .sheet(isPresented: $isShowSettingsLiteDialog) {
-            SettingsLiteDialog()
+            SettingsLiteDialog().presentationDetents([.medium])
         }
         .edgesIgnoringSafeArea(.all)
     }
@@ -45,6 +41,8 @@ struct MainPage: View {
 
     func NowSpace() -> some View {
         VStack {
+            let nowSpaceContentUseCase = viewModel.nowSpaceContentUseCase
+            let navigationUseCase = viewModel.navigationUseCase
             switch nowSpaceContentUseCase.content {
             case is NewImMessage:
                 VStack {
@@ -62,56 +60,63 @@ struct MainPage: View {
     }
 
     func MessageQuickAccessBar(_ newImMessage: NewImMessage) -> some View {
-        VStack(spacing: 12) {
-            Spacer().frame(height: 68)
-            HStack {
-                Spacer()
-                HStack(spacing: 12) {
-                    AsyncImage(
-                        url: URL(string: newImMessage.session.imObj.avatarUrl ?? ""),
-                        content: { image in
-                            image
-                                .resizable()
-                                .scaledToFit()
-                                .frame(width: 20, height: 20, alignment: .center)
-                                .clipShape(RoundedRectangle(cornerRadius: 6))
-                        },
-                        placeholder: {
-                            RoundedRectangle(cornerRadius: 6)
-                                .frame(width: 20, height: 20, alignment: .center)
-                                .foregroundColor(Color(UIColor.separator))
-                        }
-                    )
-                    Text(newImMessage.session.imObj.name).font(.system(size: 12)).lineLimit(1)
+        VStack {
+            let nowSpaceContentUseCase = viewModel.nowSpaceContentUseCase
+            let navigationUseCase = viewModel.navigationUseCase
+            VStack(spacing: 12) {
+                Spacer().frame(height: 68)
+                HStack {
+                    Spacer()
+                    HStack(spacing: 12) {
+                        AsyncImage(
+                            url: URL(string: newImMessage.session.imObj.avatarUrl ?? ""),
+                            content: { image in
+                                image
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: 20, height: 20, alignment: .center)
+                                    .clipShape(RoundedRectangle(cornerRadius: 6))
+                            },
+                            placeholder: {
+                                RoundedRectangle(cornerRadius: 6)
+                                    .frame(width: 20, height: 20, alignment: .center)
+                                    .foregroundColor(Color(UIColor.separator))
+                            }
+                        )
+                        Text(newImMessage.session.imObj.name).font(.system(size: 12)).lineLimit(1)
+                    }
+                    Spacer()
                 }
-                Spacer()
+                Divider()
+                HStack {
+                    Spacer()
+                    Text(ImMessageStatic.readableContent(newImMessage.imMessage) ?? "").font(.system(size: 13)).lineLimit(3)
+                    Spacer()
+                }.padding(.init(top: 8, leading: 12, bottom: 20, trailing: 12))
             }
-            Divider()
-            HStack {
-                Spacer()
-                Text(ImMessageStatic.readableContent(newImMessage.imMessage) ?? "").font(.system(size: 13)).lineLimit(3)
-                Spacer()
-            }.padding(.init(top: 8, leading: 12, bottom: 20, trailing: 12))
-        }
-        .background(Color(UIColor.separator))
-        .onTapGesture {
-            nowSpaceContentUseCase.removeContent()
-            viewModel.conversationUseCase.updateCurrentSessionBySession(newImMessage.session)
-            navigationUseCase.navigateTo(PageRouteNameProvider.ConversationDetailsPage)
+            .background(Color(UIColor.separator))
+            .onTapGesture {
+                nowSpaceContentUseCase.removeContent()
+                viewModel.conversationUseCase.updateCurrentSessionBySession(newImMessage.session)
+                navigationUseCase.navigateTo(PageRouteNameProvider.ConversationDetailsPage)
+            }
         }
     }
 
     func onBioClick(_ bio: any Bio) {
+        let navigationUseCase = viewModel.navigationUseCase
         switch bio {
         case is UserInfo:
-            viewModel.userInfoUseCase.updateCurrentUserInfo(bio as! UserInfo)
+            let userInfo = bio as! UserInfo
+            viewModel.userInfoUseCase.updateCurrentUserInfo(userInfo)
             navigationUseCase.navigateTo(PageRouteNameProvider.UserProfilePage)
 
         case is ScreenInfo:
             navigationUseCase.navigateTo(PageRouteNameProvider.ScreenDetailsPage)
 
         case is Application:
-            viewModel.appsUseCase.setCurrentApplication(bio as! Application)
+            let app = bio as! Application
+            viewModel.appsUseCase.setCurrentApplication(app)
             navigationUseCase.navigateTo(PageRouteNameProvider.AppDetailsPage)
 
         default:
@@ -121,6 +126,9 @@ struct MainPage: View {
 
     func Content() -> some View {
         ZStack {
+            let nowSpaceContentUseCase = viewModel.nowSpaceContentUseCase
+            let navigationUseCase = viewModel.navigationUseCase
+            let conversationUseCase = viewModel.conversationUseCase
             LoginInterceptorPage(
                 navigationUseCase: navigationUseCase,
                 onBackClick: {
@@ -158,7 +166,6 @@ struct MainPage: View {
 
                     case PageRouteNameProvider.UserProfilePage:
                         UserProfilePage(
-                            userInfoUseCase: viewModel.userInfoUseCase,
                             onBackClick: {
                                 navigationUseCase.navigationUp()
                             }
@@ -178,7 +185,6 @@ struct MainPage: View {
 
                     case PageRouteNameProvider.LoginPage:
                         LoginPage(
-                            userLoginUseCase: viewModel.userLoginUseCase,
                             onBackClick: {
                                 navigationUseCase.navigationUp()
                             }
@@ -190,7 +196,6 @@ struct MainPage: View {
 
                     case PageRouteNameProvider.AppsCenterPage:
                         AppsCenterPage(
-                            appsUseCase: viewModel.appsUseCase,
                             onBioClick: onBioClick
                         ).onAppear {
                             withAnimation {
@@ -232,7 +237,6 @@ struct MainPage: View {
 
                     case PageRouteNameProvider.OutSidePage:
                         OutSidePage(
-                            screenUseCase: viewModel.screenUseCase,
                             onBioClick: onBioClick
                         ).onAppear {
                             withAnimation {
@@ -264,7 +268,6 @@ struct MainPage: View {
 
                     case PageRouteNameProvider.ConversationOverviewPage:
                         ConversationOverviewPage(
-                            conversationUseCase: viewModel.conversationUseCase,
                             onSessionClick: { session in
                                 viewModel.conversationUseCase.updateCurrentSessionByBio(session.imObj.bio)
 
@@ -278,7 +281,6 @@ struct MainPage: View {
 
                     case PageRouteNameProvider.ConversationDetailsPage:
                         ConversationDetailsPage(
-                            conversationUseCase: viewModel.conversationUseCase,
                             onBackClick: {
                                 navigationUseCase.navigationUp()
                             }
@@ -310,7 +312,6 @@ struct MainPage: View {
 
                     case PageRouteNameProvider.SearchPage:
                         SearchPage(
-                            searchUseCase: viewModel.searchUseCase,
                             onBackClick: {
                                 navigationUseCase.navigationUp()
                             },
@@ -338,7 +339,6 @@ struct MainPage: View {
                         }
                     default:
                         StartPage(
-                            startUseCase: viewModel.startUseCase
                         ).onAppear {
                             withAnimation {
                                 navigationUseCase.visible = true
@@ -352,6 +352,8 @@ struct MainPage: View {
 
     func NavigationBar() -> some View {
         ZStack {
+            let navigationUseCase = viewModel.navigationUseCase
+
             if navigationUseCase.visible {
                 VStack(alignment: .center) {
                     Divider().foregroundColor(Theme.colorSchema.outline)
@@ -413,6 +415,7 @@ struct MainPage: View {
 
     func TabMain(_ tabItem: TabItem, onTabClick: @escaping (TabAction?) -> Void) -> some View {
         VStack {
+            let navigationUseCase = viewModel.navigationUseCase
             HStack {
                 VStack {
                     Button(
@@ -461,6 +464,7 @@ struct MainPage: View {
 
     func TabAction(_ tabAction: TabAction, tabActionClick: @escaping () -> Void) -> some View {
         VStack {
+            let conversationUseCase = viewModel.conversationUseCase
             Button(
                 action: tabActionClick,
                 label: {
@@ -494,10 +498,78 @@ struct MainPage: View {
     }
 
     func SettingsLiteDialog() -> some View {
-        VStack(spacing: 12) {
-            HStack {
-                Button(
-                    action: {
+        VStack(alignment: .leading, spacing: 24) {
+            if LocalAccountManager.Instance.isLogged() {
+                HStack(spacing: 12) {
+                    let borderColor = if brokerTest.isOnline {
+                        Color.green
+                    } else {
+                        Color.red
+                    }
+                    AsyncImage(
+                        url: URL(string: LocalAccountManager.Instance.userInfo.avatarUrl ?? ""),
+                        content: { image in
+                            image
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: (Theme.size.iconSizeNormal * 2) - 2, height: (Theme.size.iconSizeNormal * 2) - 2)
+                                .clipShape(Circle())
+                        },
+                        placeholder: {
+                            SwiftUI.Image("drawable/face-face_symbol")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: Theme.size.iconSizeNormal, height: Theme.size.iconSizeNormal)
+                                .padding(11)
+                                .fontWeight(.light)
+                                .tint(Theme.colorSchema.onSurface)
+                        }
+                    ).overlay {
+                        Circle().stroke(borderColor, lineWidth: 2)
+                    }
+
+                    Text(LocalAccountManager.Instance.userInfo.name ?? "")
+                }
+
+            } else {
+                HStack(spacing: 12) {
+                    SwiftUI.Image("drawable/face-face_symbol")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: Theme.size.iconSizeNormal, height: Theme.size.iconSizeNormal)
+                        .fontWeight(.light)
+                        .tint(Theme.colorSchema.onSurface)
+                        .padding(12)
+                        .background(Theme.colorSchema.outline.clipShape(Circle()))
+
+                    Text("Login to AppSets")
+                }
+            }
+
+            HStack(spacing: 12) {
+                SwiftUI.Image("drawable/settings-settings_symbol")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: Theme.size.iconSizeNormal, height: Theme.size.iconSizeNormal)
+                    .fontWeight(.light)
+                    .tint(Theme.colorSchema.onSurface)
+                    .padding(12)
+                    .background(Theme.colorSchema.outline.clipShape(Circle()))
+                Text("App Settings")
+            }
+            let navigationUseCase = viewModel.navigationUseCase
+            HStack(spacing: 12) {
+                HStack {}
+                    .frame(width: Theme.size.iconSizeNormal, height: Theme.size.iconSizeNormal)
+                    .padding(12)
+
+                let text = if LocalAccountManager.Instance.isLogged() {
+                    "logout"
+                } else {
+                    "login"
+                }
+                Text(text)
+                    .onTapGesture {
                         if LocalAccountManager.Instance.isLogged() {
                             viewModel.userLoginUseCase.logout(LocalContext.current)
                         } else {
@@ -506,36 +578,19 @@ struct MainPage: View {
                             }
                             navigationUseCase.navigateTo(PageRouteNameProvider.LoginPage)
                         }
-
-                    },
-                    label: {
-                        let text = if LocalAccountManager.Instance.isLogged() {
-                            "logout"
-                        } else {
-                            "login"
-                        }
-                        Text(text)
-                            .tint(.white)
                     }
-                )
-                .padding()
-                .background(RoundedRectangle(cornerRadius: 12).foregroundColor(.blue))
                 Spacer()
             }
             Spacer()
         }
-        .padding()
+        .padding(32)
     }
 }
 
 #Preview {
     VStack {
         let viewModel = MainViewModel()
-        MainPage(
-            navigationUseCase: viewModel.navigationUseCase,
-            nowSpaceContentUseCase: viewModel.nowSpaceContentUseCase,
-            conversationUseCase: viewModel.conversationUseCase
-        ).environmentObject(viewModel)
+        MainPage().environment(viewModel)
     }.onAppear(perform: {
         LocalContext.provide(t: ContextImpl())
     })

@@ -2,6 +2,7 @@ package xcj.app.share.base
 
 interface ShareDevice {
     companion object {
+        const val DEVICE_TYPE = "deviceType"
         const val RAW_NAME = "rawName"
         const val NICK_NAME = "nickName"
         const val DEVICE_TYPE_PHONE = 0

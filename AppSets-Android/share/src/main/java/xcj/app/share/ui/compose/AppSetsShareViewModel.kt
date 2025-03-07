@@ -69,10 +69,10 @@ class AppSetsShareViewModel : AnyStateViewModel() {
         updateShareDeviceListState(emptyList())
     }
 
-    fun onNewReceivedContent(content: DataContent) {
+    fun onContentReceived(content: DataContent) {
         PurpleLogger.current.d(
             TAG,
-            "onNewReceivedContent, content:\n${content}"
+            "onContentReceived, content:\n${content}"
         )
         viewModelScope.launch(Dispatchers.Main) {
             receivedContentList.add(0, content)

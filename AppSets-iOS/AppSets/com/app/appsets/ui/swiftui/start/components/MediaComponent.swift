@@ -15,12 +15,11 @@ struct Song{
 }
 
 struct MediaComponent: View {
+    @Environment(MainViewModel.self) var viewModel: MainViewModel
     
-    @ObservedObject var mediaPlaybackUseCase: MediaPlaybackUseCase
-
     var body: some View {
         ZStack(){
-            
+            let mediaPlaybackUseCase = viewModel.mediaPlaybackUseCase
             VStack(alignment:.leading,spacing: 12) {
                 HStack{
                     Text("now_playing")
@@ -117,5 +116,5 @@ struct MediaComponent: View {
 }
 
 #Preview {
-    MediaComponent(mediaPlaybackUseCase: MediaPlaybackUseCase())
+    MediaComponent()
 }
