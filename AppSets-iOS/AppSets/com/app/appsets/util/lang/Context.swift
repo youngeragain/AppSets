@@ -7,20 +7,15 @@
 
 import Foundation
 
-
 protocol Context {
-    
-    var resouces:Resources { get }
-    
+    var resources: Resources { get }
 }
 
 extension Context {
-    
-    func startService(_ intent: Intent){
+    func startService(_ intent: Intent) {
         PurpleLogger.current.d("ContextEXT", "startService, context:\(self) intent:\(intent)")
         MockIOS.startService(intent)
     }
-    
 }
 
-let LocalContext:StaticProvider<Context> = staticProvider<Context>(nil)
+let LocalContext: StaticProvider<Context> = staticProvider<Context>(nil)

@@ -9,6 +9,12 @@ struct DeviceName: Codable {
     let rawName: String
     let nickName: String?
 
+    var name: String {
+        get {
+            nickName ?? rawName
+        }
+    }
+
     public static let NONE = DeviceName(rawName: "", nickName: nil)
 
     public static var RANDOM: DeviceName {

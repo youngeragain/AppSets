@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import UniformTypeIdentifiers
 
 struct BoxFocusInfo {
     var receiveBoxFocus: Bool = false
@@ -39,7 +40,12 @@ struct SharePage: View {
 
     @State var inputContent: String = ""
     @State var isShowInput: Bool = false
+
     @State var isShowSettings: Bool = false
+
+    @State var isShowContentSelection: Bool = false
+
+    @State var containerSize: CGSize = CGSize()
 
     let onBackClickListener: () -> Void
 
@@ -87,8 +93,7 @@ struct SharePage: View {
     var body: some View {
         VStack {
             Spacer().frame(height: 52)
-            GeometryReader { geometry in
-                let containerSize = geometry.size
+            VStack {
                 let boxsHeight = getBoxsHeight(containerSize)
                 let receiveBoxHeight: CGFloat = boxsHeight.0
                 let devicesBoxHeight: CGFloat = boxsHeight.1
@@ -141,7 +146,7 @@ struct SharePage: View {
 
                     Spacer().frame(height: 12)
 
-                    ZStack(alignment: .topLeading) {
+                    ZStack(alignment: .bottomLeading) {
                         HStack(alignment: .center, spacing: 12) {
                             if !shareViewModel.boxFocusInfo.devicesBoxFocus {
                                 SwiftUI.Image("drawable/qr_code_scanner_qr_code_scanner_symbol")
@@ -207,9 +212,7 @@ struct SharePage: View {
                                     }
                                     Text(text)
                                 }
-                                if let nickName = shareViewModel.mShareDevice.deviceName.nickName {
-                                    Text(nickName).font(.system(size: 16)).fontWeight(.bold)
-                                }
+                                Text(shareViewModel.mShareDevice.deviceName.name).font(.system(size: 20)).fontWeight(.bold)
                             }.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
                         }
                     }
@@ -227,14 +230,24 @@ struct SharePage: View {
 
                     Spacer().frame(height: 12)
 
-                    ZStack(alignment: .topLeading) {
+                    ZStack(alignment: .bottomLeading) {
                         HStack(alignment: .center, spacing: 12) {
-                            SwiftUI.Image("drawable/draft_draft_symbol")
+                            SwiftUI.Image(.Drawable.draftDraftSymbol)
                                 .fontWeight(.light)
                                 .padding(12)
-                                .tint(Theme.colorSchema.onSurface)
+                                .tint(Theme.colorSchema.onSurface).onTapGesture {
+                                    isShowContentSelection = true
+                                }.sheet(isPresented: $isShowContentSelection) {
+                                    ContentSelectionSheet { urls in
+                                        withAnimation {
+                                            urls.forEach { url in
+                                                shareViewModel.addPendingContent(url)
+                                            }
+                                        }
+                                    }
+                                }
 
-                            SwiftUI.Image("drawable/notes_notes_symbol")
+                            SwiftUI.Image(.Drawable.notesNotesSymbol)
                                 .fontWeight(.light)
                                 .padding(12)
                                 .tint(Theme.colorSchema.onSurface).onTapGesture {
@@ -242,12 +255,12 @@ struct SharePage: View {
                                 }.sheet(isPresented: $isShowInput) {
                                     InputSheet({ str in
                                         isShowInput = false
-                                        if !str.isEmpty{
+                                        if !str.isEmpty {
                                             withAnimation {
                                                 shareViewModel.addPendingContent(str)
                                             }
                                         }
-                                        
+
                                     }).presentationDetents([.medium])
                                 }
 
@@ -302,7 +315,15 @@ struct SharePage: View {
 
                 }.frame(maxWidth: .infinity, maxHeight: .infinity)
                     .padding()
-            }
+            }.onGeometryChange(
+                for: CGSize.self,
+                of: { proxy in
+                    proxy.size
+                },
+                action: { proxySize in
+                    containerSize = proxySize
+                }
+            )
 
         }.frame(
             minWidth: 0,
@@ -344,17 +365,62 @@ struct SharePage: View {
                     onConfirm(inputContent)
                 } label: {
                     Text("ok").tint(Theme.colorSchema.onSecondaryContainer)
-                }.frame(alignment: .trailing).padding().background(
+                }.frame(alignment: .trailing)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .background(
                     Theme.colorSchema.secondaryContainer.clipShape(RoundedRectangle(cornerRadius: 24))
                 )
             }
 
             TextField(text: $inputContent, label: {
-                Text("input").frame(alignment: .topLeading)
+                Text("input content").frame(alignment: .topLeading)
             }).frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
                 .padding()
                 .background(Theme.colorSchema.secondaryContainer.clipShape(RoundedRectangle(cornerRadius: 24)))
         }.padding()
+    }
+
+    func ContentSelectionSheet(_ onContentSelected: @escaping ([URL]) -> Void) -> some View {
+        DocumentPickerView(onFilePicked: onContentSelected)
+    }
+}
+
+struct DocumentPickerView: UIViewControllerRepresentable {
+    typealias UIViewControllerType = UIDocumentPickerViewController
+
+    typealias Coordinator = PickerUIDocumentPickerDelegate
+
+    var onFilePicked: ([URL]) -> Void
+
+    func makeUIViewController(context: UIViewControllerRepresentableContext<Self>) -> UIDocumentPickerViewController {
+        let allowedContentTypes: [UTType] = [UTType.item]
+        let picker = UIDocumentPickerViewController(forOpeningContentTypes: allowedContentTypes, asCopy: false)
+        picker.allowsMultipleSelection = true
+        picker.delegate = context.coordinator
+        return picker
+    }
+
+    func updateUIViewController(_ uiViewController: UIDocumentPickerViewController, context: UIViewControllerRepresentableContext<Self>) {
+    }
+
+    func makeCoordinator() -> PickerUIDocumentPickerDelegate {
+        return PickerUIDocumentPickerDelegate(self)
+    }
+
+    class PickerUIDocumentPickerDelegate: NSObject, UIDocumentPickerDelegate {
+        let parent: DocumentPickerView
+
+        init(_ parent: DocumentPickerView) {
+            self.parent = parent
+        }
+
+        func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL]) {
+            parent.onFilePicked(urls)
+        }
+
+        func documentPickerWasCancelled(_ controller: UIDocumentPickerViewController) {
+        }
     }
 }
 

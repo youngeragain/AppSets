@@ -3,4 +3,5 @@
     <string name="there_are_no_add_ons_yet_click_on_the_upper_right_corner_to_add">点击右上角添加</string>
     <string name="delete">删除</string>
     <string name="compose_plugin">Compose 插件</string>
+    <string name="compose_plugin_description">使用Compose的动态能力，提供一种可动态增加或移除的应用功能扩展</string>
 </resources>

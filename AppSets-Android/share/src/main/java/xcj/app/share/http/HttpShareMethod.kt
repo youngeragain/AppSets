@@ -711,7 +711,7 @@ class HttpShareMethod : ShareMethod(), ContentReceivedListener, ListenersProvide
         }
     }
 
-    fun getPendingSendFileList(uri: String): List<DataContent> {
+    fun getPendingSendContentList(uri: String): List<DataContent> {
         return viewModel.pendingSendContentList
     }
 

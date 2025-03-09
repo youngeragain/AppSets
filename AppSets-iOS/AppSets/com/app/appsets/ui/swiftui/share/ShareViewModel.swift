@@ -5,6 +5,7 @@
 //  Created by caiju Xu on 2025/3/6.
 //
 import SwiftUI
+import Foundation
 
 @Observable
 class ShareViewModel {
@@ -48,10 +49,16 @@ class ShareViewModel {
 
     func addPendingContent(_ content: Any) {
         if(content is String){
-            let dataContent = StringDataContent(content: content as! String)
+            PurpleLogger.current.d(ShareViewModel.TAG, "addPendingContent, add String:\(content)")
+            let str = content as! String
+            let dataContent = StringDataContent(content: str)
+            _ = pendingSendContentList.add(dataContent)
+        }else if(content is URL){
+            PurpleLogger.current.d(ShareViewModel.TAG, "addPendingContent, add URL:\(content)")
+            let url = content as! URL
+            let dataContent = UriDataContent(uri: url)
             _ = pendingSendContentList.add(dataContent)
         }
-       
     }
     
     func removeAllPendingSendContent(){
@@ -60,6 +67,10 @@ class ShareViewModel {
     
     func onContentReceived(_ content: any DataContent){
         _ = receivedContentList.add(content)
+    }
+    
+    func getPendingSendContentList()->[any DataContent]{
+        return pendingSendContentList.elements
     }
     
 }

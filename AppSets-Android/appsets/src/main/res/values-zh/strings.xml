@@ -310,12 +310,14 @@
     <string name="open_wifi">开启WIFI</string>
     <string name="not_generated">未生成</string>
     <string name="weather">天气</string>
+    <string name="weather_description">简单的天气查看小工具</string>
     <string name="show_latest">显示最新</string>
     <string name="show_time">显示时间</string>
     <string name="show">显示</string>
     <string name="hide">隐藏</string>
     <string name="no_a">没有%s</string>
     <string name="transform_content">转换</string>
+    <string name="transform_content_description">文本输入的可以输出二维码或使其转换为另外的文本</string>
     <string name="private_key">私钥</string>
     <string name="public_key">公钥</string>
     <string name="auto">自动</string>
@@ -378,8 +380,10 @@
     <string name="slide_to_enable_camera_preview">滑动开启相机预览</string>
     <string name="only_for_learning_purpose">部分Logo资源，仅用于学习用途</string>
     <string name="appsets_share">AppSets 分享</string>
+    <string name="appsets_share_description">使用分享功能，在本地共享数据</string>
     <string name="slide_to_logout">滑动退出登录</string>
-    <string name="appsets_proxy">AppSets VPN/Proxy</string>
+    <string name="appsets_proxy">AppSets 代理</string>
+    <string name="appsets_proxy_description">网络代理</string>
     <string name="show_web_content">查看网页内容</string>
     <string name="image">图片</string>
     <string name="voice">语音</string>
@@ -396,7 +400,8 @@
     <string name="foreground_service">前台服务</string>
     <string name="service_running">服务正在运行</string>
     <string name="auto_send_if_x_seconds">%s秒后自动发送</string>
-    <string name="appsets_launcher">AppSets开始</string>
+    <string name="appsets_launcher">AppSets 开始</string>
+    <string name="appsets_launcher_description">可作为应用启动的第一个屏幕</string>
     <string name="add_screenshot_information">添加截图信息</string>
     <string name="download_link_url">下载链接(URL)</string>
     <string name="package_size_of_version">版本包体积大小</string>
@@ -418,6 +423,7 @@
     <string name="conversation">对话</string>
     <string name="send_to_people">发给别人</string>
     <string name="intent_caller">意图调用</string>
+    <string name="intent_caller_description">处理Android系统标准的应用间响应的小工具</string>
     <string name="deeplink">深层链接</string>
     <string name="call">调用</string>
     <string name="history">历史</string>
@@ -425,5 +431,7 @@
     <string name="how_to">下一步怎么做?</string>
     <string name="nearby_share">就近分享</string>
     <string name="quick_step">快捷</string>
+    <string name="file_manager">文件管理</string>
+    <string name="file_manager_description">自定义的文件管理工具，使用标准处理</string>
 
 </resources>

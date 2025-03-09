@@ -18,7 +18,7 @@
     <string name="new_share_content_to_you">New share content</string>
     <string name="server_status">Server Status</string>
     <string name="need_a_pin">Need a PIN</string>
-    <string name="appsets_share_send_tips">Input the content and click any device to send</string>
+    <string name="appsets_share_send_tips">Input content</string>
     <string name="devices">Devices</string>
     <string name="appsets_share_wlanp2p_usage_tips">WLAN P2P uses WIFI Direct and requires the following permissions: \n Nearby devices; Approximate location information; Precise location information; Get WIFI status; Change WIFI status; Nearby WIFI devices; * Turn on WIFI and position switches when using.</string>
     <string name="send_progress_is">Send progress(%s)</string>

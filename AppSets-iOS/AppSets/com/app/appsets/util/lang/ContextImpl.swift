@@ -11,7 +11,7 @@ class ContextImpl : Context {
     
     private static let TAG = "ContextImpl"
     
-    internal var resouces: Resources = Resources()
+    internal var resources: Resources = Resources()
     
     init() {
         PurpleLogger.current.d(ContextImpl.TAG, "init")

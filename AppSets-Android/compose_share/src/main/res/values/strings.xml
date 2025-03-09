@@ -3,4 +3,5 @@
     <string name="there_are_no_add_ons_yet_click_on_the_upper_right_corner_to_add">Click on the top right corner to add</string>
     <string name="delete">Delete</string>
     <string name="compose_plugin">Compose Plugin</string>
+    <string name="compose_plugin_description">Using the dynamic capabilities of Compose to provide an application feature extension that can be dynamically added or remove</string>
 </resources>

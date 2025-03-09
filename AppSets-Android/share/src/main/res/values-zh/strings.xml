@@ -18,7 +18,7 @@
     <string name="new_share_content_to_you">新的分享内容</string>
     <string name="server_status">服务状态</string>
     <string name="need_a_pin">需要一个PIN</string>
-    <string name="appsets_share_send_tips">输入内容，然后点击设备发送</string>
+    <string name="appsets_share_send_tips">输入内容</string>
     <string name="devices">设备</string>
     <string name="appsets_share_wlanp2p_usage_tips">WLAN P2P 使用WIFI Direct，需要以下权限:\n附近的设备; 位置大致信息; 位置精确信息; 获取WIFI状态; 更改WIFI状态; 附近WIFI设备; * 使用时打开WIFI开关和位置开关。</string>
     <string name="send_progress_is">发送进度(%s)</string>

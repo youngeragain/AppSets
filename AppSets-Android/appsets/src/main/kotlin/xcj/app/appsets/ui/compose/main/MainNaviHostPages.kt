@@ -1526,7 +1526,7 @@ fun navigateToAppSetsLauncherActivity(context: Context) {
     val componentName =
         ComponentName(
             "xcj.app.container",
-            "xcj.app.launcher.ui.standard_home.StandardWindowHome"
+            "xcj.app.launcher.ui.compose.standard_home.StandardWindowHome"
         )
     intent.setComponent(componentName)
     runCatching {

@@ -6,6 +6,12 @@
 //
 
 struct ContentInfo: Codable {
+    
+    public static let TYPE_STRING = 0
+    public static let TYPE_FILE = 1
+    public static let TYPE_URI = 2
+    public static let TYPE_BYTES = 3
+    
     let id: String
     let name: String
     let size: CLong

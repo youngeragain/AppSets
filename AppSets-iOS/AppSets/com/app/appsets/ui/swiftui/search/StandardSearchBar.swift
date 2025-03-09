@@ -25,7 +25,7 @@ struct StandardSearchBar: View {
                     }
                 ) {
                     HStack {
-                        SwiftUI.Image("drawable/search-search_symbol")
+                        SwiftUI.Image(.Drawable.searchSearchSymbol)
                             .resizable()
                             .scaledToFit()
                             .frame(width: Theme.size.iconSizeNormal, height: Theme.size.iconSizeNormal)
@@ -60,7 +60,7 @@ struct StandardSearchBar: View {
                                     .clipShape(Circle())
                             },
                             placeholder: {
-                                SwiftUI.Image("drawable/face-face_symbol")
+                                SwiftUI.Image(.Drawable.faceFaceSymbol)
                                     .resizable()
                                     .scaledToFit()
                                     .frame(width: Theme.size.iconSizeNormal, height: Theme.size.iconSizeNormal)
@@ -79,7 +79,7 @@ struct StandardSearchBar: View {
                             onClickListener("UserIcon")
                         }
                     ) {
-                        SwiftUI.Image("drawable/face-face_symbol")
+                        SwiftUI.Image(.Drawable.faceFaceSymbol)
                             .resizable()
                             .scaledToFit()
                             .frame(width: Theme.size.iconSizeNormal, height: Theme.size.iconSizeNormal)

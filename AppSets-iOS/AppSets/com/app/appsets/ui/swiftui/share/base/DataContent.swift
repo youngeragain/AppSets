@@ -29,3 +29,17 @@ struct StringDataContent: DataContent {
         self.content = content
     }
 }
+
+struct UriDataContent: DataContent {
+    var id: String = UUID().uuidString
+
+    var name: String {
+        return uri.lastPathComponent
+    }
+
+    var uri: URL
+
+    init(uri: URL) {
+        self.uri = uri
+    }
+}

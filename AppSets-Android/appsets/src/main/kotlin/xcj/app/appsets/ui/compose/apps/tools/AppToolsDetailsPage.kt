@@ -36,6 +36,13 @@ fun AppToolsDetailsPage(
                     onBackClick = onBackClick
                 )
             }
+
+            TOOL_TYPE_AppSets_File_Manager -> {
+                AppToolFileManagerPage(
+                    quickStepContents = quickStepContents,
+                    onBackClick = onBackClick
+                )
+            }
         }
     }
 }

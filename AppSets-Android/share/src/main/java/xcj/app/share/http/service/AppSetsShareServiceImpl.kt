@@ -5,7 +5,6 @@ package xcj.app.share.http.service
 import android.content.Context
 import xcj.app.share.base.ClientInfo
 import xcj.app.share.base.DataContent
-import xcj.app.share.base.ShareDevice
 import xcj.app.share.http.HttpShareMethod
 import xcj.app.share.http.base.HttpShareDevice
 import xcj.app.share.http.common.DataContentReadableData
@@ -334,7 +333,7 @@ class AppSetsShareServiceImpl : AppSetsShareService {
         shareMethod: HttpShareMethod,
         uri: String
     ): List<DataContent>? {
-        val pendingSendFileList = shareMethod.getPendingSendFileList(uri)
+        val pendingSendFileList = shareMethod.getPendingSendContentList(uri)
 
         return pendingSendFileList
     }

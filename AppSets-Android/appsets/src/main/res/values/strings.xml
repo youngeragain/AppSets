@@ -310,12 +310,14 @@
     <string name="open_wifi">Enable WIFI</string>
     <string name="not_generated">Not generated</string>
     <string name="weather">Weather</string>
+    <string name="weather_description">Simple weather viewing tool</string>
     <string name="show_latest">Show latest</string>
     <string name="show_time">Show date</string>
     <string name="show">Show</string>
     <string name="hide">Hide</string>
     <string name="no_a">No %s</string>
     <string name="transform_content">Transform content</string>
+    <string name="transform_content_description">Text input can output QR codes or convert them into other text</string>
     <string name="private_key">Private Key</string>
     <string name="public_key">Public Key</string>
     <string name="auto">Auto</string>
@@ -378,8 +380,10 @@
     <string name="slide_to_enable_camera_preview">Slide to enable camera\'s preview</string>
     <string name="only_for_learning_purpose">Partial logo resources, for learning purposes only</string>
     <string name="appsets_share">AppSets Share</string>
+    <string name="appsets_share_description">Use the sharing function to share data locally</string>
     <string name="slide_to_logout">Slide to logout</string>
-    <string name="appsets_proxy">AppSets VPN/Proxy</string>
+    <string name="appsets_proxy">AppSets Proxy</string>
+    <string name="appsets_proxy_description">Network proxy</string>
     <string name="show_web_content">Show Web content</string>
     <string name="image">Image</string>
     <string name="voice">Voice</string>
@@ -397,6 +401,7 @@
     <string name="service_running">Service Running</string>
     <string name="auto_send_if_x_seconds">Automatically send after %s seconds</string>
     <string name="appsets_launcher">AppSets Launcher</string>
+    <string name="appsets_launcher_description">Can be used as the first screen for launching an application.</string>
     <string name="add_screenshot_information">Add screenshot information</string>
     <string name="download_link_url">Download link(URL)</string>
     <string name="package_size_of_version">Version package volume size</string>
@@ -418,6 +423,7 @@
     <string name="conversation">Conversation</string>
     <string name="send_to_people">Send To People</string>
     <string name="intent_caller">Intent Caller</string>
+    <string name="intent_caller_description">A small tool for handling inter application responses to Android system standards</string>
     <string name="deeplink">DeepLink</string>
     <string name="call">Call</string>
     <string name="history">History</string>
@@ -425,4 +431,6 @@
     <string name="how_to">How to?</string>
     <string name="nearby_share">Nearby Share</string>
     <string name="quick_step">Quick Step</string>
+    <string name="file_manager">File Manager</string>
+    <string name="file_manager_description">Custom file management tool, using standard processing</string>
 </resources>

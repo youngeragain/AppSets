@@ -11,8 +11,8 @@ class ContextWrapper : Context {
     
     private var wrapped: Context
     
-    var resouces: Resources {
-        return wrapped.resouces
+    var resources: Resources {
+        return wrapped.resources
     }
     
     required init(){

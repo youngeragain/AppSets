@@ -126,7 +126,6 @@ struct MainPage: View {
 
     func Content() -> some View {
         ZStack {
-            let nowSpaceContentUseCase = viewModel.nowSpaceContentUseCase
             let navigationUseCase = viewModel.navigationUseCase
             let conversationUseCase = viewModel.conversationUseCase
             LoginInterceptorPage(
@@ -516,7 +515,7 @@ struct MainPage: View {
                                 .clipShape(Circle())
                         },
                         placeholder: {
-                            SwiftUI.Image("drawable/face-face_symbol")
+                            SwiftUI.Image(.Drawable.faceFaceSymbol)
                                 .resizable()
                                 .scaledToFit()
                                 .frame(width: Theme.size.iconSizeNormal, height: Theme.size.iconSizeNormal)
@@ -533,7 +532,7 @@ struct MainPage: View {
 
             } else {
                 HStack(spacing: 12) {
-                    SwiftUI.Image("drawable/face-face_symbol")
+                    SwiftUI.Image(.Drawable.faceFaceSymbol)
                         .resizable()
                         .scaledToFit()
                         .frame(width: Theme.size.iconSizeNormal, height: Theme.size.iconSizeNormal)
@@ -547,7 +546,7 @@ struct MainPage: View {
             }
 
             HStack(spacing: 12) {
-                SwiftUI.Image("drawable/settings-settings_symbol")
+                SwiftUI.Image(.Drawable.settingsSettingsSymbol)
                     .resizable()
                     .scaledToFit()
                     .frame(width: Theme.size.iconSizeNormal, height: Theme.size.iconSizeNormal)

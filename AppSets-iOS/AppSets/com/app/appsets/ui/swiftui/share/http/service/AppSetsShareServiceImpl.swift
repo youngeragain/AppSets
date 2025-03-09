@@ -57,11 +57,23 @@ struct AppSetsShareServiceImpl: AppSetsShareService {
 
     func getContentList(context: any Context, clientHost: String, shareToken: String, uri: String) async -> ContentInfoListResponse {
         PurpleLogger.current.d(AppSetsShareServiceImpl.TAG, "getContentList")
+        guard let dataContentList = findContentListForContentUri(uri) else {
+            return ContentInfoListResponse(code: 0, data: nil)
+        }
         let uri = uri
         var infoList: [ContentInfo] = []
-        if let str = "Are you ok?".data(using: .utf8)?.base64EncodedString() {
-            let contentInfo = ContentInfo(id: "", name: str, size: 1, type: 0)
-            infoList.append(contentInfo)
+        dataContentList.forEach{ dataContent in
+            if(dataContent is StringDataContent){
+                let stringDataContent = dataContent as! StringDataContent
+                let name = stringDataContent.name.data(using: .utf8)?.base64EncodedString() ?? ""
+                let contentInfo = ContentInfo(id:stringDataContent.id, name: name, size: stringDataContent.content.count, type: ContentInfo.TYPE_STRING)
+                infoList.append(contentInfo)
+            }else if(dataContent is UriDataContent){
+                let uriDataContent = dataContent as! UriDataContent
+                let name = uriDataContent.name.data(using: .utf8)?.base64EncodedString() ?? ""
+                let contentInfo = ContentInfo(id:uriDataContent.id, name: name, size: 0, type: ContentInfo.TYPE_URI)
+                infoList.append(contentInfo)
+            }
         }
 
         let contentInfoListWrapper = ContentInfoListWrapper(uri: uri, count: infoList.count, infoList: infoList)
@@ -77,5 +89,9 @@ struct AppSetsShareServiceImpl: AppSetsShareService {
              deviceType: ShareDevice.DEVICE_TYPE_PHONE
         )
         return DeviceInfoResponse(code: 0, data: device)
+    }
+    
+    private func findContentListForContentUri(_ uri:String)->[any DataContent]? {
+        return ShareViewModel.INSTANCE.getPendingSendContentList()
     }
 }
