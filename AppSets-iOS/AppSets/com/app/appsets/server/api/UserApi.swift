@@ -9,16 +9,16 @@ import Foundation
 
 protocol UserApi {
     
-    func login(account:String, password:String) async -> StringResponse
+    func login(account:String, password:String) async -> DesignResponse<String>
     
-    func getLoggedUseInfo() async -> UserInfoResponse
+    func getLoggedUseInfo() async -> DesignResponse<UserInfo>
     
-    func getFriends() async -> UserFriendsReponse
+    func getFriends() async -> DesignResponse<[UserInfo]>
     
-    func getChatGroupInfoList() async -> UserChatGroupInfosResponse
+    func getChatGroupInfoList() async -> DesignResponse<[GroupInfo]>
     
-    func getIndexRecommendScreens(page: Int, pageSize: Int) async -> ScreensResponse
+    func getIndexRecommendScreens(page: Int, pageSize: Int) async -> DesignResponse<[ScreenInfo]>
     
-    func getScreensByUid(_ uid: String, page: Int, pageSize: Int) async-> ScreensResponse
+    func getScreensByUid(_ uid: String, page: Int, pageSize: Int) async-> DesignResponse<[ScreenInfo]>
     
 }

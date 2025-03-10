@@ -19,7 +19,7 @@ import xcj.app.share.base.ShareDevice
 import xcj.app.share.base.ShareMethod
 import xcj.app.share.http.HttpShareMethod
 import xcj.app.share.http.base.HttpShareDevice
-import xcj.app.share.http.model.ContentInfoListWrapper
+import xcj.app.share.http.model.ContentInfoList
 import xcj.app.share.wlanp2p.WlanP2pShareMethod
 import xcj.app.share.wlanp2p.base.P2pShareDevice
 import xcj.app.starter.android.util.FileUtil
@@ -41,7 +41,7 @@ class AppSetsShareViewModel : AnyStateViewModel() {
     val shareMethodTypeState: MutableState<Class<*>> =
         mutableStateOf(WlanP2pShareMethod::class.java)
 
-    val deviceContentListMap: MutableMap<ShareDevice, ContentInfoListWrapper> = mutableStateMapOf()
+    val deviceContentListMap: MutableMap<ShareDevice, ContentInfoList> = mutableStateMapOf()
 
     val pendingSendContentList: MutableList<DataContent> = mutableStateListOf()
 
@@ -389,10 +389,10 @@ class AppSetsShareViewModel : AnyStateViewModel() {
 
     fun updateDeviceContentListMap(
         shareDevice: ShareDevice,
-        contentInfoListWrapper: ContentInfoListWrapper
+        contentInfoList: ContentInfoList
     ) {
         viewModelScope.launch(Dispatchers.Main) {
-            deviceContentListMap.put(shareDevice, contentInfoListWrapper)
+            deviceContentListMap.put(shareDevice, contentInfoList)
         }
     }
 

@@ -9,13 +9,13 @@ import Foundation
 
 protocol AppSetsApi {
     
-    func getAppToken() async -> StringResponse
+    func getAppToken() async -> DesignResponse<String>
     
-    func getIndexApplications() async -> ApplicationsResponse
+    func getIndexApplications() async -> DesignResponse<[AppWithCategory]>
     
-    func getSpotLight() async -> SpotLightResponse
+    func getSpotLight() async -> DesignResponse<SpotLight>
     
-    func getIMBrokerProperties() async -> StringResponse
+    func getIMBrokerProperties() async -> DesignResponse<String>
     
 }
 

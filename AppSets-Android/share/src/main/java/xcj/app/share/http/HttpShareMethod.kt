@@ -630,8 +630,8 @@ class HttpShareMethod : ShareMethod(), ContentReceivedListener, ListenersProvide
         if (!isAccept) {
             return
         }
-        activity.lifecycleScope.launch {
-            if (isPreferDownloadSelf) {
+        if (isPreferDownloadSelf) {
+            activity.lifecycleScope.launch {
                 appSetsShareRepository.handleDownload(
                     this@HttpShareMethod,
                     shareDevice,

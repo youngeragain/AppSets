@@ -107,7 +107,7 @@ struct SharePage: View {
                                 if shareViewModel.boxFocusInfo.receiveBoxFocus {
                                     Text("Show received content here")
                                 } else {
-                                    SwiftUI.Image("drawable/call_received_call_received_symbol")
+                                    SwiftUI.Image(.Drawable.callReceivedCallReceivedSymbol)
                                         .fontWeight(.light)
                                         .padding(12)
                                         .tint(Theme.colorSchema.onSurface)
@@ -121,7 +121,7 @@ struct SharePage: View {
                             }
                         }.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
                         HStack {
-                            SwiftUI.Image("drawable/arrow_back-arrow_back_symbol")
+                            SwiftUI.Image(.Drawable.arrowBackArrowBackSymbol)
                                 .resizable()
                                 .scaledToFit()
                                 .frame(width: Theme.size.iconSizeNormal, height: Theme.size.iconSizeNormal)
@@ -148,19 +148,17 @@ struct SharePage: View {
 
                     ZStack(alignment: .bottomLeading) {
                         HStack(alignment: .center, spacing: 12) {
-                            if !shareViewModel.boxFocusInfo.devicesBoxFocus {
-                                SwiftUI.Image("drawable/qr_code_scanner_qr_code_scanner_symbol")
-                                    .fontWeight(.light)
-                                    .padding(12)
-                                    .tint(Theme.colorSchema.onSurface)
+                            SwiftUI.Image(.Drawable.qrCodeScannerQrCodeScannerSymbol)
+                                .fontWeight(.light)
+                                .padding(12)
+                                .tint(Theme.colorSchema.onSurface)
 
-                                SwiftUI.Image("drawable/qr_code_qr_code_symbol")
-                                    .fontWeight(.light)
-                                    .padding(12)
-                                    .tint(Theme.colorSchema.onSurface)
-                            }
+                            SwiftUI.Image(.Drawable.qrCodeQrCodeSymbol)
+                                .fontWeight(.light)
+                                .padding(12)
+                                .tint(Theme.colorSchema.onSurface)
 
-                            SwiftUI.Image("drawable/settings-settings_symbol")
+                            SwiftUI.Image(.Drawable.settingsSettingsSymbol)
                                 .fontWeight(.light)
                                 .padding(12)
                                 .tint(Theme.colorSchema.onSurface)
@@ -175,7 +173,7 @@ struct SharePage: View {
                                     ForEach(shareViewModel.shareDeviceList.elements) { shareDevice in
                                         VStack(spacing: 4) {
                                             VStack {
-                                                SwiftUI.Image("drawable/smartphone_smartphone_symbol")
+                                                SwiftUI.Image(.Drawable.smartphoneSmartphoneSymbol)
                                                     .resizable()
                                                     .scaledToFit()
                                                     .frame(width: Theme.size.iconSizeNormal, height: Theme.size.iconSizeNormal)
@@ -201,7 +199,7 @@ struct SharePage: View {
                         if !shareViewModel.boxFocusInfo.devicesBoxFocus {
                             VStack {
                                 HStack {
-                                    SwiftUI.Image("drawable/refresh-refresh_symbol")
+                                    SwiftUI.Image(.Drawable.refreshRefreshSymbol)
                                         .fontWeight(.light)
                                         .padding(12)
                                         .tint(Theme.colorSchema.onSurface)
@@ -265,12 +263,12 @@ struct SharePage: View {
                                 }
 
                             if shareViewModel.pendingSendContentList.count() > 0 {
-                                SwiftUI.Image("drawable/ios_share_ios_share_symbol")
+                                SwiftUI.Image(.Drawable.iosShareIosShareSymbol)
                                     .fontWeight(.light)
                                     .padding(12)
                                     .tint(Theme.colorSchema.onSurface)
 
-                                SwiftUI.Image("drawable/delete_forever_delete_forever_symbol")
+                                SwiftUI.Image(.Drawable.deleteForeverDeleteForeverSymbol)
                                     .fontWeight(.light)
                                     .padding(12)
                                     .tint(Theme.colorSchema.onSurface).onTapGesture {
@@ -284,7 +282,7 @@ struct SharePage: View {
                                 if shareViewModel.boxFocusInfo.sendBoxFocus {
                                     Text("Show send content here")
                                 } else {
-                                    SwiftUI.Image("drawable/call_made_call_made_symbol")
+                                    SwiftUI.Image(.Drawable.callMadeCallMadeSymbol)
                                         .fontWeight(.light)
                                         .padding(12)
                                         .tint(Theme.colorSchema.onSurface)

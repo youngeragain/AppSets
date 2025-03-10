@@ -511,7 +511,7 @@ fun MessageQuickAccessBar(
                     AnyImage(
                         modifier = Modifier
                             .size(36.dp)
-                            .clip(MaterialTheme.shapes.large)
+                            .clip(MaterialTheme.shapes.extraLarge)
                             .border(
                                 1.dp,
                                 MaterialTheme.colorScheme.outline,
@@ -539,7 +539,7 @@ fun MessageQuickAccessBar(
                                     AnyImage(
                                         modifier = Modifier
                                             .size(32.dp)
-                                            .clip(MaterialTheme.shapes.large)
+                                            .clip(MaterialTheme.shapes.extraLarge)
                                             .border(
                                                 1.dp,
                                                 MaterialTheme.colorScheme.outline,
@@ -561,7 +561,7 @@ fun MessageQuickAccessBar(
                                     AnyImage(
                                         modifier = Modifier
                                             .size(32.dp)
-                                            .clip(MaterialTheme.shapes.large)
+                                            .clip(MaterialTheme.shapes.extraLarge)
                                             .border(
                                                 1.dp,
                                                 MaterialTheme.colorScheme.outline,

@@ -11,13 +11,27 @@ import Foundation
 class BaseApiImpl {
     private static let TAG = "BaseApiImpl"
 
-    func getResponse<T: DesignResponse>(
+    let defaultReponseProvider: DefaultResponseProvider
+    let baseUrlProvider: BaseUrlProvider
+
+    init(_ defaultReponseProvider: DefaultResponseProvider, _ baseUrlProvider: BaseUrlProvider) {
+        self.defaultReponseProvider = defaultReponseProvider
+        self.baseUrlProvider = baseUrlProvider
+    }
+
+    private func contactApi(_ api: String) -> String {
+        return "\(baseUrlProvider.provideUrl())\(api)"
+    }
+
+    func getResponse<D:Codable, T: DesignResponse<D>>(
         _ t: T.Type = T.self,
-        url: String,
+        _ d: D.Type = D.self,
+        api: String,
         method: HTTPMethod = .get,
         params: Parameters? = nil,
         headers: HTTPHeaders? = nil
     ) async -> T {
+        let url = contactApi(api)
         do {
             let overrideHeaders = headers ?? DesignHttp.provideHeaders(url)
             let response = try await DesignHttp.session
@@ -40,27 +54,27 @@ class BaseApiImpl {
                 """
             )
         }
-        return BaseApiImpl.ErrorResponse(t) as! T
+        return defaultReponseProvider.provideResponse(d) as! T
     }
 
-    private static func ErrorResponse<T>(_ t: T.Type) -> any DesignResponse {
-        switch t {
-        case is StringResponse.Type:
-            return StringResponse(code: -1)
-        case is UserInfoResponse.Type:
-            return UserInfoResponse(code: -1)
-        case is UserFriendsReponse.Type:
-            return UserFriendsReponse(code: -1)
-        case is UserChatGroupInfosResponse.Type:
-            return UserChatGroupInfosResponse(code: -1)
-        case is ApplicationsResponse.Type:
-            return ApplicationsResponse(code: -1)
-        case is SpotLightResponse.Type:
-            return SpotLightResponse(code: -1)
-        case is ScreensResponse.Type:
-            return ScreensResponse(code: -1)
-        default:
-            return NullReponse(code: -1)
-        }
+    func getDownloadResponse(
+        api: String,
+        method: HTTPMethod = .get,
+        params: Parameters? = nil,
+        headers: HTTPHeaders? = nil
+    ) -> HTTPURLResponse? {
+        let url = contactApi(api)
+        let overrideHeaders = headers ?? DesignHttp.provideHeaders(url)
+
+        let response = DesignHttp.session
+            .download(
+                url,
+                method: method,
+                parameters: params,
+                encoding: JSONEncoding.default,
+                headers: overrideHeaders
+            )
+            .response
+        return response
     }
 }

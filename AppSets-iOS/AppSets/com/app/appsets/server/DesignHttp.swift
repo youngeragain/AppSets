@@ -54,18 +54,8 @@ struct DesignHttp {
             serverTrustManager: manager,
             eventMonitors: [httpEventMonitor]
         )
-       
-        return session
-    }
-    
-    public static func getApiUrl(_ suffix: String) -> String {
-        let appConfig = AppConfig.Instance.appConfiguration
-        if(String.isNullOrEmpty(appConfig.apiUrl)){
-            return "\(appConfig.apiSchema)://\(appConfig.apiHost):\(appConfig.apiPort)/\(suffix)"
-        }else{
-            return "\(appConfig.apiSchema)://\(appConfig.apiUrl)/\(suffix)"
-        }
         
+        return session
     }
     
     public static func provideHeaders(_ url:String) -> HTTPHeaders {

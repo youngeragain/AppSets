@@ -19,8 +19,6 @@ import okhttp3.ResponseBody
 import retrofit2.Call
 import retrofit2.Response
 import xcj.app.share.base.DataContent
-import xcj.app.share.base.DataSendContent
-import xcj.app.share.base.ShareDevice
 import xcj.app.share.http.HttpShareMethod
 import xcj.app.share.http.api.AppSetsShareApi
 import xcj.app.share.http.base.HttpContent
@@ -28,7 +26,7 @@ import xcj.app.share.http.base.HttpShareDevice
 import xcj.app.share.http.common.ResponseProgressInterceptor
 import xcj.app.share.http.common.asProgressRequestBody
 import xcj.app.share.http.model.ContentInfo
-import xcj.app.share.http.model.ContentInfoListWrapper
+import xcj.app.share.http.model.ContentInfoList
 import xcj.app.starter.android.util.PurpleLogger
 import xcj.app.starter.foundation.http.DesignResponse
 import xcj.app.starter.server.RetrofitProvider
@@ -41,22 +39,20 @@ import java.nio.file.Files
 import java.util.UUID
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
-import kotlin.collections.component1
-import kotlin.collections.component2
 import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlin.random.Random
 
 class AppSetsShareRepository() {
 
     fun interface BaseUrlProvider {
-        fun getBaseUrl(): String?
+        fun provideUrl(): String?
     }
 
     class StringBaseUrlProvider(
         private val address: String,
         private val port: Int
     ) : BaseUrlProvider {
-        override fun getBaseUrl(): String? {
+        override fun provideUrl(): String? {
             return "http://$address:$port"
         }
     }
@@ -65,7 +61,7 @@ class AppSetsShareRepository() {
         private val shareDevice: HttpShareDevice,
         private val port: Int
     ) : BaseUrlProvider {
-        override fun getBaseUrl(): String? {
+        override fun provideUrl(): String? {
             if (shareDevice.deviceAddress.ips.isEmpty()) {
                 PurpleLogger.current.d(TAG, "buildApi, device ips is empty, return")
                 return null
@@ -76,20 +72,19 @@ class AppSetsShareRepository() {
             if (!ip4.isNullOrEmpty()) {
                 PurpleLogger.current.d(TAG, "buildApi, use device ip4:$ip4")
                 baseUrlStringBuilder.append(ip4)
-            } else {
-                val ip6 = shareDevice.deviceAddress.ip6
-                if (ip6.isNullOrEmpty()) {
-                    return null
-                }
+                baseUrlStringBuilder.append(":")
+                baseUrlStringBuilder.append(port)
+                return baseUrlStringBuilder.toString()
+            }
+            val ip6 = shareDevice.deviceAddress.ip6
+            if (!ip6.isNullOrEmpty()) {
                 PurpleLogger.current.d(TAG, "buildApi, use device ip6:$ip6")
                 baseUrlStringBuilder.append("[")
                 baseUrlStringBuilder.append(ip6)
                 baseUrlStringBuilder.append("]")
+                return baseUrlStringBuilder.toString()
             }
-            baseUrlStringBuilder.append(":")
-            baseUrlStringBuilder.append(port)
-            val baseUrl = baseUrlStringBuilder.toString()
-            return baseUrl
+            return null
         }
     }
 
@@ -104,12 +99,10 @@ class AppSetsShareRepository() {
         okHttpClient: OkHttpClient? = null
     ): AppSetsShareApi? {
         PurpleLogger.current.d(TAG, "buildApi, baseUrlProvider:$baseUrlProvider")
-        val baseUrl = baseUrlProvider.getBaseUrl()
+        val baseUrl = baseUrlProvider.provideUrl()
         if (baseUrl.isNullOrEmpty()) {
             return null
         }
-        //test
-        //baseUrl = "http://192.168.198.62:8090"
 
         PurpleLogger.current.d(TAG, "buildApi, baseUrl:$baseUrl")
         runCatching {
@@ -642,7 +635,7 @@ class AppSetsShareRepository() {
     suspend fun getContentList(
         shareDevice: HttpShareDevice,
         uri: String
-    ): DesignResponse<ContentInfoListWrapper> =
+    ): DesignResponse<ContentInfoList> =
         withContext(Dispatchers.IO) {
             val urlProvider =
                 ShareDeviceBaseUrlProvider(shareDevice, HttpShareMethod.SHARE_SERVER_API_PORT)

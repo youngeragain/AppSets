@@ -12,49 +12,43 @@ class AppSetsApiImpl : BaseApiImpl, AppSetsApi {
     
     private static let TAG = "AppSetsApiImpl"
     
-    public static let Instance:AppSetsApi = AppSetsApiImpl()
-    
-    private override init(){
-        
+    override init(_ defaultReponseProvider: any DefaultResponseProvider, _ baseUrlProvider: any BaseUrlProvider) {
+        super.init(defaultReponseProvider, baseUrlProvider)
     }
     
-    func getAppToken() async -> StringResponse {
+    func getAppToken() async -> DesignResponse<String> {
         PurpleLogger.current.d(AppSetsApiImpl.TAG, "getAppToken")
         let appConfig = AppConfig.Instance.appConfiguration
         let params:[String:String] = [
             "appSetsAppId" : appConfig.appSetsAppId
         ]
         return await getResponse(
-            StringResponse.self,
-            url: APISuffix.fullUrl(APISuffix.API_GET_APP_TOKEN),
+            api: APISuffix.API_GET_APP_TOKEN,
             method: .post,
             params: params
         )
     }
     
-    func getIMBrokerProperties() async -> StringResponse {
+    func getIMBrokerProperties() async -> DesignResponse<String> {
         PurpleLogger.current.d(AppSetsApiImpl.TAG, "getIMBrokerProperties")
         return await getResponse(
-            StringResponse.self,
-            url: APISuffix.fullUrl(APISuffix.API_GET_APPSETS_APP_IM_BROKER_PROPERTIES),
+            api: APISuffix.API_GET_APPSETS_APP_IM_BROKER_PROPERTIES,
             method: .get
         )
     }
     
-    func getIndexApplications() async -> ApplicationsResponse {
+    func getIndexApplications() async -> DesignResponse<[AppWithCategory]> {
         PurpleLogger.current.d(AppSetsApiImpl.TAG, "getIndexApplications")
         return await getResponse(
-            ApplicationsResponse.self,
-            url: APISuffix.fullUrl(APISuffix.API_GET_INDEX_APPLICATIONS),
+            api: APISuffix.API_GET_INDEX_APPLICATIONS,
             method: .post
         )
     }
     
-    func getSpotLight() async -> SpotLightResponse {
+    func getSpotLight() async -> DesignResponse<SpotLight> {
         PurpleLogger.current.d(AppSetsApiImpl.TAG, "getSpotLight")
         return await getResponse(
-            SpotLightResponse.self,
-            url: APISuffix.fullUrl(APISuffix.API_GET_SPOTLIGHT)
+            api: APISuffix.API_GET_SPOTLIGHT
         )
         
     }

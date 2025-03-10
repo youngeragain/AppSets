@@ -12,12 +12,12 @@ class UserApiImpl : BaseApiImpl, UserApi {
     
     private static let TAG = "UserApiImpl"
     
-    public static let Instance = UserApiImpl()
+    override init(_ defaultReponseProvider: any DefaultResponseProvider, _ baseUrlProvider: any BaseUrlProvider) {
+        super.init(defaultReponseProvider, baseUrlProvider)
+    }
     
-    private override init(){}
     
-    
-    func login(account: String, password: String) async -> StringResponse {
+    func login(account: String, password: String) async -> DesignResponse<String> {
         let params:[String: Any] = [
             "account": account,
             "password": password,
@@ -25,50 +25,44 @@ class UserApiImpl : BaseApiImpl, UserApi {
             "signInLocation": "Si Chuan"
         ]
         return await getResponse(
-            StringResponse.self,
-            url: APISuffix.fullUrl(APISuffix.API_USER_LOGIN),
+            api: APISuffix.API_USER_LOGIN,
             method: .post,
             params: params
         )
     }
     
-    func getLoggedUseInfo() async -> UserInfoResponse {
+    func getLoggedUseInfo() async -> DesignResponse<UserInfo> {
         PurpleLogger.current.d(UserApiImpl.TAG, "getLoggedUseInfo")
         return await getResponse(
-            UserInfoResponse.self,
-            url: APISuffix.fullUrl(APISuffix.API_USER_INFO)
+            api: APISuffix.API_USER_INFO
         )
     }
     
-    func getFriends() async -> UserFriendsReponse {
+    func getFriends() async -> DesignResponse<[UserInfo]> {
         PurpleLogger.current.d(UserApiImpl.TAG, "getFriends")
         return await getResponse(
-            UserFriendsReponse.self,
-            url: APISuffix.fullUrl(APISuffix.API_USER_FRIENDS)
+            api: APISuffix.API_USER_FRIENDS
         )
     }
     
-    func getChatGroupInfoList() async -> UserChatGroupInfosResponse {
+    func getChatGroupInfoList() async -> DesignResponse<[GroupInfo]> {
         PurpleLogger.current.d(UserApiImpl.TAG, "getChatGrups")
         return await getResponse(
-            UserChatGroupInfosResponse.self,
-            url: APISuffix.fullUrl(APISuffix.API_USER_CHAT_GROUPS)
+            api: APISuffix.API_USER_CHAT_GROUPS
         )
     }
     
-    func getIndexRecommendScreens(page: Int, pageSize: Int) async -> ScreensResponse {
+    func getIndexRecommendScreens(page: Int, pageSize: Int) async -> DesignResponse<[ScreenInfo]> {
         PurpleLogger.current.d(UserApiImpl.TAG, "getIndexRecommendScreens")
         return await getResponse(
-            ScreensResponse.self,
-            url: APISuffix.fullUrl(APISuffix.API_SCREEN_INDEX_RECOMMEND)
+            api: APISuffix.API_SCREEN_INDEX_RECOMMEND
         )
     }
     
-    func getScreensByUid(_ uid: String, page: Int, pageSize: Int) async -> ScreensResponse {
+    func getScreensByUid(_ uid: String, page: Int, pageSize: Int) async -> DesignResponse<[ScreenInfo]> {
         PurpleLogger.current.d(UserApiImpl.TAG, "getScreensByUid")
         return await getResponse(
-            ScreensResponse.self,
-            url: "\(APISuffix.fullUrl(APISuffix.API_SCREEN_USER))/\(uid)"
+            api: "\(APISuffix.API_SCREEN_USER)/\(uid)"
         )
     }
     

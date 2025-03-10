@@ -1,9 +1,8 @@
 package xcj.app.share.http.controller
 
 import android.content.Context
-import xcj.app.share.base.ShareDevice
 import xcj.app.share.http.base.HttpShareDevice
-import xcj.app.share.http.model.ContentInfoListWrapper
+import xcj.app.share.http.model.ContentInfoList
 import xcj.app.share.http.service.AppSetsShareService
 import xcj.app.share.http.service.AppSetsShareServiceImpl
 import xcj.app.starter.android.util.PurpleLogger
@@ -194,7 +193,7 @@ class AppSetsShareController {
         @RequestInfo(what = RequestInfo.WHAT_REQUEST_REMOTE_HOST) clientHost: String,
         @HttpHeader("share_token") shareToken: String,
         @HttpHeader("uri") uri: String
-    ): DesignResponse<ContentInfoListWrapper> {
+    ): DesignResponse<ContentInfoList> {
         PurpleLogger.current.d(
             TAG,
             "getContentList, context:$context, clientHost:$clientHost"

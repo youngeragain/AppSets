@@ -76,7 +76,7 @@ struct LoginPage: View {
                     HStack {
                         Spacer()
                         Text("ok")
-                            .frame(width: .infinity)
+                            .frame(maxWidth: .infinity)
                             .tint(Theme.colorSchema.onSurface)
                             .padding([.leading, .trailing], 16)
                             .padding([.top, .bottom], 12)

@@ -8,12 +8,25 @@
 import Foundation
 import Hummingbird
 
-protocol DesignResponse<D>: ResponseCodable, Codable where D: Codable {
-    associatedtype D
+class DesignResponse<D>: ResponseCodable where D : Codable {
+    var code: Int
 
-    var code: Int { get set }
+    var info: String?
 
-    var info: String? { get set }
+    var data: D?
+    
+    init(code: Int, info: String? = nil, data: D? = nil) {
+        self.code = code
+        self.info = info
+        self.data = data
+    }
+}
 
-    var data: D? { get set }
+struct DesignResponseStatic {
+    public static func notFound<D:Codable>()->DesignResponse<D>{
+        return DesignResponse<D>(code: 404, data: nil)
+    }
+    public static func badRequest<D:Codable>()->DesignResponse<D>{
+        return DesignResponse<D>(code: 400, data: nil)
+    }
 }

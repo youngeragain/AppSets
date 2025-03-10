@@ -10,7 +10,7 @@ import xcj.app.share.http.base.HttpShareDevice
 import xcj.app.share.http.common.DataContentReadableData
 import xcj.app.share.http.common.PostFileHelper
 import xcj.app.share.http.model.ContentInfo
-import xcj.app.share.http.model.ContentInfoListWrapper
+import xcj.app.share.http.model.ContentInfoList
 import xcj.app.share.ui.compose.AppSetsShareActivity
 import xcj.app.starter.android.util.PurpleLogger
 import xcj.app.starter.foundation.http.DesignResponse
@@ -267,7 +267,7 @@ class AppSetsShareServiceImpl : AppSetsShareService {
         clientHost: String,
         shareToken: String,
         uri: String
-    ): DesignResponse<ContentInfoListWrapper> {
+    ): DesignResponse<ContentInfoList> {
         val shareMethod = getShareMethod(context)
         if (shareMethod == null) {
             return DesignResponse(data = null)
@@ -306,7 +306,7 @@ class AppSetsShareServiceImpl : AppSetsShareService {
             }
         }
         val contentInfoListWrapper =
-            ContentInfoListWrapper(uri, dataContentList.size, contentInfoList).encode()
+            ContentInfoList(uri, dataContentList.size, contentInfoList).encode()
         return DesignResponse(data = contentInfoListWrapper)
     }
 
