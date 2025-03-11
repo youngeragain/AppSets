@@ -54,7 +54,7 @@ fun Modifier.combinedClickableSingle(
     }
 ) {
     val multipleEventsCutter = remember { MultipleEventsCutter.get() }
-    Modifier.combinedClickable(
+    combinedClickable(
         interactionSource = remember { MutableInteractionSource() },
         indication = LocalIndication.current,
         enabled = enabled,

@@ -16,7 +16,7 @@ private const val TAG = "VarBottomSheetContainer"
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun VarBottomSheetContainer() {
+fun BottomSheetContainer() {
     val context = LocalContext.current
     val anyStateProvider = LocalAnyStateProvider.current
     val state =

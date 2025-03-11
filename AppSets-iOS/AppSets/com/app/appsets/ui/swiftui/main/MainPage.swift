@@ -116,7 +116,7 @@ struct MainPage: View {
 
         case is Application:
             let app = bio as! Application
-            viewModel.appsUseCase.setCurrentApplication(app)
+            viewModel.appsUseCase.setViewApplication(app)
             navigationUseCase.navigateTo(PageRouteNameProvider.AppDetailsPage)
 
         default:
@@ -220,7 +220,7 @@ struct MainPage: View {
                                 navigationUseCase.visible = false
                             }
                         }.onDisappear {
-                            viewModel.appsUseCase.setCurrentApplication(nil)
+                            viewModel.appsUseCase.setViewApplication(nil)
                         }
 
                     case PageRouteNameProvider.CreateAppPage:

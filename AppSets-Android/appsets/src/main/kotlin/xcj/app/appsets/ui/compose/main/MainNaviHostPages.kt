@@ -47,6 +47,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -1151,18 +1152,16 @@ fun publishComposeNaviHostFormedEvent(navController: NavHostController, builder:
 @Composable
 fun NaviHostBackHandlerInterceptor(navController: NavHostController) {
     val anyStateProvider = LocalAnyStateProvider.current
-    val immerseContentState =
-        anyStateProvider.immerseContentState()
+    val immerseContentState = anyStateProvider.immerseContentState()
     PredictiveBackHandler(immerseContentState.isShow) {
         PurpleLogger.current.d(
             TAG,
             "NaviHostBackHandlerInterceptor onBack, make immerseContentState.showState to false"
         )
-        val progressedComposeContainerState = immerseContentState as ProgressedComposeContainerState
-        progressedComposeContainerState.markStarted()
-        it.collect(progressedComposeContainerState)
-        progressedComposeContainerState.hide()
-
+        if (immerseContentState is ProgressedComposeContainerState) {
+            it.collect(immerseContentState)
+            immerseContentState.hide()
+        }
     }
 }
 
@@ -1331,8 +1330,7 @@ fun <D> showPictureViewDialog(
     data: D,
     dataList: List<D>
 ) {
-    val immerseContentState =
-        anyStateProvider.immerseContentState()
+    val immerseContentState = anyStateProvider.immerseContentState()
     immerseContentState.show {
         Box(
             modifier = Modifier
@@ -1388,7 +1386,7 @@ fun <D> showPictureViewDialog(
                 val rotationAnimate = animateFloatAsState(
                     targetValue = rotation.floatValue,
                     label = "degree_animate",
-                    animationSpec = tween(300)
+                    animationSpec = tween(450)
                 )
 
                 LaunchedEffect(true) {

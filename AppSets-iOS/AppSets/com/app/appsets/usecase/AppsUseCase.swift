@@ -16,9 +16,9 @@ class AppsUseCase {
     
     private var application: Application? = nil
     
-    func setCurrentApplication(_ application: Application?) {
+    func setViewApplication(_ application: Application?) {
         self.application = application
-        PurpleLogger.current.d(AppsUseCase.TAG, "setCurrentApplication, application:\(String(describing: application))")
+        PurpleLogger.current.d(AppsUseCase.TAG, "setViewApplication, application:\(String(describing: application))")
     }
     
     func getViewApplication() -> Application? {

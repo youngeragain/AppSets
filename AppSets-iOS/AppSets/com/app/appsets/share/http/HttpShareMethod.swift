@@ -15,6 +15,8 @@ class HttpShareMethod: ShareMethod {
     private var serverBootStrap: ServerBootStrap?
 
     private var discovery: Discovery?
+    
+    private let appSetsShareRepository = AppSetsShareRepository()
 
     override init(viewModel: ShareViewModel) {
         super.init(viewModel: viewModel)
@@ -81,8 +83,12 @@ class HttpShareMethod: ShareMethod {
     }
 
     func notifyShareDeviceChangedOnDiscovery(_ shareDeviceList: [ShareDevice]) {
-        PurpleLogger.current.d(HttpShareMethod.TAG, "notifyShareDeviceChangedOnDiscovery")
+        
         viewModel.updateShareDeviceList(shareDeviceList)
+    }
+    
+    func notifyShareDeviceAddOnDiscovery(_ shareDevice:ShareDevice){
+        viewModel.addShareDevice(shareDevice)
     }
 
     func exchangeDeviceInfo(shareDevice: HttpShareDevice) -> HttpShareDevice? {
@@ -91,5 +97,28 @@ class HttpShareMethod: ShareMethod {
 
     func getCurrentShareDevice() -> HttpShareDevice? {
         return viewModel.mShareDevice as? HttpShareDevice
+    }
+    
+    override func onShareDeviceClick(shareDevice:ShareDevice, clickType:Int){
+        guard let httpShareDevice = shareDevice as? HttpShareDevice else{
+            return
+        }
+        if(clickType==ShareDevice.CLICK_TYPE_NORMAL){
+            
+        }else if(clickType==ShareDevice.CLICK_TYPE_LONG){
+            getDeviceContentList(shareDevice: httpShareDevice)
+        }
+    }
+    
+    func getDeviceContentList(shareDevice:HttpShareDevice){
+        Task{
+            let contentInfoListResponse = await appSetsShareRepository.getContentList(shareDevice: shareDevice, uri: "/")
+            guard let contentInfoList = contentInfoListResponse.data?.decode() else {
+                return
+            }
+            
+            viewModel.updateDeviceContentList(shareDevice:shareDevice, contentInfoList:contentInfoList)
+            
+        }
     }
 }

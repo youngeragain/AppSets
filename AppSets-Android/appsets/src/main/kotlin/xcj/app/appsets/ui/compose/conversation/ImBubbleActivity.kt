@@ -47,7 +47,7 @@ import xcj.app.appsets.ui.compose.LocalUseCaseOfUserInfo
 import xcj.app.appsets.ui.compose.PageRouteNames
 import xcj.app.appsets.ui.compose.apps.AppDetailsPage
 import xcj.app.appsets.ui.compose.apps.DownloadBottomSheetComponent
-import xcj.app.compose_share.components.VarBottomSheetContainer
+import xcj.app.compose_share.components.BottomSheetContainer
 import xcj.app.appsets.ui.compose.group.GroupInfoPage
 import xcj.app.appsets.ui.compose.main.DesignNaviHost
 import xcj.app.appsets.ui.compose.main.ImmerseContentContainer
@@ -65,7 +65,7 @@ import xcj.app.appsets.ui.compose.privacy.PrivacyPage
 import xcj.app.appsets.ui.compose.theme.AppSetsTheme
 import xcj.app.appsets.ui.compose.user.UserProfilePage
 import xcj.app.appsets.ui.model.ApplicationForCreate
-import xcj.app.appsets.ui.viewmodel.ImSessionBubbleViewModel
+import xcj.app.appsets.ui.viewmodel.ImBubbleViewModel
 import xcj.app.appsets.usecase.SystemUseCase
 import xcj.app.compose_share.components.LocalAnyStateProvider
 import xcj.app.compose_share.ui.viewmodel.AnyStateViewModel.Companion.bottomSheetState
@@ -74,14 +74,14 @@ import xcj.app.starter.android.usecase.PlatformUseCase
 import xcj.app.starter.android.util.PurpleLogger
 import kotlin.getValue
 
-class ImSessionBubbleActivity : DesignComponentActivity() {
+class ImBubbleActivity : DesignComponentActivity() {
     companion object {
-        private const val TAG = "ImSessionBubbleActivity"
+        private const val TAG = "ImBubbleActivity"
     }
 
-    private val viewModel by viewModels<ImSessionBubbleViewModel>()
+    private val viewModel by viewModels<ImBubbleViewModel>()
 
-    override fun requireViewModel(): ImSessionBubbleViewModel? {
+    override fun requireViewModel(): ImBubbleViewModel? {
         return viewModel
     }
 
@@ -89,12 +89,12 @@ class ImSessionBubbleActivity : DesignComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             AppSetsTheme {
-                ImSessionBubblePages()
+                ImBubblePages()
             }
         }
         lifecycleScope.launch {
             lifecycle.withCreated {
-                viewModel.onActivityCreated(this@ImSessionBubbleActivity)
+                viewModel.onActivityCreated(this@ImBubbleActivity)
                 viewModel.handleIntent(intent)
             }
         }
@@ -108,8 +108,8 @@ class ImSessionBubbleActivity : DesignComponentActivity() {
 }
 
 @Composable
-fun ImSessionBubblePages() {
-    val viewModel = viewModel<ImSessionBubbleViewModel>()
+fun ImBubblePages() {
+    val viewModel = viewModel<ImBubbleViewModel>()
     CompositionLocalProvider(
         LocalUseCaseOfActivityLifecycle provides viewModel.activityLifecycleUseCase,
         LocalUseCaseOfSystem provides viewModel.systemUseCase,
@@ -131,7 +131,7 @@ fun ImSessionBubblePages() {
 
             ImmerseContentContainer(navController = navController)
 
-            VarBottomSheetContainer()
+            BottomSheetContainer()
 
         }
     }

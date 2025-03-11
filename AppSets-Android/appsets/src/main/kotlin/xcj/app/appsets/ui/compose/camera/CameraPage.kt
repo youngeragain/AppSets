@@ -32,7 +32,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.viewmodel.compose.viewModel
 import xcj.app.appsets.ui.compose.LocalUseCaseOfQRCode
 import xcj.app.appsets.ui.compose.custom_component.DesignBottomBackButton
-import xcj.app.compose_share.components.VarBottomSheetContainer
+import xcj.app.compose_share.components.BottomSheetContainer
 import xcj.app.appsets.usecase.QRCodeInfoScannedState
 import xcj.app.appsets.usecase.QRCodeUseCase
 import xcj.app.compose_share.components.LocalAnyStateProvider
@@ -51,7 +51,7 @@ fun CameraPage(
         LocalAnyStateProvider provides viewModel
     ) {
         CameraContent(modifier = Modifier, onBackClick = onBackClick)
-        VarBottomSheetContainer()
+        BottomSheetContainer()
     }
 }
 

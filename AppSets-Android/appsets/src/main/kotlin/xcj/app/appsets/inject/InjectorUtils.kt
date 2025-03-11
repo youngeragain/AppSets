@@ -1,7 +1,8 @@
 package xcj.app.appsets.inject
 
+/*
 object InjectorUtils {
-    /*private fun provideMusicServiceConnection(context: Context): MusicServiceConnection {
+    private fun provideMusicServiceConnection(context: Context): MusicServiceConnection {
         return MusicServiceConnection.getInstance(
             context,
             ComponentName(context, MusicService::class.java)
@@ -28,5 +29,5 @@ object InjectorUtils {
         return NowPlayingFragmentViewModel.Factory(
             applicationContext as Application, musicServiceConnection
         )
-    }*/
-}
+    }
+}*/

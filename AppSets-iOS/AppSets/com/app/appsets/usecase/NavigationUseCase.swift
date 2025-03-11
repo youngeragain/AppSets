@@ -13,11 +13,13 @@ class NavigationUseCase {
     
     private static let TAG = "NavigationUseCase"
     
+    private static let STARTER_ROUTE = PageRouteNameProvider.AppsCenterPage
+    
     var tabItems: Array<TabItem> = []
     
-    private var routes: [String] = [PageRouteNameProvider.AppsCenterPage]
+    private var routes: [String] = [STARTER_ROUTE]
     
-    var route: String = PageRouteNameProvider.AppsCenterPage
+    var route: String = STARTER_ROUTE
     
     var visible: Bool = true
     
@@ -69,7 +71,7 @@ class NavigationUseCase {
         }
         routes.append(route)
         PurpleLogger.current.d(NavigationUseCase.TAG, "updateRoute, current route stack,\(routes)")
-        withAnimation{
+        withTransaction(.init(animation: .bouncy)){
             self.route = route
         }
     }
@@ -83,7 +85,7 @@ class NavigationUseCase {
     func navigationUp(_ by: String = "click", force: Bool = false) {
         PurpleLogger.current.d(NavigationUseCase.TAG, "navigationUp, by:\(by), force:\(force)")
         if force {
-            updateRoute(PageRouteNameProvider.StartPage, pushToStack: false)
+            updateRoute(NavigationUseCase.STARTER_ROUTE, pushToStack: false)
         }
         if routes.isEmpty {
             PurpleLogger.current.d(NavigationUseCase.TAG, "navigationUp, routes isEmpty, return")

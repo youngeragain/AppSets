@@ -7,7 +7,7 @@
 
 import Foundation
 
-protocol DataContent: Identifiable {
+public protocol DataContent: Identifiable {
     var id: String {
         get
     }

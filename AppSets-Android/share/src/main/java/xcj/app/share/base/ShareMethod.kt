@@ -125,7 +125,7 @@ abstract class ShareMethod() : ConnectivityManager.NetworkCallback(), DefaultLif
     }
 
     open fun onShareDeviceClick(shareDevice: ShareDevice, clickType: Int) {
-        if (clickType == AppSetsShareActivity.CLICK_TYPE_NORMAL) {
+        if (clickType == ShareDevice.CLICK_TYPE_NORMAL) {
             viewModel.pendingSendContentList.ifEmpty {
                 viewModel.updateBoxFocusInfo(BoxFocusInfo(sendBoxFocus = true))
             }
@@ -136,7 +136,7 @@ abstract class ShareMethod() : ConnectivityManager.NetworkCallback(), DefaultLif
         activity.lifecycleScope.launch {
             val shareDevices = viewModel.shareDeviceListState.value
             shareDevices.forEach { shareDevice ->
-                onShareDeviceClick(shareDevice, AppSetsShareActivity.CLICK_TYPE_NORMAL)
+                onShareDeviceClick(shareDevice, ShareDevice.CLICK_TYPE_NORMAL)
                 delay(1000)
             }
         }

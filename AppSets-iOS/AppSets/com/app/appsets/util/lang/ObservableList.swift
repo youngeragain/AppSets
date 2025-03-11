@@ -13,7 +13,7 @@ class ObservableList<T> {
     var elements: [T] = []
 
     func add(_ t: T) -> Bool {
-        _ = withAnimation{
+        withAnimation{
             elements.append(t)
         }
         
@@ -124,5 +124,9 @@ class ObservableList<T> {
 
     func count() -> Int {
         return elements.count
+    }
+    
+    func isEmpty()->Bool{
+        return elements.isEmpty
     }
 }

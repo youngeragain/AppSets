@@ -11,7 +11,7 @@ import xcj.app.appsets.usecase.NavigationUseCase
 import xcj.app.starter.android.util.LocalMessager
 import xcj.app.starter.android.util.PurpleLogger
 
-class ImSessionBubbleViewModel : BaseIMViewModel() {
+class ImBubbleViewModel : BaseIMViewModel() {
     companion object {
         private const val TAG = "ImSessionBubbleViewModel"
     }

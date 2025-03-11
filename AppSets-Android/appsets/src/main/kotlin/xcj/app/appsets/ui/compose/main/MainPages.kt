@@ -13,6 +13,8 @@ import androidx.compose.animation.core.animateTo
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -39,11 +41,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.composed
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.BlurEffect
@@ -83,13 +87,8 @@ import xcj.app.appsets.ui.compose.LocalUseCaseOfSearch
 import xcj.app.appsets.ui.compose.LocalUseCaseOfSystem
 import xcj.app.appsets.ui.compose.LocalUseCaseOfUserInfo
 import xcj.app.appsets.ui.compose.PageRouteNames
-import xcj.app.appsets.ui.compose.apps.quickstep.ToolAppSetsShareQuickStepHandler
-import xcj.app.appsets.ui.compose.apps.quickstep.ToolContentTransformQuickStepHandler
-import xcj.app.appsets.ui.compose.apps.quickstep.ToolIntentCallerQuickStepHandler
-import xcj.app.appsets.ui.compose.conversation.quickstep.ConversationQuickStepHandler
 import xcj.app.appsets.ui.compose.custom_component.AnyImage
 import xcj.app.appsets.ui.compose.media.video.fall.MediaFallActivity
-import xcj.app.appsets.ui.compose.outside.quickstep.OutSideQuickStepHandler
 import xcj.app.appsets.ui.compose.quickstep.QuickStepContentHandlerRegistry
 import xcj.app.appsets.ui.compose.settings.LiteSettingsDialog
 import xcj.app.appsets.ui.model.NowSpaceObjectState
@@ -99,12 +98,12 @@ import xcj.app.appsets.ui.model.TabItem
 import xcj.app.appsets.ui.viewmodel.MainViewModel
 import xcj.app.appsets.usecase.ConversationUseCase
 import xcj.app.appsets.usecase.SessionState
+import xcj.app.compose_share.components.BottomSheetContainer
 import xcj.app.compose_share.components.ComposeContainerState
 import xcj.app.compose_share.components.DesignHDivider
 import xcj.app.compose_share.components.LocalAnyStateProvider
 import xcj.app.compose_share.components.LocalUseCaseOfComposeDynamic
 import xcj.app.compose_share.components.ProgressedComposeContainerState
-import xcj.app.compose_share.components.VarBottomSheetContainer
 import xcj.app.compose_share.ui.viewmodel.AnyStateViewModel.Companion.bottomSheetState
 import xcj.app.compose_share.ui.viewmodel.AnyStateViewModel.Companion.immerseContentState
 
@@ -140,50 +139,17 @@ fun MainPages() {
         LocalAnyStateProvider provides viewModel,
         LocalQuickStepContentHandlerRegistry provides quickStepContentHandlerRegistry
     ) {
-        val backgroundModifier = makeBackgroundModifier()
         Box(
-            modifier = backgroundModifier
+            modifier =  Modifier.mainBackgroundHandle()
         ) {
             MainScaffoldContainer(navController = navController)
 
             ImmerseContentContainer(navController = navController)
 
-            VarBottomSheetContainer()
+            BottomSheetContainer()
 
         }
     }
-}
-
-@Composable
-fun makeBackgroundModifier(): Modifier {
-    val localAnyStateProvider = LocalAnyStateProvider.current
-    val bottomSheetState = localAnyStateProvider.bottomSheetState()
-    val scale = if (bottomSheetState.isShow) {
-        0.9f
-    } else {
-        1f
-    }
-    val offsetY = if (bottomSheetState.isShow) {
-        (68).dp
-    } else {
-        0.dp
-    }
-    val shapeDp = if (bottomSheetState.isShow) {
-        32.dp
-    } else {
-        0.dp
-    }
-    val shapeState by animateDpAsState(shapeDp, animationSpec = tween())
-    val offsetYState by animateDpAsState(offsetY, animationSpec = tween())
-    val scaleState by animateFloatAsState(scale, animationSpec = tween())
-
-    val clipShape = RoundedCornerShape(shapeState)
-
-    return Modifier
-        .fillMaxSize()
-        .offset(y = offsetYState)
-        .scale(scaleState)
-        .clip(clipShape)
 }
 
 @Composable
@@ -199,8 +165,8 @@ fun ImmerseContentContainer(
     ) {
         AnimatedVisibility(
             visible = immerseContentState.isShow,
-            enter = fadeIn(),
-            exit = fadeOut()
+            enter = fadeIn() + scaleIn(initialScale = 1.2f),
+            exit = fadeOut() + scaleOut(targetScale = 1.2f)
         ) {
             immerseContentState.getContent(context)?.Content()
         }
@@ -234,16 +200,11 @@ fun OnScaffoldLaunch(navController: NavController) {
             }
         navController.addOnDestinationChangedListener(destinationChangedListener)
 
-        localQuickStepContentHandlerRegistry.addContentHandler(ToolContentTransformQuickStepHandler(context))
-        localQuickStepContentHandlerRegistry.addContentHandler(ToolAppSetsShareQuickStepHandler(context))
-        localQuickStepContentHandlerRegistry.addContentHandler(ToolIntentCallerQuickStepHandler(context))
-        localQuickStepContentHandlerRegistry.addContentHandler(ConversationQuickStepHandler(context))
-        localQuickStepContentHandlerRegistry.addContentHandler(OutSideQuickStepHandler(context))
+        QuickStepContentHandlerRegistry.initHandlers(context, localQuickStepContentHandlerRegistry)
 
         onDispose {
             navController.removeOnDestinationChangedListener(destinationChangedListener)
-
-            localQuickStepContentHandlerRegistry.removeAll()
+            QuickStepContentHandlerRegistry.deInitHandlers(localQuickStepContentHandlerRegistry)
         }
     })
 }
@@ -253,10 +214,8 @@ fun OnScaffoldLaunch(navController: NavController) {
 fun MainScaffoldContainer(navController: NavHostController) {
     OnScaffoldLaunch(navController)
     val onTabClick = rememberNavigationBarOnTabClickListener(navController)
-    val scaffoldModifier = getScaffoldModifier()
-
     Scaffold(
-        modifier = scaffoldModifier,
+        modifier = Modifier.mainScaffoldHandle(),
         bottomBar = {
             NavigationBar(
                 navController = navController,
@@ -276,103 +235,6 @@ fun MainScaffoldContainer(navController: NavHostController) {
             MainNaviHostPages(navController = navController)
         }
     }
-}
-
-@Composable
-fun getScaffoldModifier(): Modifier {
-    val anyStateProvider = LocalAnyStateProvider.current
-    val immerseContentState = anyStateProvider.immerseContentState()
-    val renderEffectAnimateState = remember {
-        AnimationState(0f)
-    }
-    val scope = rememberCoroutineScope()
-    LaunchedEffect(immerseContentState.isShow) {
-        scope.launch {
-            val target = if (immerseContentState.isShow) {
-                30f
-            } else {
-                0f
-            }
-            renderEffectAnimateState.animateTo(target)
-        }
-    }
-    return Modifier.graphicsLayer {
-        if (immerseContentState.isShow) {
-            renderEffect =
-                BlurEffect(
-                    renderEffectAnimateState.value,
-                    renderEffectAnimateState.value
-                )
-        }
-    }
-}
-
-@Composable
-fun rememberNavigationBarOnTabClickListener(navController: NavController): (TabItem, TabAction?) -> Unit {
-    val context = LocalContext.current
-    val screenUseCase = LocalUseCaseOfScreen.current
-    val conversationUseCase = LocalUseCaseOfConversation.current
-    val listener: (TabItem, TabAction?) -> Unit = remember {
-        { tab, tabAction ->
-            if (tabAction != null) {
-                when (tab.routeName) {
-                    PageRouteNames.AppsCenterPage -> {
-                        if (tabAction.route.isNullOrEmpty()) {
-                            when (tabAction.action) {
-                                TabAction.ACTION_APP_TOOLS -> {
-
-                                }
-                            }
-                        } else {
-                            tabAction.route?.let(navController::navigate)
-                        }
-                    }
-
-                    PageRouteNames.OutSidePage -> {
-                        if (tabAction.route.isNullOrEmpty()) {
-                            when (tabAction.action) {
-                                TabAction.ACTION_REFRESH -> {
-                                    screenUseCase.loadOutSideScreens()
-                                }
-                            }
-                        } else {
-                            when (tabAction.route) {
-                                PageRouteNames.MediaFallPage -> {
-                                    context.startActivity(
-                                        Intent(
-                                            context,
-                                            MediaFallActivity::class.java
-                                        )
-                                    )
-                                }
-
-                                else -> {
-                                    tabAction.route?.let(navController::navigate)
-                                }
-                            }
-                        }
-                    }
-
-                    PageRouteNames.ConversationOverviewPage -> {
-                        conversationUseCase.toggleShowAddActions()
-                    }
-                }
-            } else if (!tab.isSelect) {
-                navController.navigate(tab.routeName, navOptions {
-                    popUpTo(navController.graph.findStartDestination().id) {
-                        saveState = true
-                    }
-                    // Avoid multiple copies of the same destination when
-                    // reselecting the same item
-                    launchSingleTop = true
-                    // Restore state when reselecting a previously selected item
-                    restoreState = true
-                })
-            }
-
-        }
-    }
-    return listener
 }
 
 @Composable
@@ -589,6 +451,141 @@ fun MessageQuickAccessBar(
         }
         DesignHDivider()
     }
+}
+
+@Composable
+fun Modifier.mainBackgroundHandle() = composed {
+    val localAnyStateProvider = LocalAnyStateProvider.current
+    val bottomSheetState = localAnyStateProvider.bottomSheetState()
+    if (!bottomSheetState.shouldBackgroundSink()) {
+        return@composed this
+    }
+    val scale = if (bottomSheetState.isShow) {
+        0.9f
+    } else {
+        1f
+    }
+    val offsetY = if (bottomSheetState.isShow) {
+        (68).dp
+    } else {
+        0.dp
+    }
+    val shapeDp = if (bottomSheetState.isShow) {
+        32.dp
+    } else {
+        0.dp
+    }
+    val shapeState by animateDpAsState(shapeDp, animationSpec = tween())
+    val offsetYState by animateDpAsState(offsetY, animationSpec = tween())
+    val scaleState by animateFloatAsState(scale, animationSpec = tween())
+
+    val clipShape by remember {
+        derivedStateOf {
+            RoundedCornerShape(shapeState)
+        }
+    }
+
+    fillMaxSize()
+        .offset(y = offsetYState)
+        .scale(scaleState)
+        .clip(clipShape)
+}
+
+@Composable
+fun Modifier.mainScaffoldHandle(): Modifier = composed {
+    val anyStateProvider = LocalAnyStateProvider.current
+    val immerseContentState = anyStateProvider.immerseContentState()
+    val renderEffectAnimateState = remember {
+        AnimationState(0f)
+    }
+    val scope = rememberCoroutineScope()
+    LaunchedEffect(immerseContentState.isShow) {
+        scope.launch {
+            val target = if (immerseContentState.isShow) {
+                30f
+            } else {
+                0f
+            }
+            renderEffectAnimateState.animateTo(target)
+        }
+    }
+    graphicsLayer {
+        if (immerseContentState.isShow) {
+            renderEffect =
+                BlurEffect(
+                    renderEffectAnimateState.value,
+                    renderEffectAnimateState.value
+                )
+        }
+    }
+}
+
+@Composable
+fun rememberNavigationBarOnTabClickListener(navController: NavController): (TabItem, TabAction?) -> Unit {
+    val context = LocalContext.current
+    val screenUseCase = LocalUseCaseOfScreen.current
+    val conversationUseCase = LocalUseCaseOfConversation.current
+    val listener: (TabItem, TabAction?) -> Unit = remember {
+        { tab, tabAction ->
+            if (tabAction != null) {
+                when (tab.routeName) {
+                    PageRouteNames.AppsCenterPage -> {
+                        if (tabAction.route.isNullOrEmpty()) {
+                            when (tabAction.action) {
+                                TabAction.ACTION_APP_TOOLS -> {
+
+                                }
+                            }
+                        } else {
+                            tabAction.route?.let(navController::navigate)
+                        }
+                    }
+
+                    PageRouteNames.OutSidePage -> {
+                        if (tabAction.route.isNullOrEmpty()) {
+                            when (tabAction.action) {
+                                TabAction.ACTION_REFRESH -> {
+                                    screenUseCase.loadOutSideScreens()
+                                }
+                            }
+                        } else {
+                            when (tabAction.route) {
+                                PageRouteNames.MediaFallPage -> {
+                                    context.startActivity(
+                                        Intent(
+                                            context,
+                                            MediaFallActivity::class.java
+                                        )
+                                    )
+                                }
+
+                                else -> {
+                                    tabAction.route?.let(navController::navigate)
+                                }
+                            }
+                        }
+                    }
+
+                    PageRouteNames.ConversationOverviewPage -> {
+                        conversationUseCase.toggleShowAddActions()
+                    }
+                }
+            } else if (!tab.isSelect) {
+                navController.navigate(tab.routeName, navOptions {
+                    popUpTo(navController.graph.findStartDestination().id) {
+                        saveState = true
+                    }
+                    // Avoid multiple copies of the same destination when
+                    // reselecting the same item
+                    launchSingleTop = true
+                    // Restore state when reselecting a previously selected item
+                    restoreState = true
+                })
+            }
+
+        }
+    }
+    return listener
 }
 
 private fun ComposeContainerState.mapToBackEventState(): BackEventCompat {

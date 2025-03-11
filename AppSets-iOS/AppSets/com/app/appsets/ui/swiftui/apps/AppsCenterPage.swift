@@ -48,23 +48,19 @@ struct AppsCenterPage: View {
     var body: some View {
         VStack{
             let appsUseCase = viewModel.appsUseCase
+            let applications = appsUseCase.applications.flatMap { appWithCategory in
+                appWithCategory.applications
+            }
             VStack {
                 ScrollView(.vertical) {
                     Spacer().frame(height: 52)
-                    VStack(spacing: 12) {
-                        ForEach(appsUseCase.applications.indices, id: \.self) { vIndex in
-                            ScrollView(.horizontal) {
-                                HStack(spacing: 12) {
-                                    let appCategory = appsUseCase.applications[vIndex]
-                                    ForEach(appCategory.applications.indices, id: \.self) { hIndex in
-                                        let application = appCategory.applications[hIndex]
-                                        ApplicationItem(application)
-                                    }
-                                }.padding(.init(top: 4, leading: 12, bottom: 4, trailing: 12))
-                            }.scrollIndicators(.hidden)
+                    let columns = [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())]
+                    LazyVGrid(columns: columns, alignment: .leading) {
+                        ForEach(applications, id: \.id) { application in
+                            ApplicationItem(application)
                         }
                     }
-                    Spacer().frame(height: 128)
+                    Spacer().frame(height: 68)
                 }.scrollIndicators(.hidden)
             }
             .frame(minWidth: 0, maxWidth: .infinity, minHeight: 0, maxHeight: .infinity)

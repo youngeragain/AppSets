@@ -387,7 +387,7 @@ class AppSetsShareViewModel : AnyStateViewModel() {
         pendingSendContentList.clear()
     }
 
-    fun updateDeviceContentListMap(
+    fun updateDeviceContentList(
         shareDevice: ShareDevice,
         contentInfoList: ContentInfoList
     ) {

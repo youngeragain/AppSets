@@ -15,7 +15,6 @@ import androidx.core.app.RemoteInput
 import androidx.core.content.pm.ShortcutInfoCompat
 import androidx.core.content.pm.ShortcutManagerCompat
 import androidx.core.graphics.drawable.IconCompat
-import androidx.core.graphics.drawable.toBitmapOrNull
 import coil3.imageLoader
 import coil3.request.ErrorResult
 import coil3.request.ImageRequest
@@ -26,7 +25,7 @@ import coil3.toBitmap
 import coil3.transform.CircleCropTransformation
 import xcj.app.appsets.im.Session
 import xcj.app.appsets.im.message.ImMessage
-import xcj.app.appsets.ui.compose.conversation.ImSessionBubbleActivity
+import xcj.app.appsets.ui.compose.conversation.ImBubbleActivity
 import xcj.app.appsets.ui.compose.main.MainActivity
 import xcj.app.starter.android.util.PurpleLogger
 import xcj.app.starter.test.LocalPurple
@@ -204,7 +203,7 @@ class NotificationPusher() {
             .setStyle(messagingStyle)
             .setShortcutId(session.id)
 
-        val bubbleIntent = Intent(context, ImSessionBubbleActivity::class.java).apply {
+        val bubbleIntent = Intent(context, ImBubbleActivity::class.java).apply {
             putExtra(ImMessage.KEY_IM_MESSAGE_NOTIFICATION_ID, notificationId)
             putExtra(ImMessage.KEY_IM_MESSAGE_ID, imMessage.id)
             putExtra(ImMessage.KEY_SESSION_ID, session.id)
@@ -254,7 +253,7 @@ class NotificationPusher() {
             return
         }
         if (!shortcutInfoMap.contains(session.id)) {
-            val shortcutInfoIntent = Intent(context, ImSessionBubbleActivity::class.java).apply {
+            val shortcutInfoIntent = Intent(context, ImBubbleActivity::class.java).apply {
                 action = ACTION_SHORTCUT_IM_SESSION
                 putExtra(ImMessage.KEY_IM_MESSAGE_NOTIFICATION_ID, notificationId)
                 putExtra(ImMessage.KEY_IM_MESSAGE_ID, imMessage.id)

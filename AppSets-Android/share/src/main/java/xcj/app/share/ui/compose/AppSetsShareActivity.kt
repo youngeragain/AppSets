@@ -35,10 +35,6 @@ class AppSetsShareActivity : DesignComponentActivity() {
         const val INTENT_ACTION = "xcj.app.share"
         const val INTENT_CATEGORY = "xcj.app.share.main"
 
-        const val CLICK_TYPE_NORMAL = 0
-        const val CLICK_TYPE_LONG = 1
-        const val CLICK_TYPE_DOUBLE = 2
-
         const val CONTENT_FORM_APP = 0
         const val CONTENT_FORM_SYSTEM_APP = 1
         const val CONTENT_FORM_OTHER_APP = 2

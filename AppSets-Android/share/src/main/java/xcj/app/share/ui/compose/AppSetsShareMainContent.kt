@@ -93,10 +93,10 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import coil3.compose.AsyncImage
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import xcj.app.compose_share.components.BottomSheetContainer
 import xcj.app.compose_share.components.DesignHDivider
 import xcj.app.compose_share.components.DesignTextField
 import xcj.app.compose_share.components.LocalAnyStateProvider
-import xcj.app.compose_share.components.VarBottomSheetContainer
 import xcj.app.compose_share.modifier.combinedClickableSingle
 import xcj.app.share.base.DataContent
 import xcj.app.share.base.ShareDevice
@@ -136,28 +136,30 @@ fun AppSetsShareMainContent(
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
             AppSetsShareContainer(
+                receivedSpaceContent = {
+                    ReceivedSpace(
+                        onContentViewClick = onContentViewClick
+                    )
+                },
+
                 devicesSpaceContent = {
-                    AppSetsShareDevicesSpace(
+                    DevicesSpace(
                         onDiscoveryClick = onDiscoveryClick,
                         onCloseEstablishCLick = onCloseEstablishCLick,
                         onShareDeviceClick = onShareDeviceClick,
                         onScanClick = onScanClick
                     )
                 },
-                receivedSpaceContent = {
-                    AppSetsShareReceivedSpace(
-                        onContentViewClick = onContentViewClick
-                    )
-                },
+
                 sendSpaceContent = {
-                    AppSetsShareSendSpace(
+                    SendSpace(
                         onBackClick = onBackClick,
                         onAddFileContentClick = onAddFileContentClick,
                         onAddTextContentClick = onAddTextContentClick
                     )
                 }
             )
-            VarBottomSheetContainer()
+            BottomSheetContainer()
         }
     }
 
@@ -166,8 +168,8 @@ fun AppSetsShareMainContent(
 @Composable
 fun AppSetsShareContainer(
     modifier: Modifier = Modifier,
-    devicesSpaceContent: @Composable () -> Unit,
     receivedSpaceContent: @Composable () -> Unit,
+    devicesSpaceContent: @Composable () -> Unit,
     sendSpaceContent: @Composable () -> Unit
 ) {
     val hapticFeedback = LocalHapticFeedback.current
@@ -415,7 +417,7 @@ fun AppSetsShareContainer(
 }
 
 @Composable
-fun AppSetsShareDevicesSpace(
+fun DevicesSpace(
     onDiscoveryClick: () -> Unit,
     onCloseEstablishCLick: () -> Unit,
     onShareDeviceClick: (ShareDevice, Int) -> Unit,
@@ -515,14 +517,14 @@ fun AppSetsShareDevicesSpace(
                                     hapticFeedback.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                                     onShareDeviceClick(
                                         shareDevice,
-                                        AppSetsShareActivity.CLICK_TYPE_NORMAL
+                                        ShareDevice.CLICK_TYPE_NORMAL
                                     )
                                 },
                                 onLongClick = {
                                     hapticFeedback.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                                     onShareDeviceClick(
                                         shareDevice,
-                                        AppSetsShareActivity.CLICK_TYPE_LONG
+                                        ShareDevice.CLICK_TYPE_LONG
                                     )
                                     if (shareMethodType == HttpShareMethod::class.java) {
                                         isShowDeviceContentList = true
@@ -533,7 +535,7 @@ fun AppSetsShareDevicesSpace(
                                     hapticFeedback.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                                     onShareDeviceClick(
                                         shareDevice,
-                                        AppSetsShareActivity.CLICK_TYPE_DOUBLE
+                                        ShareDevice.CLICK_TYPE_DOUBLE
                                     )
                                 }
                             )
@@ -1222,7 +1224,7 @@ fun AppSetsShareActionsSpace(
 }
 
 @Composable
-fun AppSetsShareSendSpace(
+fun SendSpace(
     onBackClick: () -> Unit,
     onAddFileContentClick: () -> Unit,
     onAddTextContentClick: (String) -> Unit
@@ -1445,7 +1447,7 @@ fun AppSetsShareSendSpace(
 }
 
 @Composable
-fun AppSetsShareReceivedSpace(
+fun ReceivedSpace(
     onContentViewClick: (DataContent) -> Unit,
 ) {
     val clipboardManager = LocalClipboardManager.current

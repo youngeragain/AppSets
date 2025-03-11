@@ -341,7 +341,7 @@ class HttpShareMethod : ShareMethod(), ContentReceivedListener, ListenersProvide
         }
 
         when (clickType) {
-            AppSetsShareActivity.CLICK_TYPE_NORMAL -> {
+            ShareDevice.CLICK_TYPE_NORMAL -> {
                 val pendingSendContentList = viewModel.pendingSendContentList
                 if (pendingSendContentList.isEmpty()) {
                     return
@@ -349,18 +349,18 @@ class HttpShareMethod : ShareMethod(), ContentReceivedListener, ListenersProvide
                 send(listOf(shareDevice))
             }
 
-            AppSetsShareActivity.CLICK_TYPE_LONG -> {
+            ShareDevice.CLICK_TYPE_LONG -> {
                 getDeviceContentList(this, shareDevice)
             }
 
-            AppSetsShareActivity.CLICK_TYPE_DOUBLE -> {
+            ShareDevice.CLICK_TYPE_DOUBLE -> {
 
             }
         }
     }
 
     private fun getDeviceContentList(
-        method: HttpShareMethod,
+        shareMethod: HttpShareMethod,
         shareDevice: HttpShareDevice
     ) {
         activity.lifecycleScope.launch {
@@ -369,7 +369,7 @@ class HttpShareMethod : ShareMethod(), ContentReceivedListener, ListenersProvide
                     appSetsShareRepository.getContentList(shareDevice, uri = "/")
                 },
                 onSuccess = {
-                    viewModel.updateDeviceContentListMap(shareDevice, it.decode())
+                    viewModel.updateDeviceContentList(shareDevice, it.decode())
                 },
                 onFailed = {
 

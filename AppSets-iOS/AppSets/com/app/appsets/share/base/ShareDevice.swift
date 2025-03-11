@@ -8,6 +8,7 @@
 import Foundation
 
 class ShareDevice: Codable, Identifiable {
+    
     public static let DEVICE_TYPE_PHONE = 0
     public static let DEVICE_TYPE_TABLET = 1
     public static let DEVICE_TYPE_COMPUTER = 2
@@ -16,6 +17,10 @@ class ShareDevice: Codable, Identifiable {
     public static let DEVICE_TYPE = "deviceType"
     public static let RAW_NAME = "rawName"
     public static let NICK_NAME = "nickName"
+    
+    public static let CLICK_TYPE_NORMAL = 0
+    public static let CLICK_TYPE_LONG = 1
+    public static let CLICK_TYPE_DOUBLE = 2
 
     var id: String = UUID().uuidString
 

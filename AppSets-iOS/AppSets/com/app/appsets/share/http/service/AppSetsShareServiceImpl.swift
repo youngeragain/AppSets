@@ -65,19 +65,17 @@ struct AppSetsShareServiceImpl: AppSetsShareService {
         dataContentList.forEach{ dataContent in
             if(dataContent is StringDataContent){
                 let stringDataContent = dataContent as! StringDataContent
-                let name = stringDataContent.name.data(using: .utf8)?.base64EncodedString() ?? ""
-                let contentInfo = ContentInfo(id:stringDataContent.id, name: name, size: stringDataContent.content.count, type: ContentInfo.TYPE_STRING)
+                let contentInfo = ContentInfo(id:stringDataContent.id, name: stringDataContent.name, size: stringDataContent.content.count, type: ContentInfo.TYPE_STRING)
                 infoList.append(contentInfo)
             }else if(dataContent is UriDataContent){
                 let uriDataContent = dataContent as! UriDataContent
-                let name = uriDataContent.name.data(using: .utf8)?.base64EncodedString() ?? ""
-                let contentInfo = ContentInfo(id:uriDataContent.id, name: name, size: 0, type: ContentInfo.TYPE_URI)
+                let contentInfo = ContentInfo(id:uriDataContent.id, name: uriDataContent.name, size: 0, type: ContentInfo.TYPE_URI)
                 infoList.append(contentInfo)
             }
         }
 
-        let contentInfoListWrapper = ContentInfoList(uri: uri, count: infoList.count, infoList: infoList)
-        return DesignResponse(code: 0, data: contentInfoListWrapper)
+        let contentInfoList = ContentInfoList(uri: uri, count: infoList.count, infoList: infoList).encode()
+        return DesignResponse(code: 0, data: contentInfoList)
     }
 
     func exchangeDeviceInfo(context: any Context, clientHost: String, device: HttpShareDevice) async -> DesignResponse<HttpShareDevice> {

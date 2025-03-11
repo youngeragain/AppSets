@@ -422,7 +422,7 @@ class WlanP2pShareMethod : ShareMethod(), ContentReceivedListener {
             return
         }
         when (clickType) {
-            AppSetsShareActivity.CLICK_TYPE_NORMAL -> {
+            ShareDevice.CLICK_TYPE_NORMAL -> {
                 if (wifiP2pDevice.status == WifiP2pDevice.CONNECTED ||
                     !shareDevice.deviceName.nickName.isNullOrEmpty()
                 ) {
@@ -436,13 +436,13 @@ class WlanP2pShareMethod : ShareMethod(), ContentReceivedListener {
                 }
             }
 
-            AppSetsShareActivity.CLICK_TYPE_LONG -> {
+            ShareDevice.CLICK_TYPE_LONG -> {
                 if (wifiP2pDevice.status == WifiP2pDevice.CONNECTED) {
                     disconnect(shareDevice)
                 }
             }
 
-            AppSetsShareActivity.CLICK_TYPE_DOUBLE -> {
+            ShareDevice.CLICK_TYPE_DOUBLE -> {
 
             }
         }

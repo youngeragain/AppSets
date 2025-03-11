@@ -14,9 +14,12 @@ import android.view.MotionEvent
 import android.window.OnBackInvokedDispatcher
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.ui.Modifier
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.withCreated
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import xcj.app.appsets.notification.NotificationPusher
@@ -154,8 +157,10 @@ class MainActivity : DesignComponentActivity() {
     private suspend fun handleIntentExternalContent(
         intent: Intent
     ) {
+        delay(150)
         val fromAppDefinition = getCallActivityAppDefinition()
         val bottomSheetState = viewModel.bottomSheetState()
+        bottomSheetState.setShouldBackgroundSink(true)
         bottomSheetState.show {
             ExternalContentContainerSheet(
                 intent = intent,

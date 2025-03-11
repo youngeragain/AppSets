@@ -46,4 +46,8 @@ class ShareMethod: SwiftUILifecycle {
         deviceName = DeviceName.RANDOM
         PurpleLogger.current.d(ShareMethod.TAG_B, "updateDeviceName, after name:\(deviceName.nickName)")
     }
+    
+    func onShareDeviceClick(shareDevice:ShareDevice, clickType:Int){
+        
+    }
 }
