@@ -59,6 +59,7 @@ class MainViewModel : BaseIMViewModel() {
 
     init {
         PurpleLogger.current.d(TAG, "init hash:${hashCode()}")
+        conversationUseCase.setNavigationUseCase(navigationUseCase)
     }
 
     override fun onCleared() {

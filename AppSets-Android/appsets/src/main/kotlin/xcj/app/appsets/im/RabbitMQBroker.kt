@@ -16,9 +16,9 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import xcj.app.appsets.account.LocalAccountManager
 import xcj.app.appsets.im.message.ImMessage
+import xcj.app.appsets.settings.AppSetsModuleSettings
 import xcj.app.appsets.usecase.ConversationUseCase
 import xcj.app.appsets.usecase.RelationsUseCase
-import xcj.app.appsets.settings.AppSetsModuleSettings
 import xcj.app.starter.android.util.LocalMessager
 import xcj.app.starter.android.util.PurpleLogger
 import xcj.app.starter.test.LocalApplication
@@ -58,13 +58,13 @@ class RabbitMQBroker : MessageBroker<RabbitMQBrokerConfig>,
     /**
      * start point
      */
-    override suspend fun bootstrap(config: RabbitMQBrokerConfig): Boolean {
+    override suspend fun bootstrap(config: RabbitMQBrokerConfig) {
         return updateUserChannel(config.getRabbitProperty())
     }
 
-    private suspend fun updateUserChannel(property: RabbitMQBrokerProperty): Boolean {
+    private suspend fun updateUserChannel(property: RabbitMQBrokerProperty) {
         PurpleLogger.current.d(TAG, "updateUserChannel")
-        return withContext(Dispatchers.IO) {
+        withContext(Dispatchers.IO) {
             this@RabbitMQBroker.property = property
             val userGroupsChanged = true
             val loggedUserUid = LocalAccountManager.userInfo.uid
@@ -72,7 +72,6 @@ class RabbitMQBroker : MessageBroker<RabbitMQBrokerConfig>,
             uid = loggedUserUid
             basicConnect()
             handleUserChannel(userChanged, userGroupsChanged)
-            true
         }
     }
 
@@ -340,12 +339,19 @@ class RabbitMQBroker : MessageBroker<RabbitMQBrokerConfig>,
     }
 
     @OptIn(ExperimentalEncodingApi::class)
-    override suspend fun sendMessage(imObj: ImObj, imMessage: ImMessage): Boolean {
+    override suspend fun sendMessage(imObj: ImObj, imMessage: ImMessage) {
         if (!checkConnection()) {
             PurpleLogger.current.d(TAG, "sendMessage, broker connection not ready! return")
-            return false
+            imMessage.messageSendInfo?.isSent = false
+            imMessage.messageSendInfo?.failureReason = "connection not ready!"
+            return
         }
-        val channel = channel ?: return false
+        val channel = channel
+        if (channel == null) {
+            imMessage.messageSendInfo?.isSent = false
+            imMessage.messageSendInfo?.failureReason = "channel not ready!"
+            return
+        }
 
         withContext(Dispatchers.IO) {
             PurpleLogger.current.d(TAG, "sendMessage")
@@ -405,12 +411,12 @@ class RabbitMQBroker : MessageBroker<RabbitMQBrokerConfig>,
             )
             runCatching {
                 channel.basicPublish(exchange, routingKey, properties, contentBytes)
-                return@withContext true
+                imMessage.messageSendInfo?.isSent = true
             }.onFailure {
                 PurpleLogger.current.e(TAG, "sendMessage, failed, ${it.message}")
-                return@withContext false
+                imMessage.messageSendInfo?.isSent = false
+                imMessage.messageSendInfo?.failureReason = it.localizedMessage
             }
         }
-        return true
     }
 }

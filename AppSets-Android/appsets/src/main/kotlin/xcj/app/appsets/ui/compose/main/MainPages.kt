@@ -193,7 +193,7 @@ fun OnScaffoldLaunch(navController: NavController) {
         val destinationChangedListener: NavController.OnDestinationChangedListener =
             NavController.OnDestinationChangedListener { _, destination, _ ->
                 anyStateProvider.bottomSheetState().hide()
-                navigationUseCase.invalidateTabItems(
+                navigationUseCase.invalidateTabItemsOnRouteChanged(
                     destination.route,
                     "On Destination Changed"
                 )

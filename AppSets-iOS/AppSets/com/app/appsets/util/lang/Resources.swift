@@ -7,6 +7,6 @@
 
 import Foundation
 
-class Resources: ObservableObject {
+class Resources {
     
 }

@@ -12,6 +12,13 @@ import xcj.app.appsets.im.model.RequestFeedbackJson
 import xcj.app.starter.util.ContentType
 import java.util.Date
 
+class MessageSendInfo {
+    var progress: Float = 0f
+    var isSent: Boolean = false
+    var failureReason: String? = null
+}
+
+
 abstract class ImMessage {
 
     companion object {
@@ -138,8 +145,13 @@ abstract class ImMessage {
      */
     abstract val messageType: String
 
-    var isSent: Boolean = false
+    var messageSendInfo: MessageSendInfo? = null
 
+    val isSendMessage: Boolean
+        get() = messageSendInfo != null
+
+    val isReceivedMessage: Boolean
+        get() = messageSendInfo == null
 
     val readableDate: String
         get() {

@@ -23,7 +23,7 @@ class ShareViewModel {
 
     var receivedContentList: ObservableList<any DataContent> = ObservableList()
 
-    var deviceContentListMap: [String: ObservableObject<ContentInfoList>] = [:]
+    var deviceContentListMap: [String: ContentInfoList] = [:]
 
     func updateShareDevice(_ shareDevice: ShareDevice) {
         mShareDevice = shareDevice
@@ -77,6 +77,6 @@ class ShareViewModel {
     }
 
     func updateDeviceContentList(shareDevice: HttpShareDevice, contentInfoList: ContentInfoList) {
-        deviceContentListMap[shareDevice.id] = ObservableObject(contentInfoList)
+        deviceContentListMap[shareDevice.id] = contentInfoList
     }
 }

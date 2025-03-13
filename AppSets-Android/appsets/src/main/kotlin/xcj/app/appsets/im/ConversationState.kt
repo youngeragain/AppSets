@@ -16,7 +16,14 @@ class ConversationState(
     }
 
     private fun addOrUpdateMessage(message: ImMessage) {
-        _messages.add(0, message) // Add to the beginning of the list
+        val existMessage = _messages.firstOrNull { it.id == message.id }
+        if (existMessage != null) {
+            val index = _messages.indexOf(existMessage)
+            _messages.remove(existMessage)
+            _messages.add(index, message)
+        } else {
+            _messages.add(0, message)
+        }
     }
 
     fun addMessages(messages: List<ImMessage>) {

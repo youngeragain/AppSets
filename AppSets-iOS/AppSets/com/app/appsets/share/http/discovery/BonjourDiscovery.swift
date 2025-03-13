@@ -65,16 +65,12 @@ class BonjourDiscovery: Discovery {
                     let deviceName = DeviceName(rawName: rawName, nickName: nickName)
 
                     var deviceIps: [DeviceIP] = []
-                    
-                    
-                    
-                    if let ip4String = String(data: browserResult.ipAddress.rawValue, encoding: .utf8)?.trimmingCharacters(in: .controlCharacters) {
-                        let deviceIp = DeviceIP(ip: ip4String)
-                        deviceIps.append(deviceIp)
-                    }else{
-                        let deviceIp = DeviceIP(ip: "192.168.165.43")
+
+                    if let ipString = bonjourDiscovery.extraIpAddressToIpString(browserResult.ipAddress){
+                        let deviceIp = DeviceIP(ip: ipString)
                         deviceIps.append(deviceIp)
                     }
+
                     let deviceAddress = DevcieAddress(ips: deviceIps)
 
                     let httpShareDevice = HttpShareDevice(
@@ -93,18 +89,28 @@ class BonjourDiscovery: Discovery {
         self.browser = browser
     }
 
-    func resolveHostnameToIP(hostname: String, completion: @escaping ([String]?, Error?) -> Void) {
-//        URLSession.shared.ho(for: hostname) { addresses, error in
-//            if let error = error {
-//                completion(nil, error)
-//                return
-//            }
-//            if let addresses = addresses {
-//                completion(addresses, nil)
-//            } else {
-//                completion(nil, NSError(domain: "HostnameResolutionErrorDomain", code: -1, userInfo: [NSLocalizedDescriptionKey: "No addresses found for hostname"]))
-//            }
-//        }
+    func extraIpAddressToIpString(_ ipAddress: IPAddress) -> String? {
+        if ipAddress is IPv4Address {
+            let str = "\(ipAddress)"
+            if !str.contains("%") {
+                return str
+            }
+            if let index = str.firstIndex(of: "%") {
+                let ip = String(str[..<index])
+                return ip
+            }
+        } else if ipAddress is IPv6Address {
+            let str = "\(ipAddress)"
+            if !str.contains("%") {
+                return str
+            }
+            
+            if let index = str.firstIndex(of: "%") {
+                let ip = String(str[..<index])
+                return ip
+            }
+        }
+        return nil
     }
 
     func startService() {

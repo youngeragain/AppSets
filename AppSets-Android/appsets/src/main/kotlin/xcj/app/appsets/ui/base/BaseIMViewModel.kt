@@ -131,7 +131,7 @@ abstract class BaseIMViewModel : AnyStateViewModel() {
         ) {
             viewModelScope.launch {
                 conversationUseCase.initSessionsIfNeeded()
-                val startResult = BrokerTest.start()
+                BrokerTest.start()
             }
         }
     }

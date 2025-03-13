@@ -28,13 +28,14 @@ import xcj.app.appsets.im.message.parseFromImObj
 import xcj.app.appsets.im.message.parseToImObj
 import xcj.app.appsets.im.model.FriendRequestFeedbackJson
 import xcj.app.appsets.im.model.GroupJoinRequestFeedbackJson
+import xcj.app.appsets.notification.NotificationPusher
 import xcj.app.appsets.server.model.Application
 import xcj.app.appsets.server.model.GroupInfo
 import xcj.app.appsets.server.model.UserInfo
 import xcj.app.appsets.server.model.UserRole
+import xcj.app.appsets.ui.compose.PageRouteNames
 import xcj.app.appsets.ui.compose.conversation.GenerativeAISession
 import xcj.app.appsets.ui.model.NowSpaceObjectState
-import xcj.app.appsets.notification.NotificationPusher
 import xcj.app.compose_share.dynamic.IComposeDispose
 import xcj.app.starter.android.util.LocalMessager
 import xcj.app.starter.android.util.PurpleLogger
@@ -82,12 +83,18 @@ class ConversationUseCase private constructor() : IComposeDispose {
     val currentSessionState: MutableState<SessionState> = mutableStateOf(SessionState.None)
 
     val complexContentSendingState: MutableState<Boolean> = mutableStateOf(false)
+    private var navigationUseCase: NavigationUseCase? = null
+
 
     init {
         sessionsMap[SYSTEM] = mutableStateListOf()
         sessionsMap[USER] = mutableStateListOf()
         sessionsMap[GROUP] = mutableStateListOf()
         sessionsMap[AI] = mutableStateListOf()
+    }
+
+    fun setNavigationUseCase(navigationUseCase: NavigationUseCase) {
+        this.navigationUseCase = navigationUseCase
     }
 
     /**
@@ -111,9 +118,13 @@ class ConversationUseCase private constructor() : IComposeDispose {
 
         when (imObj) {
             is ImObj.ImSingle -> {
-                if (imObj.userRoles?.contains(UserRole.ROLE_ADMIN) == true) {
-                    return getOrCreateSession(sessionsMap, SYSTEM, imObj)
+                val userRoles = imObj.userRoles
+                if (userRoles != null) {
+                    if (userRoles.contains(UserRole.ROLE_ADMIN)) {
+                        return getOrCreateSession(sessionsMap, SYSTEM, imObj)
+                    }
                 }
+
                 return getOrCreateSession(sessionsMap, USER, imObj)
             }
 
@@ -131,7 +142,10 @@ class ConversationUseCase private constructor() : IComposeDispose {
         if (!container.containsKey(type)) {
             return null
         }
-        val sessions = container[type]!!
+        val sessions = container[type]
+        if (sessions == null) {
+            return null
+        }
         for (session in sessions) {
             if (session.id == imObj.id) {
                 return session
@@ -226,19 +240,21 @@ class ConversationUseCase private constructor() : IComposeDispose {
             TAG,
             "onMessage, currentSessionState:${currentSessionState}"
         )
-        val session = (currentSessionState as? SessionState.Normal)?.session
-        val sessionImObj = session?.imObj
-        if (sessionImObj?.bio is GenerativeAISession.AIBio) {
-            //todo
-            GenerativeAISession.responseForSession(session, imMessage)
-        } else {
-            if (isLocal && sessionImObj != null) {
-                BrokerTest.sendMessage(sessionImObj, imMessage)
+        if (isLocal) {
+            val session = (currentSessionState as? SessionState.Normal)?.session ?: return
+            val sessionImObj = session.imObj
+            if (sessionImObj.bio is GenerativeAISession.AIBio) {
+                //todo
+                GenerativeAISession.handleSessionNewMessage(session, imMessage)
             } else {
-                val session: Session = findSessionByImMessage(context, imMessage) ?: return
-                saveMessageToLocalDB(imMessage)
-                showNotificationForImMessages(context, session, imMessage)
+                BrokerTest.sendMessage(sessionImObj, imMessage)
+                addMessageToSession(context, session, imMessage)
             }
+        } else {
+            val session: Session = findSessionByImMessage(context, imMessage) ?: return
+            addMessageToSession(context, session, imMessage)
+            saveMessageToLocalDB(imMessage)
+            showNotificationForImMessages(context, session, imMessage)
         }
     }
 
@@ -260,18 +276,19 @@ class ConversationUseCase private constructor() : IComposeDispose {
                 if (fromImObj.id == LocalAccountManager.userInfo.uid) {
                     //自己的其他设备发送的单聊消息,需要解析toImObj信息对应到相应的Session
                     val toImObj = imMessage.parseToImObj()
-                    if (toImObj != null) {
-                        val session = findSessionByImObj(toImObj)
-                        if (session == null) {
-                            PurpleLogger.current.d(
-                                TAG,
-                                "findSessionByImMessage, session is not found 1, return"
-                            )
-                            return null
-                        }
-                        addMessageToSession(context, session, imMessage)
-                        return session
+                    if (toImObj == null) {
+                        return null
                     }
+                    val session = findSessionByImObj(toImObj)
+                    if (session == null) {
+                        PurpleLogger.current.d(
+                            TAG,
+                            "findSessionByImMessage, session is not found 1, return"
+                        )
+                        return null
+                    }
+
+                    return session
                 } else {
                     //来自他人的单聊消息
                     val session = findSessionByImObj(fromImObj)//获取消息From信息对应的Session
@@ -285,7 +302,7 @@ class ConversationUseCase private constructor() : IComposeDispose {
                     if (imMessage is SystemMessage) {
                         toHandleSystemMessageIfNeeded(context, session, imMessage)
                     }
-                    addMessageToSession(context, session, imMessage)
+
                     return session
                 }
             }
@@ -300,7 +317,7 @@ class ConversationUseCase private constructor() : IComposeDispose {
                     )
                     return null
                 }
-                addMessageToSession(context, session, imMessage)
+
                 return session
             }
         }
@@ -361,9 +378,31 @@ class ConversationUseCase private constructor() : IComposeDispose {
             )
             return
         }
-        nowSpaceContentUseCase.onNewImMessage(session, imMessage)
+        addMessageToNowSpaceIfNeeded(context, session, imMessage)
         val notificationPusher = getNotificationPusher()
         pushNotificationIfNeeded(context, notificationPusher, session, imMessage)
+    }
+
+    private fun addMessageToNowSpaceIfNeeded(
+        context: Context,
+        session: Session,
+        imMessage: ImMessage
+    ) {
+        val sessionState = currentSessionState.value
+        if (sessionState !is SessionState.Normal) {
+            return
+        }
+        if (sessionState.session.id == session.id) {
+            val navigationUseCase = navigationUseCase
+            if (navigationUseCase == null) {
+                return
+            }
+            if (navigationUseCase.currentRoute != PageRouteNames.ConversationDetailsPage) {
+                nowSpaceContentUseCase.onNewImMessage(session, imMessage)
+            }
+        } else {
+            nowSpaceContentUseCase.onNewImMessage(session, imMessage)
+        }
     }
 
     private fun getNotificationPusher(): NotificationPusher {
@@ -388,10 +427,6 @@ class ConversationUseCase private constructor() : IComposeDispose {
     fun onSendMessage(context: Context, inputSelector: Int, content: Any) {
         if (!LocalAccountManager.isLogged()) {
             PurpleLogger.current.d(TAG, "onSendMessage, user not logged! return")
-            return
-        }
-        if (!BrokerTest.onlineState.value) {
-            PurpleLogger.current.d(TAG, "onSendMessage, user not connect to im server! return")
             return
         }
         val currentSessionState = currentSessionState.value

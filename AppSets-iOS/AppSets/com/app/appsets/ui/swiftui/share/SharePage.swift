@@ -249,40 +249,45 @@ struct SharePage: View {
     func DevicesSpace() -> some View {
         ZStack(alignment: .bottomLeading) {
             if shareViewModel.boxFocusInfo.devicesBoxFocus {
-                let columns = [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())]
-                
-                LazyVGrid(columns: columns, alignment: .leading) {
-                    ForEach(shareViewModel.shareDeviceList.elements) { shareDevice in
-                        VStack(spacing: 4) {
-                            VStack {
-                                SwiftUI.Image(.Drawable.smartphoneSmartphoneSymbol)
-                                    .resizable()
-                                    .scaledToFit()
-                                    .frame(width: Theme.size.iconSizeNormal, height: Theme.size.iconSizeNormal)
-                                    .fontWeight(.light)
-                                    .tint(Theme.colorSchema.onSecondaryContainer)
-                            }
-                            .padding(12)
-                            .background(Theme.colorSchema.secondaryContainer.clipShape(Circle()))
-                            .onLongPressGesture {
-                                isShowDeviceContentList = true
-                                whichIsShowDeviceContentList = shareDevice
-                                shareMethod.onShareDeviceClick(
-                                    shareDevice: shareDevice,
-                                    clickType: ShareDevice.CLICK_TYPE_LONG
-                                )
-                            } onPressingChanged: { _ in
-                            }.sheet(isPresented: $isShowDeviceContentList) {
-                                DeviceContentListSheet(shareDevcie: shareDevice)
-                            }
+                ZStack(alignment: .topLeading){
+                    let columns = [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())]
+                    ScrollView(.vertical){
+                        LazyVGrid(columns: columns, alignment: .leading) {
+                            ForEach(shareViewModel.shareDeviceList.elements) { shareDevice in
+                                VStack(spacing: 4) {
+                                    VStack {
+                                        SwiftUI.Image(.Drawable.smartphoneSmartphoneSymbol)
+                                            .resizable()
+                                            .scaledToFit()
+                                            .frame(width: Theme.size.iconSizeNormal, height: Theme.size.iconSizeNormal)
+                                            .fontWeight(.light)
+                                            .tint(Theme.colorSchema.onSecondaryContainer)
+                                    }
+                                    .padding(12)
+                                    .background(Theme.colorSchema.secondaryContainer.clipShape(Circle()))
+                                    .onLongPressGesture {
+                                        isShowDeviceContentList = true
+                                        whichIsShowDeviceContentList = shareDevice
+                                        shareMethod.onShareDeviceClick(
+                                            shareDevice: shareDevice,
+                                            clickType: ShareDevice.CLICK_TYPE_LONG
+                                        )
+                                    } onPressingChanged: { _ in
+                                    }.sheet(isPresented: $isShowDeviceContentList) {
+                                        DeviceContentListSheet(shareDevcie: shareDevice)
+                                    }
 
-                            if let nickName = shareDevice.deviceName.nickName {
-                                Text(nickName).font(.system(size: 12))
+                                    if let nickName = shareDevice.deviceName.nickName {
+                                        Text(nickName).font(.system(size: 12)).multilineTextAlignment(.center)
+                                    }
+                                    Text(shareDevice.deviceName.rawName).font(.system(size: 10)).multilineTextAlignment(.center)
+                                }.padding(12)
                             }
-                            Text(shareDevice.deviceName.rawName).font(.system(size: 10))
-                        }.padding(12)
+                        }
                     }
-                }.frame(alignment: .topLeading)
+                    
+                }.frame(maxWidth:.infinity, maxHeight:.infinity, alignment: .topLeading)
+                
             }
 
             if !shareViewModel.boxFocusInfo.devicesBoxFocus {
@@ -326,6 +331,22 @@ struct SharePage: View {
 
     func SendSpace() -> some View {
         ZStack(alignment: .bottomLeading) {
+            
+            
+            if shareViewModel.boxFocusInfo.sendBoxFocus {
+                ZStack(alignment: .topLeading){
+                    ScrollView(.vertical){
+                        LazyVStack(alignment:.leading, spacing: 12){
+                            ForEach(shareViewModel.pendingSendContentList.elements, id:\.id) { dataContent in
+                                Text(dataContent.name).padding()
+                            }
+                        }
+                    }
+                   
+                }.frame(maxWidth:.infinity, maxHeight:.infinity, alignment: .topLeading)
+                
+            }
+            
             VStack {
                 HStack {
                     if !shareViewModel.boxFocusInfo.sendBoxFocus {
@@ -348,14 +369,6 @@ struct SharePage: View {
                     }
                 }
             }.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
-            
-            if shareViewModel.boxFocusInfo.sendBoxFocus {
-                LazyVStack(spacing: 12){
-                    ForEach(shareViewModel.pendingSendContentList.elements, id:\.id) { dataContent in
-                        Text(dataContent.name)
-                    }
-                }
-            }
             
             HStack(alignment: .center, spacing: 12) {
                 SwiftUI.Image(.Drawable.draftDraftSymbol)
@@ -423,12 +436,18 @@ struct SharePage: View {
                         Theme.colorSchema.secondaryContainer.clipShape(RoundedRectangle(cornerRadius: 24))
                     )
             }
-
-            TextField(text: $inputContent, label: {
-                Text("input content").frame(alignment: .topLeading)
-            }).frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            
+            TextEditor(text: $inputContent)
+                .scrollContentBackground(.hidden)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
                 .padding()
                 .background(Theme.colorSchema.secondaryContainer.clipShape(RoundedRectangle(cornerRadius: 24)))
+                .overlay {
+                    if(inputContent.isEmpty){
+                        Text("Input content").frame(alignment: .topLeading)
+                    }
+                }
+               
         }.padding()
     }
 
@@ -441,7 +460,7 @@ struct SharePage: View {
             HStack{
                 Text("Share List")
             }
-            if let contentInfoList = shareViewModel.deviceContentListMap[shareDevcie.id]?.obj {
+            if let contentInfoList = shareViewModel.deviceContentListMap[shareDevcie.id] {
                 
                 LazyVStack{
                     ForEach(contentInfoList.infoList, id: \.id){dataContent in
@@ -449,7 +468,7 @@ struct SharePage: View {
                     }
                 }
             }
-        }
+        }.frame(alignment: .top)
     }
 }
 

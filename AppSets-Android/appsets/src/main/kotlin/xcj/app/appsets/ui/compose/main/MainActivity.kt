@@ -14,8 +14,6 @@ import android.view.MotionEvent
 import android.window.OnBackInvokedDispatcher
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.ui.Modifier
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.withCreated
 import kotlinx.coroutines.Dispatchers
@@ -210,4 +208,8 @@ class MainActivity : DesignComponentActivity() {
                 return@withContext null
             }
         }
+
+    override fun onEnterAnimationComplete() {
+        PurpleLogger.current.d(TAG, "onEnterAnimationComplete")
+    }
 }

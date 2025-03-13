@@ -14,7 +14,8 @@ class NavigationUseCase : IComposeDispose {
         private const val TAG = "NavigationUseCase"
     }
 
-    private var lastNavDestination: String? = null
+    var currentRoute: String? = null
+    var lastNavDestination: String? = null
 
     val barVisible: MutableState<Boolean> = mutableStateOf(true)
     val tabItems: MutableState<List<TabItem>> = mutableStateOf(emptyList())
@@ -82,16 +83,17 @@ class NavigationUseCase : IComposeDispose {
         tabItems.value = newTabs
     }
 
-    fun invalidateTabItems(
+    fun invalidateTabItemsOnRouteChanged(
         currentRoute: String? = PageRouteNames.AppsCenterPage,
         by: String?
     ) {
         PurpleLogger.current.d(
             TAG,
-            "invalidateTabItems, lastRoute:${lastNavDestination}," +
+            "invalidateTabItemsOnRouteChanged, lastRoute:${this.lastNavDestination}," +
                     " currentRoute:${currentRoute}, by:$by"
         )
-        lastNavDestination = currentRoute
+        this.lastNavDestination = this.currentRoute
+        this.currentRoute = currentRoute
 
         val newTabs = tabItems.value.map {
             when (it) {

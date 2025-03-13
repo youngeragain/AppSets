@@ -18,6 +18,7 @@ import xcj.app.appsets.im.message.ImMessage
 import xcj.app.appsets.im.message.ImageMessage
 import xcj.app.appsets.im.message.LocationMessage
 import xcj.app.appsets.im.message.LocationMessageMetadata
+import xcj.app.appsets.im.message.MessageSendInfo
 import xcj.app.appsets.im.message.MusicMessage
 import xcj.app.appsets.im.message.StringMessageMetadata
 import xcj.app.appsets.im.message.SystemMessage
@@ -33,8 +34,10 @@ import xcj.app.appsets.util.VideoFileUtil
 import xcj.app.appsets.util.ktx.queryUriFileName
 import xcj.app.appsets.util.model.MediaStoreDataUri
 import xcj.app.appsets.util.model.UriProvider
+import xcj.app.io.components.FileIO
 import xcj.app.io.components.LocalFileIO
 import xcj.app.io.components.ObjectUploadOptions
+import xcj.app.io.compress.ICompressor
 import xcj.app.starter.android.util.PurpleLogger
 import xcj.app.starter.util.ContentType
 import java.io.File
@@ -60,12 +63,18 @@ object ImMessageGenerator {
     }
 
     val imContentObjectUploadOptions = object : ObjectUploadOptions {
-        override fun getInfixPath(): String? {
+        private val compressOptions = object : ICompressor.CompressOptions {
+            override fun imageCompressQuality(): Int {
+                return 55
+            }
+        }
+
+        override fun getInfixPath(): String {
             return "im/"
         }
 
-        override fun imageCompressQuality(): Int? {
-            return 55
+        override fun compressOptions(): ICompressor.CompressOptions {
+            return compressOptions
         }
     }
 
@@ -102,7 +111,7 @@ object ImMessageGenerator {
      * @return 文件的UrlMarker
      *
      */
-    private suspend fun getContentUrlMaker(
+    private suspend fun uploadContent(
         context: Context,
         session: Session,
         inputSelector: Int,
@@ -124,8 +133,7 @@ object ImMessageGenerator {
                     context,
                     content,
                     contentUrlMarker,
-                    imContentObjectUploadOptions,
-                    null
+                    imContentObjectUploadOptions
                 )
                 return contentUrlMarker
             }
@@ -137,8 +145,7 @@ object ImMessageGenerator {
                     context,
                     content,
                     contentUrlMarker,
-                    imContentObjectUploadOptions,
-                    null
+                    imContentObjectUploadOptions
                 )
                 return contentUrlMarker
             }
@@ -151,8 +158,7 @@ object ImMessageGenerator {
                     context,
                     uri,
                     contentUrlMarker,
-                    imContentObjectUploadOptions,
-                    null
+                    imContentObjectUploadOptions
                 )
                 return contentUrlMarker
             }
@@ -190,9 +196,19 @@ object ImMessageGenerator {
         context: Context,
         session: Session,
         inputSelector: Int,
+        messageSendInfo: MessageSendInfo,
         content: Any
     ): StringMessageMetadata {
-        val urlMaker = getContentUrlMaker(context, session, inputSelector, content)
+        val urlMaker = uploadContent(context, session, inputSelector, content)
+        LocalFileIO.current.progressObserver = object : FileIO.ProgressObserver {
+            override fun id(): String {
+                return urlMaker ?: ""
+            }
+
+            override fun onProgress(id: String, total: Long, current: Long) {
+                messageSendInfo.progress = current.toFloat() / total.toFloat()
+            }
+        }
         val description = getContentName(context, content)
         return StringMessageMetadata(
             description,
@@ -210,7 +226,7 @@ object ImMessageGenerator {
         inputSelector: Int,
         content: Any
     ): VideoMessageMetadata {
-        val urlMaker = getContentUrlMaker(context, session, inputSelector, content)
+        val urlMaker = uploadContent(context, session, inputSelector, content)
         val mediaStoreDataUriWrapper = content as MediaStoreDataUri
         val companionUrlMaker = UUID.randomUUID().toString()
         val videoFrameUri = VideoFileUtil.extractVideoFrame(context, mediaStoreDataUriWrapper)
@@ -219,8 +235,7 @@ object ImMessageGenerator {
                 context,
                 videoFrameUri,
                 companionUrlMaker,
-                imContentObjectUploadOptions,
-                null
+                imContentObjectUploadOptions
             )
         }
         val description = getContentName(context, content)
@@ -241,7 +256,7 @@ object ImMessageGenerator {
         inputSelector: Int,
         content: Any
     ): StringMessageMetadata {
-        val urlMaker = getContentUrlMaker(context, session, inputSelector, content)
+        val urlMaker = uploadContent(context, session, inputSelector, content)
         val description = getContentName(context, content)
         return StringMessageMetadata(
             description,
@@ -259,7 +274,7 @@ object ImMessageGenerator {
         inputSelector: Int,
         content: Any
     ): StringMessageMetadata {
-        val urlMaker = getContentUrlMaker(context, session, inputSelector, content)
+        val urlMaker = uploadContent(context, session, inputSelector, content)
         val description = getContentName(context, content)
         return StringMessageMetadata(
             description,
@@ -277,7 +292,7 @@ object ImMessageGenerator {
         inputSelector: Int,
         content: Any
     ): StringMessageMetadata {
-        val urlMaker = getContentUrlMaker(context, session, inputSelector, content)
+        val urlMaker = uploadContent(context, session, inputSelector, content)
         val description = getContentName(context, content)
         return StringMessageMetadata(
             description,
@@ -373,11 +388,17 @@ object ImMessageGenerator {
         val messageFromInfo =
             MessageFromInfo(fromUserInfo.uid, fromUserInfo.name, fromUserInfo.avatarUrl)
         val messageToInfo = MessageToInfo.Companion.fromImObj(session.imObj)
-
+        val messageSendInfo = MessageSendInfo()
         val imMessage = when (inputSelector) {
             InputSelector.IMAGE -> {
                 val metadata =
-                    getImMessageMetadataForImage(context, session, inputSelector, content)
+                    getImMessageMetadataForImage(
+                        context,
+                        session,
+                        inputSelector,
+                        messageSendInfo,
+                        content
+                    )
                 ImageMessage(
                     messageId,
                     timestamp,
@@ -468,6 +489,7 @@ object ImMessageGenerator {
             }
         }
         PurpleLogger.current.d(TAG, "generateBySend, final imMessage:$imMessage")
+        imMessage.messageSendInfo = messageSendInfo
         return imMessage
     }
 

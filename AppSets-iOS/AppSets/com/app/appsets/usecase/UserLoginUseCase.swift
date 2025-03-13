@@ -7,7 +7,8 @@
 
 import Foundation
 
-class UserLoginUserCase : ObservableObject {
+@Observable
+class UserLoginUserCase {
     
     private static let TAG = "UserLoginUserCase"
     

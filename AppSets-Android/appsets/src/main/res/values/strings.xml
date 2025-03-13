@@ -433,4 +433,7 @@
     <string name="quick_step">Quick Step</string>
     <string name="file_manager">File Manager</string>
     <string name="file_manager_description">Custom file management tool, using standard processing</string>
+    <string name="failure">Failure</string>
+    <string name="send_as_web_content">Send as web content</string>
+    <string name="send_as_file">Send as file</string>
 </resources>

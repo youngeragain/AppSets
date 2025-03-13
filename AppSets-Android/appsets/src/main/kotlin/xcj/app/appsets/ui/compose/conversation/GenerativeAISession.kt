@@ -17,7 +17,7 @@ object GenerativeAISession {
 
     interface AIBio : Bio
 
-    suspend fun responseForSession(session: Session, userPrompt: Any) {
+    suspend fun handleSessionNewMessage(session: Session, userPrompt: Any) {
         if (userPrompt is TextMessage) {
             session.conversationState.addMessage(userPrompt)
             delay(200)

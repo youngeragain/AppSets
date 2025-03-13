@@ -20,14 +20,14 @@ object BrokerTest {
     val onlineState: MutableState<Boolean> = mutableStateOf(false)
 
     @OptIn(ExperimentalEncodingApi::class)
-    suspend fun start(): Boolean {
+    suspend fun start() {
         PurpleLogger.current.d(TAG, "start")
         if (!LocalAccountManager.isLogged()) {
             PurpleLogger.current.d(
                 TAG,
                 "start, failed! because of use not login! return"
             )
-            return false
+            return
         }
 
         val appConfig = AppConfig.appConfiguration
@@ -37,7 +37,7 @@ object BrokerTest {
                 "start, failed!" +
                         " because of imBrokerProperties isNullOrEmpty, return"
             )
-            return false
+            return
         }
         PurpleLogger.current.d(
             TAG,
@@ -57,7 +57,7 @@ object BrokerTest {
                 "start, failed!" +
                         " decode RabbitProperties get null, return"
             )
-            return false
+            return
         }
         runCatching {
             val jsonObject = Gson().fromJson<JsonObject>(
@@ -85,8 +85,7 @@ object BrokerTest {
             )
             rabbitMqBrokerConfig
         }.onSuccess { config ->
-            val bootstrap = broker.bootstrap(config)
-            return bootstrap
+            broker.bootstrap(config)
         }.onFailure {
             PurpleLogger.current.d(
                 TAG,
@@ -94,12 +93,11 @@ object BrokerTest {
                         " RabbitProperties map get failed, ${it.message}\n ${it.stackTraceToString()}"
             )
         }
-        return false
     }
 
-    suspend fun sendMessage(imObj: ImObj, imMessage: ImMessage): Boolean {
+    suspend fun sendMessage(imObj: ImObj, imMessage: ImMessage) {
         PurpleLogger.current.d(TAG, "sendMessage")
-        return broker.sendMessage(imObj, imMessage)
+        broker.sendMessage(imObj, imMessage)
     }
 
     suspend fun close() {

@@ -15,11 +15,11 @@ import com.tencent.cos.xml.model.`object`.GetObjectRequest
 import com.tencent.cos.xml.transfer.TransferConfig
 import com.tencent.cos.xml.transfer.TransferManager
 import com.tencent.qcloud.core.auth.QCloudCredentialProvider
-import id.zelory.compressor.Compressor
-import id.zelory.compressor.constraint.default
-import id.zelory.compressor.constraint.destination
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import xcj.app.io.components.FileIO.ProgressObserver
+import xcj.app.io.components.FileIO.UploadResultObserver
+import xcj.app.io.compress.CompressorHelper
 import xcj.app.io.tencent.STSCredentialProvider
 import xcj.app.io.tencent.TencentCosInfoProvider
 import xcj.app.io.tencent.TencentCosRegionBucket
@@ -41,6 +41,10 @@ class SimpleFileIO : FileIO {
 
         const val MESSAGE_KEY_ON_COMPONENTS_INITIALED = "on_components_initialed"
     }
+
+    var progressObserver: ProgressObserver? = null
+
+    var uploadResultObserver: UploadResultObserver? = null
 
     private var cosXmlService: CosXmlSimpleService? = null
     private var transferManager: TransferManager? = null
@@ -88,11 +92,18 @@ class SimpleFileIO : FileIO {
         cosXmlService = null
     }
 
-    private fun getUpdateResultListener(): CosXmlResultListener {
+    private fun getUpdateResultListener(urlMarker: String): CosXmlResultListener {
         return object : CosXmlResultListener {
             override fun onSuccess(request: CosXmlRequest, result: CosXmlResult) {
                 //val uploadResult = result as COSXMLUploadTaskResult
                 PurpleLogger.current.d(TAG, "UpdateResultListener, onSuccess")
+                val resultObserver = uploadResultObserver
+                if (resultObserver != null && resultObserver.id() == urlMarker) {
+                    resultObserver.onResult(urlMarker, true, null, null)
+                    if (resultObserver.removeOnDone()) {
+                        uploadResultObserver = null
+                    }
+                }
             }
 
             override fun onFail(
@@ -100,6 +111,13 @@ class SimpleFileIO : FileIO {
                 clientException: CosXmlClientException?,
                 serviceException: CosXmlServiceException?
             ) {
+                val resultObserver = uploadResultObserver
+                if (resultObserver != null && resultObserver.id() == urlMarker) {
+                    resultObserver.onResult(urlMarker, false, clientException, serviceException)
+                    if (resultObserver.removeOnDone()) {
+                        uploadResultObserver = null
+                    }
+                }
                 PurpleLogger.current.d(
                     TAG,
                     "UpdateResultListener, onFail, clientException:${clientException?.message} " +
@@ -109,30 +127,35 @@ class SimpleFileIO : FileIO {
         }
     }
 
+    private fun getUploadProgressListener(urlMarker: String): CosXmlProgressListener {
+        return object : CosXmlProgressListener {
+            override fun onProgress(complete: Long, target: Long) {
+                val progressObserver = this@SimpleFileIO.progressObserver
+                if (progressObserver != null && progressObserver.id() == urlMarker) {
+                    progressObserver.onProgress(urlMarker, target, complete)
+                    if (target == complete && progressObserver.removeOnDone()) {
+                        progressObserver.removeOnDone()
+                    }
+                }
+            }
+        }
+    }
+
     override suspend fun uploadWithFile(
         context: Context,
         file: File,
         urlMarker: String,
-        uploadOptions: ObjectUploadOptions?,
-        resultListener: Any?
+        uploadOptions: ObjectUploadOptions?
     ) {
-        finalUploadPreCheck(context, file, urlMarker, uploadOptions, resultListener)
+        finalUploadPreCheck(context, file, urlMarker, uploadOptions)
     }
 
-
-    private fun File.isImage(): Boolean {
-        return when (extension.lowercase()) {
-            "png", "webp", "jpeg", "bmp", "svg", "jpg" -> true
-            else -> false
-        }
-    }
 
     private suspend fun finalUploadPreCheck(
         context: Context,
         file: File,
         urlMarker: String,
-        uploadOptions: ObjectUploadOptions?,
-        resultListener: Any?
+        uploadOptions: ObjectUploadOptions?
     ) {
         PurpleLogger.current.d(TAG, "uploadForUrlMarker")
         ensureCosXmlServiceIfNeeded()
@@ -155,38 +178,28 @@ class SimpleFileIO : FileIO {
             PurpleLogger.current.d(TAG, "finalUpload, tencentCosRegionBucket is null, return")
             return
         }
-        ///storage/emulated/0/Android/data/xcj.app.container/cache/temp/audios/audio_record/1737029140177/audio_1737029140191_1.mp3
         if (!file.exists() || !file.isFile || !file.canRead()) {
             PurpleLogger.current.d(TAG, "uploadForUrlMarker, file not valid! return")
             return
         }
         withContext(Dispatchers.IO) {
-            var tempFile = file
-            if (file.isImage()) {
-                val compressedFile = Compressor.compress(context, file) {
-                    default(quality = uploadOptions?.imageCompressQuality() ?: 80)
-                    val tempFilesCacheDir = LocalAndroidContextFileDir.current.tempFilesCacheDir
-                    val cacheFile =
-                        File(tempFilesCacheDir + File.separator + urlMarker + "." + file.extension.lowercase())
-                    destination(cacheFile)
-                }
-                if (compressedFile.exists()) {
-                    PurpleLogger.current.d(
-                        TAG,
-                        "uploadForUrlMarker, compressed image file:${compressedFile}"
-                    )
-                    tempFile = compressedFile
-                }
-            }
+            val fileToUpload = compressedFileIfNeeded(context, file, uploadOptions)
             finalUpload(
                 tencentCosRegionBucket,
                 transferManager,
-                tempFile,
+                fileToUpload,
                 urlMarker,
-                uploadOptions,
-                resultListener
+                uploadOptions
             )
         }
+    }
+
+    private suspend fun compressedFileIfNeeded(
+        context: Context,
+        file: File,
+        uploadOptions: ObjectUploadOptions?
+    ): File {
+        return CompressorHelper().compress(context, file, uploadOptions?.compressOptions())
     }
 
     private fun finalUpload(
@@ -194,8 +207,7 @@ class SimpleFileIO : FileIO {
         transferManager: TransferManager,
         file: File,
         urlMarker: String,
-        uploadOptions: ObjectUploadOptions?,
-        resultListener: Any?
+        uploadOptions: ObjectUploadOptions?
     ) {
         PurpleLogger.current.d(TAG, "finalUpload")
         val bucket = tencentCosRegionBucket.bucketName
@@ -208,11 +220,8 @@ class SimpleFileIO : FileIO {
         val srcPath = file.toString()
         val uploadId: String? = null
         val cosxmlUploadTask = transferManager.upload(bucket, cosPath, srcPath, uploadId)
-        if (resultListener != null && resultListener is CosXmlResultListener) {
-            cosxmlUploadTask.setCosXmlResultListener(resultListener)
-        } else {
-            cosxmlUploadTask.setCosXmlResultListener(getUpdateResultListener())
-        }
+        cosxmlUploadTask.setCosXmlProgressListener(getUploadProgressListener(urlMarker))
+        cosxmlUploadTask.setCosXmlResultListener(getUpdateResultListener(urlMarker))
     }
 
     override suspend fun uploadWithUri(
@@ -220,7 +229,6 @@ class SimpleFileIO : FileIO {
         uri: Uri,
         urlMarker: String,
         uploadOptions: ObjectUploadOptions?,
-        resultListener: Any?
     ) {
         val file = FileUtil.parseUriToAndroidUriFile(context, uri)?.file
         if (file == null) {
@@ -231,15 +239,14 @@ class SimpleFileIO : FileIO {
             TAG,
             "uploadWithUri uri content file: $file"
         )
-        finalUploadPreCheck(context, file, urlMarker, uploadOptions, resultListener)
+        finalUploadPreCheck(context, file, urlMarker, uploadOptions)
     }
 
     override suspend fun uploadWithMultiFile(
         context: Context,
         files: List<File>,
         urlMarkers: List<String>,
-        uploadOptions: ObjectUploadOptions?,
-        resultListener: Any?
+        uploadOptions: ObjectUploadOptions?
     ) {
 
     }
@@ -248,13 +255,11 @@ class SimpleFileIO : FileIO {
         context: Context,
         uris: List<Uri>,
         urlMarkers: List<String>,
-        uploadOptions: ObjectUploadOptions?,
-        resultListener: Any?
+        uploadOptions: ObjectUploadOptions?
     ) {
         PurpleLogger.current.d(TAG, "uploadWithMultiUri")
-        val tempResultListener = resultListener ?: getUpdateResultListener()
         uris.forEachIndexed { index, uri ->
-            uploadWithUri(context, uri, urlMarkers[index], uploadOptions, tempResultListener)
+            uploadWithUri(context, uri, urlMarkers[index], uploadOptions)
         }
     }
 
@@ -346,10 +351,11 @@ class SimpleFileIO : FileIO {
         val cosXmlService = cosXmlService ?: return null
         val getTencentCosRegionBucket =
             tencentCosInfoProvider?.getTencentCosRegionBucket() ?: return null
+        val tempFilesCacheDir = LocalAndroidContextFileDir.current.tempFilesCacheDir
         val objectRequest = GetObjectRequest(
             getTencentCosRegionBucket.bucketName,
             path,
-            LocalAndroidContextFileDir.current.tempFilesCacheDir.toString()
+            tempFilesCacheDir.toString()
         )
         objectRequest.progressListener = object : CosXmlProgressListener {
             override fun onProgress(complete: Long, target: Long) {
@@ -359,11 +365,7 @@ class SimpleFileIO : FileIO {
 
         runCatching {
             val getObjectResult = cosXmlService.getObject(objectRequest)
-            return File(
-                LocalAndroidContextFileDir.current.tempFilesCacheDir + path.substringAfterLast(
-                    "/"
-                )
-            ).run {
+            return File(tempFilesCacheDir + path.substringAfterLast("/")).run {
                 if (exists()) {
                     this
                 } else {

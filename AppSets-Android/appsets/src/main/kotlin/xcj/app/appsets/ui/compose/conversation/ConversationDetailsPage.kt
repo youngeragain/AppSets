@@ -55,7 +55,6 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.selection.SelectionContainer
-import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
@@ -68,7 +67,6 @@ import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -76,6 +74,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -126,17 +125,17 @@ import xcj.app.appsets.im.message.TextMessage
 import xcj.app.appsets.im.message.VideoMessage
 import xcj.app.appsets.im.message.VideoMessageMetadata
 import xcj.app.appsets.im.message.VoiceMessage
+import xcj.app.appsets.settings.AppSetsModuleSettings
 import xcj.app.appsets.ui.compose.LocalUseCaseOfConversation
 import xcj.app.appsets.ui.compose.LocalUseCaseOfMediaRemoteExo
-import xcj.app.compose_share.components.DesignHDivider
+import xcj.app.appsets.ui.compose.custom_component.AnyImage
 import xcj.app.appsets.ui.compose.custom_component.BackPressHandler
 import xcj.app.appsets.ui.compose.custom_component.HideNavBarWhenOnLaunch
-import xcj.app.appsets.ui.compose.custom_component.AnyImage
 import xcj.app.appsets.ui.compose.custom_component.third_part.waveslider.WaveSlider
 import xcj.app.appsets.ui.compose.custom_component.third_part.waveslider.WaveSliderDefaults
 import xcj.app.appsets.usecase.SessionState
-import xcj.app.appsets.settings.AppSetsModuleSettings
 import xcj.app.appsets.util.DesignRecorder
+import xcj.app.compose_share.components.DesignHDivider
 import xcj.app.compose_share.modifier.combinedClickableSingle
 import xcj.app.starter.android.ktx.startWithHttpSchema
 import xcj.app.starter.android.util.PurpleLogger
@@ -242,7 +241,7 @@ fun SessionObjectNormal(
             hapticFeedback.performHapticFeedback(HapticFeedbackType.TextHandleMove)
         }
     }
-    val jumpToBottomButtonEnabled by remember {
+    val isShowJumpToLatestButton by remember {
         derivedStateOf {
             scrollState.firstVisibleItemIndex != 0 ||
                     scrollState.firstVisibleItemScrollOffset > 50
@@ -272,9 +271,19 @@ fun SessionObjectNormal(
             session = session,
             quickAccessSessions = quickAccessSessions,
             hazeState = hazeState,
+            isShowJumpToLatestButton = isShowJumpToLatestButton,
             onBackClick = onBackClick,
             onMoreClick = {
                 onMoreClick(session.imObj)
+            },
+            onJumpToLatestClick = {
+                scope.launch {
+                    if (scrollState.firstVisibleItemIndex > 25) {
+                        scrollState.scrollToItem(0)
+                    } else {
+                        scrollState.animateScrollToItem(0)
+                    }
+                }
             },
             onBioClick = onBioClick,
             onQuickAccessSessionClick = { quickAccessSession ->
@@ -329,20 +338,6 @@ fun SessionObjectNormal(
             onVoiceResumeClick = onVoiceResumeClick
         )
 
-        ShowLatestIndicator(
-            modifier = Modifier.align(Alignment.TopCenter),
-            isShow = jumpToBottomButtonEnabled,
-            onClick = {
-                scope.launch {
-                    if (scrollState.firstVisibleItemIndex > 25) {
-                        scrollState.scrollToItem(0)
-                    } else {
-                        scrollState.animateScrollToItem(0)
-                    }
-                }
-            }
-        )
-
         ComplexContentSendingIndicator(isShow = complexContentSending)
     }
 }
@@ -391,40 +386,6 @@ fun ComplexContentSendingIndicator(isShow: Boolean) {
     }
 }
 
-@Composable
-fun ShowLatestIndicator(modifier: Modifier, isShow: Boolean, onClick: () -> Unit) {
-    AnimatedVisibility(
-        modifier = modifier,
-        visible = isShow,
-        enter = fadeIn(),
-        exit = fadeOut()
-    ) {
-        Column {
-            Spacer(
-                Modifier.height(
-                    WindowInsets.statusBars.asPaddingValues().calculateTopPadding() + 120.dp
-                )
-            )
-            Text(
-                text = stringResource(xcj.app.appsets.R.string.show_latest),
-                fontSize = 12.sp,
-                modifier = Modifier
-                    .background(
-                        MaterialTheme.colorScheme.surfaceContainer,
-                        CircleShape
-                    )
-                    .clip(
-                        CircleShape
-                    )
-                    .clickable {
-                        onClick()
-                    }
-                    .padding(horizontal = 10.dp, vertical = 5.dp)
-            )
-        }
-    }
-}
-
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun TopBarComponent(
@@ -432,8 +393,10 @@ private fun TopBarComponent(
     session: Session,
     quickAccessSessions: List<Session>,
     hazeState: HazeState,
+    isShowJumpToLatestButton: Boolean,
     onBackClick: () -> Unit,
     onMoreClick: () -> Unit,
+    onJumpToLatestClick: () -> Unit,
     onBioClick: (Bio) -> Unit,
     onQuickAccessSessionClick: (Session) -> Unit
 ) {
@@ -442,60 +405,13 @@ private fun TopBarComponent(
         modifier = modifier
             .fillMaxWidth()
     ) {
-        Column(
-            modifier = Modifier.hazeEffect(
-                hazeState,
-                HazeMaterials.thin()
-            ),
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .statusBarsPadding(),
-                horizontalArrangement = Arrangement.spacedBy(2.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    painter = painterResource(id = xcj.app.compose_share.R.drawable.ic_arrow_back_24),
-                    contentDescription = stringResource(id = xcj.app.appsets.R.string.return_),
-                    modifier = Modifier
-                        .clip(CircleShape)
-                        .clickable(onClick = onBackClick)
-                        .padding(12.dp)
-                )
-                Row(
-                    modifier = Modifier,
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    UserAvatar2Component(
-                        modifier = Modifier
-                            .size(20.dp)
-                            .clip(MaterialTheme.shapes.extraLarge)
-                            .clickable {
-                                onBioClick(session.imObj.bio)
-                            },
-                        imObj = session.imObj
-                    )
-                    Text(
-                        text = session.imObj.name,
-                        modifier = Modifier,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
-                Spacer(modifier = Modifier.weight(1f))
-                Icon(
-                    painterResource(id = xcj.app.compose_share.R.drawable.ic_outline_more_vert_24),
-                    stringResource(id = xcj.app.appsets.R.string.more),
-                    modifier = Modifier
-                        .clip(CircleShape)
-                        .clickable(onClick = onMoreClick)
-                        .padding(12.dp)
-                )
-            }
-            DesignHDivider()
-        }
+        TopToolBar(
+            session = session,
+            hazeState = hazeState,
+            onBackClick = onBackClick,
+            onBioClick = onBioClick,
+            onMoreClick = onMoreClick
+        )
 
         if (quickAccessSessions.isNotEmpty()) {
             LazyRow(
@@ -505,6 +421,42 @@ private fun TopBarComponent(
                 contentPadding = PaddingValues(horizontal = 6.dp, vertical = 12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                item {
+                    if (isShowJumpToLatestButton) {
+                        Row(
+                            modifier = Modifier
+                                .clip(CircleShape)
+                                .border(1.dp, MaterialTheme.colorScheme.outline, CircleShape)
+                                .hazeEffect(
+                                    hazeState,
+                                    HazeMaterials.thin()
+                                )
+                                .clickable {
+                                    hapticFeedback.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                    onJumpToLatestClick()
+                                }
+                                .padding(horizontal = 12.dp, vertical = 6.dp)
+                                .animateItem(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            Icon(
+                                painter = painterResource(xcj.app.compose_share.R.drawable.ic_keyboard_arrow_down_24),
+                                modifier = Modifier
+                                    .size(20.dp)
+                                    .clip(CircleShape),
+                                contentDescription = null
+                            )
+                            Text(
+                                modifier = Modifier,
+                                text = stringResource(xcj.app.appsets.R.string.show_latest),
+                                fontSize = 12.sp,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
+                    }
+                }
                 items(quickAccessSessions) { session ->
                     Row(
                         modifier = Modifier
@@ -541,6 +493,70 @@ private fun TopBarComponent(
                 }
             }
         }
+    }
+}
+
+@Composable
+fun TopToolBar(
+    session: Session,
+    hazeState: HazeState,
+    onBackClick: () -> Unit,
+    onBioClick: (Bio) -> Unit,
+    onMoreClick: () -> Unit
+) {
+    Column(
+        modifier = Modifier.hazeEffect(
+            hazeState,
+            HazeMaterials.thin()
+        ),
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .statusBarsPadding(),
+            horizontalArrangement = Arrangement.spacedBy(2.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                painter = painterResource(id = xcj.app.compose_share.R.drawable.ic_arrow_back_24),
+                contentDescription = stringResource(id = xcj.app.appsets.R.string.return_),
+                modifier = Modifier
+                    .clip(CircleShape)
+                    .clickable(onClick = onBackClick)
+                    .padding(12.dp)
+            )
+            Row(
+                modifier = Modifier,
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                UserAvatar2Component(
+                    modifier = Modifier
+                        .size(20.dp)
+                        .clip(MaterialTheme.shapes.extraLarge)
+                        .clickable {
+                            onBioClick(session.imObj.bio)
+                        },
+                    imObj = session.imObj
+                )
+                Text(
+                    text = session.imObj.name,
+                    modifier = Modifier,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+            Spacer(modifier = Modifier.weight(1f))
+            Icon(
+                painterResource(id = xcj.app.compose_share.R.drawable.ic_outline_more_vert_24),
+                stringResource(id = xcj.app.appsets.R.string.more),
+                modifier = Modifier
+                    .clip(CircleShape)
+                    .clickable(onClick = onMoreClick)
+                    .padding(12.dp)
+            )
+        }
+        DesignHDivider()
     }
 }
 
@@ -730,6 +746,12 @@ private fun ImMessageItemCenterComponent(
                 SelectionContainer {
                     ImMessageItemLocationComponent(imMessage, onImMessageContentClick)
                 }
+            }
+        }
+
+        Row {
+            if (imMessage.messageSendInfo?.failureReason != null) {
+                Text(text = stringResource(xcj.app.appsets.R.string.failure), fontSize = 10.sp)
             }
         }
     }
@@ -1177,7 +1199,6 @@ private fun ImMessageItemStartComponent(
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun UserInputComponent(
     modifier: Modifier = Modifier,
@@ -1195,6 +1216,7 @@ private fun UserInputComponent(
     onVoiceResumeClick: () -> Unit,
 ) {
 
+    val hapticFeedback = LocalHapticFeedback.current
 
     var currentInputSelector by rememberSaveable { mutableIntStateOf(InputSelector.NONE) }
 
@@ -1209,50 +1231,117 @@ private fun UserInputComponent(
         }
         BackPressHandler(onBackPressed = dismissKeyboard)
     }
-
+    var expandUserInput by remember { mutableStateOf(false) }
+    val textFieldAdviser by rememberUpdatedState(
+        TextFieldAdviser().apply {
+            makeAdviser(inputTextState)
+        }
+    )
     Column(
-        modifier = modifier
-            .hazeEffect(
-                hazeState,
-                HazeMaterials.thin()
-            )
-            .navigationBarsPadding()
-            .animateContentSize(alignment = Alignment.BottomCenter)
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        UserInputText(
-            textFieldValue = inputTextState,
-            onTextChanged = onTextChanged,
-            // Only show the keyboard if there's no input selector and text field has focus
-            keyboardShown = currentInputSelector == InputSelector.NONE && textFieldFocusState,
-            focusState = textFieldFocusState,
-            // Close extended selector if text field receives focus
-            onTextFieldFocused = { focused ->
-                if (focused) {
-                    currentInputSelector = InputSelector.NONE
-                    resetScroll()
-                }
-                textFieldFocusState = focused
-            },
-            onInputMoreAction = onInputMoreAction,
-            onSendClick = { textFieldAdviser ->
-                val overrideInputSelect = if (textFieldAdviser !is TextFieldAdviser.None) {
-                    textFieldAdviser.inputSelector
-                } else {
-                    currentInputSelector
-                }
-                onSendClick(overrideInputSelect)
-                resetScroll()
-            },
-            onSearchIconClick = onSearchIconClick,
-            onVoiceAction = onVoiceAction
-        )
+        LazyRow(
+            reverseLayout = true,
+            contentPadding = PaddingValues(horizontal = 12.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            items(textFieldAdviser.advises) { advise ->
+                Row(
+                    modifier = Modifier
+                        .clip(CircleShape)
+                        .border(1.dp, MaterialTheme.colorScheme.outline, CircleShape)
+                        .hazeEffect(
+                            hazeState,
+                            HazeMaterials.thin()
+                        )
+                        .clickable {
+                            hapticFeedback.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                            val overrideInputSelect = advise.inputSelector
+                            onSendClick(overrideInputSelect)
+                            resetScroll()
+                        }
+                        .padding(horizontal = 12.dp, vertical = 6.dp)
+                        .animateItem(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    when (advise) {
+                        is TextFieldAdviser.WebContent -> {
+                            Icon(
+                                painter = painterResource(xcj.app.compose_share.R.drawable.ic_outline_language_24),
+                                contentDescription = null
+                            )
+                            Text(text = stringResource(xcj.app.appsets.R.string.send_as_web_content), fontSize = 12.sp)
+                        }
+                        is TextFieldAdviser.BaseUriContent->{
+                            Icon(
+                                painter = painterResource(xcj.app.compose_share.R.drawable.ic_insert_drive_file_24),
+                                contentDescription = null
+                            )
+                            Text(text = stringResource(xcj.app.appsets.R.string.send_as_file), fontSize = 12.sp)
+                        }
+                    }
 
-        AudioRecordSpace(
-            recorderState = recorderState,
-            onStopClick = onVoiceStopClick,
-            onPauseClick = onVoicePauseClick,
-            onResumeClick = onVoiceResumeClick
-        )
+                }
+            }
+        }
+        Column(
+            modifier = Modifier
+                .hazeEffect(
+                    hazeState,
+                    HazeMaterials.thin()
+                )
+                .navigationBarsPadding()
+                .animateContentSize(alignment = Alignment.BottomCenter)
+        ) {
+            UserInputText(
+                textFieldValue = inputTextState,
+                onTextChanged = onTextChanged,
+                textFieldAdviser = textFieldAdviser,
+                expandUserInput = expandUserInput,
+                // Only show the keyboard if there's no input selector and text field has focus
+                keyboardShown = currentInputSelector == InputSelector.NONE && textFieldFocusState,
+                focusState = textFieldFocusState,
+                onExpandUserInputClick = {
+                    hapticFeedback.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                    expandUserInput = !expandUserInput
+                },
+                // Close extended selector if text field receives focus
+                onTextFieldFocused = { focused ->
+                    if (focused) {
+                        currentInputSelector = InputSelector.NONE
+                        resetScroll()
+                    }
+                    textFieldFocusState = focused
+                },
+                onInputMoreAction = { action ->
+                    hapticFeedback.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                    onInputMoreAction(action)
+                },
+                onSendClick = {
+                    hapticFeedback.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                    expandUserInput = false
+                    onSendClick(currentInputSelector)
+                    resetScroll()
+                },
+                onSearchIconClick = { keywords ->
+                    hapticFeedback.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                    onSearchIconClick(keywords)
+                },
+                onVoiceAction = {
+                    hapticFeedback.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                    onVoiceAction()
+                }
+            )
+
+            AudioRecordSpace(
+                recorderState = recorderState,
+                onStopClick = onVoiceStopClick,
+                onPauseClick = onVoicePauseClick,
+                onResumeClick = onVoiceResumeClick
+            )
+        }
     }
 }
 
@@ -1362,17 +1451,19 @@ fun AudioRecordSpace(
     }
 }
 
-@ExperimentalFoundationApi
 @Composable
 private fun UserInputText(
     keyboardType: KeyboardType = KeyboardType.Text,
     textFieldValue: TextFieldValue,
+    textFieldAdviser: TextFieldAdviser,
+    expandUserInput: Boolean,
     keyboardShown: Boolean,
     focusState: Boolean,
+    onExpandUserInputClick: () -> Unit,
     onTextChanged: (TextFieldValue) -> Unit,
     onTextFieldFocused: (Boolean) -> Unit,
     onInputMoreAction: (String) -> Unit,
-    onSendClick: (TextFieldAdviser.Advise) -> Unit,
+    onSendClick: () -> Unit,
     onSearchIconClick: (String) -> Unit,
     onVoiceAction: () -> Unit,
 ) {
@@ -1381,20 +1472,13 @@ private fun UserInputText(
 
     val activity = context as ComponentActivity
 
-    var expandUserInput by remember { mutableStateOf(false) }
 
     var userInputTargetHeight = getUserInputHeight(activity, expandUserInput)
-
-    val hapticFeedback = LocalHapticFeedback.current
 
     val userInputHeightState by animateDpAsState(
         targetValue = userInputTargetHeight,
         animationSpec = tween()
     )
-
-    val textFieldAdviser = remember {
-        TextFieldAdviser()
-    }
 
     Column(
         modifier = Modifier
@@ -1423,7 +1507,6 @@ private fun UserInputText(
                 BasicTextField(
                     value = textFieldValue,
                     onValueChange = {
-                        textFieldAdviser.makeAdviser(it)
                         onTextChanged(it)
                     },
                     modifier = Modifier
@@ -1438,9 +1521,7 @@ private fun UserInputText(
                         },
                     keyboardActions = KeyboardActions(
                         onSend = {
-                            hapticFeedback.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                            expandUserInput = false
-                            onSendClick(TextFieldAdviser.None)
+                            onSendClick()
                         }
                     ),
                     keyboardOptions = KeyboardOptions(
@@ -1495,7 +1576,6 @@ private fun UserInputText(
                         .clip(CircleShape)
                         .clickable(
                             onClick = {
-                                hapticFeedback.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                                 onInputMoreAction("IM_CONTENT_SELECT_REQUEST")
                             }
                         )
@@ -1509,7 +1589,6 @@ private fun UserInputText(
                         .clip(CircleShape)
                         .combinedClickableSingle(
                             onClick = {
-                                hapticFeedback.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                                 onVoiceAction()
                             }
                         )
@@ -1535,27 +1614,27 @@ private fun UserInputText(
                     IconButton(
                         modifier = Modifier,
                         onClick = {
-                            hapticFeedback.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                            expandUserInput = !expandUserInput
+                            onExpandUserInputClick()
                         },
                         colors = IconButtonDefaults.iconButtonColors(
                             containerColor = MaterialTheme.colorScheme.primaryContainer
                         )
                     ) {
-                        val expandIconRes = if (expandUserInput) {
-                            xcj.app.compose_share.R.drawable.ic_round_close_fullscreen_24
-                        } else {
-                            xcj.app.compose_share.R.drawable.ic_open_in_full_24px
-                        }
+
                         AnimatedContent(
-                            targetState = expandIconRes,
+                            targetState = expandUserInput,
                             transitionSpec = {
                                 fadeIn() togetherWith fadeOut()
                             },
                             contentAlignment = Alignment.Center
-                        ) { targetIcon ->
+                        ) { targetExpandUserInput ->
+                            val expandIconRes = if (targetExpandUserInput) {
+                                xcj.app.compose_share.R.drawable.ic_round_close_fullscreen_24
+                            } else {
+                                xcj.app.compose_share.R.drawable.ic_open_in_full_24px
+                            }
                             Icon(
-                                painter = painterResource(id = targetIcon),
+                                painter = painterResource(id = expandIconRes),
                                 contentDescription = stringResource(id = xcj.app.appsets.R.string.send)
                             )
                         }
@@ -1563,7 +1642,6 @@ private fun UserInputText(
                     IconButton(
                         modifier = Modifier,
                         onClick = {
-                            hapticFeedback.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                             onSearchIconClick(textFieldValue.text)
                         },
                         colors = IconButtonDefaults.iconButtonColors(
@@ -1575,25 +1653,11 @@ private fun UserInputText(
                             contentDescription = stringResource(id = xcj.app.appsets.R.string.search)
                         )
                     }
-                    when (textFieldAdviser.advise.value) {
-                        is TextFieldAdviser.WebContent -> {
-                            FilledTonalButton(
-                                onClick = {
-                                    hapticFeedback.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                    expandUserInput = false
-                                    onSendClick(textFieldAdviser.advise.value)
-                                }
-                            ) {
-                                Text("Send as web content", fontSize = 12.sp)
-                            }
-                        }
-                    }
+
                     IconButton(
                         modifier = Modifier,
                         onClick = {
-                            hapticFeedback.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                            expandUserInput = false
-                            onSendClick(TextFieldAdviser.None)
+                            onSendClick()
                         },
                         colors = IconButtonDefaults.iconButtonColors(
                             containerColor = MaterialTheme.colorScheme.primaryContainer
@@ -1850,18 +1914,43 @@ class TextFieldAdviser {
         override var inputSelector: Int = InputSelector.HTML
     }
 
-    private val _advise: MutableState<Advise> = mutableStateOf(None)
-    val advise: MutableState<Advise> = _advise
-
-    fun makeAdviser(textFieldValue: TextFieldValue) {
-        val advise = analysis(textFieldValue)
-        _advise.value = advise
+    data class BaseUriContent(val uri: String, val tips: String? = null) : Advise() {
+        override var inputSelector: Int = InputSelector.FILE
     }
 
-    fun analysis(textFieldValue: TextFieldValue): Advise {
+    data class ImageUriContent(val uri: String, val tips: String? = null) : Advise() {
+        override var inputSelector: Int = InputSelector.IMAGE
+    }
+
+    data class VideoUriContent(val uri: String, val tips: String? = null) : Advise() {
+        override var inputSelector: Int = InputSelector.VIDEO
+    }
+
+    data class FileUriContent(val uri: String, val tips: String? = null) : Advise() {
+        override var inputSelector: Int = InputSelector.FILE
+    }
+
+    data class MusicUriContent(val uri: String, val tips: String? = null) : Advise() {
+        override var inputSelector: Int = InputSelector.MUSIC
+    }
+
+    private val _advise: MutableList<Advise> = mutableListOf(None)
+    val advises: List<Advise> = _advise
+
+    fun makeAdviser(textFieldValue: TextFieldValue) {
+        _advise.clear()
+        val advises = analysis(textFieldValue)
+        _advise.addAll(advises)
+    }
+
+    fun analysis(textFieldValue: TextFieldValue): List<Advise> {
+        val results = mutableListOf<Advise>()
         if (textFieldValue.text.startWithHttpSchema()) {
-            return WebContent(textFieldValue.text)
+            results.add(WebContent(textFieldValue.text))
         }
-        return None
+        if (textFieldValue.text.startsWith("content://") || textFieldValue.text.startsWith("file://")) {
+            results.add(BaseUriContent(textFieldValue.text))
+        }
+        return results
     }
 }

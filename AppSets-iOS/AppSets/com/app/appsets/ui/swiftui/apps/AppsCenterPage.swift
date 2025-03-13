@@ -40,6 +40,7 @@ struct AppsCenterPage: View {
                 .frame(maxWidth: 78)
                 .font(.system(size: 12))
                 .lineLimit(2)
+                .multilineTextAlignment(.center)
         }.padding(.init(top: 12, leading: 12, bottom: 12, trailing: 12)).onTapGesture {
             onBioClickListener(application)
         }
