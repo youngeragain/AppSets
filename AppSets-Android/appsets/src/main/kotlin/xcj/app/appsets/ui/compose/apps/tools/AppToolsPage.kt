@@ -33,6 +33,7 @@ const val TOOL_TYPE_AppSets_Proxy = "AppSets_Proxy"
 const val TOOL_TYPE_AppSets_Launcher = "AppSets_Launcher"
 const val TOOL_TYPE_AppSets_Intent_Caller = "AppSets_Intent_Caller"
 const val TOOL_TYPE_AppSets_File_Manager = "AppSets_File_Manager"
+const val TOOL_TYPE_AppSets_Graphic = "AppSets_Graphic"
 
 
 data class AppTool(
@@ -102,6 +103,14 @@ fun generateAppToolList(): List<AppTool> {
                     xcj.app.appsets.R.string.file_manager,
                     xcj.app.appsets.R.string.file_manager_description,
                     TOOL_TYPE_AppSets_File_Manager
+                )
+            )
+            add(
+                AppTool(
+                    xcj.app.compose_share.R.drawable.ic_square_foot_24,
+                    xcj.app.appsets.R.string.graphic,
+                    xcj.app.appsets.R.string.graphic_description,
+                    TOOL_TYPE_AppSets_Graphic
                 )
             )
             add(

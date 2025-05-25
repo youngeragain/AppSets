@@ -6,8 +6,10 @@ import android.app.Service
 import android.content.BroadcastReceiver
 import android.content.ComponentName
 import android.content.ContentResolver
+import android.content.ContentUris
 import android.content.Context
 import android.content.pm.PackageManager
+import android.database.Cursor
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -91,7 +93,9 @@ suspend fun Context.getSystemFileUris(
         else -> throw UnsupportedOperationException()
     } ?: return@withContext null
     val projections: Array<String> = arrayOf(
+        MediaStore.Files.FileColumns._ID,
         MediaStore.MediaColumns.DISPLAY_NAME,
+        MediaStore.MediaColumns.MIME_TYPE,
         MediaStore.MediaColumns.SIZE,
         MediaStore.MediaColumns.DATA,
         MediaStore.MediaColumns.DATE_ADDED
@@ -138,40 +142,76 @@ suspend fun Context.getSystemFileUris(
         while (it.moveToNext()) {
             val mediaStoreDataUri = MediaStoreDataUri()
             projections.forEach { projection ->
-                val index = it.getColumnIndex(projection)
-                if (index != -1) {
-                    when (projection) {
-                        MediaStore.MediaColumns.DATA -> {
-                            val path = it.getString(index)
-                            if (!path.isNullOrEmpty()) {
-                                mediaStoreDataUri.uri = Uri.fromFile(File(path))
-                            }
-                        }
+                val index = it.getColumnIndexOrThrow(projection)
+                when (projection) {
+                    MediaStore.Files.FileColumns._ID -> {
+                        mediaStoreDataUri.id = it.getString(index)
+                    }
 
-                        MediaStore.MediaColumns.DISPLAY_NAME -> {
-                            mediaStoreDataUri.displayName = it.getString(index)
+                    MediaStore.MediaColumns.DATA -> {
+                        val path = it.getString(index)
+                        if (!path.isNullOrEmpty()) {
+                            mediaStoreDataUri.uri = Uri.fromFile(File(path))
+                            mediaStoreDataUri.uri =
+                                getPath(it)
                         }
+                    }
 
-                        MediaStore.MediaColumns.SIZE -> {
-                            val size = it.getLong(index)
-                            mediaStoreDataUri.size = size
-                            mediaStoreDataUri.sizeReadable =
-                                ByteUtil.getNetFileSizeDescription(size)
-                        }
+                    MediaStore.MediaColumns.DISPLAY_NAME -> {
+                        mediaStoreDataUri.displayName = it.getString(index)
+                    }
 
-                        MediaStore.MediaColumns.DATE_ADDED -> {
-                            mediaStoreDataUri.date = it.getString(index)
-                        }
+                    MediaStore.MediaColumns.SIZE -> {
+                        val size = it.getLong(index)
+                        mediaStoreDataUri.size = size
+                        mediaStoreDataUri.sizeReadable =
+                            ByteUtil.getNetFileSizeDescription(size)
+                    }
+
+                    MediaStore.MediaColumns.DATE_ADDED -> {
+                        mediaStoreDataUri.date = it.getString(index)
                     }
                 }
             }
-
-            fileUris.add(mediaStoreDataUri)
+            if (mediaStoreDataUri.size != 0L) {
+                fileUris.add(mediaStoreDataUri)
+            } else {
+                PurpleLogger.current.d(
+                    TAG,
+                    "getSystemFileUris, mediaStoreDataUri size is 0, $mediaStoreDataUri"
+                )
+            }
         }
         return@withContext fileUris
     }
 
     return@withContext null
+}
+
+fun getPath(cursor: Cursor): Uri? {
+    val idColumnIndex = cursor.getColumnIndex(MediaStore.Files.FileColumns._ID)
+    if (idColumnIndex == -1) {
+        return null
+    }
+    val id: Long = cursor.getLong(idColumnIndex)
+    val mimeTypeColumnIndex = cursor.getColumnIndex(MediaStore.MediaColumns.MIME_TYPE)
+    if (mimeTypeColumnIndex == -1) {
+        return null
+    }
+    val mimeType: String? = cursor.getString(mimeTypeColumnIndex)
+    val contentUri: Uri
+
+    if (mimeType?.startsWith("image") == true) {
+        contentUri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI
+    } else if (mimeType?.startsWith("video") == true) {
+        contentUri = MediaStore.Video.Media.EXTERNAL_CONTENT_URI
+    } else {
+        // ?
+        contentUri = MediaStore.Files.getContentUri("external")
+    }
+
+    val uri = ContentUris.withAppendedId(contentUri, id)
+    return uri
 }
 
 fun Context.getScreenWidthHeight(): Pair<Int, Int> {
@@ -213,12 +253,9 @@ suspend fun Context.queryUriFileName(uri: Uri): String? = withContext(Dispatcher
         if (!moveToNext) {
             return@withContext null
         }
-        val projection = projections.first()
-        val index = it.getColumnIndexOrThrow(projection)
-        if (index != -1) {
-            val name = it.getString(index)
-            return@withContext name
-        }
+        val index = it.getColumnIndexOrThrow(MediaStore.Files.FileColumns.DISPLAY_NAME)
+        val name = it.getString(index)
+        return@withContext name
     }
     return@withContext null
 }

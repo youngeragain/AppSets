@@ -47,7 +47,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -1252,21 +1251,20 @@ fun navigateWithBundle(
     navController: NavHostController,
     route: String,
     bundleCreator: () -> Bundle
-): Boolean {
+) {
     val destinationId = navController.findDestination(route)?.id
     if (destinationId == null) {
         PurpleLogger.current.d(
             TAG,
             "navigateWithBundle, route:$route, destinationId is null, return"
         )
-        return false
+        return
     }
     val navDirections: NavDirections = object : NavDirections {
         override val actionId: Int = destinationId
         override val arguments: Bundle = bundleCreator()
     }
     navController.navigate(navDirections)
-    return true
 }
 
 @SuppressLint("RestrictedApi")

@@ -436,4 +436,8 @@
     <string name="failure">Failure</string>
     <string name="send_as_web_content">Send as web content</string>
     <string name="send_as_file">Send as file</string>
+    <string name="send_as_image">Send as image</string>
+    <string name="send_as_video">Send as video</string>
+    <string name="graphic">Graphic</string>
+    <string name="graphic_description">Run Shader program</string>
 </resources>

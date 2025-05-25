@@ -43,6 +43,12 @@ fun AppToolsDetailsPage(
                     onBackClick = onBackClick
                 )
             }
+            TOOL_TYPE_AppSets_Graphic -> {
+                AppToolGraphicPage(
+                    quickStepContents = quickStepContents,
+                    onBackClick = onBackClick
+                )
+            }
         }
     }
 }

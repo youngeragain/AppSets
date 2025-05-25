@@ -5,10 +5,12 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
+import android.os.PowerManager
 import android.provider.DocumentsContract
 import android.provider.Settings
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
+import androidx.core.net.toUri
 import xcj.app.starter.android.ActivityThemeInterface
 import xcj.app.starter.android.ui.model.PlatformPermissionsUsage
 import xcj.app.starter.android.util.PurpleLogger
@@ -62,10 +64,11 @@ class PlatformUseCase {
             }.onFailure {
                 PurpleLogger.current.d(
                     TAG,
-                    "navigateToExternalSystemAppDetails, go app's system permission page failed, fallback go to app's system details page, ${it.message}"
+                    "navigateToExternalSystemAppDetails, go app's system permission page failed," +
+                            " fallback go to app's system details page, ${it.message}"
                 )
                 val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
-                intent.setData(Uri.parse("package:${context.packageName}"))
+                intent.setData("package:${context.packageName}".toUri())
                 runCatching {
                     context.startActivity(intent)
                 }.onFailure {
@@ -156,6 +159,21 @@ class PlatformUseCase {
             runCatching {
                 activityResultLauncher?.launch(intent)
             }
+        }
+
+        fun isIgnoringBatteryOptimizations(context: Context, permissions: List<String>): Boolean {
+            val powerManager = context.getSystemService(PowerManager::class.java)
+            if (powerManager == null) {
+                return true
+            }
+            val packageName = context.packageName
+            return powerManager.isIgnoringBatteryOptimizations(packageName)
+        }
+
+        fun requestBatteryOptimizationSettings(context: Context) {
+            val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS)
+            intent.setData(("package:" + context.packageName).toUri())
+            context.startActivity(intent)
         }
     }
 }

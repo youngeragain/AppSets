@@ -19,7 +19,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.os.bundleOf
@@ -33,7 +32,6 @@ import xcj.app.appsets.ui.compose.quickstep.QuickStepContent
 import xcj.app.appsets.ui.compose.quickstep.QuickStepContentHandler
 import xcj.app.appsets.ui.compose.quickstep.QuickStepContentHolder
 import xcj.app.appsets.ui.compose.quickstep.TextQuickStepContent
-import xcj.app.compose_share.R
 
 class ToolIntentCallerQuickStepHandler(context: Context) : QuickStepContentHandler(context) {
 
@@ -123,7 +121,7 @@ fun ToolIntentCallerQuickStepHandlerContent(
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Icon(
-                    painter = painterResource(R.drawable.ic_call_made_24),
+                    painter = painterResource(xcj.app.compose_share.R.drawable.ic_call_made_24),
                     contentDescription = null
                 )
                 Column {

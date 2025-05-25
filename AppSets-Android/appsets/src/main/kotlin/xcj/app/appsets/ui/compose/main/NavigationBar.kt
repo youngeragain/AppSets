@@ -41,12 +41,12 @@ import androidx.media3.common.util.UnstableApi
 import xcj.app.appsets.ui.compose.LocalUseCaseOfConversation
 import xcj.app.appsets.ui.compose.LocalUseCaseOfScreen
 import xcj.app.appsets.ui.compose.PageRouteNames
-import xcj.app.compose_share.components.DesignHDivider
 import xcj.app.appsets.ui.compose.custom_component.ImageButtonComponent
 import xcj.app.appsets.ui.compose.search.StandardSearchBar
 import xcj.app.appsets.ui.model.TabAction
 import xcj.app.appsets.ui.model.TabItem
 import xcj.app.appsets.usecase.NavigationUseCase
+import xcj.app.compose_share.components.DesignHDivider
 
 private const val TAG = "NavigationBar"
 
@@ -86,6 +86,7 @@ fun NavigationBar(
         ) {
             StandardNavigationBar(
                 enable,
+                visible,
                 tabItems,
                 onTabClick,
                 onSearchBarClick,
@@ -98,6 +99,7 @@ fun NavigationBar(
 @Composable
 fun StandardNavigationBar(
     enable: Boolean,
+    visible: Boolean,
     tabItems: List<TabItem>,
     onTabClick: (TabItem, TabAction?) -> Unit,
     onSearchBarClick: () -> Unit,
@@ -127,6 +129,7 @@ fun StandardNavigationBar(
                 tabItems.forEach { tab ->
                     TabItem(
                         modifier = Modifier,
+                        hostVisible = visible,
                         naviTabItem = tab,
                         onTabClick = onTabClick
                     )
@@ -146,6 +149,7 @@ fun StandardNavigationBar(
 @Composable
 fun TabItem(
     modifier: Modifier = Modifier,
+    hostVisible: Boolean,
     naviTabItem: TabItem,
     onTabClick: (TabItem, TabAction?) -> Unit
 ) {
@@ -173,7 +177,14 @@ fun TabItem(
                 }
             }
         }
-        if (naviTabItem.isSelect) {
+        //todo bug
+        var itemIsSelectOverride = if (hostVisible) {
+            naviTabItem.isSelect
+        } else {
+            true
+        }
+
+        if (itemIsSelectOverride) {
             Spacer(modifier = Modifier.width(8.dp))
             Column {
                 Row(

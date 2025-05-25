@@ -82,7 +82,7 @@ object LocalAccountManager {
             PurpleLogger.current.d(TAG, "restoreLoginStateIfNeeded, token is nullOrEmpty, return")
             return
         }
-        PurpleLogger.current.d(TAG, "restoreLoginStateIfNeeded:token:$token")
+        PurpleLogger.current.d(TAG, "restoreLoginStateIfNeeded, token:$token")
 
         val userInfoJsonString = MySharedPreferences.getString(SPK_USER_INFO)
         runCatching {

@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
+import xcj.app.starter.android.usecase.PlatformUseCase
 import xcj.app.starter.android.util.PurpleLogger
 
 data class PlatformPermissionsUsage(
@@ -45,8 +46,9 @@ data class PlatformPermissionsUsage(
             description: String,
             usage: String,
             usageUri: Uri?,
+            checker: (context: Context, permissions: List<String>) -> Boolean = ::hasPlatformPermissions
         ): PlatformPermissionsUsage {
-            val hasPlatformPermissions = hasPlatformPermissions(
+            val hasPlatformPermissions = checker(
                 context,
                 androidDefinitionNames
             )
@@ -189,7 +191,8 @@ data class PlatformPermissionsUsage(
                         null,
                         context.getString(xcj.app.starter.R.string.ignore_battery_optimizations_permission_tips),
                         context.getString(xcj.app.starter.R.string.ignore_battery_optimizations_app_usage_des),
-                        null
+                        null,
+                        checker = PlatformUseCase::isIgnoringBatteryOptimizations
                     )
                 )
             }

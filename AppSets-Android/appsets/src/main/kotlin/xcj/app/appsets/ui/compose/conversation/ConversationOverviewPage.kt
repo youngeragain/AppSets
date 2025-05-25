@@ -4,9 +4,14 @@ import android.content.res.Configuration
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandIn
+import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutHorizontally
@@ -484,13 +489,11 @@ fun ConversationOverviewTabs(
         Spacer(modifier = Modifier.windowInsetsTopHeight(WindowInsets.statusBars))
         AnimatedVisibility(
             visible = isShowAddActions,
-            enter = slideInVertically(
-                animationSpec = tween(250),
-                initialOffsetY = { 0 }
+            enter = expandVertically(
+                animationSpec = tween(),
             ) + fadeIn(),
-            exit = slideOutVertically(
-                animationSpec = tween(200),
-                targetOffsetY = { 0 }
+            exit = shrinkVertically(
+                animationSpec = tween(),
             ),
             content = {
                 ConversationOverviewAddActionsComponent(

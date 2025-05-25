@@ -26,23 +26,24 @@ import xcj.app.appsets.constants.Constants
 import xcj.app.appsets.ui.compose.LocalNavHostController
 import xcj.app.appsets.ui.compose.PageRouteNames
 import xcj.app.appsets.ui.compose.apps.tools.TOOL_TYPE
-import xcj.app.appsets.ui.compose.apps.tools.TOOL_TYPE_AppSets_Transform
+import xcj.app.appsets.ui.compose.apps.tools.TOOL_TYPE_AppSets_Graphic
+import xcj.app.appsets.ui.compose.apps.tools.TOOL_TYPE_AppSets_Intent_Caller
 import xcj.app.appsets.ui.compose.main.navigateWithBundle
 import xcj.app.appsets.ui.compose.quickstep.QuickStepContent
 import xcj.app.appsets.ui.compose.quickstep.QuickStepContentHandler
 import xcj.app.appsets.ui.compose.quickstep.QuickStepContentHolder
 import xcj.app.appsets.ui.compose.quickstep.TextQuickStepContent
 
-class ToolContentTransformQuickStepHandler(context: Context) : QuickStepContentHandler(context) {
+class ToolGraphicQuickStepHandler(context: Context) : QuickStepContentHandler(context) {
 
     private var mQuickStepContentHolder: QuickStepContentHolder? = null
 
     override fun getName(): String {
-        return context.getString(xcj.app.appsets.R.string.transform_content)
+        return context.getString(xcj.app.appsets.R.string.graphic)
     }
 
     override fun getDescription(): String {
-        return context.getString(xcj.app.appsets.R.string.transform_content)
+        return context.getString(xcj.app.appsets.R.string.graphic_description)
     }
 
     override fun getCategory(): String {
@@ -63,7 +64,7 @@ class ToolContentTransformQuickStepHandler(context: Context) : QuickStepContentH
     override fun getContent(onClick: () -> Unit): @Composable (() -> Unit) {
         val contentCompose = @Composable {
             val navController = LocalNavHostController.current
-            ToolContentTransformQuickStepHandlerContent(
+            ToolGraphicQuickStepHandlerContent(
                 name = getName(),
                 description = getDescription(),
                 onClick = {
@@ -74,14 +75,14 @@ class ToolContentTransformQuickStepHandler(context: Context) : QuickStepContentH
                     }
 
                     if (quickStepContents == null) {
-                        return@ToolContentTransformQuickStepHandlerContent
+                        return@ToolGraphicQuickStepHandlerContent
                     }
                     navigateWithBundle(
                         navController,
                         PageRouteNames.AppToolsDetailsPage,
                         bundleCreator = {
                             bundleOf().apply {
-                                putString(TOOL_TYPE, TOOL_TYPE_AppSets_Transform)
+                                putString(TOOL_TYPE, TOOL_TYPE_AppSets_Graphic)
                                 putParcelableArrayList(
                                     Constants.QUICK_STEP_CONTENT,
                                     quickStepContents
@@ -98,9 +99,9 @@ class ToolContentTransformQuickStepHandler(context: Context) : QuickStepContentH
 }
 
 @Composable
-fun ToolContentTransformQuickStepHandlerContent(
+fun ToolGraphicQuickStepHandlerContent(
     name: String,
-    description:String,
+    description: String,
     onClick: () -> Unit
 ) {
     Column(
@@ -121,7 +122,7 @@ fun ToolContentTransformQuickStepHandlerContent(
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Icon(
-                    painter = painterResource(xcj.app.compose_share.R.drawable.ic_outline_qr_code_24),
+                    painter = painterResource(xcj.app.compose_share.R.drawable.ic_call_made_24),
                     contentDescription = null
                 )
                 Column {

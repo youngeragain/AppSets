@@ -11,8 +11,9 @@ abstract class AnyStateViewModel : ViewModel(), AnyStateProvider {
 
     companion object {
         private const val TAG = "AnyStateViewModel"
-        const val NAME_BOTTOM_SHEET_COMPOSE_STATE = "bottomSheetContainerComposeState"
-        const val NAME_IMMERSE_CONTENT_COMPOSE_STATE = "immerseContentComposeState"
+        private const val NAME_BOTTOM_SHEET_COMPOSE_STATE = "bottomSheetContainerComposeState"
+        private const val NAME_IMMERSE_CONTENT_COMPOSE_STATE = "immerseContentComposeState"
+
         fun AnyStateProvider.bottomSheetState(): ComposeContainerState {
             return provideState(NAME_BOTTOM_SHEET_COMPOSE_STATE)
         }

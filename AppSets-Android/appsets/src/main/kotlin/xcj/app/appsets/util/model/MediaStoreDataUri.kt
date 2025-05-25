@@ -8,7 +8,14 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import xcj.app.starter.android.util.PurpleLogger
 
-class MediaStoreDataUri() : UriProvider {
+data class MediaStoreDataUri(
+    var id: String? = null,
+    var uri: Uri? = null,
+    var date: String? = null,
+    var displayName: String? = null,
+    var size: Long = 0L,
+    var sizeReadable: String? = null
+) : UriProvider {
     companion object {
         private const val TAG = "MediaStoreDataUriWrapper"
         fun fromUri(uri: Uri): MediaStoreDataUri {
@@ -17,12 +24,6 @@ class MediaStoreDataUri() : UriProvider {
             }
         }
     }
-
-    var uri: Uri? = null
-    var date: String? = null
-    var displayName: String? = null
-    var size: Long = 0L
-    var sizeReadable: String? = null
 
     override fun provideUri(): Uri? {
         return uri

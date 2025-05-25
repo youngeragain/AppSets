@@ -436,5 +436,9 @@
     <string name="failure">失败</string>
     <string name="send_as_web_content">以网页发送</string>
     <string name="send_as_file">以文件发送</string>
+    <string name="send_as_image">以图片发送</string>
+    <string name="send_as_video">以视频发送</string>
+    <string name="graphic">图形</string>
+    <string name="graphic_description">运行Shader程序</string>
 
 </resources>

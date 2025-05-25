@@ -25,7 +25,6 @@ import xcj.app.appsets.ui.compose.main.navigateToAppSetsShareActivity
 import xcj.app.appsets.ui.compose.quickstep.QuickStepContent
 import xcj.app.appsets.ui.compose.quickstep.QuickStepContentHandler
 import xcj.app.appsets.ui.compose.quickstep.QuickStepContentHolder
-import xcj.app.compose_share.R
 
 class ToolAppSetsShareQuickStepHandler(context: Context) : QuickStepContentHandler(context) {
 
@@ -97,7 +96,7 @@ fun ToolAppSetsShareQuickStepHandlerContent(
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Icon(
-                    painter = painterResource(R.drawable.ic_round_swap_calls_24),
+                    painter = painterResource(xcj.app.compose_share.R.drawable.ic_round_swap_calls_24),
                     contentDescription = null
                 )
                 Column {

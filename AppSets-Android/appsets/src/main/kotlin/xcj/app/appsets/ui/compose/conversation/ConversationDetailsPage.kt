@@ -1,7 +1,8 @@
-@file:OptIn(ExperimentalHazeMaterialsApi::class)
+@file:OptIn(ExperimentalHazeMaterialsApi::class, ExperimentalFoundationApi::class)
 
 package xcj.app.appsets.ui.compose.conversation
 
+import android.net.Uri
 import android.os.Build
 import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedCallback
@@ -21,6 +22,9 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.content.ReceiveContentListener
+import androidx.compose.foundation.content.consume
+import androidx.compose.foundation.content.contentReceiver
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
@@ -71,12 +75,13 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
@@ -106,8 +111,10 @@ import dev.chrisbanes.haze.hazeEffect
 import dev.chrisbanes.haze.hazeSource
 import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
 import dev.chrisbanes.haze.materials.HazeMaterials
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import xcj.app.appsets.account.LocalAccountManager
 import xcj.app.appsets.im.Bio
 import xcj.app.appsets.im.ImObj
@@ -219,6 +226,7 @@ fun SessionObjectNormal(
             conversationUseCase.onComposeDispose("page dispose")
         }
     }
+    val context = LocalContext.current
 
     var searchKeywords by remember {
         mutableStateOf("")
@@ -250,9 +258,39 @@ fun SessionObjectNormal(
 
     val hazeState = remember { HazeState() }
 
-    var inputTextState by remember { mutableStateOf(TextFieldValue()) }
+    var inputTextFiledValue by remember { mutableStateOf(TextFieldValue()) }
 
-    val context = LocalContext.current
+    val receivedContents = remember { mutableStateListOf<Uri>() }
+
+    val textFieldAdviser = remember {
+        TextFieldAdviser()
+    }
+
+    LaunchedEffect(inputTextFiledValue, receivedContents.size) {
+        scope.launch {
+            textFieldAdviser.makeAdviser(inputTextFiledValue, receivedContents)
+        }
+    }
+
+    // Remember the ReceiveContentListener object as it is created inside a Composable scope
+    val receiveContentListener = remember {
+        ReceiveContentListener { transferableContent ->
+            PurpleLogger.current.d(TAG, "onReceive")
+            receivedContents.clear()
+            transferableContent.consume { clipDataItem ->
+                val uri = clipDataItem.uri
+                if (uri != null) {
+                    receivedContents.add(uri)
+                    return@consume true
+                } else if (!clipDataItem.text.isNullOrEmpty()) {
+                    inputTextFiledValue = TextFieldValue(clipDataItem.text.toString())
+                    return@consume true
+                } else {
+                    return@consume false
+                }
+            }
+        }
+    }
 
     Box {
         ImMessageListComponent(
@@ -297,24 +335,26 @@ fun SessionObjectNormal(
                 .align(Alignment.BottomCenter)
                 .imePadding(),
             hazeState = hazeState,
-            inputTextState = inputTextState,
+            inputTextState = inputTextFiledValue,
+            textFieldAdviser = textFieldAdviser,
+            receiveContentListener = receiveContentListener,
             recorderState = recorderState,
             onTextChanged = {
-                inputTextState = it
+                inputTextFiledValue = it
                 if (it.text.isEmpty()) {
                     searchKeywords = ""
                 }
             },
             onSendClick = { inputSelector ->
-                if (!inputTextState.text.isEmpty() && !inputTextState.text.isBlank()) {
+                if (!inputTextFiledValue.text.isEmpty() && !inputTextFiledValue.text.isBlank()) {
                     conversationUseCase.onSendMessage(
                         context,
                         inputSelector,
-                        inputTextState.text
+                        inputTextFiledValue.text
                     )
                 }
                 // Reset text field and close keyboard
-                inputTextState = TextFieldValue()
+                inputTextFiledValue = TextFieldValue()
                 // Move scroll to bottom
             },
             onSearchIconClick = { keywords ->
@@ -335,7 +375,12 @@ fun SessionObjectNormal(
             onVoiceAction = onVoiceAction,
             onVoiceStopClick = onVoiceStopClick,
             onVoicePauseClick = onVoicePauseClick,
-            onVoiceResumeClick = onVoiceResumeClick
+            onVoiceResumeClick = onVoiceResumeClick,
+            onRemoveAdviseClick = { advise ->
+                textFieldAdviser.removeAdvise(advise)
+                //remove associate content in receiveContents
+            }
+
         )
 
         ComplexContentSendingIndicator(isShow = complexContentSending)
@@ -1204,6 +1249,8 @@ private fun UserInputComponent(
     modifier: Modifier = Modifier,
     hazeState: HazeState,
     inputTextState: TextFieldValue,
+    textFieldAdviser: TextFieldAdviser,
+    receiveContentListener: ReceiveContentListener,
     recorderState: DesignRecorder.AudioRecorderState,
     onTextChanged: (TextFieldValue) -> Unit,
     onSendClick: (Int) -> Unit,
@@ -1214,6 +1261,7 @@ private fun UserInputComponent(
     onVoiceStopClick: (Boolean) -> Unit,
     onVoicePauseClick: () -> Unit,
     onVoiceResumeClick: () -> Unit,
+    onRemoveAdviseClick: (TextFieldAdviser.Advise) -> Unit,
 ) {
 
     val hapticFeedback = LocalHapticFeedback.current
@@ -1232,11 +1280,8 @@ private fun UserInputComponent(
         BackPressHandler(onBackPressed = dismissKeyboard)
     }
     var expandUserInput by remember { mutableStateOf(false) }
-    val textFieldAdviser by rememberUpdatedState(
-        TextFieldAdviser().apply {
-            makeAdviser(inputTextState)
-        }
-    )
+
+
     Column(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -1272,14 +1317,59 @@ private fun UserInputComponent(
                                 painter = painterResource(xcj.app.compose_share.R.drawable.ic_outline_language_24),
                                 contentDescription = null
                             )
-                            Text(text = stringResource(xcj.app.appsets.R.string.send_as_web_content), fontSize = 12.sp)
+                            Text(
+                                text = stringResource(xcj.app.appsets.R.string.send_as_web_content),
+                                fontSize = 12.sp
+                            )
                         }
-                        is TextFieldAdviser.BaseUriContent->{
+
+                        is TextFieldAdviser.BaseUriContent -> {
                             Icon(
                                 painter = painterResource(xcj.app.compose_share.R.drawable.ic_insert_drive_file_24),
                                 contentDescription = null
                             )
-                            Text(text = stringResource(xcj.app.appsets.R.string.send_as_file), fontSize = 12.sp)
+                            Text(
+                                text = stringResource(xcj.app.appsets.R.string.send_as_file),
+                                fontSize = 12.sp
+                            )
+                        }
+
+                        is TextFieldAdviser.ImageUriContent -> {
+                            Icon(
+                                painter = painterResource(xcj.app.compose_share.R.drawable.ic_photo_24),
+                                contentDescription = null
+                            )
+                            Text(
+                                text = stringResource(xcj.app.appsets.R.string.send_as_image),
+                                fontSize = 12.sp
+                            )
+
+                            Icon(
+                                modifier = Modifier.clickable {
+                                    onRemoveAdviseClick(advise)
+                                },
+                                painter = painterResource(xcj.app.compose_share.R.drawable.ic_round_close_24),
+                                contentDescription = null
+                            )
+
+                        }
+
+                        is TextFieldAdviser.VideoUriContent -> {
+                            Icon(
+                                painter = painterResource(xcj.app.compose_share.R.drawable.ic_slow_motion_video_24),
+                                contentDescription = null
+                            )
+                            Text(
+                                text = stringResource(xcj.app.appsets.R.string.send_as_video),
+                                fontSize = 12.sp
+                            )
+                            Icon(
+                                modifier = Modifier.clickable {
+                                    onRemoveAdviseClick(advise)
+                                },
+                                painter = painterResource(xcj.app.compose_share.R.drawable.ic_round_close_24),
+                                contentDescription = null
+                            )
                         }
                     }
 
@@ -1299,6 +1389,7 @@ private fun UserInputComponent(
                 textFieldValue = inputTextState,
                 onTextChanged = onTextChanged,
                 textFieldAdviser = textFieldAdviser,
+                receiveContentListener = receiveContentListener,
                 expandUserInput = expandUserInput,
                 // Only show the keyboard if there's no input selector and text field has focus
                 keyboardShown = currentInputSelector == InputSelector.NONE && textFieldFocusState,
@@ -1456,6 +1547,7 @@ private fun UserInputText(
     keyboardType: KeyboardType = KeyboardType.Text,
     textFieldValue: TextFieldValue,
     textFieldAdviser: TextFieldAdviser,
+    receiveContentListener: ReceiveContentListener,
     expandUserInput: Boolean,
     keyboardShown: Boolean,
     focusState: Boolean,
@@ -1480,6 +1572,9 @@ private fun UserInputText(
         animationSpec = tween()
     )
 
+    var lastFocusState by remember { mutableStateOf(false) }
+
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -1502,13 +1597,9 @@ private fun UserInputText(
                 Modifier
                     .height(userInputHeightState)
             }
+
             Box(modifier = boxModifier) {
-                var lastFocusState by remember { mutableStateOf(false) }
                 BasicTextField(
-                    value = textFieldValue,
-                    onValueChange = {
-                        onTextChanged(it)
-                    },
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(start = 12.dp)
@@ -1518,7 +1609,12 @@ private fun UserInputText(
                                 onTextFieldFocused(state.isFocused)
                             }
                             lastFocusState = state.isFocused
-                        },
+                        }
+                        .contentReceiver(receiveContentListener),
+                    value = textFieldValue,
+                    onValueChange = {
+                        onTextChanged(it)
+                    },
                     keyboardActions = KeyboardActions(
                         onSend = {
                             onSendClick()
@@ -1906,10 +2002,6 @@ class TextFieldAdviser {
         abstract var inputSelector: Int
     }
 
-    object None : Advise() {
-        override var inputSelector: Int = InputSelector.NONE
-    }
-
     data class WebContent(val uri: String, val tips: String? = null) : Advise() {
         override var inputSelector: Int = InputSelector.HTML
     }
@@ -1934,23 +2026,39 @@ class TextFieldAdviser {
         override var inputSelector: Int = InputSelector.MUSIC
     }
 
-    private val _advise: MutableList<Advise> = mutableListOf(None)
+    private val _advise: MutableList<Advise> = mutableStateListOf()
     val advises: List<Advise> = _advise
 
-    fun makeAdviser(textFieldValue: TextFieldValue) {
+    suspend fun makeAdviser(
+        textFieldValue: TextFieldValue,
+        receivedContents: SnapshotStateList<Uri>
+    ) {
+        val advises = analysis(textFieldValue, receivedContents)
         _advise.clear()
-        val advises = analysis(textFieldValue)
         _advise.addAll(advises)
     }
 
-    fun analysis(textFieldValue: TextFieldValue): List<Advise> {
-        val results = mutableListOf<Advise>()
-        if (textFieldValue.text.startWithHttpSchema()) {
-            results.add(WebContent(textFieldValue.text))
+    suspend fun analysis(
+        textFieldValue: TextFieldValue,
+        receivedContents: SnapshotStateList<Uri>
+    ): List<Advise> =
+        withContext(Dispatchers.IO) {
+            val results = mutableListOf<Advise>()
+            if (textFieldValue.text.startWithHttpSchema()) {
+                results.add(WebContent(textFieldValue.text))
+            }
+            if (textFieldValue.text.startsWith("content://") || textFieldValue.text.startsWith("file://")) {
+                results.add(BaseUriContent(textFieldValue.text))
+            }
+            if (receivedContents.isNotEmpty()) {
+                receivedContents.forEach { uri ->
+                    results.add(ImageUriContent(uri.toString()))
+                }
+            }
+            return@withContext results
         }
-        if (textFieldValue.text.startsWith("content://") || textFieldValue.text.startsWith("file://")) {
-            results.add(BaseUriContent(textFieldValue.text))
-        }
-        return results
+
+    fun removeAdvise(advise: Advise) {
+        _advise.remove(advise)
     }
 }
