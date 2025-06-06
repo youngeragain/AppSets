@@ -17,16 +17,19 @@ open class DesignApplication : Application() {
 
     override fun onTrimMemory(level: Int) {
         super.onTrimMemory(level)
+        //LocalPurple.current.onTrimMemory(level)
         PurpleLogger.current.d(TAG, "onTrimMemory, level:$level")
     }
 
     override fun onLowMemory() {
         super.onLowMemory()
+        //LocalPurple.current.onLowMemory()
         PurpleLogger.current.d(TAG, "onLowMemory")
     }
 
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
+        //LocalPurple.current.onConfigurationChanged(newConfig)
         PurpleLogger.current.d(TAG, "onConfigurationChanged, newConfig:$newConfig")
     }
 }

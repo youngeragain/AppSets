@@ -16,6 +16,8 @@ object RSAHelper {
 
     private const val TAG = "RSAHelper"
 
+    private const val TRANSFORM_DEFAULT = "RSA/ECB/OAEPWithSHA-256AndMGF1Padding"
+
     data class EncryptionResult(
         val privateKeyFile: File,
         val publicKeyFile: File,
@@ -40,10 +42,9 @@ object RSAHelper {
     @JvmStatic
     suspend fun encrypt(
         input: String,
-        transformation: String = "RSA/ECB/OAEPWithSHA-1AndMGF1Padding"
+        transformation: String = TRANSFORM_DEFAULT
     ): EncryptionResult? {
         return withContext(Dispatchers.Default) {
-
 
             runCatching {
                 val keyPairGenerator = KeyPairGenerator.getInstance("RSA")
@@ -81,7 +82,7 @@ object RSAHelper {
     @JvmStatic
     suspend fun decrypt(
         input: DecryptionInput,
-        transformation: String = "RSA/ECB/OAEPWithSHA-1AndMGF1Padding"
+        transformation: String = TRANSFORM_DEFAULT
     ): DecryptionResult? {
         return withContext(Dispatchers.Default) {
             val cipher = Cipher.getInstance(transformation)

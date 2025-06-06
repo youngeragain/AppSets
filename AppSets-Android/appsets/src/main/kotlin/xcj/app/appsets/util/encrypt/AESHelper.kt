@@ -13,37 +13,41 @@ import kotlin.io.encoding.ExperimentalEncodingApi
 object AESHelper {
 
     private const val TAG = "AESHelper"
+    const val ALGORITHM_AES = "AES"
+    const val ALGORITHM_DES = "DES"
+    const val TRANSFORM_AES_DEFAULT = "AES/ECB/PKCS5Padding"
+    const val TRANSFORM_DES_DEFAULT = "DES/ECB/PKCS5Padding"
 
     data class EncryptionResult(
         val password: String,
         val privateKeyFile: File,
         val outContent: String,
         val outContentBase64: String,
-        val encryptTransformation:String
+        val encryptTransformation: String,
     )
 
     data class DecryptionResult(
         val outContent: String,
-        val outContentBase64: String
+        val outContentBase64: String,
     )
 
     data class DecryptionInput(
         val keyFile: File,
         val inputContent: String,
-        val base64Encoded: Boolean
+        val base64Encoded: Boolean,
     )
 
     @OptIn(ExperimentalEncodingApi::class)
     @JvmStatic
     suspend fun encrypt(
         input: String,
-        algorithm: String = "AES",
-        transformation: String = "AES/ECB/PKCS5Padding"
+        algorithm: String = ALGORITHM_AES,
+        transformation: String = TRANSFORM_AES_DEFAULT,
     ): EncryptionResult? {
         return withContext(Dispatchers.Default) {
             runCatching {
                 val uuid = UUID.randomUUID().toString().uppercase()
-                val password = if (algorithm == "AES") {
+                val password = if (algorithm == ALGORITHM_AES) {
                     uuid.substring(0, 16)
                 } else {
                     uuid.substring(0, 8)
@@ -76,8 +80,8 @@ object AESHelper {
     @JvmStatic
     suspend fun decrypt(
         input: DecryptionInput,
-        algorithm: String = "AES",
-        transformation: String = "AES/ECB/PKCS5Padding"
+        algorithm: String = ALGORITHM_AES,
+        transformation: String = TRANSFORM_AES_DEFAULT,
     ): DecryptionResult? {
         return withContext(Dispatchers.Default) {
             val cipher = Cipher.getInstance(transformation)
@@ -89,7 +93,7 @@ object AESHelper {
     private fun tryDecrypt(
         input: DecryptionInput,
         algorithm: String,
-        cipher: Cipher
+        cipher: Cipher,
     ): DecryptionResult? {
         runCatching {
             val keyBytes = Base64.decode(input.keyFile.readBytes())

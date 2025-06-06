@@ -1168,7 +1168,7 @@ fun NaviHostBackHandlerInterceptor(navController: NavHostController) {
 fun DesignNaviHost(
     navController: NavHostController,
     startDestination: String,
-    builder: NavGraphBuilder.() -> Unit
+    builder: NavGraphBuilder.() -> Unit,
 ) {
     NavHost(
         navController = navController,
@@ -1179,8 +1179,8 @@ fun DesignNaviHost(
         exitTransition = {
             scaleOut(targetScale = 1.07f, animationSpec = tween()) + fadeOut(tween())
         },
+        contentAlignment = Alignment.TopCenter,
         builder = builder,
-        contentAlignment = Alignment.TopCenter
     )
     NaviHostBackHandlerInterceptor(navController)
 }
@@ -1188,7 +1188,7 @@ fun DesignNaviHost(
 fun onBioClick(
     context: Context,
     navController: NavHostController,
-    bio: Bio
+    bio: Bio,
 ) {
     if (context !is DesignComponentActivity) {
         return
@@ -1202,7 +1202,8 @@ fun onBioClick(
     }
     when (bio) {
         is UserInfo,
-        is MessageFromInfo -> {
+        is MessageFromInfo,
+            -> {
             navigateToUserInfoPage(context, navController, bio.id)
         }
 
@@ -1231,7 +1232,7 @@ fun onBioClick(
 fun navigateToAppDetailsPage(
     navController: NavHostController,
     appsUseCase: AppsUseCase,
-    application: Application
+    application: Application,
 ) {
     navigateWithBundle(
         navController,
@@ -1250,7 +1251,7 @@ fun navigateToAppDetailsPage(
 fun navigateWithBundle(
     navController: NavHostController,
     route: String,
-    bundleCreator: () -> Bundle
+    bundleCreator: () -> Bundle,
 ) {
     val destinationId = navController.findDestination(route)?.id
     if (destinationId == null) {
@@ -1273,7 +1274,7 @@ fun navigateToCreateAppPage(
     application: Application?,
     platform: PlatForm?,
     version: VersionInfo?,
-    createStep: String
+    createStep: String,
 ): Boolean {
     val destinationId = navController.findDestination(PageRouteNames.CreateAppPage)?.id
     if (destinationId == null) {
@@ -1303,7 +1304,7 @@ fun navigateToCreateAppPage(
 fun navigateToUserInfoPage(
     context: Context,
     navController: NavController,
-    uid: String?
+    uid: String?,
 ) {
     if (uid.isNullOrEmpty()) {
         return
@@ -1326,7 +1327,7 @@ fun <D> showPictureViewDialog(
     anyStateProvider: AnyStateProvider,
     context: Context,
     data: D,
-    dataList: List<D>
+    dataList: List<D>,
 ) {
     val immerseContentState = anyStateProvider.immerseContentState()
     immerseContentState.show {
@@ -1425,7 +1426,7 @@ fun showContentSelectionDialog(
     navController: NavController,
     contextName: String,
     requestKey: String,
-    requestTypes: List<String>? = null
+    requestTypes: List<String>? = null,
 ) {
     val platformPermissionsUsageOfFile =
         PlatformUseCase.providePlatformPermissions(context).firstOrNull {

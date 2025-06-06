@@ -294,6 +294,8 @@ fun NowSpace(navController: NavController) {
     ) {
         val nowSpaceContentUseCase = LocalUseCaseOfNowSpaceContent.current
         val conversationUseCase = LocalUseCaseOfConversation.current
+
+
         val content = nowSpaceContentUseCase.content.value
         val currentSession =
             (conversationUseCase.currentSessionState.value as? SessionState.Normal)?.session

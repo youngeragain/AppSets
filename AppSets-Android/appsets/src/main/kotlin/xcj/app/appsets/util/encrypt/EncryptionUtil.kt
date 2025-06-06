@@ -14,12 +14,20 @@ object EncryptionUtil {
 
     @JvmStatic
     suspend fun encryptWithDES(input: String): AESHelper.EncryptionResult? {
-        return AESHelper.encrypt(input, algorithm = "DES", "DES/ECB/PKCS5Padding")
+        return AESHelper.encrypt(
+            input,
+            algorithm = AESHelper.ALGORITHM_DES,
+            AESHelper.TRANSFORM_DES_DEFAULT
+        )
     }
 
     @JvmStatic
     suspend fun decryptForDES(input: AESHelper.DecryptionInput): AESHelper.DecryptionResult? {
-        return AESHelper.decrypt(input, algorithm = "DES", "DES/ECB/PKCS5Padding")
+        return AESHelper.decrypt(
+            input,
+            algorithm = AESHelper.ALGORITHM_DES,
+            AESHelper.TRANSFORM_DES_DEFAULT
+        )
     }
 
     @JvmStatic

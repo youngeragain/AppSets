@@ -37,7 +37,7 @@ object ApiProvider {
                 url
             }
 
-            AppSetsApiProvider::class.java -> {
+            AppSetsApi::class.java -> {
                 url
             }
 

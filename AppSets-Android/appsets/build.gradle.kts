@@ -127,9 +127,9 @@ dependencies {
         ksp(libs.moshi.kotlin.codegen)
 
         implementation(libs.retrofit.converter.moshi)*/
+    implementation(libs.okhttp.logging)
     implementation(libs.retrofit)
     implementation(libs.retrofit.converter.gson)
-    implementation(libs.okhttp.logging)
     implementation(libs.retrofit.kotlin.coroutines.adapter)
 
     implementation(libs.coil)

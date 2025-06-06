@@ -2,12 +2,12 @@ package xcj.app.appsets.server.repository
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import xcj.app.appsets.server.api.AppSetsApiProvider
+import xcj.app.appsets.server.api.AppSetsApi
 import xcj.app.appsets.server.api.ApiProvider
 import xcj.app.starter.android.util.PurpleLogger
 import xcj.app.starter.foundation.http.DesignResponse
 
-class GenerationAIRepository(private val appSetsApi: AppSetsApiProvider) {
+class GenerationAIRepository(private val appSetsApi: AppSetsApi) {
 
     suspend fun getGenerateContentWithNoneContext(): DesignResponse<String> =
         withContext(Dispatchers.IO) {
@@ -23,7 +23,7 @@ class GenerationAIRepository(private val appSetsApi: AppSetsApiProvider) {
         private const val TAG = "GenerationAIContentRepository"
 
         fun newInstance(): GenerationAIRepository {
-            val api = ApiProvider.provide(AppSetsApiProvider::class.java)
+            val api = ApiProvider.provide(AppSetsApi::class.java)
             val repository = GenerationAIRepository(api)
             return repository
         }

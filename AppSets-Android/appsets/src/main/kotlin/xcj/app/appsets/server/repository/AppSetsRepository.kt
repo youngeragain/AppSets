@@ -5,7 +5,7 @@ import android.net.Uri
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import xcj.app.appsets.account.LocalAccountManager
-import xcj.app.appsets.server.api.AppSetsApiProvider
+import xcj.app.appsets.server.api.AppSetsApi
 import xcj.app.appsets.server.api.ApiProvider
 import xcj.app.appsets.server.model.Application
 import xcj.app.appsets.server.model.AppsWithCategory
@@ -21,7 +21,7 @@ import xcj.app.starter.foundation.http.DesignResponse
 import java.util.UUID
 
 class AppSetsRepository(
-    private val appSetsApi: AppSetsApiProvider
+    private val appSetsApi: AppSetsApi
 ) {
 
     suspend fun getAppToken(): DesignResponse<String> = withContext(Dispatchers.IO) {
@@ -228,7 +228,7 @@ class AppSetsRepository(
 
         fun getInstance(): AppSetsRepository {
             if (INSTANCE == null) {
-                val api = ApiProvider.provide(AppSetsApiProvider::class.java)
+                val api = ApiProvider.provide(AppSetsApi::class.java)
                 val appSetsRepository = AppSetsRepository(api)
                 INSTANCE = appSetsRepository
             }

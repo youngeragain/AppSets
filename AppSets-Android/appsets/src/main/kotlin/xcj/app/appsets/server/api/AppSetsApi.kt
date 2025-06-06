@@ -15,7 +15,7 @@ import xcj.app.appsets.server.model.SpotLight
 import xcj.app.appsets.server.model.UpdateCheckResult
 import xcj.app.starter.foundation.http.DesignResponse
 
-interface AppSetsApiProvider {
+interface AppSetsApi {
 
     @POST("appsets/apptoken/get")
     suspend fun getAppToken(@Body hashMap: Map<String, String?>): DesignResponse<String>
