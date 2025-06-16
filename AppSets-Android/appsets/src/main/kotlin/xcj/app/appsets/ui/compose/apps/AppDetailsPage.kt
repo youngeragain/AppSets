@@ -24,15 +24,14 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsBottomHeight
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SegmentedButton
-import androidx.compose.material3.SegmentedButtonDefaults
-import androidx.compose.material3.SingleChoiceSegmentedButtonRow
+import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -62,9 +61,9 @@ import dev.chrisbanes.haze.materials.HazeMaterials
 import xcj.app.appsets.server.model.Application
 import xcj.app.appsets.server.model.PlatForm
 import xcj.app.appsets.server.model.VersionInfo
+import xcj.app.appsets.ui.compose.custom_component.AnyImage
 import xcj.app.appsets.ui.compose.custom_component.DesignBottomBackButton
 import xcj.app.appsets.ui.compose.custom_component.HideNavBarWhenOnLaunch
-import xcj.app.appsets.ui.compose.custom_component.AnyImage
 import xcj.app.appsets.ui.compose.theme.BigAvatarShape
 import xcj.app.compose_share.components.BackActionTopBar
 
@@ -79,7 +78,7 @@ fun AppDetailsPage(
     onAddVersionInfoClick: (PlatForm) -> Unit,
     onAddScreenshotInfoClick: (PlatForm, VersionInfo) -> Unit,
     onAddDownloadInfoClick: (PlatForm, VersionInfo) -> Unit,
-    onJoinToChatClick: (Application) -> Unit
+    onJoinToChatClick: (Application) -> Unit,
 ) {
 
     HideNavBarWhenOnLaunch()
@@ -216,36 +215,27 @@ fun ApplicationContentComponent(
                 }
             }
         }
-        Box(
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(vertical = 12.dp),
-            contentAlignment = Alignment.Center
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
         ) {
-            SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
-                SegmentedButton(
-                    selected = false,
-                    onClick = onShowApplicationCreatorClick,
-                    shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2),
-                ) {
-                    Text(
-                        modifier = modifier.padding(vertical = 4.dp),
-                        text = stringResource(xcj.app.appsets.R.string.creator_information),
-                        maxLines = 1
-                    )
+            SuggestionChip(
+                onClick = onShowApplicationCreatorClick,
+                shape = CircleShape,
+                label = {
+                    Text(text = stringResource(xcj.app.appsets.R.string.creator_information),)
                 }
-                SegmentedButton(
-                    selected = false,
-                    onClick = onJoinToChatClick,
-                    shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2),
-                ) {
-                    Text(
-                        modifier = modifier.padding(vertical = 4.dp),
-                        text = stringResource(id = xcj.app.appsets.R.string.chat) + "  ",
-                        maxLines = 1
-                    )
+            )
+            SuggestionChip(
+                onClick = onJoinToChatClick,
+                shape = CircleShape,
+                label = {
+                    Text(text = stringResource(id = xcj.app.appsets.R.string.chat))
                 }
-            }
+            )
         }
         Column(
             modifier = Modifier
@@ -443,7 +433,7 @@ fun PlatformInfo(
     platform: PlatForm,
     onAddVersionInfoClick: (PlatForm) -> Unit,
     onAddScreenshotInfoClick: (PlatForm, VersionInfo) -> Unit,
-    onAddDownloadInfoClick: (PlatForm, VersionInfo) -> Unit
+    onAddDownloadInfoClick: (PlatForm, VersionInfo) -> Unit,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text(
@@ -554,7 +544,7 @@ fun PlatformInfo(
 fun VersionInfo(
     version: VersionInfo,
     onAddScreenshotInfoClick: () -> Unit,
-    onAddDownloadInfoClick: () -> Unit
+    onAddDownloadInfoClick: () -> Unit,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
 

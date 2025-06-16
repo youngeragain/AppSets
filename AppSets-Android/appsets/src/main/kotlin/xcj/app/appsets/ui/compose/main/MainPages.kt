@@ -140,7 +140,7 @@ fun MainPages() {
         LocalQuickStepContentHandlerRegistry provides quickStepContentHandlerRegistry
     ) {
         Box(
-            modifier =  Modifier.mainBackgroundHandle()
+            modifier = Modifier.mainBackgroundHandle()
         ) {
             MainScaffoldContainer(navController = navController)
 
@@ -154,7 +154,7 @@ fun MainPages() {
 
 @Composable
 fun ImmerseContentContainer(
-    navController: NavHostController
+    navController: NavHostController,
 ) {
     val context = LocalContext.current
     val anyStateProvider = LocalAnyStateProvider.current
@@ -217,7 +217,7 @@ fun MainScaffoldContainer(navController: NavHostController) {
     Scaffold(
         modifier = Modifier.mainScaffoldHandle(),
         bottomBar = {
-            NavigationBar(
+            NavigationBarContainer(
                 navController = navController,
                 onTabClick = onTabClick
             )
@@ -238,7 +238,7 @@ fun MainScaffoldContainer(navController: NavHostController) {
 }
 
 @Composable
-fun NavigationBar(
+fun NavigationBarContainer(
     navController: NavHostController,
     onTabClick: (TabItem, TabAction?) -> Unit,
 ) {
@@ -247,14 +247,23 @@ fun NavigationBar(
     val qrCodeUseCase = LocalUseCaseOfQRCode.current
     val systemUseCase = LocalUseCaseOfSystem.current
     val anyStateProvider = LocalAnyStateProvider.current
-
+    val enable = systemUseCase.newVersionState.value?.forceUpdate != true
+    val inSearchModel = navController.currentDestination?.route == PageRouteNames.SearchPage
+    val searchUseCase = LocalUseCaseOfSearch.current
     NavigationBar(
         visible = navigationUseCase.barVisible.value,
-        enable = systemUseCase.newVersionState.value?.forceUpdate != true,
+        enable = enable,
+        inSearchModel = inSearchModel,
         tabItems = navigationUseCase.tabItems.value,
         onTabClick = onTabClick,
         onSearchBarClick = {
             navController.navigate(PageRouteNames.SearchPage)
+        },
+        onBackClick = {
+            navController.navigateUp()
+        },
+        onInputContent = {
+            searchUseCase.updateKeywords(it)
         },
         onBioClick = {
             anyStateProvider.bottomSheetState().show {
@@ -344,7 +353,7 @@ fun NowSpace(navController: NavController) {
 @Composable
 fun MessageQuickAccessBar(
     modifier: Modifier,
-    newImMessage: NewImMessage
+    newImMessage: NewImMessage,
 ) {
     Column(
         modifier = modifier

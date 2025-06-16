@@ -26,8 +26,7 @@ fun UserScreens(
     screens: List<ScreenState>,
     onBioClick: (Bio) -> Unit,
     onLoadMore: () -> Unit,
-    onPictureClick: (ScreenMediaFileUrl, List<ScreenMediaFileUrl>) -> Unit,
-    onScreenVideoPlayClick: (ScreenMediaFileUrl) -> Unit,
+    onScreenMediaClick: (ScreenMediaFileUrl, List<ScreenMediaFileUrl>) -> Unit
 ) {
     if (screens.isEmpty()) {
         Box(
@@ -59,9 +58,8 @@ fun UserScreens(
             currentDestinationRoute = PageRouteNames.UserProfilePage,
             screens = screens,
             onBioClick = onBioClick,
-            pictureInteractionFlow = interactionFlow,
-            onPictureClick = onPictureClick,
-            onScreenVideoPlayClick = onScreenVideoPlayClick
+            pictureInteractionFlowCollector = interactionFlow,
+            onScreenMediaClick = onScreenMediaClick,
         )
     }
 }

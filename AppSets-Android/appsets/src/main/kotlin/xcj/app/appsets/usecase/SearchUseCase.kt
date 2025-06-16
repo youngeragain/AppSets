@@ -14,16 +14,16 @@ import kotlinx.coroutines.flow.buffer
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.launch
 import xcj.app.appsets.account.LocalAccountManager
-import xcj.app.starter.server.requestNotNull
 import xcj.app.appsets.server.model.CombineSearchRes
 import xcj.app.appsets.server.repository.SearchRepository
 import xcj.app.appsets.ui.model.SearchResult
 import xcj.app.appsets.ui.model.SearchState
 import xcj.app.compose_share.dynamic.IComposeDispose
+import xcj.app.starter.server.requestNotNull
 
 class SearchUseCase(
     private val coroutineScope: CoroutineScope,
-    private val searchRepository: SearchRepository
+    private val searchRepository: SearchRepository,
 ) : IComposeDispose {
 
     companion object {

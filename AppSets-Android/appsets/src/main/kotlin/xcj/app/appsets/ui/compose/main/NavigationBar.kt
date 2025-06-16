@@ -25,6 +25,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
@@ -32,7 +33,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
@@ -42,10 +42,9 @@ import xcj.app.appsets.ui.compose.LocalUseCaseOfConversation
 import xcj.app.appsets.ui.compose.LocalUseCaseOfScreen
 import xcj.app.appsets.ui.compose.PageRouteNames
 import xcj.app.appsets.ui.compose.custom_component.ImageButtonComponent
-import xcj.app.appsets.ui.compose.search.StandardSearchBar
+import xcj.app.appsets.ui.compose.search.NavigationSearchBar
 import xcj.app.appsets.ui.model.TabAction
 import xcj.app.appsets.ui.model.TabItem
-import xcj.app.appsets.usecase.NavigationUseCase
 import xcj.app.compose_share.components.DesignHDivider
 
 private const val TAG = "NavigationBar"
@@ -54,29 +53,32 @@ private const val TAG = "NavigationBar"
 @UnstableApi
 @Composable
 fun NavigationBarPreview() {
-    val navigationUseCase = remember {
-        NavigationUseCase().apply {
-            initTabItems()
-        }
-    }
-    NavigationBar(
-        visible = true,
-        enable = true,
-        tabItems = navigationUseCase.tabItems.value,
-        onTabClick = { tab, tabAction -> },
-        onSearchBarClick = {},
-        onBioClick = {},
-    )
+    /*   val navigationUseCase = remember {
+           NavigationUseCase().apply {
+               initTabItems()
+           }
+       }
+       NavigationBar(
+           visible = true,
+           enable = true,
+           tabItems = navigationUseCase.tabItems.value,
+           onTabClick = { tab, tabAction -> },
+           onSearchBarClick = {},
+           onBioClick = {},
+       )*/
 }
 
 @Composable
 fun NavigationBar(
     visible: Boolean,
     enable: Boolean,
+    inSearchModel: Boolean,
     tabItems: List<TabItem>,
     onTabClick: (TabItem, TabAction?) -> Unit,
+    onBackClick: () -> Unit,
+    onInputContent: (String) -> Unit,
     onSearchBarClick: () -> Unit,
-    onBioClick: () -> Unit
+    onBioClick: () -> Unit,
 ) {
     Box {
         AnimatedVisibility(
@@ -85,12 +87,15 @@ fun NavigationBar(
             exit = fadeOut() + slideOutVertically(targetOffsetY = { it + it / 20 }),
         ) {
             StandardNavigationBar(
-                enable,
-                visible,
-                tabItems,
-                onTabClick,
-                onSearchBarClick,
-                onBioClick
+                enable = enable,
+                visible = visible,
+                inSearchModel = inSearchModel,
+                tabItems = tabItems,
+                onBackClick = onBackClick,
+                onInputContent = onInputContent,
+                onTabClick = onTabClick,
+                onSearchBarClick = onSearchBarClick,
+                onBioClick = onBioClick
             )
         }
     }
@@ -100,15 +105,19 @@ fun NavigationBar(
 fun StandardNavigationBar(
     enable: Boolean,
     visible: Boolean,
+    inSearchModel: Boolean,
     tabItems: List<TabItem>,
     onTabClick: (TabItem, TabAction?) -> Unit,
+    onBackClick: () -> Unit,
+    onInputContent: (String) -> Unit,
     onSearchBarClick: () -> Unit,
-    onBioClick: () -> Unit
+    onBioClick: () -> Unit,
 ) {
 
     androidx.compose.material3.Surface(
         modifier = Modifier
             .fillMaxWidth()
+            .imePadding()
     ) {
         Column(
             modifier = Modifier
@@ -126,17 +135,25 @@ fun StandardNavigationBar(
                     .animateContentSize(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                tabItems.forEach { tab ->
-                    TabItem(
-                        modifier = Modifier,
-                        hostVisible = visible,
-                        naviTabItem = tab,
-                        onTabClick = onTabClick
-                    )
+                if (
+                    !inSearchModel
+                ) {
+                    tabItems.forEach { tab ->
+                        TabItem(
+                            modifier = Modifier,
+                            hostVisible = visible,
+                            naviTabItem = tab,
+                            onTabClick = onTabClick
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
                 }
-                Spacer(modifier = Modifier.width(8.dp))
-                StandardSearchBar(
+
+                NavigationSearchBar(
                     enable = enable,
+                    inSearchModel = inSearchModel,
+                    onBackClick = onBackClick,
+                    onInputContent = onInputContent,
                     onSearchBarClick = onSearchBarClick,
                     onBioClick = onBioClick
                 )
@@ -151,7 +168,7 @@ fun TabItem(
     modifier: Modifier = Modifier,
     hostVisible: Boolean,
     naviTabItem: TabItem,
-    onTabClick: (TabItem, TabAction?) -> Unit
+    onTabClick: (TabItem, TabAction?) -> Unit,
 ) {
     Row(
         modifier = modifier.animateContentSize(),

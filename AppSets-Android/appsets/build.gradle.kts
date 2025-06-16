@@ -139,6 +139,7 @@ dependencies {
     implementation(libs.coil.video)
 
     implementation(libs.telephoto.zoomable)
+    implementation(libs.telephoto.zoomable.peek.overlay)
 
     implementation(libs.google.barcode.scanning)
     implementation(libs.rabbit.amqp)
@@ -163,4 +164,6 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+
+    implementation(libs.compose.card.stack)
 }

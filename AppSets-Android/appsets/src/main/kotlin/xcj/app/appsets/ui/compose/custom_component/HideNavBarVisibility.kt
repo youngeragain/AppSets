@@ -8,7 +8,7 @@ import xcj.app.appsets.usecase.NavigationUseCase
 
 @Composable
 fun HideNavBarWhenOnLaunch(
-    navigationUseCase: NavigationUseCase = LocalUseCaseOfNavigation.current
+    navigationUseCase: NavigationUseCase = LocalUseCaseOfNavigation.current,
 ) {
     LaunchedEffect(key1 = true) {
         navigationUseCase.barVisible.value = false
@@ -17,7 +17,7 @@ fun HideNavBarWhenOnLaunch(
 
 @Composable
 fun ShowNavBarWhenOnLaunch(
-    navigationUseCase: NavigationUseCase = LocalUseCaseOfNavigation.current
+    navigationUseCase: NavigationUseCase = LocalUseCaseOfNavigation.current,
 ) {
     LaunchedEffect(key1 = true) {
         navigationUseCase.barVisible.value = true
@@ -26,7 +26,7 @@ fun ShowNavBarWhenOnLaunch(
 
 @Composable
 fun ShowNavBarWhenOnDispose(
-    navigationUseCase: NavigationUseCase = LocalUseCaseOfNavigation.current
+    navigationUseCase: NavigationUseCase = LocalUseCaseOfNavigation.current,
 ) {
     DisposableEffect(key1 = true, effect = {
         onDispose {

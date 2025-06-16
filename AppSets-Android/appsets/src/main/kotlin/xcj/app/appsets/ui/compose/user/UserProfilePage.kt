@@ -61,8 +61,7 @@ fun UserProfilePage(
     onFlipFollowClick: (UserInfo) -> Unit,
     onChatClick: (UserInfo) -> Unit,
     onBioClick: (Bio) -> Unit,
-    onPictureClick: (ScreenMediaFileUrl, List<ScreenMediaFileUrl>) -> Unit,
-    onScreenVideoPlayClick: (ScreenMediaFileUrl) -> Unit,
+    onScreenMediaClick: (ScreenMediaFileUrl, List<ScreenMediaFileUrl>) -> Unit,
     onLoadMoreScreens: (String, Boolean) -> Unit,
     onSelectUserAvatarClick: (String) -> Unit,
     onModifyProfileConfirmClick: () -> Unit,
@@ -219,8 +218,7 @@ fun UserProfilePage(
                                     onLoadMore = {
                                         onLoadMoreScreens(userProfileState.userInfo.uid, false)
                                     },
-                                    onPictureClick = onPictureClick,
-                                    onScreenVideoPlayClick = onScreenVideoPlayClick
+                                    onScreenMediaClick = onScreenMediaClick
                                 )
                             }
 

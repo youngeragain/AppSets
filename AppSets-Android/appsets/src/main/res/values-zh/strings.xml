@@ -45,7 +45,7 @@
     <string name="this_app_has_been_pinned_do_you_want_to_unpin_it">此应用已经固定，是否取消固定?</string>
     <string name="search">搜索</string>
     <string name="no_content">没有任何内容</string>
-    <string name="requires_login_to_appsets">需要登录AppSets</string>
+    <string name="requires_login_to_appsets">登录AppSets</string>
     <string name="restricted_content_continue_viewing">受限内容,继续查看</string>
     <string name="restricted_content_continue_viewing_user_to_view_notify">将通知对方你的查看请求，对方同意后即可查看，平台不负责任何责任！是否发送查看请求？</string>
     <string name="an_empty_status">一条空的状态:)</string>
@@ -440,5 +440,7 @@
     <string name="send_as_video">以视频发送</string>
     <string name="graphic">图形</string>
     <string name="graphic_description">运行Shader程序</string>
+    <string name="x_videos">%s个视频</string>
+    <string name="x_pictures">%s张图片</string>
 
 </resources>

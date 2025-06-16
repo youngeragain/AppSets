@@ -91,8 +91,7 @@ fun ScreenDetailsPage(
     onLikesClick: () -> Unit,
     onInputReview: (String) -> Unit,
     onReviewConfirm: () -> Unit,
-    onPictureClick: (ScreenMediaFileUrl, List<ScreenMediaFileUrl>) -> Unit,
-    onScreenVideoPlayClick: (ScreenMediaFileUrl) -> Unit,
+    onScreenMediaClick: (ScreenMediaFileUrl, List<ScreenMediaFileUrl>) -> Unit,
     onPageShowPrevious: () -> Unit,
     onPageShowNext: () -> Unit
 ) {
@@ -170,8 +169,7 @@ fun ScreenDetailsPage(
                     hazeState = hazeState,
                     viewScreenInfo = viewScreenInfo,
                     onBioClick = onBioClick,
-                    onPictureClick = onPictureClick,
-                    onScreenVideoPlayClick = onScreenVideoPlayClick,
+                    onScreenMediaClick = onScreenMediaClick,
                     onPageShowPrevious = onPageShowPrevious,
                     onPageShowNext = onPageShowNext
                 )
@@ -272,8 +270,7 @@ fun ScreenDetailsPager(
     hazeState: HazeState,
     viewScreenInfo: ViewScreenInfo,
     onBioClick: (Bio) -> Unit,
-    onPictureClick: (ScreenMediaFileUrl, List<ScreenMediaFileUrl>) -> Unit,
-    onScreenVideoPlayClick: (ScreenMediaFileUrl) -> Unit,
+    onScreenMediaClick: (ScreenMediaFileUrl, List<ScreenMediaFileUrl>) -> Unit,
     onPageShowPrevious: () -> Unit,
     onPageShowNext: () -> Unit
 ) {
@@ -297,9 +294,8 @@ fun ScreenDetailsPager(
                         currentDestinationRoute = PageRouteNames.ScreenDetailsPage,
                         screenInfo = viewScreenInfo.screenInfo!!,
                         onBioClick = onBioClick,
-                        pictureInteractionFlow = { a, b -> },
-                        onPictureClick = onPictureClick,
-                        onScreenVideoPlayClick = onScreenVideoPlayClick
+                        pictureInteractionFlowCollector = { a, b -> },
+                        onScreenMediaClick = onScreenMediaClick,
                     )
                 }
 

@@ -78,19 +78,28 @@ import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.FileProvider
+import com.msusman.compose.cardstack.Direction
+import com.msusman.compose.cardstack.Duration
+import com.msusman.compose.cardstack.SwipeDirection
+import com.msusman.compose.cardstack.SwipeMethod
 import kotlinx.coroutines.launch
-
+import me.saket.telephoto.zoomable.rememberZoomablePeekOverlayState
+import me.saket.telephoto.zoomable.zoomablePeekOverlay
 import xcj.app.appsets.account.LocalAccountManager
 import xcj.app.appsets.im.Bio
 import xcj.app.appsets.server.model.ScreenInfo
 import xcj.app.appsets.server.model.ScreenMediaFileUrl
 import xcj.app.appsets.ui.compose.PageRouteNames
 import xcj.app.appsets.ui.compose.custom_component.AnyImage
+import xcj.app.appsets.ui.compose.custom_component.CardStack0
+import xcj.app.appsets.ui.compose.custom_component.rememberStackState0
 import xcj.app.appsets.ui.model.PictureStyleState
 import xcj.app.appsets.ui.model.ScreenState
 import xcj.app.appsets.util.saveComposeNodeAsBitmap
 import xcj.app.starter.android.util.PurpleLogger
 import xcj.app.starter.util.ContentType
+import kotlin.math.max
+import kotlin.math.min
 
 private const val TAG = "ScreensList"
 
@@ -101,10 +110,9 @@ fun ScreensList(
     screens: List<ScreenState>,
     scrollableState: ScrollableState,
     onBioClick: (Bio) -> Unit,
-    pictureInteractionFlow: (Interaction, ScreenMediaFileUrl) -> Unit,
-    onPictureClick: (ScreenMediaFileUrl, List<ScreenMediaFileUrl>) -> Unit,
-    onScreenVideoPlayClick: (ScreenMediaFileUrl) -> Unit,
-    headerContent: (@Composable () -> Unit)? = null
+    pictureInteractionFlowCollector: (Interaction, ScreenMediaFileUrl) -> Unit,
+    onScreenMediaClick: (ScreenMediaFileUrl, List<ScreenMediaFileUrl>) -> Unit,
+    headerContent: (@Composable () -> Unit)? = null,
 ) {
     val configuration = LocalConfiguration.current
     if (configuration.orientation == Configuration.ORIENTATION_PORTRAIT) {
@@ -114,9 +122,8 @@ fun ScreensList(
             currentDestinationRoute = currentDestinationRoute,
             screens = screens,
             onBioClick = onBioClick,
-            pictureInteractionFlow = pictureInteractionFlow,
-            onScreenVideoPlayClick = onScreenVideoPlayClick,
-            onPictureClick = onPictureClick,
+            pictureInteractionFlowCollector = pictureInteractionFlowCollector,
+            onScreenMediaClick = onScreenMediaClick,
             headerContent = headerContent
         )
     } else {
@@ -126,9 +133,8 @@ fun ScreensList(
             currentDestinationRoute = currentDestinationRoute,
             screens = screens,
             onBioClick = onBioClick,
-            pictureInteractionFlow = pictureInteractionFlow,
-            onScreenVideoPlayClick = onScreenVideoPlayClick,
-            onPictureClick = onPictureClick,
+            pictureInteractionFlowCollector = pictureInteractionFlowCollector,
+            onScreenMediaClick = onScreenMediaClick,
             headerContent = headerContent
         )
     }
@@ -141,10 +147,9 @@ fun LandscapeScreenList(
     screens: List<ScreenState>,
     scrollableState: ScrollableState,
     onBioClick: (Bio) -> Unit,
-    pictureInteractionFlow: (Interaction, ScreenMediaFileUrl) -> Unit,
-    onPictureClick: (ScreenMediaFileUrl, List<ScreenMediaFileUrl>) -> Unit,
-    onScreenVideoPlayClick: (ScreenMediaFileUrl) -> Unit,
-    headerContent: (@Composable () -> Unit)? = null
+    pictureInteractionFlowCollector: (Interaction, ScreenMediaFileUrl) -> Unit,
+    onScreenMediaClick: (ScreenMediaFileUrl, List<ScreenMediaFileUrl>) -> Unit,
+    headerContent: (@Composable () -> Unit)? = null,
 ) {
     LazyVerticalStaggeredGrid(
         columns = StaggeredGridCells.Fixed(3),
@@ -186,9 +191,8 @@ fun LandscapeScreenList(
                         currentDestinationRoute = currentDestinationRoute,
                         screenInfo = screenState.screenInfo,
                         onBioClick = onBioClick,
-                        pictureInteractionFlow = pictureInteractionFlow,
-                        onPictureClick = onPictureClick,
-                        onScreenVideoPlayClick = onScreenVideoPlayClick
+                        pictureInteractionFlowCollector = pictureInteractionFlowCollector,
+                        onScreenMediaClick = onScreenMediaClick
                     )
                 }
             }
@@ -206,12 +210,12 @@ fun PortraitScreenList(
     screens: List<ScreenState>,
     scrollableState: ScrollableState,
     onBioClick: (Bio) -> Unit,
-    pictureInteractionFlow: (Interaction, ScreenMediaFileUrl) -> Unit,
-    onPictureClick: (ScreenMediaFileUrl, List<ScreenMediaFileUrl>) -> Unit,
-    onScreenVideoPlayClick: (ScreenMediaFileUrl) -> Unit,
-    headerContent: (@Composable () -> Unit)? = null
+    pictureInteractionFlowCollector: (Interaction, ScreenMediaFileUrl) -> Unit,
+    onScreenMediaClick: (ScreenMediaFileUrl, List<ScreenMediaFileUrl>) -> Unit,
+    headerContent: (@Composable () -> Unit)? = null,
 ) {
     LazyColumn(
+        modifier = modifier,
         contentPadding = PaddingValues(horizontal = 12.dp),
         verticalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterVertically),
         state = scrollableState as LazyListState
@@ -259,9 +263,8 @@ fun PortraitScreenList(
                         currentDestinationRoute = currentDestinationRoute,
                         screenInfo = screenState.screenInfo,
                         onBioClick = onBioClick,
-                        pictureInteractionFlow = pictureInteractionFlow,
-                        onPictureClick = onPictureClick,
-                        onScreenVideoPlayClick = onScreenVideoPlayClick
+                        pictureInteractionFlowCollector = pictureInteractionFlowCollector,
+                        onScreenMediaClick = onScreenMediaClick
                     )
                 }
             }
@@ -279,9 +282,8 @@ fun ScreenComponent(
     screenInfo: ScreenInfo,
     pictureStyleState: PictureStyleState = rememberPictureStyleState(),
     onBioClick: (Bio) -> Unit,
-    pictureInteractionFlow: ((Interaction, ScreenMediaFileUrl) -> Unit),
-    onPictureClick: (ScreenMediaFileUrl, List<ScreenMediaFileUrl>) -> Unit,
-    onScreenVideoPlayClick: (ScreenMediaFileUrl) -> Unit,
+    pictureInteractionFlowCollector: ((Interaction, ScreenMediaFileUrl) -> Unit),
+    onScreenMediaClick: (ScreenMediaFileUrl, List<ScreenMediaFileUrl>) -> Unit,
 ) {
     var capturingViewBounds by remember { mutableStateOf<Rect?>(null) }
     Column(
@@ -305,17 +307,23 @@ fun ScreenComponent(
                     pictureStyleState = pictureStyleState,
                     capturingViewBounds = capturingViewBounds
                 )
-                ScreenSectionOfContentPicturesPart(
+
+                ScreenSectionOfContentMediasPart(
                     screenInfo = screenInfo,
-                    pictureStyleState = pictureStyleState,
-                    onPictureClick = onPictureClick,
-                    picInteractionFlow = pictureInteractionFlow
+                    onMediaClick = onScreenMediaClick,
+                    mediaInteractionFlowCollector = pictureInteractionFlowCollector
                 )
-                ScreenSectionOfContentVideosPart(
-                    screenInfo = screenInfo,
-                    pictureStyleState = pictureStyleState,
-                    onScreenVideoPlayClick = onScreenVideoPlayClick
-                )
+                /* ScreenSectionOfContentPicturesPart(
+                     screenInfo = screenInfo,
+                     pictureStyleState = pictureStyleState,
+                     onMediaClick = onScreenMediaClick,
+                     picInteractionFlow = pictureInteractionFlowCollector
+                 )
+                 ScreenSectionOfContentVideosPart(
+                     screenInfo = screenInfo,
+                     pictureStyleState = pictureStyleState,
+                     onMediaClick = onScreenMediaClick
+                 )*/
                 ScreenSectionOfContentTextPart(
                     screenInfo = screenInfo,
                     currentDestinationRoute = currentDestinationRoute
@@ -337,29 +345,12 @@ fun ScreenTopActionsPart(
     currentDestinationRoute: String,
     screenInfo: ScreenInfo,
     pictureStyleState: PictureStyleState,
-    capturingViewBounds: Rect?
+    capturingViewBounds: Rect?,
 ) {
+    val context = LocalContext.current
+    val localView = LocalView.current
+    val scope = rememberCoroutineScope()
     Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-        val noneVideoMediaFileUrlsSize =
-            screenInfo.mediaFileUrls?.filter { !it.isVideoMedia }?.size ?: 0
-        if (noneVideoMediaFileUrlsSize > 1) {
-            SuggestionChip(
-                onClick = {
-                    pictureStyleState.nextStyle()
-                },
-                label = {
-                    Image(
-                        modifier = Modifier.size(18.dp),
-                        painter = painterResource(id = xcj.app.compose_share.R.drawable.ic_web_stories_24),
-                        contentDescription = "RandomPicStyle"
-                    )
-                },
-                shape = CircleShape
-            )
-        }
-        val context = LocalContext.current
-        val localView = LocalView.current
-        val scope = rememberCoroutineScope()
         SuggestionChip(
             onClick = {
                 scope.launch {
@@ -375,12 +366,67 @@ fun ScreenTopActionsPart(
             },
             shape = CircleShape
         )
+        val mediaFileUrls = screenInfo.mediaFileUrls
+        if (!mediaFileUrls.isNullOrEmpty()) {
+            SuggestionChip(
+                onClick = {
+
+                },
+                label = {
+                    val videoCount = mediaFileUrls.sumOf {
+                        if (it.isVideoMedia) {
+                            1.toInt()
+                        } else {
+                            0.toInt()
+                        }
+                    }
+                    val pictureCount = mediaFileUrls.sumOf {
+                        if (!it.isVideoMedia) {
+                            1.toInt()
+                        } else {
+                            0.toInt()
+                        }
+                    }
+                    if (videoCount > 0 && pictureCount > 0) {
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(2.dp)
+                        ) {
+                            Text(
+                                text = stringResource(
+                                    xcj.app.appsets.R.string.x_videos,
+                                    videoCount
+                                ), fontSize = 12.sp
+                            )
+                            Text(
+                                text = stringResource(
+                                    xcj.app.appsets.R.string.x_pictures,
+                                    pictureCount
+                                ), fontSize = 12.sp
+                            )
+                        }
+                    } else if (videoCount > 0) {
+                        Text(
+                            text = stringResource(xcj.app.appsets.R.string.x_videos, videoCount),
+                            fontSize = 12.sp
+                        )
+                    } else if (pictureCount > 0) {
+                        Text(
+                            text = stringResource(
+                                xcj.app.appsets.R.string.x_pictures,
+                                pictureCount
+                            ), fontSize = 12.sp
+                        )
+                    }
+                },
+                shape = CircleShape
+            )
+        }
     }
 }
 
 @Composable
 fun ScreenSectionOfContentAssociatePeoplesPart(
-    screenInfo: ScreenInfo
+    screenInfo: ScreenInfo,
 ) {
     if (!screenInfo.associateUsers.isNullOrEmpty())
         Text(
@@ -393,7 +439,7 @@ fun ScreenSectionOfContentAssociatePeoplesPart(
 
 @Composable
 fun ScreenSectionOfContentAssociateTopicsPart(
-    screenInfo: ScreenInfo
+    screenInfo: ScreenInfo,
 ) {
     if (!screenInfo.associateTopics.isNullOrEmpty())
         Text(
@@ -405,19 +451,58 @@ fun ScreenSectionOfContentAssociateTopicsPart(
 }
 
 @Composable
-fun ScreenSectionOfContentVideosPart(
+fun ScreenSectionOfContentMediasPart(
     screenInfo: ScreenInfo,
-    pictureStyleState: PictureStyleState,
-    onScreenVideoPlayClick: ((ScreenMediaFileUrl) -> Unit)?
+    onMediaClick: ((ScreenMediaFileUrl, List<ScreenMediaFileUrl>) -> Unit)?,
+    mediaInteractionFlowCollector: ((Interaction, ScreenMediaFileUrl) -> Unit)?,
 ) {
-    val videoMediaFileUrl =
-        screenInfo.mediaFileUrls?.firstOrNull { it.isVideoMedia }
+    val mediaFileUrls = screenInfo.mediaFileUrls
+    if (mediaFileUrls.isNullOrEmpty()) {
+        return
+    }
+    val stackState0 = rememberStackState0<ScreenMediaFileUrl>(
+        canDrag = false
+    )
+    CardStack0(
+        modifier = Modifier,
+        stackState0 = stackState0,
+        items = mediaFileUrls,
+        cardElevation = 20.dp,
+        scaleRatio = 0.9f,
+        rotationMaxDegree = 0,
+        displacementThreshold = 60.dp,
+        animationDuration = Duration.NORMAL,
+        visibleCount = min(3, max(1, mediaFileUrls.size)),
+        stackDirection = Direction.Top,
+        swipeDirection = SwipeDirection.HORIZONTAL,
+        swipeMethod = SwipeMethod.AUTOMATIC_AND_MANUAL,
+        shadowElevation = 2.dp,
+        shadowShape = MaterialTheme.shapes.extraLarge,
+        onSwiped = { index ->
+            //Log.d(TAG, "onSwiped index:$index ")
 
-    if (videoMediaFileUrl != null) {
-        Column {
-            Spacer(modifier = Modifier.height(16.dp))
-            val pictureHeightOverride = pictureStyleState.lineHeight.times(1.6f)
-            Box(modifier = Modifier
+        }
+    ) { mediaFileUrl ->
+        MediaCard(
+            mediaFileUrl,
+            onMediaClick = {
+                onMediaClick?.invoke(it, mediaFileUrls)
+            },
+            mediaInteractionFlowCollector
+        )
+    }
+}
+
+@Composable
+fun MediaCard(
+    mediaFileUrl: ScreenMediaFileUrl,
+    onMediaClick: ((ScreenMediaFileUrl) -> Unit)?,
+    mediaInteractionFlowCollector: ((Interaction, ScreenMediaFileUrl) -> Unit)?,
+) {
+    Column {
+        val pictureHeightOverride = 230.dp
+        Box(
+            modifier = Modifier
                 .fillMaxWidth()
                 .height(pictureHeightOverride)
                 .background(
@@ -426,10 +511,95 @@ fun ScreenSectionOfContentVideosPart(
                 )
                 .clip(MaterialTheme.shapes.extraLarge)
                 .clickable {
-                    if (onScreenVideoPlayClick != null) {
-                        onScreenVideoPlayClick(videoMediaFileUrl)
+                    if (onMediaClick != null) {
+                        onMediaClick(mediaFileUrl)
                     }
                 }
+        ) {
+            if (mediaFileUrl.isRestrictedContent) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .clip(MaterialTheme.shapes.extraLarge),
+                    contentAlignment = Alignment.Center
+                ) {
+                    val text = AnnotatedString(
+                        stringResource(xcj.app.appsets.R.string.restricted_content_continue_viewing),
+                        listOf(
+                            AnnotatedString.Range(
+                                SpanStyle(
+                                    color = MaterialTheme.colorScheme.primary,
+                                    fontWeight = FontWeight.Bold
+                                ), 5, 9
+                            )
+                        )
+                    )
+                    Text(text = text, fontSize = 12.sp)
+                }
+            } else {
+                AnyImage(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .clip(MaterialTheme.shapes.extraLarge)
+                        .zoomablePeekOverlay(rememberZoomablePeekOverlayState()),
+                    any = if (mediaFileUrl.isVideoMedia) {
+                        mediaFileUrl.mediaFileCompanionUrl
+                    } else {
+                        mediaFileUrl.mediaFileUrl
+                    }
+                )
+                if (mediaFileUrl.isVideoMedia) {
+                    IconButton(
+                        modifier = Modifier
+                            .padding(12.dp)
+                            .align(Alignment.Center),
+                        onClick = {
+                            if (onMediaClick != null) {
+                                onMediaClick(mediaFileUrl)
+                            }
+                        },
+                        colors = IconButtonDefaults.iconButtonColors(
+                            containerColor = MaterialTheme.colorScheme.tertiaryContainer
+                        )
+                    ) {
+                        Icon(
+                            painter = painterResource(id = xcj.app.compose_share.R.drawable.ic_slow_motion_video_24),
+                            contentDescription = null,
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun ScreenSectionOfContentVideosPart(
+    screenInfo: ScreenInfo,
+    pictureStyleState: PictureStyleState,
+    onMediaClick: ((ScreenMediaFileUrl) -> Unit)?,
+) {
+    val videoMediaFileUrl =
+        screenInfo.mediaFileUrls?.firstOrNull { it.isVideoMedia }
+
+    if (videoMediaFileUrl != null) {
+        Column {
+            Spacer(modifier = Modifier.height(16.dp))
+            val pictureHeightOverride = pictureStyleState.lineHeight.times(1.6f)
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(pictureHeightOverride)
+                    .background(
+                        MaterialTheme.colorScheme.outline,
+                        MaterialTheme.shapes.extraLarge
+                    )
+                    .clip(MaterialTheme.shapes.extraLarge)
+                    .clickable {
+                        if (onMediaClick != null) {
+                            onMediaClick(videoMediaFileUrl)
+                        }
+                    }
             ) {
                 if (videoMediaFileUrl.isRestrictedContent) {
                     Box(
@@ -455,7 +625,8 @@ fun ScreenSectionOfContentVideosPart(
                     AnyImage(
                         modifier = Modifier
                             .fillMaxSize()
-                            .clip(MaterialTheme.shapes.extraLarge),
+                            .clip(MaterialTheme.shapes.extraLarge)
+                            .zoomablePeekOverlay(rememberZoomablePeekOverlayState()),
                         any = videoMediaFileUrl.mediaFileCompanionUrl
                     )
                     IconButton(
@@ -463,8 +634,8 @@ fun ScreenSectionOfContentVideosPart(
                             .padding(12.dp)
                             .align(Alignment.Center),
                         onClick = {
-                            if (onScreenVideoPlayClick != null) {
-                                onScreenVideoPlayClick(videoMediaFileUrl)
+                            if (onMediaClick != null) {
+                                onMediaClick(videoMediaFileUrl)
                             }
                         },
                         colors = IconButtonDefaults.iconButtonColors(
@@ -487,8 +658,8 @@ fun ScreenSectionOfContentVideosPart(
 fun ScreenSectionOfContentPicturesPart(
     screenInfo: ScreenInfo,
     pictureStyleState: PictureStyleState,
-    onPictureClick: ((ScreenMediaFileUrl, List<ScreenMediaFileUrl>) -> Unit)?,
-    picInteractionFlow: ((Interaction, ScreenMediaFileUrl) -> Unit)?
+    onMediaClick: ((ScreenMediaFileUrl, List<ScreenMediaFileUrl>) -> Unit)?,
+    picInteractionFlow: ((Interaction, ScreenMediaFileUrl) -> Unit)?,
 ) {
     val pictureMediaFileUrls =
         screenInfo.mediaFileUrls?.filter { !it.isVideoMedia }
@@ -545,7 +716,7 @@ fun ScreenSectionOfContentPicturesPart(
                         picRowCount,
                         rowIndex,
                         pictureHeightOverride,
-                        onPictureClick,
+                        onMediaClick,
                         picInteractionFlow
                     )
                 }
@@ -557,7 +728,7 @@ fun ScreenSectionOfContentPicturesPart(
 @Composable
 fun ScreenSectionOfContentTextPart(
     screenInfo: ScreenInfo,
-    currentDestinationRoute: String
+    currentDestinationRoute: String,
 ) {
     if (!screenInfo.screenContent.isNullOrEmpty()) {
         val modifier = if (currentDestinationRoute != PageRouteNames.ScreenDetailsPage) {
@@ -601,7 +772,7 @@ fun ScreenSectionOfContentPartAllEmpty(modifier: Modifier) {
 fun ScreenSectionOfUserPart(
     screenInfo: ScreenInfo,
     onBioClick: (Bio) -> Unit,
-    currentDestinationRoute: String
+    currentDestinationRoute: String,
 ) {
     Row(
         modifier = Modifier,
@@ -615,15 +786,16 @@ fun ScreenSectionOfUserPart(
         if (screenInfo.uid == LocalAccountManager.userInfo.uid
             && currentDestinationRoute == PageRouteNames.UserProfilePage
         ) {
-            Box(modifier = Modifier
-                .background(
-                    MaterialTheme.colorScheme.primary,
-                    MaterialTheme.shapes.extraLarge
-                )
-                .clickable {
+            Box(
+                modifier = Modifier
+                    .background(
+                        MaterialTheme.colorScheme.primary,
+                        MaterialTheme.shapes.extraLarge
+                    )
+                    .clickable {
 
-                }
-                .padding(vertical = 6.dp, horizontal = 10.dp)
+                    }
+                    .padding(vertical = 6.dp, horizontal = 10.dp)
             ) {
                 val isPublicStr = if (screenInfo.isPublic == 1) {
                     stringResource(xcj.app.appsets.R.string.public_)
@@ -638,12 +810,13 @@ fun ScreenSectionOfUserPart(
             }
 
         } else {
-            Row(modifier = Modifier
-                .clip(MaterialTheme.shapes.extraLarge)
-                .clickable {
-                    screenInfo.userInfo?.let { onBioClick.invoke(it) }
-                }
-                .padding(6.dp),
+            Row(
+                modifier = Modifier
+                    .clip(MaterialTheme.shapes.extraLarge)
+                    .clickable {
+                        screenInfo.userInfo?.let { onBioClick.invoke(it) }
+                    }
+                    .padding(6.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             )
@@ -674,8 +847,8 @@ fun RowOfScreenPictures(
     rowCount: Int,
     rowIndex: Int,
     picHeight: Dp,
-    onPictureClick: ((ScreenMediaFileUrl, List<ScreenMediaFileUrl>) -> Unit)?,
-    picInteractionFlow: ((Interaction, ScreenMediaFileUrl) -> Unit)? = null,
+    onMediaClick: ((ScreenMediaFileUrl, List<ScreenMediaFileUrl>) -> Unit)?,
+    mediaInteractionFlowCollector: ((Interaction, ScreenMediaFileUrl) -> Unit)? = null,
 ) {
     var sizeOfItem by remember {
         mutableStateOf(IntSize.Zero)
@@ -697,22 +870,28 @@ fun RowOfScreenPictures(
         val smallCornerSize = 0.dp
         mediaFileUrls.forEachIndexed { index, mediaFileUrl ->
             if (mediaFileUrl.mediaType == ContentType.IMAGE) {
+
                 val interactionSource = remember {
-                    MutableInteractionSource()
+                    if (mediaInteractionFlowCollector != null) {
+                        MutableInteractionSource()
+                    } else {
+                        null
+                    }
                 }
-                LaunchedEffect(
-                    key1 = interactionSource,
-                    block = {
-                        interactionSource.interactions.collect { interaction ->
-                            if (picInteractionFlow != null) {
-                                picInteractionFlow(
+                if (mediaInteractionFlowCollector != null) {
+                    LaunchedEffect(
+                        key1 = interactionSource,
+                        block = {
+                            interactionSource?.interactions?.collect { interaction ->
+                                mediaInteractionFlowCollector(
                                     interaction,
                                     mediaFileUrl
                                 )
                             }
                         }
-                    }
-                )
+                    )
+                }
+
                 val shape = getScreenPicShape(
                     mediaFileUrls.size,
                     index,
@@ -723,7 +902,7 @@ fun RowOfScreenPictures(
                 )
                 Surface(
                     onClick = {
-                        onPictureClick?.invoke(mediaFileUrl, allMediaFileUrls)
+                        onMediaClick?.invoke(mediaFileUrl, allMediaFileUrls)
                     },
                     interactionSource = interactionSource,
                     modifier = Modifier
@@ -758,6 +937,7 @@ fun RowOfScreenPictures(
                             modifier = Modifier
                                 .fillMaxSize()
                                 .clip(shape)
+                                .zoomablePeekOverlay(rememberZoomablePeekOverlayState()),
                         )
                     }
                 }
@@ -777,7 +957,7 @@ fun rememberPictureStyleState(): PictureStyleState {
 private fun shareAppSetsUserScreen(
     context: Context,
     capturingViewBounds: Rect?,
-    localView: View
+    localView: View,
 ) {
     val bounds = capturingViewBounds ?: run {
         PurpleLogger.current.d(TAG, "share failure, because bounds is null!")
@@ -818,7 +998,7 @@ private fun getScreenPicShape(
     rowCount: Int,
     rowIndex: Int,
     bigCornerSize: Dp,
-    smallCornerSize: Dp
+    smallCornerSize: Dp,
 ): Shape {
     val topStart = if (index == 0 && rowIndex == 0) {
         bigCornerSize

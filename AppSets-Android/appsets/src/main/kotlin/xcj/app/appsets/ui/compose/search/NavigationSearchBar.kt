@@ -1,6 +1,8 @@
 package xcj.app.appsets.ui.compose.search
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -19,7 +21,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -27,61 +31,97 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-
 import xcj.app.appsets.account.LocalAccountManager
 import xcj.app.appsets.im.BrokerTest
-import xcj.app.appsets.util.ktx.toast
+import xcj.app.appsets.ui.compose.LocalUseCaseOfSearch
 import xcj.app.appsets.ui.compose.custom_component.ImageButtonComponent
 import xcj.app.appsets.ui.model.LoginStatusState
+import xcj.app.appsets.util.ktx.toast
 
-private const val TAG = "StandardSearchBar"
+private const val TAG = "NavigationSearchBar"
 
 @Composable
-fun StandardSearchBar(
+fun NavigationSearchBar(
     enable: Boolean,
+    inSearchModel: Boolean,
+    onBackClick: () -> Unit,
+    onInputContent: (String) -> Unit,
     onSearchBarClick: () -> Unit,
-    onBioClick: () -> Unit
+    onBioClick: () -> Unit,
 ) {
-    val context = LocalContext.current
+    val searchUseCase = LocalUseCaseOfSearch.current
+    val searchState = searchUseCase.searchState.value
+    var sizeOfSearchBar by remember {
+        mutableStateOf(IntSize.Zero)
+    }
     Column {
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Row(
-                modifier = Modifier
-                    .background(
-                        MaterialTheme.colorScheme.outline,
-                        MaterialTheme.shapes.extraLarge
-                    )
-                    .widthIn(min = 100.dp, max = 150.dp)
-                    .height(42.dp)
-                    .clip(MaterialTheme.shapes.extraLarge)
-                    .clickable {
-                        if (!enable) {
-                            context
-                                .getString(xcj.app.appsets.R.string.need_to_update_app)
-                                .toast()
-                        } else {
-                            onSearchBarClick()
-                        }
-                    }
-                    .padding(horizontal = 8.dp),
-                verticalAlignment = Alignment.CenterVertically
+            if (
+                inSearchModel
             ) {
-                Icon(
-                    painter = painterResource(id = xcj.app.compose_share.R.drawable.ic_round_search_24),
-                    contentDescription = stringResource(id = xcj.app.appsets.R.string.search)
+                SearchInputBar(
+                    searchState = searchState,
+                    sizeOfSearchBar = sizeOfSearchBar,
+                    onBackClick = onBackClick,
+                    onInputContent = onInputContent,
+                    searchBarPlaced = {
+                        sizeOfSearchBar = it.size
+                    }
                 )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(stringResource(id = xcj.app.appsets.R.string.search), fontSize = 12.sp)
-                Spacer(modifier = Modifier.width(10.dp))
+            } else {
+                SearchClickableBar(
+                    enable = enable,
+                    onSearchBarClick = onSearchBarClick
+                )
+                LocalAccountUserAvatar(onClick = onBioClick)
             }
-            LocalAccountUserAvatar(onClick = onBioClick)
+
         }
+
         Spacer(modifier = Modifier.height(4.dp))
+    }
+}
+
+@Composable
+fun SearchClickableBar(
+    enable: Boolean,
+    onSearchBarClick: () -> Unit,
+) {
+    val context = LocalContext.current
+    Row(
+        modifier = Modifier
+            .background(
+                MaterialTheme.colorScheme.outline,
+                MaterialTheme.shapes.extraLarge
+            )
+            .widthIn(min = 100.dp, max = 150.dp)
+            .height(42.dp)
+            .clip(MaterialTheme.shapes.extraLarge)
+            .clickable {
+                if (!enable) {
+                    context
+                        .getString(xcj.app.appsets.R.string.need_to_update_app)
+                        .toast()
+                } else {
+                    onSearchBarClick()
+                }
+            }
+            .padding(horizontal = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            painter = painterResource(id = xcj.app.compose_share.R.drawable.ic_round_search_24),
+            contentDescription = stringResource(id = xcj.app.appsets.R.string.search)
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(stringResource(id = xcj.app.appsets.R.string.search), fontSize = 12.sp)
+        Spacer(modifier = Modifier.width(10.dp))
     }
 }
 

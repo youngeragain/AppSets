@@ -2,8 +2,9 @@ package xcj.app.appsets.ui.compose.settings
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -25,6 +26,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -38,7 +40,7 @@ fun AboutPage(
     updateHistory: List<UpdateCheckResult>,
     onBackClick: () -> Unit,
     onHistoryExpandStateChanged: (Boolean) -> Unit,
-    onDispose: () -> Unit
+    onDispose: () -> Unit,
 ) {
     DisposableEffect(key1 = true, effect = {
         onDispose(onDispose)
@@ -61,11 +63,12 @@ fun AboutPage(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth(1f)
-                        .background(
-                            MaterialTheme.colorScheme.secondaryContainer,
+                        .clip(MaterialTheme.shapes.extraLarge)
+                        .border(
+                            1.dp,
+                            MaterialTheme.colorScheme.outline,
                             MaterialTheme.shapes.extraLarge
                         )
-                        .clip(MaterialTheme.shapes.extraLarge)
                         .clickable {
                             historyExpandState = !historyExpandState
                             onHistoryExpandStateChanged(historyExpandState)
@@ -73,13 +76,16 @@ fun AboutPage(
                         .padding(12.dp)) {
                     Text(text = stringResource(xcj.app.appsets.R.string.version_update_history))
                     Spacer(modifier = Modifier.weight(1f))
-                    val resId = if (historyExpandState) {
-                        xcj.app.compose_share.R.drawable.ic_keyboard_arrow_up_24
-                    } else {
-                        xcj.app.compose_share.R.drawable.ic_keyboard_arrow_down_24
-                    }
+                    val rotateState by animateFloatAsState(
+                        if (historyExpandState) {
+                            -180f
+                        } else {
+                            0f
+                        }
+                    )
                     Icon(
-                        painter = painterResource(id = resId),
+                        modifier = Modifier.rotate(rotateState),
+                        painter = painterResource(id = xcj.app.compose_share.R.drawable.ic_keyboard_arrow_down_24),
                         contentDescription = "expand"
                     )
                 }

@@ -3,8 +3,9 @@ project_test = true
 
 [versions]
 agp = "8.10.1"
-kotlin = "2.1.0"
-ksp = "2.1.0-1.0.29"
+composeCardStack = "1.0.1"
+kotlin = "2.1.21"
+ksp = "2.1.21-2.0.2"
 cor-ktx = "1.16.0"
 junit = "4.13.2"
 junit-android = "1.2.1"
@@ -33,10 +34,10 @@ camerax = "1.4.2"
 lifecycle = "2.8.7"
 media3 = "1.7.1"
 moshi = "1.15.2"
-retrofit = "2.11.0"
+retrofit = "3.0.0"
 retrofit2-kotlin-coroutines-adapter = "0.9.2"
-coil = "3.1.0"
-telephoto-zoomable = "0.15.1"
+coil = "3.2.0"
+telephoto-zoomable = "0.16.0"
 slice = "1.1.0-alpha02"
 slice-builder-ktx = "1.0.0-alpha08"
 recyclerview = "1.4.0"
@@ -47,21 +48,22 @@ okhttp = "5.0.0-alpha.16"
 google-barcode-scanning = "17.3.0"
 rabbitmq = "5.25.0"
 zxing = "3.5.3"
-haze = "1.5.0"
+haze = "1.6.4"
 hiltPlugin = "2.55"
 hilt = "2.51.1"
 hilt-lifecycle-viewmodel = "1.0.0-alpha03"
 gson = "2.13.1"
 image-compressor = "3.0.1"
 tencent-cos-lite = "5.9.32"
-jetty-server = "12.0.16"
-netty-all = "4.1.118.Final"
+jetty-server = "12.0.22"
+netty-all = "4.1.112.Final"
 google-web-rtc = "1.0.32006"
 tinder-scarlet = "0.1.12"
-jmdns = "3.6.0"
+jmdns = "3.6.1"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "cor-ktx" }
+compose-card-stack = { module = "com.github.msusman1:compose-card-stack", version.ref = "composeCardStack" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junit-android" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espresso-core" }
@@ -130,6 +132,7 @@ coil-gif = { group = "io.coil-kt.coil3", name = "coil-gif", version.ref = "coil"
 coil-video = { group = "io.coil-kt.coil3", name = "coil-video", version.ref = "coil" }
 
 telephoto-zoomable = { group = "me.saket.telephoto", name = "zoomable", version.ref = "telephoto-zoomable" }
+telephoto-zoomable-peek-overlay = { group = "me.saket.telephoto", name = "zoomable-peek-overlay", version.ref = "telephoto-zoomable" }
 
 google-barcode-scanning = { group = "com.google.mlkit", name = "barcode-scanning", version.ref = "google-barcode-scanning" }
 rabbit-amqp = { group = "com.rabbitmq", name = "amqp-client", version.ref = "rabbitmq" }

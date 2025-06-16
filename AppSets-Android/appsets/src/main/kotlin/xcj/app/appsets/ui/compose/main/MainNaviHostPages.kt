@@ -346,25 +346,20 @@ fun MainNaviHostPages(navController: NavHostController) {
                         onLoadMore = {
                             screensUseCase.loadMore(null, false)
                         },
-                        onPictureClick = { url, urls ->
+                        onScreenMediaClick = { url, urls ->
                             restrictedContentConfirmCallback = {
-                                showPictureViewDialog(
-                                    anyStateProvider,
-                                    context,
-                                    url.mediaFileUrl,
-                                    urls.map { fileUrl -> fileUrl.mediaFileUrl })
+                                if (url.isVideoMedia) {
+                                    navigateToVideoPlaybackActivity(context, url)
+                                } else {
+                                    showPictureViewDialog(
+                                        anyStateProvider,
+                                        context,
+                                        url.mediaFileUrl,
+                                        urls.map { fileUrl -> fileUrl.mediaFileUrl })
+                                }
+
                             }
                             if (url.isRestrictedContent) {
-                                isShowRestrictedContentDialog = true
-                            } else {
-                                restrictedContentConfirmCallback?.invoke()
-                            }
-                        },
-                        onScreenVideoPlayClick = { mediaFileUrl ->
-                            restrictedContentConfirmCallback = {
-                                navigateToVideoPlaybackActivity(context, mediaFileUrl)
-                            }
-                            if (mediaFileUrl.isRestrictedContent) {
                                 isShowRestrictedContentDialog = true
                             } else {
                                 restrictedContentConfirmCallback?.invoke()
@@ -402,25 +397,20 @@ fun MainNaviHostPages(navController: NavHostController) {
                         onReviewConfirm = {
                             screensUseCase.onReviewConfirm(context)
                         },
-                        onPictureClick = { url, urls ->
+                        onScreenMediaClick = { url, urls ->
                             restrictedContentConfirmCallback = {
-                                showPictureViewDialog(
-                                    anyStateProvider,
-                                    context,
-                                    url.mediaFileUrl,
-                                    urls.map { fileUrl -> fileUrl.mediaFileUrl })
+                                if (url.isVideoMedia) {
+                                    navigateToVideoPlaybackActivity(context, url)
+                                } else {
+                                    showPictureViewDialog(
+                                        anyStateProvider,
+                                        context,
+                                        url.mediaFileUrl,
+                                        urls.map { fileUrl -> fileUrl.mediaFileUrl })
+                                }
+
                             }
                             if (url.isRestrictedContent) {
-                                isShowRestrictedContentDialog = true
-                            } else {
-                                restrictedContentConfirmCallback?.invoke()
-                            }
-                        },
-                        onScreenVideoPlayClick = { mediaFileUrl ->
-                            restrictedContentConfirmCallback = {
-                                navigateToVideoPlaybackActivity(context, mediaFileUrl)
-                            }
-                            if (mediaFileUrl.isRestrictedContent) {
                                 isShowRestrictedContentDialog = true
                             } else {
                                 restrictedContentConfirmCallback?.invoke()
@@ -437,10 +427,6 @@ fun MainNaviHostPages(navController: NavHostController) {
             }
 
             composable(PageRouteNames.CreateScreenPage) {
-
-                val quickStepContents =
-                    it.arguments?.getParcelableArrayList<QuickStepContent>(Constants.QUICK_STEP_CONTENT)
-
                 LoginInterceptorPage(
                     navController = navController,
                     navBackStackEntry = it,
@@ -451,6 +437,8 @@ fun MainNaviHostPages(navController: NavHostController) {
                     val screenPostUseCase = LocalUseCaseOfScreenPost.current
                     val systemUseCase = LocalUseCaseOfSystem.current
                     val anyStateProvider = LocalAnyStateProvider.current
+                    val quickStepContents =
+                        it.arguments?.getParcelableArrayList<QuickStepContent>(Constants.QUICK_STEP_CONTENT)
                     CreateScreenPage(
                         quickStepContents = quickStepContents,
                         onBackClick = { shouldRefresh ->
@@ -877,29 +865,29 @@ fun MainNaviHostPages(navController: NavHostController) {
             }
 
             composable(PageRouteNames.SearchPage) {
-                val context = LocalContext.current
-                val searchUseCase = LocalUseCaseOfSearch.current
-                val anyStateProvider = LocalAnyStateProvider.current
                 LoginInterceptorPage(
                     navController = navController,
                     navBackStackEntry = it,
                     onBackClick = navController::navigateUp,
                 ) {
+                    val context = LocalContext.current
+                    val searchUseCase = LocalUseCaseOfSearch.current
+                    val anyStateProvider = LocalAnyStateProvider.current
                     SearchPage(
-                        onBackClick = navController::navigateUp,
-                        onInputContent = { inputContent ->
-                            searchUseCase.updateKeywords(inputContent)
-                        },
                         onBioClick = { bio ->
                             onBioClick(context, navController, bio)
                         },
-                        onPictureClick = { url, urls ->
+                        onScreenMediaClick = { url, urls ->
                             restrictedContentConfirmCallback = {
-                                showPictureViewDialog(
-                                    anyStateProvider,
-                                    context,
-                                    url.mediaFileUrl,
-                                    urls.map { fileUrl -> fileUrl.mediaFileUrl })
+                                if (url.isVideoMedia) {
+                                    navigateToVideoPlaybackActivity(context, url)
+                                } else {
+                                    showPictureViewDialog(
+                                        anyStateProvider,
+                                        context,
+                                        url.mediaFileUrl,
+                                        urls.map { fileUrl -> fileUrl.mediaFileUrl })
+                                }
                             }
                             if (url.isRestrictedContent) {
                                 isShowRestrictedContentDialog = true
@@ -907,17 +895,8 @@ fun MainNaviHostPages(navController: NavHostController) {
                                 restrictedContentConfirmCallback?.invoke()
                             }
                         },
-                        onScreenVideoPlayClick = { mediaFileUrl ->
-                            restrictedContentConfirmCallback = {
-                                navigateToVideoPlaybackActivity(context, mediaFileUrl)
-                            }
-                            if (mediaFileUrl.isRestrictedContent) {
-                                isShowRestrictedContentDialog = true
-                            } else {
-                                restrictedContentConfirmCallback?.invoke()
-                            }
-                        }
-                    )
+
+                        )
                 }
             }
 
@@ -1083,25 +1062,20 @@ fun MainNaviHostPages(navController: NavHostController) {
                         onBioClick = { bio ->
                             onBioClick(context, navController, bio)
                         },
-                        onPictureClick = { url, urls ->
+                        onScreenMediaClick = { url, urls ->
                             restrictedContentConfirmCallback = {
-                                showPictureViewDialog(
-                                    anyStateProvider,
-                                    context,
-                                    url.mediaFileUrl,
-                                    urls.map { fileUrl -> fileUrl.mediaFileUrl })
+                                if (url.isVideoMedia) {
+                                    navigateToVideoPlaybackActivity(context, url)
+                                } else {
+                                    showPictureViewDialog(
+                                        anyStateProvider,
+                                        context,
+                                        url.mediaFileUrl,
+                                        urls.map { fileUrl -> fileUrl.mediaFileUrl })
+                                }
+
                             }
                             if (url.isRestrictedContent) {
-                                isShowRestrictedContentDialog = true
-                            } else {
-                                restrictedContentConfirmCallback?.invoke()
-                            }
-                        },
-                        onScreenVideoPlayClick = { mediaFileUrl ->
-                            restrictedContentConfirmCallback = {
-                                navigateToVideoPlaybackActivity(context, mediaFileUrl)
-                            }
-                            if (mediaFileUrl.isRestrictedContent) {
                                 isShowRestrictedContentDialog = true
                             } else {
                                 restrictedContentConfirmCallback?.invoke()

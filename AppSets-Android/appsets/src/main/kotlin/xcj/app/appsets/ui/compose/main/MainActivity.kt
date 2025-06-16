@@ -22,6 +22,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import xcj.app.appsets.notification.NotificationPusher
+import xcj.app.appsets.ui.compose.LocalPageRouteNameNeedLoggedProvider
 import xcj.app.appsets.ui.compose.theme.AppSetsTheme
 import xcj.app.appsets.ui.viewmodel.MainViewModel
 import xcj.app.appsets.util.SplashScreenHelper
@@ -51,7 +52,6 @@ class MainActivity : DesignComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         SplashScreenHelper.onActivityCreate(this)
-
         setContent {
             AppSetsTheme {
                 // A surface container using the 'background' color from the theme

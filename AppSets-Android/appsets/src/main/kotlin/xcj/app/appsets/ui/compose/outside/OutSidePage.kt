@@ -29,8 +29,7 @@ fun OutSidePage(
     screens: List<ScreenState>,
     onBioClick: (Bio) -> Unit,
     onLoadMore: () -> Unit,
-    onPictureClick: (ScreenMediaFileUrl, List<ScreenMediaFileUrl>) -> Unit,
-    onScreenVideoPlayClick: (ScreenMediaFileUrl) -> Unit,
+    onScreenMediaClick: (ScreenMediaFileUrl, List<ScreenMediaFileUrl>) -> Unit,
 ) {
     ShowNavBarWhenOnLaunch()
     var boxSizeFloat by remember {
@@ -78,9 +77,8 @@ fun OutSidePage(
             currentDestinationRoute = PageRouteNames.OutSidePage,
             screens = screens,
             onBioClick = onBioClick,
-            pictureInteractionFlow = interactionFlow,
-            onPictureClick = onPictureClick,
-            onScreenVideoPlayClick = onScreenVideoPlayClick
+            pictureInteractionFlowCollector = interactionFlow,
+            onScreenMediaClick = onScreenMediaClick,
         )
 
         /*val bigImageTargetSize = if (bigImageAction?.second is PressInteraction.Press) {

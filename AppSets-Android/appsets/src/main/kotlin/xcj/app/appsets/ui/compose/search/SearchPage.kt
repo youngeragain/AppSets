@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -71,31 +70,24 @@ import xcj.app.appsets.server.model.ScreenMediaFileUrl
 import xcj.app.appsets.server.model.UserInfo
 import xcj.app.appsets.ui.compose.LocalUseCaseOfSearch
 import xcj.app.appsets.ui.compose.PageRouteNames
-import xcj.app.compose_share.components.DesignHDivider
-import xcj.app.compose_share.components.SearchTextField
-import xcj.app.appsets.ui.compose.custom_component.HideNavBarWhenOnLaunch
 import xcj.app.appsets.ui.compose.custom_component.AnyImage
+import xcj.app.appsets.ui.compose.custom_component.ShowNavBarWhenOnLaunch
 import xcj.app.appsets.ui.compose.outside.ScreenComponent
 import xcj.app.appsets.ui.model.SearchResult
 import xcj.app.appsets.ui.model.SearchState
+import xcj.app.compose_share.components.DesignHDivider
+import xcj.app.compose_share.components.SearchTextField
 
 @Composable
 fun SearchPage(
-    onBackClick: () -> Unit,
-    onInputContent: (String) -> Unit,
     onBioClick: (Bio) -> Unit,
-    onPictureClick: (ScreenMediaFileUrl, List<ScreenMediaFileUrl>) -> Unit,
-    onScreenVideoPlayClick: (ScreenMediaFileUrl) -> Unit
+    onScreenMediaClick: (ScreenMediaFileUrl, List<ScreenMediaFileUrl>) -> Unit,
 ) {
 
-    HideNavBarWhenOnLaunch()
+    ShowNavBarWhenOnLaunch()
 
     val searchUseCase = LocalUseCaseOfSearch.current
     val searchState = searchUseCase.searchState.value
-    var sizeOfSearchBar by remember {
-        mutableStateOf(IntSize.Zero)
-    }
-
     var boxSize by remember {
         mutableStateOf(IntSize.Zero)
     }
@@ -112,16 +104,6 @@ fun SearchPage(
             .statusBarsPadding()
             .padding(horizontal = 12.dp)
     ) {
-        SearchPageTop(
-            searchState = searchState,
-            sizeOfSearchBar = sizeOfSearchBar,
-            onBackClick = onBackClick,
-            onInputContent = onInputContent,
-            searchBarPlaced = {
-                sizeOfSearchBar = it.size
-            }
-        )
-        Spacer(modifier = Modifier.height(1.dp))
         Column(
             modifier = Modifier
                 .weight(1f)
@@ -132,22 +114,20 @@ fun SearchPage(
             SearchPageResults(
                 searchState = searchState,
                 containerSize = boxSize,
-                sizeOfSearchBar = sizeOfSearchBar,
                 onBioClick = onBioClick,
-                onPictureClick = onPictureClick,
-                onScreenVideoPlayClick = onScreenVideoPlayClick
+                onScreenMediaClick = onScreenMediaClick
             )
         }
     }
 }
 
 @Composable
-fun SearchPageTop(
+fun SearchInputBar(
     searchState: SearchState,
     sizeOfSearchBar: IntSize,
     onBackClick: () -> Unit,
     onInputContent: (String) -> Unit,
-    searchBarPlaced: (LayoutCoordinates) -> Unit
+    searchBarPlaced: (LayoutCoordinates) -> Unit,
 ) {
     var inputContent by remember {
         mutableStateOf(TextFieldValue())
@@ -168,16 +148,15 @@ fun SearchPageTop(
     })
     val keyboardController = LocalSoftwareKeyboardController.current
     val scope = rememberCoroutineScope()
+    val corner = sizeOfSearchBar.height
+        .div(2)
+        .toFloat()
     val cornerShape by rememberUpdatedState(
         RoundedCornerShape(
-            topStart = sizeOfSearchBar.height
-                .div(2)
-                .toFloat(),
-            topEnd = sizeOfSearchBar.height
-                .div(2)
-                .toFloat(),
-            bottomStart = 8.dp.value,
-            bottomEnd = 8.dp.value
+            topStart = corner,
+            topEnd = corner,
+            bottomStart = corner,
+            bottomEnd = corner
         )
     )
     SearchTextField(
@@ -274,10 +253,8 @@ fun searchBorderStroke(searchState: SearchState): BorderStroke {
 fun SearchPageResults(
     searchState: SearchState,
     containerSize: IntSize,
-    sizeOfSearchBar: IntSize,
     onBioClick: (Bio) -> Unit,
-    onPictureClick: (ScreenMediaFileUrl, List<ScreenMediaFileUrl>) -> Unit,
-    onScreenVideoPlayClick: (ScreenMediaFileUrl) -> Unit,
+    onScreenMediaClick: (ScreenMediaFileUrl, List<ScreenMediaFileUrl>) -> Unit,
 ) {
     val density = LocalDensity.current
     val targetValue by rememberUpdatedState(
@@ -295,24 +272,20 @@ fun SearchPageResults(
         animationSpec = tween(550),
         label = "search_container_height_animate"
     )
-    val roundedCornerShape by rememberUpdatedState(
-        RoundedCornerShape(
-            topStart = 8.dp.value,
-            topEnd = 8.dp.value,
-            bottomStart = sizeOfSearchBar.height
-                .div(2)
-                .toFloat(),
-            bottomEnd = sizeOfSearchBar.height
-                .div(2)
-                .toFloat()
-        )
-    )
+
     Box(
         Modifier
             .height(heightOfBox.value)
             .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.surface, roundedCornerShape)
-            .border(1.dp, MaterialTheme.colorScheme.outline, roundedCornerShape)
+            .background(
+                MaterialTheme.colorScheme.surface,
+                RoundedCornerShape(24.dp)
+            )
+            .border(
+                1.dp,
+                MaterialTheme.colorScheme.outline,
+                RoundedCornerShape(24.dp)
+            )
     ) {
         when (searchState) {
             is SearchState.None -> {
@@ -352,7 +325,7 @@ fun SearchPageResults(
                         )
                     }
                 } else {
-                    LazyColumn(contentPadding = PaddingValues(vertical = 12.dp)) {
+                    LazyColumn(contentPadding = PaddingValues(top = 12.dp, bottom = 68.dp)) {
                         items(searchState.results) { result ->
                             when (result) {
                                 is SearchResult.SplitTitle -> {
@@ -396,8 +369,7 @@ fun SearchPageResults(
                                         modifier = Modifier,
                                         screenInfo = result.screenInfo,
                                         onBioClick = onBioClick,
-                                        onPictureClick = onPictureClick,
-                                        onScreenVideoPlayClick = onScreenVideoPlayClick
+                                        onScreenMediaClick = onScreenMediaClick,
                                     )
                                 }
 
@@ -467,8 +439,7 @@ fun SearchedScreenComponent(
     modifier: Modifier,
     screenInfo: ScreenInfo,
     onBioClick: (Bio) -> Unit,
-    onPictureClick: (ScreenMediaFileUrl, List<ScreenMediaFileUrl>) -> Unit,
-    onScreenVideoPlayClick: (ScreenMediaFileUrl) -> Unit
+    onScreenMediaClick: (ScreenMediaFileUrl, List<ScreenMediaFileUrl>) -> Unit,
 ) {
     Column(
         modifier = modifier
@@ -482,9 +453,8 @@ fun SearchedScreenComponent(
             currentDestinationRoute = PageRouteNames.SearchPage,
             screenInfo = screenInfo,
             onBioClick = onBioClick,
-            onPictureClick = onPictureClick,
-            pictureInteractionFlow = { a, b -> },
-            onScreenVideoPlayClick = onScreenVideoPlayClick
+            onScreenMediaClick = onScreenMediaClick,
+            pictureInteractionFlowCollector = { a, b -> },
         )
     }
 }
@@ -494,7 +464,7 @@ fun SearchedScreenComponent(
 fun SearchedApplicationComponent(
     modifier: Modifier,
     applications: List<Application>,
-    onBioClick: (Bio) -> Unit
+    onBioClick: (Bio) -> Unit,
 ) {
     FlowRow(horizontalArrangement = Arrangement.spacedBy(24.dp)) {
         applications.forEach { application ->

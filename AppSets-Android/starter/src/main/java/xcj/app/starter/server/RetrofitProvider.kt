@@ -27,7 +27,7 @@ object RetrofitProvider {
         return OkHttpClient.Builder().apply {
             if (PurpleLogger.current.enable) {
                 val loggingInterceptor = okhttp3.logging.HttpLoggingInterceptor().apply {
-                    level = okhttp3.logging.HttpLoggingInterceptor.Level.HEADERS
+                    level = okhttp3.logging.HttpLoggingInterceptor.Level.BODY
                 }
                 addInterceptor(loggingInterceptor)
             }
@@ -48,7 +48,7 @@ object RetrofitProvider {
         baseUrl: String,
         clazz: Class<T>,
         okHttpClient: OkHttpClient?,
-        notReuse: Boolean = false
+        notReuse: Boolean = false,
     ): T {
         if (notReuse) {
             var okHttpClientOverride = okHttpClient ?: defaultOkHttpClient

@@ -82,7 +82,7 @@ fun rememberSwipeContainerState(
                 it
             },
             velocityThreshold = {
-                anchors.maxAnchor()
+                anchors.maxPosition()
             },
             snapAnimationSpec = tween(450),
             decayAnimationSpec = exponentialDecay(),

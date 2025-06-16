@@ -7,6 +7,7 @@ import android.graphics.Color
 import android.net.Uri
 import android.provider.MediaStore
 import androidx.camera.view.PreviewView
+import androidx.camera.view.PreviewView.ImplementationMode
 import androidx.compose.animation.core.AnimationState
 import androidx.compose.animation.core.animateTo
 import androidx.compose.animation.core.tween
@@ -45,8 +46,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
-import androidx.compose.material3.SuggestionChip
-import androidx.compose.material3.SuggestionChipDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -72,13 +71,12 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import xcj.app.appsets.ui.compose.camera.CameraComponents
-import xcj.app.compose_share.components.DesignVDivider
-import xcj.app.appsets.ui.compose.custom_component.FlipCardContainer
-import xcj.app.appsets.ui.compose.custom_component.LoadMoreHandler
 import xcj.app.appsets.ui.compose.custom_component.AnyImage
+import xcj.app.appsets.ui.compose.custom_component.LoadMoreHandler
 import xcj.app.appsets.ui.compose.custom_component.SwipeContainer
 import xcj.app.appsets.util.model.MediaStoreDataUri
 import xcj.app.appsets.util.model.UriProvider
+import xcj.app.compose_share.components.DesignVDivider
 import java.io.File
 
 enum class DragValue { Start, Center, End }
@@ -99,13 +97,13 @@ sealed interface ContentSelectionResults {
         override val requestKey: String,
         override val contextPageName: String,
         override val selectType: String,
-        val selectItems: List<UriProvider>
+        val selectItems: List<UriProvider>,
     ) : ContentSelectionResults
 
     data class LocationInfo(
         val coordinate: String,
         val info: String? = null,
-        val extras: String? = null
+        val extras: String? = null,
     )
 
     data class LocationContentSelectionResults(
@@ -113,7 +111,7 @@ sealed interface ContentSelectionResults {
         override val requestKey: String,
         override val contextPageName: String,
         override val selectType: String,
-        val locationInfo: LocationInfo
+        val locationInfo: LocationInfo,
     ) : ContentSelectionResults
 }
 
@@ -135,7 +133,7 @@ fun ContentSelectDialog(
     contextName: String,
     requestKey: String,
     requestTypes: List<String>? = null,
-    onContentSelect: (ContentSelectionResults) -> Unit
+    onContentSelect: (ContentSelectionResults) -> Unit,
 ) {
 
     val pageState = rememberPagerState { selectionTypes.size }
@@ -242,7 +240,7 @@ fun ContentSelectDialog(
 fun CameraContentSelection(
     contextName: String,
     requestKey: String,
-    onContentSelect: (ContentSelectionResults) -> Unit
+    onContentSelect: (ContentSelectionResults) -> Unit,
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -293,6 +291,7 @@ fun CameraContentSelection(
                         .fillMaxSize(),
                     factory = {
                         val preview = PreviewView(it)
+                        preview.setImplementationMode(ImplementationMode.COMPATIBLE)
                         //change to texture view
                         preview.setBackgroundColor(Color.TRANSPARENT)
                         preview
@@ -433,7 +432,7 @@ fun CameraContentSelection(
 fun LocationContentSelection(
     contextName: String,
     requestKey: String,
-    onContentSelect: (ContentSelectionResults) -> Unit
+    onContentSelect: (ContentSelectionResults) -> Unit,
 ) {
     val context = LocalContext.current
     Column(
@@ -478,7 +477,7 @@ fun LocationContentSelection(
 fun PictureContentSelection(
     contextName: String,
     requestKey: String,
-    onContentSelect: (ContentSelectionResults) -> Unit
+    onContentSelect: (ContentSelectionResults) -> Unit,
 ) {
     val contentSelectionResultsProvider = remember {
         ContentSelectionResultsProvider().apply {
@@ -514,73 +513,25 @@ fun PictureContentSelection(
                         .height(220.dp)
                         .padding(4.dp)
                 ) {
-                    FlipCardContainer(
+                    AnyImage(
                         modifier = Modifier
-                            .fillMaxSize(),
-                        cardShape = MaterialTheme.shapes.extraLarge,
-                        onCardClick = {
-                            selectContents.add(contentUriProvider)
-                            val results = ContentSelectionResults.RichMediaContentSelectionResults(
-                                context,
-                                requestKey,
-                                contextName,
-                                ContentSelectionVarargs.PICTURE,
-                                selectContents
-                            )
-                            onContentSelect(results)
-                        },
-                        frontContent = {
-                            AnyImage(
-                                modifier = Modifier
-                                    .fillMaxSize(),
-                                any = contentUriProvider.provideUri()
-                            )
-                        },
-                        backContent = {
-                            Box(
-                                modifier = Modifier.fillMaxSize()
-                            ) {
-                                Column(
-                                    modifier = Modifier.padding(12.dp),
-                                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                                ) {
-                                    val mediaStoreWrapper =
-                                        (contentUriProvider as? MediaStoreDataUri)
-                                    SuggestionChip(
-                                        onClick = {},
-                                        border = SuggestionChipDefaults.suggestionChipBorder(
-                                            enabled = true,
-                                            MaterialTheme.colorScheme.outline
-                                        ),
-                                        colors = SuggestionChipDefaults.suggestionChipColors(
-                                            containerColor = MaterialTheme.colorScheme.outline
-                                        ),
-                                        label = {
-                                            Text(
-                                                text = mediaStoreWrapper?.displayName ?: "",
-                                                fontSize = 12.sp
-                                            )
-                                        }
-                                    )
-                                    SuggestionChip(
-                                        onClick = {},
-                                        border = SuggestionChipDefaults.suggestionChipBorder(
-                                            enabled = true,
-                                            MaterialTheme.colorScheme.outline
-                                        ),
-                                        colors = SuggestionChipDefaults.suggestionChipColors(
-                                            containerColor = MaterialTheme.colorScheme.outline
-                                        ),
-                                        label = {
-                                            Text(
-                                                text = mediaStoreWrapper?.sizeReadable ?: "",
-                                                fontSize = 10.sp
-                                            )
-                                        }
-                                    )
+                            .fillMaxSize()
+                            .clip(MaterialTheme.shapes.extraLarge)
+                            .clickable(
+                                onClick = {
+                                    selectContents.add(contentUriProvider)
+                                    val results =
+                                        ContentSelectionResults.RichMediaContentSelectionResults(
+                                            context,
+                                            requestKey,
+                                            contextName,
+                                            ContentSelectionVarargs.PICTURE,
+                                            selectContents
+                                        )
+                                    onContentSelect(results)
                                 }
-                            }
-                        }
+                            ),
+                        any = contentUriProvider.provideUri()
                     )
                 }
             }
@@ -597,7 +548,7 @@ fun PictureContentSelection(
 fun VideoContentSelection(
     contextName: String,
     requestKey: String,
-    onContentSelect: (ContentSelectionResults) -> Unit
+    onContentSelect: (ContentSelectionResults) -> Unit,
 ) {
     val contentSelectionResultsProvider = remember {
         ContentSelectionResultsProvider().apply {
@@ -709,7 +660,7 @@ fun VideoContentSelection(
 fun AudioContentSelection(
     contextName: String,
     requestKey: String,
-    onContentSelect: (ContentSelectionResults) -> Unit
+    onContentSelect: (ContentSelectionResults) -> Unit,
 ) {
     val contentSelectionResultsProvider = remember {
         ContentSelectionResultsProvider().apply {
@@ -791,7 +742,7 @@ fun AudioContentSelection(
 fun FileContentSelection(
     contextName: String,
     requestKey: String,
-    onContentSelect: (ContentSelectionResults) -> Unit
+    onContentSelect: (ContentSelectionResults) -> Unit,
 ) {
     val contentSelectionResultsProvider = remember {
         ContentSelectionResultsProvider().apply {

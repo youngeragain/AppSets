@@ -47,7 +47,6 @@ import xcj.app.appsets.ui.compose.LocalUseCaseOfUserInfo
 import xcj.app.appsets.ui.compose.PageRouteNames
 import xcj.app.appsets.ui.compose.apps.AppDetailsPage
 import xcj.app.appsets.ui.compose.apps.DownloadBottomSheetComponent
-import xcj.app.compose_share.components.BottomSheetContainer
 import xcj.app.appsets.ui.compose.group.GroupInfoPage
 import xcj.app.appsets.ui.compose.main.DesignNaviHost
 import xcj.app.appsets.ui.compose.main.ImmerseContentContainer
@@ -67,12 +66,12 @@ import xcj.app.appsets.ui.compose.user.UserProfilePage
 import xcj.app.appsets.ui.model.ApplicationForCreate
 import xcj.app.appsets.ui.viewmodel.ImBubbleViewModel
 import xcj.app.appsets.usecase.SystemUseCase
+import xcj.app.compose_share.components.BottomSheetContainer
 import xcj.app.compose_share.components.LocalAnyStateProvider
 import xcj.app.compose_share.ui.viewmodel.AnyStateViewModel.Companion.bottomSheetState
 import xcj.app.starter.android.ui.base.DesignComponentActivity
 import xcj.app.starter.android.usecase.PlatformUseCase
 import xcj.app.starter.android.util.PurpleLogger
-import kotlin.getValue
 
 class ImBubbleActivity : DesignComponentActivity() {
     companion object {
@@ -418,25 +417,20 @@ fun ImSessionBubbleNaviHostPages(navController: NavHostController) {
                     onReviewConfirm = {
                         screensUseCase.onReviewConfirm(context)
                     },
-                    onPictureClick = { url, urls ->
+                    onScreenMediaClick = { url, urls ->
                         restrictedContentConfirmCallback = {
-                            showPictureViewDialog(
-                                anyStateProvider,
-                                context,
-                                url.mediaFileUrl,
-                                urls.map { fileUrl -> fileUrl.mediaFileUrl })
+                            if (url.isVideoMedia) {
+                                navigateToVideoPlaybackActivity(context, url)
+                            } else {
+                                showPictureViewDialog(
+                                    anyStateProvider,
+                                    context,
+                                    url.mediaFileUrl,
+                                    urls.map { fileUrl -> fileUrl.mediaFileUrl })
+                            }
+
                         }
                         if (url.isRestrictedContent) {
-                            isShowRestrictedContentDialog = true
-                        } else {
-                            restrictedContentConfirmCallback?.invoke()
-                        }
-                    },
-                    onScreenVideoPlayClick = { mediaFileUrl ->
-                        restrictedContentConfirmCallback = {
-                            navigateToVideoPlaybackActivity(context, mediaFileUrl)
-                        }
-                        if (mediaFileUrl.isRestrictedContent) {
                             isShowRestrictedContentDialog = true
                         } else {
                             restrictedContentConfirmCallback?.invoke()
@@ -490,25 +484,20 @@ fun ImSessionBubbleNaviHostPages(navController: NavHostController) {
                     onBioClick = { bio ->
                         onBioClick(context, navController, bio)
                     },
-                    onPictureClick = { url, urls ->
+                    onScreenMediaClick = { url, urls ->
                         restrictedContentConfirmCallback = {
-                            showPictureViewDialog(
-                                anyStateProvider,
-                                context,
-                                url.mediaFileUrl,
-                                urls.map { fileUrl -> fileUrl.mediaFileUrl })
+                            if (url.isVideoMedia) {
+                                navigateToVideoPlaybackActivity(context, url)
+                            } else {
+                                showPictureViewDialog(
+                                    anyStateProvider,
+                                    context,
+                                    url.mediaFileUrl,
+                                    urls.map { fileUrl -> fileUrl.mediaFileUrl })
+                            }
+
                         }
                         if (url.isRestrictedContent) {
-                            isShowRestrictedContentDialog = true
-                        } else {
-                            restrictedContentConfirmCallback?.invoke()
-                        }
-                    },
-                    onScreenVideoPlayClick = { mediaFileUrl ->
-                        restrictedContentConfirmCallback = {
-                            navigateToVideoPlaybackActivity(context, mediaFileUrl)
-                        }
-                        if (mediaFileUrl.isRestrictedContent) {
                             isShowRestrictedContentDialog = true
                         } else {
                             restrictedContentConfirmCallback?.invoke()
