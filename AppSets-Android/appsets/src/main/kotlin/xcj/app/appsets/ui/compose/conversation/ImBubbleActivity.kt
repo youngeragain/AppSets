@@ -272,7 +272,7 @@ fun ImSessionBubbleNaviHostPages(navController: NavHostController) {
                 val recorderState = mediaAudioRecorderUseCase.recorderState
                 ConversationOverviewPage(
                     sessionState = conversationUseCase.currentSessionState.value,
-                    isShowAddActions = conversationUseCase.isShowAddActions.value,
+                    isShowActions = conversationUseCase.isShowActions.value,
                     recorderState = recorderState.value,
                     onBioClick = { bio ->
                         onBioClick(context, navController, bio)
@@ -313,10 +313,13 @@ fun ImSessionBubbleNaviHostPages(navController: NavHostController) {
                             }
                         }
                     },
+                    onAddAIGCClick = {
+                        navController.navigate(PageRouteNames.ConversationAIGCMarketPage)
+                    },
                     onAddFriendClick = {
                         navController.navigate(PageRouteNames.SearchPage)
                     },
-                    onJoinGroupClick = {
+                    onAddGroupClick = {
                         navController.navigate(PageRouteNames.SearchPage)
                     },
                     onCreateGroupClick = {

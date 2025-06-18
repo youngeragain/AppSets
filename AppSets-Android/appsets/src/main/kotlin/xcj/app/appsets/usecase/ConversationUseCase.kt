@@ -77,7 +77,7 @@ class ConversationUseCase private constructor() : IComposeDispose {
     private val sessionsMap: MutableMap<String, MutableList<Session>> = mutableMapOf()
 
     val currentTab: MutableState<String> = mutableStateOf(AI)
-    val isShowAddActions: MutableState<Boolean> = mutableStateOf(false)
+    val isShowActions: MutableState<Boolean> = mutableStateOf(false)
 
     private var lastSessionState: SessionState = SessionState.None
     val currentSessionState: MutableState<SessionState> = mutableStateOf(SessionState.None)
@@ -137,7 +137,7 @@ class ConversationUseCase private constructor() : IComposeDispose {
     private fun getOrCreateSession(
         container: Map<String, MutableList<Session>>,
         type: String,
-        imObj: ImObj
+        imObj: ImObj,
     ): Session? {
         if (!container.containsKey(type)) {
             return null
@@ -327,7 +327,7 @@ class ConversationUseCase private constructor() : IComposeDispose {
     private fun addMessageToSession(
         context: Context,
         session: Session,
-        imMessage: ImMessage
+        imMessage: ImMessage,
     ) {
         session.conversationState.addMessage(imMessage)
     }
@@ -335,7 +335,7 @@ class ConversationUseCase private constructor() : IComposeDispose {
     private fun toHandleSystemMessageIfNeeded(
         context: Context,
         session: Session,
-        imMessage: SystemMessage
+        imMessage: SystemMessage,
     ) {
         val systemContentInterface = imMessage.systemContentInterface
         when (systemContentInterface) {
@@ -368,7 +368,7 @@ class ConversationUseCase private constructor() : IComposeDispose {
     private suspend fun showNotificationForImMessages(
         context: Context,
         session: Session,
-        imMessage: ImMessage
+        imMessage: ImMessage,
     ) {
         PurpleLogger.current.d(TAG, "showNotificationForImMessages")
         if (imMessage.fromInfo.uid == LocalAccountManager.userInfo.uid) {
@@ -386,7 +386,7 @@ class ConversationUseCase private constructor() : IComposeDispose {
     private fun addMessageToNowSpaceIfNeeded(
         context: Context,
         session: Session,
-        imMessage: ImMessage
+        imMessage: ImMessage,
     ) {
         val sessionState = currentSessionState.value
         if (sessionState !is SessionState.Normal) {
@@ -483,11 +483,7 @@ class ConversationUseCase private constructor() : IComposeDispose {
 
     fun initSessionsIfNeeded(force: Boolean = true) {
         PurpleLogger.current.d(TAG, "initSessionsIfNeeded")
-        if (force) {
-            initSessions()
-            return
-        }
-        if (sessionsInitTimes == 0) {
+        if (force || sessionsInitTimes == 0) {
             initSessions()
         }
     }
@@ -500,18 +496,6 @@ class ConversationUseCase private constructor() : IComposeDispose {
         coroutineScope.launch {
             sessionsMap.values.forEach(MutableCollection<*>::clear)
             runCatching {
-                //generative sessions
-                val aiSessions = sessionsMap[AI]
-                aiSessions?.apply {
-                    add(GenerativeAISession.geminiSession)
-                    add(GenerativeAISession.openAiChatGPTSession)
-                    add(GenerativeAISession.cursorSession)
-                    add(GenerativeAISession.microsoftCopilotSession)
-                    add(GenerativeAISession.doubaoSession)
-                    add(GenerativeAISession.wenxinyiyanSession)
-                    add(GenerativeAISession.xunfeiSparkSession)
-                }
-
                 //User sessions
                 val userSessions = sessionsMap[USER]!!
                 val userInfoRepository = UserInfoRepository.getInstance()
@@ -586,7 +570,7 @@ class ConversationUseCase private constructor() : IComposeDispose {
 
     private suspend fun fillImMessageToSessions(
         sessionList: MutableList<Session>,
-        bioList: List<Bio>
+        bioList: List<Bio>,
     ) {
         if (bioList.isEmpty()) {
             PurpleLogger.current.d(
@@ -607,7 +591,7 @@ class ConversationUseCase private constructor() : IComposeDispose {
         bio: Bio,
         session: Session,
         page: Int,
-        pageSize: Int
+        pageSize: Int,
     ) {
         val imMessageList = when (bio) {
             is UserInfo -> {
@@ -672,7 +656,7 @@ class ConversationUseCase private constructor() : IComposeDispose {
     }
 
     fun toggleShowAddActions() {
-        isShowAddActions.value = !isShowAddActions.value
+        isShowActions.value = !isShowActions.value
     }
 
     @SuppressLint("MissingPermission")
@@ -739,7 +723,7 @@ class ConversationUseCase private constructor() : IComposeDispose {
         context: Context,
         notificationPusher: NotificationPusher,
         session: Session,
-        imMessage: ImMessage
+        imMessage: ImMessage,
     ) {
         PurpleLogger.current.d(TAG, "pushNotificationIfNeeded")
         notificationPusher.pushConversionNotification(context, session, imMessage)
@@ -756,6 +740,14 @@ class ConversationUseCase private constructor() : IComposeDispose {
 
     override fun onComposeDispose(by: String?) {
         PurpleLogger.current.d(TAG, "onComposeDispose, by:$by")
+    }
+
+    fun addAIGCSessionIfAbsent(session: Session) {
+        val aiSessions = sessionsMap[AI]
+        if (aiSessions == null) {
+            return
+        }
+        aiSessions.add(0, session)
     }
 
 }

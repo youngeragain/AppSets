@@ -445,4 +445,9 @@
     <string name="granted">Granted</string>
     <string name="go_to_settings">Go to Settings</string>
     <string name="request">Request</string>
+    <string name="goods">Goods</string>
+    <string name="cancel_follow">Cancel Follow</string>
+    <string name="follow">Follow</string>
+    <string name="add_ai_aigent">Add AIGC</string>
+    <string name="get_suggestions">Get suggestions</string>
 </resources>

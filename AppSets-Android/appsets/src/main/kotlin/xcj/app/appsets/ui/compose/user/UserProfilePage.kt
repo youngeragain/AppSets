@@ -47,6 +47,7 @@ private const val APPLICATION = "Application"
 private const val SCREEN = "Screen"
 private const val FOLLOWER_FOLLOWED = "Follower/Followed"
 private const val MODIFY_PROFILE = "ModifyProfile"
+private const val GOODS = "Goods"
 
 @Composable
 fun UserProfilePage(

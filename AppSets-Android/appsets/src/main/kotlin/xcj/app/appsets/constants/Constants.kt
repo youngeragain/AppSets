@@ -14,7 +14,7 @@ object Constants {
 
 
     const val Android = "Android"
-    const val IOS = "IOS"
+    const val IOS = "iOS"
     const val Windows = "Windows"
     const val Linux = "Linux"
     const val Chrome_OS = "Chrome OS"

@@ -10,6 +10,7 @@ object PageRouteNames {
     const val ScreenDetailsPage = "Main/ScreenDetailsPage"
     const val ScreenEditPage = "Main/ScreenEditPage"
     const val ConversationOverviewPage = "Main/ConversationOverviewPage"
+    const val ConversationAIGCMarketPage = "Main/ConversationAIGCMarketPage"
     const val UserProfilePage = "Main/UserProfilePage"
     const val GroupInfoPage = "Main/GroupInfoPage"
     const val SearchPage = "Main/SearchPage"

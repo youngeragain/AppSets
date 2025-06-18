@@ -44,7 +44,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -110,6 +109,7 @@ import xcj.app.appsets.ui.compose.apps.tools.TOOL_TYPE_AppSets_Proxy
 import xcj.app.appsets.ui.compose.apps.tools.TOOL_TYPE_AppSets_Share
 import xcj.app.appsets.ui.compose.camera.CameraComposeActivity
 import xcj.app.appsets.ui.compose.content_selection.ContentSelectDialog
+import xcj.app.appsets.ui.compose.conversation.AIGCMarketPage
 import xcj.app.appsets.ui.compose.conversation.ConversationDetailsMoreInfo
 import xcj.app.appsets.ui.compose.conversation.ConversationDetailsPage
 import xcj.app.appsets.ui.compose.conversation.ConversationOverviewPage
@@ -495,7 +495,11 @@ fun MainNaviHostPages(navController: NavHostController) {
                     )
                 }
             }
-
+            composable(PageRouteNames.ConversationAIGCMarketPage) {
+                AIGCMarketPage(
+                    onBackClick = navController::navigateUp
+                )
+            }
             composable(PageRouteNames.ConversationOverviewPage) {
                 LoginInterceptorPage(
                     navController = navController,
@@ -511,7 +515,7 @@ fun MainNaviHostPages(navController: NavHostController) {
                     val recorderState = mediaAudioRecorderUseCase.recorderState
                     ConversationOverviewPage(
                         sessionState = conversationUseCase.currentSessionState.value,
-                        isShowAddActions = conversationUseCase.isShowAddActions.value,
+                        isShowActions = conversationUseCase.isShowActions.value,
                         recorderState = recorderState.value,
                         onBioClick = { bio ->
                             onBioClick(context, navController, bio)
@@ -552,10 +556,13 @@ fun MainNaviHostPages(navController: NavHostController) {
                                 }
                             }
                         },
+                        onAddAIGCClick = {
+                            navController.navigate(PageRouteNames.ConversationAIGCMarketPage)
+                        },
                         onAddFriendClick = {
                             navController.navigate(PageRouteNames.SearchPage)
                         },
-                        onJoinGroupClick = {
+                        onAddGroupClick = {
                             navController.navigate(PageRouteNames.SearchPage)
                         },
                         onCreateGroupClick = {

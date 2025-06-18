@@ -443,7 +443,7 @@ private fun TopBarComponent(
     onMoreClick: () -> Unit,
     onJumpToLatestClick: () -> Unit,
     onBioClick: (Bio) -> Unit,
-    onQuickAccessSessionClick: (Session) -> Unit
+    onQuickAccessSessionClick: (Session) -> Unit,
 ) {
     val hapticFeedback = LocalHapticFeedback.current
     Column(
@@ -547,7 +547,7 @@ fun TopToolBar(
     hazeState: HazeState,
     onBackClick: () -> Unit,
     onBioClick: (Bio) -> Unit,
-    onMoreClick: () -> Unit
+    onMoreClick: () -> Unit,
 ) {
     Column(
         modifier = Modifier.hazeEffect(
@@ -570,18 +570,19 @@ fun TopToolBar(
                     .clickable(onClick = onBackClick)
                     .padding(12.dp)
             )
+            Spacer(modifier = Modifier.weight(1f))
             Row(
-                modifier = Modifier,
+                modifier = Modifier
+                    .clickable {
+                        onBioClick(session.imObj.bio)
+                    },
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 UserAvatar2Component(
                     modifier = Modifier
                         .size(20.dp)
-                        .clip(MaterialTheme.shapes.extraLarge)
-                        .clickable {
-                            onBioClick(session.imObj.bio)
-                        },
+                        .clip(MaterialTheme.shapes.extraLarge),
                     imObj = session.imObj
                 )
                 Text(
@@ -633,7 +634,7 @@ private fun ImMessageListComponent(
     hazeState: HazeState,
     scrollState: LazyListState,
     onBioClick: (Bio) -> Unit,
-    onImMessageContentClick: (ImMessage) -> Unit
+    onImMessageContentClick: (ImMessage) -> Unit,
 ) {
     Box(modifier = modifier) {
         LazyColumn(
@@ -674,7 +675,7 @@ private fun ImMessageItemWrapperComponent(
     session: Session,
     imMessage: ImMessage,
     onBioClick: (Bio) -> Unit,
-    onImMessageContentClick: (ImMessage) -> Unit
+    onImMessageContentClick: (ImMessage) -> Unit,
 ) {
     Box(
         modifier = modifier
@@ -713,7 +714,7 @@ private fun BoxScope.messageBubbleBoxModifier(imMessage: ImMessage): Modifier {
 @Composable
 private fun ImMessageItemCenterComponent(
     imMessage: ImMessage,
-    onImMessageContentClick: (ImMessage) -> Unit
+    onImMessageContentClick: (ImMessage) -> Unit,
 ) {
     val appSetsModuleSettings = AppSetsModuleSettings.get()
     val horizontalAlignment = when (appSetsModuleSettings.imBubbleAlignment) {
@@ -806,7 +807,7 @@ private fun ImMessageItemCenterComponent(
 private fun ImMessageItemEndComponent(
     session: Session,
     imMessage: ImMessage,
-    onBioClick: (Bio) -> Unit
+    onBioClick: (Bio) -> Unit,
 ) {
     Row(modifier = Modifier.padding(12.dp)) {
         val appSetsModuleSettings = AppSetsModuleSettings.get()
@@ -845,7 +846,7 @@ private fun ImMessageItemEndComponent(
 @Composable
 private fun ImMessageItemLocationComponent(
     imMessage: LocationMessage,
-    onImMessageContentClick: (ImMessage) -> Unit
+    onImMessageContentClick: (ImMessage) -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -892,7 +893,7 @@ private fun ImMessageItemLocationComponent(
 @Composable
 fun ImMessageItemFileComponent(
     imMessage: FileMessage,
-    onImMessageContentClick: (ImMessage) -> Unit
+    onImMessageContentClick: (ImMessage) -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -922,7 +923,7 @@ fun ImMessageItemFileComponent(
 @Composable
 private fun ImMessageItemADComponent(
     imMessage: AdMessage,
-    onImMessageContentClick: (ImMessage) -> Unit
+    onImMessageContentClick: (ImMessage) -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -954,7 +955,7 @@ private fun ImMessageItemADComponent(
 @Composable
 private fun ImMessageItemMusicComponent(
     imMessage: MusicMessage,
-    onImMessageContentClick: (ImMessage) -> Unit
+    onImMessageContentClick: (ImMessage) -> Unit,
 ) {
     val mediaRemoteExoUseCase = LocalUseCaseOfMediaRemoteExo.current
     var waveValue by remember {
@@ -1032,7 +1033,7 @@ private fun ImMessageItemMusicComponent(
 @Composable
 private fun ImMessageItemVideoComponent(
     imMessage: VideoMessage,
-    onImMessageContentClick: (ImMessage) -> Unit
+    onImMessageContentClick: (ImMessage) -> Unit,
 ) {
     Box(
         modifier = Modifier
@@ -1071,7 +1072,7 @@ private fun ImMessageItemVideoComponent(
 @Composable
 private fun ImMessageItemVoiceComponent(
     imMessage: VoiceMessage,
-    onImMessageContentClick: (ImMessage) -> Unit
+    onImMessageContentClick: (ImMessage) -> Unit,
 ) {
     val mediaRemoteExoUseCase = LocalUseCaseOfMediaRemoteExo.current
     var waveValue by remember {
@@ -1137,7 +1138,7 @@ private fun ImMessageItemVoiceComponent(
 @Composable
 private fun ImMessageItemHTMLComponent(
     imMessage: HTMLMessage,
-    onImMessageContentClick: (ImMessage) -> Unit
+    onImMessageContentClick: (ImMessage) -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -1167,7 +1168,7 @@ private fun ImMessageItemHTMLComponent(
 @Composable
 private fun ImMessageItemImageComponent(
     imMessage: ImageMessage,
-    onImMessageContentClick: (ImMessage) -> Unit
+    onImMessageContentClick: (ImMessage) -> Unit,
 ) {
     Box(
         modifier = Modifier
@@ -1192,7 +1193,7 @@ private fun ImMessageItemImageComponent(
 @Composable
 private fun ImMessageItemTextComponent(
     imMessage: TextMessage,
-    onImMessageContentClick: (ImMessage) -> Unit
+    onImMessageContentClick: (ImMessage) -> Unit,
 ) {
     Text(
         modifier = Modifier
@@ -1207,7 +1208,7 @@ private fun ImMessageItemTextComponent(
 private fun ImMessageItemStartComponent(
     session: Session,
     imMessage: ImMessage,
-    onBioClick: (Bio) -> Unit
+    onBioClick: (Bio) -> Unit,
 ) {
     Row(modifier = Modifier.padding(12.dp)) {
         val appSetsModuleSettings = AppSetsModuleSettings.get()
@@ -2031,7 +2032,7 @@ class TextFieldAdviser {
 
     suspend fun makeAdviser(
         textFieldValue: TextFieldValue,
-        receivedContents: SnapshotStateList<Uri>
+        receivedContents: SnapshotStateList<Uri>,
     ) {
         val advises = analysis(textFieldValue, receivedContents)
         _advise.clear()
@@ -2040,7 +2041,7 @@ class TextFieldAdviser {
 
     suspend fun analysis(
         textFieldValue: TextFieldValue,
-        receivedContents: SnapshotStateList<Uri>
+        receivedContents: SnapshotStateList<Uri>,
     ): List<Advise> =
         withContext(Dispatchers.IO) {
             val results = mutableListOf<Advise>()

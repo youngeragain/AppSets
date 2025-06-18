@@ -23,13 +23,13 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-
 import xcj.app.appsets.server.model.UserInfo
 import xcj.app.appsets.ui.compose.LocalUseCaseOfUserInfo
+import xcj.app.appsets.ui.compose.custom_component.AnyImage
+import xcj.app.appsets.ui.compose.theme.BigAvatarShape
+import xcj.app.appsets.ui.model.UserInfoModification
 import xcj.app.compose_share.components.DesignHDivider
 import xcj.app.compose_share.components.DesignTextField
-import xcj.app.appsets.ui.compose.custom_component.AnyImage
-import xcj.app.appsets.ui.model.UserInfoModification
 
 @Composable
 fun ProfileModificationComponent(
@@ -68,11 +68,11 @@ fun ProfileModificationComponent(
                     any = userInfoModification.userAvatarUri?.provideUri() ?: userInfo.bioUrl,
                     modifier = Modifier
                         .size(250.dp)
-                        .clip(MaterialTheme.shapes.extraLarge)
+                        .clip(BigAvatarShape)
                         .border(
-                            1.dp,
-                            MaterialTheme.colorScheme.outline,
-                            MaterialTheme.shapes.extraLarge
+                            width = 1.dp,
+                            color = MaterialTheme.colorScheme.outline,
+                            shape = BigAvatarShape
                         )
                         .align(Alignment.CenterHorizontally)
                 )

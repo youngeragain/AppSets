@@ -15,7 +15,9 @@ import java.util.UUID
 
 object GenerativeAISession {
 
-    interface AIBio : Bio
+    interface AIBio : Bio {
+        val description: String?
+    }
 
     suspend fun handleSessionNewMessage(session: Session, userPrompt: Any) {
         if (userPrompt is TextMessage) {
@@ -69,12 +71,26 @@ object GenerativeAISession {
         )
     }
 
+    val templateSessions: List<Session>
+        get() {
+            return listOf(
+                geminiSession,
+                cursorSession,
+                openAiChatGPTSession,
+                microsoftCopilotSession,
+                xunfeiSparkSession,
+                wenxinyiyanSession,
+                doubaoSession
+            )
+        }
+
     val geminiSession: Session
         get() {
             val bio = object : AIBio {
                 override val id: String = UUID.randomUUID().toString()
                 override val name: String = "Gemini"
                 override val bioUrl: Any? = xcj.app.appsets.R.drawable.ai_model_logo_google_gemini
+                override val description: String? = "Gemini is Google's AI Model"
             }
 
             return Session(
@@ -89,6 +105,7 @@ object GenerativeAISession {
                 override val id: String = UUID.randomUUID().toString()
                 override val name: String = "Cursor"
                 override val bioUrl: Any? = xcj.app.appsets.R.drawable.ai_model_logo_cursor
+                override val description: String? = "Cursor is Cursor's AI Model"
             }
 
             return Session(
@@ -103,6 +120,7 @@ object GenerativeAISession {
                 override val id: String = UUID.randomUUID().toString()
                 override val name: String = "OpenAI ChatGPT"
                 override val bioUrl: Any? = xcj.app.appsets.R.drawable.ai_model_logo_openai_logomark
+                override val description: String? = "OpenAI ChatGPT is OpenAI's AI Model"
             }
 
             return Session(
@@ -117,6 +135,7 @@ object GenerativeAISession {
                 override val name: String = "Microsoft Copilot"
                 override val bioUrl: Any? =
                     xcj.app.appsets.R.drawable.ai_model_logo_microsoft_copilot
+                override val description: String? = "Microsoft Copilot is Microsoft's AI Model"
             }
 
             return Session(
@@ -131,6 +150,7 @@ object GenerativeAISession {
                 override val id: String = UUID.randomUUID().toString()
                 override val name: String = "讯飞星火"
                 override val bioUrl: Any? = xcj.app.appsets.R.drawable.ai_model_logo_xunfei_spark
+                override val description: String? = "讯飞星火 is XunFei's AI Model"
             }
 
             return Session(
@@ -145,6 +165,7 @@ object GenerativeAISession {
                 override val id: String = UUID.randomUUID().toString()
                 override val name: String = "文心一言"
                 override val bioUrl: Any? = xcj.app.appsets.R.drawable.ai_model_logo_baidu_yiyan
+                override val description: String? = "文心一言 is Baidu's AI Model"
             }
 
             return Session(
@@ -159,6 +180,7 @@ object GenerativeAISession {
                 override val id: String = UUID.randomUUID().toString()
                 override val name: String = "豆包"
                 override val bioUrl: Any? = xcj.app.appsets.R.drawable.ai_model_logo_doubao_white_bg
+                override val description: String? = "豆包 is ByteDance's AI Model"
             }
 
             return Session(

@@ -236,7 +236,7 @@ fun TabItemActionComponent(
         tabAction.action == TabAction.ACTION_ADD
     ) {
         val iconRotationState by animateFloatAsState(
-            targetValue = if (conversationUseCase.isShowAddActions.value) {
+            targetValue = if (conversationUseCase.isShowActions.value) {
                 135f
             } else {
                 0f

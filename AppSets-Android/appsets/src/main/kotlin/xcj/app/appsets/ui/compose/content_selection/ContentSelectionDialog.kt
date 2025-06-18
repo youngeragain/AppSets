@@ -711,7 +711,6 @@ fun AudioContentSelection(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(12.dp),
-                        verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         Image(
@@ -793,7 +792,6 @@ fun FileContentSelection(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(12.dp),
-                        verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         Image(

@@ -4,18 +4,13 @@ import android.content.res.Configuration
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
-import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.expandIn
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -24,6 +19,7 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -80,25 +76,26 @@ import xcj.app.appsets.im.model.GroupRequestJson
 import xcj.app.appsets.server.model.GroupInfo
 import xcj.app.appsets.server.model.UserInfo
 import xcj.app.appsets.ui.compose.LocalUseCaseOfConversation
-import xcj.app.compose_share.components.DesignHDivider
-import xcj.app.compose_share.components.DesignVDivider
 import xcj.app.appsets.ui.compose.custom_component.AnyImage
 import xcj.app.appsets.ui.compose.custom_component.ShowNavBarWhenOnLaunch
 import xcj.app.appsets.usecase.ConversationUseCase
 import xcj.app.appsets.usecase.SessionState
 import xcj.app.appsets.util.DesignRecorder
+import xcj.app.compose_share.components.DesignHDivider
+import xcj.app.compose_share.components.DesignVDivider
 
 private const val TAG = "ConversationOverviewPage"
 
 @Composable
 fun ConversationOverviewPage(
     sessionState: SessionState,
-    isShowAddActions: Boolean,
+    isShowActions: Boolean,
     recorderState: DesignRecorder.AudioRecorderState,
     onBioClick: (Bio) -> Unit,
     onImMessageContentClick: (ImMessage) -> Unit,
+    onAddAIGCClick: () -> Unit,
     onAddFriendClick: () -> Unit,
-    onJoinGroupClick: () -> Unit,
+    onAddGroupClick: () -> Unit,
     onCreateGroupClick: () -> Unit,
     onConversionSessionClick: (Session, Boolean) -> Unit,
     onSystemImMessageClick: (Session, ImMessage) -> Unit,
@@ -109,14 +106,15 @@ fun ConversationOverviewPage(
     onVoicePauseClick: () -> Unit,
     onVoiceResumeClick: () -> Unit,
     onMoreClick: ((ImObj) -> Unit),
-    onLandscapeModeEndBackClick: () -> Unit
+    onLandscapeModeEndBackClick: () -> Unit,
 ) {
     ShowNavBarWhenOnLaunch()
     if (LocalConfiguration.current.orientation == Configuration.ORIENTATION_PORTRAIT) {
         ConversationOverviewPortrait(
-            isShowAddActions = isShowAddActions,
+            isShowActions = isShowActions,
+            onAddAIGCClick = onAddAIGCClick,
             onAddFriendClick = onAddFriendClick,
-            onJoinGroupClick = onJoinGroupClick,
+            onAddGroupClick = onAddGroupClick,
             onCreateGroupClick = onCreateGroupClick,
             onConversionSessionClick = { session ->
                 onConversionSessionClick(session, true)
@@ -127,11 +125,12 @@ fun ConversationOverviewPage(
         )
     } else {
         ConversationOverviewLandscape(
-            isShowAddActions = isShowAddActions,
+            isShowActions = isShowActions,
             sessionState = sessionState,
             recorderState = recorderState,
+            onAddAIGCClick = onAddAIGCClick,
             onAddFriendClick = onAddFriendClick,
-            onJoinGroupClick = onJoinGroupClick,
+            onAddGroupClick = onAddGroupClick,
             onCreateGroupClick = onCreateGroupClick,
             onConversionSessionClick = { session ->
                 onConversionSessionClick(session, false)
@@ -210,10 +209,11 @@ fun ConversationOverviewLandscapeEnd(
 fun ConversationOverviewLandscape(
     modifier: Modifier = Modifier,
     sessionState: SessionState,
-    isShowAddActions: Boolean,
+    isShowActions: Boolean,
     recorderState: DesignRecorder.AudioRecorderState,
+    onAddAIGCClick: () -> Unit,
     onAddFriendClick: () -> Unit,
-    onJoinGroupClick: () -> Unit,
+    onAddGroupClick: () -> Unit,
     onCreateGroupClick: () -> Unit,
     onConversionSessionClick: (Session) -> Unit,
     onSystemImMessageClick: (Session, ImMessage) -> Unit,
@@ -230,15 +230,16 @@ fun ConversationOverviewLandscape(
 ) {
     Row(modifier.fillMaxSize()) {
         ConversationOverviewPortrait(
-            Modifier.width(410.dp),
-            isShowAddActions,
-            onAddFriendClick,
-            onJoinGroupClick,
-            onCreateGroupClick,
-            onConversionSessionClick,
-            onSystemImMessageClick,
-            onBioClick,
-            onUserRequestClick
+            modifier = Modifier.width(410.dp),
+            isShowActions = isShowActions,
+            onAddAIGCClick = onAddAIGCClick,
+            onAddFriendClick = onAddFriendClick,
+            onAddGroupClick = onAddGroupClick,
+            onCreateGroupClick = onCreateGroupClick,
+            onConversionSessionClick = onConversionSessionClick,
+            onSystemImMessageClick = onSystemImMessageClick,
+            onBioClick = onBioClick,
+            onUserRequestClick = onUserRequestClick
         )
         DesignVDivider()
         Box(
@@ -266,14 +267,15 @@ fun ConversationOverviewLandscape(
 @Composable
 fun ConversationOverviewPortrait(
     modifier: Modifier = Modifier,
-    isShowAddActions: Boolean,
+    isShowActions: Boolean,
+    onAddAIGCClick: () -> Unit,
     onAddFriendClick: () -> Unit,
-    onJoinGroupClick: () -> Unit,
+    onAddGroupClick: () -> Unit,
     onCreateGroupClick: () -> Unit,
     onConversionSessionClick: (Session) -> Unit,
     onSystemImMessageClick: (Session, ImMessage) -> Unit,
     onBioClick: (Bio) -> Unit,
-    onUserRequestClick: (Boolean, Session, SystemMessage) -> Unit
+    onUserRequestClick: (Boolean, Session, SystemMessage) -> Unit,
 ) {
     val tabs = remember {
         listOf(
@@ -287,25 +289,29 @@ fun ConversationOverviewPortrait(
     val pagerState =
         rememberPagerState(tabs.indexOf(conversationUseCase.currentTab.value)) { tabs.size }
     val scope = rememberCoroutineScope()
+
+    LaunchedEffect(pagerState.currentPage) {
+        conversationUseCase.updateCurrentTab(tabs[pagerState.currentPage])
+    }
+
     Column(
         modifier = modifier
     ) {
         ConversationOverviewTabs(
             tabs = tabs,
             currentTab = tabs[pagerState.currentPage],
-            isShowAddActions = isShowAddActions,
+            isShowAddActions = isShowActions,
             onTabClick = { tab ->
                 scope.launch {
                     pagerState.animateScrollToPage(tabs.indexOf(tab))
                 }
             },
+            onAddAIGCClick = onAddAIGCClick,
             onAddFriendClick = onAddFriendClick,
-            onJoinGroupClick = onJoinGroupClick,
+            onAddGroupClick = onAddGroupClick,
             onCreateGroupClick = onCreateGroupClick
         )
-        LaunchedEffect(pagerState.currentPage) {
-            conversationUseCase.updateCurrentTab(tabs[pagerState.currentPage])
-        }
+
         HorizontalPager(
             modifier = Modifier.weight(1f),
             state = pagerState
@@ -314,18 +320,21 @@ fun ConversationOverviewPortrait(
             when (currentTab) {
                 ConversationUseCase.AI -> {
                     ConversationOverviewSessionsOfAI(
+                        onEmptyTipsClick = onAddAIGCClick,
                         onConversionSessionClick = onConversionSessionClick
                     )
                 }
 
                 ConversationUseCase.USER -> {
                     ConversationOverviewSessionsOfUser(
+                        onEmptyTipsClick = onAddFriendClick,
                         onConversionSessionClick = onConversionSessionClick
                     )
                 }
 
                 ConversationUseCase.GROUP -> {
                     ConversationOverviewSessionsOfGroup(
+                        onEmptyTipsClick = onAddGroupClick,
                         onConversionSessionClick = onConversionSessionClick
                     )
                 }
@@ -346,13 +355,15 @@ fun ConversationOverviewPortrait(
 fun ConversationOverviewSessionsOfSystem(
     onSystemImMessageClick: (Session, ImMessage) -> Unit,
     onBioClick: (Bio) -> Unit,
-    onUserRequestClick: (Boolean, Session, SystemMessage) -> Unit
+    onUserRequestClick: (Boolean, Session, SystemMessage) -> Unit,
 ) {
     Box(Modifier.fillMaxSize()) {
         val conversationUseCase = LocalUseCaseOfConversation.current
         val sessions = conversationUseCase.currentTabSessions()
         val currentTab = conversationUseCase.currentTab.value
-        if (sessions.flatMap { it.conversationState.messages }.isEmpty()) {
+        val hasMessages =
+            sessions.firstOrNull { it.conversationState.messages.isNotEmpty() } != null
+        if (!hasMessages) {
             Text(
                 text = stringResource(getEmptyPromptTextFor(currentTab)),
                 fontSize = 12.sp,
@@ -378,18 +389,34 @@ fun ConversationOverviewSessionsOfSystem(
 
 @Composable
 fun ConversationOverviewSessionsOfGroup(
-    onConversionSessionClick: (Session) -> Unit
+    onEmptyTipsClick: () -> Unit,
+    onConversionSessionClick: (Session) -> Unit,
 ) {
     Box(Modifier.fillMaxSize()) {
         val conversationUseCase = LocalUseCaseOfConversation.current
         val sessions = conversationUseCase.currentTabSessions()
         val currentTab = conversationUseCase.currentTab.value
         if (sessions.isEmpty()) {
-            Text(
-                text = stringResource(getEmptyPromptTextFor(currentTab)),
-                fontSize = 12.sp,
-                modifier = Modifier.align(Alignment.Center)
-            )
+            Column(
+                modifier = Modifier.align(Alignment.Center),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = stringResource(getEmptyPromptTextFor(currentTab)),
+                    fontSize = 12.sp,
+                )
+
+                FilledTonalButton(
+                    onClick = onEmptyTipsClick
+                ) {
+                    Text(
+                        text = stringResource(xcj.app.appsets.R.string.add),
+                        fontSize = 12.sp,
+                    )
+                }
+            }
+
         } else {
             LazyColumn(
                 contentPadding = PaddingValues(bottom = 98.dp)
@@ -409,18 +436,33 @@ fun ConversationOverviewSessionsOfGroup(
 
 @Composable
 fun ConversationOverviewSessionsOfUser(
-    onConversionSessionClick: (Session) -> Unit
+    onEmptyTipsClick: () -> Unit,
+    onConversionSessionClick: (Session) -> Unit,
 ) {
     Box(Modifier.fillMaxSize()) {
         val conversationUseCase = LocalUseCaseOfConversation.current
         val sessions = conversationUseCase.currentTabSessions()
         val currentTab = conversationUseCase.currentTab.value
         if (sessions.isEmpty()) {
-            Text(
-                text = stringResource(getEmptyPromptTextFor(currentTab)),
-                fontSize = 12.sp,
-                modifier = Modifier.align(Alignment.Center)
-            )
+            Column(
+                modifier = Modifier.align(Alignment.Center),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = stringResource(getEmptyPromptTextFor(currentTab)),
+                    fontSize = 12.sp,
+                )
+
+                FilledTonalButton(
+                    onClick = onEmptyTipsClick
+                ) {
+                    Text(
+                        text = stringResource(xcj.app.appsets.R.string.add),
+                        fontSize = 12.sp,
+                    )
+                }
+            }
         } else {
             LazyColumn(
                 contentPadding = PaddingValues(bottom = 98.dp)
@@ -440,6 +482,7 @@ fun ConversationOverviewSessionsOfUser(
 
 @Composable
 fun ConversationOverviewSessionsOfAI(
+    onEmptyTipsClick: () -> Unit,
     onConversionSessionClick: (Session) -> Unit,
 ) {
     Box(Modifier.fillMaxSize()) {
@@ -447,11 +490,25 @@ fun ConversationOverviewSessionsOfAI(
         val sessions = conversationUseCase.currentTabSessions()
         val currentTab = conversationUseCase.currentTab.value
         if (sessions.isEmpty()) {
-            Text(
-                text = stringResource(getEmptyPromptTextFor(currentTab)),
-                fontSize = 12.sp,
-                modifier = Modifier.align(Alignment.Center)
-            )
+            Column(
+                modifier = Modifier.align(Alignment.Center),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = stringResource(getEmptyPromptTextFor(currentTab)),
+                    fontSize = 12.sp,
+                )
+
+                FilledTonalButton(
+                    onClick = onEmptyTipsClick
+                ) {
+                    Text(
+                        text = stringResource(xcj.app.appsets.R.string.add),
+                        fontSize = 12.sp,
+                    )
+                }
+            }
         } else {
             LazyColumn(
                 contentPadding = PaddingValues(bottom = 98.dp)
@@ -476,9 +533,10 @@ fun ConversationOverviewTabs(
     currentTab: String,
     isShowAddActions: Boolean,
     onTabClick: (String) -> Unit,
+    onAddAIGCClick: () -> Unit,
     onAddFriendClick: () -> Unit,
-    onJoinGroupClick: () -> Unit,
-    onCreateGroupClick: () -> Unit
+    onAddGroupClick: () -> Unit,
+    onCreateGroupClick: () -> Unit,
 ) {
 
     Column(
@@ -496,9 +554,10 @@ fun ConversationOverviewTabs(
                 animationSpec = tween(),
             ),
             content = {
-                ConversationOverviewAddActionsComponent(
+                ConversationOverviewActionsComponent(
+                    onAddAIGCClick = onAddAIGCClick,
                     onAddFriendClick = onAddFriendClick,
-                    onJoinGroupClick = onJoinGroupClick,
+                    onAddGroupClick = onAddGroupClick,
                     onCreateGroupClick = onCreateGroupClick
                 )
             }
@@ -539,7 +598,7 @@ fun ConversationOverviewSystemImMessageItemComponent(
     session: Session,
     onSystemImMessageClick: (Session, ImMessage) -> Unit,
     onBioClick: (Bio) -> Unit,
-    onUserRequestClick: (Boolean, Session, SystemMessage) -> Unit
+    onUserRequestClick: (Boolean, Session, SystemMessage) -> Unit,
 ) {
     Column(
         modifier = modifier
@@ -567,7 +626,7 @@ fun ConversationOverviewSimpleItemComponent(
     modifier: Modifier,
     currentTab: String,
     session: Session,
-    onConversionSessionClick: (Session) -> Unit
+    onConversionSessionClick: (Session) -> Unit,
 ) {
     Row(
         modifier = modifier
@@ -671,9 +730,10 @@ fun ConversationOverviewSimpleItemComponent(
 }
 
 @Composable
-fun ConversationOverviewAddActionsComponent(
+fun ConversationOverviewActionsComponent(
+    onAddAIGCClick: () -> Unit,
     onAddFriendClick: () -> Unit,
-    onJoinGroupClick: () -> Unit,
+    onAddGroupClick: () -> Unit,
     onCreateGroupClick: () -> Unit,
 ) {
     Box(
@@ -681,51 +741,56 @@ fun ConversationOverviewAddActionsComponent(
             .fillMaxWidth()
             .padding(12.dp)
     ) {
-        Column(
+        FlowRow(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(
-                    color = MaterialTheme.colorScheme.secondaryContainer,
+                .border(
+                    width = 1.dp,
+                    color = MaterialTheme.colorScheme.outline,
                     shape = MaterialTheme.shapes.extraLarge
                 )
                 .padding(12.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Text(
-                text = stringResource(xcj.app.appsets.R.string.add_friend),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(
-                        MaterialTheme.colorScheme.surface, CircleShape
-                    )
-                    .clip(CircleShape)
-                    .clickable(onClick = onAddFriendClick)
-                    .padding(horizontal = 12.dp, vertical = 12.dp),
-                fontSize = 12.sp
-            )
-            Text(
-                text = stringResource(xcj.app.appsets.R.string.add_group),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(
-                        MaterialTheme.colorScheme.surface, CircleShape
-                    )
-                    .clip(CircleShape)
-                    .clickable(onClick = onJoinGroupClick)
-                    .padding(horizontal = 12.dp, vertical = 12.dp),
-                fontSize = 12.sp
-            )
-            Text(
-                text = stringResource(xcj.app.appsets.R.string.create_group),
-                Modifier
-                    .fillMaxWidth()
-                    .background(
-                        MaterialTheme.colorScheme.surface, CircleShape
-                    )
-                    .clip(CircleShape)
-                    .clickable(onClick = onCreateGroupClick)
-                    .padding(horizontal = 12.dp, vertical = 12.dp), fontSize = 12.sp
-            )
+            FilledTonalButton(
+                onClick = onAddAIGCClick,
+                shape = CircleShape
+            ) {
+                Text(
+                    text = stringResource(xcj.app.appsets.R.string.add_ai_aigent),
+                    fontSize = 12.sp
+                )
+            }
+            FilledTonalButton(
+                onClick = onAddFriendClick,
+                shape = CircleShape
+            ) {
+                Text(
+                    text = stringResource(xcj.app.appsets.R.string.add_friend),
+                    fontSize = 12.sp
+                )
+            }
+
+            FilledTonalButton(
+                onClick = onAddGroupClick,
+                shape = CircleShape
+            ) {
+                Text(
+                    text = stringResource(xcj.app.appsets.R.string.add_group),
+                    fontSize = 12.sp
+                )
+            }
+
+            FilledTonalButton(
+                onClick = onCreateGroupClick,
+                shape = CircleShape
+            ) {
+                Text(
+                    text = stringResource(xcj.app.appsets.R.string.create_group),
+                    fontSize = 12.sp
+                )
+            }
         }
     }
 }
@@ -736,7 +801,7 @@ fun SystemImMessageContent(
     imMessage: SystemMessage,
     onSystemImMessageClick: (Session, ImMessage) -> Unit,
     onBioClick: (Bio) -> Unit,
-    onUserRequestClick: (Boolean, Session, SystemMessage) -> Unit
+    onUserRequestClick: (Boolean, Session, SystemMessage) -> Unit,
 ) {
     Box(
         modifier = Modifier
@@ -804,7 +869,7 @@ fun GroupJoinRequestFeedbackCard(
     imMessage: SystemMessage,
     groupJoinRequestFeedbackJson: GroupJoinRequestFeedbackJson,
     onSystemImMessageClick: (Session, ImMessage) -> Unit,
-    onBioClick: (Bio) -> Unit
+    onBioClick: (Bio) -> Unit,
 ) {
     val context = LocalContext.current
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -838,7 +903,7 @@ fun FriendRequestFeedbackCard(
     imMessage: SystemMessage,
     friendRequestFeedbackJson: FriendRequestFeedbackJson,
     onSystemImMessageClick: (Session, ImMessage) -> Unit,
-    onBioClick: (Bio) -> Unit
+    onBioClick: (Bio) -> Unit,
 ) {
     val context = LocalContext.current
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -873,7 +938,7 @@ fun GroupRequestCard(
     groupRequestJson: GroupRequestJson,
     onSystemImMessageClick: (Session, ImMessage) -> Unit,
     onBioClick: (Bio) -> Unit,
-    onUserRequestClick: (Boolean, Session, SystemMessage) -> Unit
+    onUserRequestClick: (Boolean, Session, SystemMessage) -> Unit,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Row(
@@ -1035,7 +1100,7 @@ fun FriendRequestCard(
     friendRequestJson: FriendRequestJson,
     onSystemImMessageClick: (Session, ImMessage) -> Unit,
     onBioClick: (Bio) -> Unit,
-    onUserRequestClick: (Boolean, Session, SystemMessage) -> Unit
+    onUserRequestClick: (Boolean, Session, SystemMessage) -> Unit,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Row(
