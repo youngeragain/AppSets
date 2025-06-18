@@ -29,6 +29,7 @@ fun BackActionTopBar(
     @DrawableRes
     backIcon: Int? = null,
     backButtonRightText: String? = null,
+    centerText: String? = null,
     endButtonText: String? = null,
     onBackClick: () -> Unit,
     onEndButtonClick: (() -> Unit)? = null,
@@ -57,6 +58,19 @@ fun BackActionTopBar(
                 if (!backButtonRightText.isNullOrEmpty()) {
                     Text(
                         text = backButtonRightText,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+            if (!centerText.isNullOrEmpty()) {
+                Row(
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .padding(horizontal = 12.dp)
+                ) {
+                    Text(
+                        text = centerText,
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold
                     )

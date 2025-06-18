@@ -2,11 +2,11 @@ package xcj.app.appsets.ui.compose.user
 
 import android.content.res.Configuration
 import androidx.compose.foundation.border
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowColumn
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
@@ -22,6 +21,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -34,10 +34,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import xcj.app.appsets.account.LocalAccountManager
 import xcj.app.appsets.server.model.UserInfo
-import xcj.app.compose_share.components.DesignHDivider
 import xcj.app.appsets.ui.compose.custom_component.AnyImage
 import xcj.app.appsets.ui.compose.theme.BigAvatarShape
 import xcj.app.appsets.usecase.RelationsUseCase
+import xcj.app.compose_share.components.DesignHDivider
 
 private const val TAG = "UserInfoHeader"
 
@@ -58,38 +58,40 @@ private fun makeUserActions(
     userInfo: UserInfo,
     isLoginUserFollowedThisUser: Boolean,
     userFollowers: List<UserInfo>,
-    userFollowed: List<UserInfo>
+    userFollowed: List<UserInfo>,
 ): List<UserAction> {
-    val updateUserInfoText = stringResource(id = xcj.app.appsets.R.string.update_information)
-    val addFriendText = stringResource(id = xcj.app.appsets.R.string.add_friend)
-    val chatText = stringResource(id = xcj.app.appsets.R.string.chat)
     val tabs = remember {
         mutableStateListOf<UserAction>()
     }
-    tabs.clear()
-    tabs.add(UserAction(UserAction.ACTION_APPLICATION, UserAction.ACTION_APPLICATION))
-    tabs.add(UserAction(UserAction.ACTION_SCREEN, UserAction.ACTION_SCREEN))
-    tabs.add(
-        UserAction(
-            UserAction.ACTION_FOLLOW_STATE,
-            "${userFollowers.size}/${userFollowed.size} (Follower/Followed)"
+    val updateUserInfoText = stringResource(id = xcj.app.appsets.R.string.update_information)
+    val addFriendText = stringResource(id = xcj.app.appsets.R.string.add_friend)
+    val chatText = stringResource(id = xcj.app.appsets.R.string.chat)
+    LaunchedEffect(Unit) {
+        tabs.clear()
+        tabs.add(UserAction(UserAction.ACTION_APPLICATION, UserAction.ACTION_APPLICATION))
+        tabs.add(UserAction(UserAction.ACTION_SCREEN, UserAction.ACTION_SCREEN))
+        tabs.add(
+            UserAction(
+                UserAction.ACTION_FOLLOW_STATE,
+                "${userFollowers.size}/${userFollowed.size} (Follower/Followed)"
+            )
         )
-    )
-    if (userInfo.uid == LocalAccountManager.userInfo.uid) {
-        tabs.add(UserAction(UserAction.ACTION_UPDATE_INFO, updateUserInfoText))
-    } else {
-        val currentFollowState = if (isLoginUserFollowedThisUser) {
-            "Cancel Follow"
+        if (userInfo.uid == LocalAccountManager.userInfo.uid) {
+            tabs.add(UserAction(UserAction.ACTION_UPDATE_INFO, updateUserInfoText))
         } else {
-            "Follow"
+            val currentFollowState = if (isLoginUserFollowedThisUser) {
+                "Cancel Follow"
+            } else {
+                "Follow"
+            }
+            tabs.add(UserAction(UserAction.ACTION_FLIP_FOLLOW, currentFollowState))
         }
-        tabs.add(UserAction(UserAction.ACTION_FLIP_FOLLOW, currentFollowState))
-    }
-    tabs.add(UserAction(UserAction.ACTION_CHAT, chatText))
-    if (!LocalAccountManager.isLoggedUser(userInfo.uid) && !RelationsUseCase.getInstance()
-            .hasUserRelated(userInfo.uid)
-    ) {
-        tabs.add(UserAction(UserAction.ACTION_ADD_FRIEND, addFriendText))
+        tabs.add(UserAction(UserAction.ACTION_CHAT, chatText))
+        if (!LocalAccountManager.isLoggedUser(userInfo.uid) && !RelationsUseCase.getInstance()
+                .hasUserRelated(userInfo.uid)
+        ) {
+            tabs.add(UserAction(UserAction.ACTION_ADD_FRIEND, addFriendText))
+        }
     }
     return tabs
 }
@@ -102,7 +104,7 @@ fun UserInfoHeader(
     userFollowers: List<UserInfo>,
     userFollowed: List<UserInfo>,
     isLoginUserFollowedThisUser: Boolean,
-    onActionClick: (UserAction) -> Unit
+    onActionClick: (UserAction) -> Unit,
 ) {
     val configuration = LocalConfiguration.current
     if (configuration.orientation == Configuration.ORIENTATION_PORTRAIT) {
@@ -142,25 +144,17 @@ fun UserInfoHeader(
                 text = introduction,
                 fontSize = 12.sp
             )
+            val actions = makeUserActions(
+                userInfo,
+                isLoginUserFollowedThisUser,
+                userFollowers,
+                userFollowed
+            )
+            UserActions(
+                actions = actions,
+                onActionClick = onActionClick
+            )
 
-            val scrollState = rememberScrollState()
-            Row(
-                modifier = Modifier.horizontalScroll(scrollState),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                Spacer(modifier = Modifier.width(4.dp))
-                val actions = makeUserActions(
-                    userInfo,
-                    isLoginUserFollowedThisUser,
-                    userFollowers,
-                    userFollowed
-                )
-                UserActions(
-                    actions = actions,
-                    onActionClick = onActionClick
-                )
-                Spacer(modifier = Modifier.width(4.dp))
-            }
             DesignHDivider()
         }
     } else {
@@ -224,16 +218,20 @@ fun UserActions(
     onActionClick: (UserAction) -> Unit,
 ) {
     val textModifier = Modifier.padding(vertical = 10.dp, horizontal = 10.dp)
+    FlowRow(
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
 
-    actions.forEach { action ->
-        SuggestionChip(
-            onClick = {
-                onActionClick(action)
-            },
-            shape = CircleShape,
-            label = {
-                Text(text = action.name, modifier = textModifier, fontSize = 12.sp)
-            }
-        )
+        actions.forEachIndexed { index, action ->
+            SuggestionChip(
+                onClick = {
+                    onActionClick(action)
+                },
+                shape = CircleShape,
+                label = {
+                    Text(text = action.name, modifier = textModifier, fontSize = 12.sp)
+                }
+            )
+        }
     }
 }

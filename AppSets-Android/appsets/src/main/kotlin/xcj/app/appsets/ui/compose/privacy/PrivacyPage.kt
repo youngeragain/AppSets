@@ -22,7 +22,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AssistChip
-import androidx.compose.material3.AssistChipDefaults
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -36,7 +36,6 @@ import androidx.compose.ui.unit.sp
 import xcj.app.appsets.ui.compose.apps.tools.PageIndicator
 import xcj.app.appsets.ui.compose.custom_component.DesignBottomBackButton
 import xcj.app.appsets.ui.compose.custom_component.HideNavBarWhenOnLaunch
-
 import xcj.app.starter.android.ui.model.PlatformPermissionsUsage
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -45,7 +44,7 @@ fun PrivacyPage(
     onBackClick: () -> Unit,
     privacy: String?,
     platformPermissionsUsageList: List<PlatformPermissionsUsage>,
-    onRequest: (PlatformPermissionsUsage) -> Unit
+    onRequest: (PlatformPermissionsUsage, Int) -> Unit,
 ) {
     HideNavBarWhenOnLaunch()
     val pagerState = rememberPagerState {
@@ -109,7 +108,7 @@ fun PrivacyComponent(privacy: String?) {
 @Composable
 fun PlatformPermissionsComponent(
     platformPermissionsUsageList: List<PlatformPermissionsUsage>,
-    onRequest: (PlatformPermissionsUsage) -> Unit
+    onRequest: (PlatformPermissionsUsage, Int) -> Unit,
 ) {
     Column(
         verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -135,7 +134,7 @@ fun PlatformPermissionsComponent(
 @Composable
 fun PermissionCard(
     platformPermissionsUsage: PlatformPermissionsUsage,
-    onRequest: (PlatformPermissionsUsage) -> Unit
+    onRequest: (PlatformPermissionsUsage, Int) -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -169,7 +168,7 @@ fun PermissionCard(
         } else {
             AssistChip(
                 onClick = {
-                    onRequest(platformPermissionsUsage)
+                    onRequest(platformPermissionsUsage, 1)
                 },
                 label = {
                     Text(text = stringResource(id = xcj.app.appsets.R.string.check))
@@ -177,21 +176,27 @@ fun PermissionCard(
                 shape = CircleShape,
             )
         }
-        Row {
+        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             Spacer(modifier = Modifier.weight(1f))
             if (!platformPermissionsUsage.granted) {
-                AssistChip(
+                FilledTonalButton(
                     onClick = {
-                        onRequest(platformPermissionsUsage)
-                    },
-                    label = {
-                        Text(text = stringResource(xcj.app.appsets.R.string.operable))
+                        onRequest(platformPermissionsUsage, 0)
                     },
                     shape = CircleShape,
-                    colors = AssistChipDefaults.assistChipColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
-                )
+                ) {
+                    Text(text = stringResource(xcj.app.appsets.R.string.go_to_settings))
+                }
+                FilledTonalButton(
+                    onClick = {
+                        onRequest(platformPermissionsUsage, 1)
+                    },
+                    shape = CircleShape
+                ) {
+                    Text(text = stringResource(xcj.app.appsets.R.string.request))
+                }
             } else {
-                Text(text = stringResource(xcj.app.appsets.R.string.no_action_required))
+                Text(text = stringResource(xcj.app.appsets.R.string.granted))
             }
         }
     }
@@ -200,5 +205,5 @@ fun PermissionCard(
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun PrivacyAndPermissionsPagePreview() {
-    PrivacyPage({}, null, emptyList(), {})
+    PrivacyPage({}, null, emptyList(), { a, b -> })
 }

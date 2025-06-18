@@ -1,5 +1,6 @@
 package xcj.app.starter.android.usecase
 
+import android.Manifest
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
@@ -35,6 +36,10 @@ class PlatformUseCase {
 
         fun requestPermission(context: Context, permissions: List<String>) {
             if (context !is Activity) {
+                return
+            }
+            if (permissions.contains(Manifest.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS)) {
+                requestBatteryOptimizationSettings(context)
                 return
             }
             var shouldShowRequestPermissionRationale = false
@@ -82,7 +87,7 @@ class PlatformUseCase {
 
         fun makeFileSelectionIntent(
             mimeType: String = "*/*",
-            multiSelect: Boolean
+            multiSelect: Boolean,
         ): Intent {
             return Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
                 addCategory(Intent.CATEGORY_OPENABLE)
@@ -113,7 +118,7 @@ class PlatformUseCase {
             context: Context,
             requestCode: Int,
             mimeType: String = "*/*",
-            multiSelect: Boolean = false
+            multiSelect: Boolean = false,
         ) {
             if (context !is Activity) {
                 return
@@ -127,7 +132,7 @@ class PlatformUseCase {
         fun openSystemFileProvider(
             context: Context,
             mimeType: String = "*/*",
-            multiSelect: Boolean = false
+            multiSelect: Boolean = false,
         ) {
             if (context !is ActivityThemeInterface) {
                 return
@@ -145,7 +150,7 @@ class PlatformUseCase {
 
         fun openSystemFileProviderToOpenDirectory(
             context: Context,
-            pickerInitialUri: Uri? = null
+            pickerInitialUri: Uri? = null,
         ) {
             if (context !is ActivityThemeInterface) {
                 return
@@ -172,7 +177,7 @@ class PlatformUseCase {
 
         fun requestBatteryOptimizationSettings(context: Context) {
             val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS)
-            intent.setData(("package:" + context.packageName).toUri())
+            intent.setData(("package:${context.packageName}").toUri())
             context.startActivity(intent)
         }
     }

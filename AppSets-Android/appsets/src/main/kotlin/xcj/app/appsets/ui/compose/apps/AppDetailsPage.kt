@@ -133,7 +133,7 @@ fun AppDetailsPage(
                         backActionBarSize = it.size
                     }
                     .hazeEffect(hazeState, HazeMaterials.thin()),
-                backButtonRightText = application.name ?: "",
+                centerText = application.name ?: "",
                 onBackClick = onBackClick
             )
         }
@@ -226,7 +226,7 @@ fun ApplicationContentComponent(
                 onClick = onShowApplicationCreatorClick,
                 shape = CircleShape,
                 label = {
-                    Text(text = stringResource(xcj.app.appsets.R.string.creator_information),)
+                    Text(text = stringResource(xcj.app.appsets.R.string.creator_information))
                 }
             )
             SuggestionChip(

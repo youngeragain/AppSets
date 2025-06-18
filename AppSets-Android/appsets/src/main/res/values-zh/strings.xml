@@ -442,5 +442,8 @@
     <string name="graphic_description">运行Shader程序</string>
     <string name="x_videos">%s个视频</string>
     <string name="x_pictures">%s张图片</string>
+    <string name="granted">已授权</string>
+    <string name="go_to_settings">去设置</string>
+    <string name="request">请求</string>
 
 </resources>

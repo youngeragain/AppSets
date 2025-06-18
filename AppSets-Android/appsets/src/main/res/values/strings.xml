@@ -442,4 +442,7 @@
     <string name="graphic_description">Run Shader program</string>
     <string name="x_videos">%s videos</string>
     <string name="x_pictures">%s pictures</string>
+    <string name="granted">Granted</string>
+    <string name="go_to_settings">Go to Settings</string>
+    <string name="request">Request</string>
 </resources>

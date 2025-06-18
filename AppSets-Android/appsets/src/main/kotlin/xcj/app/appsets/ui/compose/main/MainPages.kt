@@ -165,8 +165,8 @@ fun ImmerseContentContainer(
     ) {
         AnimatedVisibility(
             visible = immerseContentState.isShow,
-            enter = fadeIn() + scaleIn(initialScale = 1.2f),
-            exit = fadeOut() + scaleOut(targetScale = 1.2f)
+            enter = fadeIn(tween()) + scaleIn(initialScale = 1.12f, animationSpec = tween()),
+            exit = fadeOut(tween()) + scaleOut(targetScale = 1.12f, animationSpec = tween()),
         ) {
             immerseContentState.getContent(context)?.Content()
         }

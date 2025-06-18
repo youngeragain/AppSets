@@ -36,15 +36,16 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import xcj.app.appsets.account.LocalAccountManager
-import xcj.app.appsets.ui.compose.custom_component.ImageButtonComponent
-import xcj.app.appsets.ui.compose.custom_component.AnyImage
-import xcj.app.appsets.ui.compose.custom_component.SwipeContainer
 import xcj.app.appsets.ui.compose.content_selection.DragValue
+import xcj.app.appsets.ui.compose.custom_component.AnyImage
+import xcj.app.appsets.ui.compose.custom_component.ImageButtonComponent
+import xcj.app.appsets.ui.compose.custom_component.SwipeContainer
 import xcj.app.appsets.ui.compose.search.LocalAccountUserAvatar
 import xcj.app.appsets.ui.model.LoginStatusState
 import xcj.app.appsets.usecase.QRCodeInfoScannedState
 import xcj.app.appsets.usecase.QRCodeUseCase
 import xcj.app.appsets.usecase.SystemUseCase
+import xcj.app.starter.android.usecase.PlatformUseCase
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -55,7 +56,7 @@ fun LiteSettingsDialog(
     onSettingsLoginClick: () -> Unit,
     onGenQRCodeClick: () -> Unit,
     onToScanQRCodeClick: () -> Unit,
-    onQRCodeConfirmClick: () -> Unit
+    onQRCodeConfirmClick: () -> Unit,
 ) {
     val context = LocalContext.current
     val loginStatusState by LocalAccountManager.loginStatusState
@@ -176,9 +177,11 @@ fun LiteSettingsDialog(
                     modifier = Modifier
                         .fillMaxWidth(1f)
                         .clip(MaterialTheme.shapes.extraLarge)
-                        .clickable(onClick = {
-                            onToScanQRCodeClick()
-                        })
+                        .clickable(
+                            onClick = {
+                                onToScanQRCodeClick()
+                            }
+                        )
                         .padding(horizontal = 12.dp, vertical = 6.dp),
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                     verticalAlignment = Alignment.CenterVertically

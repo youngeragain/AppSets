@@ -644,8 +644,15 @@ fun ImSessionBubbleNaviHostPages(navController: NavHostController) {
                     onBackClick = navController::navigateUp,
                     privacy = privacy,
                     platformPermissionsUsageList = androidPermissionsUsageList,
-                    onRequest = {
-                        PlatformUseCase.navigateToExternalSystemAppDetails(context)
+                    onRequest = { permission, type ->
+                        if (type == 0) {
+                            PlatformUseCase.navigateToExternalSystemAppDetails(context)
+                        } else {
+                            PlatformUseCase.requestPermission(
+                                context,
+                                permission.androidDefinitionNames
+                            )
+                        }
                     }
                 )
             }

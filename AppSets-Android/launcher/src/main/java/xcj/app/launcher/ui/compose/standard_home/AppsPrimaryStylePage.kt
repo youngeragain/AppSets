@@ -4,6 +4,8 @@ package xcj.app.launcher.ui.compose.standard_home
 
 import android.view.ContextThemeWrapper
 import androidx.activity.ComponentActivity
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -68,7 +70,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import coil3.compose.AsyncImage
 import kotlinx.coroutines.launch
 import xcj.app.launcher.ui.model.StyledAppDefinition
-import xcj.app.starter.android.AppDefinition
 import kotlin.math.roundToInt
 
 @Composable
@@ -78,7 +79,10 @@ fun AppsPrimaryStylePage(containerSize: IntSize, onAppClick: (StyledAppDefinitio
 
 @OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
 @Composable
-fun AppsPrimaryStylePageVertical(containerSize: IntSize, onAppClick: (StyledAppDefinition) -> Unit) {
+fun AppsPrimaryStylePageVertical(
+    containerSize: IntSize,
+    onAppClick: (StyledAppDefinition) -> Unit,
+) {
     val viewModel = viewModel<StandardWindowHomeViewModel>()
     val settings by viewModel.settings
     val space = settings.appCardSpace.dp
@@ -109,7 +113,15 @@ fun AppsPrimaryStylePageVertical(containerSize: IntSize, onAppClick: (StyledAppD
             items = appDefinitionList,
             key = { it.appDefinition.id }
         ) { styledApp ->
-            Column(modifier = Modifier.padding(bottom = space)) {
+            Column(
+                modifier = Modifier
+                    .padding(bottom = space)
+                    .animateItem(
+                        fadeInSpec = tween(),
+                        placementSpec = tween(),
+                        fadeOutSpec = tween()
+                    )
+            ) {
                 Card(
                     modifier = Modifier.size(boxWidthDp),
                     shape = RectangleShape,
@@ -453,7 +465,7 @@ fun SettingsPanelVertical(appCardContainerSize: IntSize) {
 fun ColorSelector(
     currentColorToChange: Int,
     onDismissRequest: () -> Unit,
-    onConfirmColor: (Color?) -> Unit
+    onConfirmColor: (Color?) -> Unit,
 ) {
     var colorCurrent by remember {
         mutableStateOf<Color?>(null)

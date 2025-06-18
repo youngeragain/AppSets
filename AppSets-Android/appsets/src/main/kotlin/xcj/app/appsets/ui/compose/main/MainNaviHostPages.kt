@@ -15,7 +15,6 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -33,7 +32,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -45,7 +43,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.layout.ContentScale
@@ -1012,8 +1009,15 @@ fun MainNaviHostPages(navController: NavHostController) {
                     onBackClick = navController::navigateUp,
                     privacy = privacy,
                     platformPermissionsUsageList = androidPermissionsUsageList,
-                    onRequest = {
-                        PlatformUseCase.navigateToExternalSystemAppDetails(context)
+                    onRequest = { permission, type ->
+                        if (type == 0) {
+                            PlatformUseCase.navigateToExternalSystemAppDetails(context)
+                        } else {
+                            PlatformUseCase.requestPermission(
+                                context,
+                                permission.androidDefinitionNames
+                            )
+                        }
                     }
                 )
             }
@@ -1354,12 +1358,12 @@ fun <D> showPictureViewDialog(
                     )
             ) {
                 val rotation = remember {
-                    mutableFloatStateOf(270f)
+                    mutableFloatStateOf(90f)
                 }
                 val rotationAnimate = animateFloatAsState(
                     targetValue = rotation.floatValue,
                     label = "degree_animate",
-                    animationSpec = tween(450)
+                    animationSpec = tween()
                 )
 
                 LaunchedEffect(true) {
@@ -1369,12 +1373,6 @@ fun <D> showPictureViewDialog(
                 }
                 Icon(
                     modifier = Modifier
-                        .shadow(20.dp, CircleShape)
-                        .background(
-                            MaterialTheme.colorScheme.surface,
-                            CircleShape
-                        )
-                        .clip(CircleShape)
                         .clickable {
                             immerseContentState.hide()
                         }

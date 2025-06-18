@@ -84,7 +84,6 @@ object PackageUtil {
                     }
                 }
                 emit(chunkedAppDefinitions)
-                delay(50)
             }
             PurpleLogger.current.d(TAG, "getLauncherIntentAppDefinitionList 4")
         }

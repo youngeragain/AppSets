@@ -7,6 +7,6 @@
 
 import Foundation
 
-let PurpleLogger: StaticProvider<PurpleLoggerForIOS> = staticProvider<Logger>{
+let PurpleLogger: StaticProvider<PurpleLoggerForIOS> = staticProvider<PurpleLoggerForIOS>{
     PurpleLoggerForIOS()
 }
