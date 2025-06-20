@@ -47,9 +47,7 @@ fun PrivacyPage(
     onRequest: (PlatformPermissionsUsage, Int) -> Unit,
 ) {
     HideNavBarWhenOnLaunch()
-    val pagerState = rememberPagerState {
-        2
-    }
+    val pagerState = rememberPagerState { 2 }
     Box(modifier = Modifier.fillMaxSize()) {
         PageIndicator(
             modifier = Modifier
@@ -66,12 +64,10 @@ fun PrivacyPage(
             modifier = Modifier.fillMaxSize(),
             state = pagerState
         ) { pageIndex ->
-            Box(Modifier.fillMaxSize()) {
-                if (pageIndex == 0) {
-                    PlatformPermissionsComponent(platformPermissionsUsageList, onRequest)
-                } else if (pageIndex == 1) {
-                    PrivacyComponent(privacy)
-                }
+            if (pageIndex == 0) {
+                PlatformPermissionsComponent(platformPermissionsUsageList, onRequest)
+            } else if (pageIndex == 1) {
+                PrivacyComponent(privacy)
             }
         }
 

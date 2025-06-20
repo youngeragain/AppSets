@@ -89,6 +89,7 @@ import xcj.app.appsets.ui.compose.LocalUseCaseOfConversation
 import xcj.app.appsets.ui.compose.LocalUseCaseOfGroupInfo
 import xcj.app.appsets.ui.compose.LocalUseCaseOfMediaAudioRecorder
 import xcj.app.appsets.ui.compose.LocalUseCaseOfMediaRemoteExo
+import xcj.app.appsets.ui.compose.LocalUseCaseOfNavigation
 import xcj.app.appsets.ui.compose.LocalUseCaseOfQRCode
 import xcj.app.appsets.ui.compose.LocalUseCaseOfScreen
 import xcj.app.appsets.ui.compose.LocalUseCaseOfScreenPost
@@ -109,7 +110,7 @@ import xcj.app.appsets.ui.compose.apps.tools.TOOL_TYPE_AppSets_Proxy
 import xcj.app.appsets.ui.compose.apps.tools.TOOL_TYPE_AppSets_Share
 import xcj.app.appsets.ui.compose.camera.CameraComposeActivity
 import xcj.app.appsets.ui.compose.content_selection.ContentSelectDialog
-import xcj.app.appsets.ui.compose.conversation.AIGCMarketPage
+import xcj.app.appsets.ui.compose.conversation.ai_model.AIGCMarketPage
 import xcj.app.appsets.ui.compose.conversation.ConversationDetailsMoreInfo
 import xcj.app.appsets.ui.compose.conversation.ConversationDetailsPage
 import xcj.app.appsets.ui.compose.conversation.ConversationOverviewPage
@@ -556,7 +557,7 @@ fun MainNaviHostPages(navController: NavHostController) {
                                 }
                             }
                         },
-                        onAddAIGCClick = {
+                        onAddAIModelClick = {
                             navController.navigate(PageRouteNames.ConversationAIGCMarketPage)
                         },
                         onAddFriendClick = {
@@ -756,6 +757,7 @@ fun MainNaviHostPages(navController: NavHostController) {
                 val systemUseCase = LocalUseCaseOfSystem.current
                 val qrCodeUseCase = LocalUseCaseOfQRCode.current
                 val anyStateProvider = LocalAnyStateProvider.current
+                val navigationUseCase = LocalUseCaseOfNavigation.current
                 LaunchedEffect(true) {
                     systemUseCase.prepareLoginState()
                 }
@@ -763,6 +765,13 @@ fun MainNaviHostPages(navController: NavHostController) {
                     loginSignUpState = systemUseCase.loginSignUpState.value,
                     onBackClick = navController::navigateUp,
                     qrCodeInfo = qrCodeUseCase.generatedQRCodeInfo.value,
+                    onLoggingFinish = {
+                        val lastNavDestination = navigationUseCase.lastNavDestination
+                        if (lastNavDestination.isNullOrEmpty()) {
+                            return@LoginPage
+                        }
+                        navController.navigateWithClearStack(lastNavDestination)
+                    },
                     onSignUpButtonClick = {
                         navController.navigate(PageRouteNames.SignUpPage)
                     },

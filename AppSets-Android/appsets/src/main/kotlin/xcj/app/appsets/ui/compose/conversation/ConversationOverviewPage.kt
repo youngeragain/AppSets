@@ -93,7 +93,7 @@ fun ConversationOverviewPage(
     recorderState: DesignRecorder.AudioRecorderState,
     onBioClick: (Bio) -> Unit,
     onImMessageContentClick: (ImMessage) -> Unit,
-    onAddAIGCClick: () -> Unit,
+    onAddAIModelClick: () -> Unit,
     onAddFriendClick: () -> Unit,
     onAddGroupClick: () -> Unit,
     onCreateGroupClick: () -> Unit,
@@ -112,7 +112,7 @@ fun ConversationOverviewPage(
     if (LocalConfiguration.current.orientation == Configuration.ORIENTATION_PORTRAIT) {
         ConversationOverviewPortrait(
             isShowActions = isShowActions,
-            onAddAIGCClick = onAddAIGCClick,
+            onAddAIModelClick = onAddAIModelClick,
             onAddFriendClick = onAddFriendClick,
             onAddGroupClick = onAddGroupClick,
             onCreateGroupClick = onCreateGroupClick,
@@ -128,7 +128,7 @@ fun ConversationOverviewPage(
             isShowActions = isShowActions,
             sessionState = sessionState,
             recorderState = recorderState,
-            onAddAIGCClick = onAddAIGCClick,
+            onAddAIModelClick = onAddAIModelClick,
             onAddFriendClick = onAddFriendClick,
             onAddGroupClick = onAddGroupClick,
             onCreateGroupClick = onCreateGroupClick,
@@ -211,7 +211,7 @@ fun ConversationOverviewLandscape(
     sessionState: SessionState,
     isShowActions: Boolean,
     recorderState: DesignRecorder.AudioRecorderState,
-    onAddAIGCClick: () -> Unit,
+    onAddAIModelClick: () -> Unit,
     onAddFriendClick: () -> Unit,
     onAddGroupClick: () -> Unit,
     onCreateGroupClick: () -> Unit,
@@ -232,7 +232,7 @@ fun ConversationOverviewLandscape(
         ConversationOverviewPortrait(
             modifier = Modifier.width(410.dp),
             isShowActions = isShowActions,
-            onAddAIGCClick = onAddAIGCClick,
+            onAddAIModelClick = onAddAIModelClick,
             onAddFriendClick = onAddFriendClick,
             onAddGroupClick = onAddGroupClick,
             onCreateGroupClick = onCreateGroupClick,
@@ -268,7 +268,7 @@ fun ConversationOverviewLandscape(
 fun ConversationOverviewPortrait(
     modifier: Modifier = Modifier,
     isShowActions: Boolean,
-    onAddAIGCClick: () -> Unit,
+    onAddAIModelClick: () -> Unit,
     onAddFriendClick: () -> Unit,
     onAddGroupClick: () -> Unit,
     onCreateGroupClick: () -> Unit,
@@ -306,7 +306,7 @@ fun ConversationOverviewPortrait(
                     pagerState.animateScrollToPage(tabs.indexOf(tab))
                 }
             },
-            onAddAIGCClick = onAddAIGCClick,
+            onAddAIModelClick = onAddAIModelClick,
             onAddFriendClick = onAddFriendClick,
             onAddGroupClick = onAddGroupClick,
             onCreateGroupClick = onCreateGroupClick
@@ -320,7 +320,7 @@ fun ConversationOverviewPortrait(
             when (currentTab) {
                 ConversationUseCase.AI -> {
                     ConversationOverviewSessionsOfAI(
-                        onEmptyTipsClick = onAddAIGCClick,
+                        onEmptyTipsClick = onAddAIModelClick,
                         onConversionSessionClick = onConversionSessionClick
                     )
                 }
@@ -533,7 +533,7 @@ fun ConversationOverviewTabs(
     currentTab: String,
     isShowAddActions: Boolean,
     onTabClick: (String) -> Unit,
-    onAddAIGCClick: () -> Unit,
+    onAddAIModelClick: () -> Unit,
     onAddFriendClick: () -> Unit,
     onAddGroupClick: () -> Unit,
     onCreateGroupClick: () -> Unit,
@@ -555,7 +555,7 @@ fun ConversationOverviewTabs(
             ),
             content = {
                 ConversationOverviewActionsComponent(
-                    onAddAIGCClick = onAddAIGCClick,
+                    onAddAIModelClick = onAddAIModelClick,
                     onAddFriendClick = onAddFriendClick,
                     onAddGroupClick = onAddGroupClick,
                     onCreateGroupClick = onCreateGroupClick
@@ -731,7 +731,7 @@ fun ConversationOverviewSimpleItemComponent(
 
 @Composable
 fun ConversationOverviewActionsComponent(
-    onAddAIGCClick: () -> Unit,
+    onAddAIModelClick: () -> Unit,
     onAddFriendClick: () -> Unit,
     onAddGroupClick: () -> Unit,
     onCreateGroupClick: () -> Unit,
@@ -754,7 +754,7 @@ fun ConversationOverviewActionsComponent(
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             FilledTonalButton(
-                onClick = onAddAIGCClick,
+                onClick = onAddAIModelClick,
                 shape = CircleShape
             ) {
                 Text(

@@ -54,13 +54,13 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import xcj.app.appsets.ui.compose.LocalUseCaseOfQRCode
-import xcj.app.compose_share.components.DesignTextField
+import xcj.app.appsets.ui.compose.custom_component.AnyImage
 import xcj.app.appsets.ui.compose.custom_component.DesignBottomBackButton
 import xcj.app.appsets.ui.compose.custom_component.HideNavBarWhenOnLaunch
-import xcj.app.appsets.ui.compose.custom_component.AnyImage
 import xcj.app.appsets.ui.model.LoginSignUpState
 import xcj.app.appsets.usecase.QRCodeInfoScannedState
 import xcj.app.appsets.usecase.QRCodeUseCase
+import xcj.app.compose_share.components.DesignTextField
 
 private const val TAG = "LoginPage"
 
@@ -69,15 +69,16 @@ fun LoginPage(
     onBackClick: () -> Unit,
     loginSignUpState: LoginSignUpState,
     qrCodeInfo: QRCodeInfoScannedState.AppSetsQRCodeInfo?,
+    onLoggingFinish: () -> Unit,
     onSignUpButtonClick: () -> Unit,
     onQRCodeLoginButtonClick: () -> Unit,
     onScanQRCodeButtonClick: () -> Unit,
-    onLoginConfirmButtonClick: (String, String) -> Unit
+    onLoginConfirmButtonClick: (String, String) -> Unit,
 ) {
     HideNavBarWhenOnLaunch()
     LaunchedEffect(loginSignUpState) {
         if (loginSignUpState is LoginSignUpState.LoggingFinish) {
-            onBackClick()
+            onLoggingFinish()
         }
     }
     val qrCodeUseCase = LocalUseCaseOfQRCode.current
@@ -140,7 +141,7 @@ fun LoginPage(
 fun LoginComponent2(
     modifier: Modifier,
     onBackClick: () -> Unit,
-    onLoginConfirmButtonClick: (String, String) -> Unit
+    onLoginConfirmButtonClick: (String, String) -> Unit,
 ) {
     val hapticFeedback = LocalHapticFeedback.current
     var accountText by remember {

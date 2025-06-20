@@ -31,7 +31,7 @@ import xcj.app.appsets.ui.compose.quickstep.QuickStepContent
 import xcj.app.appsets.ui.compose.quickstep.QuickStepContentHandler
 import xcj.app.appsets.ui.compose.quickstep.QuickStepContentHolder
 
-class AIGCQuickStepHandler(context: Context) : QuickStepContentHandler(context) {
+class AIQuickStepHandler(context: Context) : QuickStepContentHandler(context) {
 
     private var mQuickStepContentHolder: QuickStepContentHolder? = null
 
@@ -55,7 +55,7 @@ class AIGCQuickStepHandler(context: Context) : QuickStepContentHandler(context) 
     override fun getContent(onClick: () -> Unit): @Composable (() -> Unit) {
         val contentCompose = @Composable {
             val navController = LocalNavHostController.current
-            AIGCQuickStepHandlerContent(
+            AIQuickStepHandlerContent(
                 name = getName(),
                 description = getDescription(),
                 onClick = {
@@ -65,7 +65,7 @@ class AIGCQuickStepHandler(context: Context) : QuickStepContentHandler(context) 
                         }
                     }
                     if (quickStepContents == null) {
-                        return@AIGCQuickStepHandlerContent
+                        return@AIQuickStepHandlerContent
                     }
                     navigateWithBundle(
                         navController,
@@ -88,7 +88,7 @@ class AIGCQuickStepHandler(context: Context) : QuickStepContentHandler(context) 
 }
 
 @Composable
-private fun AIGCQuickStepHandlerContent(
+private fun AIQuickStepHandlerContent(
     name: String,
     description: String,
     onClick: () -> Unit

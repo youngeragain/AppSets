@@ -313,7 +313,7 @@ fun ImSessionBubbleNaviHostPages(navController: NavHostController) {
                             }
                         }
                     },
-                    onAddAIGCClick = {
+                    onAddAIModelClick = {
                         navController.navigate(PageRouteNames.ConversationAIGCMarketPage)
                     },
                     onAddFriendClick = {

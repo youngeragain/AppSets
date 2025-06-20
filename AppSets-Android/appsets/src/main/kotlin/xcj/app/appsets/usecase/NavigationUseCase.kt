@@ -84,7 +84,7 @@ class NavigationUseCase : IComposeDispose {
     }
 
     fun invalidateTabItemsOnRouteChanged(
-        currentRoute: String? = PageRouteNames.AppsCenterPage,
+        currentRoute: String?,
         by: String?
     ) {
         PurpleLogger.current.d(

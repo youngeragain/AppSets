@@ -5,7 +5,7 @@ import xcj.app.appsets.ui.compose.apps.quickstep.ToolAppSetsShareQuickStepHandle
 import xcj.app.appsets.ui.compose.apps.quickstep.ToolContentTransformQuickStepHandler
 import xcj.app.appsets.ui.compose.apps.quickstep.ToolGraphicQuickStepHandler
 import xcj.app.appsets.ui.compose.apps.quickstep.ToolIntentCallerQuickStepHandler
-import xcj.app.appsets.ui.compose.conversation.quickstep.AIGCQuickStepHandler
+import xcj.app.appsets.ui.compose.conversation.quickstep.AIQuickStepHandler
 import xcj.app.appsets.ui.compose.conversation.quickstep.ConversationQuickStepHandler
 import xcj.app.appsets.ui.compose.outside.quickstep.OutSideQuickStepHandler
 
@@ -17,7 +17,7 @@ class QuickStepContentHandlerRegistry {
             registry.addContentHandler(ToolIntentCallerQuickStepHandler(context))
             registry.addContentHandler(ToolGraphicQuickStepHandler(context))
             registry.addContentHandler(ConversationQuickStepHandler(context))
-            registry.addContentHandler(AIGCQuickStepHandler(context))
+            registry.addContentHandler(AIQuickStepHandler(context))
             registry.addContentHandler(OutSideQuickStepHandler(context))
         }
 

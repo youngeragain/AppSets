@@ -109,6 +109,15 @@ import xcj.app.compose_share.ui.viewmodel.AnyStateViewModel.Companion.immerseCon
 
 private const val TAG = "MainPages"
 
+fun NavHostController.navigateWithClearStack(route: String) {
+    navigate(route) {
+        popUpTo(graph.findStartDestination().id) {
+            inclusive = true
+        }
+        launchSingleTop = true
+    }
+}
+
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun MainPages() {

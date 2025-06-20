@@ -15,9 +15,17 @@ import java.util.UUID
 
 object GenerativeAISession {
 
+    data class AIModel(val name: String)
+
     interface AIBio : Bio {
         val description: String?
+        val models: List<AIModel>
+        val type: Int
     }
+
+    const val TYPE_ONLINE = 0
+    const val TYPE_ON_DEVICE = 1
+    const val TYPE_MIX = 2
 
     suspend fun handleSessionNewMessage(session: Session, userPrompt: Any) {
         if (userPrompt is TextMessage) {
@@ -71,16 +79,19 @@ object GenerativeAISession {
         )
     }
 
-    val templateSessions: List<Session>
+    val onlineSessions: List<Session>
         get() {
             return listOf(
                 geminiSession,
-                cursorSession,
+                claudeSession,
                 openAiChatGPTSession,
                 microsoftCopilotSession,
+                deepSeekSession,
                 xunfeiSparkSession,
                 wenxinyiyanSession,
-                doubaoSession
+                doubaoSession,
+                qwenSession,
+                yuanbaoSession,
             )
         }
 
@@ -91,6 +102,8 @@ object GenerativeAISession {
                 override val name: String = "Gemini"
                 override val bioUrl: Any? = xcj.app.appsets.R.drawable.ai_model_logo_google_gemini
                 override val description: String? = "Gemini is Google's AI Model"
+                override val models: List<AIModel> = emptyList()
+                override val type: Int = TYPE_ONLINE
             }
 
             return Session(
@@ -98,14 +111,15 @@ object GenerativeAISession {
                 conversationState = ConversationState()
             )
         }
-
-    val cursorSession: Session
+    val claudeSession: Session
         get() {
             val bio = object : AIBio {
                 override val id: String = UUID.randomUUID().toString()
-                override val name: String = "Cursor"
-                override val bioUrl: Any? = xcj.app.appsets.R.drawable.ai_model_logo_cursor
-                override val description: String? = "Cursor is Cursor's AI Model"
+                override val name: String = "Claude"
+                override val bioUrl: Any? = xcj.app.appsets.R.drawable.ai_model_logo_claude
+                override val description: String? = "Claude is Anthropic's AI Model"
+                override val models: List<AIModel> = emptyList()
+                override val type: Int = TYPE_ONLINE
             }
 
             return Session(
@@ -113,14 +127,15 @@ object GenerativeAISession {
                 conversationState = ConversationState()
             )
         }
-
     val openAiChatGPTSession: Session
         get() {
             val bio = object : AIBio {
                 override val id: String = UUID.randomUUID().toString()
                 override val name: String = "OpenAI ChatGPT"
-                override val bioUrl: Any? = xcj.app.appsets.R.drawable.ai_model_logo_openai_logomark
+                override val bioUrl: Any? = xcj.app.appsets.R.drawable.ai_model_logo_openai
                 override val description: String? = "OpenAI ChatGPT is OpenAI's AI Model"
+                override val models: List<AIModel> = emptyList()
+                override val type: Int = TYPE_ONLINE
             }
 
             return Session(
@@ -136,6 +151,8 @@ object GenerativeAISession {
                 override val bioUrl: Any? =
                     xcj.app.appsets.R.drawable.ai_model_logo_microsoft_copilot
                 override val description: String? = "Microsoft Copilot is Microsoft's AI Model"
+                override val models: List<AIModel> = emptyList()
+                override val type: Int = TYPE_ONLINE
             }
 
             return Session(
@@ -143,14 +160,31 @@ object GenerativeAISession {
                 conversationState = ConversationState()
             )
         }
+    val deepSeekSession: Session
+        get() {
+            val bio = object : AIBio {
+                override val id: String = UUID.randomUUID().toString()
+                override val name: String = "DeepSeek"
+                override val bioUrl: Any? = xcj.app.appsets.R.drawable.ai_model_logo_deepseek
+                override val description: String? = "DeepSeek is 深度求索's AI Model"
+                override val models: List<AIModel> = emptyList()
+                override val type: Int = TYPE_ONLINE
+            }
 
+            return Session(
+                imObj = ImObj.fromBio(bio),
+                conversationState = ConversationState()
+            )
+        }
     val xunfeiSparkSession: Session
         get() {
             val bio = object : AIBio {
                 override val id: String = UUID.randomUUID().toString()
-                override val name: String = "讯飞星火"
+                override val name: String = "星火"
                 override val bioUrl: Any? = xcj.app.appsets.R.drawable.ai_model_logo_xunfei_spark
-                override val description: String? = "讯飞星火 is XunFei's AI Model"
+                override val description: String? = "星火 is 讯飞's AI Model"
+                override val models: List<AIModel> = emptyList()
+                override val type: Int = TYPE_ONLINE
             }
 
             return Session(
@@ -164,8 +198,10 @@ object GenerativeAISession {
             val bio = object : AIBio {
                 override val id: String = UUID.randomUUID().toString()
                 override val name: String = "文心一言"
-                override val bioUrl: Any? = xcj.app.appsets.R.drawable.ai_model_logo_baidu_yiyan
+                override val bioUrl: Any? = xcj.app.appsets.R.drawable.ai_model_logo_baidu_wenxin
                 override val description: String? = "文心一言 is Baidu's AI Model"
+                override val models: List<AIModel> = emptyList()
+                override val type: Int = TYPE_ONLINE
             }
 
             return Session(
@@ -179,13 +215,167 @@ object GenerativeAISession {
             val bio = object : AIBio {
                 override val id: String = UUID.randomUUID().toString()
                 override val name: String = "豆包"
-                override val bioUrl: Any? = xcj.app.appsets.R.drawable.ai_model_logo_doubao_white_bg
+                override val bioUrl: Any? = xcj.app.appsets.R.drawable.ai_model_logo_doubao
                 override val description: String? = "豆包 is ByteDance's AI Model"
+                override val models: List<AIModel> = emptyList()
+                override val type: Int = TYPE_ONLINE
             }
 
             return Session(
                 imObj = ImObj.fromBio(bio),
                 conversationState = ConversationState()
             )
+        }
+
+    val qwenSession: Session
+        get() {
+            val bio = object : AIBio {
+                override val id: String = UUID.randomUUID().toString()
+                override val name: String = "通义千问"
+                override val bioUrl: Any? = xcj.app.appsets.R.drawable.ai_model_logo_alibaba_qwen
+                override val description: String? = "通义千问 is Alibaba's AI Model"
+                override val models: List<AIModel> = emptyList()
+                override val type: Int = TYPE_ONLINE
+            }
+
+            return Session(
+                imObj = ImObj.fromBio(bio),
+                conversationState = ConversationState()
+            )
+        }
+    val yuanbaoSession: Session
+        get() {
+            val bio = object : AIBio {
+                override val id: String = UUID.randomUUID().toString()
+                override val name: String = "元宝"
+                override val bioUrl: Any? = xcj.app.appsets.R.drawable.ai_model_logo_tencent_yuanbao
+                override val description: String? = "元宝 is Tencent's AI Model"
+                override val models: List<AIModel> = emptyList()
+                override val type: Int = TYPE_ONLINE
+            }
+
+            return Session(
+                imObj = ImObj.fromBio(bio),
+                conversationState = ConversationState()
+            )
+        }
+
+    val onDeviceSessions: List<Session>
+        get() {
+            return listOf(
+                geminiNanoSession,
+                gemmaSession,
+                mistralSession,
+                phi_2Session,
+                tinyLlamaSession,
+                zephyrSession
+            )
+        }
+
+    val geminiNanoSession: Session
+        get() {
+            val bio = object : AIBio {
+                override val id: String = UUID.randomUUID().toString()
+                override val name: String = "Gemini Nano"
+                override val bioUrl: Any? = xcj.app.appsets.R.drawable.ai_model_logo_google_gemini
+                override val description: String? = "Gemini Nano is On-device AI Model"
+                override val models: List<AIModel> = emptyList()
+                override val type: Int = TYPE_ON_DEVICE
+            }
+
+            return Session(
+                imObj = ImObj.fromBio(bio),
+                conversationState = ConversationState()
+            )
+        }
+
+    val gemmaSession: Session
+        get() {
+            val bio = object : AIBio {
+                override val id: String = UUID.randomUUID().toString()
+                override val name: String = "Gemma"
+                override val bioUrl: Any? = xcj.app.appsets.R.drawable.ai_model_logo_google_gemini
+                override val description: String? = "Gemma is On-device AI Model"
+                override val models: List<AIModel> =
+                    listOf(AIModel("Gemma 2B"), AIModel("Gemma 7B"))
+                override val type: Int = TYPE_ON_DEVICE
+            }
+
+            return Session(
+                imObj = ImObj.fromBio(bio),
+                conversationState = ConversationState()
+            )
+        }
+
+    val mistralSession: Session
+        get() {
+            val bio = object : AIBio {
+                override val id: String = UUID.randomUUID().toString()
+                override val name: String = "Mistral"
+                override val bioUrl: Any? = xcj.app.appsets.R.drawable.ai_model_logo_google_gemini
+                override val description: String? = "Mistral is On-device AI Model"
+                override val models: List<AIModel> = listOf(AIModel("Mistral-Lite 7B"))
+                override val type: Int = TYPE_ON_DEVICE
+            }
+
+            return Session(
+                imObj = ImObj.fromBio(bio),
+                conversationState = ConversationState()
+            )
+        }
+    val phi_2Session: Session
+        get() {
+            val bio = object : AIBio {
+                override val id: String = UUID.randomUUID().toString()
+                override val name: String = "Phi-2"
+                override val bioUrl: Any? = xcj.app.appsets.R.drawable.ai_model_logo_google_gemini
+                override val description: String? = "Phi-2 is On-device AI Model"
+                override val models: List<AIModel> = emptyList()
+                override val type: Int = TYPE_ON_DEVICE
+            }
+
+            return Session(
+                imObj = ImObj.fromBio(bio),
+                conversationState = ConversationState()
+            )
+        }
+
+    val tinyLlamaSession: Session
+        get() {
+            val bio = object : AIBio {
+                override val id: String = UUID.randomUUID().toString()
+                override val name: String = "TinyLlama"
+                override val bioUrl: Any? = xcj.app.appsets.R.drawable.ai_model_logo_google_gemini
+                override val description: String? = "TinyLlama is On-device AI Model"
+                override val models: List<AIModel> = emptyList()
+                override val type: Int = TYPE_ON_DEVICE
+            }
+
+            return Session(
+                imObj = ImObj.fromBio(bio),
+                conversationState = ConversationState()
+            )
+        }
+
+    val zephyrSession: Session
+        get() {
+            val bio = object : AIBio {
+                override val id: String = UUID.randomUUID().toString()
+                override val name: String = "Zephyr"
+                override val bioUrl: Any? = xcj.app.appsets.R.drawable.ai_model_logo_google_gemini
+                override val description: String? = "Zephyr is On-device AI Model"
+                override val models: List<AIModel> = emptyList()
+                override val type: Int = TYPE_ON_DEVICE
+            }
+
+            return Session(
+                imObj = ImObj.fromBio(bio),
+                conversationState = ConversationState()
+            )
+        }
+
+    val mixedSessions: List<Session>
+        get() {
+            return listOf()
         }
 }

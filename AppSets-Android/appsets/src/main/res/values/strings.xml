@@ -448,6 +448,10 @@
     <string name="goods">Goods</string>
     <string name="cancel_follow">Cancel Follow</string>
     <string name="follow">Follow</string>
-    <string name="add_ai_aigent">Add AIGC</string>
+    <string name="add_ai_aigent">Add AI Model</string>
     <string name="get_suggestions">Get suggestions</string>
+    <string name="device_local_ai_models">On-device AI Models</string>
+    <string name="online_ai_models">Online AI Models</string>
+    <string name="mixed_ai_models">Mixed AI Models</string>
+    <string name="no_models_available">No models available</string>
 </resources>
