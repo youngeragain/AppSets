@@ -349,11 +349,11 @@ fun ScreenTopActionsPart(
 ) {
     val context = LocalContext.current
     val localView = LocalView.current
-    val scope = rememberCoroutineScope()
+    val coroutineScope = rememberCoroutineScope()
     Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
         SuggestionChip(
             onClick = {
-                scope.launch {
+                coroutineScope.launch {
                     shareAppSetsUserScreen(context, capturingViewBounds, localView)
                 }
             },

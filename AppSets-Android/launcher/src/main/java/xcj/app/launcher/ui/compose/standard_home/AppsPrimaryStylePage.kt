@@ -185,7 +185,7 @@ fun SettingsPanelVertical(appCardContainerSize: IntSize) {
     val viewModel = viewModel<StandardWindowHomeViewModel>()
     val context = LocalContext.current
     val settings by viewModel.settings
-    val scope = rememberCoroutineScope()
+    val coroutineScope = rememberCoroutineScope()
     Column(Modifier.statusBarsPadding()) {
         Surface(
             modifier = Modifier
@@ -448,7 +448,7 @@ fun SettingsPanelVertical(appCardContainerSize: IntSize) {
                                 currentColorToChange = -1
                             },
                             onConfirmColor = { color ->
-                                scope.launch {
+                                coroutineScope.launch {
                                     viewModel.updateSettingsColor(color, currentColorToChange)
                                     currentColorToChange = -1
                                 }

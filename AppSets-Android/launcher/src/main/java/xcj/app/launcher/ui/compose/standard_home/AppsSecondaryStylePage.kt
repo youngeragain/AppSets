@@ -39,7 +39,7 @@ fun AppsSecondaryStylePage(
         mutableStateOf(false)
     }
     val lazyListState = rememberLazyListState()
-    val scope = rememberCoroutineScope()
+    val coroutineScope = rememberCoroutineScope()
     val viewModel = viewModel<StandardWindowHomeViewModel>()
     val appDefinitionList = viewModel.apps
     val context = LocalContext.current
@@ -109,7 +109,7 @@ fun AppsSecondaryStylePage(
                         if (alphabet.isNullOrEmpty()) {
                             return@AppsSecondaryStylePageAlphabetChoosePanelLayer
                         }
-                        scope.launch {
+                        coroutineScope.launch {
                             delay(100)
                             val alphabetIndex = appsWithAlphabet.indexOfFirst {
                                 if (it is String) {

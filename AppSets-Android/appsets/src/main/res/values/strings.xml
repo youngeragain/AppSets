@@ -66,7 +66,7 @@
     <string name="add_reply">Add reply</string>
     <string name="reply_below">Reply below</string>
     <string name="no_reply">No reply</string>
-    <string name="not_have_conversation">No dialogue</string>
+    <string name="not_have_conversation">No conversation</string>
     <string name="personal">Personal</string>
     <string name="group">Group</string>
     <string name="system">System</string>

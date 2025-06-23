@@ -156,6 +156,7 @@ class MainActivity : DesignComponentActivity() {
     private suspend fun handleIntentExternalContent(
         intent: Intent
     ) {
+        //wait compose first frame draw finish
         delay(150)
         val fromAppDefinition = getCallActivityAppDefinition()
         val bottomSheetState = viewModel.bottomSheetState()

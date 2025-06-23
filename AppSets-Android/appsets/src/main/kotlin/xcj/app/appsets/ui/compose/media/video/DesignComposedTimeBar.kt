@@ -296,7 +296,7 @@ class DesignComposedTimeBar(
                         }
                     }
 
-                    val scope = rememberCoroutineScope()
+                    val coroutineScope = rememberCoroutineScope()
 
                     val interactionSource: MutableInteractionSource =
                         remember { MutableInteractionSource() }
@@ -306,16 +306,16 @@ class DesignComposedTimeBar(
                             PurpleLogger.current.d(TAG, "interactions:$interaction ")
                             when (interaction) {
                                 is DragInteraction.Start -> {
-                                    dispatchScrubStart(scope, sliderPosition.floatValue)
+                                    dispatchScrubStart(coroutineScope, sliderPosition.floatValue)
                                 }
 
                                 is DragInteraction.Cancel -> {
-                                    dispatchScrubStop(scope, sliderPosition.floatValue, true)
+                                    dispatchScrubStop(coroutineScope, sliderPosition.floatValue, true)
                                 }
 
                                 is DragInteraction.Stop -> {
                                     hapticFeedback.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                    dispatchScrubStop(scope, sliderPosition.floatValue, false)
+                                    dispatchScrubStop(coroutineScope, sliderPosition.floatValue, false)
                                 }
                             }
                         }
@@ -345,7 +345,7 @@ class DesignComposedTimeBar(
                             onValueChange = { progress ->
                                 hapticFeedback.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                                 sliderPosition.floatValue = progress
-                                dispatchScrubMove(scope, progress)
+                                dispatchScrubMove(coroutineScope, progress)
                             }
                         )
                     }

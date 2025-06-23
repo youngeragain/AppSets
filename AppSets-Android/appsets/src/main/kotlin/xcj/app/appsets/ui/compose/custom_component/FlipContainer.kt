@@ -70,7 +70,7 @@ fun FlipCardContainer(
         }
     }
 
-    val scope = rememberCoroutineScope()
+    val coroutineScope = rememberCoroutineScope()
     val interactionSource = remember { MutableInteractionSource() } // 记住 InteractionSource
     val context = LocalContext.current
     val hapticFeedback = LocalHapticFeedback.current
@@ -82,7 +82,7 @@ fun FlipCardContainer(
                 onClick = onCardClick,
                 onLongClick = {
                     hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
-                    scope.launch {
+                    coroutineScope.launch {
                         status = !status
                         val targetValue = if (status) {
                             base

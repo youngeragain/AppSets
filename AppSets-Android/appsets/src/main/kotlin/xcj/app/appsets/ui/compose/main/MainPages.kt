@@ -518,9 +518,9 @@ fun Modifier.mainScaffoldHandle(): Modifier = composed {
     val renderEffectAnimateState = remember {
         AnimationState(0f)
     }
-    val scope = rememberCoroutineScope()
+    val coroutineScope = rememberCoroutineScope()
     LaunchedEffect(immerseContentState.isShow) {
-        scope.launch {
+        coroutineScope.launch {
             val target = if (immerseContentState.isShow) {
                 30f
             } else {

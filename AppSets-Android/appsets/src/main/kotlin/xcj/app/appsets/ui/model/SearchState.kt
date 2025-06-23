@@ -6,19 +6,25 @@ import xcj.app.appsets.server.model.ScreenInfo
 import xcj.app.appsets.server.model.UserInfo
 
 sealed interface SearchResult {
-    data class SearchedUser(val userInfo: UserInfo) : SearchResult
-
-    data class SearchedGroup(val groupInfo: GroupInfo) :
-        SearchResult
-
-    data class SearchedScreen(val screenInfo: ScreenInfo) :
-        SearchResult
-
-    data class SearchedApplications(
-        val applications: List<Application>
+    data class SearchedUsers(
+        val users: List<UserInfo>,
     ) : SearchResult
 
-    data class SplitTitle(val title: Int? = null) : SearchResult
+    data class SearchedGroups(
+        val groups: List<GroupInfo>,
+    ) : SearchResult
+
+    data class SearchedScreens(
+        val screens: List<ScreenInfo>,
+    ) : SearchResult
+
+    data class SearchedApplications(
+        val applications: List<Application>,
+    ) : SearchResult
+
+    data class SearchedGoods(
+        val goodsList: List<Any>,
+    ) : SearchResult
 }
 
 sealed class SearchState(val keywords: String? = null, override val tips: Int? = null) : TipsState {
@@ -30,7 +36,7 @@ sealed class SearchState(val keywords: String? = null, override val tips: Int? =
     class SearchSuccess(
         keywords: String,
         val results: List<SearchResult>,
-        override val tips: Int? = null
+        override val tips: Int? = null,
     ) :
         SearchState(keywords, tips)
 

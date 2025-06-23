@@ -185,14 +185,14 @@ fun CardContainer0(
 
 @Composable
 fun <T> rememberStackState0(canDrag: Boolean = true, infinite: Boolean = true): StackState0<T> {
-    val scope = rememberCoroutineScope()
+    val coroutineScope = rememberCoroutineScope()
     val screenWidth: Float =
         with(LocalDensity.current) { LocalConfiguration.current.screenWidthDp.dp.toPx() }
     val screenHeight: Float =
         with(LocalDensity.current) { LocalConfiguration.current.screenHeightDp.dp.toPx() }
     return remember {
         StackState0(
-            scope = scope,
+            scope = coroutineScope,
             screenWidth = screenWidth,
             screenHeight = screenHeight,
             canDrag = canDrag,

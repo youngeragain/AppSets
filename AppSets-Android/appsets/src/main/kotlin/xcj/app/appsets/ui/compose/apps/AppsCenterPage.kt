@@ -58,7 +58,7 @@ fun AppsCenterPage(
 ) {
     ShowNavBarWhenOnLaunch()
 
-    val scope = rememberCoroutineScope()
+    val coroutineScope = rememberCoroutineScope()
 
     var allApplications = appCenterState.apps.flatMap { it.applications }
     val iconAnimationStates = remember {
@@ -79,13 +79,13 @@ fun AppsCenterPage(
                 } else {
                     (((index - center).toFloat() / center.toFloat()) * 180).toInt()
                 }
-                scope.launch {
+                coroutineScope.launch {
                     animation.animateTo(1f, tween(550, delay))
                 }
             }
         } else {
             iconAnimationStates.forEach {
-                scope.launch {
+                coroutineScope.launch {
                     it.animateTo(1f, snap())
                 }
             }

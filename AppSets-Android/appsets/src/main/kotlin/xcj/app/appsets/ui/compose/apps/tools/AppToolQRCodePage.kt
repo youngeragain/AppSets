@@ -106,7 +106,7 @@ fun AppToolQRCodePage(
             backButtonRightText = stringResource(xcj.app.appsets.R.string.transform_content)
         )
         Box(modifier = Modifier.weight(1f)) {
-            val scope = rememberCoroutineScope()
+            val coroutineScope = rememberCoroutineScope()
             var transformType by rememberSaveable {
                 mutableStateOf("None")
             }
@@ -210,7 +210,7 @@ fun AppToolQRCodePage(
             }
 
             LaunchedEffect(key1 = transformType, key2 = content) {
-                transformRunnable(scope)
+                transformRunnable(coroutineScope)
             }
 
             PortraitQRCodeComponent(

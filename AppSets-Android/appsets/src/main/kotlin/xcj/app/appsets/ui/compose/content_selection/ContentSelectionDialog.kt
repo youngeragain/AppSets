@@ -136,9 +136,9 @@ fun ContentSelectDialog(
     onContentSelect: (ContentSelectionResults) -> Unit,
 ) {
 
-    val pageState = rememberPagerState { selectionTypes.size }
+    val pagerState = rememberPagerState { selectionTypes.size }
 
-    val scope = rememberCoroutineScope()
+    val coroutineScope = rememberCoroutineScope()
 
     Column(modifier = Modifier.fillMaxSize()) {
         val tabsScrollState = rememberScrollState()
@@ -156,10 +156,10 @@ fun ContentSelectDialog(
                     modifier = Modifier.onPlaced {
                         buttonSize.value = it.size
                     },
-                    selected = index == pageState.currentPage,
+                    selected = index == pagerState.currentPage,
                     onClick = {
-                        scope.launch {
-                            pageState.animateScrollToPage(index)
+                        coroutineScope.launch {
+                            pagerState.animateScrollToPage(index)
                         }
                     },
                     shape = SegmentedButtonDefaults.itemShape(
@@ -172,16 +172,14 @@ fun ContentSelectDialog(
                 }
             }
         }
+        LaunchedEffect(pagerState.currentPage) {
+            tabsScrollState.animateScrollTo(buttonSize.value.width * pagerState.currentPage)
+        }
         HorizontalPager(
-            state = pageState, modifier = Modifier
+            state = pagerState, modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f)
         ) { index ->
-            LaunchedEffect(index) {
-                scope.launch {
-                    tabsScrollState.animateScrollTo(buttonSize.value.width * index)
-                }
-            }
             when (selectionTypes[index].name) {
                 ContentSelectionVarargs.CAMERA -> {
                     CameraContentSelection(
@@ -249,7 +247,7 @@ fun CameraContentSelection(
             create(context)
         }
     }
-    val scope = rememberCoroutineScope()
+    val coroutineScope = rememberCoroutineScope()
     val capturedPicture = remember {
         mutableStateOf<File?>(null)
     }
@@ -368,7 +366,7 @@ fun CameraContentSelection(
                             text = stringResource(xcj.app.appsets.R.string.delete),
                             modifier = Modifier.clickable(
                                 onClick = {
-                                    scope.launch(Dispatchers.IO) {
+                                    coroutineScope.launch(Dispatchers.IO) {
                                         val capturedPictureFile = capturedPicture.value
                                         capturedPictureFile?.delete()
                                         capturedPicture.value = null
@@ -391,7 +389,7 @@ fun CameraContentSelection(
                         } else {
                             cameraComponents.stopCamera()
                         }
-                        scope.launch {
+                        coroutineScope.launch {
                             alphaAnimation.animateTo(
                                 if (swipeableState.value == DragValue.Start) {
                                     1f
@@ -407,7 +405,7 @@ fun CameraContentSelection(
                                 if (swipeableState.value != DragValue.End) {
                                     return@IconButton
                                 }
-                                scope.launch {
+                                coroutineScope.launch {
                                     cameraComponents.takePicture { pictureFile ->
                                         capturedPicture.value = pictureFile
                                     }

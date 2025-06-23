@@ -15,6 +15,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -38,6 +40,7 @@ import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import kotlinx.coroutines.launch
 import xcj.app.appsets.ui.compose.quickstep.QuickStepContent
+import xcj.app.appsets.ui.compose.quickstep.QuickStepContentComponent
 import xcj.app.appsets.ui.compose.quickstep.QuickStepContentHolder
 import xcj.app.appsets.ui.compose.quickstep.QuickStepSheet
 import xcj.app.appsets.ui.compose.quickstep.TextQuickStepContent
@@ -48,7 +51,7 @@ import xcj.app.starter.util.ContentType
 
 private suspend fun makeQuickStepContentHolder(
     context: Context,
-    intent: Intent
+    intent: Intent,
 ): QuickStepContentHolder {
     val quickStepContentList = mutableListOf<QuickStepContent>()
     if (intent.type == ContentType.TEXT_PLAIN) {
@@ -91,15 +94,13 @@ fun ExternalContentContainerSheet(
         mutableStateOf(false)
     }
     val context = LocalContext.current
-    val scope = rememberCoroutineScope()
+    val coroutineScope = rememberCoroutineScope()
     var quickStepContentHolder by remember {
         mutableStateOf(QuickStepContentHolder(intent, emptyList()))
     }
-    LaunchedEffect(isHandleByAppSets) {
-        if (isHandleByAppSets) {
-            scope.launch {
-                quickStepContentHolder = makeQuickStepContentHolder(context, intent)
-            }
+    LaunchedEffect(Unit) {
+        coroutineScope.launch {
+            quickStepContentHolder = makeQuickStepContentHolder(context, intent)
         }
     }
     Box(modifier = Modifier.animateContentSize()) {
@@ -108,6 +109,7 @@ fun ExternalContentContainerSheet(
                 QuickStepSheet(quickStepContentHolder)
             } else {
                 ExternalContentTipsSheet(
+                    quickStepContentHolder = quickStepContentHolder,
                     fromAppDefinition = fromAppDefinition,
                     onConfirmClick = { handleType ->
                         if (handleType == MainActivity.EXTERNAL_CONTENT_HANDLE_BY_APPSETS) {
@@ -123,6 +125,7 @@ fun ExternalContentContainerSheet(
 
 @Composable
 fun ExternalContentTipsSheet(
+    quickStepContentHolder: QuickStepContentHolder,
     fromAppDefinition: AppDefinition?,
     onConfirmClick: (Int) -> Unit,
 ) {
@@ -133,33 +136,48 @@ fun ExternalContentTipsSheet(
         verticalArrangement = Arrangement.spacedBy(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        if (fromAppDefinition != null) {
-            AsyncImage(
-                model = fromAppDefinition.icon,
-                contentDescription = fromAppDefinition.description,
-                modifier = Modifier
-                    .size(42.dp)
-                    .clip(MaterialTheme.shapes.large)
-                    .border(
-                        1.dp,
-                        MaterialTheme.colorScheme.outline,
-                        MaterialTheme.shapes.large
-                    ),
-            )
-            Text(text = fromAppDefinition.name ?: "")
-        } else {
+
+        LazyRow(
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            items(quickStepContentHolder.quickStepContents) { quickStepContent ->
+                QuickStepContentComponent(quickStepContent)
+            }
+        }
+
+        Row(
+            verticalAlignment = Alignment.CenterVertically
+        ) {
             Icon(
                 modifier = Modifier
                     .size(32.dp),
                 painter = painterResource(xcj.app.compose_share.R.drawable.ic_web_stories_24),
                 contentDescription = null
             )
+            Text(
+                text = stringResource(xcj.app.appsets.R.string.external_content),
+                fontSize = 22.sp,
+                fontWeight = FontWeight.Bold
+            )
+
+            if (fromAppDefinition != null) {
+                Row {
+                    AsyncImage(
+                        model = fromAppDefinition.icon,
+                        contentDescription = fromAppDefinition.description,
+                        modifier = Modifier
+                            .size(32.dp)
+                            .clip(MaterialTheme.shapes.large)
+                            .border(
+                                1.dp,
+                                MaterialTheme.colorScheme.outline,
+                                MaterialTheme.shapes.large
+                            ),
+                    )
+                    Text(text = fromAppDefinition.name ?: "")
+                }
+            }
         }
-        Text(
-            text = stringResource(xcj.app.appsets.R.string.external_content),
-            fontSize = 22.sp,
-            fontWeight = FontWeight.Bold
-        )
 
         Text(
             text = stringResource(xcj.app.appsets.R.string.how_to), fontSize = 16.sp,
@@ -173,16 +191,18 @@ fun ExternalContentTipsSheet(
                 verticalArrangement = Arrangement.spacedBy(4.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                FilledTonalIconButton(onClick = {
-                    onConfirmClick(MainActivity.EXTERNAL_CONTENT_HANDLE_BY_APPSETS)
-                }) {
+                FilledTonalIconButton(
+                    onClick = {
+                        onConfirmClick(MainActivity.EXTERNAL_CONTENT_HANDLE_BY_APPSETS)
+                    }
+                ) {
                     Image(
                         modifier = Modifier,
                         painter = painterResource(xcj.app.compose_share.R.drawable.ic_launcher_foreground),
                         contentDescription = null
                     )
                 }
-                Text("AppSets", fontSize = 12.sp)
+                Text(text = stringResource(xcj.app.appsets.R.string.app_name), fontSize = 12.sp)
             }
         }
     }

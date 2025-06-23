@@ -45,7 +45,6 @@ import xcj.app.starter.util.ContentType
 fun QuickStepSheet(
     quickStepContentHolder: QuickStepContentHolder
 ) {
-    val newQuickStepContentHolder by rememberUpdatedState(quickStepContentHolder)
     val requester = remember {
         FocusRequester()
     }
@@ -56,7 +55,7 @@ fun QuickStepSheet(
     val filteredContentHandlersMap by remember {
         derivedStateOf {
             quickStepContentHandlerRegistry.findHandlers(
-                newQuickStepContentHolder,
+                quickStepContentHolder,
                 searchContent.text
             ).groupBy { it.getCategory() }
         }
@@ -72,7 +71,7 @@ fun QuickStepSheet(
         LazyRow(
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            items(newQuickStepContentHolder.quickStepContents) { quickStepContent ->
+            items(quickStepContentHolder.quickStepContents) { quickStepContent ->
                 QuickStepContentComponent(quickStepContent)
             }
         }
@@ -136,7 +135,7 @@ fun QuickStepContentComponent(quickStepContent: QuickStepContent) {
                 1.dp, MaterialTheme.colorScheme.outline,
                 MaterialTheme.shapes.extraLarge
             )
-            .padding(12.dp),
+            .padding(4.dp),
         horizontalArrangement = Arrangement.spacedBy(6.dp)
     ) {
         if (quickStepContent is TextQuickStepContent) {

@@ -434,7 +434,7 @@ fun DevicesSpace(
     val shareMethodType by viewModel.shareMethodTypeState
     val shareDevice by viewModel.mShareDeviceState
 
-    val scope = rememberCoroutineScope()
+    val coroutineScope = rememberCoroutineScope()
 
     var isShowSettings by remember {
         mutableStateOf(false)
@@ -459,7 +459,7 @@ fun DevicesSpace(
     }
 
     LaunchedEffect(isDiscovering, shareDeviceList) {
-        scope.launch {
+        coroutineScope.launch {
             delay(5000)
             shouldShowTips = shareDeviceList.isEmpty()
         }
@@ -477,7 +477,7 @@ fun DevicesSpace(
         if (serverBootStateInfo !is ServerBootStateInfo.Booted) {
             return@LaunchedEffect
         }
-        scope.launch {
+        coroutineScope.launch {
             val shareQrCodeContent = serverBootStateInfo.availableDeviceIp.joinToString(
                 separator = ":",
                 prefix = "asqr:appsets_share:"
@@ -935,7 +935,7 @@ fun SettingsSheet(
                 }
                 val firstPageIndex = shareMethods.indexOfFirst { it.first == shareMethodType }
                 val pagerState = rememberPagerState(firstPageIndex) { 3 }
-                val scope = rememberCoroutineScope()
+                val coroutineScope = rememberCoroutineScope()
                 SingleChoiceSegmentedButtonRow(modifier = Modifier.width(120.dp * 3)) {
                     shareMethods.forEachIndexed { index, shareMethod ->
                         SegmentedButton(
@@ -944,7 +944,7 @@ fun SettingsSheet(
                                 appSetsShareActivity.updateShareMethod(shareMethod.first)
                                 val pageIndex =
                                     shareMethods.indexOfFirst { it.first == shareMethod.first }
-                                scope.launch {
+                                coroutineScope.launch {
                                     pagerState.animateScrollToPage(pageIndex)
                                 }
                             },

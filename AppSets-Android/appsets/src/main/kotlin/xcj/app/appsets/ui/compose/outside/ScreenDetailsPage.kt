@@ -115,7 +115,7 @@ fun ScreenDetailsPage(
             mutableStateOf(false)
         }
 
-        val scope = rememberCoroutineScope()
+        val coroutineScope = rememberCoroutineScope()
         val hazeState = remember {
             HazeState()
         }
@@ -157,7 +157,7 @@ fun ScreenDetailsPage(
                             onCollectClick = onCollectClick,
                             onLikesClick = {
                                 onLikesClick()
-                                scope.launch {
+                                coroutineScope.launch {
                                     hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
                                     isShowLikeBigIconAnimation = true
                                 }

@@ -288,7 +288,7 @@ fun ConversationOverviewPortrait(
     val conversationUseCase = LocalUseCaseOfConversation.current
     val pagerState =
         rememberPagerState(tabs.indexOf(conversationUseCase.currentTab.value)) { tabs.size }
-    val scope = rememberCoroutineScope()
+    val coroutineScope = rememberCoroutineScope()
 
     LaunchedEffect(pagerState.currentPage) {
         conversationUseCase.updateCurrentTab(tabs[pagerState.currentPage])
@@ -302,7 +302,7 @@ fun ConversationOverviewPortrait(
             currentTab = tabs[pagerState.currentPage],
             isShowAddActions = isShowActions,
             onTabClick = { tab ->
-                scope.launch {
+                coroutineScope.launch {
                     pagerState.animateScrollToPage(tabs.indexOf(tab))
                 }
             },
@@ -314,7 +314,8 @@ fun ConversationOverviewPortrait(
 
         HorizontalPager(
             modifier = Modifier.weight(1f),
-            state = pagerState
+            state = pagerState,
+            verticalAlignment = Alignment.Top
         ) { index ->
             val currentTab = tabs[index]
             when (currentTab) {

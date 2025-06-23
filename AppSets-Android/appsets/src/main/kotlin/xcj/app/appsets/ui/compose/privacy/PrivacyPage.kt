@@ -61,8 +61,8 @@ fun PrivacyPage(
             pagerState = pagerState
         )
         HorizontalPager(
-            modifier = Modifier.fillMaxSize(),
-            state = pagerState
+            state = pagerState,
+            verticalAlignment = Alignment.Top
         ) { pageIndex ->
             if (pageIndex == 0) {
                 PlatformPermissionsComponent(platformPermissionsUsageList, onRequest)
@@ -172,17 +172,12 @@ fun PermissionCard(
                 shape = CircleShape,
             )
         }
-        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
             Spacer(modifier = Modifier.weight(1f))
             if (!platformPermissionsUsage.granted) {
-                FilledTonalButton(
-                    onClick = {
-                        onRequest(platformPermissionsUsage, 0)
-                    },
-                    shape = CircleShape,
-                ) {
-                    Text(text = stringResource(xcj.app.appsets.R.string.go_to_settings))
-                }
                 FilledTonalButton(
                     onClick = {
                         onRequest(platformPermissionsUsage, 1)
@@ -191,8 +186,17 @@ fun PermissionCard(
                 ) {
                     Text(text = stringResource(xcj.app.appsets.R.string.request))
                 }
+
             } else {
                 Text(text = stringResource(xcj.app.appsets.R.string.granted))
+            }
+            FilledTonalButton(
+                onClick = {
+                    onRequest(platformPermissionsUsage, 0)
+                },
+                shape = CircleShape,
+            ) {
+                Text(text = stringResource(xcj.app.appsets.R.string.go_to_settings))
             }
         }
     }

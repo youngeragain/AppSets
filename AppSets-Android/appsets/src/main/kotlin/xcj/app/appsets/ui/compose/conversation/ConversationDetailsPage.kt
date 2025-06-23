@@ -239,7 +239,7 @@ fun SessionObjectNormal(
     val scrollState = rememberLazyListState()
     val session = sessionState.session
     val conversationState = session.conversationState
-    val scope = rememberCoroutineScope()
+    val coroutineScope = rememberCoroutineScope()
     val complexContentSending by conversationUseCase.complexContentSendingState
 
     val hapticFeedback = LocalHapticFeedback.current
@@ -267,7 +267,7 @@ fun SessionObjectNormal(
     }
 
     LaunchedEffect(inputTextFiledValue, receivedContents.size) {
-        scope.launch {
+        coroutineScope.launch {
             textFieldAdviser.makeAdviser(inputTextFiledValue, receivedContents)
         }
     }
@@ -315,7 +315,7 @@ fun SessionObjectNormal(
                 onMoreClick(session.imObj)
             },
             onJumpToLatestClick = {
-                scope.launch {
+                coroutineScope.launch {
                     if (scrollState.firstVisibleItemIndex > 25) {
                         scrollState.scrollToItem(0)
                     } else {
@@ -362,7 +362,7 @@ fun SessionObjectNormal(
             },
             resetScroll = {
                 PurpleLogger.current.d(TAG, "reset scroll")
-                scope.launch {
+                coroutineScope.launch {
                     delay(200)
                     if (scrollState.firstVisibleItemIndex > 20) {
                         scrollState.scrollToItem(0)

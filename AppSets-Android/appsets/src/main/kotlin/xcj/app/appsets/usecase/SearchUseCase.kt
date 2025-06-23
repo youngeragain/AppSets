@@ -114,28 +114,21 @@ class SearchUseCase(
         val searchResults = mutableListOf<SearchResult>()
         val searchSuccess = SearchState.SearchSuccess(keywords, searchResults)
         if (!combineSearchRes.applications.isNullOrEmpty()) {
-            searchResults.add(SearchResult.SplitTitle(xcj.app.appsets.R.string.application))
             searchResults.add(SearchResult.SearchedApplications(combineSearchRes.applications))
         }
 
         if (!combineSearchRes.users.isNullOrEmpty()) {
-            searchResults.add(SearchResult.SplitTitle(xcj.app.appsets.R.string.user))
-            combineSearchRes.users.mapTo(searchResults) {
-                SearchResult.SearchedUser(it)
-            }
+            searchResults.add(SearchResult.SearchedUsers(combineSearchRes.users))
         }
         if (!combineSearchRes.groups.isNullOrEmpty()) {
-            searchResults.add(SearchResult.SplitTitle(xcj.app.appsets.R.string.group))
-            combineSearchRes.groups.mapTo(searchResults) {
-                SearchResult.SearchedGroup(it)
-            }
+            searchResults.add(SearchResult.SearchedGroups(combineSearchRes.groups))
 
         }
         if (!combineSearchRes.screens.isNullOrEmpty()) {
-            searchResults.add(SearchResult.SplitTitle(xcj.app.appsets.R.string.appsets_screen))
-            combineSearchRes.screens.mapTo(searchResults) {
-                SearchResult.SearchedScreen(it)
-            }
+            searchResults.add(SearchResult.SearchedScreens(combineSearchRes.screens))
+        }
+        if (!combineSearchRes.goods.isNullOrEmpty()) {
+            searchResults.add(SearchResult.SearchedGoods(combineSearchRes.goods))
         }
         searchState.value = searchSuccess
     }

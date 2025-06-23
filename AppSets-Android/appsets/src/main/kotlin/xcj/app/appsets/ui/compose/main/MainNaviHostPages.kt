@@ -1329,7 +1329,7 @@ fun <D> showPictureViewDialog(
             modifier = Modifier
                 .fillMaxSize()
         ) {
-            val scope = rememberCoroutineScope()
+            val coroutineScope = rememberCoroutineScope()
             val pagerState = rememberPagerState(
                 initialPage = dataList.indexOf(data),
                 pageCount = { dataList.size }
@@ -1383,7 +1383,7 @@ fun <D> showPictureViewDialog(
                 )
 
                 LaunchedEffect(true) {
-                    scope.launch {
+                    coroutineScope.launch {
                         rotation.floatValue = 0f
                     }
                 }

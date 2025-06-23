@@ -89,7 +89,7 @@ fun PortraitWeatherComponent() {
             mutableStateOf<WeatherInfo?>(null)
         }
 
-        val scope = rememberCoroutineScope()
+        val coroutineScope = rememberCoroutineScope()
 
         val scrollState = rememberScrollState()
 
@@ -101,7 +101,7 @@ fun PortraitWeatherComponent() {
 
         LaunchedEffect(key1 = true) {
             weatherInfo = systemUseCase.getWeatherInfo(locationName, longitude, latitude)
-            scope.launch {
+            coroutineScope.launch {
                 val nowHourTime = Calendar.getInstance().time.time
                 val previousHourTime = nowHourTime - 3600000
                 val temperatureInfos = weatherInfo?.temperatureInfo ?: return@launch
@@ -267,7 +267,7 @@ fun LandscapeWeatherComponent() {
             mutableStateOf<WeatherInfo?>(null)
         }
 
-        val scope = rememberCoroutineScope()
+        val coroutineScope = rememberCoroutineScope()
 
         val scrollState = rememberScrollState()
 
@@ -277,7 +277,7 @@ fun LandscapeWeatherComponent() {
         val systemUseCase = LocalUseCaseOfSystem.current
         LaunchedEffect(key1 = true) {
             weatherInfo = systemUseCase.getWeatherInfo(locationName, longitude, latitude)
-            scope.launch {
+            coroutineScope.launch {
                 val nowHourTime = Calendar.getInstance().time.time
                 val previousHourTime = nowHourTime - 3600000
                 val temperatureInfos = weatherInfo?.temperatureInfo ?: return@launch

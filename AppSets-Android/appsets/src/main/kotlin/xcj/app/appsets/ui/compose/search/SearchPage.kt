@@ -6,6 +6,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,6 +16,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
@@ -23,11 +25,21 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.itemsIndexed
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
@@ -54,9 +66,9 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextRange
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -73,9 +85,9 @@ import xcj.app.appsets.ui.compose.PageRouteNames
 import xcj.app.appsets.ui.compose.custom_component.AnyImage
 import xcj.app.appsets.ui.compose.custom_component.ShowNavBarWhenOnLaunch
 import xcj.app.appsets.ui.compose.outside.ScreenComponent
+import xcj.app.appsets.ui.compose.theme.AppSetsShapes
 import xcj.app.appsets.ui.model.SearchResult
 import xcj.app.appsets.ui.model.SearchState
-import xcj.app.compose_share.components.DesignHDivider
 import xcj.app.compose_share.components.SearchTextField
 
 @Composable
@@ -87,7 +99,7 @@ fun SearchPage(
     ShowNavBarWhenOnLaunch()
 
     val searchUseCase = LocalUseCaseOfSearch.current
-    val searchState = searchUseCase.searchState.value
+    val searchState by searchUseCase.searchState
     var boxSize by remember {
         mutableStateOf(IntSize.Zero)
     }
@@ -147,7 +159,7 @@ fun SearchInputBar(
         }
     })
     val keyboardController = LocalSoftwareKeyboardController.current
-    val scope = rememberCoroutineScope()
+    val coroutineScope = rememberCoroutineScope()
     val corner = sizeOfSearchBar.height
         .div(2)
         .toFloat()
@@ -178,7 +190,7 @@ fun SearchInputBar(
                 modifier = Modifier
                     .clip(CircleShape)
                     .clickable(onClick = {
-                        scope.launch {
+                        coroutineScope.launch {
                             keyboardController?.hide()
                             delay(350)
                             onBackClick()
@@ -325,67 +337,245 @@ fun SearchPageResults(
                         )
                     }
                 } else {
-                    LazyColumn(contentPadding = PaddingValues(top = 12.dp, bottom = 68.dp)) {
-                        items(searchState.results) { result ->
-                            when (result) {
-                                is SearchResult.SplitTitle -> {
-                                    Column(
-                                        modifier = Modifier.padding(vertical = 12.dp),
-                                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                                    ) {
-                                        result.title?.let {
-                                            Text(
-                                                text = stringResource(id = it),
-                                                fontSize = 20.sp,
-                                                fontWeight = FontWeight.Bold,
-                                                modifier = Modifier.padding(horizontal = 12.dp)
-                                            )
-                                        }
+                    SearchSuccessPages(
+                        searchSuccess = searchState,
+                        onBioClick = onBioClick,
+                        onScreenMediaClick = onScreenMediaClick
+                    )
+                }
+            }
+        }
+    }
+}
 
-                                        DesignHDivider()
-                                    }
-                                }
+@Composable
+fun SearchSuccessPages(
+    searchSuccess: SearchState.SearchSuccess,
+    onBioClick: (Bio) -> Unit,
+    onScreenMediaClick: (ScreenMediaFileUrl, List<ScreenMediaFileUrl>) -> Unit,
+) {
+    val pagerState = rememberPagerState { searchSuccess.results.size }
+    val coroutineScope = rememberCoroutineScope()
+    Box {
+        HorizontalPager(
+            state = pagerState,
+            verticalAlignment = Alignment.Top
+        ) { index ->
+            val searchResult = searchSuccess.results[index]
+            when (searchResult) {
+                is SearchResult.SearchedApplications -> {
+                    SearchedApplicationsPage(
+                        searchedApplications = searchResult,
+                        onBioClick = onBioClick
+                    )
+                }
 
-                                is SearchResult.SearchedUser -> {
-                                    SearchedUserComponent(
-                                        modifier = Modifier.clickable {
-                                            onBioClick.invoke(result.userInfo)
-                                        },
-                                        result.userInfo
-                                    )
-                                }
+                is SearchResult.SearchedUsers -> {
+                    SearchedUsersPage(
+                        searchedUsers = searchResult,
+                        onBioClick = onBioClick
+                    )
+                }
 
-                                is SearchResult.SearchedGroup -> {
-                                    SearchedGroupComponent(
-                                        modifier = Modifier.clickable {
-                                            onBioClick.invoke(result.groupInfo)
-                                        },
-                                        result.groupInfo
-                                    )
-                                }
+                is SearchResult.SearchedGroups -> {
+                    SearchedGroupsPage(
+                        searchedGroups = searchResult,
+                        onBioClick = onBioClick
+                    )
+                }
 
-                                is SearchResult.SearchedScreen -> {
-                                    SearchedScreenComponent(
-                                        modifier = Modifier,
-                                        screenInfo = result.screenInfo,
-                                        onBioClick = onBioClick,
-                                        onScreenMediaClick = onScreenMediaClick,
-                                    )
-                                }
+                is SearchResult.SearchedScreens -> {
+                    SearchedScreensPage(
+                        searchedScreens = searchResult,
+                        onBioClick = onBioClick,
+                        onScreenMediaClick = onScreenMediaClick
+                    )
+                }
 
-                                is SearchResult.SearchedApplications -> {
-                                    SearchedApplicationComponent(
-                                        modifier = Modifier,
-                                        applications = result.applications,
-                                        onBioClick = onBioClick
-                                    )
-                                }
+                is SearchResult.SearchedGoods -> {
+                    SearchedGoodsListPage(searchResult)
+                }
+            }
 
-                                else -> Unit
-                            }
+        }
+        val tabsScrollState = rememberScrollState()
+        val buttonSize = remember {
+            mutableStateOf(IntSize.Zero)
+        }
+        SingleChoiceSegmentedButtonRow(
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .padding(horizontal = 12.dp)
+                .horizontalScroll(tabsScrollState)
+        ) {
+
+            searchSuccess.results.forEachIndexed { index, selectionType ->
+                SegmentedButton(
+                    modifier = Modifier.onPlaced {
+                        buttonSize.value = it.size
+                    },
+                    selected = index == pagerState.currentPage,
+                    onClick = {
+                        coroutineScope.launch {
+                            pagerState.animateScrollToPage(index)
+                        }
+                    },
+                    shape = SegmentedButtonDefaults.itemShape(
+                        index = index,
+                        count = searchSuccess.results.size
+                    ),
+                    icon = {}
+                ) {
+                    val text = when (selectionType) {
+                        is SearchResult.SearchedApplications -> {
+                            stringResource(xcj.app.appsets.R.string.application)
+                        }
+
+                        is SearchResult.SearchedUsers -> {
+                            stringResource(xcj.app.appsets.R.string.user)
+                        }
+
+                        is SearchResult.SearchedGroups -> {
+                            stringResource(xcj.app.appsets.R.string.group)
+                        }
+
+                        is SearchResult.SearchedScreens -> {
+                            "Screen"
+                        }
+
+                        is SearchResult.SearchedGoods -> {
+                            stringResource(xcj.app.appsets.R.string.goods)
                         }
                     }
+                    Text(text = text)
                 }
+            }
+        }
+        LaunchedEffect(pagerState.currentPage) {
+            tabsScrollState.animateScrollTo(buttonSize.value.width * pagerState.currentPage)
+        }
+    }
+
+
+}
+
+@Composable
+fun SearchedGoodsListPage(searchedGoodsList: SearchResult.SearchedGoods) {
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(top = 52.dp, bottom = 68.dp)
+    ) {
+        items(searchedGoodsList.goodsList) { screenInfo ->
+
+        }
+    }
+}
+
+@Composable
+fun SearchedScreensPage(
+    searchedScreens: SearchResult.SearchedScreens,
+    onBioClick: (Bio) -> Unit,
+    onScreenMediaClick: (ScreenMediaFileUrl, List<ScreenMediaFileUrl>) -> Unit,
+) {
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(top = 52.dp, bottom = 68.dp)
+    ) {
+        items(searchedScreens.screens) { screenInfo ->
+            SearchedScreenComponent(
+                modifier = Modifier,
+                screenInfo = screenInfo,
+                onBioClick = onBioClick,
+                onScreenMediaClick = onScreenMediaClick
+            )
+        }
+    }
+}
+
+@Composable
+fun SearchedGroupsPage(searchedGroups: SearchResult.SearchedGroups, onBioClick: (Bio) -> Unit) {
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(top = 52.dp, bottom = 68.dp)
+    ) {
+        items(searchedGroups.groups) { groupInfo ->
+            SearchedGroupComponent(
+                modifier = Modifier.clickable {
+                    onBioClick.invoke(groupInfo)
+                },
+                groupInfo = groupInfo
+            )
+        }
+    }
+}
+
+@Composable
+fun SearchedUsersPage(
+    searchedUsers: SearchResult.SearchedUsers,
+    onBioClick: (Bio) -> Unit,
+) {
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(top = 52.dp, bottom = 68.dp)
+    ) {
+        items(searchedUsers.users) { userInfo ->
+            SearchedUserComponent(
+                modifier = Modifier.clickable {
+                    onBioClick.invoke(userInfo)
+                },
+                userInfo = userInfo
+            )
+        }
+    }
+}
+
+@Composable
+fun SearchedApplicationsPage(
+    searchedApplications: SearchResult.SearchedApplications,
+    onBioClick: (Bio) -> Unit,
+) {
+    LazyVerticalGrid(
+        columns = GridCells.Adaptive(90.dp),
+        modifier = Modifier.fillMaxSize(),
+        state = rememberLazyGridState(),
+        contentPadding = PaddingValues(
+            top = 52.dp,
+            bottom = 68.dp
+        )
+    ) {
+        itemsIndexed(items = searchedApplications.applications) { index, application ->
+            Column(
+                modifier = Modifier
+                    .padding(horizontal = 12.dp, vertical = 8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                AnyImage(
+                    modifier = Modifier
+                        .size(68.dp)
+                        .clip(AppSetsShapes.large)
+                        .background(MaterialTheme.colorScheme.outline, AppSetsShapes.large)
+                        .border(
+                            1.dp,
+                            MaterialTheme.colorScheme.outline,
+                            AppSetsShapes.large
+                        )
+                        .clickable(
+                            onClick = {
+                                onBioClick(application)
+                            }
+                        ),
+                    any = application.bioUrl
+                )
+                Text(
+                    text = application.name ?: "",
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    textAlign = TextAlign.Center,
+                    fontSize = 12.sp,
+                    modifier = Modifier
+                        .widthIn(max = 82.dp)
+                )
             }
         }
     }
@@ -476,7 +666,13 @@ fun SearchedApplicationComponent(
                 AnyImage(
                     modifier = Modifier
                         .size(68.dp)
-                        .clip(MaterialTheme.shapes.large)
+                        .clip(AppSetsShapes.large)
+                        .background(MaterialTheme.colorScheme.outline, AppSetsShapes.large)
+                        .border(
+                            1.dp,
+                            MaterialTheme.colorScheme.outline,
+                            AppSetsShapes.large
+                        )
                         .clickable {
                             onBioClick(application)
                         },

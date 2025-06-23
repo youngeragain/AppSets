@@ -103,7 +103,7 @@ fun ColorSliderVertical(
 fun HueBarVertical(
     setColor: (Float) -> Unit
 ) {
-    val scope = rememberCoroutineScope()
+    val coroutineScope = rememberCoroutineScope()
     val interactionSource = remember {
         MutableInteractionSource()
     }
@@ -147,7 +147,7 @@ fun HueBarVertical(
             return x * 360f / width
         }
 
-        scope.collectForPress(interactionSource) { pressPosition ->
+        coroutineScope.collectForPress(interactionSource) { pressPosition ->
             val pressPos = pressPosition.x.coerceIn(0f..drawScopeSize.width)
             pressOffset.value = Offset(pressPos, 0f)
             val selectedHue = pointToHue(pressPos)
@@ -174,7 +174,7 @@ fun SatValPanel(
     val interactionSource = remember {
         MutableInteractionSource()
     }
-    val scope = rememberCoroutineScope()
+    val coroutineScope = rememberCoroutineScope()
     var sat: Float
     var value: Float
     val pressOffset = remember {
@@ -218,7 +218,7 @@ fun SatValPanel(
         )
 
 
-        scope.collectForPress(interactionSource) { pressPosition ->
+        coroutineScope.collectForPress(interactionSource) { pressPosition ->
             val pressPositionOffset = Offset(
                 pressPosition.x.coerceIn(0f..satValSize.width),
                 pressPosition.y.coerceIn(0f..satValSize.height)
@@ -286,10 +286,10 @@ fun CoroutineScope.collectForPress(
 private fun Modifier.emitDragGesture(
     interactionSource: MutableInteractionSource
 ): Modifier = composed {
-    val scope = rememberCoroutineScope()
+    val coroutineScope = rememberCoroutineScope()
     pointerInput(Unit) {
         detectDragGestures { input, _ ->
-            scope.launch {
+            coroutineScope.launch {
                 interactionSource.emit(PressInteraction.Press(input.position))
             }
         }

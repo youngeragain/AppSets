@@ -171,13 +171,13 @@ fun MediaContentInfoCard(
         mutableStateOf(true)
     }
     val hapticFeedback = LocalHapticFeedback.current
-    val scope = rememberCoroutineScope()
+    val coroutineScope = rememberCoroutineScope()
 
     var miniModeJobState = remember {
         mutableStateOf<Job?>(null)
     }
     DisposableEffect(Unit) {
-        miniModeJobState.value = scope.launch {
+        miniModeJobState.value = coroutineScope.launch {
             delay(3000)
             miniMode.value = false
             if (mediaContent != null) {

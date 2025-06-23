@@ -56,7 +56,7 @@ fun AppSetsVpnMainContent(
     onConnectButtonClick: (Boolean) -> Unit,
 ) {
     val pagerState = rememberPagerState(0) { 2 }
-    val scope = rememberCoroutineScope()
+    val coroutineScope = rememberCoroutineScope()
     Column(
         modifier = Modifier.navigationBarsPadding(),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -82,7 +82,7 @@ fun AppSetsVpnMainContent(
             SegmentedButton(
                 selected = pagerState.currentPage == 0,
                 onClick = {
-                    scope.launch {
+                    coroutineScope.launch {
                         pagerState.animateScrollToPage(0)
                     }
                 },
@@ -97,7 +97,7 @@ fun AppSetsVpnMainContent(
             SegmentedButton(
                 selected = pagerState.currentPage == 1,
                 onClick = {
-                    scope.launch {
+                    coroutineScope.launch {
                         pagerState.animateScrollToPage(1)
                     }
                 },

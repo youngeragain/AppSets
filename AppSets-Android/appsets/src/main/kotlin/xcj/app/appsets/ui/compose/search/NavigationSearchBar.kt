@@ -53,7 +53,7 @@ fun NavigationSearchBar(
     onBioClick: () -> Unit,
 ) {
     val searchUseCase = LocalUseCaseOfSearch.current
-    val searchState = searchUseCase.searchState.value
+    val searchState by searchUseCase.searchState
     var sizeOfSearchBar by remember {
         mutableStateOf(IntSize.Zero)
     }
