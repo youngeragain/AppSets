@@ -14,12 +14,12 @@ class DefaultComposeDynamicLoader(composeMethodsAware: ComposeMethodsAware) :
         private const val TAG = "DefaultComposeDynamicLoader"
     }
 
-    override fun <I : IComposeMethods> loadByClass(
+    override fun <I : IComposeMethodsAware> loadByClass(
         methodsContainer: MutableList<ComposeMethodsWrapper>,
         aarName: String?, clazz: Class<I>
     ) {
         //TODO 添加使用注解的解析逻辑
-        if (!AbstractComposeMethods::class.java.isAssignableFrom(clazz)) {
+        if (!AbstractComposeMethodsAware::class.java.isAssignableFrom(clazz)) {
             return
         }
         try {

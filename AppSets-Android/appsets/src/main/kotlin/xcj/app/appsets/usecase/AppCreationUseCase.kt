@@ -17,14 +17,14 @@ import xcj.app.appsets.ui.model.PlatformForCreate
 import xcj.app.appsets.ui.model.ScreenshotInfoForCreate
 import xcj.app.appsets.ui.model.VersionInfoForCreate
 import xcj.app.appsets.util.model.UriProvider
-import xcj.app.compose_share.dynamic.IComposeDispose
+import xcj.app.compose_share.dynamic.IComposeLifecycleAware
 import xcj.app.starter.android.ktx.startWithHttpSchema
 import xcj.app.starter.android.util.PurpleLogger
 
 class AppCreationUseCase(
     private val coroutineScope: CoroutineScope,
     private val appSetsRepository: AppSetsRepository
-) : IComposeDispose {
+) : IComposeLifecycleAware {
     companion object {
         private const val TAG = "AppCreationUseCase"
     }

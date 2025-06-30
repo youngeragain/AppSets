@@ -65,24 +65,23 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.media3.common.util.UnstableApi
-
 import xcj.app.appsets.constants.Constants
-import xcj.app.appsets.util.ktx.toast
-import xcj.app.appsets.server.model.PlatForm
+import xcj.app.appsets.server.model.Platform
 import xcj.app.appsets.server.model.VersionInfo
 import xcj.app.appsets.ui.compose.LocalUseCaseOfAppCreation
-import xcj.app.compose_share.components.DesignTextField
-import xcj.app.compose_share.components.DesignVDivider
-import xcj.app.appsets.ui.compose.custom_component.HideNavBarWhenOnLaunch
 import xcj.app.appsets.ui.compose.custom_component.AnyImage
+import xcj.app.appsets.ui.compose.custom_component.HideNavBarWhenOnLaunch
 import xcj.app.appsets.ui.model.ApplicationForCreate
 import xcj.app.appsets.ui.model.CreateApplicationState
 import xcj.app.appsets.ui.model.DownloadInfoForCreate
 import xcj.app.appsets.ui.model.PlatformForCreate
 import xcj.app.appsets.ui.model.ScreenshotInfoForCreate
 import xcj.app.appsets.ui.model.VersionInfoForCreate
+import xcj.app.appsets.util.ktx.toast
 import xcj.app.appsets.util.model.UriProvider
 import xcj.app.compose_share.components.BackActionTopBar
+import xcj.app.compose_share.components.DesignTextField
+import xcj.app.compose_share.components.DesignVDivider
 import xcj.app.compose_share.components.LocalAnyStateProvider
 import xcj.app.compose_share.ui.viewmodel.AnyStateViewModel.Companion.bottomSheetState
 
@@ -105,7 +104,7 @@ fun CreateAppPagePreview() {
 fun CreateAppPage(
     onBackClick: () -> Unit,
     createStep: String = ApplicationForCreate.CREATE_STEP_APPLICATION,
-    platform: PlatForm? = null,
+    platform: Platform? = null,
     versionInfo: VersionInfo? = null,
     createApplicationState: CreateApplicationState,
     onApplicationForCreateFiledChanged: (Any, String, String) -> Unit,
@@ -529,7 +528,7 @@ fun CreateApplicationIndicator(createApplicationState: CreateApplicationState) {
 @Composable
 fun CustomPlatformAddComponent(
     platformNames: List<String>,
-    onConfirmClick: () -> Unit
+    onConfirmClick: () -> Unit,
 ) {
     Box(
         Modifier.fillMaxWidth()
@@ -731,7 +730,7 @@ fun PlatformForApp(
     platformForCreate: PlatformForCreate,
     versionInfo: VersionInfo? = null,
     onApplicationForCreateFiledChanged: (Any, String, String) -> Unit,
-    onChoosePictureClick: (Any, String, UriProvider?) -> Unit
+    onChoosePictureClick: (Any, String, UriProvider?) -> Unit,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text(
@@ -888,7 +887,7 @@ fun VersionForPlatform(
     versionInfoForCreate: VersionInfoForCreate,
     versionInfoForCreateIndex: Int,
     onApplicationForCreateFiledChanged: (Any, String, String) -> Unit,
-    onChoosePictureClick: (Any, String, UriProvider?) -> Unit
+    onChoosePictureClick: (Any, String, UriProvider?) -> Unit,
 ) {
     Column {
         DesignVDivider()
@@ -1039,13 +1038,15 @@ fun VersionForPlatform(
                                         MaterialTheme.shapes.extraLarge
                                     )
                                     .clip(MaterialTheme.shapes.extraLarge)
-                                    .clickable(onClick = {
-                                        appCreationUseCase.deleteScreenInfoInVersion(
-                                            platformForCreate,
-                                            versionInfoForCreate,
-                                            screenShot
-                                        )
-                                    })
+                                    .clickable(
+                                        onClick = {
+                                            appCreationUseCase.deleteScreenInfoInVersion(
+                                                platformForCreate,
+                                                versionInfoForCreate,
+                                                screenShot
+                                            )
+                                        }
+                                    )
                                     .padding(horizontal = 12.dp, vertical = 6.dp)
                             ) {
                                 Text(
@@ -1058,14 +1059,12 @@ fun VersionForPlatform(
                                     .size(200.dp)
                                     .background(
                                         MaterialTheme.colorScheme.outline,
-                                        MaterialTheme.shapes.extraLarge
+                                        MaterialTheme.shapes.medium
                                     )
-                                    .clip(MaterialTheme.shapes.extraLarge),
+                                    .clip(MaterialTheme.shapes.medium),
                                 any = screenShot.uriHolder?.provideUri()
                             )
-
                         }
-
                     }
                 }
             } else {

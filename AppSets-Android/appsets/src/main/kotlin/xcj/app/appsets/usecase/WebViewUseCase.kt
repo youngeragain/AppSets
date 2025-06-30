@@ -2,9 +2,9 @@ package xcj.app.appsets.usecase
 
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
-import xcj.app.compose_share.dynamic.IComposeDispose
+import xcj.app.compose_share.dynamic.IComposeLifecycleAware
 
-class WebViewUseCase : IComposeDispose {
+class WebViewUseCase : IComposeLifecycleAware {
 
     val url: MutableState<String?> = mutableStateOf(null)
 

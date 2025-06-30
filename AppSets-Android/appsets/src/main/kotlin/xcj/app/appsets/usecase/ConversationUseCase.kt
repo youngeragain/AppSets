@@ -36,7 +36,7 @@ import xcj.app.appsets.server.model.UserRole
 import xcj.app.appsets.ui.compose.PageRouteNames
 import xcj.app.appsets.ui.compose.conversation.GenerativeAISession
 import xcj.app.appsets.ui.model.NowSpaceObjectState
-import xcj.app.compose_share.dynamic.IComposeDispose
+import xcj.app.compose_share.dynamic.IComposeLifecycleAware
 import xcj.app.starter.android.util.LocalMessager
 import xcj.app.starter.android.util.PurpleLogger
 import xcj.app.starter.test.LocalPurpleCoroutineScope
@@ -46,7 +46,7 @@ sealed interface SessionState {
     data class Normal(val session: Session) : SessionState
 }
 
-class ConversationUseCase private constructor() : IComposeDispose {
+class ConversationUseCase private constructor() : IComposeLifecycleAware {
 
     companion object {
         private const val TAG = "ConversationUseCase"

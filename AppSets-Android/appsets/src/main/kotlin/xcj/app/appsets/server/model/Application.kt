@@ -22,7 +22,7 @@ data class Application(
     val updateUid: String? = null,
     override val name: String? = null,
     val category: String? = null,
-    val platforms: List<PlatForm>? = null
+    val platforms: List<Platform>? = null,
 ) : Bio, ImSessionHolder, Parcelable {
 
     override var imSession: Session? = null
@@ -48,7 +48,7 @@ data class Application(
         parcel.readString(),
         parcel.readString(),
         parcel.readString(),
-        parcel.createTypedArrayList(PlatForm)
+        parcel.createTypedArrayList(Platform)
     ) {
     }
 
@@ -71,17 +71,43 @@ data class Application(
         return 0
     }
 
-    fun hasCurrentPlatformDownloadInfo(): Boolean {
+    fun currentPlatformVersionDownloadsInfos(): List<DownloadInfo> {
+        if (platforms.isNullOrEmpty()) {
+            return emptyList()
+        }
+        platforms.forEach { platform ->
+            if (platform.name == Constants.Android) {
+                return if (platform.versionInfos.isNullOrEmpty()) {
+                    emptyList()
+                } else {
+                    platform.versionInfos.flatMap {
+                        val downloadInfos = it.downloadInfos
+                        if (downloadInfos.isNullOrEmpty()) {
+                            emptyList()
+                        } else {
+                            downloadInfos
+                        }
+                    }
+                }
+            }
+        }
+        return emptyList()
+    }
+
+    fun hasPlatformDownloadInfo(platformName: String?): Boolean {
+        if (platformName.isNullOrEmpty()) {
+            return false
+        }
         if (platforms.isNullOrEmpty()) {
             return false
         }
         platforms.forEach { platform ->
-            if (platform.name == Constants.Android) {
+            if (platform.name == platformName) {
                 if (platform.versionInfos.isNullOrEmpty()) {
                     return false
                 } else {
                     platform.versionInfos.forEach { versionInfo ->
-                        if (versionInfo.downloadInfos.isNullOrEmpty()) {
+                        if (!versionInfo.downloadInfos.isNullOrEmpty()) {
                             return true
                         }
                     }
@@ -90,6 +116,7 @@ data class Application(
         }
         return false
     }
+
 
     companion object CREATOR : Parcelable.Creator<Application> {
 
@@ -111,12 +138,12 @@ data class Application(
     }
 }
 
-data class PlatForm(
+data class Platform(
     val id: String? = null,
     val name: String? = null,
     val packageName: String? = null,
     val introduction: String? = null,
-    val versionInfos: List<VersionInfo>? = null
+    val versionInfos: List<VersionInfo>? = null,
 ) : Parcelable {
 
     constructor(parcel: Parcel) : this(
@@ -140,12 +167,12 @@ data class PlatForm(
         return 0
     }
 
-    companion object CREATOR : Parcelable.Creator<PlatForm> {
-        override fun createFromParcel(parcel: Parcel): PlatForm {
-            return PlatForm(parcel)
+    companion object CREATOR : Parcelable.Creator<Platform> {
+        override fun createFromParcel(parcel: Parcel): Platform {
+            return Platform(parcel)
         }
 
-        override fun newArray(size: Int): Array<PlatForm?> {
+        override fun newArray(size: Int): Array<Platform?> {
             return arrayOfNulls(size)
         }
     }
@@ -161,7 +188,7 @@ data class VersionInfo(
     val packageSize: String? = null,
     val privacyUrl: String? = null,
     val screenshotInfos: List<ScreenshotInfo>? = null,
-    val downloadInfos: List<DownloadInfo>? = null
+    val downloadInfos: List<DownloadInfo>? = null,
 ) : Parcelable {
     constructor(parcel: Parcel) : this(
         parcel.readString(),
@@ -261,6 +288,9 @@ data class DownloadInfo(
     val updateTime: String? = null,
     val downloadTimes: Int?,
     val url: String? = null,
+    val description: String? = null,
+    val architectures: List<String>? = null,
+    val size: String? = null,
 ) : Parcelable {
     constructor(parcel: Parcel) : this(
         parcel.readString(),
@@ -269,6 +299,9 @@ data class DownloadInfo(
         parcel.readString(),
         parcel.readString(),
         parcel.readValue(Int::class.java.classLoader) as? Int,
+        parcel.readString(),
+        parcel.readString(),
+        parcel.createStringArrayList(),
         parcel.readString()
     ) {
     }
@@ -281,6 +314,9 @@ data class DownloadInfo(
         parcel.writeString(updateTime)
         parcel.writeValue(downloadTimes)
         parcel.writeString(url)
+        parcel.writeString(description)
+        parcel.writeStringList(architectures)
+        parcel.writeString(size)
     }
 
     override fun describeContents(): Int {

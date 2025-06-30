@@ -28,7 +28,7 @@ object PluginsRegistry : IPluginsRegistry {
             val methodsContainer: MutableList<ComposeMethodsWrapper> =
                 mutableListOf()
 
-            val loadAllAAR = loadAllAAR<IComposeMethods>()
+            val loadAllAAR = loadAllAAR<IComposeMethodsAware>()
             if (loadAllAAR.isNullOrEmpty()) {
                 composeMethodsAware.setMethodsContainer(methodsContainer)
                 return@withContext
@@ -46,7 +46,7 @@ object PluginsRegistry : IPluginsRegistry {
         }
     }
 
-    private fun <I : IComposeMethods> loadAllAAR(): Map<String, List<Class<I>>?>? {
+    private fun <I : IComposeMethodsAware> loadAllAAR(): Map<String, List<Class<I>>?>? {
         val keysJson = MySharedPreferences.getString("dynamic_compose_keys")
         if (keysJson.isNullOrEmpty()) {
             return null
@@ -155,10 +155,10 @@ object PluginsRegistry : IPluginsRegistry {
             DexClassScanner.setDexClassLoader(dexClassLoader)
             val allIComposeMethods =
                 DexClassScanner.getAllClassByInterface(
-                    IComposeMethods::class.java,
+                    IComposeMethodsAware::class.java,
                     "xcj.app.compose_share"
                 )?.filterNot {
-                    it == AbstractComposeMethods::class.java
+                    it == AbstractComposeMethodsAware::class.java
                 }
             DexClassScanner.setDexClassLoader(null)
             allIComposeMethods
@@ -218,7 +218,7 @@ object PluginsRegistry : IPluginsRegistry {
 
     fun unRegisterByAARByUser(
         aarName: String,
-        iComposeMethods: IComposeMethods? = null,
+        iComposeMethods: IComposeMethodsAware? = null,
         onFinish: (() -> Unit)? = null
     ) {
         runCatching {
@@ -280,7 +280,7 @@ object PluginsRegistry : IPluginsRegistry {
 
     }
 
-    override fun <I : IComposeMethods> registerByClass(key: String, vararg clazz: Class<I>) {
+    override fun <I : IComposeMethodsAware> registerByClass(key: String, vararg clazz: Class<I>) {
 
     }
 }

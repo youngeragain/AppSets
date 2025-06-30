@@ -36,7 +36,7 @@ import xcj.app.appsets.util.ktx.toastSuspend
 import xcj.app.appsets.util.message_digest.MessageDigestUtil
 import xcj.app.appsets.util.model.UriProvider
 import xcj.app.compose_share.components.AnyStateProvider
-import xcj.app.compose_share.dynamic.IComposeDispose
+import xcj.app.compose_share.dynamic.IComposeLifecycleAware
 import xcj.app.compose_share.ui.viewmodel.AnyStateViewModel.Companion.bottomSheetState
 import xcj.app.starter.android.util.PurpleLogger
 import xcj.app.starter.server.requestNotNull
@@ -122,7 +122,7 @@ class SystemUseCase(
     private val userRepository: UserRepository,
     private val appSetsRepository: AppSetsRepository,
     private val coroutineScope: CoroutineScope = LocalPurpleCoroutineScope.current,
-) : IComposeDispose {
+) : IComposeLifecycleAware {
 
     val selectedContentsStateHolder: SelectedContentsStateHolder = SelectedContentsStateHolder()
 

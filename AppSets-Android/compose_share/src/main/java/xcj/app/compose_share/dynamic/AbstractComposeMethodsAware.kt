@@ -2,7 +2,7 @@ package xcj.app.compose_share.dynamic
 
 import xcj.app.starter.android.util.PurpleLogger
 
-abstract class AbstractComposeMethods : IComposeMethods {
+abstract class AbstractComposeMethodsAware : IComposeMethodsAware {
 
     companion object {
         private const val TAG = "AbstractComposeMethods"

@@ -3,7 +3,12 @@
 package xcj.app.appsets.ui.compose.apps
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -23,9 +28,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsBottomHeight
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
@@ -40,6 +46,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -59,13 +66,16 @@ import dev.chrisbanes.haze.hazeSource
 import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
 import dev.chrisbanes.haze.materials.HazeMaterials
 import xcj.app.appsets.server.model.Application
-import xcj.app.appsets.server.model.PlatForm
+import xcj.app.appsets.server.model.DownloadInfo
+import xcj.app.appsets.server.model.Platform
+import xcj.app.appsets.server.model.ScreenshotInfo
 import xcj.app.appsets.server.model.VersionInfo
 import xcj.app.appsets.ui.compose.custom_component.AnyImage
 import xcj.app.appsets.ui.compose.custom_component.DesignBottomBackButton
 import xcj.app.appsets.ui.compose.custom_component.HideNavBarWhenOnLaunch
 import xcj.app.appsets.ui.compose.theme.BigAvatarShape
 import xcj.app.compose_share.components.BackActionTopBar
+import xcj.app.compose_share.components.DesignHDivider
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -74,10 +84,11 @@ fun AppDetailsPage(
     onBackClick: () -> Unit,
     onGetApplicationClick: (Application) -> Unit,
     onShowApplicationCreatorClick: (Application) -> Unit,
-    onAddPlatformInfoClick: (PlatForm?) -> Unit,
-    onAddVersionInfoClick: (PlatForm) -> Unit,
-    onAddScreenshotInfoClick: (PlatForm, VersionInfo) -> Unit,
-    onAddDownloadInfoClick: (PlatForm, VersionInfo) -> Unit,
+    onAddPlatformInfoClick: (Platform?) -> Unit,
+    onAddVersionInfoClick: (Platform) -> Unit,
+    onAddScreenshotInfoClick: (Platform, VersionInfo) -> Unit,
+    onAddDownloadInfoClick: (Platform, VersionInfo) -> Unit,
+    onAppScreenShotClick: (ScreenshotInfo, List<ScreenshotInfo>) -> Unit,
     onJoinToChatClick: (Application) -> Unit,
 ) {
 
@@ -126,6 +137,7 @@ fun AppDetailsPage(
                 onAddVersionInfoClick = onAddVersionInfoClick,
                 onAddScreenshotInfoClick = onAddScreenshotInfoClick,
                 onAddDownloadInfoClick = onAddDownloadInfoClick,
+                onAppScreenShotClick = onAppScreenShotClick
             )
             BackActionTopBar(
                 modifier = Modifier
@@ -150,20 +162,36 @@ fun ApplicationContentComponent(
     onShowApplicationCreatorClick: () -> Unit,
     onJoinToChatClick: () -> Unit,
     onAddPlatformInfoClick: (Int) -> Unit,
-    onAddVersionInfoClick: (PlatForm) -> Unit,
-    onAddScreenshotInfoClick: (PlatForm, VersionInfo) -> Unit,
-    onAddDownloadInfoClick: (PlatForm, VersionInfo) -> Unit,
+    onAddVersionInfoClick: (Platform) -> Unit,
+    onAddScreenshotInfoClick: (Platform, VersionInfo) -> Unit,
+    onAddDownloadInfoClick: (Platform, VersionInfo) -> Unit,
+    onAppScreenShotClick: (ScreenshotInfo, List<ScreenshotInfo>) -> Unit,
 ) {
     val rememberScrollState = rememberScrollState()
     val context = LocalContext.current
     var getApplicationButtonVisible by remember {
         mutableStateOf(false)
     }
-    LaunchedEffect(key1 = true, block = {
-        if (application.hasCurrentPlatformDownloadInfo()) {
-            getApplicationButtonVisible = true
+    var platformPosition by remember {
+        val initPosition = if (application.currentVisiblePlatformPosition != -1) {
+            application.currentVisiblePlatformPosition
+        } else {
+            0
         }
-    })
+        mutableIntStateOf(initPosition)
+    }
+    val platform by remember {
+        derivedStateOf {
+            application.currentVisiblePlatformPosition = platformPosition
+            application.platforms?.getOrNull(platformPosition)
+        }
+    }
+    LaunchedEffect(
+        key1 = platform,
+        block = {
+            getApplicationButtonVisible = application.hasPlatformDownloadInfo(platform?.name)
+        }
+    )
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -181,9 +209,7 @@ fun ApplicationContentComponent(
             modifier = Modifier
                 .fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Spacer(modifier = Modifier.height(8.dp))
             AnyImage(
                 modifier = Modifier
                     .size(250.dp)
@@ -195,7 +221,8 @@ fun ApplicationContentComponent(
                     ),
                 any = application.bioUrl
             )
-            if (getApplicationButtonVisible) {
+            Spacer(modifier = Modifier.height(16.dp))
+            AnimatedVisibility(visible = getApplicationButtonVisible) {
                 Row {
                     FilledTonalButton(
                         onClick = onGetApplicationClick
@@ -211,7 +238,6 @@ fun ApplicationContentComponent(
                         }
                         Text(text = getButtonText, fontSize = 12.sp)
                     }
-
                 }
             }
         }
@@ -274,14 +300,7 @@ fun ApplicationContentComponent(
                     ?: stringResource(id = xcj.app.appsets.R.string.not_offered)
             )
         }
-        var platformPosition by remember {
-            val initPosition = if (application.currentVisiblePlatformPosition != -1) {
-                application.currentVisiblePlatformPosition
-            } else {
-                0
-            }
-            mutableIntStateOf(initPosition)
-        }
+
         Box(
             modifier = Modifier.fillMaxWidth()
         ) {
@@ -314,12 +333,7 @@ fun ApplicationContentComponent(
             }
         }
         if (!application.platforms.isNullOrEmpty()) {
-            val platform by remember {
-                derivedStateOf {
-                    application.currentVisiblePlatformPosition = platformPosition
-                    application.platforms[platformPosition]
-                }
-            }
+
             Column(Modifier.fillMaxWidth()) {
                 if (application.platforms.size > 1) {
                     PreviousNextComponent(
@@ -340,16 +354,24 @@ fun ApplicationContentComponent(
                                 platformPosition += 1
                         })
                 }
+
                 AnimatedContent(
                     targetState = platform,
-                    label = "platform_animate"
-                ) {
-                    PlatformInfo(
-                        platform = it,
-                        onAddVersionInfoClick = onAddVersionInfoClick,
-                        onAddScreenshotInfoClick = onAddScreenshotInfoClick,
-                        onAddDownloadInfoClick = onAddDownloadInfoClick
-                    )
+                    label = "platform_animate",
+                    transitionSpec = {
+                        (fadeIn(animationSpec = tween(220))
+                            .togetherWith(fadeOut(animationSpec = tween(90))))
+                    }
+                ) { targetPlatform ->
+                    if (targetPlatform != null) {
+                        PlatformInfo(
+                            platform = targetPlatform,
+                            onAddVersionInfoClick = onAddVersionInfoClick,
+                            onAddScreenshotInfoClick = onAddScreenshotInfoClick,
+                            onAddDownloadInfoClick = onAddDownloadInfoClick,
+                            onAppScreenShotClick = onAppScreenShotClick
+                        )
+                    }
                 }
             }
         }
@@ -358,7 +380,10 @@ fun ApplicationContentComponent(
 }
 
 @Composable
-fun DownloadBottomSheetComponent(application: Application) {
+fun DownloadBottomSheetComponent(
+    application: Application,
+    onDownloadInfoGetClick: (Application, DownloadInfo) -> Unit,
+) {
     Column(
         modifier = Modifier
             .heightIn(min = 440.dp)
@@ -369,11 +394,11 @@ fun DownloadBottomSheetComponent(application: Application) {
                 AnyImage(
                     modifier = Modifier
                         .size(24.dp)
-                        .clip(RoundedCornerShape(4.dp))
+                        .clip(MaterialTheme.shapes.extraLarge)
                         .border(
                             1.dp,
                             MaterialTheme.colorScheme.outline,
-                            RoundedCornerShape(4.dp)
+                            MaterialTheme.shapes.extraLarge
                         ),
                     any = application.bioUrl
                 )
@@ -392,7 +417,7 @@ fun DownloadBottomSheetComponent(application: Application) {
                         .fillMaxWidth()
                         .border(
                             width = 1.dp,
-                            color = MaterialTheme.colorScheme.primary,
+                            color = MaterialTheme.colorScheme.outline,
                             MaterialTheme.shapes.extraLarge
                         )
                 ) {
@@ -400,40 +425,102 @@ fun DownloadBottomSheetComponent(application: Application) {
                         text = "${application.price} ${application.priceUnit}",
                         fontSize = 42.sp,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.align(
                             Alignment.Center
                         )
                     )
                 }
             }
-        }
-        Spacer(modifier = Modifier.height(24.dp))
-        val context = LocalContext.current
-        Box(Modifier.fillMaxWidth()) {
+            Spacer(modifier = Modifier.height(24.dp))
             FilledTonalButton(
+                modifier = Modifier.align(Alignment.CenterHorizontally),
                 onClick = { },
-                modifier = Modifier.align(Alignment.Center)
             ) {
-                val buttonText = if (application.price.isNullOrEmpty()) {
-                    context.getString(xcj.app.appsets.R.string.download)
-                } else {
-                    context.getString(xcj.app.appsets.R.string.buy)
+                Text(text = stringResource(xcj.app.appsets.R.string.buy))
+            }
+        } else {
+            val currentPlatformVersionDownloadsInfos by rememberUpdatedState(
+                application.currentPlatformVersionDownloadsInfos()
+            )
+            LazyColumn(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                items(currentPlatformVersionDownloadsInfos) { downloadInfo ->
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Column(
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Row {
+                                    Text(
+                                        text = "描述:",
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    Text(
+                                        text = downloadInfo.description ?: "未填写",
+                                        fontSize = 12.sp
+                                    )
+                                }
+                                Row {
+                                    Text(
+                                        text = "大小:",
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    Text(
+                                        text = downloadInfo.size ?: "未填写",
+                                        fontSize = 12.sp
+                                    )
+                                }
+                                Row {
+                                    Text(
+                                        text = "架构:",
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    Text(
+                                        text = downloadInfo.architectures?.joinToString()
+                                            ?: "未填写",
+                                        fontSize = 12.sp
+                                    )
+                                }
+                            }
+                            FilledTonalButton(
+                                onClick = {
+                                    onDownloadInfoGetClick(application, downloadInfo)
+                                },
+                            ) {
+                                val buttonText = if (application.price.isNullOrEmpty()) {
+                                    stringResource(xcj.app.appsets.R.string.download)
+                                } else {
+                                    stringResource(xcj.app.appsets.R.string.buy)
+                                }
+                                Text(text = buttonText)
+                            }
+                        }
+                        DesignHDivider()
+                    }
                 }
-                Text(text = buttonText)
             }
         }
-
         Spacer(modifier = Modifier.windowInsetsBottomHeight(WindowInsets.navigationBars))
     }
 }
 
 @Composable
 fun PlatformInfo(
-    platform: PlatForm,
-    onAddVersionInfoClick: (PlatForm) -> Unit,
-    onAddScreenshotInfoClick: (PlatForm, VersionInfo) -> Unit,
-    onAddDownloadInfoClick: (PlatForm, VersionInfo) -> Unit,
+    platform: Platform,
+    onAddVersionInfoClick: (Platform) -> Unit,
+    onAddScreenshotInfoClick: (Platform, VersionInfo) -> Unit,
+    onAddDownloadInfoClick: (Platform, VersionInfo) -> Unit,
+    onAppScreenShotClick: (ScreenshotInfo, List<ScreenshotInfo>) -> Unit,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text(
@@ -524,16 +611,22 @@ fun PlatformInfo(
                 }
                 AnimatedContent(
                     targetState = version,
-                    label = "version_animate"
-                ) {
+                    label = "version_animate",
+                    transitionSpec = {
+                        (fadeIn(animationSpec = tween(220))
+                            .togetherWith(fadeOut(animationSpec = tween(90))))
+                    }
+                ) { targetVersionInfo ->
                     VersionInfo(
-                        version = it,
+                        version = targetVersionInfo,
                         onAddScreenshotInfoClick = {
-                            onAddScreenshotInfoClick(platform, it)
+                            onAddScreenshotInfoClick(platform, targetVersionInfo)
                         },
                         onAddDownloadInfoClick = {
-                            onAddDownloadInfoClick(platform, it)
-                        })
+                            onAddDownloadInfoClick(platform, targetVersionInfo)
+                        },
+                        onAppScreenShotClick = onAppScreenShotClick
+                    )
                 }
             }
         }
@@ -545,9 +638,11 @@ fun VersionInfo(
     version: VersionInfo,
     onAddScreenshotInfoClick: () -> Unit,
     onAddDownloadInfoClick: () -> Unit,
+    onAppScreenShotClick: (ScreenshotInfo, List<ScreenshotInfo>) -> Unit,
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-
+    Column(
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
         Text(
             text = stringResource(xcj.app.appsets.R.string.version_information),
             fontSize = 16.sp,
@@ -617,23 +712,25 @@ fun VersionInfo(
         if (!version.screenshotInfos.isNullOrEmpty()) {
             Row(modifier = Modifier.horizontalScroll(rememberScrollState())) {
                 version.screenshotInfos.forEachIndexed { index, screenShot ->
-                    val url = screenShot.url
-                    if (url != null) {
-                        Row {
+                    Row {
+                        Spacer(modifier = Modifier.width(12.dp))
+                        AnyImage(
+                            modifier = Modifier
+                                .size(200.dp)
+                                .background(
+                                    MaterialTheme.colorScheme.outline,
+                                    MaterialTheme.shapes.medium
+                                )
+                                .clip(MaterialTheme.shapes.medium)
+                                .clickable(
+                                    onClick = {
+                                        onAppScreenShotClick(screenShot, version.screenshotInfos)
+                                    }
+                                ),
+                            any = screenShot.url
+                        )
+                        if (index == version.screenshotInfos.size - 1) {
                             Spacer(modifier = Modifier.width(12.dp))
-                            AnyImage(
-                                modifier = Modifier
-                                    .size(200.dp)
-                                    .background(
-                                        MaterialTheme.colorScheme.secondaryContainer,
-                                        MaterialTheme.shapes.extraLarge
-                                    )
-                                    .clip(MaterialTheme.shapes.extraLarge),
-                                any = url
-                            )
-                            if (index == version.screenshotInfos.size - 1) {
-                                Spacer(modifier = Modifier.width(12.dp))
-                            }
                         }
                     }
                 }

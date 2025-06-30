@@ -10,7 +10,9 @@ import xcj.app.appsets.server.model.Application
 import xcj.app.appsets.server.model.AppsWithCategory
 import xcj.app.appsets.server.repository.AppSetsRepository
 import xcj.app.appsets.ui.model.TipsState
-import xcj.app.compose_share.dynamic.IComposeDispose
+import xcj.app.compose_share.dynamic.IComposeLifecycleAware
+import xcj.app.io.components.ObjectUploadOptions
+import xcj.app.io.compress.ICompressor
 import xcj.app.starter.android.util.PurpleLogger
 import kotlin.math.abs
 
@@ -28,14 +30,30 @@ sealed interface AppCenterState : TipsState {
     ) : AppCenterState
 }
 
+
+
 class AppsUseCase(
     private val coroutineScope: CoroutineScope,
     private val appSetsRepository: AppSetsRepository,
-) : IComposeDispose {
+) : IComposeLifecycleAware {
 
     companion object {
         private const val TAG = "AppsUseCase"
+        val appsContentObjectUploadOptions = object : ObjectUploadOptions {
+            private val compressOptions = object : ICompressor.CompressOptions {
+                override fun imageCompressQuality(): Int {
+                    return 55
+                }
+            }
 
+            override fun getInfixPath(): String {
+                return "apps/"
+            }
+
+            override fun compressOptions(): ICompressor.CompressOptions {
+                return compressOptions
+            }
+        }
         fun createMockApplications(count: Int): MutableList<AppsWithCategory> {
             val result = mutableListOf<AppsWithCategory>()
             val applications = mutableListOf<Application>()

@@ -6,23 +6,23 @@ import androidx.compose.runtime.mutableStateOf
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import xcj.app.appsets.account.LocalAccountManager
-import xcj.app.starter.server.requestNotNull
-import xcj.app.starter.server.requestNotNullRaw
-import xcj.app.appsets.util.ktx.toastSuspend
 import xcj.app.appsets.server.model.Application
 import xcj.app.appsets.server.model.UserInfo
 import xcj.app.appsets.server.repository.AppSetsRepository
 import xcj.app.appsets.server.repository.UserRepository
 import xcj.app.appsets.ui.model.UserInfoModification
 import xcj.app.appsets.ui.model.UserProfileState
+import xcj.app.appsets.util.ktx.toastSuspend
 import xcj.app.appsets.util.model.UriProvider
-import xcj.app.compose_share.dynamic.IComposeDispose
+import xcj.app.compose_share.dynamic.IComposeLifecycleAware
+import xcj.app.starter.server.requestNotNull
+import xcj.app.starter.server.requestNotNullRaw
 
 class UserInfoUseCase(
     private val coroutineScope: CoroutineScope,
     private val userRepository: UserRepository,
-    private val appSetsRepository: AppSetsRepository
-) : IComposeDispose {
+    private val appSetsRepository: AppSetsRepository,
+) : IComposeLifecycleAware {
 
     val currentUserInfoState: MutableState<UserProfileState> = mutableStateOf(
         UserProfileState.Loading
@@ -42,7 +42,7 @@ class UserInfoUseCase(
 
     private fun fetchUserRelateInformation(
         userInfo: UserInfo?,
-        requestOnlyUserInfo: Boolean = false
+        requestOnlyUserInfo: Boolean = false,
     ) {
         if (userInfo == null) {
             currentUserInfoState.value = UserProfileState.NotFound
@@ -59,6 +59,8 @@ class UserInfoUseCase(
                         val myFollowedThisUser =
                             userRepository.getMyFollowedThisUser(userInfo.uid).data
                         loggedUserFollowedState.value = myFollowedThisUser == true
+                    } else {
+                        loggedUserFollowedState.value = false
                     }
                     val followersByUser =
                         userRepository.getFollowersAndFollowedByUser(userInfo.uid).data
@@ -71,11 +73,16 @@ class UserInfoUseCase(
                         if (!followed.isNullOrEmpty()) {
                             followedUsersState.value = followed
                         }
+                    } else {
+                        followerUsersState.value = emptyList()
+                        followedUsersState.value = emptyList()
                     }
                     val applicationsByUser =
                         appSetsRepository.getApplicationsByUser(userInfo.uid).data
                     if (!applicationsByUser.isNullOrEmpty()) {
                         applicationsState.value = applicationsByUser
+                    } else {
+                        applicationsState.value = emptyList()
                     }
                 }
             )
@@ -126,7 +133,7 @@ class UserInfoUseCase(
     }
 
     fun modifyUserInfo(
-        context: Context
+        context: Context,
     ) {
 
         val currentUserInfoState = currentUserInfoState.value

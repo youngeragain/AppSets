@@ -56,6 +56,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.net.toUri
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -106,6 +107,7 @@ import xcj.app.compose_share.components.LocalUseCaseOfComposeDynamic
 import xcj.app.compose_share.components.ProgressedComposeContainerState
 import xcj.app.compose_share.ui.viewmodel.AnyStateViewModel.Companion.bottomSheetState
 import xcj.app.compose_share.ui.viewmodel.AnyStateViewModel.Companion.immerseContentState
+import xcj.app.starter.android.ktx.startWithHttpSchema
 
 private const val TAG = "MainPages"
 
@@ -174,8 +176,13 @@ fun ImmerseContentContainer(
     ) {
         AnimatedVisibility(
             visible = immerseContentState.isShow,
-            enter = fadeIn(tween()) + scaleIn(initialScale = 1.12f, animationSpec = tween()),
-            exit = fadeOut(tween()) + scaleOut(targetScale = 1.12f, animationSpec = tween()),
+            enter = fadeIn(animationSpec = tween()) + scaleIn(
+                initialScale = 1.12f,
+                animationSpec = tween()
+            ),
+            exit = fadeOut() + scaleOut(
+                targetScale = 1.12f
+            ),
         ) {
             immerseContentState.getContent(context)?.Content()
         }
@@ -221,8 +228,11 @@ fun OnScaffoldLaunch(navController: NavController) {
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun MainScaffoldContainer(navController: NavHostController) {
-    OnScaffoldLaunch(navController)
+    val context = LocalContext.current
+    val systemUseCase = LocalUseCaseOfSystem.current
+    val updateCheckResult by systemUseCase.newVersionState
     val onTabClick = rememberNavigationBarOnTabClickListener(navController)
+    OnScaffoldLaunch(navController)
     Scaffold(
         modifier = Modifier.mainScaffoldHandle(),
         bottomBar = {
@@ -233,11 +243,24 @@ fun MainScaffoldContainer(navController: NavHostController) {
         }
     ) { _ ->
         Column {
-            val systemUseCase = LocalUseCaseOfSystem.current
             NewVersionSpace(
-                updateCheckResult = systemUseCase.newVersionState.value,
+                updateCheckResult = updateCheckResult,
                 onDismissClick = {
                     systemUseCase.dismissNewVersionTips()
+                },
+                onDownloadClick = {
+                    if (!updateCheckResult?.downloadUrl.startWithHttpSchema()) {
+                        return@NewVersionSpace
+                    }
+                    val uri =
+                        updateCheckResult?.downloadUrl?.toUri()
+                    if (uri == null) {
+                        return@NewVersionSpace
+                    }
+                    val downloadIntent = Intent(Intent.ACTION_VIEW, uri)
+                    runCatching {
+                        context.startActivity(downloadIntent)
+                    }
                 }
             )
             NowSpace(navController)

@@ -6,10 +6,10 @@ import androidx.compose.runtime.mutableStateOf
 import xcj.app.appsets.im.Session
 import xcj.app.appsets.im.message.ImMessage
 import xcj.app.appsets.ui.model.NowSpaceObjectState
-import xcj.app.compose_share.dynamic.IComposeDispose
+import xcj.app.compose_share.dynamic.IComposeLifecycleAware
 import xcj.app.starter.android.util.PurpleLogger
 
-class NowSpaceContentUseCase private constructor() : IComposeDispose {
+class NowSpaceContentUseCase private constructor() : IComposeLifecycleAware {
 
     companion object {
         private const val TAG = "NowSpaceContentUseCase"

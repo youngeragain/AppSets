@@ -22,9 +22,9 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.pager.VerticalPager
 import androidx.compose.foundation.pager.rememberPagerState
@@ -32,6 +32,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -50,6 +51,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.net.toUri
 import androidx.core.os.bundleOf
 import androidx.navigation.NavController
 import androidx.navigation.NavDirections
@@ -65,6 +67,7 @@ import xcj.app.appsets.constants.Constants
 import xcj.app.appsets.im.Bio
 import xcj.app.appsets.im.InputSelector
 import xcj.app.appsets.im.MessageFromInfo
+import xcj.app.appsets.im.MessageToInfo
 import xcj.app.appsets.im.Session
 import xcj.app.appsets.im.message.HTMLMessage
 import xcj.app.appsets.im.message.ImageMessage
@@ -75,8 +78,9 @@ import xcj.app.appsets.im.message.VoiceMessage
 import xcj.app.appsets.im.model.CommonURIJson
 import xcj.app.appsets.purple_module.ModuleConstant
 import xcj.app.appsets.server.model.Application
+import xcj.app.appsets.server.model.DownloadInfo
 import xcj.app.appsets.server.model.GroupInfo
-import xcj.app.appsets.server.model.PlatForm
+import xcj.app.appsets.server.model.Platform
 import xcj.app.appsets.server.model.ScreenInfo
 import xcj.app.appsets.server.model.ScreenMediaFileUrl
 import xcj.app.appsets.server.model.UserInfo
@@ -110,10 +114,10 @@ import xcj.app.appsets.ui.compose.apps.tools.TOOL_TYPE_AppSets_Proxy
 import xcj.app.appsets.ui.compose.apps.tools.TOOL_TYPE_AppSets_Share
 import xcj.app.appsets.ui.compose.camera.CameraComposeActivity
 import xcj.app.appsets.ui.compose.content_selection.ContentSelectDialog
-import xcj.app.appsets.ui.compose.conversation.ai_model.AIGCMarketPage
 import xcj.app.appsets.ui.compose.conversation.ConversationDetailsMoreInfo
 import xcj.app.appsets.ui.compose.conversation.ConversationDetailsPage
 import xcj.app.appsets.ui.compose.conversation.ConversationOverviewPage
+import xcj.app.appsets.ui.compose.conversation.ai_model.AIGCMarketPage
 import xcj.app.appsets.ui.compose.custom_component.AnyImage
 import xcj.app.appsets.ui.compose.group.CreateGroupPage
 import xcj.app.appsets.ui.compose.group.GroupInfoPage
@@ -144,6 +148,8 @@ import xcj.app.compose_share.components.LocalAnyStateProvider
 import xcj.app.compose_share.components.ProgressedComposeContainerState
 import xcj.app.compose_share.ui.viewmodel.AnyStateViewModel.Companion.bottomSheetState
 import xcj.app.compose_share.ui.viewmodel.AnyStateViewModel.Companion.immerseContentState
+import xcj.app.io.components.LocalFileIO
+import xcj.app.starter.android.ktx.startWithHttpSchema
 import xcj.app.starter.android.ui.base.DesignComponentActivity
 import xcj.app.starter.android.usecase.PlatformUseCase
 import xcj.app.starter.android.util.LocalMessager
@@ -204,14 +210,25 @@ fun MainNaviHostPages(navController: NavHostController) {
                     val context = LocalContext.current
                     val conversationUseCase = LocalUseCaseOfConversation.current
                     val anyStateProvider = LocalAnyStateProvider.current
-
+                    val coroutineScope = rememberCoroutineScope()
                     AppDetailsPage(
                         application = application,
                         onBackClick = navController::navigateUp,
                         onGetApplicationClick = { application ->
                             anyStateProvider.bottomSheetState()
                                 .show {
-                                    DownloadBottomSheetComponent(application = application)
+                                    DownloadBottomSheetComponent(
+                                        application = application,
+                                        onDownloadInfoGetClick = { application, downloadInfo ->
+                                            coroutineScope.launch {
+                                                handleApplicationDownload(
+                                                    context,
+                                                    application,
+                                                    downloadInfo
+                                                )
+                                            }
+                                        }
+                                    )
                                 }
                         },
                         onShowApplicationCreatorClick = { application ->
@@ -251,6 +268,14 @@ fun MainNaviHostPages(navController: NavHostController) {
                                 platform,
                                 version,
                                 ApplicationForCreate.CREATE_STEP_DOWNLOAD
+                            )
+                        },
+                        onAppScreenShotClick = { screenshot, screenshotList ->
+                            showPictureViewDialog(
+                                anyStateProvider,
+                                context,
+                                screenshot.url,
+                                screenshotList.map { it.url }
                             )
                         },
                         onJoinToChatClick = { application ->
@@ -1196,6 +1221,7 @@ fun onBioClick(
     }
     when (bio) {
         is UserInfo,
+        is MessageToInfo,
         is MessageFromInfo,
             -> {
             navigateToUserInfoPage(context, navController, bio.id)
@@ -1266,7 +1292,7 @@ fun navigateWithBundle(
 fun navigateToCreateAppPage(
     navController: NavController,
     application: Application?,
-    platform: PlatForm?,
+    platform: Platform?,
     version: VersionInfo?,
     createStep: String,
 ): Boolean {
@@ -1330,6 +1356,19 @@ fun <D> showPictureViewDialog(
                 .fillMaxSize()
         ) {
             val coroutineScope = rememberCoroutineScope()
+            val rotation = remember {
+                mutableFloatStateOf(90f)
+            }
+            val rotationAnimate = animateFloatAsState(
+                targetValue = rotation.floatValue,
+                label = "degree_animate",
+                animationSpec = tween()
+            )
+            LaunchedEffect(true) {
+                coroutineScope.launch {
+                    rotation.floatValue = 0f
+                }
+            }
             val pagerState = rememberPagerState(
                 initialPage = dataList.indexOf(data),
                 pageCount = { dataList.size }
@@ -1346,12 +1385,21 @@ fun <D> showPictureViewDialog(
                     contentScale = ContentScale.FillWidth
                 )
             }
-
             Row(
                 modifier = Modifier
-                    .align(Alignment.TopCenter)
-                    .systemBarsPadding()
+                    .align(Alignment.BottomCenter)
+                    .fillMaxWidth()
+                    .padding(
+                        bottom = WindowInsets.navigationBars
+                            .asPaddingValues()
+                            .calculateBottomPadding() + 12.dp
+                    )
             ) {
+                Spacer(
+                    modifier = Modifier.width(
+                        WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
+                    )
+                )
                 Card(
                     shape = CircleShape
                 ) {
@@ -1362,31 +1410,8 @@ fun <D> showPictureViewDialog(
                         fontWeight = FontWeight.Bold
                     )
                 }
-            }
+                Spacer(modifier = Modifier.weight(1f))
 
-            Row(
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(
-                        bottom = WindowInsets.navigationBars
-                            .asPaddingValues()
-                            .calculateBottomPadding() + 12.dp
-                    )
-            ) {
-                val rotation = remember {
-                    mutableFloatStateOf(90f)
-                }
-                val rotationAnimate = animateFloatAsState(
-                    targetValue = rotation.floatValue,
-                    label = "degree_animate",
-                    animationSpec = tween()
-                )
-
-                LaunchedEffect(true) {
-                    coroutineScope.launch {
-                        rotation.floatValue = 0f
-                    }
-                }
                 Icon(
                     modifier = Modifier
                         .clickable {
@@ -1395,7 +1420,8 @@ fun <D> showPictureViewDialog(
                         .rotate(rotationAnimate.value)
                         .padding(12.dp),
                     painter = painterResource(id = xcj.app.compose_share.R.drawable.ic_round_close_24),
-                    contentDescription = "close"
+                    contentDescription = "close",
+                    tint = MaterialTheme.colorScheme.onSurface
                 )
                 Spacer(
                     modifier = Modifier.width(
@@ -1558,5 +1584,28 @@ fun navigateToAppSetsShareActivity(context: Context, intentN: Intent?) {
         context.startActivity(intent)
     }.onFailure {
         PurpleLogger.current.d(TAG, "navigateToAppSetsVpnActivity, failed!, e:${it.message}")
+    }
+}
+
+suspend fun handleApplicationDownload(
+    context: Context,
+    application: Application,
+    downloadInfo: DownloadInfo,
+) {
+    var url = downloadInfo.url
+    if (url.isNullOrEmpty()) {
+        return
+    }
+    if (!url.startWithHttpSchema()) {
+        val fileIO = LocalFileIO.current
+        url = fileIO.generatePreSign(url, AppsUseCase.appsContentObjectUploadOptions)
+    }
+    val uri = url?.toUri()
+    if (uri == null) {
+        return
+    }
+    val downloadIntent = Intent(Intent.ACTION_VIEW, uri)
+    runCatching {
+        context.startActivity(downloadIntent)
     }
 }

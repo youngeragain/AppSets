@@ -12,7 +12,7 @@ import xcj.app.appsets.util.ktx.toast
 import xcj.app.appsets.ui.compose.PageRouteNames
 import xcj.app.appsets.util.DesignRecorder
 import xcj.app.appsets.util.model.UriProvider
-import xcj.app.compose_share.dynamic.IComposeDispose
+import xcj.app.compose_share.dynamic.IComposeLifecycleAware
 import xcj.app.starter.android.ktx.asFileOrNull
 import xcj.app.starter.android.usecase.PlatformUseCase
 import xcj.app.starter.android.util.PurpleLogger
@@ -21,7 +21,7 @@ import java.io.File
 
 class MediaAudioRecorderUseCase(
     private val coroutineScope: CoroutineScope,
-) : IComposeDispose {
+) : IComposeLifecycleAware {
     companion object {
         private const val TAG = "MediaAudioRecorderUseCase"
     }

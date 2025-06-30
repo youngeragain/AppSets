@@ -9,12 +9,12 @@ import xcj.app.appsets.server.model.MediaContent
 import xcj.app.appsets.server.repository.AppSetsRepository
 import xcj.app.appsets.ui.model.SpotLightState
 import xcj.app.appsets.usecase.component.media.RemoteExoplayer
-import xcj.app.compose_share.dynamic.IComposeDispose
+import xcj.app.compose_share.dynamic.IComposeLifecycleAware
 
 class MediaRemoteExoUseCase(
     private val coroutineScope: CoroutineScope,
     private val appSetsRepository: AppSetsRepository,
-) : IComposeDispose {
+) : IComposeLifecycleAware {
 
     companion object {
         private const val TAG = "MediaRemoteExoUseCase"

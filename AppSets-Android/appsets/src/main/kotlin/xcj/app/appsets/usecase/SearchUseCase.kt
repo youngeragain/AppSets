@@ -18,13 +18,13 @@ import xcj.app.appsets.server.model.CombineSearchRes
 import xcj.app.appsets.server.repository.SearchRepository
 import xcj.app.appsets.ui.model.SearchResult
 import xcj.app.appsets.ui.model.SearchState
-import xcj.app.compose_share.dynamic.IComposeDispose
+import xcj.app.compose_share.dynamic.IComposeLifecycleAware
 import xcj.app.starter.server.requestNotNull
 
 class SearchUseCase(
     private val coroutineScope: CoroutineScope,
     private val searchRepository: SearchRepository,
-) : IComposeDispose {
+) : IComposeLifecycleAware {
 
     companion object {
         private const val TAG = "SearchUseCase"

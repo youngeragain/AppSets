@@ -13,6 +13,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -50,6 +51,7 @@ import xcj.app.appsets.ui.compose.apps.DownloadBottomSheetComponent
 import xcj.app.appsets.ui.compose.group.GroupInfoPage
 import xcj.app.appsets.ui.compose.main.DesignNaviHost
 import xcj.app.appsets.ui.compose.main.ImmerseContentContainer
+import xcj.app.appsets.ui.compose.main.handleApplicationDownload
 import xcj.app.appsets.ui.compose.main.navigateToCreateAppPage
 import xcj.app.appsets.ui.compose.main.navigateToUserInfoPage
 import xcj.app.appsets.ui.compose.main.navigateToVideoPlaybackActivity
@@ -561,14 +563,25 @@ fun ImSessionBubbleNaviHostPages(navController: NavHostController) {
                 val context = LocalContext.current
                 val conversationUseCase = LocalUseCaseOfConversation.current
                 val anyStateProvider = LocalAnyStateProvider.current
-
+                val coroutineScope = rememberCoroutineScope()
                 AppDetailsPage(
                     application = application,
                     onBackClick = navController::navigateUp,
                     onGetApplicationClick = { application ->
                         anyStateProvider.bottomSheetState()
                             .show {
-                                DownloadBottomSheetComponent(application = application)
+                                DownloadBottomSheetComponent(
+                                    application = application,
+                                    onDownloadInfoGetClick = { application, downloadInfo ->
+                                        coroutineScope.launch {
+                                            handleApplicationDownload(
+                                                context,
+                                                application,
+                                                downloadInfo
+                                            )
+                                        }
+                                    }
+                                )
                             }
                     },
                     onShowApplicationCreatorClick = { application ->
@@ -608,6 +621,14 @@ fun ImSessionBubbleNaviHostPages(navController: NavHostController) {
                             platform,
                             version,
                             ApplicationForCreate.CREATE_STEP_DOWNLOAD
+                        )
+                    },
+                    onAppScreenShotClick = { screenshot, screenshotList ->
+                        showPictureViewDialog(
+                            anyStateProvider,
+                            context,
+                            screenshot.url,
+                            screenshotList.map { it.url }
                         )
                     },
                     onJoinToChatClick = { application ->

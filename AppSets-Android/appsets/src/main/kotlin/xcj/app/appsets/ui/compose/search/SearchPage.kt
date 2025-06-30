@@ -289,15 +289,6 @@ fun SearchPageResults(
         Modifier
             .height(heightOfBox.value)
             .fillMaxWidth()
-            .background(
-                MaterialTheme.colorScheme.surface,
-                RoundedCornerShape(24.dp)
-            )
-            .border(
-                1.dp,
-                MaterialTheme.colorScheme.outline,
-                RoundedCornerShape(24.dp)
-            )
     ) {
         when (searchState) {
             is SearchState.None -> {

@@ -12,7 +12,7 @@ import xcj.app.appsets.db.room.repository.PinnedAppsRepository
 import xcj.app.starter.server.requestNotNullRaw
 import xcj.app.appsets.server.repository.AppSetsRepository
 import xcj.app.appsets.ui.model.SpotLightState
-import xcj.app.compose_share.dynamic.IComposeDispose
+import xcj.app.compose_share.dynamic.IComposeLifecycleAware
 import xcj.app.starter.android.AppDefinition
 import xcj.app.starter.android.ItemDefinition
 import xcj.app.starter.android.util.PackageUtil
@@ -23,7 +23,7 @@ class StartUseCase(
     private val coroutineScope: CoroutineScope,
     private val pinnedAppsRepository: PinnedAppsRepository,
     private val appSetsRepository: AppSetsRepository,
-) : IComposeDispose {
+) : IComposeLifecycleAware {
 
     companion object {
         private const val TAG = "StartUseCase"

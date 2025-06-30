@@ -125,7 +125,9 @@ fun StandardNavigationBar(
                 .navigationBarsPadding(),
             verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
-            DesignHDivider()
+            if (!inSearchModel) {
+                DesignHDivider()
+            }
             val scrollState = rememberScrollState()
             Row(
                 modifier = Modifier

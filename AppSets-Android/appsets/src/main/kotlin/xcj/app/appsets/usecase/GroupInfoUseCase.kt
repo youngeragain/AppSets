@@ -10,13 +10,13 @@ import xcj.app.appsets.server.model.GroupInfo
 import xcj.app.appsets.server.repository.UserRepository
 import xcj.app.appsets.ui.model.GroupInfoState
 import xcj.app.appsets.util.PictureUrlMapper
-import xcj.app.compose_share.dynamic.IComposeDispose
+import xcj.app.compose_share.dynamic.IComposeLifecycleAware
 import xcj.app.starter.android.util.PurpleLogger
 
 class GroupInfoUseCase(
     private val coroutineScope: CoroutineScope,
     private val userRepository: UserRepository
-) : IComposeDispose {
+) : IComposeLifecycleAware {
     companion object {
         private const val TAG = "GroupInfoUseCase"
     }

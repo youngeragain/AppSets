@@ -19,7 +19,7 @@ import xcj.app.appsets.ui.model.PostScreenState
 import xcj.app.appsets.util.ktx.toastSuspend
 import xcj.app.appsets.util.model.MediaStoreDataUri
 import xcj.app.appsets.util.model.UriProvider
-import xcj.app.compose_share.dynamic.IComposeDispose
+import xcj.app.compose_share.dynamic.IComposeLifecycleAware
 import xcj.app.starter.server.requestNotNull
 import xcj.app.starter.util.ContentType
 
@@ -27,7 +27,7 @@ class ScreenPostUseCase(
     private val coroutineScope: CoroutineScope,
     private val screenRepository: ScreenRepository,
     private val generationAIRepository: GenerationAIRepository
-) : IComposeDispose {
+) : IComposeLifecycleAware {
 
     companion object {
         private const val TAG = "ScreenPostUseCase"

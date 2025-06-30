@@ -18,14 +18,14 @@ import xcj.app.appsets.server.repository.ScreenRepository
 import xcj.app.appsets.ui.compose.PageRouteNames
 import xcj.app.appsets.ui.model.ScreenState
 import xcj.app.appsets.ui.model.ViewScreenInfo
-import xcj.app.compose_share.dynamic.IComposeDispose
+import xcj.app.compose_share.dynamic.IComposeLifecycleAware
 import xcj.app.starter.android.util.PurpleLogger
 import xcj.app.starter.foundation.http.DesignResponse
 
 class ScreenUseCase(
     private val coroutineScope: CoroutineScope,
     private val screenRepository: ScreenRepository
-) : IComposeDispose {
+) : IComposeLifecycleAware {
 
     companion object {
         private const val TAG = "ScreenUseCase"
@@ -100,6 +100,7 @@ class ScreenUseCase(
                             container.screens.addAll(screenStateList)
                         }
                     } else {
+                        container.screens.clear()
                         container.page -= 1
                     }
                     if (userScreenInfoList.size < container.pageSize) {
@@ -112,7 +113,8 @@ class ScreenUseCase(
                     PurpleLogger.current.e(TAG, "requestScreens, onFailed:${it}")
                     container.isRequesting.value = false
                     container.page -= 1
-                })
+                }
+            )
         }
     }
 

@@ -1,7 +1,5 @@
 package xcj.app.appsets.ui.compose.main
 
-import android.content.Intent
-import android.net.Uri
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -29,13 +27,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import xcj.app.appsets.server.model.UpdateCheckResult
-import xcj.app.starter.android.ktx.startWithHttpSchema
 
 @Composable
 fun NewVersionSpace(
     modifier: Modifier = Modifier,
     updateCheckResult: UpdateCheckResult?,
-    onDismissClick: (() -> Unit)?,
+    onDismissClick: () -> Unit,
+    onDownloadClick: () -> Unit,
 ) {
     Box(
         Modifier
@@ -69,9 +67,7 @@ fun NewVersionSpace(
                                     CircleShape
                                 )
                                 .clip(CircleShape)
-                                .clickable {
-                                    onDismissClick?.invoke()
-                                }
+                                .clickable(onClick = onDismissClick)
                                 .padding(12.dp),
                             painter = painterResource(id = xcj.app.compose_share.R.drawable.ic_round_close_24),
                             contentDescription = "close",
@@ -97,19 +93,9 @@ fun NewVersionSpace(
                             fontSize = 15.sp, color = MaterialTheme.colorScheme.onSecondaryContainer
                         )
                         Box(Modifier.fillMaxWidth()) {
-                            val context = LocalContext.current
                             FilledTonalButton(
-                                onClick = {
-                                    if (!updateCheckResult.downloadUrl.startWithHttpSchema()) {
-                                        return@FilledTonalButton
-                                    }
-                                    val uri =
-                                        Uri.parse(updateCheckResult.downloadUrl)
-                                    val downloadIntent = Intent(Intent.ACTION_VIEW, uri)
-                                    runCatching {
-                                        context.startActivity(downloadIntent)
-                                    }
-                                }, modifier = Modifier.align(Alignment.CenterEnd)
+                                onClick = onDownloadClick,
+                                modifier = Modifier.align(Alignment.CenterEnd)
                             ) {
                                 Text(text = stringResource(xcj.app.appsets.R.string.download_updates))
                             }

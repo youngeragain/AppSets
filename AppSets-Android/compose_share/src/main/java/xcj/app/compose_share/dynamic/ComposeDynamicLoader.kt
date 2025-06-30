@@ -12,7 +12,7 @@ abstract class ComposeDynamicLoader(
 
     }
 
-    open fun <I : IComposeMethods> loadByClass(
+    open fun <I : IComposeMethodsAware> loadByClass(
         methodsContainer: MutableList<ComposeMethodsWrapper>,
         aarName: String?, clazz: Class<I>
     ) {
@@ -25,7 +25,7 @@ abstract class ComposeDynamicLoader(
         className: String
     ) {
         runCatching {
-            val clazz = Class.forName(className) as? Class<IComposeMethods>
+            val clazz = Class.forName(className) as? Class<IComposeMethodsAware>
             if (clazz != null) {
                 loadByClass(methodsContainer, null, clazz)
             }

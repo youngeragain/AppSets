@@ -8,10 +8,10 @@ import xcj.app.appsets.im.model.CommonURIJson
 import xcj.app.appsets.ui.compose.media.video.fall.VideoMediaContent
 import xcj.app.appsets.ui.model.SpotLightState
 import xcj.app.appsets.usecase.component.media.LocalExoplayer
-import xcj.app.compose_share.dynamic.IComposeDispose
+import xcj.app.compose_share.dynamic.IComposeLifecycleAware
 import xcj.app.starter.android.util.PurpleLogger
 
-class MediaLocalExoUseCase() : IComposeDispose {
+class MediaLocalExoUseCase() : IComposeLifecycleAware {
 
     companion object {
         private const val TAG = "MediaLocalExoUseCase"

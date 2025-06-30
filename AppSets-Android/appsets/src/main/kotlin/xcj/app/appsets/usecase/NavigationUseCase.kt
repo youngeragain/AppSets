@@ -5,10 +5,10 @@ import androidx.compose.runtime.mutableStateOf
 import xcj.app.appsets.ui.compose.PageRouteNames
 import xcj.app.appsets.ui.model.TabAction
 import xcj.app.appsets.ui.model.TabItem
-import xcj.app.compose_share.dynamic.IComposeDispose
+import xcj.app.compose_share.dynamic.IComposeLifecycleAware
 import xcj.app.starter.android.util.PurpleLogger
 
-class NavigationUseCase : IComposeDispose {
+class NavigationUseCase : IComposeLifecycleAware {
 
     companion object {
         private const val TAG = "NavigationUseCase"

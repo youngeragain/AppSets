@@ -5,5 +5,5 @@ interface IPluginsRegistry {
     fun unRegisterByAAR(aarPath: String): Boolean
 
     fun registerByClassName(key: String, vararg className: String)
-    fun <I : IComposeMethods> registerByClass(key: String, vararg clazz: Class<I>)
+    fun <I : IComposeMethodsAware> registerByClass(key: String, vararg clazz: Class<I>)
 }

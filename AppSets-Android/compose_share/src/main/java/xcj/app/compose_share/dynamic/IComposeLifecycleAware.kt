@@ -1,5 +1,5 @@
 package xcj.app.compose_share.dynamic
 
-interface IComposeDispose {
+interface IComposeLifecycleAware {
     fun onComposeDispose(by: String?)
 }
