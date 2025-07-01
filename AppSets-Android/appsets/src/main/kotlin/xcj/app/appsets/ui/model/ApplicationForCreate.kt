@@ -2,7 +2,7 @@ package xcj.app.appsets.ui.model
 
 import xcj.app.appsets.server.model.Application
 import xcj.app.appsets.server.model.DownloadInfo
-import xcj.app.appsets.server.model.Platform
+import xcj.app.appsets.server.model.AppPlatform
 import xcj.app.appsets.server.model.ScreenshotInfo
 import xcj.app.appsets.server.model.VersionInfo
 import xcj.app.appsets.util.model.UriProvider
@@ -95,7 +95,7 @@ data class PlatformForCreate(
         const val FILED_NAME_PACKAGE = "packageName"
         const val FILED_NAME_INTRODUCTION = "introduction"
 
-        fun inflateFromPlatform(platForm: Platform): PlatformForCreate {
+        fun inflateFromPlatform(platForm: AppPlatform): PlatformForCreate {
             PurpleLogger.current.d(TAG, "inflateFromPlatform")
             return PlatformForCreate(
                 id = platForm.id ?: "",

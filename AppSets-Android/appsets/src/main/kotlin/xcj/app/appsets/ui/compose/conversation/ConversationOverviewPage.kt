@@ -687,7 +687,8 @@ fun ConversationOverviewSimpleItemComponent(
                                 .size(20.dp)
                                 .clip(MaterialTheme.shapes.small),
                             any = imMessage.fromInfo.bioUrl,
-                            defaultColor = MaterialTheme.colorScheme.outline
+                            defaultColor = MaterialTheme.colorScheme.outline,
+                            error = imMessage.fromInfo.name
                         )
                         val context = LocalContext.current
                         Text(

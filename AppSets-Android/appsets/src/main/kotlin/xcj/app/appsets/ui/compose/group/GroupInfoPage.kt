@@ -186,7 +186,8 @@ fun GroupInfoPage(
                                                 1.dp,
                                                 MaterialTheme.colorScheme.outline,
                                                 MaterialTheme.shapes.extraLarge
-                                            )
+                                            ),
+                                        error = userInfo.name
                                     )
                                     Text(
                                         text = userInfo.name ?: "",
@@ -280,7 +281,8 @@ fun GroupInfoPage(
                                         MaterialTheme.colorScheme.outline,
                                         BigAvatarShape
                                     ),
-                                any = groupInfoState.groupInfo.bioUrl
+                                any = groupInfoState.groupInfo.bioUrl,
+                                error = groupInfoState.groupInfo.name
                             )
                             Column(
                                 modifier = Modifier

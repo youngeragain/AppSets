@@ -80,7 +80,7 @@ import xcj.app.appsets.purple_module.ModuleConstant
 import xcj.app.appsets.server.model.Application
 import xcj.app.appsets.server.model.DownloadInfo
 import xcj.app.appsets.server.model.GroupInfo
-import xcj.app.appsets.server.model.Platform
+import xcj.app.appsets.server.model.AppPlatform
 import xcj.app.appsets.server.model.ScreenInfo
 import xcj.app.appsets.server.model.ScreenMediaFileUrl
 import xcj.app.appsets.server.model.UserInfo
@@ -214,11 +214,12 @@ fun MainNaviHostPages(navController: NavHostController) {
                     AppDetailsPage(
                         application = application,
                         onBackClick = navController::navigateUp,
-                        onGetApplicationClick = { application ->
+                        onGetApplicationClick = { application, appPlatform ->
                             anyStateProvider.bottomSheetState()
                                 .show {
                                     DownloadBottomSheetComponent(
                                         application = application,
+                                        appPlatform = appPlatform,
                                         onDownloadInfoGetClick = { application, downloadInfo ->
                                             coroutineScope.launch {
                                                 handleApplicationDownload(
@@ -270,7 +271,7 @@ fun MainNaviHostPages(navController: NavHostController) {
                                 ApplicationForCreate.CREATE_STEP_DOWNLOAD
                             )
                         },
-                        onAppScreenShotClick = { screenshot, screenshotList ->
+                        onAppScreenshotClick = { screenshot, screenshotList ->
                             showPictureViewDialog(
                                 anyStateProvider,
                                 context,
@@ -1292,7 +1293,7 @@ fun navigateWithBundle(
 fun navigateToCreateAppPage(
     navController: NavController,
     application: Application?,
-    platform: Platform?,
+    platform: AppPlatform?,
     version: VersionInfo?,
     createStep: String,
 ): Boolean {

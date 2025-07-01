@@ -66,7 +66,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.media3.common.util.UnstableApi
 import xcj.app.appsets.constants.Constants
-import xcj.app.appsets.server.model.Platform
+import xcj.app.appsets.server.model.AppPlatform
 import xcj.app.appsets.server.model.VersionInfo
 import xcj.app.appsets.ui.compose.LocalUseCaseOfAppCreation
 import xcj.app.appsets.ui.compose.custom_component.AnyImage
@@ -104,7 +104,7 @@ fun CreateAppPagePreview() {
 fun CreateAppPage(
     onBackClick: () -> Unit,
     createStep: String = ApplicationForCreate.CREATE_STEP_APPLICATION,
-    platform: Platform? = null,
+    platform: AppPlatform? = null,
     versionInfo: VersionInfo? = null,
     createApplicationState: CreateApplicationState,
     onApplicationForCreateFiledChanged: (Any, String, String) -> Unit,

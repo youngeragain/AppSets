@@ -829,7 +829,8 @@ fun ScreenSectionOfUserPart(
                     any = screenInfo.userInfo?.bioUrl,
                     modifier = Modifier
                         .size(24.dp)
-                        .clip(RoundedCornerShape(10.dp))
+                        .clip(CircleShape),
+                    error = screenInfo.userInfo?.name
                 )
             }
         }

@@ -567,11 +567,12 @@ fun ImSessionBubbleNaviHostPages(navController: NavHostController) {
                 AppDetailsPage(
                     application = application,
                     onBackClick = navController::navigateUp,
-                    onGetApplicationClick = { application ->
+                    onGetApplicationClick = { application, appPlatform ->
                         anyStateProvider.bottomSheetState()
                             .show {
                                 DownloadBottomSheetComponent(
                                     application = application,
+                                    appPlatform = appPlatform,
                                     onDownloadInfoGetClick = { application, downloadInfo ->
                                         coroutineScope.launch {
                                             handleApplicationDownload(
@@ -623,7 +624,7 @@ fun ImSessionBubbleNaviHostPages(navController: NavHostController) {
                             ApplicationForCreate.CREATE_STEP_DOWNLOAD
                         )
                     },
-                    onAppScreenShotClick = { screenshot, screenshotList ->
+                    onAppScreenshotClick = { screenshot, screenshotList ->
                         showPictureViewDialog(
                             anyStateProvider,
                             context,

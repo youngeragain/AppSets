@@ -65,9 +65,9 @@ import dev.chrisbanes.haze.hazeEffect
 import dev.chrisbanes.haze.hazeSource
 import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
 import dev.chrisbanes.haze.materials.HazeMaterials
+import xcj.app.appsets.server.model.AppPlatform
 import xcj.app.appsets.server.model.Application
 import xcj.app.appsets.server.model.DownloadInfo
-import xcj.app.appsets.server.model.Platform
 import xcj.app.appsets.server.model.ScreenshotInfo
 import xcj.app.appsets.server.model.VersionInfo
 import xcj.app.appsets.ui.compose.custom_component.AnyImage
@@ -82,13 +82,13 @@ import xcj.app.compose_share.components.DesignHDivider
 fun AppDetailsPage(
     application: Application?,
     onBackClick: () -> Unit,
-    onGetApplicationClick: (Application) -> Unit,
+    onGetApplicationClick: (Application, AppPlatform) -> Unit,
     onShowApplicationCreatorClick: (Application) -> Unit,
-    onAddPlatformInfoClick: (Platform?) -> Unit,
-    onAddVersionInfoClick: (Platform) -> Unit,
-    onAddScreenshotInfoClick: (Platform, VersionInfo) -> Unit,
-    onAddDownloadInfoClick: (Platform, VersionInfo) -> Unit,
-    onAppScreenShotClick: (ScreenshotInfo, List<ScreenshotInfo>) -> Unit,
+    onAddPlatformInfoClick: (AppPlatform?) -> Unit,
+    onAddVersionInfoClick: (AppPlatform) -> Unit,
+    onAddScreenshotInfoClick: (AppPlatform, VersionInfo) -> Unit,
+    onAddDownloadInfoClick: (AppPlatform, VersionInfo) -> Unit,
+    onAppScreenshotClick: (ScreenshotInfo, List<ScreenshotInfo>) -> Unit,
     onJoinToChatClick: (Application) -> Unit,
 ) {
 
@@ -118,9 +118,7 @@ fun AppDetailsPage(
                 backActionBarSize = backActionBarSize,
                 hazeState = hazeState,
                 application = application,
-                onGetApplicationClick = {
-                    onGetApplicationClick(application)
-                },
+                onGetApplicationClick = onGetApplicationClick,
                 onShowApplicationCreatorClick = {
                     onShowApplicationCreatorClick(application)
                 },
@@ -137,7 +135,7 @@ fun AppDetailsPage(
                 onAddVersionInfoClick = onAddVersionInfoClick,
                 onAddScreenshotInfoClick = onAddScreenshotInfoClick,
                 onAddDownloadInfoClick = onAddDownloadInfoClick,
-                onAppScreenShotClick = onAppScreenShotClick
+                onAppScreenshotClick = onAppScreenshotClick
             )
             BackActionTopBar(
                 modifier = Modifier
@@ -158,14 +156,14 @@ fun ApplicationContentComponent(
     backActionBarSize: IntSize,
     hazeState: HazeState,
     application: Application,
-    onGetApplicationClick: () -> Unit,
+    onGetApplicationClick: (Application, AppPlatform) -> Unit,
     onShowApplicationCreatorClick: () -> Unit,
     onJoinToChatClick: () -> Unit,
     onAddPlatformInfoClick: (Int) -> Unit,
-    onAddVersionInfoClick: (Platform) -> Unit,
-    onAddScreenshotInfoClick: (Platform, VersionInfo) -> Unit,
-    onAddDownloadInfoClick: (Platform, VersionInfo) -> Unit,
-    onAppScreenShotClick: (ScreenshotInfo, List<ScreenshotInfo>) -> Unit,
+    onAddVersionInfoClick: (AppPlatform) -> Unit,
+    onAddScreenshotInfoClick: (AppPlatform, VersionInfo) -> Unit,
+    onAddDownloadInfoClick: (AppPlatform, VersionInfo) -> Unit,
+    onAppScreenshotClick: (ScreenshotInfo, List<ScreenshotInfo>) -> Unit,
 ) {
     val rememberScrollState = rememberScrollState()
     val context = LocalContext.current
@@ -225,7 +223,9 @@ fun ApplicationContentComponent(
             AnimatedVisibility(visible = getApplicationButtonVisible) {
                 Row {
                     FilledTonalButton(
-                        onClick = onGetApplicationClick
+                        onClick = {
+                            platform?.let { onGetApplicationClick(application, it) }
+                        }
                     ) {
                         val getButtonText = if (application.price.isNullOrEmpty()) {
                             context.getString(xcj.app.appsets.R.string.get)
@@ -369,7 +369,7 @@ fun ApplicationContentComponent(
                             onAddVersionInfoClick = onAddVersionInfoClick,
                             onAddScreenshotInfoClick = onAddScreenshotInfoClick,
                             onAddDownloadInfoClick = onAddDownloadInfoClick,
-                            onAppScreenShotClick = onAppScreenShotClick
+                            onAppScreenshotClick = onAppScreenshotClick
                         )
                     }
                 }
@@ -382,6 +382,7 @@ fun ApplicationContentComponent(
 @Composable
 fun DownloadBottomSheetComponent(
     application: Application,
+    appPlatform: AppPlatform,
     onDownloadInfoGetClick: (Application, DownloadInfo) -> Unit,
 ) {
     Column(
@@ -440,7 +441,7 @@ fun DownloadBottomSheetComponent(
             }
         } else {
             val currentPlatformVersionDownloadsInfos by rememberUpdatedState(
-                application.currentPlatformVersionDownloadsInfos()
+                application.platformVersionDownloadsInfos(appPlatform.name)
             )
             LazyColumn(
                 modifier = Modifier.fillMaxWidth(),
@@ -516,11 +517,11 @@ fun DownloadBottomSheetComponent(
 
 @Composable
 fun PlatformInfo(
-    platform: Platform,
-    onAddVersionInfoClick: (Platform) -> Unit,
-    onAddScreenshotInfoClick: (Platform, VersionInfo) -> Unit,
-    onAddDownloadInfoClick: (Platform, VersionInfo) -> Unit,
-    onAppScreenShotClick: (ScreenshotInfo, List<ScreenshotInfo>) -> Unit,
+    platform: AppPlatform,
+    onAddVersionInfoClick: (AppPlatform) -> Unit,
+    onAddScreenshotInfoClick: (AppPlatform, VersionInfo) -> Unit,
+    onAddDownloadInfoClick: (AppPlatform, VersionInfo) -> Unit,
+    onAppScreenshotClick: (ScreenshotInfo, List<ScreenshotInfo>) -> Unit,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text(
@@ -625,7 +626,7 @@ fun PlatformInfo(
                         onAddDownloadInfoClick = {
                             onAddDownloadInfoClick(platform, targetVersionInfo)
                         },
-                        onAppScreenShotClick = onAppScreenShotClick
+                        onAppScreenshotClick = onAppScreenshotClick
                     )
                 }
             }
@@ -638,7 +639,7 @@ fun VersionInfo(
     version: VersionInfo,
     onAddScreenshotInfoClick: () -> Unit,
     onAddDownloadInfoClick: () -> Unit,
-    onAppScreenShotClick: (ScreenshotInfo, List<ScreenshotInfo>) -> Unit,
+    onAppScreenshotClick: (ScreenshotInfo, List<ScreenshotInfo>) -> Unit,
 ) {
     Column(
         verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -724,7 +725,7 @@ fun VersionInfo(
                                 .clip(MaterialTheme.shapes.medium)
                                 .clickable(
                                     onClick = {
-                                        onAppScreenShotClick(screenShot, version.screenshotInfos)
+                                        onAppScreenshotClick(screenShot, version.screenshotInfos)
                                     }
                                 ),
                             any = screenShot.url

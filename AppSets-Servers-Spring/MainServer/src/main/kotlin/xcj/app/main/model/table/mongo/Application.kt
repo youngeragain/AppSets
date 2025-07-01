@@ -32,10 +32,10 @@ data class Application(
     val category: String?,
     @Field("app_id")
     val appId: String?,
-    val platforms: List<PlatForm>?
+    val platforms: List<AppPlatform>?
 )
 
-data class PlatForm(
+data class AppPlatform(
     @Field("id")
     val id: String?,
     val name: String?,
@@ -98,5 +98,8 @@ data class DownloadInfo(
     @Field("download_times")
     val downloadTimes: Int?,
     val url: String?,
+    val description: String?,
+    val architectures: List<String>?,
+    val size: String?,
 )
 

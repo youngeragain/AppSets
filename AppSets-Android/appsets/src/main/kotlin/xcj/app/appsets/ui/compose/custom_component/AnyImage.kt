@@ -15,8 +15,10 @@ fun AnyImage(
     modifier: Modifier = Modifier,
     any: Any?,
     defaultColor: Color = Color.Transparent,
-    contentScale: ContentScale = ContentScale.Crop
+    contentScale: ContentScale = ContentScale.Crop,
+    error: Any? = null,
 ) {
+    val placeHolderOrErrorPainter = error?.let { anyPainter(it) }
     AsyncImage(
         model = ImageRequest.Builder(LocalContext.current)
             .data(any)
@@ -25,6 +27,7 @@ fun AnyImage(
             .build(),
         contentDescription = null,
         contentScale = contentScale,
-        modifier = modifier
+        modifier = modifier,
+        error = placeHolderOrErrorPainter
     )
 }

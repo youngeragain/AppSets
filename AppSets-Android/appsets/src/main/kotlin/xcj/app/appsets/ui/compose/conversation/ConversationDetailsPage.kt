@@ -612,7 +612,8 @@ private fun UserAvatarComponent(modifier: Modifier, imMessage: ImMessage) {
     AnyImage(
         modifier = modifier,
         any = imMessage.fromInfo.bioUrl,
-        defaultColor = MaterialTheme.colorScheme.secondaryContainer
+        defaultColor = MaterialTheme.colorScheme.secondaryContainer,
+        error = imMessage.fromInfo.name
     )
 }
 
@@ -621,7 +622,8 @@ private fun UserAvatar2Component(modifier: Modifier, imObj: ImObj?) {
     AnyImage(
         modifier = modifier,
         any = imObj?.avatarUrl,
-        defaultColor = MaterialTheme.colorScheme.secondaryContainer
+        defaultColor = MaterialTheme.colorScheme.secondaryContainer,
+        error = imObj?.name
     )
 }
 

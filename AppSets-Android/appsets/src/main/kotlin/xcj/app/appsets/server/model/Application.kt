@@ -22,7 +22,7 @@ data class Application(
     val updateUid: String? = null,
     override val name: String? = null,
     val category: String? = null,
-    val platforms: List<Platform>? = null,
+    val platforms: List<AppPlatform>? = null,
 ) : Bio, ImSessionHolder, Parcelable {
 
     override var imSession: Session? = null
@@ -48,7 +48,7 @@ data class Application(
         parcel.readString(),
         parcel.readString(),
         parcel.readString(),
-        parcel.createTypedArrayList(Platform)
+        parcel.createTypedArrayList(AppPlatform)
     ) {
     }
 
@@ -71,12 +71,15 @@ data class Application(
         return 0
     }
 
-    fun currentPlatformVersionDownloadsInfos(): List<DownloadInfo> {
+    fun platformVersionDownloadsInfos(platformName: String?): List<DownloadInfo> {
+        if (platformName.isNullOrEmpty()) {
+            return emptyList()
+        }
         if (platforms.isNullOrEmpty()) {
             return emptyList()
         }
         platforms.forEach { platform ->
-            if (platform.name == Constants.Android) {
+            if (platform.name == platformName) {
                 return if (platform.versionInfos.isNullOrEmpty()) {
                     emptyList()
                 } else {
@@ -138,7 +141,7 @@ data class Application(
     }
 }
 
-data class Platform(
+data class AppPlatform(
     val id: String? = null,
     val name: String? = null,
     val packageName: String? = null,
@@ -167,12 +170,12 @@ data class Platform(
         return 0
     }
 
-    companion object CREATOR : Parcelable.Creator<Platform> {
-        override fun createFromParcel(parcel: Parcel): Platform {
-            return Platform(parcel)
+    companion object CREATOR : Parcelable.Creator<AppPlatform> {
+        override fun createFromParcel(parcel: Parcel): AppPlatform {
+            return AppPlatform(parcel)
         }
 
-        override fun newArray(size: Int): Array<Platform?> {
+        override fun newArray(size: Int): Array<AppPlatform?> {
             return arrayOfNulls(size)
         }
     }
