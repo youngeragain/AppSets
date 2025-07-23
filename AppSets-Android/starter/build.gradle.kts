@@ -6,7 +6,7 @@ plugins {
 
 android {
     namespace = "xcj.app.starter"
-    compileSdk = 35
+    compileSdk = 36
     defaultConfig {
         //applicationId "xcj.app.stater"
         minSdk = 24

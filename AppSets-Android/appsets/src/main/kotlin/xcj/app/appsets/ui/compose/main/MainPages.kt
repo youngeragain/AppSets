@@ -35,7 +35,7 @@ import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.windowInsetsTopHeight
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -63,6 +63,8 @@ import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navOptions
+import dev.chrisbanes.haze.HazeState
+import dev.chrisbanes.haze.rememberHazeState
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import xcj.app.appsets.account.LocalAccountManager
@@ -150,6 +152,13 @@ fun MainPages() {
         LocalAnyStateProvider provides viewModel,
         LocalQuickStepContentHandlerRegistry provides quickStepContentHandlerRegistry
     ) {
+        MainBox(navController = navController)
+    }
+}
+
+@Composable
+fun MainBox(navController: NavHostController) {
+    Surface {
         Box(
             modifier = Modifier.mainBackgroundHandle()
         ) {
@@ -233,16 +242,15 @@ fun MainScaffoldContainer(navController: NavHostController) {
     val updateCheckResult by systemUseCase.newVersionState
     val onTabClick = rememberNavigationBarOnTabClickListener(navController)
     OnScaffoldLaunch(navController)
-    Scaffold(
-        modifier = Modifier.mainScaffoldHandle(),
-        bottomBar = {
-            NavigationBarContainer(
-                navController = navController,
-                onTabClick = onTabClick
-            )
-        }
-    ) { _ ->
-        Column {
+    val hazeState = rememberHazeState()
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .mainScaffoldHandle(),
+    ) {
+        Column(
+            modifier = Modifier.fillMaxSize()
+        ) {
             NewVersionSpace(
                 updateCheckResult = updateCheckResult,
                 onDismissClick = {
@@ -264,14 +272,29 @@ fun MainScaffoldContainer(navController: NavHostController) {
                 }
             )
             NowSpace(navController)
-            MainNaviHostPages(navController = navController)
+            MainNaviHostPages(
+                navController = navController,
+                startPageRoute = PageRouteNames.AppsCenterPage,
+                hazeState = hazeState
+            )
         }
+
+        NavigationBarContainer(
+            modifier = Modifier
+                .fillMaxWidth()
+                .align(Alignment.BottomCenter),
+            navController = navController,
+            hazeState = hazeState,
+            onTabClick = onTabClick,
+        )
     }
 }
 
 @Composable
 fun NavigationBarContainer(
+    modifier: Modifier = Modifier,
     navController: NavHostController,
+    hazeState: HazeState,
     onTabClick: (TabItem, TabAction?) -> Unit,
 ) {
     val context = LocalContext.current
@@ -283,6 +306,8 @@ fun NavigationBarContainer(
     val inSearchModel = navController.currentDestination?.route == PageRouteNames.SearchPage
     val searchUseCase = LocalUseCaseOfSearch.current
     NavigationBar(
+        modifier = modifier,
+        hazeState = hazeState,
         visible = navigationUseCase.barVisible.value,
         enable = enable,
         inSearchModel = inSearchModel,

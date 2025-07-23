@@ -1,8 +1,6 @@
 package xcj.app.appsets.ui.compose.search
 
-import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -58,32 +56,31 @@ fun NavigationSearchBar(
         mutableStateOf(IntSize.Zero)
     }
     Column {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        if (
+            inSearchModel
         ) {
-            if (
-                inSearchModel
+            Spacer(modifier = Modifier.height(4.dp))
+            SearchInputBar(
+                searchState = searchState,
+                sizeOfSearchBar = sizeOfSearchBar,
+                onBackClick = onBackClick,
+                onInputContent = onInputContent,
+                searchBarPlaced = {
+                    sizeOfSearchBar = it.size
+                }
+            )
+        } else {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                SearchInputBar(
-                    searchState = searchState,
-                    sizeOfSearchBar = sizeOfSearchBar,
-                    onBackClick = onBackClick,
-                    onInputContent = onInputContent,
-                    searchBarPlaced = {
-                        sizeOfSearchBar = it.size
-                    }
-                )
-            } else {
                 SearchClickableBar(
                     enable = enable,
                     onSearchBarClick = onSearchBarClick
                 )
                 LocalAccountUserAvatar(onClick = onBioClick)
             }
-
         }
-
         Spacer(modifier = Modifier.height(4.dp))
     }
 }

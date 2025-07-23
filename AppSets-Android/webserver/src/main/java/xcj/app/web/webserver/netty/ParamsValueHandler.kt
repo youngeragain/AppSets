@@ -30,7 +30,9 @@ object ParamsValueHandler {
     ): Any? {
         PurpleLogger.current.d(
             TAG,
-            "guessValue[${handlerMethod.method.name}], Api Uri:${handlerMethod.uri}, paramIndex:$paramIndex, paramType:$paramType, argumentAnnotations count:${argumentAnnotations.size}"
+            "guessValue[${handlerMethod.method.name}], Api Uri:${handlerMethod.uri}, " +
+                    "paramIndex:$paramIndex, paramType:$paramType, " +
+                    "argumentAnnotations count:${argumentAnnotations.size}"
         )
         if (paramType == HttpRequest::class.java) {
             return httpRequestWrapper.httpRequest

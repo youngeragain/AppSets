@@ -1,16 +1,17 @@
+@file:kotlin.OptIn(ExperimentalHazeMaterialsApi::class, ExperimentalSharedTransitionApi::class)
+
 package xcj.app.appsets.ui.compose.main
 
 import androidx.annotation.OptIn
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.animateContentSize
-import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.keyframes
 import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
@@ -18,7 +19,6 @@ import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -38,6 +38,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.media3.common.util.UnstableApi
+import dev.chrisbanes.haze.HazeState
+import dev.chrisbanes.haze.hazeEffect
+import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
+import dev.chrisbanes.haze.materials.HazeMaterials
 import xcj.app.appsets.ui.compose.LocalUseCaseOfConversation
 import xcj.app.appsets.ui.compose.LocalUseCaseOfScreen
 import xcj.app.appsets.ui.compose.PageRouteNames
@@ -70,6 +74,8 @@ fun NavigationBarPreview() {
 
 @Composable
 fun NavigationBar(
+    modifier: Modifier = Modifier,
+    hazeState: HazeState,
     visible: Boolean,
     enable: Boolean,
     inSearchModel: Boolean,
@@ -80,29 +86,31 @@ fun NavigationBar(
     onSearchBarClick: () -> Unit,
     onBioClick: () -> Unit,
 ) {
-    Box {
-        AnimatedVisibility(
+    AnimatedVisibility(
+        modifier = modifier,
+        visible = visible,
+        enter = fadeIn() + slideInVertically(initialOffsetY = { it + it / 20 }),
+        exit = fadeOut() + slideOutVertically(targetOffsetY = { it + it / 20 }),
+    ) {
+        StandardNavigationBar(
+            hazeState = hazeState,
+            enable = enable,
             visible = visible,
-            enter = fadeIn() + slideInVertically(initialOffsetY = { it + it / 20 }),
-            exit = fadeOut() + slideOutVertically(targetOffsetY = { it + it / 20 }),
-        ) {
-            StandardNavigationBar(
-                enable = enable,
-                visible = visible,
-                inSearchModel = inSearchModel,
-                tabItems = tabItems,
-                onBackClick = onBackClick,
-                onInputContent = onInputContent,
-                onTabClick = onTabClick,
-                onSearchBarClick = onSearchBarClick,
-                onBioClick = onBioClick
-            )
-        }
+            inSearchModel = inSearchModel,
+            tabItems = tabItems,
+            onBackClick = onBackClick,
+            onInputContent = onInputContent,
+            onTabClick = onTabClick,
+            onSearchBarClick = onSearchBarClick,
+            onBioClick = onBioClick
+        )
     }
 }
 
 @Composable
 fun StandardNavigationBar(
+    modifier: Modifier = Modifier,
+    hazeState: HazeState,
     enable: Boolean,
     visible: Boolean,
     inSearchModel: Boolean,
@@ -114,53 +122,52 @@ fun StandardNavigationBar(
     onBioClick: () -> Unit,
 ) {
 
-    androidx.compose.material3.Surface(
-        modifier = Modifier
+    Column(
+        modifier = modifier
+            .hazeEffect(
+                hazeState,
+                HazeMaterials.thin()
+            )
             .fillMaxWidth()
-            .imePadding()
+            .navigationBarsPadding()
+            .imePadding(),
     ) {
-        Column(
+        if (!inSearchModel) {
+            DesignHDivider()
+            Spacer(modifier = Modifier.height(6.dp))
+        }
+        val scrollState = rememberScrollState()
+        Row(
             modifier = Modifier
-                .fillMaxWidth()
-                .navigationBarsPadding(),
-            verticalArrangement = Arrangement.spacedBy(6.dp)
+                .align(Alignment.CenterHorizontally)
+                .heightIn(min = 48.dp)
+                .horizontalScroll(state = scrollState)
+                .animateContentSize(),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            if (!inSearchModel) {
-                DesignHDivider()
-            }
-            val scrollState = rememberScrollState()
-            Row(
-                modifier = Modifier
-                    .align(Alignment.CenterHorizontally)
-                    .heightIn(min = 48.dp)
-                    .horizontalScroll(state = scrollState)
-                    .animateContentSize(),
-                verticalAlignment = Alignment.CenterVertically
+            if (
+                !inSearchModel
             ) {
-                if (
-                    !inSearchModel
-                ) {
-                    tabItems.forEach { tab ->
-                        TabItem(
-                            modifier = Modifier,
-                            hostVisible = visible,
-                            naviTabItem = tab,
-                            onTabClick = onTabClick
-                        )
-                    }
-                    Spacer(modifier = Modifier.width(8.dp))
+                tabItems.forEach { tab ->
+                    TabItem(
+                        modifier = Modifier,
+                        hostVisible = visible,
+                        naviTabItem = tab,
+                        onTabClick = onTabClick
+                    )
                 }
-
-                NavigationSearchBar(
-                    enable = enable,
-                    inSearchModel = inSearchModel,
-                    onBackClick = onBackClick,
-                    onInputContent = onInputContent,
-                    onSearchBarClick = onSearchBarClick,
-                    onBioClick = onBioClick
-                )
                 Spacer(modifier = Modifier.width(8.dp))
             }
+
+            NavigationSearchBar(
+                enable = enable,
+                inSearchModel = inSearchModel,
+                onBackClick = onBackClick,
+                onInputContent = onInputContent,
+                onSearchBarClick = onSearchBarClick,
+                onBioClick = onBioClick
+            )
+            Spacer(modifier = Modifier.width(8.dp))
         }
     }
 }
@@ -197,7 +204,7 @@ fun TabItem(
             }
         }
         //todo bug
-        var itemIsSelectOverride = if (hostVisible) {
+        val itemIsSelectOverride = if (hostVisible) {
             naviTabItem.isSelect
         } else {
             true
@@ -261,12 +268,12 @@ fun TabItemActionComponent(
             } else {
                 0f
             },
-            animationSpec = tween(durationMillis = 550, easing = LinearOutSlowInEasing),
             label = "outside_refresh_button_animate_state"
         )
         ImageButtonComponent(
             resource = tabAction.icon,
             resRotate = iconRotationState,
+            useImage = false,
             onClick = {
                 onTabClick(naviTabItem, tabAction)
             }
@@ -274,6 +281,7 @@ fun TabItemActionComponent(
     } else {
         ImageButtonComponent(
             resource = tabAction.icon,
+            useImage = tabAction.action == TabAction.ACTION_ADD,
             onClick = {
                 onTabClick(naviTabItem, tabAction)
             }
@@ -289,6 +297,7 @@ fun TabItemMainComponent(naviTabItem: TabItem, onTabClick: (TabItem, TabAction?)
         if (naviTabItem is TabItem.SampleTabItem) {
             ImageButtonComponent(
                 resource = naviTabItem.icon,
+                useImage = false,
                 onClick = {
                     onTabClick(naviTabItem, null)
                 }
@@ -307,6 +316,7 @@ fun TabItemMainComponent(naviTabItem: TabItem, onTabClick: (TabItem, TabAction?)
             )
             ImageButtonComponent(
                 resource = naviTabItem.icon,
+                useImage = false,
                 resRotate = rotation.value,
                 onClick = {
                     onTabClick(naviTabItem, null)

@@ -19,6 +19,13 @@ dependencyManagement {
     }
 }
 
+kotlin {
+    compilerOptions {
+        freeCompilerArgs = listOf("-Xjsr305=strict")
+        //jvmTarget = "17"
+    }
+}
+
 dependencies {
 
     implementation(project(":Share"))
@@ -33,14 +40,14 @@ dependencies {
     testImplementation(libs.spring.boot.test)
 }
 
-
-
+/*
 tasks.withType<KotlinCompile> {
     kotlinOptions {
         freeCompilerArgs = listOf("-Xjsr305=strict")
         jvmTarget = "17"
     }
 }
+*/
 
 tasks.withType<Test> {
     useJUnitPlatform()

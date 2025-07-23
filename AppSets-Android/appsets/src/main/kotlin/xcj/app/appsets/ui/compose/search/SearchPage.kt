@@ -1,7 +1,15 @@
+@file:OptIn(ExperimentalHazeMaterialsApi::class)
+
 package xcj.app.appsets.ui.compose.search
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -18,11 +26,10 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -61,7 +68,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.onPlaced
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -72,6 +78,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import xcj.app.appsets.im.Bio
@@ -111,26 +118,12 @@ fun SearchPage(
         }
     })
 
-    Column(
-        modifier = Modifier
-            .statusBarsPadding()
-            .padding(horizontal = 12.dp)
-    ) {
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .onPlaced {
-                    boxSize = it.size
-                }
-        ) {
-            SearchPageResults(
-                searchState = searchState,
-                containerSize = boxSize,
-                onBioClick = onBioClick,
-                onScreenMediaClick = onScreenMediaClick
-            )
-        }
-    }
+    SearchPageResults(
+        searchState = searchState,
+        containerSize = boxSize,
+        onBioClick = onBioClick,
+        onScreenMediaClick = onScreenMediaClick
+    )
 }
 
 @Composable
@@ -268,71 +261,70 @@ fun SearchPageResults(
     onBioClick: (Bio) -> Unit,
     onScreenMediaClick: (ScreenMediaFileUrl, List<ScreenMediaFileUrl>) -> Unit,
 ) {
-    val density = LocalDensity.current
-    val targetValue by rememberUpdatedState(
-        if (searchState is SearchState.SearchSuccess) {
-            with(density) {
-                containerSize.height.toDp() - WindowInsets.navigationBars.asPaddingValues()
-                    .calculateBottomPadding()
-            }
-        } else {
-            120.dp
-        }
-    )
-    val heightOfBox = animateDpAsState(
-        targetValue = targetValue,
-        animationSpec = tween(550),
-        label = "search_container_height_animate"
-    )
-
-    Box(
-        Modifier
-            .height(heightOfBox.value)
-            .fillMaxWidth()
-    ) {
-        when (searchState) {
-            is SearchState.None -> {
-                Text(
-                    text = stringResource(xcj.app.appsets.R.string.no_content),
-                    modifier = Modifier.align(Alignment.Center)
+    AnimatedContent(
+        targetState = searchState,
+        contentAlignment = Alignment.TopCenter,
+        transitionSpec = {
+            (fadeIn(animationSpec = tween(450)) +
+                    scaleIn(initialScale = 0.92f, animationSpec = tween(450)))
+                .togetherWith(
+                    fadeOut(animationSpec = tween(120)) + scaleOut(
+                        targetScale = 1.12f,
+                        animationSpec = tween(
+                            120
+                        )
+                    )
                 )
-            }
-
-            is SearchState.Searching -> {
-                Column(
-                    modifier = Modifier.align(Alignment.Center),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    searchState.tips?.let {
-                        Text(text = stringResource(id = it))
-                    }
-
-                }
-            }
-
-            is SearchState.SearchFailed -> {
-                searchState.tips?.let {
+        }
+    ) { targetSearchState ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+        ) {
+            when (targetSearchState) {
+                is SearchState.None -> {
                     Text(
-                        text = stringResource(id = it),
+                        text = stringResource(xcj.app.appsets.R.string.no_content),
                         modifier = Modifier.align(Alignment.Center)
                     )
                 }
-            }
 
-            is SearchState.SearchSuccess -> {
-                if (searchState.results.isEmpty()) {
-                    searchState.tips?.let {
+                is SearchState.Searching -> {
+                    Column(
+                        modifier = Modifier.align(Alignment.Center),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        targetSearchState.tips?.let {
+                            Text(text = stringResource(id = it))
+                        }
+
+                    }
+                }
+
+                is SearchState.SearchFailed -> {
+                    targetSearchState.tips?.let {
                         Text(
                             text = stringResource(id = it),
                             modifier = Modifier.align(Alignment.Center)
                         )
                     }
-                } else {
-                    SearchSuccessPages(
-                        searchSuccess = searchState,
-                        onBioClick = onBioClick,
-                        onScreenMediaClick = onScreenMediaClick
-                    )
+                }
+
+                is SearchState.SearchSuccess -> {
+                    if (targetSearchState.results.isEmpty()) {
+                        targetSearchState.tips?.let {
+                            Text(
+                                text = stringResource(id = it),
+                                modifier = Modifier.align(Alignment.Center)
+                            )
+                        }
+                    } else {
+                        SearchSuccessPages(
+                            searchSuccess = targetSearchState,
+                            onBioClick = onBioClick,
+                            onScreenMediaClick = onScreenMediaClick
+                        )
+                    }
                 }
             }
         }
@@ -347,6 +339,14 @@ fun SearchSuccessPages(
 ) {
     val pagerState = rememberPagerState { searchSuccess.results.size }
     val coroutineScope = rememberCoroutineScope()
+    val tabsScrollState = rememberScrollState()
+    val buttonSize = remember {
+        mutableStateOf(IntSize.Zero)
+    }
+    LaunchedEffect(pagerState.currentPage) {
+        tabsScrollState.animateScrollTo(buttonSize.value.width * pagerState.currentPage)
+    }
+
     Box {
         HorizontalPager(
             state = pagerState,
@@ -389,22 +389,20 @@ fun SearchSuccessPages(
             }
 
         }
-        val tabsScrollState = rememberScrollState()
-        val buttonSize = remember {
-            mutableStateOf(IntSize.Zero)
-        }
         SingleChoiceSegmentedButtonRow(
             modifier = Modifier
                 .align(Alignment.TopCenter)
+                .statusBarsPadding()
                 .padding(horizontal = 12.dp)
                 .horizontalScroll(tabsScrollState)
         ) {
 
             searchSuccess.results.forEachIndexed { index, selectionType ->
                 SegmentedButton(
-                    modifier = Modifier.onPlaced {
-                        buttonSize.value = it.size
-                    },
+                    modifier = Modifier
+                        .onPlaced {
+                            buttonSize.value = it.size
+                        },
                     selected = index == pagerState.currentPage,
                     onClick = {
                         coroutineScope.launch {
@@ -442,19 +440,17 @@ fun SearchSuccessPages(
                 }
             }
         }
-        LaunchedEffect(pagerState.currentPage) {
-            tabsScrollState.animateScrollTo(buttonSize.value.width * pagerState.currentPage)
-        }
     }
-
-
 }
 
 @Composable
 fun SearchedGoodsListPage(searchedGoodsList: SearchResult.SearchedGoods) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(top = 52.dp, bottom = 68.dp)
+        contentPadding = PaddingValues(
+            top = 52.dp + WindowInsets.systemBars.asPaddingValues().calculateTopPadding(),
+            bottom = 68.dp
+        )
     ) {
         items(searchedGoodsList.goodsList) { screenInfo ->
 
@@ -470,7 +466,10 @@ fun SearchedScreensPage(
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(top = 52.dp, bottom = 68.dp)
+        contentPadding = PaddingValues(
+            top = 52.dp + WindowInsets.systemBars.asPaddingValues().calculateTopPadding(),
+            bottom = 68.dp
+        )
     ) {
         items(searchedScreens.screens) { screenInfo ->
             SearchedScreenComponent(
@@ -487,7 +486,10 @@ fun SearchedScreensPage(
 fun SearchedGroupsPage(searchedGroups: SearchResult.SearchedGroups, onBioClick: (Bio) -> Unit) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(top = 52.dp, bottom = 68.dp)
+        contentPadding = PaddingValues(
+            top = 52.dp + WindowInsets.systemBars.asPaddingValues().calculateTopPadding(),
+            bottom = 68.dp
+        )
     ) {
         items(searchedGroups.groups) { groupInfo ->
             SearchedGroupComponent(
@@ -507,7 +509,10 @@ fun SearchedUsersPage(
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(top = 52.dp, bottom = 68.dp)
+        contentPadding = PaddingValues(
+            top = 52.dp + WindowInsets.systemBars.asPaddingValues().calculateTopPadding(),
+            bottom = 68.dp
+        )
     ) {
         items(searchedUsers.users) { userInfo ->
             SearchedUserComponent(
@@ -530,7 +535,7 @@ fun SearchedApplicationsPage(
         modifier = Modifier.fillMaxSize(),
         state = rememberLazyGridState(),
         contentPadding = PaddingValues(
-            top = 52.dp,
+            top = 52.dp + WindowInsets.systemBars.asPaddingValues().calculateTopPadding(),
             bottom = 68.dp
         )
     ) {
@@ -583,9 +588,14 @@ fun SearchedUserComponent(modifier: Modifier, userInfo: UserInfo) {
     ) {
         AnyImage(
             modifier = Modifier
-                .size(36.dp)
+                .size(48.dp)
+                .background(
+                    color = MaterialTheme.colorScheme.outline,
+                    shape = MaterialTheme.shapes.large
+                )
                 .clip(MaterialTheme.shapes.large),
-            any = userInfo.bioUrl
+            any = userInfo.bioUrl,
+            defaultColor = MaterialTheme.colorScheme.outline
         )
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(text = userInfo.name ?: "")
@@ -604,9 +614,14 @@ fun SearchedGroupComponent(modifier: Modifier, groupInfo: GroupInfo) {
     ) {
         AnyImage(
             modifier = Modifier
-                .size(36.dp)
+                .size(48.dp)
+                .background(
+                    color = MaterialTheme.colorScheme.outline,
+                    shape = MaterialTheme.shapes.large
+                )
                 .clip(MaterialTheme.shapes.large),
             any = groupInfo.bioUrl,
+            defaultColor = MaterialTheme.colorScheme.outline
         )
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(text = groupInfo.name ?: "")

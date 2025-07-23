@@ -7,7 +7,7 @@ plugins {
 
 android {
     namespace = "xcj.app.share"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         minSdk = 24

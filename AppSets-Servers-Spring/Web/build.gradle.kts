@@ -13,18 +13,25 @@ plugins {
 group = "xcj.app.web"
 version = "0.0.1-SNAPSHOT"
 
+kotlin {
+    compilerOptions {
+        freeCompilerArgs = listOf("-Xjsr305=strict")
+        //jvmTarget = "17"
+    }
+}
+
 dependencies {
     implementation(project(":Share"))
     implementation(libs.spring.boot.thymeleaf)
 }
 
 
-tasks.withType<KotlinCompile> {
+/*tasks.withType<KotlinCompile> {
     kotlinOptions {
         freeCompilerArgs = listOf("-Xjsr305=strict")
         jvmTarget = "17"
     }
-}
+}*/
 
 tasks.withType<Test> {
     useJUnitPlatform()

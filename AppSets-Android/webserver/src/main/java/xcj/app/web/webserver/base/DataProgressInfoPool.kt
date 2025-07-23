@@ -10,7 +10,7 @@ object DataProgressInfoPool {
         LinkedHashMap<String, DataProgressInfo>(16, 0.75f, true)
 
     fun obtain(): DataProgressInfo {
-        if (pool.isEmpty) {
+        if (pool.isEmpty()) {
             val uuid = UUID.randomUUID().toString()
             return obtainById(uuid)
         }

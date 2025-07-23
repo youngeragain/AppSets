@@ -13,6 +13,13 @@ plugins {
 group = "xcj.app.starter"
 version = "0.0.1-SNAPSHOT"
 
+kotlin {
+    compilerOptions {
+        freeCompilerArgs = listOf("-Xjsr305=strict")
+        //jvmTarget = "17"
+    }
+}
+
 dependencies {
     api(libs.kotlin.stdlib)
     api(libs.kotlin.stdlib.jdk8)
@@ -20,12 +27,13 @@ dependencies {
     api(libs.slf4j.api)
     api(libs.kotlinx.coroutines.core)
 }
-tasks.withType<KotlinCompile> {
+
+/*tasks.withType<KotlinCompile> {
     kotlinOptions {
         freeCompilerArgs = listOf("-Xjsr305=strict")
         jvmTarget = "17"
     }
-}
+}*/
 
 tasks.withType<Test> {
     useJUnitPlatform()

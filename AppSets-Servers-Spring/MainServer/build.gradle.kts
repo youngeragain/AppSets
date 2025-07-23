@@ -28,6 +28,13 @@ configurations.all {
 }
 
 
+kotlin {
+    compilerOptions {
+        freeCompilerArgs = listOf("-Xjsr305=strict")
+        //jvmTarget = "17"
+    }
+}
+
 dependencies {
 
     implementation(project(":Share"))
@@ -69,12 +76,14 @@ dependencies {
     args("--spring.profiles.active=profile-a,profile-b")
 }*/
 
+/*
 tasks.withType<KotlinCompile> {
     kotlinOptions {
         freeCompilerArgs = listOf("-Xjsr305=strict")
         jvmTarget = "17"
     }
 }
+*/
 
 tasks.withType<Test> {
     useJUnitPlatform()

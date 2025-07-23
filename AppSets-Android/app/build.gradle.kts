@@ -13,7 +13,7 @@ apply(from = "custom_build.gradle")
 
 android {
     namespace = "xcj.app.container"
-    compileSdk = 35
+    compileSdk = 36
     signingConfigs {
         getKeystoreProperties()?.let { keystoreProperties ->
             create("release") {

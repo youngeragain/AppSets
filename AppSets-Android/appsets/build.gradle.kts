@@ -12,7 +12,7 @@ apply(from = "custom_build.gradle")
 
 android {
     namespace = "xcj.app.appsets"
-    compileSdk = 35
+    compileSdk = 36
     sourceSets {
         // Encapsulates configurations for the main source set.
         getByName("main") {

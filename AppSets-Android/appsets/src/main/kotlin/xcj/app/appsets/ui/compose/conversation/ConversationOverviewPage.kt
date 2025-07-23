@@ -372,7 +372,7 @@ fun ConversationOverviewSessionsOfSystem(
             )
         } else {
             LazyColumn(
-                contentPadding = PaddingValues(bottom = 98.dp)
+                contentPadding = PaddingValues(top = 12.dp, bottom = 98.dp)
             ) {
                 itemsIndexed(sessions) { index, session ->
                     ConversationOverviewSystemImMessageItemComponent(
@@ -420,7 +420,7 @@ fun ConversationOverviewSessionsOfGroup(
 
         } else {
             LazyColumn(
-                contentPadding = PaddingValues(bottom = 98.dp)
+                contentPadding = PaddingValues(top = 12.dp, bottom = 98.dp)
             ) {
                 itemsIndexed(sessions) { index, session ->
                     ConversationOverviewSimpleItemComponent(
@@ -466,7 +466,7 @@ fun ConversationOverviewSessionsOfUser(
             }
         } else {
             LazyColumn(
-                contentPadding = PaddingValues(bottom = 98.dp)
+                contentPadding = PaddingValues(top = 12.dp, bottom = 98.dp)
             ) {
                 itemsIndexed(sessions) { index, session ->
                     ConversationOverviewSimpleItemComponent(
@@ -512,7 +512,7 @@ fun ConversationOverviewSessionsOfAI(
             }
         } else {
             LazyColumn(
-                contentPadding = PaddingValues(bottom = 98.dp)
+                contentPadding = PaddingValues(top = 12.dp, bottom = 98.dp)
             ) {
                 itemsIndexed(sessions) { index, session ->
                     ConversationOverviewSimpleItemComponent(
@@ -543,7 +543,8 @@ fun ConversationOverviewTabs(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .animateContentSize()
+            .animateContentSize(),
+        verticalArrangement = Arrangement.spacedBy(6.dp)
     ) {
         Spacer(modifier = Modifier.windowInsetsTopHeight(WindowInsets.statusBars))
         AnimatedVisibility(
@@ -587,9 +588,7 @@ fun ConversationOverviewTabs(
                 )
             }
         }
-        Spacer(modifier = Modifier.height(6.dp))
         DesignHDivider()
-        Spacer(modifier = Modifier.height(6.dp))
     }
 }
 

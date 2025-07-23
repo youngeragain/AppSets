@@ -135,65 +135,71 @@ fun QuickStepContentComponent(quickStepContent: QuickStepContent) {
                 1.dp, MaterialTheme.colorScheme.outline,
                 MaterialTheme.shapes.extraLarge
             )
-            .padding(4.dp),
+            .padding(8.dp),
         horizontalArrangement = Arrangement.spacedBy(6.dp)
     ) {
-        if (quickStepContent is TextQuickStepContent) {
-            Icon(
-                painter = painterResource(xcj.app.compose_share.R.drawable.ic_notes_24),
-                contentDescription = null
-            )
-            Text(
-                text = quickStepContent.text,
-                fontSize = 12.sp,
-                maxLines = 3,
-                overflow = TextOverflow.Ellipsis
-            )
-        } else if (quickStepContent is UriQuickStepContent) {
-            when {
-                ContentType.isImage(quickStepContent.uriContentType) -> {
-                    /* Icon(
-                         painter = painterResource(xcj.app.compose_share.R.drawable.ic_photo_24),
-                         contentDescription = null
-                     )*/
-                    AnyImage(
-                        modifier = Modifier
-                            .size(120.dp)
-                            .clip(MaterialTheme.shapes.extraLarge),
-                        any = quickStepContent.uri
-                    )
-                }
+        when (quickStepContent) {
+            is TextQuickStepContent -> {
+                Icon(
+                    painter = painterResource(xcj.app.compose_share.R.drawable.ic_notes_24),
+                    contentDescription = null
+                )
+                Text(
+                    text = quickStepContent.text,
+                    fontSize = 12.sp,
+                    maxLines = 3,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
 
-                ContentType.isVideo(quickStepContent.uriContentType) -> {
-                    /*  Icon(
-                          painter = painterResource(xcj.app.compose_share.R.drawable.ic_slow_motion_video_24),
-                          contentDescription = null
-                      )*/
-                    AnyImage(
-                        modifier = Modifier
-                            .size(120.dp)
-                            .clip(MaterialTheme.shapes.extraLarge),
-                        any = quickStepContent.uri
-                    )
-                }
-
-                else -> {
-                    Icon(
-                        painter = painterResource(xcj.app.compose_share.R.drawable.ic_insert_drive_file_24),
-                        contentDescription = null
-                    )
-                    val displayName = quickStepContent.androidUriFile?.displayName
-                    if (!displayName.isNullOrEmpty()) {
-                        Text(text = displayName, fontSize = 12.sp)
+            is UriQuickStepContent -> {
+                when {
+                    ContentType.isImage(quickStepContent.uriContentType) -> {
+                        /* Icon(
+                             painter = painterResource(xcj.app.compose_share.R.drawable.ic_photo_24),
+                             contentDescription = null
+                         )*/
+                        AnyImage(
+                            modifier = Modifier
+                                .size(120.dp)
+                                .clip(MaterialTheme.shapes.extraLarge),
+                            any = quickStepContent.uri
+                        )
                     }
 
+                    ContentType.isVideo(quickStepContent.uriContentType) -> {
+                        /*  Icon(
+                              painter = painterResource(xcj.app.compose_share.R.drawable.ic_slow_motion_video_24),
+                              contentDescription = null
+                          )*/
+                        AnyImage(
+                            modifier = Modifier
+                                .size(120.dp)
+                                .clip(MaterialTheme.shapes.extraLarge),
+                            any = quickStepContent.uri
+                        )
+                    }
+
+                    else -> {
+                        Icon(
+                            painter = painterResource(xcj.app.compose_share.R.drawable.ic_insert_drive_file_24),
+                            contentDescription = null
+                        )
+                        val displayName = quickStepContent.androidUriFile?.displayName
+                        if (!displayName.isNullOrEmpty()) {
+                            Text(text = displayName, fontSize = 12.sp)
+                        }
+
+                    }
                 }
             }
-        } else {
-            Icon(
-                painter = painterResource(xcj.app.compose_share.R.drawable.ic_insert_drive_file_24),
-                contentDescription = null
-            )
+
+            else -> {
+                Icon(
+                    painter = painterResource(xcj.app.compose_share.R.drawable.ic_insert_drive_file_24),
+                    contentDescription = null
+                )
+            }
         }
     }
 }

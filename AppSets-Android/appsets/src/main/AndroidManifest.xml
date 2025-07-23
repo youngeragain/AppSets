@@ -129,7 +129,7 @@
         </activity>
 
         <activity
-            android:name=".ui.compose.conversation.ImBubbleActivity"
+            android:name=".ui.compose.conversation.IMBubbleActivity"
             android:allowEmbedded="true"
             android:exported="true"
             android:label="@string/app_name"

@@ -159,23 +159,23 @@ fun ExternalContentTipsSheet(
                 fontSize = 22.sp,
                 fontWeight = FontWeight.Bold
             )
+        }
 
-            if (fromAppDefinition != null) {
-                Row {
-                    AsyncImage(
-                        model = fromAppDefinition.icon,
-                        contentDescription = fromAppDefinition.description,
-                        modifier = Modifier
-                            .size(32.dp)
-                            .clip(MaterialTheme.shapes.large)
-                            .border(
-                                1.dp,
-                                MaterialTheme.colorScheme.outline,
-                                MaterialTheme.shapes.large
-                            ),
-                    )
-                    Text(text = fromAppDefinition.name ?: "")
-                }
+        if (fromAppDefinition != null) {
+            Row {
+                AsyncImage(
+                    model = fromAppDefinition.icon,
+                    contentDescription = fromAppDefinition.description,
+                    modifier = Modifier
+                        .size(32.dp)
+                        .clip(MaterialTheme.shapes.large)
+                        .border(
+                            1.dp,
+                            MaterialTheme.colorScheme.outline,
+                            MaterialTheme.shapes.large
+                        ),
+                )
+                Text(text = fromAppDefinition.name ?: "")
             }
         }
 

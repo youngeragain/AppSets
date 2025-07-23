@@ -8,8 +8,8 @@ plugins {
 }
 
 android {
-    namespace = "xcj.app.launcher"
-    compileSdk = 35
+    namespace = "xcj.app.screen_share"
+    compileSdk = 36
 
     defaultConfig {
         //applicationId = "xcj.app.launcher"

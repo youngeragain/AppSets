@@ -39,13 +39,13 @@ function ScaffoldContainer({ routeDataDefault }){
         }else{
             setLastRouteData(oldRouteData)
         }
-
-        console.log("=======\n"+"route:"+newRouteData.routeName+"\nlastRoute:"+routeData.routeName+"\n=========")
+        console.log("=======\n"+"route:"+routeData.routeName+"\nlastRoute:"+(lastRouteData?lastRouteData:oldRouteData).routeName+"\n=========")
        
     }
 
     function onPanelBackClick(){
-        onNavBarItemClick(lastRouteData)
+        let lastRouteDataOverride = lastRouteData?lastRouteData:new RouteData("applications", null)
+        onNavBarItemClick(lastRouteDataOverride)
     }
 
     var navibarView = (<></>)

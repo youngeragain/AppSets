@@ -6,7 +6,7 @@ plugins {
 
 android {
     namespace = "xcj.app.baselineprofile"
-    compileSdk = 35
+    compileSdk = 36
     defaultConfig {
         minSdk = 28
         targetSdk = 35

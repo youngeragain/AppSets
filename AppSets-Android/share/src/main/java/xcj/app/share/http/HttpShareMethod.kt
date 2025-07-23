@@ -24,7 +24,7 @@ import xcj.app.share.http.common.ServerBootStateInfo
 import xcj.app.share.http.discovery.BonjourDiscovery
 import xcj.app.share.http.discovery.Discovery
 import xcj.app.share.http.discovery.DiscoveryEndpoint
-import xcj.app.share.http.repository.AppSetsShareRepository
+import xcj.app.share.http.repository.ShareRepository
 import xcj.app.share.ui.compose.AppSetsShareActivity
 import xcj.app.share.ui.compose.AppSetsShareViewModel
 import xcj.app.share.util.NetworkUtil
@@ -67,7 +67,7 @@ class HttpShareMethod : ShareMethod(), ContentReceivedListener, ListenersProvide
         }
     }
 
-    private val appSetsShareRepository = AppSetsShareRepository()
+    private val shareRepository = ShareRepository()
 
     private var discovery: Discovery? = null
 
@@ -366,7 +366,7 @@ class HttpShareMethod : ShareMethod(), ContentReceivedListener, ListenersProvide
         activity.lifecycleScope.launch {
             requestNotNull(
                 action = {
-                    appSetsShareRepository.getContentList(shareDevice, uri = "/")
+                    shareRepository.getContentList(shareDevice, uri = "/")
                 },
                 onSuccess = {
                     viewModel.updateDeviceContentList(shareDevice, it.decode())
@@ -387,7 +387,7 @@ class HttpShareMethod : ShareMethod(), ContentReceivedListener, ListenersProvide
         }
         prepareSendContentRunnableInfoMap(shareDevices, sendContentList)
         activity.lifecycleScope.launch {
-            appSetsShareRepository.handleSend(
+            shareRepository.handleSend(
                 this@HttpShareMethod,
                 uri = "/",
                 sendDirect = false
@@ -405,7 +405,7 @@ class HttpShareMethod : ShareMethod(), ContentReceivedListener, ListenersProvide
             }
             val sendDataRunnableInfo = SendDataRunnableInfo()
             val sendContentRunnable: SuspendRunnable = suspend {
-                appSetsShareRepository.sendContentList(activity, this, dataSendContentList)
+                shareRepository.sendContentList(activity, this, dataSendContentList)
             }
             sendDataRunnableInfo.sendDataRunnable = sendContentRunnable
             sendContentRunnableInfoMap.put(shareDevice, sendDataRunnableInfo)
@@ -504,7 +504,7 @@ class HttpShareMethod : ShareMethod(), ContentReceivedListener, ListenersProvide
         shareDevice.token = shareToken
         if (shareDevice.isPaired) {
             activity.lifecycleScope.launch {
-                appSetsShareRepository.resumeHandleSend(
+                shareRepository.resumeHandleSend(
                     shareMethod = this@HttpShareMethod,
                     shareDevice = shareDevice,
                     uri = "/",
@@ -600,7 +600,7 @@ class HttpShareMethod : ShareMethod(), ContentReceivedListener, ListenersProvide
         }
         if (isAccept) {
             activity.lifecycleScope.launch {
-                appSetsShareRepository.resumeHandleSend(
+                shareRepository.resumeHandleSend(
                     shareMethod = this@HttpShareMethod,
                     shareDevice = shareDevice,
                     uri = "/",
@@ -619,7 +619,7 @@ class HttpShareMethod : ShareMethod(), ContentReceivedListener, ListenersProvide
         activity.lifecycleScope.launch {
             requestRaw(
                 action = {
-                    appSetsShareRepository.prepareSendResponse(
+                    shareRepository.prepareSendResponse(
                         shareDevice,
                         isAccept,
                         isPreferDownloadSelf
@@ -632,7 +632,7 @@ class HttpShareMethod : ShareMethod(), ContentReceivedListener, ListenersProvide
         }
         if (isPreferDownloadSelf) {
             activity.lifecycleScope.launch {
-                appSetsShareRepository.handleDownload(
+                shareRepository.handleDownload(
                     this@HttpShareMethod,
                     shareDevice,
                     uri
@@ -646,7 +646,7 @@ class HttpShareMethod : ShareMethod(), ContentReceivedListener, ListenersProvide
             val shareToken = UUID.randomUUID().toString()
             requestRaw(
                 action = {
-                    appSetsShareRepository.pairResponse(shareDevice, shareToken)
+                    shareRepository.pairResponse(shareDevice, shareToken)
                 },
                 onSuccess = {
                     shareDevice.pin = pin
@@ -669,7 +669,7 @@ class HttpShareMethod : ShareMethod(), ContentReceivedListener, ListenersProvide
             activity.lifecycleScope.launch {
                 requestRaw(
                     action = {
-                        appSetsShareRepository.exchangeDeviceInfo(this@HttpShareMethod, address)
+                        shareRepository.exchangeDeviceInfo(this@HttpShareMethod, address)
                     }
                 )
             }

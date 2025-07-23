@@ -60,6 +60,8 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.google.gson.Gson
+import dev.chrisbanes.haze.HazeState
+import dev.chrisbanes.haze.hazeSource
 import kotlinx.coroutines.launch
 import me.saket.telephoto.zoomable.rememberZoomableState
 import me.saket.telephoto.zoomable.zoomable
@@ -77,10 +79,10 @@ import xcj.app.appsets.im.message.VideoMessage
 import xcj.app.appsets.im.message.VoiceMessage
 import xcj.app.appsets.im.model.CommonURIJson
 import xcj.app.appsets.purple_module.ModuleConstant
+import xcj.app.appsets.server.model.AppPlatform
 import xcj.app.appsets.server.model.Application
 import xcj.app.appsets.server.model.DownloadInfo
 import xcj.app.appsets.server.model.GroupInfo
-import xcj.app.appsets.server.model.AppPlatform
 import xcj.app.appsets.server.model.ScreenInfo
 import xcj.app.appsets.server.model.ScreenMediaFileUrl
 import xcj.app.appsets.server.model.UserInfo
@@ -161,7 +163,11 @@ import xcj.app.starter.test.NaviHostParams
 private const val TAG = "MainNaviHostPages"
 
 @Composable
-fun MainNaviHostPages(navController: NavHostController) {
+fun MainNaviHostPages(
+    navController: NavHostController,
+    startPageRoute: String,
+    hazeState: HazeState,
+) {
 
     var isShowRestrictedContentDialog by remember {
         mutableStateOf(false)
@@ -172,8 +178,9 @@ fun MainNaviHostPages(navController: NavHostController) {
 
     Box {
         DesignNaviHost(
+            modifier = Modifier.hazeSource(hazeState),
             navController = navController,
-            startDestination = PageRouteNames.AppsCenterPage,
+            startDestination = startPageRoute,
         ) {
 
             publishComposeNaviHostFormedEvent(navController, this)
@@ -1186,11 +1193,13 @@ fun NaviHostBackHandlerInterceptor(navController: NavHostController) {
 
 @Composable
 fun DesignNaviHost(
+    modifier: Modifier = Modifier,
     navController: NavHostController,
     startDestination: String,
     builder: NavGraphBuilder.() -> Unit,
 ) {
     NavHost(
+        modifier = modifier,
         navController = navController,
         startDestination = startDestination,
         enterTransition = {
