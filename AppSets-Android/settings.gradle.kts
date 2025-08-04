@@ -65,10 +65,10 @@ pluginManagement {
         maven {
             url = uri("https://plugins.gradle.org/m2/")
         }
-        maven {
+        /*maven {
             name = "MavenLocal"
             url = uri("file://D:/MavenLocal")
-        }
+        }*/
     }
 }
 
@@ -105,10 +105,10 @@ dependencyResolutionManagement {
         maven {
             url = uri("https://jcenter.bintray.com/")
         }
-        maven {
+        /*maven {
             name = "MavenLocal"
             url = uri("file://D:/MavenLocal")
-        }
+        }*/
     }
 }
 
