@@ -79,5 +79,5 @@ dependencies {
     androidTestImplementation(libs.androidx.espresso.core)
 
 
-    implementation(libs.ffmpeg.kit.full)
+    //implementation(libs.ffmpeg.kit.full)
 }

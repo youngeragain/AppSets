@@ -454,5 +454,7 @@
     <string name="online_ai_models">在线AI模型</string>
     <string name="mixed_ai_models">混合AI模型</string>
     <string name="no_models_available">没有可用模型</string>
+    <string name="remove">移除</string>
+    <string name="there_is_nothing_here">There is nothing here</string>
 
 </resources>

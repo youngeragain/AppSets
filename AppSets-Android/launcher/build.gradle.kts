@@ -8,7 +8,7 @@ plugins {
 }
 
 android {
-    namespace = "xcj.app.screen_share"
+    namespace = "xcj.app.launcher"
     compileSdk = 36
 
     defaultConfig {

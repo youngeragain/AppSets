@@ -2,6 +2,7 @@
 
 package xcj.app.appsets.ui.compose.outside
 
+import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
@@ -11,6 +12,8 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.clipScrollableContainer
+import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.ScrollableState
 import androidx.compose.foundation.interaction.Interaction
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -31,6 +34,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsTopHeight
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -48,6 +52,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.carousel.HorizontalUncontainedCarousel
+import androidx.compose.material3.carousel.rememberCarouselState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -58,6 +64,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.layout.boundsInRoot
@@ -78,10 +85,6 @@ import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.FileProvider
-import com.msusman.compose.cardstack.Direction
-import com.msusman.compose.cardstack.Duration
-import com.msusman.compose.cardstack.SwipeDirection
-import com.msusman.compose.cardstack.SwipeMethod
 import kotlinx.coroutines.launch
 import me.saket.telephoto.zoomable.rememberZoomablePeekOverlayState
 import me.saket.telephoto.zoomable.zoomablePeekOverlay
@@ -91,15 +94,11 @@ import xcj.app.appsets.server.model.ScreenInfo
 import xcj.app.appsets.server.model.ScreenMediaFileUrl
 import xcj.app.appsets.ui.compose.PageRouteNames
 import xcj.app.appsets.ui.compose.custom_component.AnyImage
-import xcj.app.appsets.ui.compose.custom_component.CardStack0
-import xcj.app.appsets.ui.compose.custom_component.rememberStackState0
 import xcj.app.appsets.ui.model.PictureStyleState
 import xcj.app.appsets.ui.model.ScreenState
 import xcj.app.appsets.util.saveComposeNodeAsBitmap
 import xcj.app.starter.android.util.PurpleLogger
 import xcj.app.starter.util.ContentType
-import kotlin.math.max
-import kotlin.math.min
 
 private const val TAG = "ScreensList"
 
@@ -375,16 +374,16 @@ fun ScreenTopActionsPart(
                 label = {
                     val videoCount = mediaFileUrls.sumOf {
                         if (it.isVideoMedia) {
-                            1.toInt()
+                            1
                         } else {
-                            0.toInt()
+                            0
                         }
                     }
                     val pictureCount = mediaFileUrls.sumOf {
                         if (!it.isVideoMedia) {
-                            1.toInt()
+                            1
                         } else {
-                            0.toInt()
+                            0
                         }
                     }
                     if (videoCount > 0 && pictureCount > 0) {
@@ -460,29 +459,16 @@ fun ScreenSectionOfContentMediasPart(
     if (mediaFileUrls.isNullOrEmpty()) {
         return
     }
-    val stackState0 = rememberStackState0<ScreenMediaFileUrl>(
-        canDrag = false
-    )
-    CardStack0(
-        modifier = Modifier,
-        stackState0 = stackState0,
-        items = mediaFileUrls,
-        cardElevation = 20.dp,
-        scaleRatio = 0.9f,
-        rotationMaxDegree = 0,
-        displacementThreshold = 60.dp,
-        animationDuration = Duration.NORMAL,
-        visibleCount = min(3, max(1, mediaFileUrls.size)),
-        stackDirection = Direction.Top,
-        swipeDirection = SwipeDirection.HORIZONTAL,
-        swipeMethod = SwipeMethod.AUTOMATIC_AND_MANUAL,
-        shadowElevation = 2.dp,
-        shadowShape = MaterialTheme.shapes.extraLarge,
-        onSwiped = { index ->
-            //Log.d(TAG, "onSwiped index:$index ")
-
-        }
-    ) { mediaFileUrl ->
+    val carouselState = rememberCarouselState { mediaFileUrls.size }
+    HorizontalUncontainedCarousel(
+        state = carouselState,
+        modifier = Modifier
+            .fillMaxWidth()
+            .wrapContentHeight(),
+        itemWidth = 250.dp,
+        itemSpacing = 8.dp,
+    ) { index ->
+        val mediaFileUrl = mediaFileUrls[index]
         MediaCard(
             mediaFileUrl,
             onMediaClick = {
@@ -499,74 +485,67 @@ fun MediaCard(
     onMediaClick: ((ScreenMediaFileUrl) -> Unit)?,
     mediaInteractionFlowCollector: ((Interaction, ScreenMediaFileUrl) -> Unit)?,
 ) {
-    Column {
-        val pictureHeightOverride = 230.dp
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(pictureHeightOverride)
-                .background(
-                    MaterialTheme.colorScheme.outline,
-                    MaterialTheme.shapes.extraLarge
-                )
-                .clip(MaterialTheme.shapes.extraLarge)
-                .clickable {
-                    if (onMediaClick != null) {
-                        onMediaClick(mediaFileUrl)
-                    }
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(200.dp)
+            .background(
+                MaterialTheme.colorScheme.outline
+            )
+            .clickable {
+                if (onMediaClick != null) {
+                    onMediaClick(mediaFileUrl)
                 }
-        ) {
-            if (mediaFileUrl.isRestrictedContent) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .clip(MaterialTheme.shapes.extraLarge),
-                    contentAlignment = Alignment.Center
-                ) {
-                    val text = AnnotatedString(
-                        stringResource(xcj.app.appsets.R.string.restricted_content_continue_viewing),
-                        listOf(
-                            AnnotatedString.Range(
-                                SpanStyle(
-                                    color = MaterialTheme.colorScheme.primary,
-                                    fontWeight = FontWeight.Bold
-                                ), 5, 9
-                            )
+            }
+    ) {
+        if (mediaFileUrl.isRestrictedContent) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                val text = AnnotatedString(
+                    stringResource(xcj.app.appsets.R.string.restricted_content_continue_viewing),
+                    listOf(
+                        AnnotatedString.Range(
+                            SpanStyle(
+                                color = MaterialTheme.colorScheme.primary,
+                                fontWeight = FontWeight.Bold
+                            ), 5, 9
                         )
                     )
-                    Text(text = text, fontSize = 12.sp)
-                }
-            } else {
-                AnyImage(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .clip(MaterialTheme.shapes.extraLarge)
-                        .zoomablePeekOverlay(rememberZoomablePeekOverlayState()),
-                    any = if (mediaFileUrl.isVideoMedia) {
-                        mediaFileUrl.mediaFileCompanionUrl
-                    } else {
-                        mediaFileUrl.mediaFileUrl
-                    }
                 )
-                if (mediaFileUrl.isVideoMedia) {
-                    IconButton(
-                        modifier = Modifier
-                            .padding(12.dp)
-                            .align(Alignment.Center),
-                        onClick = {
-                            if (onMediaClick != null) {
-                                onMediaClick(mediaFileUrl)
-                            }
-                        },
-                        colors = IconButtonDefaults.iconButtonColors(
-                            containerColor = MaterialTheme.colorScheme.tertiaryContainer
-                        )
-                    ) {
-                        Icon(
-                            painter = painterResource(id = xcj.app.compose_share.R.drawable.ic_slow_motion_video_24),
-                            contentDescription = null,
-                        )
-                    }
+                Text(text = text, fontSize = 12.sp)
+            }
+        } else {
+            AnyImage(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .zoomablePeekOverlay(rememberZoomablePeekOverlayState()),
+                any = if (mediaFileUrl.isVideoMedia) {
+                    mediaFileUrl.mediaFileCompanionUrl
+                } else {
+                    mediaFileUrl.mediaFileUrl
+                }
+            )
+            if (mediaFileUrl.isVideoMedia) {
+                IconButton(
+                    modifier = Modifier
+                        .padding(12.dp)
+                        .align(Alignment.Center),
+                    onClick = {
+                        if (onMediaClick != null) {
+                            onMediaClick(mediaFileUrl)
+                        }
+                    },
+                    colors = IconButtonDefaults.iconButtonColors(
+                        containerColor = MaterialTheme.colorScheme.tertiaryContainer
+                    )
+                ) {
+                    Icon(
+                        painter = painterResource(id = xcj.app.compose_share.R.drawable.ic_slow_motion_video_24),
+                        contentDescription = null,
+                    )
                 }
             }
         }
@@ -955,15 +934,20 @@ fun rememberPictureStyleState(): PictureStyleState {
     return pictureStyleState
 }
 
-private fun shareAppSetsUserScreen(
+private suspend fun shareAppSetsUserScreen(
     context: Context,
     capturingViewBounds: Rect?,
     localView: View,
 ) {
-    val bounds = capturingViewBounds ?: run {
+    if (capturingViewBounds == null) {
         PurpleLogger.current.d(TAG, "share failure, because bounds is null!")
         return
     }
+    if (context !is Activity) {
+        PurpleLogger.current.d(TAG, "share failure, context is not Activity!")
+        return
+    }
+    val bounds = capturingViewBounds
     val file = saveComposeNodeAsBitmap(
         context,
         bounds,

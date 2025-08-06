@@ -95,7 +95,7 @@ import xcj.app.appsets.ui.compose.outside.ScreenComponent
 import xcj.app.appsets.ui.compose.theme.AppSetsShapes
 import xcj.app.appsets.ui.model.SearchResult
 import xcj.app.appsets.ui.model.SearchState
-import xcj.app.compose_share.components.SearchTextField
+import xcj.app.compose_share.components.DesignTextField
 
 @Composable
 fun SearchPage(
@@ -164,7 +164,7 @@ fun SearchInputBar(
             bottomEnd = corner
         )
     )
-    SearchTextField(
+    DesignTextField(
         value = inputContent.text,
         onValueChange = {
             inputContent = TextFieldValue(it)

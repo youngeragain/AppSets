@@ -16,45 +16,44 @@ import xcj.app.starter.test.LocalAndroidContextFileDir
 import java.io.File
 import java.util.UUID
 import kotlin.math.roundToInt
+import androidx.core.graphics.createBitmap
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import okhttp3.Dispatcher
 
 private const val TAG = "ComposeHelper"
 
-internal fun saveComposeNodeAsBitmap(
-    context: Context,
+internal suspend fun saveComposeNodeAsBitmap(
+    activity: Activity,
     bounds: Rect,
     view: View
-): File {
-    val bitmap = Bitmap.createBitmap(
-        bounds.width.roundToInt(), bounds.height.roundToInt(),
-        Bitmap.Config.ARGB_8888
-    )
+): File = withContext(Dispatchers.IO) {
+    val bitmap = createBitmap(bounds.width.roundToInt(), bounds.height.roundToInt())
     val cacheDir = LocalAndroidContextFileDir.current.tempImagesCacheDir
-    val fileName = "${UUID.randomUUID()}.png"
+    val fileName = "${UUID.randomUUID()}.jpg"
     val file = File(cacheDir, fileName)
     file.createNewFile()
 
     fun saveInternal() {
         runCatching {
             file.writeBitmap(bitmap, Bitmap.CompressFormat.PNG, 85)
-            file
         }.onFailure {
+            it.printStackTrace()
             PurpleLogger.current.d(
                 TAG,
-                "saveInternal, save compose node image failure with name:$fileName"
+                "saveInternal, save compose node image failure with name:$fileName, ${it.message}"
             )
         }.onSuccess {
             PurpleLogger.current.d(
                 TAG,
                 "saveInternal, save compose node image success with name:$fileName"
             )
-
         }
     }
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
         // Above Android O, use PixelCopy
-        val window = (context as Activity).window
         PixelCopy.request(
-            window,
+            activity.window,
             android.graphics.Rect(
                 bounds.left.toInt(),
                 bounds.top.toInt(),
@@ -79,5 +78,5 @@ internal fun saveComposeNodeAsBitmap(
         bitmap.applyCanvas(view::draw)
         saveInternal()
     }
-    return file
+    return@withContext file
 }

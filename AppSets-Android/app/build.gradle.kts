@@ -1,3 +1,4 @@
+//noinspection WrongGradleMethod
 import java.util.Properties
 
 plugins {
@@ -54,6 +55,7 @@ android {
             )
             runCatching {
                 signingConfigs.getByName("release")
+
             }.onSuccess {
                 signingConfig = it
             }.onFailure {
@@ -68,7 +70,6 @@ android {
                 "proguard-rules.pro"
             )
         }
-
     }
 
     buildFeatures {

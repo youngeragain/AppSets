@@ -23,7 +23,6 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -38,7 +37,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import xcj.app.appsets.ui.compose.LocalQuickStepContentHandlerRegistry
 import xcj.app.appsets.ui.compose.custom_component.AnyImage
-import xcj.app.compose_share.components.SearchTextField
+import xcj.app.compose_share.components.DesignTextField
 import xcj.app.starter.util.ContentType
 
 @Composable
@@ -75,7 +74,7 @@ fun QuickStepSheet(
                 QuickStepContentComponent(quickStepContent)
             }
         }
-        SearchTextField(
+        DesignTextField(
             value = searchContent.text,
             onValueChange = {
                 searchContent = TextFieldValue(it)

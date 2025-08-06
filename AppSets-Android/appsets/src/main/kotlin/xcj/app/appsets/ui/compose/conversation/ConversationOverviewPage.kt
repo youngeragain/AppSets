@@ -34,6 +34,9 @@ import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsTopHeight
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
@@ -547,23 +550,14 @@ fun ConversationOverviewTabs(
         verticalArrangement = Arrangement.spacedBy(6.dp)
     ) {
         Spacer(modifier = Modifier.windowInsetsTopHeight(WindowInsets.statusBars))
-        AnimatedVisibility(
-            visible = isShowAddActions,
-            enter = expandVertically(
-                animationSpec = tween(),
-            ) + fadeIn(),
-            exit = shrinkVertically(
-                animationSpec = tween(),
-            ),
-            content = {
-                ConversationOverviewActionsComponent(
-                    onAddAIModelClick = onAddAIModelClick,
-                    onAddFriendClick = onAddFriendClick,
-                    onAddGroupClick = onAddGroupClick,
-                    onCreateGroupClick = onCreateGroupClick
-                )
-            }
-        )
+        if (isShowAddActions) {
+            ConversationOverviewActionsComponent(
+                onAddAIModelClick = onAddAIModelClick,
+                onAddFriendClick = onAddFriendClick,
+                onAddGroupClick = onAddGroupClick,
+                onCreateGroupClick = onCreateGroupClick
+            )
+        }
         Row(
             modifier = Modifier
                 .padding(horizontal = 12.dp)
@@ -742,7 +736,16 @@ fun ConversationOverviewActionsComponent(
             .fillMaxWidth()
             .padding(12.dp)
     ) {
-        FlowRow(
+        val actionsTabs = remember {
+            listOf(
+                xcj.app.appsets.R.string.add_ai_aigent,
+                xcj.app.appsets.R.string.add_friend,
+                xcj.app.appsets.R.string.add_group,
+                xcj.app.appsets.R.string.create_group
+            )
+        }
+        LazyVerticalGrid(
+            columns = GridCells.Fixed(2),
             modifier = Modifier
                 .fillMaxWidth()
                 .border(
@@ -754,43 +757,35 @@ fun ConversationOverviewActionsComponent(
             verticalArrangement = Arrangement.spacedBy(12.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            FilledTonalButton(
-                onClick = onAddAIModelClick,
-                shape = CircleShape
-            ) {
-                Text(
-                    text = stringResource(xcj.app.appsets.R.string.add_ai_aigent),
-                    fontSize = 12.sp
-                )
-            }
-            FilledTonalButton(
-                onClick = onAddFriendClick,
-                shape = CircleShape
-            ) {
-                Text(
-                    text = stringResource(xcj.app.appsets.R.string.add_friend),
-                    fontSize = 12.sp
-                )
-            }
+            items(actionsTabs) { actionsTabResInt ->
+                FilledTonalButton(
+                    onClick = {
+                        when (actionsTabResInt) {
+                            xcj.app.appsets.R.string.add_ai_aigent -> {
+                                onAddAIModelClick()
+                            }
 
-            FilledTonalButton(
-                onClick = onAddGroupClick,
-                shape = CircleShape
-            ) {
-                Text(
-                    text = stringResource(xcj.app.appsets.R.string.add_group),
-                    fontSize = 12.sp
-                )
-            }
+                            xcj.app.appsets.R.string.add_friend -> {
+                                onAddFriendClick()
+                            }
 
-            FilledTonalButton(
-                onClick = onCreateGroupClick,
-                shape = CircleShape
-            ) {
-                Text(
-                    text = stringResource(xcj.app.appsets.R.string.create_group),
-                    fontSize = 12.sp
-                )
+                            xcj.app.appsets.R.string.add_group -> {
+                                onAddGroupClick()
+                            }
+
+                            xcj.app.appsets.R.string.create_group -> {
+                                onCreateGroupClick()
+                            }
+
+                        }
+                    },
+                    shape = CircleShape
+                ) {
+                    Text(
+                        text = stringResource(actionsTabResInt),
+                        fontSize = 12.sp
+                    )
+                }
             }
         }
     }

@@ -70,12 +70,18 @@ private fun makeUserActions(
     )
     tabs.add(UserAction(UserAction.ACTION_SCREEN, UserAction.ACTION_SCREEN))
     tabs.add(UserAction(UserAction.ACTION_GOODS, stringResource(xcj.app.appsets.R.string.goods)))
-    tabs.add(
-        UserAction(
-            UserAction.ACTION_FOLLOW_STATE,
-            "${userFollowers.size}/${userFollowed.size} (Follower/Followed)"
+
+    tabs.add(UserAction(UserAction.ACTION_CHAT, stringResource(id = xcj.app.appsets.R.string.chat)))
+    if (!LocalAccountManager.isLoggedUser(userInfo.uid) && !RelationsUseCase.getInstance()
+            .hasUserRelated(userInfo.uid)
+    ) {
+        tabs.add(
+            UserAction(
+                UserAction.ACTION_ADD_FRIEND,
+                stringResource(id = xcj.app.appsets.R.string.add_friend)
+            )
         )
-    )
+    }
 
     if (userInfo.uid == LocalAccountManager.userInfo.uid) {
         tabs.add(
@@ -92,17 +98,13 @@ private fun makeUserActions(
         }
         tabs.add(UserAction(UserAction.ACTION_FLIP_FOLLOW, currentFollowState))
     }
-    tabs.add(UserAction(UserAction.ACTION_CHAT, stringResource(id = xcj.app.appsets.R.string.chat)))
-    if (!LocalAccountManager.isLoggedUser(userInfo.uid) && !RelationsUseCase.getInstance()
-            .hasUserRelated(userInfo.uid)
-    ) {
-        tabs.add(
-            UserAction(
-                UserAction.ACTION_ADD_FRIEND,
-                stringResource(id = xcj.app.appsets.R.string.add_friend)
-            )
+
+    tabs.add(
+        UserAction(
+            UserAction.ACTION_FOLLOW_STATE,
+            "${userFollowers.size}/${userFollowed.size} (Follower/Followed)"
         )
-    }
+    )
     return tabs
 }
 
@@ -220,9 +222,12 @@ fun UserActions(
     onActionClick: (UserAction) -> Unit,
 ) {
     FlowRow(
-        modifier = Modifier.animateContentSize(),
+        modifier = Modifier
+            .padding(horizontal = 12.dp)
+            .animateContentSize(),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
+
+        ) {
         val textModifier = Modifier.padding(vertical = 10.dp, horizontal = 10.dp)
         actions.forEachIndexed { index, action ->
             SuggestionChip(

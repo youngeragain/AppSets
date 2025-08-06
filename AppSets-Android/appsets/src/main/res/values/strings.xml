@@ -454,4 +454,6 @@
     <string name="online_ai_models">Online AI Models</string>
     <string name="mixed_ai_models">Mixed AI Models</string>
     <string name="no_models_available">No models available</string>
+    <string name="remove">Remove</string>
+    <string name="there_is_nothing_here">There is nothing here</string>
 </resources>

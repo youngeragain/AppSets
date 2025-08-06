@@ -8,6 +8,8 @@ import android.net.Uri
 import android.provider.MediaStore
 import androidx.camera.view.PreviewView
 import androidx.camera.view.PreviewView.ImplementationMode
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.AnimationState
 import androidx.compose.animation.core.animateTo
 import androidx.compose.animation.core.tween
@@ -24,11 +26,14 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -40,27 +45,43 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CardElevation
+import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonColors
+import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.onPlaced
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
@@ -69,6 +90,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.net.toUri
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import xcj.app.appsets.ui.compose.camera.CameraComponents
 import xcj.app.appsets.ui.compose.custom_component.AnyImage
@@ -76,6 +98,7 @@ import xcj.app.appsets.ui.compose.custom_component.LoadMoreHandler
 import xcj.app.appsets.ui.compose.custom_component.SwipeContainer
 import xcj.app.appsets.util.model.MediaStoreDataUri
 import xcj.app.appsets.util.model.UriProvider
+import xcj.app.compose_share.components.DesignTextField
 import xcj.app.compose_share.components.DesignVDivider
 import java.io.File
 
@@ -140,45 +163,9 @@ fun ContentSelectDialog(
 
     val coroutineScope = rememberCoroutineScope()
 
-    Column(modifier = Modifier.fillMaxSize()) {
-        val tabsScrollState = rememberScrollState()
-        val buttonSize = remember {
-            mutableStateOf(IntSize.Zero)
-        }
-        SingleChoiceSegmentedButtonRow(
-            modifier = Modifier
-                .padding(horizontal = 12.dp, vertical = 8.dp)
-                .horizontalScroll(tabsScrollState)
-        ) {
-
-            selectionTypes.forEachIndexed { index, selectionType ->
-                SegmentedButton(
-                    modifier = Modifier.onPlaced {
-                        buttonSize.value = it.size
-                    },
-                    selected = index == pagerState.currentPage,
-                    onClick = {
-                        coroutineScope.launch {
-                            pagerState.animateScrollToPage(index)
-                        }
-                    },
-                    shape = SegmentedButtonDefaults.itemShape(
-                        index = index,
-                        count = selectionTypes.size
-                    ),
-                    icon = {}
-                ) {
-                    Text(stringResource(selectionType.nameStringResource))
-                }
-            }
-        }
-        LaunchedEffect(pagerState.currentPage) {
-            tabsScrollState.animateScrollTo(buttonSize.value.width * pagerState.currentPage)
-        }
+    Box(modifier = Modifier.fillMaxSize()) {
         HorizontalPager(
-            state = pagerState, modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f)
+            state = pagerState,
         ) { index ->
             when (selectionTypes[index].name) {
                 ContentSelectionVarargs.CAMERA -> {
@@ -230,6 +217,42 @@ fun ContentSelectDialog(
                 }
             }
         }
+
+        val tabsScrollState = rememberScrollState()
+        val buttonSize = remember {
+            mutableStateOf(IntSize.Zero)
+        }
+        SingleChoiceSegmentedButtonRow(
+            modifier = Modifier
+                .padding()
+                .horizontalScroll(tabsScrollState)
+        ) {
+            Spacer(modifier = Modifier.width(12.dp))
+            selectionTypes.forEachIndexed { index, selectionType ->
+                SegmentedButton(
+                    modifier = Modifier.onPlaced {
+                        buttonSize.value = it.size
+                    },
+                    selected = index == pagerState.currentPage,
+                    onClick = {
+                        coroutineScope.launch {
+                            pagerState.animateScrollToPage(index)
+                        }
+                    },
+                    shape = SegmentedButtonDefaults.itemShape(
+                        index = index,
+                        count = selectionTypes.size
+                    ),
+                    icon = {}
+                ) {
+                    Text(stringResource(selectionType.nameStringResource))
+                }
+            }
+            Spacer(modifier = Modifier.width(12.dp))
+        }
+        LaunchedEffect(pagerState.currentPage) {
+            tabsScrollState.animateScrollTo(buttonSize.value.width * pagerState.currentPage)
+        }
     }
 }
 
@@ -267,7 +290,7 @@ fun CameraContentSelection(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(12.dp),
+            .padding(start = 4.dp, top = 60.dp, end = 4.dp),
         verticalArrangement = Arrangement.spacedBy(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -420,9 +443,7 @@ fun CameraContentSelection(
                     }
                 )
             }
-
         }
-
     }
 }
 
@@ -436,7 +457,7 @@ fun LocationContentSelection(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(12.dp),
+            .padding(start = 4.dp, top = 60.dp, end = 4.dp),
         verticalArrangement = Arrangement.spacedBy(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -482,7 +503,7 @@ fun PictureContentSelection(
             mediaStoreType = MediaStore.Images::class.java
         }
     }
-    val picsState = contentSelectionResultsProvider.contentUris
+    val contentUrls = contentSelectionResultsProvider.contentUris
     val context = LocalContext.current
     LaunchedEffect(true) {
         contentSelectionResultsProvider.load(context, true)
@@ -495,26 +516,47 @@ fun PictureContentSelection(
     val selectContents = remember {
         mutableListOf<UriProvider>()
     }
-    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+    var searchText by remember {
+        mutableStateOf("")
+    }
+    var isSearchMode by remember {
+        mutableStateOf(false)
+    }
+    val filteredContentUrls by remember {
+        derivedStateOf {
+            contentUrls.filter {
+                if (it is MediaStoreDataUri) {
+                    it.displayName?.contains(searchText, true) == true
+                } else {
+                    true
+                }
+            }
+        }
+    }
+    Box(
+        modifier = Modifier
+            .fillMaxWidth(),
+        contentAlignment = Alignment.Center
+    )
+    {
         LazyVerticalGrid(
-            columns = GridCells.Fixed(2),
+            columns = GridCells.Fixed(3),
             modifier = Modifier.fillMaxSize(),
             state = gridState,
-            contentPadding = PaddingValues(2.dp)
+            contentPadding = PaddingValues(start = 4.dp, top = 60.dp, end = 4.dp, bottom = 120.dp)
         ) {
             items(
-                items = picsState
+                items = filteredContentUrls
             ) { contentUriProvider ->
                 Box(
                     Modifier
-                        .fillMaxSize()
-                        .height(220.dp)
-                        .padding(4.dp)
+                        .padding(2.dp)
+                        .animateItem()
                 ) {
-                    AnyImage(
+                    Column(
                         modifier = Modifier
-                            .fillMaxSize()
-                            .clip(MaterialTheme.shapes.extraLarge)
+                            .fillMaxWidth()
+                            .animateContentSize()
                             .clickable(
                                 onClick = {
                                     selectContents.add(contentUriProvider)
@@ -528,19 +570,129 @@ fun PictureContentSelection(
                                         )
                                     onContentSelect(results)
                                 }
-                            ),
-                        any = contentUriProvider.provideUri()
-                    )
+                            )
+                    ) {
+                        AnyImage(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(120.dp),
+                            any = contentUriProvider.provideUri()
+                        )
+                        if (isSearchMode) {
+                            Column(
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                val mediaStoreWrapper =
+                                    (contentUriProvider as? MediaStoreDataUri)
+                                Text(
+                                    text = mediaStoreWrapper?.displayName ?: "",
+                                    fontSize = 12.sp,
+                                    modifier = Modifier,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                                Text(
+                                    text = mediaStoreWrapper?.sizeReadable ?: "",
+                                    fontSize = 12.sp
+                                )
+                            }
+                        }
+                    }
                 }
             }
         }
         if (
-            picsState.isEmpty()
+            contentUrls.isEmpty()
         ) {
-            Text("There is nothing here")
+            Text(stringResource(xcj.app.appsets.R.string.there_is_nothing_here))
+        }
+
+        BottomActions(
+            modifier = Modifier.align(Alignment.BottomCenter),
+            isSearchMode = isSearchMode,
+            searchText = searchText,
+            actionIcon = xcj.app.compose_share.R.drawable.ic_camera_24,
+            onSearchModeChanged = {
+                isSearchMode = it
+            },
+            onSearchContentChanged = {
+                searchText = it
+            },
+            onActionClick = {
+
+            }
+        )
+    }
+}
+
+@Composable
+fun BottomActions(
+    modifier: Modifier,
+    isSearchMode: Boolean,
+    searchText: String,
+    actionIcon: Int,
+    onSearchModeChanged: (Boolean) -> Unit,
+    onSearchContentChanged: (String) -> Unit,
+    onActionClick: () -> Unit
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .animateContentSize()
+            .padding(12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        FilledTonalIconButton(
+            modifier = Modifier.size(TextFieldDefaults.MinHeight),
+            onClick = {
+                onSearchModeChanged(!isSearchMode)
+            }
+        ) {
+            Icon(
+                painter = painterResource(xcj.app.compose_share.R.drawable.ic_round_search_24),
+                contentDescription = null
+            )
+        }
+
+        AnimatedVisibility(
+            visible = isSearchMode,
+            modifier = Modifier.clipToBounds()
+        ) {
+            DesignTextField(
+                modifier = Modifier
+                    .width(200.dp)
+                    .defaultMinSize(minHeight = 42.dp),
+                textStyle = LocalTextStyle.current.copy(fontSize = 12.sp),
+                value = searchText,
+                onValueChange = {
+                    onSearchContentChanged(it)
+                },
+                placeholder = {
+                    Text(
+                        text = stringResource(xcj.app.appsets.R.string.search),
+                        fontSize = 12.sp
+                    )
+                },
+                colors = TextFieldDefaults.colors(
+                    unfocusedIndicatorColor = androidx.compose.ui.graphics.Color.Transparent,
+                    focusedIndicatorColor = androidx.compose.ui.graphics.Color.Transparent
+                )
+            )
+        }
+        Spacer(modifier = Modifier.weight(1f))
+
+        FilledTonalIconButton(
+            modifier = Modifier.size(TextFieldDefaults.MinHeight),
+            onClick = onActionClick
+        ) {
+            Icon(
+                painter = painterResource(actionIcon),
+                contentDescription = null
+            )
         }
     }
 }
+
 
 @Composable
 fun VideoContentSelection(
@@ -553,7 +705,7 @@ fun VideoContentSelection(
             mediaStoreType = MediaStore.Video::class.java
         }
     }
-    val picsState = contentSelectionResultsProvider.contentUris
+    val contentUrls = contentSelectionResultsProvider.contentUris
     val context = LocalContext.current
     val columnState = rememberLazyListState()
 
@@ -567,90 +719,114 @@ fun VideoContentSelection(
     val selectContents = remember {
         mutableListOf<UriProvider>()
     }
+    var searchText by remember {
+        mutableStateOf("")
+    }
+    var isSearchMode by remember {
+        mutableStateOf(false)
+    }
+    val filteredContentUrls by remember {
+        derivedStateOf {
+            contentUrls.filter {
+                if (it is MediaStoreDataUri) {
+                    it.displayName?.contains(searchText, true) == true
+                } else {
+                    true
+                }
+            }
+        }
+    }
     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
             state = columnState,
-            contentPadding = PaddingValues(12.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            contentPadding = PaddingValues(start = 4.dp, top = 60.dp, end = 4.dp, bottom = 120.dp),
+            verticalArrangement = Arrangement.spacedBy(2.dp)
         ) {
-            items(items = picsState) { contentUriProvider ->
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(250.dp),
-                    shape = MaterialTheme.shapes.extraLarge
+            items(items = filteredContentUrls) { contentUriProvider ->
+                Column(
+                    Modifier
+                        .fillMaxSize()
+                        .animateItem()
+                        .animateContentSize()
+                        .clickable(onClick = {
+                            selectContents.add(contentUriProvider)
+                            val results =
+                                ContentSelectionResults.RichMediaContentSelectionResults(
+                                    context,
+                                    requestKey,
+                                    contextName,
+                                    ContentSelectionVarargs.VIDEO,
+                                    selectContents
+                                )
+                            onContentSelect(results)
+                        })
                 ) {
                     Box(
-                        Modifier
-                            .fillMaxSize()
-                            .clickable(onClick = {
-                                selectContents.add(contentUriProvider)
-                                val results =
-                                    ContentSelectionResults.RichMediaContentSelectionResults(
-                                        context,
-                                        requestKey,
-                                        contextName,
-                                        ContentSelectionVarargs.VIDEO,
-                                        selectContents
-                                    )
-                                onContentSelect(results)
-                            })
+                        modifier = Modifier.fillMaxSize()
                     ) {
                         AnyImage(
-                            modifier = Modifier.fillMaxSize(),
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .height(250.dp),
                             any = contentUriProvider.provideUri()
                         )
-                        Box(
-                            Modifier
-                                .fillMaxWidth()
-                                .align(Alignment.BottomCenter)
-                                .padding(12.dp)
+                        FilledTonalIconButton(
+                            modifier = Modifier.align(Alignment.Center),
+                            onClick = {}
                         ) {
-                            Row(
-                                modifier = Modifier
-                                    .background(
-                                        MaterialTheme.colorScheme.surface,
-                                        MaterialTheme.shapes.extraLarge
-                                    )
-                                    .padding(12.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(12.dp)
-                            ) {
-                                Image(
-                                    modifier = Modifier,
-                                    painter = painterResource(xcj.app.compose_share.R.drawable.ic_play_circle_filled_24),
-                                    contentDescription = "play"
-                                )
-                                Column(
-                                    verticalArrangement = Arrangement.spacedBy(4.dp),
-                                ) {
-                                    val mediaStoreWrapper =
-                                        (contentUriProvider as? MediaStoreDataUri)
-                                    Text(
-                                        text = mediaStoreWrapper?.displayName ?: "",
-                                        fontSize = 12.sp,
-                                        modifier = Modifier,
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis
-                                    )
-                                    Text(
-                                        text = mediaStoreWrapper?.sizeReadable ?: "",
-                                        fontSize = 12.sp
-                                    )
-                                }
-                            }
+                            Icon(
+                                painter = painterResource(xcj.app.compose_share.R.drawable.ic_slow_motion_video_24),
+                                contentDescription = "play"
+                            )
                         }
-
                     }
+                    if (isSearchMode) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        ) {
+                            val mediaStoreWrapper =
+                                (contentUriProvider as? MediaStoreDataUri)
+                            Text(
+                                text = mediaStoreWrapper?.displayName ?: "",
+                                fontSize = 12.sp,
+                                modifier = Modifier,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                            Spacer(modifier = Modifier.weight(1f))
+                            Text(
+                                text = mediaStoreWrapper?.sizeReadable ?: "",
+                                fontSize = 12.sp
+                            )
+                        }
+                    }
+
                 }
             }
         }
         if (
-            picsState.isEmpty()
+            contentUrls.isEmpty()
         ) {
-            Text("There is nothing here")
+            Text(stringResource(xcj.app.appsets.R.string.there_is_nothing_here))
         }
+        BottomActions(
+            modifier = Modifier.align(Alignment.BottomCenter),
+            isSearchMode = isSearchMode,
+            searchText = searchText,
+            actionIcon = xcj.app.compose_share.R.drawable.ic_camera_24,
+            onSearchModeChanged = {
+                isSearchMode = it
+            },
+            onSearchContentChanged = {
+                searchText = it
+            },
+            onActionClick = {
+
+            }
+        )
     }
 }
 
@@ -665,7 +841,7 @@ fun AudioContentSelection(
             mediaStoreType = MediaStore.Audio::class.java
         }
     }
-    val picsState = contentSelectionResultsProvider.contentUris
+    val contentUrls = contentSelectionResultsProvider.contentUris
     val context = LocalContext.current
     val columnState = rememberLazyListState()
 
@@ -681,15 +857,33 @@ fun AudioContentSelection(
         mutableListOf<UriProvider>()
     }
 
+    var searchText by remember {
+        mutableStateOf("")
+    }
+    var isSearchMode by remember {
+        mutableStateOf(false)
+    }
+    val filteredContentUrls by remember {
+        derivedStateOf {
+            contentUrls.filter {
+                if (it is MediaStoreDataUri) {
+                    it.displayName?.contains(searchText, true) == true
+                } else {
+                    true
+                }
+            }
+        }
+    }
+
     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
             state = columnState,
-            contentPadding = PaddingValues(12.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            contentPadding = PaddingValues(start = 4.dp, top = 60.dp, end = 4.dp, bottom = 120.dp),
+            verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
-            items(items = picsState) { contentUriProvider ->
-                Card(
+            items(items = filteredContentUrls) { contentUriProvider ->
+                OutlinedCard(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clickable {
@@ -703,7 +897,7 @@ fun AudioContentSelection(
                             )
                             onContentSelect(results)
                         },
-                    shape = MaterialTheme.shapes.extraLarge
+                    shape = MaterialTheme.shapes.large,
                 ) {
                     Row(
                         modifier = Modifier
@@ -727,10 +921,26 @@ fun AudioContentSelection(
             }
         }
         if (
-            picsState.isEmpty()
+            contentUrls.isEmpty()
         ) {
-            Text("There is nothing here")
+            Text(stringResource(xcj.app.appsets.R.string.there_is_nothing_here))
         }
+
+        BottomActions(
+            modifier = Modifier.align(Alignment.BottomCenter),
+            isSearchMode = isSearchMode,
+            searchText = searchText,
+            actionIcon = xcj.app.compose_share.R.drawable.ic_outline_keyboard_voice_24,
+            onSearchModeChanged = {
+                isSearchMode = it
+            },
+            onSearchContentChanged = {
+                searchText = it
+            },
+            onActionClick = {
+
+            }
+        )
     }
 
 }
@@ -746,7 +956,7 @@ fun FileContentSelection(
             mediaStoreType = MediaStore.Files::class.java
         }
     }
-    val picsState = contentSelectionResultsProvider.contentUris
+    val contentUrls = contentSelectionResultsProvider.contentUris
     val context = LocalContext.current
     val columnState = rememberLazyListState()
 
@@ -762,15 +972,33 @@ fun FileContentSelection(
         mutableListOf<UriProvider>()
     }
 
+    var searchText by remember {
+        mutableStateOf("")
+    }
+    var isSearchMode by remember {
+        mutableStateOf(false)
+    }
+    val filteredContentUrls by remember {
+        derivedStateOf {
+            contentUrls.filter {
+                if (it is MediaStoreDataUri) {
+                    it.displayName?.contains(searchText, true) == true
+                } else {
+                    true
+                }
+            }
+        }
+    }
+
     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
             state = columnState,
-            contentPadding = PaddingValues(12.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            contentPadding = PaddingValues(start = 4.dp, top = 60.dp, end = 4.dp, bottom = 120.dp),
+            verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
-            items(items = picsState) { contentUriProvider ->
-                Card(
+            items(items = filteredContentUrls) { contentUriProvider ->
+                OutlinedCard(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clickable {
@@ -784,7 +1012,7 @@ fun FileContentSelection(
                             )
                             onContentSelect(results)
                         },
-                    shape = MaterialTheme.shapes.extraLarge
+                    shape = MaterialTheme.shapes.large,
                 ) {
                     Row(
                         modifier = Modifier
@@ -806,10 +1034,27 @@ fun FileContentSelection(
                 }
             }
         }
+
         if (
-            picsState.isEmpty()
+            contentUrls.isEmpty()
         ) {
-            Text("There is nothing here")
+            Text(stringResource(xcj.app.appsets.R.string.there_is_nothing_here))
         }
+
+        BottomActions(
+            modifier = Modifier.align(Alignment.BottomCenter),
+            isSearchMode = isSearchMode,
+            searchText = searchText,
+            actionIcon = xcj.app.compose_share.R.drawable.ic_round_add_24,
+            onSearchModeChanged = {
+                isSearchMode = it
+            },
+            onSearchContentChanged = {
+                searchText = it
+            },
+            onActionClick = {
+
+            }
+        )
     }
 }

@@ -1,7 +1,5 @@
 package xcj.app.screen_share.ui.compose
 
-import android.app.Activity
-import android.content.Context
 import android.content.Intent
 import android.media.projection.MediaProjectionManager
 import android.os.Bundle
@@ -26,7 +24,7 @@ class MainActivity : DesignComponentActivity() {
     private val mediaProjectionLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
-        if (result.resultCode == Activity.RESULT_OK) {
+        if (result.resultCode == RESULT_OK) {
             // 用户已授权，启动屏幕录制服务
             val data = result.data
             if (data != null) {
@@ -64,7 +62,7 @@ class MainActivity : DesignComponentActivity() {
     private fun requestStartCapture() {
         if (!::mediaProjectionManager.isInitialized) {
             mediaProjectionManager =
-                getSystemService(Context.MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
+                getSystemService(MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
         }
         val captureIntent = mediaProjectionManager.createScreenCaptureIntent()
         mediaProjectionLauncher.launch(captureIntent) // 使用 Launcher
@@ -74,7 +72,7 @@ class MainActivity : DesignComponentActivity() {
     private fun startScreenCaptureService(data: Intent) {
         val serviceIntent = Intent(this, ScreenCaptureService::class.java)
         serviceIntent.action = ScreenCaptureService.ACTION_START
-        serviceIntent.putExtra(ScreenCaptureService.EXTRA_RESULT_CODE, Activity.RESULT_OK)
+        serviceIntent.putExtra(ScreenCaptureService.EXTRA_RESULT_CODE, RESULT_OK)
         serviceIntent.putExtra(ScreenCaptureService.EXTRA_DATA, data)
 
         // 启动前台服务

@@ -1,5 +1,6 @@
 package xcj.app.screen_share.service
 
+import android.R
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -68,7 +69,7 @@ class ScreenCaptureService : Service() {
 
                 if (resultCode != 0 && data != null) {
                     val mediaProjectionManager =
-                        getSystemService(Context.MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
+                        getSystemService(MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
                     mediaProjection = mediaProjectionManager.getMediaProjection(resultCode, data)
 
                     // 获取屏幕尺寸和密度
@@ -112,14 +113,14 @@ class ScreenCaptureService : Service() {
             Notification.Builder(this, NOTIFICATION_CHANNEL_ID)
                 .setContentTitle("屏幕录制中")
                 .setContentText("您的屏幕正在被录制...")
-                .setSmallIcon(android.R.drawable.ic_media_play) // 替换为你的图标
+                .setSmallIcon(R.drawable.ic_media_play) // 替换为你的图标
                 .build()
         } else {
             @Suppress("DEPRECATION")
             Notification.Builder(this)
                 .setContentTitle("屏幕录制中")
                 .setContentText("您的屏幕正在被录制...")
-                .setSmallIcon(android.R.drawable.ic_media_play)
+                .setSmallIcon(R.drawable.ic_media_play)
                 .build()
         }
     }

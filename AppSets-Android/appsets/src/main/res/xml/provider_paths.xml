@@ -3,6 +3,9 @@
     <external-path
         name="appsets_share"
         path="Download/AppSets/ContentShare" />
+    <external-path
+        name="files"
+        path="." />
     <external-files-path
         name="external_files"
         path="." />

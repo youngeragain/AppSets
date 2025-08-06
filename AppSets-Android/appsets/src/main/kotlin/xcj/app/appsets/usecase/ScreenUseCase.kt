@@ -100,7 +100,6 @@ class ScreenUseCase(
                             container.screens.addAll(screenStateList)
                         }
                     } else {
-                        container.screens.clear()
                         container.page -= 1
                     }
                     if (userScreenInfoList.size < container.pageSize) {
