@@ -58,7 +58,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import xcj.app.appsets.ui.compose.LocalUseCaseOfScreenPost
-import xcj.app.appsets.ui.compose.content_selection.ContentSelectionVarargs
+import xcj.app.appsets.ui.compose.content_selection.ContentSelectionTypes
 import xcj.app.appsets.ui.compose.custom_component.AnyImage
 import xcj.app.appsets.ui.compose.custom_component.HideNavBarWhenOnLaunch
 import xcj.app.appsets.ui.compose.quickstep.QuickStepContent
@@ -83,7 +83,7 @@ fun CreateScreenPage(
     onInputTopics: (String) -> Unit,
     onInputPeoples: (String) -> Unit,
     onAddMediaFallClick: () -> Unit,
-    onAddMediaContentClick: (String, String) -> Unit,
+    onAddMediaContentClick: (String, String, Int) -> Unit,
     onRemoveMediaContent: (String, UriProvider) -> Unit,
     onVideoPlayClick: (UriProvider) -> Unit,
 ) {
@@ -190,7 +190,7 @@ fun NewPostScreenComponent(
     onInputTopics: (String) -> Unit,
     onInputUsers: (String) -> Unit,
     onAddMediaFallClick: () -> Unit,
-    onAddMediaContentClick: (String, String) -> Unit,
+    onAddMediaContentClick: (String, String, Int) -> Unit,
     onRemoveMediaContent: (String, UriProvider) -> Unit,
     onVideoPlayClick: (UriProvider) -> Unit
 ) {
@@ -365,7 +365,8 @@ fun NewPostScreenComponent(
                         .clickable(onClick = {
                             onAddMediaContentClick(
                                 "CREATE_SCREEN_CONTENT_SELECT_IMAGE_REQUEST",
-                                ContentSelectionVarargs.PICTURE
+                                ContentSelectionTypes.IMAGE,
+                                32
                             )
                         }),
                     contentAlignment = Alignment.Center
@@ -413,7 +414,8 @@ fun NewPostScreenComponent(
                     onClick = {
                         onAddMediaContentClick(
                             "CREATE_SCREEN_CONTENT_SELECT_VIDEO_REQUEST",
-                            ContentSelectionVarargs.VIDEO
+                            ContentSelectionTypes.VIDEO,
+                            1
                         )
                     },
                 )

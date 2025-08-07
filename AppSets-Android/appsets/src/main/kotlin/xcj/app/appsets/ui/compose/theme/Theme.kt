@@ -16,7 +16,8 @@ val DarkColorPalette = darkColorScheme(
     onPrimary = Purple700,
     secondary = Teal200
      */
-    outline = Color(0x80363636)
+    outline = colorDarkOutline,
+    outlineVariant = colorDarkOutlineVariant
 )
 
 val LightColorPalette = lightColorScheme(
@@ -31,7 +32,8 @@ val LightColorPalette = lightColorScheme(
     onBackground = Color.Black,
     onSurface = Color.Black,
     */
-    outline = Color(0xD1EAEAEA)
+    outline = colorLightOutline,
+    outlineVariant = Color(0xD1DADADA)
 )
 
 @Composable
@@ -39,10 +41,16 @@ fun AppSetsTheme(darkTheme: Boolean = isSystemInDarkTheme(), content: @Composabl
     val dynamicColor = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
     val colorScheme = when {
         dynamicColor && darkTheme ->
-            dynamicDarkColorScheme(LocalContext.current).copy(outline = Color(0x80363636))
+            dynamicDarkColorScheme(LocalContext.current).copy(
+                outline = colorDarkOutline,
+                outlineVariant = colorDarkOutlineVariant
+            )
 
         dynamicColor && !darkTheme ->
-            dynamicLightColorScheme(LocalContext.current).copy(outline = Color(0xD1EAEAEA))
+            dynamicLightColorScheme(LocalContext.current).copy(
+                outline = colorLightOutline,
+                outlineVariant = colorLightOutlineVariant
+            )
 
         darkTheme -> DarkColorPalette
         else -> LightColorPalette

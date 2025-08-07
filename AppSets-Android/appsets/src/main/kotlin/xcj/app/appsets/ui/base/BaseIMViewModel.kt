@@ -15,8 +15,8 @@ import xcj.app.appsets.server.repository.AppSetsRepository
 import xcj.app.appsets.server.repository.ScreenRepository
 import xcj.app.appsets.server.repository.UserRepository
 import xcj.app.appsets.ui.compose.PageRouteNames
-import xcj.app.appsets.ui.compose.content_selection.ContentSelectionResults
-import xcj.app.appsets.ui.compose.content_selection.ContentSelectionVarargs
+import xcj.app.appsets.ui.compose.content_selection.ContentSelectionResult
+import xcj.app.appsets.ui.compose.content_selection.ContentSelectionTypes
 import xcj.app.appsets.usecase.ActivityLifecycleUseCase
 import xcj.app.appsets.usecase.ConversationUseCase
 import xcj.app.appsets.usecase.GroupInfoUseCase
@@ -83,7 +83,7 @@ abstract class BaseIMViewModel : AnyStateViewModel() {
     open fun observeSomeThings(activity: ComponentActivity) {
         PurpleLogger.current.d(TAG, "observeSomeThings")
 
-        LocalMessager.observe<String, ContentSelectionResults>(
+        LocalMessager.observe<String, ContentSelectionResult>(
             activity,
             ModuleConstant.MESSAGE_KEY_ON_CONTENT_SELECT_RESULT
         ) {
@@ -159,22 +159,22 @@ abstract class BaseIMViewModel : AnyStateViewModel() {
      */
     open fun dispatchContentSelectedResult(
         context: Context,
-        contentSelectionResults: ContentSelectionResults
+        contentSelectionResult: ContentSelectionResult
     ) {
         PurpleLogger.current.d(
             TAG,
-            "dispatchContentSelectedResult, contentSelectionResults:$contentSelectionResults"
+            "dispatchContentSelectedResult, contentSelectionResults:$contentSelectionResult"
         )
-        systemUseCase.selectedContentsStateHolder.updateSelectedContent(contentSelectionResults)
-        val type = contentSelectionResults.selectType
+        systemUseCase.selectedContentsStateHolder.updateSelectedContent(contentSelectionResult)
+        val type = contentSelectionResult.selectType
 
         when (type) {
-            ContentSelectionVarargs.PICTURE -> {
-                if (contentSelectionResults !is ContentSelectionResults.RichMediaContentSelectionResults) {
+            ContentSelectionTypes.IMAGE -> {
+                if (contentSelectionResult !is ContentSelectionResult.RichMediaContentSelectionResult) {
                     return
                 }
-                val contentUriList = contentSelectionResults.selectItems
-                when (contentSelectionResults.contextPageName) {
+                val contentUriList = contentSelectionResult.selectItems
+                when (contentSelectionResult.contextPageName) {
                     PageRouteNames.ConversationDetailsPage -> {
                         //todo multi
                         val imageUri = contentUriList.firstOrNull()
@@ -210,14 +210,14 @@ abstract class BaseIMViewModel : AnyStateViewModel() {
                 }
             }
 
-            ContentSelectionVarargs.VIDEO -> {
-                if (contentSelectionResults !is ContentSelectionResults.RichMediaContentSelectionResults) {
+            ContentSelectionTypes.VIDEO -> {
+                if (contentSelectionResult !is ContentSelectionResult.RichMediaContentSelectionResult) {
                     return
                 }
-                when (contentSelectionResults.contextPageName) {
+                when (contentSelectionResult.contextPageName) {
                     PageRouteNames.ConversationDetailsPage -> {
                         //todo multi
-                        val audioUri = contentSelectionResults.selectItems.firstOrNull()
+                        val audioUri = contentSelectionResult.selectItems.firstOrNull()
                         if (audioUri != null) {
                             conversationUseCase.onSendMessage(
                                 context,
@@ -229,14 +229,14 @@ abstract class BaseIMViewModel : AnyStateViewModel() {
                 }
             }
 
-            ContentSelectionVarargs.AUDIO -> {
-                if (contentSelectionResults !is ContentSelectionResults.RichMediaContentSelectionResults) {
+            ContentSelectionTypes.AUDIO -> {
+                if (contentSelectionResult !is ContentSelectionResult.RichMediaContentSelectionResult) {
                     return
                 }
-                when (contentSelectionResults.contextPageName) {
+                when (contentSelectionResult.contextPageName) {
                     PageRouteNames.ConversationDetailsPage -> {
                         //todo multi
-                        val audioUri = contentSelectionResults.selectItems.firstOrNull()
+                        val audioUri = contentSelectionResult.selectItems.firstOrNull()
                         if (audioUri != null) {
                             conversationUseCase.onSendMessage(
                                 context,
@@ -248,14 +248,14 @@ abstract class BaseIMViewModel : AnyStateViewModel() {
                 }
             }
 
-            ContentSelectionVarargs.FILE -> {
-                if (contentSelectionResults !is ContentSelectionResults.RichMediaContentSelectionResults) {
+            ContentSelectionTypes.FILE -> {
+                if (contentSelectionResult !is ContentSelectionResult.RichMediaContentSelectionResult) {
                     return
                 }
-                when (contentSelectionResults.contextPageName) {
+                when (contentSelectionResult.contextPageName) {
                     PageRouteNames.ConversationDetailsPage -> {
                         //todo multi
-                        val audioUri = contentSelectionResults.selectItems.firstOrNull()
+                        val audioUri = contentSelectionResult.selectItems.firstOrNull()
                         if (audioUri != null) {
                             conversationUseCase.onSendMessage(
                                 context,
@@ -267,13 +267,13 @@ abstract class BaseIMViewModel : AnyStateViewModel() {
                 }
             }
 
-            ContentSelectionVarargs.LOCATION -> {
-                if (contentSelectionResults !is ContentSelectionResults.LocationContentSelectionResults) {
+            ContentSelectionTypes.LOCATION -> {
+                if (contentSelectionResult !is ContentSelectionResult.LocationContentSelectionResult) {
                     return
                 }
-                when (contentSelectionResults.contextPageName) {
+                when (contentSelectionResult.contextPageName) {
                     PageRouteNames.ConversationDetailsPage -> {
-                        val locationInfo = contentSelectionResults.locationInfo
+                        val locationInfo = contentSelectionResult.locationInfo
                         conversationUseCase.onSendMessage(
                             context,
                             InputSelector.LOCATION,

@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
 import xcj.app.appsets.server.repository.GenerationAIRepository
 import xcj.app.appsets.server.repository.ScreenRepository
-import xcj.app.appsets.ui.compose.content_selection.ContentSelectionVarargs
+import xcj.app.appsets.ui.compose.content_selection.ContentSelectionTypes
 import xcj.app.appsets.ui.compose.quickstep.QuickStepContent
 import xcj.app.appsets.ui.compose.quickstep.TextQuickStepContent
 import xcj.app.appsets.ui.compose.quickstep.UriQuickStepContent
@@ -139,13 +139,13 @@ class ScreenPostUseCase(
             return
         }
         val postScreen = postScreenState.postScreen
-        if (type == ContentSelectionVarargs.PICTURE) {
+        if (type == ContentSelectionTypes.IMAGE) {
             val newPostScreen =
                 postScreen.copy(pictures = postScreen.pictures.toMutableList().apply {
                     remove(uriProvider)
                 })
             this.postScreenState.value = postScreenState.copy(postScreen = newPostScreen)
-        } else if (type == ContentSelectionVarargs.VIDEO) {
+        } else if (type == ContentSelectionTypes.VIDEO) {
             val newPostScreen = postScreen.copy(videos = postScreen.videos.toMutableList().apply {
                 remove(uriProvider)
             })

@@ -13,8 +13,8 @@ import xcj.app.appsets.server.repository.SearchRepository
 import xcj.app.appsets.server.repository.UserRepository
 import xcj.app.appsets.ui.base.BaseIMViewModel
 import xcj.app.appsets.ui.compose.PageRouteNames
-import xcj.app.appsets.ui.compose.content_selection.ContentSelectionResults
-import xcj.app.appsets.ui.compose.content_selection.ContentSelectionVarargs
+import xcj.app.appsets.ui.compose.content_selection.ContentSelectionResult
+import xcj.app.appsets.ui.compose.content_selection.ContentSelectionTypes
 import xcj.app.appsets.usecase.AppCreationUseCase
 import xcj.app.appsets.usecase.AppsUseCase
 import xcj.app.appsets.usecase.NavigationUseCase
@@ -106,23 +106,23 @@ class MainViewModel : BaseIMViewModel() {
 
     override fun dispatchContentSelectedResult(
         context: Context,
-        contentSelectionResults: ContentSelectionResults
+        contentSelectionResult: ContentSelectionResult
     ) {
-        super.dispatchContentSelectedResult(context, contentSelectionResults)
+        super.dispatchContentSelectedResult(context, contentSelectionResult)
         PurpleLogger.current.d(
             TAG,
-            "dispatchContentSelectedResult, contentSelectionResults:$contentSelectionResults"
+            "dispatchContentSelectedResult, contentSelectionResults:$contentSelectionResult"
         )
-        systemUseCase.selectedContentsStateHolder.updateSelectedContent(contentSelectionResults)
-        val type = contentSelectionResults.selectType
+        systemUseCase.selectedContentsStateHolder.updateSelectedContent(contentSelectionResult)
+        val type = contentSelectionResult.selectType
 
         when (type) {
-            ContentSelectionVarargs.PICTURE -> {
-                if (contentSelectionResults !is ContentSelectionResults.RichMediaContentSelectionResults) {
+            ContentSelectionTypes.IMAGE -> {
+                if (contentSelectionResult !is ContentSelectionResult.RichMediaContentSelectionResult) {
                     return
                 }
-                val contentUriList = contentSelectionResults.selectItems
-                when (contentSelectionResults.contextPageName) {
+                val contentUriList = contentSelectionResult.selectItems
+                when (contentSelectionResult.contextPageName) {
 
                     PageRouteNames.CreateScreenPage -> {
                         screenPostUseCase.updateSelectPictures(contentUriList)
@@ -138,33 +138,33 @@ class MainViewModel : BaseIMViewModel() {
                 }
             }
 
-            ContentSelectionVarargs.VIDEO -> {
-                if (contentSelectionResults !is ContentSelectionResults.RichMediaContentSelectionResults) {
+            ContentSelectionTypes.VIDEO -> {
+                if (contentSelectionResult !is ContentSelectionResult.RichMediaContentSelectionResult) {
                     return
                 }
-                when (contentSelectionResults.contextPageName) {
+                when (contentSelectionResult.contextPageName) {
                     PageRouteNames.CreateScreenPage -> {
                         screenPostUseCase.updateSelectVideo(
-                            contentSelectionResults.selectItems
+                            contentSelectionResult.selectItems
                         )
                     }
                 }
             }
 
-            ContentSelectionVarargs.AUDIO -> {
-                if (contentSelectionResults !is ContentSelectionResults.RichMediaContentSelectionResults) {
+            ContentSelectionTypes.AUDIO -> {
+                if (contentSelectionResult !is ContentSelectionResult.RichMediaContentSelectionResult) {
                     return
                 }
             }
 
-            ContentSelectionVarargs.FILE -> {
-                if (contentSelectionResults !is ContentSelectionResults.RichMediaContentSelectionResults) {
+            ContentSelectionTypes.FILE -> {
+                if (contentSelectionResult !is ContentSelectionResult.RichMediaContentSelectionResult) {
                     return
                 }
             }
 
-            ContentSelectionVarargs.LOCATION -> {
-                if (contentSelectionResults !is ContentSelectionResults.LocationContentSelectionResults) {
+            ContentSelectionTypes.LOCATION -> {
+                if (contentSelectionResult !is ContentSelectionResult.LocationContentSelectionResult) {
                     return
                 }
             }

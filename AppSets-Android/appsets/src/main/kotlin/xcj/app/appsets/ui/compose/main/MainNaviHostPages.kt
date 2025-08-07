@@ -116,6 +116,8 @@ import xcj.app.appsets.ui.compose.apps.tools.TOOL_TYPE_AppSets_Proxy
 import xcj.app.appsets.ui.compose.apps.tools.TOOL_TYPE_AppSets_Share
 import xcj.app.appsets.ui.compose.camera.CameraComposeActivity
 import xcj.app.appsets.ui.compose.content_selection.ContentSelectDialog
+import xcj.app.appsets.ui.compose.content_selection.ContentSelectionRequest
+import xcj.app.appsets.ui.compose.content_selection.defaultSelectionTypeParam
 import xcj.app.appsets.ui.compose.conversation.ConversationDetailsMoreInfo
 import xcj.app.appsets.ui.compose.conversation.ConversationDetailsPage
 import xcj.app.appsets.ui.compose.conversation.ConversationOverviewPage
@@ -490,14 +492,20 @@ fun MainNaviHostPages(
                         onInputPeoples = screenPostUseCase::onInputPeoples,
                         onAddMediaFallClick = screenPostUseCase::onAddMediaFallClick,
 
-                        onAddMediaContentClick = { requestKey, requestType ->
+                        onAddMediaContentClick = { requestKey, requestType, requestTypeMaxCount ->
                             showContentSelectionDialog(
                                 context,
                                 anyStateProvider,
                                 navController,
                                 PageRouteNames.CreateScreenPage,
                                 requestKey,
-                                requestTypes = listOf(requestType)
+                                requestSelectionTypeParams = listOf(
+                                    ContentSelectionRequest.SelectionTypeParam(
+                                        requestType,
+                                        requestTypeMaxCount
+                                    )
+                                ),
+                                defaultSelectionType = requestType
                             )
                         },
                         onRemoveMediaContent = { type, scalableItemState ->
@@ -1450,7 +1458,8 @@ fun showContentSelectionDialog(
     navController: NavController,
     contextName: String,
     requestKey: String,
-    requestTypes: List<String>? = null,
+    requestSelectionTypeParams: List<ContentSelectionRequest.SelectionTypeParam> = defaultSelectionTypeParam,
+    defaultSelectionType: String = requestSelectionTypeParams.first().selectionType,
 ) {
     val platformPermissionsUsageOfFile =
         PlatformUseCase.providePlatformPermissions(context).firstOrNull {
@@ -1464,12 +1473,17 @@ fun showContentSelectionDialog(
         return
     }
     val bottomSheetContainerState = anyStateProvider.bottomSheetState()
+    val request = ContentSelectionRequest(
+        context,
+        contextName,
+        requestKey,
+        requestSelectionTypeParams,
+        defaultSelectionType
+    )
     bottomSheetContainerState.show {
         ContentSelectDialog(
-            contextName = contextName,
-            requestKey = requestKey,
-            requestTypes = requestTypes,
-            onContentSelect = {
+            request = request,
+            onContentSelected = {
                 bottomSheetContainerState.hide()
                 LocalMessager.post(ModuleConstant.MESSAGE_KEY_ON_CONTENT_SELECT_RESULT, it)
             }

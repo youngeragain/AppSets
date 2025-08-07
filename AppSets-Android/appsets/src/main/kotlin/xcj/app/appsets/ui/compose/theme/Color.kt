@@ -2,7 +2,8 @@ package xcj.app.appsets.ui.compose.theme
 
 import androidx.compose.ui.graphics.Color
 
-val Purple200 = Color(0xFFBB86FC)
-val Purple500 = Color(0xFF6200EE)
-val Purple700 = Color(0xFF3700B3)
-val Teal200 = Color(0xFF03DAC5)
+val colorDarkOutline = Color(0x80363636)
+val colorDarkOutlineVariant = Color(0x80282828)
+
+val colorLightOutline = Color(0xD1EAEAEA)
+val colorLightOutlineVariant = Color(0xD1DADADA)

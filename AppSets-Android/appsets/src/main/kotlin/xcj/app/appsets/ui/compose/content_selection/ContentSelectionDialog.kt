@@ -1,4 +1,4 @@
-@file:OptIn(ExperimentalFoundationApi::class)
+@file:OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3ExpressiveApi::class)
 
 package xcj.app.appsets.ui.compose.content_selection
 
@@ -8,6 +8,7 @@ import android.net.Uri
 import android.provider.MediaStore
 import androidx.camera.view.PreviewView
 import androidx.camera.view.PreviewView.ImplementationMode
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.AnimationState
@@ -15,12 +16,17 @@ import androidx.compose.animation.core.animateTo
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -34,7 +40,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
@@ -44,14 +52,13 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CardElevation
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.IconButtonColors
-import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
@@ -66,22 +73,22 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.onPlaced
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.role
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
@@ -90,12 +97,13 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.net.toUri
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import xcj.app.appsets.ui.compose.camera.CameraComponents
+import xcj.app.appsets.ui.compose.content_selection.ContentSelectionRequest.SelectionTypeParam
 import xcj.app.appsets.ui.compose.custom_component.AnyImage
 import xcj.app.appsets.ui.compose.custom_component.LoadMoreHandler
 import xcj.app.appsets.ui.compose.custom_component.SwipeContainer
+import xcj.app.appsets.ui.compose.theme.NoCornerShape
 import xcj.app.appsets.util.model.MediaStoreDataUri
 import xcj.app.appsets.util.model.UriProvider
 import xcj.app.compose_share.components.DesignTextField
@@ -104,24 +112,50 @@ import java.io.File
 
 enum class DragValue { Start, Center, End }
 
-data class ContentSelectionType(
-    val name: String,
+val defaultSelectionTypeParam = listOf(
+    SelectionTypeParam(ContentSelectionTypes.IMAGE, 1),
+    SelectionTypeParam(ContentSelectionTypes.VIDEO, 1),
+    SelectionTypeParam(ContentSelectionTypes.AUDIO, 1),
+    SelectionTypeParam(ContentSelectionTypes.FILE, 1),
+    SelectionTypeParam(ContentSelectionTypes.LOCATION, 1),
+    SelectionTypeParam(ContentSelectionTypes.CAMERA, 1),
+)
+
+data class ContentSelectionTab(
+    val selectionType: String,
     val nameStringResource: Int,
 )
 
-sealed interface ContentSelectionResults {
+/**
+ * @param selectionTypeParams key is type value is type's max count
+ */
+data class ContentSelectionRequest(
+    val context: Context,
+    val contextName: String,
+    val requestKey: String,
+    val selectionTypeParams: List<SelectionTypeParam>,
+    val defaultSelectionType: String
+) {
+    fun selectionTypeMaxCount(selectionType: String): Int {
+        return selectionTypeParams.firstOrNull { it.selectionType == selectionType }?.maxCount ?: 0
+    }
+
+    data class SelectionTypeParam(val selectionType: String, val maxCount: Int)
+}
+
+sealed interface ContentSelectionResult {
     val context: Context
     val requestKey: String
     val contextPageName: String
     val selectType: String
 
-    data class RichMediaContentSelectionResults(
+    data class RichMediaContentSelectionResult(
         override val context: Context,
         override val requestKey: String,
         override val contextPageName: String,
         override val selectType: String,
         val selectItems: List<UriProvider>,
-    ) : ContentSelectionResults
+    ) : ContentSelectionResult
 
     data class LocationInfo(
         val coordinate: String,
@@ -129,129 +163,138 @@ sealed interface ContentSelectionResults {
         val extras: String? = null,
     )
 
-    data class LocationContentSelectionResults(
+    data class LocationContentSelectionResult(
         override val context: Context,
         override val requestKey: String,
         override val contextPageName: String,
         override val selectType: String,
         val locationInfo: LocationInfo,
-    ) : ContentSelectionResults
+    ) : ContentSelectionResult
 }
 
 
-private val selectionTypes = listOf(
-    ContentSelectionType(ContentSelectionVarargs.PICTURE, xcj.app.appsets.R.string.picture),
-    ContentSelectionType(ContentSelectionVarargs.VIDEO, xcj.app.appsets.R.string.video),
-    ContentSelectionType(ContentSelectionVarargs.AUDIO, xcj.app.appsets.R.string.audio),
-    ContentSelectionType(ContentSelectionVarargs.FILE, xcj.app.appsets.R.string.file),
-    ContentSelectionType(
-        ContentSelectionVarargs.LOCATION,
-        xcj.app.appsets.R.string.location
-    ),
-    ContentSelectionType(ContentSelectionVarargs.CAMERA, xcj.app.appsets.R.string.camera),
-)
-
 @Composable
 fun ContentSelectDialog(
-    contextName: String,
-    requestKey: String,
-    requestTypes: List<String>? = null,
-    onContentSelect: (ContentSelectionResults) -> Unit,
+    request: ContentSelectionRequest,
+    onContentSelected: (ContentSelectionResult) -> Unit,
 ) {
 
-    val pagerState = rememberPagerState { selectionTypes.size }
+    val selectionTabs = remember {
+        val contentSelectionTabs = mutableListOf(
+            ContentSelectionTab(ContentSelectionTypes.IMAGE, xcj.app.appsets.R.string.picture),
+            ContentSelectionTab(ContentSelectionTypes.VIDEO, xcj.app.appsets.R.string.video),
+            ContentSelectionTab(ContentSelectionTypes.AUDIO, xcj.app.appsets.R.string.audio),
+            ContentSelectionTab(ContentSelectionTypes.FILE, xcj.app.appsets.R.string.file),
+            ContentSelectionTab(
+                ContentSelectionTypes.LOCATION,
+                xcj.app.appsets.R.string.location
+            ),
+            ContentSelectionTab(ContentSelectionTypes.CAMERA, xcj.app.appsets.R.string.camera),
+        )
+        contentSelectionTabs.removeIf { contentSelectionTab ->
+            request.selectionTypeParams.firstOrNull {
+                it.selectionType == contentSelectionTab.selectionType
+            } == null
+        }
+        contentSelectionTabs
+    }
+    var defaultSelectionTypeIndex =
+        selectionTabs.indexOfFirst { it.selectionType == request.defaultSelectionType }
+    if (defaultSelectionTypeIndex == -1) {
+        defaultSelectionTypeIndex = 0
+    }
+    val pagerState = rememberPagerState(defaultSelectionTypeIndex) { selectionTabs.size }
 
     val coroutineScope = rememberCoroutineScope()
 
-    Box(modifier = Modifier.fillMaxSize()) {
+    Column(modifier = Modifier.fillMaxSize()) {
         HorizontalPager(
+            modifier = Modifier.weight(1f),
             state = pagerState,
         ) { index ->
-            when (selectionTypes[index].name) {
-                ContentSelectionVarargs.CAMERA -> {
+            when (selectionTabs[index].selectionType) {
+                ContentSelectionTypes.CAMERA -> {
                     CameraContentSelection(
-                        contextName = contextName,
-                        requestKey = requestKey,
-                        onContentSelect = onContentSelect
+                        request = request,
+                        onContentSelected = onContentSelected
                     )
                 }
 
-                ContentSelectionVarargs.LOCATION -> {
+                ContentSelectionTypes.LOCATION -> {
                     LocationContentSelection(
-                        contextName = contextName,
-                        requestKey = requestKey,
-                        onContentSelect = onContentSelect
+                        request = request,
+                        onContentSelected = onContentSelected
                     )
                 }
 
-                ContentSelectionVarargs.PICTURE -> {
+                ContentSelectionTypes.IMAGE -> {
                     PictureContentSelection(
-                        contextName = contextName,
-                        requestKey = requestKey,
-                        onContentSelect = onContentSelect
+                        request = request,
+                        onContentSelected = onContentSelected
                     )
                 }
 
-                ContentSelectionVarargs.VIDEO -> {
+                ContentSelectionTypes.VIDEO -> {
                     VideoContentSelection(
-                        contextName = contextName,
-                        requestKey = requestKey,
-                        onContentSelect = onContentSelect
+                        request = request,
+                        onContentSelected = onContentSelected
                     )
                 }
 
-                ContentSelectionVarargs.AUDIO -> {
+                ContentSelectionTypes.AUDIO -> {
                     AudioContentSelection(
-                        contextName = contextName,
-                        requestKey = requestKey,
-                        onContentSelect = onContentSelect
+                        request = request,
+                        onContentSelected = onContentSelected
                     )
                 }
 
-                ContentSelectionVarargs.FILE -> {
+                ContentSelectionTypes.FILE -> {
                     FileContentSelection(
-                        contextName = contextName,
-                        requestKey = requestKey,
-                        onContentSelect = onContentSelect
+                        request = request,
+                        onContentSelected = onContentSelected
                     )
                 }
             }
         }
+        if (selectionTabs.size > 1) {
+            val tabsScrollState = rememberScrollState()
 
-        val tabsScrollState = rememberScrollState()
-        val buttonSize = remember {
-            mutableStateOf(IntSize.Zero)
-        }
-        SingleChoiceSegmentedButtonRow(
-            modifier = Modifier
-                .padding()
-                .horizontalScroll(tabsScrollState)
-        ) {
-            Spacer(modifier = Modifier.width(12.dp))
-            selectionTypes.forEachIndexed { index, selectionType ->
-                SegmentedButton(
-                    modifier = Modifier.onPlaced {
-                        buttonSize.value = it.size
-                    },
-                    selected = index == pagerState.currentPage,
-                    onClick = {
-                        coroutineScope.launch {
-                            pagerState.animateScrollToPage(index)
-                        }
-                    },
-                    shape = SegmentedButtonDefaults.itemShape(
-                        index = index,
-                        count = selectionTypes.size
-                    ),
-                    icon = {}
-                ) {
-                    Text(stringResource(selectionType.nameStringResource))
-                }
+            val buttonSize = remember {
+                mutableStateOf(IntSize.Zero)
             }
-            Spacer(modifier = Modifier.width(12.dp))
-        }
-        LaunchedEffect(pagerState.currentPage) {
-            tabsScrollState.animateScrollTo(buttonSize.value.width * pagerState.currentPage)
+
+            LaunchedEffect(pagerState.currentPage) {
+                tabsScrollState.animateScrollTo(buttonSize.value.width * pagerState.currentPage)
+            }
+
+            SingleChoiceSegmentedButtonRow(
+                modifier = Modifier
+                    .align(Alignment.CenterHorizontally)
+                    .horizontalScroll(tabsScrollState)
+            ) {
+                Spacer(modifier = Modifier.width(12.dp))
+                selectionTabs.forEachIndexed { index, selectionType ->
+                    SegmentedButton(
+                        modifier = Modifier.onPlaced {
+                            buttonSize.value = it.size
+                        },
+                        selected = index == pagerState.currentPage,
+                        onClick = {
+                            coroutineScope.launch {
+                                pagerState.animateScrollToPage(index)
+                            }
+                        },
+                        shape = SegmentedButtonDefaults.itemShape(
+                            index = index,
+                            count = selectionTabs.size
+                        ),
+                        icon = {}
+                    ) {
+                        Text(stringResource(selectionType.nameStringResource))
+                    }
+                }
+                Spacer(modifier = Modifier.width(12.dp))
+            }
         }
     }
 }
@@ -259,9 +302,8 @@ fun ContentSelectDialog(
 
 @Composable
 fun CameraContentSelection(
-    contextName: String,
-    requestKey: String,
-    onContentSelect: (ContentSelectionResults) -> Unit,
+    request: ContentSelectionRequest,
+    onContentSelected: (ContentSelectionResult) -> Unit,
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -290,7 +332,7 @@ fun CameraContentSelection(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(start = 4.dp, top = 60.dp, end = 4.dp),
+            .padding(4.dp),
         verticalArrangement = Arrangement.spacedBy(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -371,16 +413,16 @@ fun CameraContentSelection(
                                         }
                                     }
                                     capturedPictureIsSelect.value = true
-                                    val selectContents = listOf(pictureFileUri)
+                                    val selectedContents = listOf(pictureFileUri)
                                     val results =
-                                        ContentSelectionResults.RichMediaContentSelectionResults(
+                                        ContentSelectionResult.RichMediaContentSelectionResult(
                                             context,
-                                            requestKey,
-                                            contextName,
-                                            ContentSelectionVarargs.PICTURE,
-                                            selectContents
+                                            request.requestKey,
+                                            request.contextName,
+                                            ContentSelectionTypes.IMAGE,
+                                            selectedContents
                                         )
-                                    onContentSelect(results)
+                                    onContentSelected(results)
                                 },
                             any = capturedPicture.value
                         )
@@ -449,15 +491,14 @@ fun CameraContentSelection(
 
 @Composable
 fun LocationContentSelection(
-    contextName: String,
-    requestKey: String,
-    onContentSelect: (ContentSelectionResults) -> Unit,
+    request: ContentSelectionRequest,
+    onContentSelected: (ContentSelectionResult) -> Unit,
 ) {
     val context = LocalContext.current
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(start = 4.dp, top = 60.dp, end = 4.dp),
+            .padding(4.dp),
         verticalArrangement = Arrangement.spacedBy(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -470,18 +511,18 @@ fun LocationContentSelection(
 
         }
         IconButton(onClick = {
-            val locationInfo = ContentSelectionResults.LocationInfo(
+            val locationInfo = ContentSelectionResult.LocationInfo(
                 coordinate = "104.066284,30.572938",
                 info = "四川省成都市武侯区锦悦西路2"
             )
-            val results = ContentSelectionResults.LocationContentSelectionResults(
+            val results = ContentSelectionResult.LocationContentSelectionResult(
                 context,
-                requestKey,
-                contextName,
-                ContentSelectionVarargs.LOCATION,
+                request.requestKey,
+                request.contextName,
+                ContentSelectionTypes.LOCATION,
                 locationInfo
             )
-            onContentSelect(results)
+            onContentSelected(results)
         }) {
             Icon(
                 painter = painterResource(xcj.app.compose_share.R.drawable.ic_location_on_24),
@@ -494,17 +535,16 @@ fun LocationContentSelection(
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun PictureContentSelection(
-    contextName: String,
-    requestKey: String,
-    onContentSelect: (ContentSelectionResults) -> Unit,
+    request: ContentSelectionRequest,
+    onContentSelected: (ContentSelectionResult) -> Unit,
 ) {
+    val context = LocalContext.current
     val contentSelectionResultsProvider = remember {
         ContentSelectionResultsProvider().apply {
             mediaStoreType = MediaStore.Images::class.java
         }
     }
     val contentUrls = contentSelectionResultsProvider.contentUris
-    val context = LocalContext.current
     LaunchedEffect(true) {
         contentSelectionResultsProvider.load(context, true)
     }
@@ -513,8 +553,8 @@ fun PictureContentSelection(
         contentSelectionResultsProvider.load(context, false)
     }
 
-    val selectContents = remember {
-        mutableListOf<UriProvider>()
+    val selectedContents = remember {
+        mutableStateListOf<UriProvider>()
     }
     var searchText by remember {
         mutableStateOf("")
@@ -533,9 +573,23 @@ fun PictureContentSelection(
             }
         }
     }
+    var boxSize by remember {
+        mutableStateOf(IntSize.Zero)
+    }
+    val density = LocalDensity.current
+    val itemHeight by remember {
+        derivedStateOf {
+            with(density) {
+                (boxSize.width.toDp() - 2.dp * 6) / 3
+            }
+        }
+    }
     Box(
         modifier = Modifier
-            .fillMaxWidth(),
+            .fillMaxWidth()
+            .onPlaced {
+                boxSize = it.size
+            },
         contentAlignment = Alignment.Center
     )
     {
@@ -543,8 +597,9 @@ fun PictureContentSelection(
             columns = GridCells.Fixed(3),
             modifier = Modifier.fillMaxSize(),
             state = gridState,
-            contentPadding = PaddingValues(start = 4.dp, top = 60.dp, end = 4.dp, bottom = 120.dp)
+            contentPadding = PaddingValues(start = 4.dp, top = 4.dp, end = 4.dp, bottom = 120.dp)
         ) {
+
             items(
                 items = filteredContentUrls
             ) { contentUriProvider ->
@@ -559,25 +614,54 @@ fun PictureContentSelection(
                             .animateContentSize()
                             .clickable(
                                 onClick = {
-                                    selectContents.add(contentUriProvider)
-                                    val results =
-                                        ContentSelectionResults.RichMediaContentSelectionResults(
-                                            context,
-                                            requestKey,
-                                            contextName,
-                                            ContentSelectionVarargs.PICTURE,
-                                            selectContents
+                                    val isSelected =
+                                        selectedContents.firstOrNull { it == contentUriProvider } != null
+                                    if (isSelected) {
+                                        selectedContents.removeIf { it == contentUriProvider }
+                                    } else if (selectedContents.size >= request.selectionTypeMaxCount(
+                                            ContentSelectionTypes.IMAGE
                                         )
-                                    onContentSelect(results)
+                                    ) {
+                                        return@clickable
+                                    } else {
+                                        selectedContents.add(contentUriProvider)
+                                    }
                                 }
                             )
                     ) {
-                        AnyImage(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(120.dp),
-                            any = contentUriProvider.provideUri()
-                        )
+                        val isSelected =
+                            selectedContents.firstOrNull { it == contentUriProvider } != null
+                        AnimatedContent(
+                            targetState = isSelected,
+                            transitionSpec = {
+                                (fadeIn(animationSpec = tween(450)) +
+                                        scaleIn(
+                                            initialScale = 1.12f,
+                                            animationSpec = tween(450)
+                                        ))
+                                    .togetherWith(
+                                        fadeOut(animationSpec = tween(450)) + scaleOut(
+                                            targetScale = 1.12f,
+                                            animationSpec = tween(450)
+                                        )
+                                    )
+                            }
+                        ) { targetIsSelected ->
+                            AnyImage(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(itemHeight)
+                                    .clip(
+                                        if (targetIsSelected) {
+                                            CircleShape
+                                        } else {
+                                            NoCornerShape
+                                        }
+                                    ),
+                                any = contentUriProvider.provideUri()
+                            )
+                        }
+
                         if (isSearchMode) {
                             Column(
                                 modifier = Modifier.fillMaxWidth()
@@ -609,6 +693,9 @@ fun PictureContentSelection(
 
         BottomActions(
             modifier = Modifier.align(Alignment.BottomCenter),
+            request = request,
+            contentSelectionType = ContentSelectionTypes.IMAGE,
+            selectedContents = selectedContents,
             isSearchMode = isSearchMode,
             searchText = searchText,
             actionIcon = xcj.app.compose_share.R.drawable.ic_camera_24,
@@ -620,93 +707,26 @@ fun PictureContentSelection(
             },
             onActionClick = {
 
-            }
+            },
+            onContentSelected = onContentSelected,
         )
     }
 }
 
 @Composable
-fun BottomActions(
-    modifier: Modifier,
-    isSearchMode: Boolean,
-    searchText: String,
-    actionIcon: Int,
-    onSearchModeChanged: (Boolean) -> Unit,
-    onSearchContentChanged: (String) -> Unit,
-    onActionClick: () -> Unit
-) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .animateContentSize()
-            .padding(12.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        FilledTonalIconButton(
-            modifier = Modifier.size(TextFieldDefaults.MinHeight),
-            onClick = {
-                onSearchModeChanged(!isSearchMode)
-            }
-        ) {
-            Icon(
-                painter = painterResource(xcj.app.compose_share.R.drawable.ic_round_search_24),
-                contentDescription = null
-            )
-        }
-
-        AnimatedVisibility(
-            visible = isSearchMode,
-            modifier = Modifier.clipToBounds()
-        ) {
-            DesignTextField(
-                modifier = Modifier
-                    .width(200.dp)
-                    .defaultMinSize(minHeight = 42.dp),
-                textStyle = LocalTextStyle.current.copy(fontSize = 12.sp),
-                value = searchText,
-                onValueChange = {
-                    onSearchContentChanged(it)
-                },
-                placeholder = {
-                    Text(
-                        text = stringResource(xcj.app.appsets.R.string.search),
-                        fontSize = 12.sp
-                    )
-                },
-                colors = TextFieldDefaults.colors(
-                    unfocusedIndicatorColor = androidx.compose.ui.graphics.Color.Transparent,
-                    focusedIndicatorColor = androidx.compose.ui.graphics.Color.Transparent
-                )
-            )
-        }
-        Spacer(modifier = Modifier.weight(1f))
-
-        FilledTonalIconButton(
-            modifier = Modifier.size(TextFieldDefaults.MinHeight),
-            onClick = onActionClick
-        ) {
-            Icon(
-                painter = painterResource(actionIcon),
-                contentDescription = null
-            )
-        }
-    }
-}
-
-
-@Composable
 fun VideoContentSelection(
-    contextName: String,
-    requestKey: String,
-    onContentSelect: (ContentSelectionResults) -> Unit,
+    request: ContentSelectionRequest,
+    onContentSelected: (ContentSelectionResult) -> Unit,
 ) {
+    val context = LocalContext.current
+
     val contentSelectionResultsProvider = remember {
         ContentSelectionResultsProvider().apply {
             mediaStoreType = MediaStore.Video::class.java
         }
     }
     val contentUrls = contentSelectionResultsProvider.contentUris
-    val context = LocalContext.current
+
     val columnState = rememberLazyListState()
 
     LaunchedEffect(true) {
@@ -716,8 +736,8 @@ fun VideoContentSelection(
     LoadMoreHandler(scrollableState = columnState) {
         contentSelectionResultsProvider.load(context, false)
     }
-    val selectContents = remember {
-        mutableListOf<UriProvider>()
+    val selectedContents = remember {
+        mutableStateListOf<UriProvider>()
     }
     var searchText by remember {
         mutableStateOf("")
@@ -740,8 +760,8 @@ fun VideoContentSelection(
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
             state = columnState,
-            contentPadding = PaddingValues(start = 4.dp, top = 60.dp, end = 4.dp, bottom = 120.dp),
-            verticalArrangement = Arrangement.spacedBy(2.dp)
+            contentPadding = PaddingValues(start = 4.dp, top = 4.dp, end = 4.dp, bottom = 120.dp),
+            verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
             items(items = filteredContentUrls) { contentUriProvider ->
                 Column(
@@ -749,28 +769,59 @@ fun VideoContentSelection(
                         .fillMaxSize()
                         .animateItem()
                         .animateContentSize()
-                        .clickable(onClick = {
-                            selectContents.add(contentUriProvider)
-                            val results =
-                                ContentSelectionResults.RichMediaContentSelectionResults(
-                                    context,
-                                    requestKey,
-                                    contextName,
-                                    ContentSelectionVarargs.VIDEO,
-                                    selectContents
-                                )
-                            onContentSelect(results)
-                        })
+                        .clickable(
+                            onClick = {
+                                val isSelected =
+                                    selectedContents.firstOrNull { it == contentUriProvider } != null
+                                if (isSelected) {
+                                    selectedContents.removeIf { it == contentUriProvider }
+                                } else if (selectedContents.size >= request.selectionTypeMaxCount(
+                                        ContentSelectionTypes.VIDEO
+                                    )
+                                ) {
+                                    return@clickable
+                                } else {
+                                    selectedContents.add(contentUriProvider)
+                                }
+                            }
+                        )
                 ) {
                     Box(
                         modifier = Modifier.fillMaxSize()
                     ) {
-                        AnyImage(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .height(250.dp),
-                            any = contentUriProvider.provideUri()
-                        )
+                        val isSelected =
+                            selectedContents.firstOrNull { it == contentUriProvider } != null
+                        AnimatedContent(
+                            targetState = isSelected,
+                            transitionSpec = {
+                                (fadeIn(animationSpec = tween(450)) +
+                                        scaleIn(
+                                            initialScale = 1.12f,
+                                            animationSpec = tween(450)
+                                        ))
+                                    .togetherWith(
+                                        fadeOut(animationSpec = tween(450)) + scaleOut(
+                                            targetScale = 1.12f,
+                                            animationSpec = tween(450)
+                                        )
+                                    )
+                            }
+                        ) { targetIsSelected ->
+                            AnyImage(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .height(250.dp)
+                                    .clip(
+                                        if (targetIsSelected) {
+                                            CircleShape
+                                        } else {
+                                            NoCornerShape
+                                        }
+                                    ),
+                                any = contentUriProvider.provideUri()
+                            )
+                        }
+
                         FilledTonalIconButton(
                             modifier = Modifier.align(Alignment.Center),
                             onClick = {}
@@ -803,7 +854,6 @@ fun VideoContentSelection(
                             )
                         }
                     }
-
                 }
             }
         }
@@ -814,6 +864,9 @@ fun VideoContentSelection(
         }
         BottomActions(
             modifier = Modifier.align(Alignment.BottomCenter),
+            request = request,
+            contentSelectionType = ContentSelectionTypes.VIDEO,
+            selectedContents = selectedContents,
             isSearchMode = isSearchMode,
             searchText = searchText,
             actionIcon = xcj.app.compose_share.R.drawable.ic_camera_24,
@@ -825,24 +878,25 @@ fun VideoContentSelection(
             },
             onActionClick = {
 
-            }
+            },
+            onContentSelected = onContentSelected
         )
     }
 }
 
 @Composable
 fun AudioContentSelection(
-    contextName: String,
-    requestKey: String,
-    onContentSelect: (ContentSelectionResults) -> Unit,
+    request: ContentSelectionRequest,
+    onContentSelected: (ContentSelectionResult) -> Unit,
 ) {
+    val context = LocalContext.current
     val contentSelectionResultsProvider = remember {
         ContentSelectionResultsProvider().apply {
             mediaStoreType = MediaStore.Audio::class.java
         }
     }
     val contentUrls = contentSelectionResultsProvider.contentUris
-    val context = LocalContext.current
+
     val columnState = rememberLazyListState()
 
     LaunchedEffect(true) {
@@ -853,8 +907,8 @@ fun AudioContentSelection(
         contentSelectionResultsProvider.load(context, false)
     }
 
-    val selectContents = remember {
-        mutableListOf<UriProvider>()
+    val selectedContents = remember {
+        mutableStateListOf<UriProvider>()
     }
 
     var searchText by remember {
@@ -879,45 +933,73 @@ fun AudioContentSelection(
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
             state = columnState,
-            contentPadding = PaddingValues(start = 4.dp, top = 60.dp, end = 4.dp, bottom = 120.dp),
+            contentPadding = PaddingValues(start = 4.dp, top = 4.dp, end = 4.dp, bottom = 120.dp),
             verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
             items(items = filteredContentUrls) { contentUriProvider ->
-                OutlinedCard(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable {
-                            selectContents.add(contentUriProvider)
-                            val results = ContentSelectionResults.RichMediaContentSelectionResults(
-                                context,
-                                requestKey,
-                                contextName,
-                                ContentSelectionVarargs.AUDIO,
-                                selectContents
+                val isSelected =
+                    selectedContents.firstOrNull { it == contentUriProvider } != null
+                AnimatedContent(
+                    targetState = isSelected,
+                    transitionSpec = {
+                        (fadeIn(animationSpec = tween(450)) +
+                                scaleIn(
+                                    initialScale = 1.12f,
+                                    animationSpec = tween(450)
+                                ))
+                            .togetherWith(
+                                fadeOut(animationSpec = tween(450)) + scaleOut(
+                                    targetScale = 1.12f,
+                                    animationSpec = tween(450)
+                                )
                             )
-                            onContentSelect(results)
-                        },
-                    shape = MaterialTheme.shapes.large,
-                ) {
-                    Row(
+                    },
+                    modifier = Modifier.animateItem()
+                ) { targetIsSelected ->
+                    OutlinedCard(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(12.dp),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            .clickable {
+                                val isSelected =
+                                    selectedContents.firstOrNull { it == contentUriProvider } != null
+                                if (isSelected) {
+                                    selectedContents.removeIf { it == contentUriProvider }
+                                } else if (selectedContents.size >= request.selectionTypeMaxCount(
+                                        ContentSelectionTypes.AUDIO
+                                    )
+                                ) {
+                                    return@clickable
+                                } else {
+                                    selectedContents.add(contentUriProvider)
+                                }
+                            },
+                        shape = if (targetIsSelected) {
+                            MaterialTheme.shapes.extraLarge
+                        } else {
+                            MaterialTheme.shapes.large
+                        },
                     ) {
-                        Image(
-                            painter = painterResource(xcj.app.compose_share.R.drawable.ic_audiotrack_24),
-                            contentDescription = "file_icon"
-                        )
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(12.dp),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            Icon(
+                                painter = painterResource(xcj.app.compose_share.R.drawable.ic_audiotrack_24),
+                                contentDescription = "file_icon"
+                            )
 
-                        val mediaStoreWrapper =
-                            (contentUriProvider as? MediaStoreDataUri)
-                        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                            Text(text = mediaStoreWrapper?.displayName ?: "")
-                            Text(text = mediaStoreWrapper?.sizeReadable ?: "", fontSize = 12.sp)
+                            val mediaStoreWrapper =
+                                (contentUriProvider as? MediaStoreDataUri)
+                            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                Text(text = mediaStoreWrapper?.displayName ?: "")
+                                Text(text = mediaStoreWrapper?.sizeReadable ?: "", fontSize = 12.sp)
+                            }
                         }
                     }
                 }
+
             }
         }
         if (
@@ -928,6 +1010,9 @@ fun AudioContentSelection(
 
         BottomActions(
             modifier = Modifier.align(Alignment.BottomCenter),
+            request = request,
+            contentSelectionType = ContentSelectionTypes.AUDIO,
+            selectedContents = selectedContents,
             isSearchMode = isSearchMode,
             searchText = searchText,
             actionIcon = xcj.app.compose_share.R.drawable.ic_outline_keyboard_voice_24,
@@ -939,7 +1024,8 @@ fun AudioContentSelection(
             },
             onActionClick = {
 
-            }
+            },
+            onContentSelected = onContentSelected
         )
     }
 
@@ -947,17 +1033,17 @@ fun AudioContentSelection(
 
 @Composable
 fun FileContentSelection(
-    contextName: String,
-    requestKey: String,
-    onContentSelect: (ContentSelectionResults) -> Unit,
+    request: ContentSelectionRequest,
+    onContentSelected: (ContentSelectionResult) -> Unit,
 ) {
+    val context = LocalContext.current
     val contentSelectionResultsProvider = remember {
         ContentSelectionResultsProvider().apply {
             mediaStoreType = MediaStore.Files::class.java
         }
     }
     val contentUrls = contentSelectionResultsProvider.contentUris
-    val context = LocalContext.current
+
     val columnState = rememberLazyListState()
 
     LaunchedEffect(true) {
@@ -968,8 +1054,8 @@ fun FileContentSelection(
         contentSelectionResultsProvider.load(context, false)
     }
 
-    val selectContents = remember {
-        mutableListOf<UriProvider>()
+    val selectedContents = remember {
+        mutableStateListOf<UriProvider>()
     }
 
     var searchText by remember {
@@ -994,44 +1080,72 @@ fun FileContentSelection(
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
             state = columnState,
-            contentPadding = PaddingValues(start = 4.dp, top = 60.dp, end = 4.dp, bottom = 120.dp),
+            contentPadding = PaddingValues(start = 4.dp, top = 4.dp, end = 4.dp, bottom = 120.dp),
             verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
             items(items = filteredContentUrls) { contentUriProvider ->
-                OutlinedCard(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable {
-                            selectContents.add(contentUriProvider)
-                            val results = ContentSelectionResults.RichMediaContentSelectionResults(
-                                context,
-                                requestKey,
-                                contextName,
-                                ContentSelectionVarargs.FILE,
-                                selectContents
+                val isSelected =
+                    selectedContents.firstOrNull { it == contentUriProvider } != null
+                AnimatedContent(
+                    targetState = isSelected,
+                    transitionSpec = {
+                        (fadeIn(animationSpec = tween(450)) +
+                                scaleIn(
+                                    initialScale = 1.12f,
+                                    animationSpec = tween(450)
+                                ))
+                            .togetherWith(
+                                fadeOut(animationSpec = tween(450)) + scaleOut(
+                                    targetScale = 1.12f,
+                                    animationSpec = tween(450)
+                                )
                             )
-                            onContentSelect(results)
-                        },
-                    shape = MaterialTheme.shapes.large,
-                ) {
-                    Row(
+                    },
+                    modifier = Modifier.animateItem()
+                ) { targetIsSelected ->
+                    OutlinedCard(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(12.dp),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            .clickable {
+                                val isSelected =
+                                    selectedContents.firstOrNull { it == contentUriProvider } != null
+                                if (isSelected) {
+                                    selectedContents.removeIf { it == contentUriProvider }
+                                } else if (selectedContents.size >= request.selectionTypeMaxCount(
+                                        ContentSelectionTypes.FILE
+                                    )
+                                ) {
+                                    return@clickable
+                                } else {
+                                    selectedContents.add(contentUriProvider)
+                                }
+                            },
+                        shape = if (targetIsSelected) {
+                            MaterialTheme.shapes.extraLarge
+                        } else {
+                            MaterialTheme.shapes.large
+                        },
                     ) {
-                        Image(
-                            painter = painterResource(xcj.app.compose_share.R.drawable.ic_insert_drive_file_24),
-                            contentDescription = "file_icon"
-                        )
-                        val mediaStoreWrapper =
-                            contentUriProvider as? MediaStoreDataUri
-                        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                            Text(text = mediaStoreWrapper?.displayName ?: "")
-                            Text(text = mediaStoreWrapper?.sizeReadable ?: "", fontSize = 12.sp)
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(12.dp),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            Icon(
+                                painter = painterResource(xcj.app.compose_share.R.drawable.ic_insert_drive_file_24),
+                                contentDescription = "file_icon"
+                            )
+                            val mediaStoreWrapper =
+                                contentUriProvider as? MediaStoreDataUri
+                            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                Text(text = mediaStoreWrapper?.displayName ?: "")
+                                Text(text = mediaStoreWrapper?.sizeReadable ?: "", fontSize = 12.sp)
+                            }
                         }
                     }
                 }
+
             }
         }
 
@@ -1043,6 +1157,9 @@ fun FileContentSelection(
 
         BottomActions(
             modifier = Modifier.align(Alignment.BottomCenter),
+            request = request,
+            contentSelectionType = ContentSelectionTypes.FILE,
+            selectedContents = selectedContents,
             isSearchMode = isSearchMode,
             searchText = searchText,
             actionIcon = xcj.app.compose_share.R.drawable.ic_round_add_24,
@@ -1054,7 +1171,171 @@ fun FileContentSelection(
             },
             onActionClick = {
 
-            }
+            },
+            onContentSelected = onContentSelected
         )
+    }
+}
+
+@Composable
+fun BottomActions(
+    modifier: Modifier,
+    request: ContentSelectionRequest,
+    contentSelectionType: String,
+    selectedContents: List<UriProvider>,
+    isSearchMode: Boolean,
+    searchText: String,
+    actionIcon: Int,
+    onSearchModeChanged: (Boolean) -> Unit,
+    onSearchContentChanged: (String) -> Unit,
+    onActionClick: () -> Unit,
+    onContentSelected: (ContentSelectionResult) -> Unit,
+) {
+    val context = LocalContext.current
+    val isSystemInDarkTheme = isSystemInDarkTheme()
+    val gradientColors = listOf(
+        androidx.compose.ui.graphics.Color.Transparent,
+        if (isSystemInDarkTheme) {
+            androidx.compose.ui.graphics.Color.Black
+        } else {
+            androidx.compose.ui.graphics.Color.White
+        }
+    )
+    val isReachMinCount by rememberUpdatedState(selectedContents.isNotEmpty())
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .background(
+                brush = Brush.verticalGradient(
+                    colors = gradientColors,
+                    startY = 0f,
+                    endY = Float.POSITIVE_INFINITY // 从顶部到底部
+                )
+            ),
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        )
+        {
+            AnimatedVisibility(
+                visible = isSearchMode,
+                enter = fadeIn(),
+                exit = fadeOut()
+            ) {
+                DesignTextField(
+                    modifier = Modifier
+                        .defaultMinSize(minHeight = 42.dp),
+                    textStyle = LocalTextStyle.current.copy(fontSize = 12.sp),
+                    value = searchText,
+                    onValueChange = {
+                        onSearchContentChanged(it)
+                    },
+                    placeholder = {
+                        Text(
+                            text = stringResource(xcj.app.appsets.R.string.search),
+                            fontSize = 12.sp
+                        )
+                    },
+                    colors = TextFieldDefaults.colors(
+                        unfocusedIndicatorColor = androidx.compose.ui.graphics.Color.Transparent,
+                        focusedIndicatorColor = androidx.compose.ui.graphics.Color.Transparent
+                    )
+                )
+            }
+
+
+
+            AnimatedVisibility(
+                visible = isReachMinCount,
+                enter = fadeIn(),
+                exit = fadeOut()
+            ) {
+                FilledTonalButton(
+                    modifier = Modifier
+                        .defaultMinSize(minHeight = 42.dp)
+                        .width(TextFieldDefaults.MinWidth),
+                    onClick = {
+                        val results =
+                            ContentSelectionResult.RichMediaContentSelectionResult(
+                                context,
+                                request.requestKey,
+                                request.contextName,
+                                contentSelectionType,
+                                selectedContents
+                            )
+                        onContentSelected(results)
+                    }
+                ) {
+                    Text(text = stringResource(xcj.app.appsets.R.string.confirm))
+                }
+            }
+
+            Box(
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                FilledTonalIconButton(
+                    modifier = Modifier
+                        .size(TextFieldDefaults.MinHeight)
+                        .align(Alignment.CenterStart),
+                    onClick = {
+                        onSearchModeChanged(!isSearchMode)
+                    }
+                ) {
+                    Icon(
+                        painter = painterResource(xcj.app.compose_share.R.drawable.ic_round_search_24),
+                        contentDescription = null
+                    )
+                }
+
+
+                LazyRow(
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .widthIn(max = TextFieldDefaults.MinWidth)
+                        .animateContentSize(),
+                    horizontalArrangement = Arrangement.spacedBy(2.dp)
+                ) {
+                    item {
+                        Surface(
+                            modifier
+                                .clip(CircleShape)
+                        ) {
+                            Text(
+                                "${selectedContents.size}/${
+                                    request.selectionTypeMaxCount(
+                                        contentSelectionType
+                                    )
+                                }",
+                                modifier = Modifier.padding(horizontal = 2.dp)
+                            )
+                        }
+                    }
+
+                    items(selectedContents) { uriProvider ->
+                        AnyImage(
+                            modifier = modifier
+                                .size(25.dp),
+                            any = uriProvider.provideUri()
+                        )
+                    }
+
+                }
+
+                FilledTonalIconButton(
+                    modifier = Modifier
+                        .size(TextFieldDefaults.MinHeight)
+                        .align(Alignment.CenterEnd),
+                    onClick = onActionClick
+                ) {
+                    Icon(
+                        painter = painterResource(actionIcon),
+                        contentDescription = null
+                    )
+                }
+            }
+        }
     }
 }

@@ -27,7 +27,7 @@ import xcj.app.appsets.im.message.VideoMessage
 import xcj.app.appsets.im.message.VideoMessageMetadata
 import xcj.app.appsets.im.message.VoiceMessage
 import xcj.app.appsets.settings.AppConfig
-import xcj.app.appsets.ui.compose.content_selection.ContentSelectionResults
+import xcj.app.appsets.ui.compose.content_selection.ContentSelectionResult
 import xcj.app.appsets.ui.compose.conversation.GenerativeAISession
 import xcj.app.appsets.util.PictureUrlMapper
 import xcj.app.appsets.util.VideoFileUtil
@@ -310,7 +310,7 @@ object ImMessageGenerator {
         inputSelector: Int,
         content: Any
     ): LocationMessageMetadata {
-        val locationInfo = content as ContentSelectionResults.LocationInfo
+        val locationInfo = content as ContentSelectionResult.LocationInfo
         val description = getContentName(context, content)
         return LocationMessageMetadata(
             description,

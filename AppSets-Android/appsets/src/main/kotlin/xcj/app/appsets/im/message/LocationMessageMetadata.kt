@@ -1,6 +1,6 @@
 package xcj.app.appsets.im.message
 
-import xcj.app.appsets.ui.compose.content_selection.ContentSelectionResults
+import xcj.app.appsets.ui.compose.content_selection.ContentSelectionResult
 
 class LocationMessageMetadata(
     description: String,
@@ -8,7 +8,7 @@ class LocationMessageMetadata(
     compressed: Boolean,
     encode: String,
     contentType: String,
-    data: ContentSelectionResults.LocationInfo,
-) : MessageMetadata<ContentSelectionResults.LocationInfo>(
+    data: ContentSelectionResult.LocationInfo,
+) : MessageMetadata<ContentSelectionResult.LocationInfo>(
     description, size, compressed, encode, data, contentType
 )

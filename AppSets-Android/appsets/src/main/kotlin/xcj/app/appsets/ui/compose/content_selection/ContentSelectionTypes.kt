@@ -6,11 +6,13 @@ import xcj.app.appsets.util.model.MediaStoreDataUri
 /**
  * 选择内容弹窗
  */
-object ContentSelectionVarargs {
+object ContentSelectionTypes {
 
     const val CAMERA = "camera"
     const val LOCATION = "location"
-    const val PICTURE = "picture"
+
+    const val IMAGE = "image"
+
     const val VIDEO = "video"
     const val AUDIO = "audio"
     const val FILE = "file"

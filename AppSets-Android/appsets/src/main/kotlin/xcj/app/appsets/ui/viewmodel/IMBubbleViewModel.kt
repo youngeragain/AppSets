@@ -5,7 +5,7 @@ import android.content.Intent
 import androidx.activity.ComponentActivity
 import xcj.app.appsets.im.message.ImMessage
 import xcj.app.appsets.ui.base.BaseIMViewModel
-import xcj.app.appsets.ui.compose.content_selection.ContentSelectionResults
+import xcj.app.appsets.ui.compose.content_selection.ContentSelectionResult
 import xcj.app.appsets.usecase.ConversationUseCase
 import xcj.app.appsets.usecase.NavigationUseCase
 import xcj.app.starter.android.util.LocalMessager
@@ -46,12 +46,12 @@ class IMBubbleViewModel : BaseIMViewModel() {
      */
     override fun dispatchContentSelectedResult(
         context: Context,
-        contentSelectionResults: ContentSelectionResults
+        contentSelectionResult: ContentSelectionResult
     ) {
-        super.dispatchContentSelectedResult(context, contentSelectionResults)
+        super.dispatchContentSelectedResult(context, contentSelectionResult)
         PurpleLogger.current.d(
             TAG,
-            "dispatchContentSelectedResult, contentSelectionResults:$contentSelectionResults"
+            "dispatchContentSelectedResult, contentSelectionResults:$contentSelectionResult"
         )
     }
 

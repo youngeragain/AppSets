@@ -27,7 +27,7 @@ import xcj.app.appsets.server.repository.UserRepository
 import xcj.app.appsets.service.MainService
 import xcj.app.appsets.settings.AppConfig
 import xcj.app.appsets.ui.compose.PageRouteNames
-import xcj.app.appsets.ui.compose.content_selection.ContentSelectionResults
+import xcj.app.appsets.ui.compose.content_selection.ContentSelectionResult
 import xcj.app.appsets.ui.compose.login.UserAgreementComposeViewProvider
 import xcj.app.appsets.ui.model.LoginSignUpState
 import xcj.app.appsets.ui.model.SignUpUserInfo
@@ -47,16 +47,16 @@ import xcj.app.starter.test.LocalPurpleCoroutineScope
 import java.util.Calendar
 
 data class SelectedContents(
-    val contents: MutableMap<String, ContentSelectionResults> = mutableMapOf()
+    val contents: MutableMap<String, ContentSelectionResult> = mutableMapOf()
 )
 
 class SelectedContentsStateHolder {
 
     val selectedContentsState: MutableState<SelectedContents> = mutableStateOf(SelectedContents())
 
-    fun updateSelectedContent(contentSelectionResults: ContentSelectionResults) {
+    fun updateSelectedContent(contentSelectionResult: ContentSelectionResult) {
         val selectedContents = selectedContentsState.value
-        selectedContents.contents.put(contentSelectionResults.requestKey, contentSelectionResults)
+        selectedContents.contents.put(contentSelectionResult.requestKey, contentSelectionResult)
         selectedContentsState.value = SelectedContents(selectedContents.contents)
     }
 }
