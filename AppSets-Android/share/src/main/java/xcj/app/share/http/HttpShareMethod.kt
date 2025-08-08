@@ -1,7 +1,7 @@
 package xcj.app.share.http
 
-import AppSetsShareClientPreSendSheet
-import AppSetsSharePinSheet
+import AppSetsShareClientPreSendSheetContent
+import AppSetsSharePinSheetContent
 import android.net.Network
 import android.os.Build
 import androidx.annotation.RequiresApi
@@ -472,7 +472,7 @@ class HttpShareMethod : ShareMethod(), ContentReceivedListener, ListenersProvide
     private fun showPinToClientSheet(shareDevice: HttpShareDevice, pin: Int) {
         val bottomSheetState = viewModel.bottomSheetState()
         bottomSheetState.show {
-            AppSetsSharePinSheet(
+            AppSetsSharePinSheetContent(
                 shareDevice = shareDevice,
                 pin = pin,
                 onConfirmClick = {
@@ -542,7 +542,7 @@ class HttpShareMethod : ShareMethod(), ContentReceivedListener, ListenersProvide
         } else {
             val bottomSheetState = viewModel.bottomSheetState()
             bottomSheetState.show {
-                AppSetsShareClientPreSendSheet(
+                AppSetsShareClientPreSendSheetContent(
                     shareDevice = shareDevice,
                     isAutoAccept = isAutoAcceptState.value,
                     onAcceptClick = { isAccept ->

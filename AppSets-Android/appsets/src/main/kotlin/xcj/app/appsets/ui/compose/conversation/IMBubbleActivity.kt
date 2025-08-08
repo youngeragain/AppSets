@@ -47,7 +47,7 @@ import xcj.app.appsets.ui.compose.LocalUseCaseOfSystem
 import xcj.app.appsets.ui.compose.LocalUseCaseOfUserInfo
 import xcj.app.appsets.ui.compose.PageRouteNames
 import xcj.app.appsets.ui.compose.apps.AppDetailsPage
-import xcj.app.appsets.ui.compose.apps.DownloadBottomSheetComponent
+import xcj.app.appsets.ui.compose.apps.DownloadBottomSheetContent
 import xcj.app.appsets.ui.compose.group.GroupInfoPage
 import xcj.app.appsets.ui.compose.main.DesignNaviHost
 import xcj.app.appsets.ui.compose.main.ImmerseContentContainer
@@ -248,7 +248,7 @@ fun ImSessionBubbleNaviHostPages(navController: NavHostController) {
                     onMoreClick = { imObj ->
                         anyStateProvider.bottomSheetState()
                             .show {
-                                ConversationDetailsMoreInfo(
+                                ConversationDetailsMoreInfoSheetContent(
                                     imObj = imObj,
                                     onBioClick = { bio ->
                                         onBioClick(context, navController, bio)
@@ -380,7 +380,7 @@ fun ImSessionBubbleNaviHostPages(navController: NavHostController) {
                     onMoreClick = { imObj ->
                         anyStateProvider.bottomSheetState()
                             .show {
-                                ConversationDetailsMoreInfo(
+                                ConversationDetailsMoreInfoSheetContent(
                                     imObj = imObj,
                                     onBioClick = { bio ->
                                         onBioClick(context, navController, bio)
@@ -570,7 +570,7 @@ fun ImSessionBubbleNaviHostPages(navController: NavHostController) {
                     onGetApplicationClick = { application, appPlatform ->
                         anyStateProvider.bottomSheetState()
                             .show {
-                                DownloadBottomSheetComponent(
+                                DownloadBottomSheetContent(
                                     application = application,
                                     appPlatform = appPlatform,
                                     onDownloadInfoGetClick = { application, downloadInfo ->

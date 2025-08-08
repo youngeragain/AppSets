@@ -10,7 +10,6 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.view.Choreographer
 import android.view.MotionEvent
 import android.window.OnBackInvokedDispatcher
 import androidx.activity.compose.setContent
@@ -22,7 +21,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import xcj.app.appsets.notification.NotificationPusher
-import xcj.app.appsets.ui.compose.LocalPageRouteNameNeedLoggedProvider
 import xcj.app.appsets.ui.compose.theme.AppSetsTheme
 import xcj.app.appsets.ui.viewmodel.MainViewModel
 import xcj.app.appsets.util.SplashScreenHelper
@@ -159,16 +157,16 @@ class MainActivity : DesignComponentActivity() {
         //wait compose first frame draw finish
         delay(150)
         val fromAppDefinition = getCallActivityAppDefinition()
-        val bottomSheetState = viewModel.bottomSheetState()
-        bottomSheetState.setShouldBackgroundSink(true)
-        bottomSheetState.show {
-            ExternalContentContainerSheet(
+        val composeContainerState = viewModel.bottomSheetState()
+        composeContainerState.setShouldBackgroundSink(true)
+        composeContainerState.show {
+            ExternalContentSheetContent(
                 intent = intent,
                 fromAppDefinition = fromAppDefinition,
                 onConfirmClick = { handleType ->
                     when (handleType) {
                         EXTERNAL_CONTENT_HANDLE_BY_LOCAL_SHARE -> {
-                            bottomSheetState.hide()
+                            composeContainerState.hide()
                             handleExternalDataByAppSetsShare(intent)
 
                         }

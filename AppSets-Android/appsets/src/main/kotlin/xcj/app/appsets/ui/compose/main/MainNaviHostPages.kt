@@ -106,7 +106,7 @@ import xcj.app.appsets.ui.compose.PageRouteNames
 import xcj.app.appsets.ui.compose.apps.AppDetailsPage
 import xcj.app.appsets.ui.compose.apps.AppsCenterPage
 import xcj.app.appsets.ui.compose.apps.CreateAppPage
-import xcj.app.appsets.ui.compose.apps.DownloadBottomSheetComponent
+import xcj.app.appsets.ui.compose.apps.DownloadBottomSheetContent
 import xcj.app.appsets.ui.compose.apps.tools.AppToolsDetailsPage
 import xcj.app.appsets.ui.compose.apps.tools.AppToolsPage
 import xcj.app.appsets.ui.compose.apps.tools.TOOL_TYPE
@@ -115,10 +115,10 @@ import xcj.app.appsets.ui.compose.apps.tools.TOOL_TYPE_AppSets_Launcher
 import xcj.app.appsets.ui.compose.apps.tools.TOOL_TYPE_AppSets_Proxy
 import xcj.app.appsets.ui.compose.apps.tools.TOOL_TYPE_AppSets_Share
 import xcj.app.appsets.ui.compose.camera.CameraComposeActivity
-import xcj.app.appsets.ui.compose.content_selection.ContentSelectDialog
+import xcj.app.appsets.ui.compose.content_selection.ContentSelectSheetContent
 import xcj.app.appsets.ui.compose.content_selection.ContentSelectionRequest
 import xcj.app.appsets.ui.compose.content_selection.defaultSelectionTypeParam
-import xcj.app.appsets.ui.compose.conversation.ConversationDetailsMoreInfo
+import xcj.app.appsets.ui.compose.conversation.ConversationDetailsMoreInfoSheetContent
 import xcj.app.appsets.ui.compose.conversation.ConversationDetailsPage
 import xcj.app.appsets.ui.compose.conversation.ConversationOverviewPage
 import xcj.app.appsets.ui.compose.conversation.ai_model.AIGCMarketPage
@@ -140,7 +140,7 @@ import xcj.app.appsets.ui.compose.search.SearchPage
 import xcj.app.appsets.ui.compose.settings.AboutPage
 import xcj.app.appsets.ui.compose.settings.SettingsPage
 import xcj.app.appsets.ui.compose.user.UserProfilePage
-import xcj.app.appsets.ui.compose.web.WebComponent
+import xcj.app.appsets.ui.compose.web.WebSheetContent
 import xcj.app.appsets.ui.model.ApplicationForCreate
 import xcj.app.appsets.ui.viewmodel.MainViewModel
 import xcj.app.appsets.usecase.AppsUseCase
@@ -226,7 +226,7 @@ fun MainNaviHostPages(
                         onGetApplicationClick = { application, appPlatform ->
                             anyStateProvider.bottomSheetState()
                                 .show {
-                                    DownloadBottomSheetComponent(
+                                    DownloadBottomSheetContent(
                                         application = application,
                                         appPlatform = appPlatform,
                                         onDownloadInfoGetClick = { application, downloadInfo ->
@@ -665,7 +665,7 @@ fun MainNaviHostPages(
                         onMoreClick = { imObj ->
                             anyStateProvider.bottomSheetState()
                                 .show {
-                                    ConversationDetailsMoreInfo(
+                                    ConversationDetailsMoreInfoSheetContent(
                                         imObj = imObj,
                                         onBioClick = { bio ->
                                             onBioClick(context, navController, bio)
@@ -776,7 +776,7 @@ fun MainNaviHostPages(
                         onMoreClick = { imObj ->
                             anyStateProvider.bottomSheetState()
                                 .show {
-                                    ConversationDetailsMoreInfo(
+                                    ConversationDetailsMoreInfoSheetContent(
                                         imObj = imObj,
                                         onBioClick = { bio ->
                                             onBioClick(context, navController, bio)
@@ -1481,7 +1481,7 @@ fun showContentSelectionDialog(
         defaultSelectionType
     )
     bottomSheetContainerState.show {
-        ContentSelectDialog(
+        ContentSelectSheetContent(
             request = request,
             onContentSelected = {
                 bottomSheetContainerState.hide()
@@ -1497,7 +1497,7 @@ fun showWebBrowserDialog(context: Context, anyStateProvider: AnyStateProvider, d
     }
     val bottomSheetState = anyStateProvider.bottomSheetState()
     bottomSheetState.show {
-        WebComponent(null, url = data)
+        WebSheetContent(null, url = data)
     }
 }
 

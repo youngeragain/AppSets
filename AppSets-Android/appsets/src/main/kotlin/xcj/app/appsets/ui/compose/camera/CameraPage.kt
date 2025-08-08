@@ -75,11 +75,11 @@ fun CameraContent(
             composeContainerState.show {
                 when (scannedQRCodeInfo) {
                     is QRCodeInfoScannedState.AppSetsQRCodeInfo -> {
-                        AppSetsQRCodeInfoHandlerSheet(scannedQRCodeInfo)
+                        AppSetsQRCodeInfoHandlerSheetContent(scannedQRCodeInfo)
                     }
 
                     is QRCodeInfoScannedState.OthersQRCodeInfo -> {
-                        OthersQRCodeInfoHandlerSheet(scannedQRCodeInfo)
+                        OthersQRCodeInfoHandlerSheetContent(scannedQRCodeInfo)
                     }
                 }
             }
@@ -123,7 +123,7 @@ fun CameraContent(
 }
 
 @Composable
-fun OthersQRCodeInfoHandlerSheet(scannedQRCodeInfo: QRCodeInfoScannedState.OthersQRCodeInfo) {
+fun OthersQRCodeInfoHandlerSheetContent(scannedQRCodeInfo: QRCodeInfoScannedState.OthersQRCodeInfo) {
     Column(
         Modifier
             .fillMaxWidth()
@@ -145,7 +145,7 @@ fun OthersQRCodeInfoHandlerSheet(scannedQRCodeInfo: QRCodeInfoScannedState.Other
 }
 
 @Composable
-fun AppSetsQRCodeInfoHandlerSheet(
+fun AppSetsQRCodeInfoHandlerSheetContent(
     appSetsQRCodeInfo: QRCodeInfoScannedState.AppSetsQRCodeInfo,
 ) {
     val qrCodeUseCase = LocalUseCaseOfQRCode.current

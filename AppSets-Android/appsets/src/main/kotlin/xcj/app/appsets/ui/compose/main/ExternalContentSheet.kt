@@ -85,7 +85,7 @@ private suspend fun makeQuickStepContentHolder(
 }
 
 @Composable
-fun ExternalContentContainerSheet(
+fun ExternalContentSheetContent(
     intent: Intent,
     fromAppDefinition: AppDefinition?,
     onConfirmClick: (Int) -> Unit,

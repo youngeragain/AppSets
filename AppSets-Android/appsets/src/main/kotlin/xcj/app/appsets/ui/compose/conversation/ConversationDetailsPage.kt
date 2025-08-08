@@ -418,7 +418,7 @@ fun ComplexContentSendingIndicator(isShow: Boolean) {
             ) {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
                     Icon(
                         painterResource(xcj.app.compose_share.R.drawable.ic_ios_share_24),

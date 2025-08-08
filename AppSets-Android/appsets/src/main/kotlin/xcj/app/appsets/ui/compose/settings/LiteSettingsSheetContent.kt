@@ -45,11 +45,10 @@ import xcj.app.appsets.ui.model.LoginStatusState
 import xcj.app.appsets.usecase.QRCodeInfoScannedState
 import xcj.app.appsets.usecase.QRCodeUseCase
 import xcj.app.appsets.usecase.SystemUseCase
-import xcj.app.starter.android.usecase.PlatformUseCase
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LiteSettingsDialog(
+fun LiteSettingsSheetContent(
     qrCodeInfo: QRCodeInfoScannedState.AppSetsQRCodeInfo?,
     onBioClick: () -> Unit,
     onSettingsClick: () -> Unit,

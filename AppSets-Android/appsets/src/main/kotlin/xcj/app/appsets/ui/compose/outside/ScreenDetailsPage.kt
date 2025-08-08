@@ -416,7 +416,7 @@ fun ScreenDetailsTopBar(
                                         val bottomSheetContainerState =
                                             anyStateProvider.bottomSheetState()
                                         bottomSheetContainerState.show {
-                                            CollectEditBox(
+                                            CollectEditSheetContent(
                                                 onConfirmClick = {
                                                     bottomSheetContainerState.hide()
                                                 }
@@ -445,22 +445,30 @@ fun ScreenDetailsTopBar(
 }
 
 @Composable
-fun CollectEditBox(
+fun CollectEditSheetContent(
     onConfirmClick: () -> Unit,
 ) {
+    var collectCategory by remember {
+        mutableStateOf("")
+    }
     Column(
         Modifier
             .fillMaxWidth()
-            .padding(12.dp)
+            .padding(12.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        Row {
+        Row(
+            verticalAlignment = Alignment.CenterVertically
+        ) {
             Text(text = stringResource(xcj.app.appsets.R.string.add_favorite_category))
             Spacer(modifier = Modifier.weight(1f))
+            FilledTonalButton(
+                onClick = onConfirmClick
+            ) {
+                Text(text = stringResource(xcj.app.appsets.R.string.sure))
+            }
         }
-        Spacer(modifier = Modifier.height(12.dp))
-        var collectCategory by remember {
-            mutableStateOf("")
-        }
+
         DesignTextField(
             modifier = Modifier.fillMaxWidth(),
             value = collectCategory,
@@ -473,15 +481,6 @@ fun CollectEditBox(
             maxLines = 1,
             shape = MaterialTheme.shapes.extraLarge
         )
-        Spacer(modifier = Modifier.height(12.dp))
-        Row {
-            Spacer(modifier = Modifier.weight(1f))
-            FilledTonalButton(
-                onClick = onConfirmClick
-            ) {
-                Text(text = stringResource(xcj.app.appsets.R.string.sure))
-            }
-        }
     }
 }
 

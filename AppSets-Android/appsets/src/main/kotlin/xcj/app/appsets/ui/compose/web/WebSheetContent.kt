@@ -31,7 +31,7 @@ private const val USER_AGENT_MOBILE =
 
 @SuppressLint("ClickableViewAccessibility")
 @Composable
-fun WebComponent(title: String?, url: String) {
+fun WebSheetContent(title: String?, url: String) {
     Box(
         modifier = Modifier
             .padding()

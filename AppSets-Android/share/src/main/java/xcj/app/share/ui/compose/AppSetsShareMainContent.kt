@@ -1872,7 +1872,7 @@ fun ShareDeviceNormalComponent(modifier: Modifier, shareDevice: ShareDevice) {
 }
 
 @Composable
-fun AppSetsSharePinSheet(
+fun AppSetsSharePinSheetContent(
     shareDevice: ShareDevice,
     pin: Int,
     onConfirmClick: () -> Unit,
@@ -1902,7 +1902,7 @@ fun AppSetsSharePinSheet(
 
 
 @Composable
-fun AppSetsShareClientPreSendSheet(
+fun AppSetsShareClientPreSendSheetContent(
     shareDevice: ShareDevice,
     isAutoAccept: Boolean,
     onAcceptClick: (Boolean) -> Unit,

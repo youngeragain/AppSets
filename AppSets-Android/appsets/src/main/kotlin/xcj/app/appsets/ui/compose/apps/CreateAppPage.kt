@@ -416,7 +416,7 @@ fun CreateAppPage(
                                     val composeContainerState =
                                         anyStateProvider.bottomSheetState()
                                     composeContainerState.show {
-                                        CustomPlatformAddComponent(
+                                        CustomPlatformAddSheetContent(
                                             platformNames = platformNames,
                                             onConfirmClick = {
                                                 composeContainerState.hide()
@@ -511,7 +511,7 @@ fun CreateApplicationIndicator(createApplicationState: CreateApplicationState) {
             ) {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
                     Image(
                         modifier = Modifier.size(68.dp),
@@ -526,40 +526,23 @@ fun CreateApplicationIndicator(createApplicationState: CreateApplicationState) {
 }
 
 @Composable
-fun CustomPlatformAddComponent(
+fun CustomPlatformAddSheetContent(
     platformNames: List<String>,
     onConfirmClick: () -> Unit,
 ) {
-    Box(
-        Modifier.fillMaxWidth()
+    val context = LocalContext.current
+    var customPlatform by remember {
+        mutableStateOf("")
+    }
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .padding(12.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        Column(
-            Modifier
-                .fillMaxWidth()
-                .padding(12.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            Text(
-                text = stringResource(xcj.app.appsets.R.string.add_custom_platform),
-                modifier = Modifier.align(Alignment.CenterHorizontally),
-                fontWeight = FontWeight.Bold
-            )
-            Text(text = stringResource(xcj.app.appsets.R.string.platform_name_english_only))
-            var customPlatform by remember {
-                mutableStateOf("")
-            }
-            DesignTextField(
-                modifier = Modifier.fillMaxWidth(),
-                value = customPlatform,
-                onValueChange = {
-                    if (it.isNotEmpty()) {
-                        customPlatform = it
-                    }
-                },
-                placeholder = {
-                    Text(text = stringResource(id = xcj.app.appsets.R.string.name))
-                })
-            val context = LocalContext.current
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(text = stringResource(xcj.app.appsets.R.string.add_custom_platform))
+            Spacer(modifier = Modifier.weight(1f))
             FilledTonalButton(
                 onClick = {
                     if (customPlatform.isEmpty()) {
@@ -585,6 +568,20 @@ fun CustomPlatformAddComponent(
                 Text(text = stringResource(id = xcj.app.appsets.R.string.sure))
             }
         }
+        Text(text = stringResource(xcj.app.appsets.R.string.platform_name_english_only))
+
+        DesignTextField(
+            modifier = Modifier.fillMaxWidth(),
+            value = customPlatform,
+            onValueChange = {
+                if (it.isNotEmpty()) {
+                    customPlatform = it
+                }
+            },
+            placeholder = {
+                Text(text = stringResource(id = xcj.app.appsets.R.string.name))
+            })
+
     }
 }
 

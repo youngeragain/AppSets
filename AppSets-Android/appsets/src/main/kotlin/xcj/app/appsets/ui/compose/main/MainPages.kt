@@ -93,7 +93,7 @@ import xcj.app.appsets.ui.compose.PageRouteNames
 import xcj.app.appsets.ui.compose.custom_component.AnyImage
 import xcj.app.appsets.ui.compose.media.video.fall.MediaFallActivity
 import xcj.app.appsets.ui.compose.quickstep.QuickStepContentHandlerRegistry
-import xcj.app.appsets.ui.compose.settings.LiteSettingsDialog
+import xcj.app.appsets.ui.compose.settings.LiteSettingsSheetContent
 import xcj.app.appsets.ui.model.NowSpaceObjectState
 import xcj.app.appsets.ui.model.NowSpaceObjectState.NewImMessage
 import xcj.app.appsets.ui.model.TabAction
@@ -324,7 +324,7 @@ fun NavigationBarContainer(
         },
         onBioClick = {
             anyStateProvider.bottomSheetState().show {
-                LiteSettingsDialog(
+                LiteSettingsSheetContent(
                     qrCodeInfo = qrCodeUseCase.generatedQRCodeInfo.value,
                     onBioClick = {
                         val bio = LocalAccountManager.userInfo

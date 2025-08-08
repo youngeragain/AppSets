@@ -25,12 +25,12 @@ import xcj.app.appsets.usecase.RelationsUseCase
 
 @Preview(showBackground = true)
 @Composable
-fun ConversationDetailsMoreInfoPreView() {
-    //ConversationDetailsMorePage({ })
+fun ConversationDetailsMoreInfoSheetContentPreView() {
+    //ConversationDetailsMoreInfoSheetContent({ })
 }
 
 @Composable
-fun ConversationDetailsMoreInfo(
+fun ConversationDetailsMoreInfoSheetContent(
     imObj: ImObj,
     onBioClick: (Bio) -> Unit,
     onRequestAddFriend: (String) -> Unit,

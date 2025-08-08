@@ -320,7 +320,7 @@ fun LoginIndicator(loginSignUpState: LoginSignUpState) {
             ) {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
                     Image(
                         modifier = Modifier.size(68.dp),

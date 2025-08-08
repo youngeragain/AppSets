@@ -18,8 +18,6 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -174,7 +172,7 @@ sealed interface ContentSelectionResult {
 
 
 @Composable
-fun ContentSelectDialog(
+fun ContentSelectSheetContent(
     request: ContentSelectionRequest,
     onContentSelected: (ContentSelectionResult) -> Unit,
 ) {
@@ -636,12 +634,12 @@ fun PictureContentSelection(
                             transitionSpec = {
                                 (fadeIn(animationSpec = tween(450)) +
                                         scaleIn(
-                                            initialScale = 1.12f,
+                                            initialScale = 1.22f,
                                             animationSpec = tween(450)
                                         ))
                                     .togetherWith(
                                         fadeOut(animationSpec = tween(450)) + scaleOut(
-                                            targetScale = 1.12f,
+                                            targetScale = 0.82f,
                                             animationSpec = tween(450)
                                         )
                                     )
@@ -796,12 +794,12 @@ fun VideoContentSelection(
                             transitionSpec = {
                                 (fadeIn(animationSpec = tween(450)) +
                                         scaleIn(
-                                            initialScale = 1.12f,
+                                            initialScale = 1.22f,
                                             animationSpec = tween(450)
                                         ))
                                     .togetherWith(
                                         fadeOut(animationSpec = tween(450)) + scaleOut(
-                                            targetScale = 1.12f,
+                                            targetScale = 0.82f,
                                             animationSpec = tween(450)
                                         )
                                     )
@@ -944,12 +942,12 @@ fun AudioContentSelection(
                     transitionSpec = {
                         (fadeIn(animationSpec = tween(450)) +
                                 scaleIn(
-                                    initialScale = 1.12f,
+                                    initialScale = 1.22f,
                                     animationSpec = tween(450)
                                 ))
                             .togetherWith(
                                 fadeOut(animationSpec = tween(450)) + scaleOut(
-                                    targetScale = 1.12f,
+                                    targetScale = 0.82f,
                                     animationSpec = tween(450)
                                 )
                             )
@@ -974,7 +972,7 @@ fun AudioContentSelection(
                                 }
                             },
                         shape = if (targetIsSelected) {
-                            MaterialTheme.shapes.extraLarge
+                            CircleShape
                         } else {
                             MaterialTheme.shapes.large
                         },
@@ -1091,12 +1089,12 @@ fun FileContentSelection(
                     transitionSpec = {
                         (fadeIn(animationSpec = tween(450)) +
                                 scaleIn(
-                                    initialScale = 1.12f,
+                                    initialScale = 1.22f,
                                     animationSpec = tween(450)
                                 ))
                             .togetherWith(
                                 fadeOut(animationSpec = tween(450)) + scaleOut(
-                                    targetScale = 1.12f,
+                                    targetScale = 0.82f,
                                     animationSpec = tween(450)
                                 )
                             )
@@ -1121,7 +1119,7 @@ fun FileContentSelection(
                                 }
                             },
                         shape = if (targetIsSelected) {
-                            MaterialTheme.shapes.extraLarge
+                            CircleShape
                         } else {
                             MaterialTheme.shapes.large
                         },
@@ -1209,7 +1207,7 @@ fun BottomActions(
                 brush = Brush.verticalGradient(
                     colors = gradientColors,
                     startY = 0f,
-                    endY = Float.POSITIVE_INFINITY // 从顶部到底部
+                    endY = Float.POSITIVE_INFINITY
                 )
             ),
     ) {
@@ -1295,8 +1293,9 @@ fun BottomActions(
                     modifier = Modifier
                         .align(Alignment.Center)
                         .widthIn(max = TextFieldDefaults.MinWidth)
-                        .animateContentSize(),
-                    horizontalArrangement = Arrangement.spacedBy(2.dp)
+                        .animateContentSize(alignment = Alignment.CenterStart),
+                    horizontalArrangement = Arrangement.spacedBy(2.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     item {
                         Surface(
@@ -1309,7 +1308,8 @@ fun BottomActions(
                                         contentSelectionType
                                     )
                                 }",
-                                modifier = Modifier.padding(horizontal = 2.dp)
+                                modifier = Modifier.padding(horizontal = 2.dp),
+                                fontSize = 12.sp
                             )
                         }
                     }

@@ -380,7 +380,7 @@ fun ApplicationContentComponent(
 }
 
 @Composable
-fun DownloadBottomSheetComponent(
+fun DownloadBottomSheetContent(
     application: Application,
     appPlatform: AppPlatform,
     onDownloadInfoGetClick: (Application, DownloadInfo) -> Unit,
