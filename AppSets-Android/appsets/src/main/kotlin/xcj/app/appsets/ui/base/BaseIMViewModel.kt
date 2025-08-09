@@ -174,7 +174,7 @@ abstract class BaseIMViewModel : AnyStateViewModel() {
                     return
                 }
                 val contentUriList = contentSelectionResult.selectItems
-                when (contentSelectionResult.contextPageName) {
+                when (contentSelectionResult.request.contextName) {
                     PageRouteNames.ConversationDetailsPage -> {
                         //todo multi
                         val imageUri = contentUriList.firstOrNull()
@@ -214,7 +214,7 @@ abstract class BaseIMViewModel : AnyStateViewModel() {
                 if (contentSelectionResult !is ContentSelectionResult.RichMediaContentSelectionResult) {
                     return
                 }
-                when (contentSelectionResult.contextPageName) {
+                when (contentSelectionResult.request.contextName) {
                     PageRouteNames.ConversationDetailsPage -> {
                         //todo multi
                         val audioUri = contentSelectionResult.selectItems.firstOrNull()
@@ -233,7 +233,7 @@ abstract class BaseIMViewModel : AnyStateViewModel() {
                 if (contentSelectionResult !is ContentSelectionResult.RichMediaContentSelectionResult) {
                     return
                 }
-                when (contentSelectionResult.contextPageName) {
+                when (contentSelectionResult.request.contextName) {
                     PageRouteNames.ConversationDetailsPage -> {
                         //todo multi
                         val audioUri = contentSelectionResult.selectItems.firstOrNull()
@@ -252,7 +252,7 @@ abstract class BaseIMViewModel : AnyStateViewModel() {
                 if (contentSelectionResult !is ContentSelectionResult.RichMediaContentSelectionResult) {
                     return
                 }
-                when (contentSelectionResult.contextPageName) {
+                when (contentSelectionResult.request.contextName) {
                     PageRouteNames.ConversationDetailsPage -> {
                         //todo multi
                         val audioUri = contentSelectionResult.selectItems.firstOrNull()
@@ -271,7 +271,7 @@ abstract class BaseIMViewModel : AnyStateViewModel() {
                 if (contentSelectionResult !is ContentSelectionResult.LocationContentSelectionResult) {
                     return
                 }
-                when (contentSelectionResult.contextPageName) {
+                when (contentSelectionResult.request.contextName) {
                     PageRouteNames.ConversationDetailsPage -> {
                         val locationInfo = contentSelectionResult.locationInfo
                         conversationUseCase.onSendMessage(

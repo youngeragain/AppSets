@@ -378,6 +378,7 @@
     <string name="can_not_found_session_object">Unable to find session object</string>
     <string name="please_choose_avatar">Please choose a picture as your AppSets account\'s avatar!</string>
     <string name="slide_to_enable_camera_preview">Slide to enable camera\'s preview</string>
+    <string name="slide_to_enable_location_preview">Slide to enable location\'s preview</string>
     <string name="only_for_learning_purpose">Partial logo resources, for learning purposes only</string>
     <string name="appsets_share">AppSets Share</string>
     <string name="appsets_share_description">Use the sharing function to share data locally</string>
@@ -456,4 +457,5 @@
     <string name="no_models_available">No models available</string>
     <string name="remove">Remove</string>
     <string name="there_is_nothing_here">There is nothing here</string>
+    <string name="no_x_permission">No %s permission</string>
 </resources>

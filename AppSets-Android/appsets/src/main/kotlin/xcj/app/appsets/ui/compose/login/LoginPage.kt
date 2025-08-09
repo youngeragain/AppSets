@@ -102,6 +102,7 @@ fun LoginPage(
             LoginComponent2(
                 modifier = Modifier.align(Alignment.BottomCenter),
                 onBackClick = onBackClick,
+                loginSignUpState = loginSignUpState,
                 onLoginConfirmButtonClick = onLoginConfirmButtonClick
             )
         } else {
@@ -127,6 +128,7 @@ fun LoginPage(
                     LoginComponent2(
                         modifier = Modifier.align(Alignment.BottomCenter),
                         onBackClick = onBackClick,
+                        loginSignUpState = loginSignUpState,
                         onLoginConfirmButtonClick = onLoginConfirmButtonClick
                     )
                 }
@@ -140,6 +142,7 @@ fun LoginPage(
 @Composable
 fun LoginComponent2(
     modifier: Modifier,
+    loginSignUpState: LoginSignUpState,
     onBackClick: () -> Unit,
     onLoginConfirmButtonClick: (String, String) -> Unit,
 ) {
@@ -187,6 +190,7 @@ fun LoginComponent2(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(TextFieldDefaults.MinHeight),
+                enabled = loginSignUpState is LoginSignUpState.Nothing,
                 onClick = {
                     hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
                     onLoginConfirmButtonClick(accountText, passwordText)

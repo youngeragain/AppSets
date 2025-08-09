@@ -2,23 +2,21 @@
 
 package xcj.app.appsets.ui.compose.content_selection
 
+import android.Manifest
 import android.content.Context
 import android.graphics.Color
 import android.net.Uri
 import android.provider.MediaStore
 import androidx.camera.view.PreviewView
 import androidx.camera.view.PreviewView.ImplementationMode
-import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.AnimationState
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateTo
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
-import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -51,6 +49,7 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilledTonalButton
@@ -81,13 +80,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.onPlaced
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -101,23 +105,55 @@ import xcj.app.appsets.ui.compose.content_selection.ContentSelectionRequest.Sele
 import xcj.app.appsets.ui.compose.custom_component.AnyImage
 import xcj.app.appsets.ui.compose.custom_component.LoadMoreHandler
 import xcj.app.appsets.ui.compose.custom_component.SwipeContainer
-import xcj.app.appsets.ui.compose.theme.NoCornerShape
 import xcj.app.appsets.util.model.MediaStoreDataUri
 import xcj.app.appsets.util.model.UriProvider
 import xcj.app.compose_share.components.DesignTextField
 import xcj.app.compose_share.components.DesignVDivider
+import xcj.app.starter.android.ui.model.PlatformPermissionsUsage
+import xcj.app.starter.android.usecase.PlatformUseCase
 import java.io.File
 
 enum class DragValue { Start, Center, End }
 
-val defaultSelectionTypeParam = listOf(
-    SelectionTypeParam(ContentSelectionTypes.IMAGE, 1),
-    SelectionTypeParam(ContentSelectionTypes.VIDEO, 1),
-    SelectionTypeParam(ContentSelectionTypes.AUDIO, 1),
-    SelectionTypeParam(ContentSelectionTypes.FILE, 1),
-    SelectionTypeParam(ContentSelectionTypes.LOCATION, 1),
-    SelectionTypeParam(ContentSelectionTypes.CAMERA, 1),
-)
+val defaultAllSelectionTypeParam:List<SelectionTypeParam>
+    get() = listOf(
+        SelectionTypeParam(ContentSelectionTypes.IMAGE, 1),
+        SelectionTypeParam(ContentSelectionTypes.VIDEO, 1),
+        SelectionTypeParam(ContentSelectionTypes.AUDIO, 1),
+        SelectionTypeParam(ContentSelectionTypes.FILE, 1),
+        SelectionTypeParam(ContentSelectionTypes.LOCATION, 1),
+        SelectionTypeParam(ContentSelectionTypes.CAMERA, 1),
+    )
+
+val defaultImageSelectionTypeParam: List<SelectionTypeParam>
+    get() = listOf(
+        SelectionTypeParam(ContentSelectionTypes.IMAGE, 1)
+    )
+
+val defaultVideoSelectionTypeParam: List<SelectionTypeParam>
+    get()  = listOf(
+        SelectionTypeParam(ContentSelectionTypes.VIDEO, 1)
+    )
+
+val defaultAudioSelectionTypeParam: List<SelectionTypeParam>
+    get() = listOf(
+        SelectionTypeParam(ContentSelectionTypes.AUDIO, 1)
+    )
+
+val defaultFileSelectionTypeParam : List<SelectionTypeParam>
+    get() = listOf(
+        SelectionTypeParam(ContentSelectionTypes.FILE, 1)
+    )
+
+val defaultLocationSelectionTypeParam : List<SelectionTypeParam>
+    get() = listOf(
+        SelectionTypeParam(ContentSelectionTypes.LOCATION, 1)
+    )
+
+val defaultCameraSelectionTypeParam : List<SelectionTypeParam>
+    get() = listOf(
+        SelectionTypeParam(ContentSelectionTypes.CAMERA, 1)
+    )
 
 data class ContentSelectionTab(
     val selectionType: String,
@@ -143,14 +179,12 @@ data class ContentSelectionRequest(
 
 sealed interface ContentSelectionResult {
     val context: Context
-    val requestKey: String
-    val contextPageName: String
+    val request: ContentSelectionRequest
     val selectType: String
 
     data class RichMediaContentSelectionResult(
         override val context: Context,
-        override val requestKey: String,
-        override val contextPageName: String,
+        override val request: ContentSelectionRequest,
         override val selectType: String,
         val selectItems: List<UriProvider>,
     ) : ContentSelectionResult
@@ -163,8 +197,7 @@ sealed interface ContentSelectionResult {
 
     data class LocationContentSelectionResult(
         override val context: Context,
-        override val requestKey: String,
-        override val contextPageName: String,
+        override val request: ContentSelectionRequest,
         override val selectType: String,
         val locationInfo: LocationInfo,
     ) : ContentSelectionResult
@@ -305,17 +338,31 @@ fun CameraContentSelection(
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
+    val coroutineScope = rememberCoroutineScope()
     val cameraComponents = remember {
         CameraComponents().apply {
             create(context)
         }
     }
-    val coroutineScope = rememberCoroutineScope()
     val capturedPicture = remember {
         mutableStateOf<File?>(null)
     }
     val capturedPictureIsSelect = remember {
         mutableStateOf(false)
+    }
+    var swipeableState by remember {
+        mutableStateOf(DragValue.Start)
+    }
+    val alphaAnimation = remember {
+        AnimationState(1f)
+    }
+    var hasCameraPermission by remember {
+        mutableStateOf(false)
+    }
+    LaunchedEffect(true) {
+        hasCameraPermission = PlatformUseCase.hasPlatformPermissions(
+            context,
+            listOf(Manifest.permission.CAMERA))
     }
     DisposableEffect(Unit) {
         onDispose {
@@ -334,17 +381,12 @@ fun CameraContentSelection(
         verticalArrangement = Arrangement.spacedBy(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        val swipeableState = remember {
-            mutableStateOf(DragValue.Start)
-        }
-        val alphaAnimation = remember {
-            AnimationState(1f)
-        }
-        Card(
+
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
+                .border(1.dp, MaterialTheme.colorScheme.outline, MaterialTheme.shapes.extraLarge)
                 .weight(1f),
-            shape = MaterialTheme.shapes.extraLarge
         ) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 AndroidView(
@@ -360,7 +402,7 @@ fun CameraContentSelection(
                 ) {
                     cameraComponents.bindToLifecycle(lifecycleOwner, it)
                 }
-                if (alphaAnimation.value > 0f) {
+                if (swipeableState!= DragValue.End) {
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
@@ -370,7 +412,28 @@ fun CameraContentSelection(
                             .background(MaterialTheme.colorScheme.surface),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text(stringResource(xcj.app.appsets.R.string.slide_to_enable_camera_preview))
+
+                        Column(
+                            modifier = Modifier.animateContentSize(),
+                            verticalArrangement = Arrangement.spacedBy(12.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(stringResource(xcj.app.appsets.R.string.slide_to_enable_camera_preview))
+                            if(!hasCameraPermission){
+                                Text(
+                                    text = stringResource(
+                                        xcj.app.appsets.R.string.no_x_permission,
+                                        stringResource(xcj.app.appsets.R.string.camera)),
+                                    color = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.clickable(
+                                        onClick = {
+
+                                        }
+                                    )
+                                )
+                            }
+
+                        }
                     }
                 }
             }
@@ -415,8 +478,7 @@ fun CameraContentSelection(
                                     val results =
                                         ContentSelectionResult.RichMediaContentSelectionResult(
                                             context,
-                                            request.requestKey,
-                                            request.contextName,
+                                            request,
                                             ContentSelectionTypes.IMAGE,
                                             selectedContents
                                         )
@@ -443,10 +505,10 @@ fun CameraContentSelection(
             Box(Modifier.align(Alignment.TopCenter)) {
                 SwipeContainer(
                     onDragValueChanged = { dragValue ->
-                        if (swipeableState.value == dragValue) {
+                        if (swipeableState == dragValue) {
                             return@SwipeContainer
                         }
-                        swipeableState.value = dragValue
+                        swipeableState = dragValue
                         if (dragValue == DragValue.End) {
                             cameraComponents.startCamera()
                         } else {
@@ -454,18 +516,18 @@ fun CameraContentSelection(
                         }
                         coroutineScope.launch {
                             alphaAnimation.animateTo(
-                                if (swipeableState.value == DragValue.Start) {
+                                if (swipeableState == DragValue.Start) {
                                     1f
                                 } else {
                                     0f
-                                }, tween(450)
+                                }, tween(350)
                             )
                         }
                     },
                     dragContent = {
                         IconButton(
                             onClick = {
-                                if (swipeableState.value != DragValue.End) {
+                                if (swipeableState != DragValue.End) {
                                     return@IconButton
                                 }
                                 coroutineScope.launch {
@@ -493,6 +555,22 @@ fun LocationContentSelection(
     onContentSelected: (ContentSelectionResult) -> Unit,
 ) {
     val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+    var swipeableState by remember {
+        mutableStateOf(DragValue.Start)
+    }
+    val alphaAnimation = remember {
+        AnimationState(1f)
+    }
+    var hasLocationPermission by remember {
+        mutableStateOf(false)
+    }
+    LaunchedEffect(true) {
+        hasLocationPermission = PlatformUseCase.hasPlatformPermissions(
+            context,
+            listOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)
+        )
+    }
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -500,32 +578,99 @@ fun LocationContentSelection(
         verticalArrangement = Arrangement.spacedBy(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Card(
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
+                .clip(MaterialTheme.shapes.extraLarge)
+                .border(1.dp, MaterialTheme.colorScheme.outline, MaterialTheme.shapes.extraLarge)
                 .weight(1f),
-            shape = MaterialTheme.shapes.extraLarge
         ) {
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
 
+                if (swipeableState!= DragValue.End) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .graphicsLayer {
+                                alpha = alphaAnimation.value
+                            }
+                            .background(MaterialTheme.colorScheme.surface),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(
+                            modifier = Modifier.animateContentSize(),
+                            verticalArrangement = Arrangement.spacedBy(12.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(text = stringResource(xcj.app.appsets.R.string.slide_to_enable_location_preview))
+                            if(!hasLocationPermission){
+                                Text(
+                                    text = stringResource(
+                                        xcj.app.appsets.R.string.no_x_permission,
+                                        stringResource(xcj.app.appsets.R.string.location)),
+                                    color = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.clickable(
+                                        onClick = {
+
+                                        }
+                                    ),
+
+                                )
+                            }
+
+                        }
+                    }
+                }
+            }
         }
-        IconButton(onClick = {
-            val locationInfo = ContentSelectionResult.LocationInfo(
-                coordinate = "104.066284,30.572938",
-                info = "四川省成都市武侯区锦悦西路2"
-            )
-            val results = ContentSelectionResult.LocationContentSelectionResult(
-                context,
-                request.requestKey,
-                request.contextName,
-                ContentSelectionTypes.LOCATION,
-                locationInfo
-            )
-            onContentSelected(results)
-        }) {
-            Icon(
-                painter = painterResource(xcj.app.compose_share.R.drawable.ic_location_on_24),
-                contentDescription = "location"
-            )
+        Box(Modifier.fillMaxWidth()) {
+            Box(Modifier.align(Alignment.TopCenter)) {
+                SwipeContainer(
+                    onDragValueChanged = { dragValue ->
+                        if (swipeableState == dragValue) {
+                            return@SwipeContainer
+                        }
+                        swipeableState = dragValue
+                        if (dragValue == DragValue.End) {
+
+                        } else {
+
+                        }
+                        coroutineScope.launch {
+                            alphaAnimation.animateTo(
+                                if (swipeableState == DragValue.Start) {
+                                    1f
+                                } else {
+                                    0f
+                                }, tween(350)
+                            )
+                        }
+                    },
+                    dragContent = {
+                        IconButton(onClick = {
+                            if(swipeableState!= DragValue.End){
+                                return@IconButton
+                            }
+                            val locationInfo = ContentSelectionResult.LocationInfo(
+                                coordinate = "104.066284,30.572938",
+                                info = "四川省成都市武侯区锦悦西路2"
+                            )
+                            val results = ContentSelectionResult.LocationContentSelectionResult(
+                                context,
+                                request,
+                                ContentSelectionTypes.LOCATION,
+                                locationInfo
+                            )
+                            onContentSelected(results)
+                        }) {
+                            Icon(
+                                painter = painterResource(xcj.app.compose_share.R.drawable.ic_location_on_24),
+                                contentDescription = "location"
+                            )
+                        }
+                    }
+                )
+            }
         }
     }
 }
@@ -536,7 +681,10 @@ fun PictureContentSelection(
     request: ContentSelectionRequest,
     onContentSelected: (ContentSelectionResult) -> Unit,
 ) {
+
     val context = LocalContext.current
+    val density = LocalDensity.current
+    val hapticFeedback = LocalHapticFeedback.current
     val contentSelectionResultsProvider = remember {
         ContentSelectionResultsProvider().apply {
             mediaStoreType = MediaStore.Images::class.java
@@ -574,8 +722,8 @@ fun PictureContentSelection(
     var boxSize by remember {
         mutableStateOf(IntSize.Zero)
     }
-    val density = LocalDensity.current
-    val itemHeight by remember {
+
+    val itemHeightDp by remember {
         derivedStateOf {
             with(density) {
                 (boxSize.width.toDp() - 2.dp * 6) / 3
@@ -610,56 +758,39 @@ fun PictureContentSelection(
                         modifier = Modifier
                             .fillMaxWidth()
                             .animateContentSize()
-                            .clickable(
-                                onClick = {
-                                    val isSelected =
-                                        selectedContents.firstOrNull { it == contentUriProvider } != null
-                                    if (isSelected) {
-                                        selectedContents.removeIf { it == contentUriProvider }
-                                    } else if (selectedContents.size >= request.selectionTypeMaxCount(
-                                            ContentSelectionTypes.IMAGE
-                                        )
-                                    ) {
-                                        return@clickable
-                                    } else {
-                                        selectedContents.add(contentUriProvider)
-                                    }
-                                }
-                            )
                     ) {
-                        val isSelected =
-                            selectedContents.firstOrNull { it == contentUriProvider } != null
-                        AnimatedContent(
-                            targetState = isSelected,
-                            transitionSpec = {
-                                (fadeIn(animationSpec = tween(450)) +
-                                        scaleIn(
-                                            initialScale = 1.22f,
-                                            animationSpec = tween(450)
-                                        ))
-                                    .togetherWith(
-                                        fadeOut(animationSpec = tween(450)) + scaleOut(
-                                            targetScale = 0.82f,
-                                            animationSpec = tween(450)
-                                        )
-                                    )
-                            }
-                        ) { targetIsSelected ->
-                            AnyImage(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(itemHeight)
-                                    .clip(
-                                        if (targetIsSelected) {
-                                            CircleShape
+                        val itemClipShape = calculateItemClipShape(
+                            itemHeightDp, 
+                            selectedContents, 
+                            contentUriProvider
+                        )
+                        AnyImage(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(itemHeightDp)
+                                .clip(itemClipShape)
+                                .clickable(
+                                    onClick = {
+                                        val selectionTypeMaxCount =
+                                            request.selectionTypeMaxCount(ContentSelectionTypes.IMAGE)
+                                        val isSelected =
+                                            selectedContents.firstOrNull { it == contentUriProvider } != null
+                                        if (isSelected) {
+                                            hapticFeedback.performHapticFeedback(HapticFeedbackType.ToggleOff)
+                                            selectedContents.removeIf { it == contentUriProvider }
+                                        } else if(selectionTypeMaxCount ==1){
+                                            selectedContents.clear()
+                                            selectedContents.add(contentUriProvider)
+                                        }else if (selectedContents.size >= selectionTypeMaxCount) {
+                                            return@clickable
                                         } else {
-                                            NoCornerShape
+                                            hapticFeedback.performHapticFeedback(HapticFeedbackType.ToggleOn)
+                                            selectedContents.add(contentUriProvider)
                                         }
-                                    ),
-                                any = contentUriProvider.provideUri()
-                            )
-                        }
-
+                                    }
+                                ),
+                            any = contentUriProvider.provideUri()
+                        )
                         if (isSearchMode) {
                             Column(
                                 modifier = Modifier.fillMaxWidth()
@@ -712,12 +843,46 @@ fun PictureContentSelection(
 }
 
 @Composable
+fun calculateItemClipShape(
+    itemHeightDp: Dp,
+    selectedContents:List<UriProvider>,
+    contentUriProvider: UriProvider
+): Shape {
+    val density = LocalDensity.current
+    val isSelected by remember {
+        derivedStateOf {
+            selectedContents.firstOrNull { it == contentUriProvider } != null
+        }
+    }
+
+    var clipShapeCornerSize by remember {
+        mutableStateOf(0.dp)
+    }
+    LaunchedEffect(isSelected) {
+        clipShapeCornerSize = if(isSelected){
+            with(density){
+                CircleShape.topStart.toPx(DpSize(itemHeightDp, itemHeightDp).toSize(), density).toDp()
+            }
+        }else{
+            0.dp
+        }
+    }
+    val clipShapeCornerSizeState by animateDpAsState(targetValue = clipShapeCornerSize, animationSpec = tween(350))
+    val clipShape by remember {
+        derivedStateOf {
+            RoundedCornerShape(clipShapeCornerSizeState)
+        }
+    }
+    return clipShape
+}
+
+@Composable
 fun VideoContentSelection(
     request: ContentSelectionRequest,
     onContentSelected: (ContentSelectionResult) -> Unit,
 ) {
     val context = LocalContext.current
-
+    val hapticFeedback = LocalHapticFeedback.current
     val contentSelectionResultsProvider = remember {
         ContentSelectionResultsProvider().apply {
             mediaStoreType = MediaStore.Video::class.java
@@ -767,58 +932,42 @@ fun VideoContentSelection(
                         .fillMaxSize()
                         .animateItem()
                         .animateContentSize()
-                        .clickable(
-                            onClick = {
-                                val isSelected =
-                                    selectedContents.firstOrNull { it == contentUriProvider } != null
-                                if (isSelected) {
-                                    selectedContents.removeIf { it == contentUriProvider }
-                                } else if (selectedContents.size >= request.selectionTypeMaxCount(
-                                        ContentSelectionTypes.VIDEO
-                                    )
-                                ) {
-                                    return@clickable
-                                } else {
-                                    selectedContents.add(contentUriProvider)
-                                }
-                            }
-                        )
                 ) {
                     Box(
                         modifier = Modifier.fillMaxSize()
                     ) {
-                        val isSelected =
-                            selectedContents.firstOrNull { it == contentUriProvider } != null
-                        AnimatedContent(
-                            targetState = isSelected,
-                            transitionSpec = {
-                                (fadeIn(animationSpec = tween(450)) +
-                                        scaleIn(
-                                            initialScale = 1.22f,
-                                            animationSpec = tween(450)
-                                        ))
-                                    .togetherWith(
-                                        fadeOut(animationSpec = tween(450)) + scaleOut(
-                                            targetScale = 0.82f,
-                                            animationSpec = tween(450)
-                                        )
-                                    )
-                            }
-                        ) { targetIsSelected ->
-                            AnyImage(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .height(250.dp)
-                                    .clip(
-                                        if (targetIsSelected) {
-                                            CircleShape
+                        val itemClipShape = calculateItemClipShape(
+                            250.dp,
+                            selectedContents,
+                            contentUriProvider
+                        )
+                        AnyImage(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .height(250.dp)
+                                .clip(itemClipShape)
+                                .clickable(
+                                    onClick = {
+                                        val selectionTypeMaxCount =
+                                            request.selectionTypeMaxCount(ContentSelectionTypes.VIDEO)
+                                        val isSelected =
+                                            selectedContents.firstOrNull { it == contentUriProvider } != null
+                                        if (isSelected) {
+                                            hapticFeedback.performHapticFeedback(HapticFeedbackType.ToggleOff)
+                                            selectedContents.removeIf { it == contentUriProvider }
+                                        } else if(selectionTypeMaxCount ==1){
+                                            selectedContents.clear()
+                                            selectedContents.add(contentUriProvider)
+                                        }else if (selectedContents.size >= selectionTypeMaxCount) {
+                                            return@clickable
                                         } else {
-                                            NoCornerShape
+                                            hapticFeedback.performHapticFeedback(HapticFeedbackType.ToggleOn)
+                                            selectedContents.add(contentUriProvider)
                                         }
-                                    ),
-                                any = contentUriProvider.provideUri()
-                            )
-                        }
+                                    }
+                                ),
+                            any = contentUriProvider.provideUri()
+                        )
 
                         FilledTonalIconButton(
                             modifier = Modifier.align(Alignment.Center),
@@ -888,6 +1037,8 @@ fun AudioContentSelection(
     onContentSelected: (ContentSelectionResult) -> Unit,
 ) {
     val context = LocalContext.current
+    val density = LocalDensity.current
+    val hapticFeedback = LocalHapticFeedback.current
     val contentSelectionResultsProvider = remember {
         ContentSelectionResultsProvider().apply {
             mediaStoreType = MediaStore.Audio::class.java
@@ -935,69 +1086,66 @@ fun AudioContentSelection(
             verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
             items(items = filteredContentUrls) { contentUriProvider ->
-                val isSelected =
-                    selectedContents.firstOrNull { it == contentUriProvider } != null
-                AnimatedContent(
-                    targetState = isSelected,
-                    transitionSpec = {
-                        (fadeIn(animationSpec = tween(450)) +
-                                scaleIn(
-                                    initialScale = 1.22f,
-                                    animationSpec = tween(450)
-                                ))
-                            .togetherWith(
-                                fadeOut(animationSpec = tween(450)) + scaleOut(
-                                    targetScale = 0.82f,
-                                    animationSpec = tween(450)
-                                )
-                            )
-                    },
-                    modifier = Modifier.animateItem()
-                ) { targetIsSelected ->
-                    OutlinedCard(
+                var itemSize by remember {
+                    mutableStateOf(IntSize.Zero)
+                }
+                val itemHeightDp by remember {
+                    derivedStateOf {
+                        with(density){itemSize.height.toDp()}
+                    }
+                }
+                val itemClipShape = calculateItemClipShape(
+                    itemHeightDp,
+                    selectedContents,
+                    contentUriProvider
+                )
+                OutlinedCard(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .onPlaced{
+                            itemSize = it.size
+                        }
+                        .clip(itemClipShape)
+                        .clickable {
+                            val selectionTypeMaxCount =
+                                request.selectionTypeMaxCount(ContentSelectionTypes.AUDIO)
+                            val isSelected =
+                                selectedContents.firstOrNull { it == contentUriProvider } != null
+                            if (isSelected) {
+                                hapticFeedback.performHapticFeedback(HapticFeedbackType.ToggleOff)
+                                selectedContents.removeIf { it == contentUriProvider }
+                            } else if(selectionTypeMaxCount ==1){
+                                selectedContents.clear()
+                                selectedContents.add(contentUriProvider)
+                            }else if (selectedContents.size >= selectionTypeMaxCount) {
+                                return@clickable
+                            } else {
+                                hapticFeedback.performHapticFeedback(HapticFeedbackType.ToggleOn)
+                                selectedContents.add(contentUriProvider)
+                            }
+                        },
+                    shape = itemClipShape,
+                )
+                {
+                    Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clickable {
-                                val isSelected =
-                                    selectedContents.firstOrNull { it == contentUriProvider } != null
-                                if (isSelected) {
-                                    selectedContents.removeIf { it == contentUriProvider }
-                                } else if (selectedContents.size >= request.selectionTypeMaxCount(
-                                        ContentSelectionTypes.AUDIO
-                                    )
-                                ) {
-                                    return@clickable
-                                } else {
-                                    selectedContents.add(contentUriProvider)
-                                }
-                            },
-                        shape = if (targetIsSelected) {
-                            CircleShape
-                        } else {
-                            MaterialTheme.shapes.large
-                        },
+                            .padding(12.dp),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(12.dp),
-                            horizontalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            Icon(
-                                painter = painterResource(xcj.app.compose_share.R.drawable.ic_audiotrack_24),
-                                contentDescription = "file_icon"
-                            )
+                        Icon(
+                            painter = painterResource(xcj.app.compose_share.R.drawable.ic_audiotrack_24),
+                            contentDescription = "file_icon"
+                        )
 
-                            val mediaStoreWrapper =
-                                (contentUriProvider as? MediaStoreDataUri)
-                            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                                Text(text = mediaStoreWrapper?.displayName ?: "")
-                                Text(text = mediaStoreWrapper?.sizeReadable ?: "", fontSize = 12.sp)
-                            }
+                        val mediaStoreWrapper =
+                            (contentUriProvider as? MediaStoreDataUri)
+                        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                            Text(text = mediaStoreWrapper?.displayName ?: "")
+                            Text(text = mediaStoreWrapper?.sizeReadable ?: "", fontSize = 12.sp)
                         }
                     }
                 }
-
             }
         }
         if (
@@ -1035,6 +1183,8 @@ fun FileContentSelection(
     onContentSelected: (ContentSelectionResult) -> Unit,
 ) {
     val context = LocalContext.current
+    val density = LocalDensity.current
+    val hapticFeedback = LocalHapticFeedback.current
     val contentSelectionResultsProvider = remember {
         ContentSelectionResultsProvider().apply {
             mediaStoreType = MediaStore.Files::class.java
@@ -1082,68 +1232,65 @@ fun FileContentSelection(
             verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
             items(items = filteredContentUrls) { contentUriProvider ->
-                val isSelected =
-                    selectedContents.firstOrNull { it == contentUriProvider } != null
-                AnimatedContent(
-                    targetState = isSelected,
-                    transitionSpec = {
-                        (fadeIn(animationSpec = tween(450)) +
-                                scaleIn(
-                                    initialScale = 1.22f,
-                                    animationSpec = tween(450)
-                                ))
-                            .togetherWith(
-                                fadeOut(animationSpec = tween(450)) + scaleOut(
-                                    targetScale = 0.82f,
-                                    animationSpec = tween(450)
-                                )
-                            )
-                    },
-                    modifier = Modifier.animateItem()
-                ) { targetIsSelected ->
-                    OutlinedCard(
+                var itemSize by remember {
+                    mutableStateOf(IntSize.Zero)
+                }
+                val itemHeightDp by remember {
+                    derivedStateOf {
+                        with(density){itemSize.height.toDp()}
+                    }
+                }
+                val itemClipShape = calculateItemClipShape(
+                    itemHeightDp,
+                    selectedContents,
+                    contentUriProvider
+                )
+                OutlinedCard(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .onPlaced{
+                            itemSize = it.size
+                        }
+                        .clip(itemClipShape)
+                        .clickable {
+                            val selectionTypeMaxCount =
+                                request.selectionTypeMaxCount(ContentSelectionTypes.FILE)
+                            val isSelected =
+                                selectedContents.firstOrNull { it == contentUriProvider } != null
+                            if (isSelected) {
+                                hapticFeedback.performHapticFeedback(HapticFeedbackType.ToggleOff)
+                                selectedContents.removeIf { it == contentUriProvider }
+                            } else if(selectionTypeMaxCount ==1){
+                                selectedContents.clear()
+                                selectedContents.add(contentUriProvider)
+                            }else if (selectedContents.size >= selectionTypeMaxCount) {
+                                return@clickable
+                            } else {
+                                hapticFeedback.performHapticFeedback(HapticFeedbackType.ToggleOn)
+                                selectedContents.add(contentUriProvider)
+                            }
+                        },
+                    shape = itemClipShape,
+                )
+                {
+                    Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clickable {
-                                val isSelected =
-                                    selectedContents.firstOrNull { it == contentUriProvider } != null
-                                if (isSelected) {
-                                    selectedContents.removeIf { it == contentUriProvider }
-                                } else if (selectedContents.size >= request.selectionTypeMaxCount(
-                                        ContentSelectionTypes.FILE
-                                    )
-                                ) {
-                                    return@clickable
-                                } else {
-                                    selectedContents.add(contentUriProvider)
-                                }
-                            },
-                        shape = if (targetIsSelected) {
-                            CircleShape
-                        } else {
-                            MaterialTheme.shapes.large
-                        },
+                            .padding(12.dp),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(12.dp),
-                            horizontalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            Icon(
-                                painter = painterResource(xcj.app.compose_share.R.drawable.ic_insert_drive_file_24),
-                                contentDescription = "file_icon"
-                            )
-                            val mediaStoreWrapper =
-                                contentUriProvider as? MediaStoreDataUri
-                            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                                Text(text = mediaStoreWrapper?.displayName ?: "")
-                                Text(text = mediaStoreWrapper?.sizeReadable ?: "", fontSize = 12.sp)
-                            }
+                        Icon(
+                            painter = painterResource(xcj.app.compose_share.R.drawable.ic_insert_drive_file_24),
+                            contentDescription = "file_icon"
+                        )
+                        val mediaStoreWrapper =
+                            contentUriProvider as? MediaStoreDataUri
+                        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                            Text(text = mediaStoreWrapper?.displayName ?: "")
+                            Text(text = mediaStoreWrapper?.sizeReadable ?: "", fontSize = 12.sp)
                         }
                     }
                 }
-
             }
         }
 
@@ -1190,6 +1337,8 @@ fun BottomActions(
     onContentSelected: (ContentSelectionResult) -> Unit,
 ) {
     val context = LocalContext.current
+    val hapticFeedback = LocalHapticFeedback.current
+    val isReachMinCount by rememberUpdatedState(selectedContents.isNotEmpty())
     val isSystemInDarkTheme = isSystemInDarkTheme()
     val gradientColors = listOf(
         androidx.compose.ui.graphics.Color.Transparent,
@@ -1199,7 +1348,7 @@ fun BottomActions(
             androidx.compose.ui.graphics.Color.White
         }
     )
-    val isReachMinCount by rememberUpdatedState(selectedContents.isNotEmpty())
+
     Box(
         modifier = modifier
             .fillMaxWidth()
@@ -1214,63 +1363,55 @@ fun BottomActions(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(12.dp),
+                .padding(12.dp)
+                .animateContentSize(alignment = Alignment.BottomCenter),
             horizontalAlignment = Alignment.CenterHorizontally
         )
         {
-            AnimatedVisibility(
-                visible = isSearchMode,
-                enter = fadeIn(),
-                exit = fadeOut()
-            ) {
-                DesignTextField(
-                    modifier = Modifier
-                        .defaultMinSize(minHeight = 42.dp),
-                    textStyle = LocalTextStyle.current.copy(fontSize = 12.sp),
-                    value = searchText,
-                    onValueChange = {
-                        onSearchContentChanged(it)
-                    },
-                    placeholder = {
-                        Text(
-                            text = stringResource(xcj.app.appsets.R.string.search),
-                            fontSize = 12.sp
-                        )
-                    },
-                    colors = TextFieldDefaults.colors(
-                        unfocusedIndicatorColor = androidx.compose.ui.graphics.Color.Transparent,
-                        focusedIndicatorColor = androidx.compose.ui.graphics.Color.Transparent
-                    )
-                )
-            }
-
-
-
-            AnimatedVisibility(
-                visible = isReachMinCount,
-                enter = fadeIn(),
-                exit = fadeOut()
-            ) {
-                FilledTonalButton(
-                    modifier = Modifier
-                        .defaultMinSize(minHeight = 42.dp)
-                        .width(TextFieldDefaults.MinWidth),
-                    onClick = {
-                        val results =
-                            ContentSelectionResult.RichMediaContentSelectionResult(
-                                context,
-                                request.requestKey,
-                                request.contextName,
-                                contentSelectionType,
-                                selectedContents
+            if(isSearchMode){
+                Box(modifier = Modifier.padding(vertical = 6.dp)){
+                    DesignTextField(
+                        modifier = Modifier,
+                        textStyle = LocalTextStyle.current.copy(fontSize = 12.sp),
+                        value = searchText,
+                        onValueChange = {
+                            onSearchContentChanged(it)
+                        },
+                        placeholder = {
+                            Text(
+                                text = stringResource(xcj.app.appsets.R.string.search),
+                                fontSize = 12.sp
                             )
-                        onContentSelected(results)
-                    }
-                ) {
-                    Text(text = stringResource(xcj.app.appsets.R.string.confirm))
+                        },
+                        colors = TextFieldDefaults.colors(
+                            unfocusedIndicatorColor = androidx.compose.ui.graphics.Color.Transparent,
+                            focusedIndicatorColor = androidx.compose.ui.graphics.Color.Transparent
+                        )
+                    )
                 }
             }
-
+            if(isReachMinCount){
+                Box(modifier = Modifier.padding(vertical = 6.dp)){
+                    FilledTonalButton(
+                        modifier = Modifier
+                            .width(TextFieldDefaults.MinWidth)
+                            .height(TextFieldDefaults.MinHeight),
+                        onClick = {
+                            hapticFeedback.performHapticFeedback(HapticFeedbackType.Confirm)
+                            val results =
+                                ContentSelectionResult.RichMediaContentSelectionResult(
+                                    context,
+                                    request,
+                                    contentSelectionType,
+                                    selectedContents
+                                )
+                            onContentSelected(results)
+                        }
+                    ) {
+                        Text(text = stringResource(xcj.app.appsets.R.string.confirm))
+                    }
+                }
+            }
             Box(
                 modifier = Modifier.fillMaxWidth()
             ) {
@@ -1279,6 +1420,7 @@ fun BottomActions(
                         .size(TextFieldDefaults.MinHeight)
                         .align(Alignment.CenterStart),
                     onClick = {
+                        hapticFeedback.performHapticFeedback(HapticFeedbackType.ContextClick)
                         onSearchModeChanged(!isSearchMode)
                     }
                 ) {
@@ -1328,7 +1470,10 @@ fun BottomActions(
                     modifier = Modifier
                         .size(TextFieldDefaults.MinHeight)
                         .align(Alignment.CenterEnd),
-                    onClick = onActionClick
+                    onClick = {
+                        hapticFeedback.performHapticFeedback(HapticFeedbackType.ContextClick)
+                        onActionClick()
+                    }
                 ) {
                     Icon(
                         painter = painterResource(actionIcon),

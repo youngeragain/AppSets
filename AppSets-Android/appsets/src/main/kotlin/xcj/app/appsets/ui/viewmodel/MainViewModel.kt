@@ -122,7 +122,7 @@ class MainViewModel : BaseIMViewModel() {
                     return
                 }
                 val contentUriList = contentSelectionResult.selectItems
-                when (contentSelectionResult.contextPageName) {
+                when (contentSelectionResult.request.contextName) {
 
                     PageRouteNames.CreateScreenPage -> {
                         screenPostUseCase.updateSelectPictures(contentUriList)
@@ -142,7 +142,7 @@ class MainViewModel : BaseIMViewModel() {
                 if (contentSelectionResult !is ContentSelectionResult.RichMediaContentSelectionResult) {
                     return
                 }
-                when (contentSelectionResult.contextPageName) {
+                when (contentSelectionResult.request.contextName) {
                     PageRouteNames.CreateScreenPage -> {
                         screenPostUseCase.updateSelectVideo(
                             contentSelectionResult.selectItems

@@ -6,6 +6,7 @@ import androidx.compose.animation.core.exponentialDecay
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.AnchoredDraggableState
 import androidx.compose.foundation.gestures.DraggableAnchors
 import androidx.compose.foundation.gestures.Orientation
@@ -20,6 +21,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
@@ -44,7 +46,8 @@ fun SwipeContainer(
                 state = state,
                 orientation = Orientation.Horizontal
             )
-            .background(MaterialTheme.colorScheme.outline, CircleShape)
+            .clip(CircleShape)
+            .border(1.dp, MaterialTheme.colorScheme.outline, CircleShape)
     ) {
         Box(
             Modifier
@@ -56,7 +59,7 @@ fun SwipeContainer(
                     )
                 }
                 .size(squareSize)
-                .background(MaterialTheme.colorScheme.tertiaryContainer, CircleShape)
+                .background(MaterialTheme.colorScheme.secondaryContainer, CircleShape)
         ) {
             dragContent()
         }

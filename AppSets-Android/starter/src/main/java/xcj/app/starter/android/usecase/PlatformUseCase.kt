@@ -4,6 +4,7 @@ import android.Manifest
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.os.PowerManager
@@ -21,6 +22,22 @@ class PlatformUseCase {
         private const val TAG = "PlatformUseCase"
         private const val ANDROID_PERMISSIONS_REQUEST_CODE = 8899
         const val REQUEST_CODE_FOR_FILE_PROVIDER = 2221
+
+        fun hasPlatformPermissions(context: Context, permissions: List<String>): Boolean {
+            permissions.forEach { permission ->
+                val checkSelfPermissionResult = context.checkSelfPermission(permission)
+                PurpleLogger.current.d(
+                    TAG,
+                    "hasPlatformPermissions, permission:$permission, granted:${
+                        checkSelfPermissionResult == PackageManager.PERMISSION_GRANTED
+                    }"
+                )
+                if (checkSelfPermissionResult == PackageManager.PERMISSION_DENIED) {
+                    return false
+                }
+            }
+            return true
+        }
 
         fun providePlatformPermissions(context: Context): List<PlatformPermissionsUsage> {
             val platformPermissionsUsages = PlatformPermissionsUsage.provideAll(context)

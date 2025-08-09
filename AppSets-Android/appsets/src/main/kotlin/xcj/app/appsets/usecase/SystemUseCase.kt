@@ -56,7 +56,7 @@ class SelectedContentsStateHolder {
 
     fun updateSelectedContent(contentSelectionResult: ContentSelectionResult) {
         val selectedContents = selectedContentsState.value
-        selectedContents.contents.put(contentSelectionResult.requestKey, contentSelectionResult)
+        selectedContents.contents.put(contentSelectionResult.request.requestKey, contentSelectionResult)
         selectedContentsState.value = SelectedContents(selectedContents.contents)
     }
 }

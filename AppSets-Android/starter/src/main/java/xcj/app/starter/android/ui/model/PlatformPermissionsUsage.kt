@@ -22,22 +22,6 @@ data class PlatformPermissionsUsage(
 
         private const val TAG = "PlatformPermissionsUsage"
 
-        private fun hasPlatformPermissions(context: Context, permissions: List<String>): Boolean {
-            permissions.forEach { permission ->
-                val checkSelfPermissionResult = context.checkSelfPermission(permission)
-                PurpleLogger.current.d(
-                    TAG,
-                    "hasPlatformPermissions, permission:$permission, granted:${
-                        checkSelfPermissionResult == PackageManager.PERMISSION_GRANTED
-                    }"
-                )
-                if (checkSelfPermissionResult == PackageManager.PERMISSION_DENIED) {
-                    return false
-                }
-            }
-            return true
-        }
-
         private fun withCheck(
             context: Context,
             name: String,
@@ -46,7 +30,7 @@ data class PlatformPermissionsUsage(
             description: String,
             usage: String,
             usageUri: Uri?,
-            checker: (context: Context, permissions: List<String>) -> Boolean = ::hasPlatformPermissions
+            checker: (context: Context, permissions: List<String>) -> Boolean = PlatformUseCase::hasPlatformPermissions
         ): PlatformPermissionsUsage {
             val hasPlatformPermissions = checker(
                 context,

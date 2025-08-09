@@ -117,7 +117,8 @@ import xcj.app.appsets.ui.compose.apps.tools.TOOL_TYPE_AppSets_Share
 import xcj.app.appsets.ui.compose.camera.CameraComposeActivity
 import xcj.app.appsets.ui.compose.content_selection.ContentSelectSheetContent
 import xcj.app.appsets.ui.compose.content_selection.ContentSelectionRequest
-import xcj.app.appsets.ui.compose.content_selection.defaultSelectionTypeParam
+import xcj.app.appsets.ui.compose.content_selection.defaultAllSelectionTypeParam
+import xcj.app.appsets.ui.compose.content_selection.defaultImageSelectionTypeParam
 import xcj.app.appsets.ui.compose.conversation.ConversationDetailsMoreInfoSheetContent
 import xcj.app.appsets.ui.compose.conversation.ConversationDetailsPage
 import xcj.app.appsets.ui.compose.conversation.ConversationOverviewPage
@@ -348,6 +349,7 @@ fun MainNaviHostPages(
                                 navController,
                                 PageRouteNames.CreateAppPage,
                                 requestKey,
+                                requestSelectionTypeParams = defaultImageSelectionTypeParam
                             )
                         },
                         onConfirmClick = {
@@ -851,6 +853,7 @@ fun MainNaviHostPages(
                             navController,
                             PageRouteNames.SignUpPage,
                             requestKey,
+                            requestSelectionTypeParams = defaultImageSelectionTypeParam
                         )
                     },
                     onConfirmClick = {
@@ -1013,6 +1016,7 @@ fun MainNaviHostPages(
                                 navController,
                                 PageRouteNames.CreateGroupPage,
                                 requestKey,
+                                requestSelectionTypeParams = defaultImageSelectionTypeParam
                             )
                         }
                     )
@@ -1152,6 +1156,7 @@ fun MainNaviHostPages(
                                 navController,
                                 PageRouteNames.UserProfilePage,
                                 requestKey,
+                                requestSelectionTypeParams = defaultImageSelectionTypeParam
                             )
                         },
                         onModifyProfileConfirmClick = {
@@ -1458,7 +1463,7 @@ fun showContentSelectionDialog(
     navController: NavController,
     contextName: String,
     requestKey: String,
-    requestSelectionTypeParams: List<ContentSelectionRequest.SelectionTypeParam> = defaultSelectionTypeParam,
+    requestSelectionTypeParams: List<ContentSelectionRequest.SelectionTypeParam> = defaultAllSelectionTypeParam,
     defaultSelectionType: String = requestSelectionTypeParams.first().selectionType,
 ) {
     val platformPermissionsUsageOfFile =

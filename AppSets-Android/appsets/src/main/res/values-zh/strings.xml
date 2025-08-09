@@ -378,6 +378,7 @@
     <string name="can_not_found_session_object">无法找到会话对象</string>
     <string name="please_choose_avatar">请选择一个图片作为头像!</string>
     <string name="slide_to_enable_camera_preview">滑动开启相机预览</string>
+    <string name="slide_to_enable_location_preview">滑动开启位置预览</string>
     <string name="only_for_learning_purpose">部分Logo资源，仅用于学习用途</string>
     <string name="appsets_share">AppSets 分享</string>
     <string name="appsets_share_description">使用分享功能，在本地共享数据</string>
@@ -456,5 +457,6 @@
     <string name="no_models_available">没有可用模型</string>
     <string name="remove">移除</string>
     <string name="there_is_nothing_here">什么都没有</string>
+    <string name="no_x_permission">还没有%s权限</string>
 
 </resources>
