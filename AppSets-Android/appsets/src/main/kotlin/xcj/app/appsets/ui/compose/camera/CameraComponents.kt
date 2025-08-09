@@ -5,8 +5,11 @@ import android.graphics.Bitmap
 import androidx.camera.core.ImageCapture
 import androidx.camera.core.ImageCaptureException
 import androidx.camera.core.ImageProxy
+import androidx.camera.mlkit.vision.MlKitAnalyzer
+import androidx.camera.view.CameraController
 import androidx.camera.view.LifecycleCameraController
 import androidx.camera.view.PreviewView
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.LifecycleOwner
 import xcj.app.appsets.annotation.PleaseAvoidQuickMultiClick
 import xcj.app.appsets.util.ktx.writeBitmap
@@ -14,6 +17,7 @@ import xcj.app.starter.android.util.PurpleLogger
 import xcj.app.starter.test.LocalAndroidContextFileDir
 import java.io.File
 import java.util.UUID
+import java.util.concurrent.Executor
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
@@ -22,33 +26,49 @@ class CameraComponents {
         private const val TAG = "CameraComponents"
     }
 
+    private lateinit var mainExecutor: Executor
     private lateinit var cameraExecutor: ExecutorService
     private lateinit var cameraTakeExecutor: ExecutorService
     private lateinit var cameraController: LifecycleCameraController
     private var preview: PreviewView? = null
 
-    fun create(context: Context) {
+    fun prepare(context: Context) {
+        mainExecutor = ContextCompat.getMainExecutor(context)
         cameraExecutor = Executors.newSingleThreadExecutor()
         cameraTakeExecutor = Executors.newSingleThreadExecutor()
         cameraController = LifecycleCameraController(context)
     }
 
+    fun attachPreview(preview: PreviewView){
+        this.preview = preview
+    }
+
+    fun detachPreview(){
+        this.preview = null
+    }
+
+    fun getCameraExecutor(): Executor{
+        return cameraExecutor
+    }
+
+    fun getCameraController(): CameraController{
+        return cameraController
+    }
+
     fun bindToLifecycle(
         lifecycleOwner: LifecycleOwner,
-        preview: PreviewView,
-        controllerApplier: (LifecycleCameraController.(ExecutorService) -> Unit)? = null,
     ) {
         PurpleLogger.current.d(TAG, "bindToLifecycle")
         cameraController.unbind()
-        controllerApplier?.invoke(cameraController, cameraExecutor)
         cameraController.bindToLifecycle(lifecycleOwner)
         //preview.setOnTouchListener { _, _ -> false } //no-op
-        this.preview = preview
     }
 
     fun close() {
         PurpleLogger.current.d(TAG, "close")
-        cameraController.unbind()
+        detachPreview()
+        removeImageAnalysisAnalyzer()
+        stopCamera()
         cameraExecutor.shutdown()
         cameraTakeExecutor.shutdown()
     }
@@ -64,7 +84,7 @@ class CameraComponents {
     }
 
     @PleaseAvoidQuickMultiClick
-    fun takePicture(pictureFileCallback: (File) -> Unit) {
+    fun takePicture(onPictureTaken: (File) -> Unit) {
         PurpleLogger.current.d(TAG, "takePicture")
         cameraController.imageCaptureMode = ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY
         cameraController.takePicture(
@@ -87,7 +107,7 @@ class CameraComponents {
                         TAG,
                         "takePicture, onCaptureSuccess, finish!, picture:$file"
                     )
-                    pictureFileCallback(file)
+                    onPictureTaken(file)
                 }
 
                 override fun onCaptureProcessProgressed(progress: Int) {
@@ -105,5 +125,17 @@ class CameraComponents {
                     PurpleLogger.current.d(TAG, "takePicture, onPostviewBitmapAvailable")
                 }
             })
+    }
+
+    fun clearOverlayIfNeeded() {
+        preview?.overlay?.clear()
+    }
+
+    fun setImageAnalysisAnalyzer(mlKitAnalyzer: MlKitAnalyzer) {
+        cameraController.setImageAnalysisAnalyzer(cameraExecutor, mlKitAnalyzer)
+    }
+
+    fun removeImageAnalysisAnalyzer() {
+        cameraController.clearImageAnalysisAnalyzer()
     }
 }

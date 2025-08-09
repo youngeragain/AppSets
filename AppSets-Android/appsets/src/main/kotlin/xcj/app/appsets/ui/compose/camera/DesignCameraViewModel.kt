@@ -1,5 +1,6 @@
 package xcj.app.appsets.ui.compose.camera
 
+import android.app.Activity
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.viewModelScope
 import com.google.mlkit.vision.barcode.common.Barcode
@@ -10,7 +11,7 @@ import xcj.app.appsets.usecase.QRCodeUseCase
 import xcj.app.compose_share.ui.viewmodel.AnyStateViewModel
 import xcj.app.starter.android.util.PurpleLogger
 
-class CameraComposeViewModel : AnyStateViewModel() {
+class DesignCameraViewModel : AnyStateViewModel() {
 
     companion object {
         private const val TAG = "CameraComposeViewModel"
@@ -27,7 +28,7 @@ class CameraComposeViewModel : AnyStateViewModel() {
         UserRepository.getInstance()
     )
 
-    fun updateCode(cameraActivity: CameraComposeActivity, barcode: Barcode) {
-        qrCodeUseCase.onScannedBarcode(cameraActivity, barcode)
+    fun updateCode(activity: Activity, barcode: Barcode) {
+        qrCodeUseCase.onScannedBarcode(activity, barcode)
     }
 }

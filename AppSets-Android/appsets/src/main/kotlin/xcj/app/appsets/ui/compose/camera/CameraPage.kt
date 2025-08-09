@@ -1,5 +1,8 @@
 package xcj.app.appsets.ui.compose.camera
 
+import android.app.Activity
+import androidx.camera.core.ImageAnalysis.COORDINATE_SYSTEM_VIEW_REFERENCED
+import androidx.camera.mlkit.vision.MlKitAnalyzer
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -20,16 +23,25 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.content.ContextCompat
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.google.mlkit.vision.barcode.BarcodeScannerOptions
+import com.google.mlkit.vision.barcode.BarcodeScanning
+import com.google.mlkit.vision.barcode.common.Barcode
 import xcj.app.appsets.ui.compose.LocalUseCaseOfQRCode
 import xcj.app.appsets.ui.compose.custom_component.DesignBottomBackButton
 import xcj.app.compose_share.components.BottomSheetContainer
@@ -38,6 +50,7 @@ import xcj.app.appsets.usecase.QRCodeUseCase
 import xcj.app.compose_share.components.LocalAnyStateProvider
 import xcj.app.compose_share.ui.viewmodel.AnyStateViewModel.Companion.bottomSheetState
 import xcj.app.starter.android.util.PurpleLogger
+import kotlin.collections.first
 
 private const val TAG = "CameraPage"
 
@@ -45,7 +58,7 @@ private const val TAG = "CameraPage"
 fun CameraPage(
     onBackClick: () -> Unit
 ) {
-    val viewModel = viewModel<CameraComposeViewModel>()
+    val viewModel = viewModel<DesignCameraViewModel>()
     CompositionLocalProvider(
         LocalUseCaseOfQRCode provides viewModel.qrCodeUseCase,
         LocalAnyStateProvider provides viewModel
@@ -60,11 +73,51 @@ fun CameraContent(
     modifier: Modifier = Modifier,
     onBackClick: () -> Unit
 ) {
+
+    val context = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
+    val qrCodeUseCase = LocalUseCaseOfQRCode.current
     val anyStateProvider = LocalAnyStateProvider.current
+
+    val viewModel = viewModel<DesignCameraViewModel>()
+    val cameraComponents = remember {
+        CameraComponents().apply {
+            prepare(context)
+        }
+    }
+
     val composeContainerState =
         anyStateProvider.bottomSheetState()
-    val qrCodeUseCase = LocalUseCaseOfQRCode.current
-    val scannedQRCodeInfo = qrCodeUseCase.scannedQRCodeInfo.value
+
+    val scannedQRCodeInfo by qrCodeUseCase.scannedQRCodeInfo
+
+    DisposableEffect(Unit) {
+        val options = BarcodeScannerOptions.Builder()
+            .setBarcodeFormats(Barcode.FORMAT_QR_CODE)
+            .build()
+        val barcodeScanner = BarcodeScanning.getClient(options)
+        val mlKitAnalyzer = MlKitAnalyzer(
+            listOf(barcodeScanner),
+            COORDINATE_SYSTEM_VIEW_REFERENCED,
+            ContextCompat.getMainExecutor(context)
+        ) { result: MlKitAnalyzer.Result ->
+            val barcodeResults = result.getValue(barcodeScanner)
+            if ((barcodeResults == null) ||
+                (barcodeResults.isEmpty()) ||
+                (barcodeResults.first() == null)
+            ) {
+                cameraComponents.clearOverlayIfNeeded()
+                return@MlKitAnalyzer
+            }
+            if(context is Activity){
+                viewModel.updateCode(context, barcodeResults[0])
+            }
+        }
+        cameraComponents.setImageAnalysisAnalyzer(mlKitAnalyzer)
+        onDispose {
+            cameraComponents.close()
+        }
+    }
 
     LaunchedEffect(scannedQRCodeInfo) {
         if (scannedQRCodeInfo == null) {
@@ -73,13 +126,17 @@ fun CameraContent(
         } else {
             PurpleLogger.current.d(TAG, "LaunchedEffect, composeContainerState.show()")
             composeContainerState.show {
-                when (scannedQRCodeInfo) {
+                val qRCodeInfoScannedState = scannedQRCodeInfo
+                if(qRCodeInfoScannedState ==null){
+                    return@show
+                }
+                when (qRCodeInfoScannedState) {
                     is QRCodeInfoScannedState.AppSetsQRCodeInfo -> {
-                        AppSetsQRCodeInfoHandlerSheetContent(scannedQRCodeInfo)
+                        AppSetsQRCodeInfoHandlerSheetContent(qRCodeInfoScannedState)
                     }
 
                     is QRCodeInfoScannedState.OthersQRCodeInfo -> {
-                        OthersQRCodeInfoHandlerSheetContent(scannedQRCodeInfo)
+                        OthersQRCodeInfoHandlerSheetContent(qRCodeInfoScannedState)
                     }
                 }
             }
@@ -94,7 +151,8 @@ fun CameraContent(
             },
             modifier = modifier.fillMaxSize()
         ) {
-            (it.context as CameraComposeActivity).startCamera(it)
+            cameraComponents.bindToLifecycle(lifecycleOwner)
+            cameraComponents.attachPreview(it)
         }
         Column(
             modifier = Modifier

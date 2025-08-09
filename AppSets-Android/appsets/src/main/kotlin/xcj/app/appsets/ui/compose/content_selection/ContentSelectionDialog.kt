@@ -9,7 +9,6 @@ import android.net.Uri
 import android.provider.MediaStore
 import androidx.camera.view.PreviewView
 import androidx.camera.view.PreviewView.ImplementationMode
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.AnimationState
 import androidx.compose.animation.core.animateDpAsState
@@ -29,7 +28,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -50,7 +48,6 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FilledTonalIconButton
@@ -109,7 +106,6 @@ import xcj.app.appsets.util.model.MediaStoreDataUri
 import xcj.app.appsets.util.model.UriProvider
 import xcj.app.compose_share.components.DesignTextField
 import xcj.app.compose_share.components.DesignVDivider
-import xcj.app.starter.android.ui.model.PlatformPermissionsUsage
 import xcj.app.starter.android.usecase.PlatformUseCase
 import java.io.File
 
@@ -341,13 +337,13 @@ fun CameraContentSelection(
     val coroutineScope = rememberCoroutineScope()
     val cameraComponents = remember {
         CameraComponents().apply {
-            create(context)
+            prepare(context)
         }
     }
-    val capturedPicture = remember {
+    var capturedPictureFile by remember {
         mutableStateOf<File?>(null)
     }
-    val capturedPictureIsSelect = remember {
+    var capturedPictureIsSelect by remember {
         mutableStateOf(false)
     }
     var swipeableState by remember {
@@ -366,8 +362,9 @@ fun CameraContentSelection(
     }
     DisposableEffect(Unit) {
         onDispose {
-            if (capturedPictureIsSelect.value) {
-                val pictureFile = capturedPicture.value
+            cameraComponents.close()
+            if (capturedPictureIsSelect) {
+                val pictureFile = capturedPictureFile
                 if (pictureFile != null && pictureFile.exists()) {
                     pictureFile.delete()
                 }
@@ -385,7 +382,6 @@ fun CameraContentSelection(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .border(1.dp, MaterialTheme.colorScheme.outline, MaterialTheme.shapes.extraLarge)
                 .weight(1f),
         ) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -400,7 +396,8 @@ fun CameraContentSelection(
                         preview
                     }
                 ) {
-                    cameraComponents.bindToLifecycle(lifecycleOwner, it)
+                    cameraComponents.bindToLifecycle(lifecycleOwner)
+                    cameraComponents.attachPreview(it)
                 }
                 if (swipeableState!= DragValue.End) {
                     Box(
@@ -442,7 +439,7 @@ fun CameraContentSelection(
         Box(Modifier.fillMaxWidth()) {
             Box(modifier = Modifier.align(Alignment.TopStart)) {
                 androidx.compose.animation.AnimatedVisibility(
-                    visible = capturedPicture.value != null,
+                    visible = capturedPictureFile != null,
                     enter = fadeIn(),
                     exit = fadeOut()
                 ) {
@@ -464,7 +461,7 @@ fun CameraContentSelection(
                                     MaterialTheme.shapes.extraLarge
                                 )
                                 .clickable {
-                                    val pictureFile = capturedPicture.value
+                                    val pictureFile = capturedPictureFile
                                     if (pictureFile == null) {
                                         return@clickable
                                     }
@@ -473,7 +470,7 @@ fun CameraContentSelection(
                                             return pictureFile.toUri()
                                         }
                                     }
-                                    capturedPictureIsSelect.value = true
+                                    capturedPictureIsSelect = true
                                     val selectedContents = listOf(pictureFileUri)
                                     val results =
                                         ContentSelectionResult.RichMediaContentSelectionResult(
@@ -484,7 +481,7 @@ fun CameraContentSelection(
                                         )
                                     onContentSelected(results)
                                 },
-                            any = capturedPicture.value
+                            any = capturedPictureFile
                         )
                         DesignVDivider(modifier = Modifier.height(32.dp))
                         Text(
@@ -492,9 +489,8 @@ fun CameraContentSelection(
                             modifier = Modifier.clickable(
                                 onClick = {
                                     coroutineScope.launch(Dispatchers.IO) {
-                                        val capturedPictureFile = capturedPicture.value
                                         capturedPictureFile?.delete()
-                                        capturedPicture.value = null
+                                        capturedPictureFile = null
                                     }
                                 }
                             )
@@ -530,10 +526,8 @@ fun CameraContentSelection(
                                 if (swipeableState != DragValue.End) {
                                     return@IconButton
                                 }
-                                coroutineScope.launch {
-                                    cameraComponents.takePicture { pictureFile ->
-                                        capturedPicture.value = pictureFile
-                                    }
+                                cameraComponents.takePicture { pictureFile ->
+                                    capturedPictureFile = pictureFile
                                 }
                             }
                         ) {
@@ -581,8 +575,6 @@ fun LocationContentSelection(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .clip(MaterialTheme.shapes.extraLarge)
-                .border(1.dp, MaterialTheme.colorScheme.outline, MaterialTheme.shapes.extraLarge)
                 .weight(1f),
         ) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -690,7 +682,7 @@ fun PictureContentSelection(
             mediaStoreType = MediaStore.Images::class.java
         }
     }
-    val contentUrls = contentSelectionResultsProvider.contentUris
+    val contentUris = contentSelectionResultsProvider.contentUris
     LaunchedEffect(true) {
         contentSelectionResultsProvider.load(context, true)
     }
@@ -710,7 +702,7 @@ fun PictureContentSelection(
     }
     val filteredContentUrls by remember {
         derivedStateOf {
-            contentUrls.filter {
+            contentUris.filter {
                 if (it is MediaStoreDataUri) {
                     it.displayName?.contains(searchText, true) == true
                 } else {
@@ -815,7 +807,7 @@ fun PictureContentSelection(
             }
         }
         if (
-            contentUrls.isEmpty()
+            contentUris.isEmpty()
         ) {
             Text(stringResource(xcj.app.appsets.R.string.there_is_nothing_here))
         }
@@ -824,6 +816,7 @@ fun PictureContentSelection(
             modifier = Modifier.align(Alignment.BottomCenter),
             request = request,
             contentSelectionType = ContentSelectionTypes.IMAGE,
+            devicesContents = contentUris,
             selectedContents = selectedContents,
             isSearchMode = isSearchMode,
             searchText = searchText,
@@ -888,7 +881,7 @@ fun VideoContentSelection(
             mediaStoreType = MediaStore.Video::class.java
         }
     }
-    val contentUrls = contentSelectionResultsProvider.contentUris
+    val contentUris = contentSelectionResultsProvider.contentUris
 
     val columnState = rememberLazyListState()
 
@@ -910,7 +903,7 @@ fun VideoContentSelection(
     }
     val filteredContentUrls by remember {
         derivedStateOf {
-            contentUrls.filter {
+            contentUris.filter {
                 if (it is MediaStoreDataUri) {
                     it.displayName?.contains(searchText, true) == true
                 } else {
@@ -1005,7 +998,7 @@ fun VideoContentSelection(
             }
         }
         if (
-            contentUrls.isEmpty()
+            contentUris.isEmpty()
         ) {
             Text(stringResource(xcj.app.appsets.R.string.there_is_nothing_here))
         }
@@ -1013,6 +1006,7 @@ fun VideoContentSelection(
             modifier = Modifier.align(Alignment.BottomCenter),
             request = request,
             contentSelectionType = ContentSelectionTypes.VIDEO,
+            devicesContents = contentUris,
             selectedContents = selectedContents,
             isSearchMode = isSearchMode,
             searchText = searchText,
@@ -1044,7 +1038,7 @@ fun AudioContentSelection(
             mediaStoreType = MediaStore.Audio::class.java
         }
     }
-    val contentUrls = contentSelectionResultsProvider.contentUris
+    val contentUris = contentSelectionResultsProvider.contentUris
 
     val columnState = rememberLazyListState()
 
@@ -1068,7 +1062,7 @@ fun AudioContentSelection(
     }
     val filteredContentUrls by remember {
         derivedStateOf {
-            contentUrls.filter {
+            contentUris.filter {
                 if (it is MediaStoreDataUri) {
                     it.displayName?.contains(searchText, true) == true
                 } else {
@@ -1149,7 +1143,7 @@ fun AudioContentSelection(
             }
         }
         if (
-            contentUrls.isEmpty()
+            contentUris.isEmpty()
         ) {
             Text(stringResource(xcj.app.appsets.R.string.there_is_nothing_here))
         }
@@ -1158,6 +1152,7 @@ fun AudioContentSelection(
             modifier = Modifier.align(Alignment.BottomCenter),
             request = request,
             contentSelectionType = ContentSelectionTypes.AUDIO,
+            devicesContents = contentUris,
             selectedContents = selectedContents,
             isSearchMode = isSearchMode,
             searchText = searchText,
@@ -1190,7 +1185,7 @@ fun FileContentSelection(
             mediaStoreType = MediaStore.Files::class.java
         }
     }
-    val contentUrls = contentSelectionResultsProvider.contentUris
+    val contentUris = contentSelectionResultsProvider.contentUris
 
     val columnState = rememberLazyListState()
 
@@ -1214,7 +1209,7 @@ fun FileContentSelection(
     }
     val filteredContentUrls by remember {
         derivedStateOf {
-            contentUrls.filter {
+            contentUris.filter {
                 if (it is MediaStoreDataUri) {
                     it.displayName?.contains(searchText, true) == true
                 } else {
@@ -1295,7 +1290,7 @@ fun FileContentSelection(
         }
 
         if (
-            contentUrls.isEmpty()
+            contentUris.isEmpty()
         ) {
             Text(stringResource(xcj.app.appsets.R.string.there_is_nothing_here))
         }
@@ -1304,6 +1299,7 @@ fun FileContentSelection(
             modifier = Modifier.align(Alignment.BottomCenter),
             request = request,
             contentSelectionType = ContentSelectionTypes.FILE,
+            devicesContents = contentUris,
             selectedContents = selectedContents,
             isSearchMode = isSearchMode,
             searchText = searchText,
@@ -1327,6 +1323,7 @@ fun BottomActions(
     modifier: Modifier,
     request: ContentSelectionRequest,
     contentSelectionType: String,
+    devicesContents:List<UriProvider>,
     selectedContents: List<UriProvider>,
     isSearchMode: Boolean,
     searchText: String,
@@ -1415,22 +1412,23 @@ fun BottomActions(
             Box(
                 modifier = Modifier.fillMaxWidth()
             ) {
-                FilledTonalIconButton(
-                    modifier = Modifier
-                        .size(TextFieldDefaults.MinHeight)
-                        .align(Alignment.CenterStart),
-                    onClick = {
-                        hapticFeedback.performHapticFeedback(HapticFeedbackType.ContextClick)
-                        onSearchModeChanged(!isSearchMode)
-                    }
-                ) {
-                    Icon(
-                        painter = painterResource(xcj.app.compose_share.R.drawable.ic_round_search_24),
-                        contentDescription = null
-                    )
+                if(devicesContents.isNotEmpty()){
+                    FilledTonalIconButton(
+                        modifier = Modifier
+                            .size(TextFieldDefaults.MinHeight)
+                            .align(Alignment.CenterStart),
+                        onClick = {
+                            hapticFeedback.performHapticFeedback(HapticFeedbackType.ContextClick)
+                            onSearchModeChanged(!isSearchMode)
+                        }
+                    ) {
+                        Icon(
+                            painter = painterResource(xcj.app.compose_share.R.drawable.ic_round_search_24),
+                            contentDescription = null
+                        )
+                    }    
                 }
-
-
+                
                 LazyRow(
                     modifier = Modifier
                         .align(Alignment.Center)
@@ -1440,19 +1438,21 @@ fun BottomActions(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     item {
-                        Surface(
-                            modifier
-                                .clip(CircleShape)
-                        ) {
-                            Text(
-                                "${selectedContents.size}/${
-                                    request.selectionTypeMaxCount(
-                                        contentSelectionType
-                                    )
-                                }",
-                                modifier = Modifier.padding(horizontal = 2.dp),
-                                fontSize = 12.sp
-                            )
+                        if(devicesContents.isNotEmpty()){
+                            Surface(
+                                modifier
+                                    .clip(CircleShape)
+                            ) {
+                                Text(
+                                    "${selectedContents.size}/${
+                                        request.selectionTypeMaxCount(
+                                            contentSelectionType
+                                        )
+                                    }",
+                                    modifier = Modifier.padding(horizontal = 2.dp),
+                                    fontSize = 12.sp
+                                )
+                            }
                         }
                     }
 

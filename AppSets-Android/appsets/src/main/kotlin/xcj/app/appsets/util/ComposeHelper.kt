@@ -30,7 +30,7 @@ internal suspend fun saveComposeNodeAsBitmap(
 ): File = withContext(Dispatchers.IO) {
     val bitmap = createBitmap(bounds.width.roundToInt(), bounds.height.roundToInt())
     val cacheDir = LocalAndroidContextFileDir.current.tempImagesCacheDir
-    val fileName = "${UUID.randomUUID()}.jpg"
+    val fileName = "${UUID.randomUUID()}.png"
     val file = File(cacheDir, fileName)
     file.createNewFile()
 

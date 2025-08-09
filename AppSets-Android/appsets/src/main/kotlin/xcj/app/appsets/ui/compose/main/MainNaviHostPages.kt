@@ -114,7 +114,7 @@ import xcj.app.appsets.ui.compose.apps.tools.TOOL_TYPE_AppSets_Compose_plugin
 import xcj.app.appsets.ui.compose.apps.tools.TOOL_TYPE_AppSets_Launcher
 import xcj.app.appsets.ui.compose.apps.tools.TOOL_TYPE_AppSets_Proxy
 import xcj.app.appsets.ui.compose.apps.tools.TOOL_TYPE_AppSets_Share
-import xcj.app.appsets.ui.compose.camera.CameraComposeActivity
+import xcj.app.appsets.ui.compose.camera.DesignCameraActivity
 import xcj.app.appsets.ui.compose.content_selection.ContentSelectSheetContent
 import xcj.app.appsets.ui.compose.content_selection.ContentSelectionRequest
 import xcj.app.appsets.ui.compose.content_selection.defaultAllSelectionTypeParam
@@ -428,9 +428,8 @@ fun MainNaviHostPages(
                         onLikesClick = {
                             screensUseCase.userClickLikeScreen(context)
                         },
-                        onInputReview = screensUseCase::onInputReview,
-                        onReviewConfirm = {
-                            screensUseCase.onReviewConfirm(context)
+                        onReviewConfirm = { reviewString->
+                            screensUseCase.onReviewConfirm(context, reviewString)
                         },
                         onScreenMediaClick = { url, urls ->
                             restrictedContentConfirmCallback = {
@@ -1557,8 +1556,8 @@ fun navigateToCameraActivity(context: Context, navController: NavController) {
         navController.navigate(PageRouteNames.PrivacyPage)
         return
     }
-    val intent = Intent(context, CameraComposeActivity::class.java)
-    context.startActivityForResult(intent, CameraComposeActivity.REQUEST_CODE)
+    val intent = Intent(context, DesignCameraActivity::class.java)
+    context.startActivityForResult(intent, DesignCameraActivity.REQUEST_CODE)
 }
 
 fun navigateToAppSetsLauncherActivity(context: Context) {

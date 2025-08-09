@@ -1,4 +1,4 @@
-@file:OptIn(ExperimentalHazeMaterialsApi::class)
+@file:OptIn(ExperimentalHazeMaterialsApi::class, ExperimentalMaterial3Api::class)
 
 package xcj.app.appsets.ui.compose.outside
 
@@ -35,10 +35,17 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.BottomSheetDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.SuggestionChip
+import androidx.compose.material3.SuggestionChipDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -89,8 +96,7 @@ fun ScreenDetailsPage(
     onEditClick: () -> Unit,
     onCollectClick: (String?) -> Unit,
     onLikesClick: () -> Unit,
-    onInputReview: (String) -> Unit,
-    onReviewConfirm: () -> Unit,
+    onReviewConfirm: (String?) -> Unit,
     onScreenMediaClick: (ScreenMediaFileUrl, List<ScreenMediaFileUrl>) -> Unit,
     onPageShowPrevious: () -> Unit,
     onPageShowNext: () -> Unit
@@ -166,7 +172,6 @@ fun ScreenDetailsPage(
                     }
                 }
                 ScreenDetailsPager(
-                    hazeState = hazeState,
                     viewScreenInfo = viewScreenInfo,
                     onBioClick = onBioClick,
                     onScreenMediaClick = onScreenMediaClick,
@@ -177,9 +182,6 @@ fun ScreenDetailsPage(
 
             AddReviewSpace(
                 modifier = Modifier.align(Alignment.BottomCenter),
-                hazeState = hazeState,
-                viewScreenInfo = viewScreenInfo,
-                onInputReview = onInputReview,
                 onReviewConfirm = onReviewConfirm
             )
 
@@ -205,7 +207,7 @@ fun ScreenDetailsPage(
                     .size(likeTargetSizeDp.value)
                     .align(Alignment.Center),
                 painter = painterResource(id = xcj.app.compose_share.R.drawable.ic_favorite_24),
-                tint = Color(0xfff8312f),
+                tint = Color.Red,
                 contentDescription = stringResource(xcj.app.appsets.R.string.favorite)
             )
         }
@@ -215,59 +217,94 @@ fun ScreenDetailsPage(
 @Composable
 fun AddReviewSpace(
     modifier: Modifier,
-    hazeState: HazeState,
-    viewScreenInfo: ViewScreenInfo,
-    onInputReview: (String) -> Unit,
-    onReviewConfirm: () -> Unit,
+    onReviewConfirm: (String?) -> Unit,
 ) {
+    var inputContentText by remember {
+        mutableStateOf("")
+    }
+    var isShowInputContentSheet by remember {
+        mutableStateOf(false)
+    }
+
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .imePadding()
-            .hazeEffect(hazeState, HazeMaterials.thin()),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+            .navigationBarsPadding(),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Spacer(Modifier.height(6.dp))
-        Row(
-            modifier = Modifier
-                .padding(horizontal = 12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            DesignTextField(
-                modifier = Modifier
-                    .weight(1f),
-                value = viewScreenInfo.userInputReview ?: "",
-                onValueChange = onInputReview,
-                placeholder = {
-                    Text(
-                        text = stringResource(xcj.app.appsets.R.string.add_reply),
-                        fontSize = 12.sp
-                    )
-                },
-                textStyle = TextStyle.Default.copy(fontSize = 12.sp),
-                maxLines = 1
+        SuggestionChip(
+            onClick = {
+                isShowInputContentSheet = true
+            },
+            label = {
+                Text(
+                    text = stringResource(xcj.app.appsets.R.string.add_reply)
+                )
+            },
+            shape = CircleShape,
+            colors = SuggestionChipDefaults.suggestionChipColors().copy(
+                containerColor = MaterialTheme.colorScheme.secondaryContainer
             )
-            AnimatedVisibility(visible = !viewScreenInfo.userInputReview.isNullOrEmpty()) {
+        )
+    }
+
+    if (isShowInputContentSheet) {
+        ModalBottomSheet(
+            sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+            onDismissRequest = {
+                isShowInputContentSheet = false
+            },
+            dragHandle = {
+                BottomSheetDefaults.DragHandle(
+                    color = MaterialTheme.colorScheme.outline
+                )
+            }
+        ) {
+            Column(
+                modifier = Modifier
+                    .padding(horizontal = 12.dp)
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
                 Row {
-                    Spacer(modifier = Modifier.width(10.dp))
-                    FilledTonalButton(
-                        onClick = onReviewConfirm
-                    ) {
-                        Text(
-                            text = stringResource(id = xcj.app.appsets.R.string.sure),
-                            fontSize = 12.sp
-                        )
+                    Spacer(modifier = Modifier.weight(1f))
+                    FilledTonalButton(onClick = {
+                        isShowInputContentSheet = false
+                        onReviewConfirm(inputContentText)
+                    }) {
+                        Text(text = stringResource(xcj.app.starter.R.string.ok))
                     }
                 }
+                DesignTextField(
+                    value = inputContentText,
+                    onValueChange = {
+                        inputContentText = it
+                    },
+                    placeholder = {
+                        Text(
+                            text = stringResource(xcj.app.appsets.R.string.text_something),
+                            fontSize = 12.sp
+                        )
+                    },
+                    modifier = Modifier
+                        .height(350.dp)
+                        .fillMaxWidth(),
+                    colors = TextFieldDefaults.colors(
+                        unfocusedContainerColor = MaterialTheme.colorScheme.outline,
+                        focusedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
+                        unfocusedIndicatorColor = Color.Transparent,
+                        focusedIndicatorColor = Color.Transparent
+                    )
+                )
+                Spacer(modifier = Modifier.height(12.dp))
             }
         }
-        Spacer(Modifier.navigationBarsPadding())
     }
 }
 
 @Composable
 fun ScreenDetailsPager(
-    hazeState: HazeState,
     viewScreenInfo: ViewScreenInfo,
     onBioClick: (Bio) -> Unit,
     onScreenMediaClick: (ScreenMediaFileUrl, List<ScreenMediaFileUrl>) -> Unit,
@@ -281,7 +318,6 @@ fun ScreenDetailsPager(
         val scrollState = rememberScrollState()
         Column(
             modifier = Modifier
-                .hazeSource(hazeState)
                 .verticalScroll(scrollState),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {

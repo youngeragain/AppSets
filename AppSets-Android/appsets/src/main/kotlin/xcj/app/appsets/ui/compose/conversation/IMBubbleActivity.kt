@@ -419,9 +419,8 @@ fun ImSessionBubbleNaviHostPages(navController: NavHostController) {
                     onLikesClick = {
                         screensUseCase.userClickLikeScreen(context)
                     },
-                    onInputReview = screensUseCase::onInputReview,
-                    onReviewConfirm = {
-                        screensUseCase.onReviewConfirm(context)
+                    onReviewConfirm = { reviewString->
+                        screensUseCase.onReviewConfirm(context, reviewString)
                     },
                     onScreenMediaClick = { url, urls ->
                         restrictedContentConfirmCallback = {

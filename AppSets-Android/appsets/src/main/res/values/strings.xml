@@ -63,7 +63,7 @@
     <string name="sure">OK</string>
     <string name="favorite">Favorite</string>
     <string name="no_corresponding_screen_found">No corresponding Screen found</string>
-    <string name="add_reply">Add reply</string>
+    <string name="add_reply">Add Reply</string>
     <string name="reply_below">Reply below</string>
     <string name="no_reply">No reply</string>
     <string name="not_have_conversation">No conversation</string>
@@ -449,7 +449,7 @@
     <string name="goods">Goods</string>
     <string name="cancel_follow">Cancel Follow</string>
     <string name="follow">Follow</string>
-    <string name="add_ai_aigent">Add AI Model</string>
+    <string name="add_ai_agent">Add AI Model</string>
     <string name="get_suggestions">Get suggestions</string>
     <string name="device_local_ai_models">On-device AI Models</string>
     <string name="online_ai_models">Online AI Models</string>

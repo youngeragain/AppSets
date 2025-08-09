@@ -313,13 +313,13 @@ class ScreenUseCase(
     }
 
 
-    private fun addScreenReview(context: Context) {
+    private fun addScreenReview(context: Context, reviewString:String?) {
         if (!LocalAccountManager.isLogged()) {
             context.getString(xcj.app.appsets.R.string.login_required).toast()
             return
         }
         val viewScreenInfo = currentViewScreenInfo.value
-        val reviewString = viewScreenInfo.userInputReview
+        val reviewString = reviewString
         if (reviewString.isNullOrEmpty()) {
             context.getString(xcj.app.appsets.R.string.reply_is_empty).toast()
             return
@@ -355,15 +355,8 @@ class ScreenUseCase(
         }
     }
 
-    fun onInputReview(review: String) {
-        currentViewScreenInfo.value =
-            currentViewScreenInfo.value.copy(
-                userInputReview = review
-            )
-    }
-
-    fun onReviewConfirm(context: Context) {
-        addScreenReview(context)
+    fun onReviewConfirm(context: Context, reviewString:String?) {
+        addScreenReview(context, reviewString)
     }
 
     fun onChangeScreenStyleClick(

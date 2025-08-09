@@ -137,7 +137,7 @@
             android:windowSoftInputMode="adjustResize" />
 
         <activity
-            android:name=".ui.compose.camera.CameraComposeActivity"
+            android:name=".ui.compose.camera.DesignCameraActivity"
             android:exported="false"
             android:label="@string/title_activity_camera_compose" />
         <activity

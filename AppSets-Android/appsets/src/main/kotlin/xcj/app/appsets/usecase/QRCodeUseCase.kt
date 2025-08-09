@@ -1,5 +1,6 @@
 package xcj.app.appsets.usecase
 
+import android.app.Activity
 import android.app.Activity.RESULT_OK
 import android.content.Context
 import android.content.Intent
@@ -18,7 +19,7 @@ import xcj.app.appsets.account.LocalAccountManager
 import xcj.app.appsets.server.model.UserInfo
 import xcj.app.appsets.server.repository.QRCodeRepository
 import xcj.app.appsets.server.repository.UserRepository
-import xcj.app.appsets.ui.compose.camera.CameraComposeActivity
+import xcj.app.appsets.ui.compose.camera.DesignCameraActivity
 import xcj.app.appsets.ui.model.LoginSignUpState
 import xcj.app.compose_share.dynamic.IComposeLifecycleAware
 import xcj.app.starter.android.util.PurpleLogger
@@ -217,10 +218,6 @@ class QRCodeUseCase(
         }
     }
 
-    fun toScanQrCodePage(context: Context) {
-
-    }
-
     /**
      * 如果是扫码者确认，那么，扫码的一端必须是未登录状态，所需的providerId和code需要从外部提供，即从扫描到的二维码处获取
      * 如果是二维码提供者确认，那么所需的providerId和code可从本地直接获取
@@ -238,7 +235,7 @@ class QRCodeUseCase(
         }
     }
 
-    fun onScannedBarcode(cameraActivity: CameraComposeActivity, barcode: Barcode) {
+    fun onScannedBarcode(activity: Activity, barcode: Barcode) {
         PurpleLogger.current.d(TAG, "onScannedBarcode")
         val barRawString = barcode.rawValue
         //asqr:login:provider_id:code:state
@@ -260,8 +257,8 @@ class QRCodeUseCase(
                 val deviceAddresses = split.subList(2, split.size).toTypedArray()
                 val intent = Intent()
                 intent.putExtra("APPSETS_SHARE_DEVICE_ADDRESSES", deviceAddresses)
-                cameraActivity.setResult(RESULT_OK, intent)
-                cameraActivity.finish()
+                activity.setResult(RESULT_OK, intent)
+                activity.finish()
             }
 
             QR_USED_FOR_LOGIN -> {
@@ -335,7 +332,7 @@ class QRCodeUseCase(
     }
 
     fun onActivityResult(context: Context, requestCode: Int, resultCode: Int, intent: Intent) {
-        if (requestCode != CameraComposeActivity.REQUEST_CODE ||
+        if (requestCode != DesignCameraActivity.REQUEST_CODE ||
             resultCode != RESULT_OK
         ) {
             return
