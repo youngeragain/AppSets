@@ -6,6 +6,7 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.TaskStackBuilder
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
@@ -13,7 +14,6 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
-import androidx.media3.common.util.Util
 import androidx.media3.datasource.DataSourceBitmapLoader
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.session.CacheBitmapLoader
@@ -36,7 +36,7 @@ class MediaPlayback101Service : MediaLibraryService() {
 
         override fun onConnect(
             session: MediaSession,
-            controller: MediaSession.ControllerInfo
+            controller: MediaSession.ControllerInfo,
         ): MediaSession.ConnectionResult {
             PurpleLogger.current.d(TAG, "onConnect")
             val availableSessionCommands =
@@ -54,7 +54,7 @@ class MediaPlayback101Service : MediaLibraryService() {
             session: MediaSession,
             controller: MediaSession.ControllerInfo,
             customCommand: SessionCommand,
-            args: Bundle
+            args: Bundle,
         ): ListenableFuture<SessionResult> {
             PurpleLogger.current.d(TAG, "onCustomCommand")
             /*if (CUSTOM_COMMAND_TOGGLE_SHUFFLE_MODE_ON == customCommand.customAction) {
@@ -82,7 +82,7 @@ class MediaPlayback101Service : MediaLibraryService() {
         override fun onGetLibraryRoot(
             session: MediaLibrarySession,
             browser: MediaSession.ControllerInfo,
-            params: LibraryParams?
+            params: LibraryParams?,
         ): ListenableFuture<LibraryResult<MediaItem>> {
             PurpleLogger.current.d(TAG, "onGetLibraryRoot")
             return super.onGetLibraryRoot(session, browser, params)
@@ -99,7 +99,7 @@ class MediaPlayback101Service : MediaLibraryService() {
         override fun onGetItem(
             session: MediaLibrarySession,
             browser: MediaSession.ControllerInfo,
-            mediaId: String
+            mediaId: String,
         ): ListenableFuture<LibraryResult<MediaItem>> {
             PurpleLogger.current.d(TAG, "onGetItem")
             /* val item =
@@ -115,7 +115,7 @@ class MediaPlayback101Service : MediaLibraryService() {
             session: MediaLibrarySession,
             browser: MediaSession.ControllerInfo,
             parentId: String,
-            params: LibraryParams?
+            params: LibraryParams?,
         ): ListenableFuture<LibraryResult<Void>> {
             PurpleLogger.current.d(TAG, "onSubscribe")
             /*val children =
@@ -134,7 +134,7 @@ class MediaPlayback101Service : MediaLibraryService() {
             parentId: String,
             page: Int,
             pageSize: Int,
-            params: LibraryParams?
+            params: LibraryParams?,
         ): ListenableFuture<LibraryResult<ImmutableList<MediaItem>>> {
             PurpleLogger.current.d(TAG, "onGetChildren")
             /*val children =
@@ -150,7 +150,7 @@ class MediaPlayback101Service : MediaLibraryService() {
         override fun onAddMediaItems(
             mediaSession: MediaSession,
             controller: MediaSession.ControllerInfo,
-            mediaItems: List<MediaItem>
+            mediaItems: List<MediaItem>,
         ): ListenableFuture<List<MediaItem>> {
             /*val updatedMediaItems: List<MediaItem> =
                 mediaItems.mapNotNull { mediaItem ->
@@ -246,7 +246,7 @@ class MediaPlayback101Service : MediaLibraryService() {
 
     override fun onCreate() {
         super.onCreate()
-        val setPlaybackItemCommand = CommandButton.Builder()
+        val setPlaybackItemCommand = CommandButton.Builder(CommandButton.ICON_UNDEFINED)
             .setSessionCommand(SessionCommand("set_playback_item", Bundle.EMPTY))
             .build()
         customCommands =
@@ -337,7 +337,9 @@ class MediaPlayback101Service : MediaLibraryService() {
     }
 
     private fun ensureNotificationChannel(notificationManagerCompat: NotificationManagerCompat) {
-        if (Util.SDK_INT < 26 || notificationManagerCompat.getNotificationChannel(CHANNEL_ID) != null) {
+
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O ||
+            notificationManagerCompat.getNotificationChannel(CHANNEL_ID) != null) {
             return
         }
 
