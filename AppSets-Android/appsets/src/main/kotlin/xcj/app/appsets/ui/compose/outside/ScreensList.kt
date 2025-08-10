@@ -12,8 +12,6 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.clipScrollableContainer
-import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.ScrollableState
 import androidx.compose.foundation.interaction.Interaction
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -64,7 +62,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.layout.boundsInRoot
@@ -287,19 +284,14 @@ fun ScreenComponent(
     var capturingViewBounds by remember { mutableStateOf<Rect?>(null) }
     Column(
         modifier = Modifier
-            .animateContentSize()
             .onGloballyPositioned {
                 capturingViewBounds = it.boundsInRoot()
             }
     ) {
         if (screenInfo.isAllContentEmpty()) {
-            ScreenSectionOfContentPartAllEmpty(
-                modifier = Modifier.clip(MaterialTheme.shapes.large)
-            )
+            ScreenSectionOfContentPartAllEmpty()
         } else {
-            Column(
-                modifier = Modifier.clip(MaterialTheme.shapes.large)
-            ) {
+            Column {
                 ScreenTopActionsPart(
                     currentDestinationRoute = currentDestinationRoute,
                     screenInfo = screenInfo,
@@ -539,164 +531,12 @@ fun MediaCard(
                         }
                     },
                     colors = IconButtonDefaults.iconButtonColors(
-                        containerColor = MaterialTheme.colorScheme.tertiaryContainer
+                        containerColor = MaterialTheme.colorScheme.primaryContainer
                     )
                 ) {
                     Icon(
                         painter = painterResource(id = xcj.app.compose_share.R.drawable.ic_slow_motion_video_24),
                         contentDescription = null,
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun ScreenSectionOfContentVideosPart(
-    screenInfo: ScreenInfo,
-    pictureStyleState: PictureStyleState,
-    onMediaClick: ((ScreenMediaFileUrl) -> Unit)?,
-) {
-    val videoMediaFileUrl =
-        screenInfo.mediaFileUrls?.firstOrNull { it.isVideoMedia }
-
-    if (videoMediaFileUrl != null) {
-        Column {
-            Spacer(modifier = Modifier.height(16.dp))
-            val pictureHeightOverride = pictureStyleState.lineHeight.times(1.6f)
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(pictureHeightOverride)
-                    .background(
-                        MaterialTheme.colorScheme.outline,
-                        MaterialTheme.shapes.extraLarge
-                    )
-                    .clip(MaterialTheme.shapes.extraLarge)
-                    .clickable {
-                        if (onMediaClick != null) {
-                            onMediaClick(videoMediaFileUrl)
-                        }
-                    }
-            ) {
-                if (videoMediaFileUrl.isRestrictedContent) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .clip(MaterialTheme.shapes.extraLarge),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        val text = AnnotatedString(
-                            stringResource(xcj.app.appsets.R.string.restricted_content_continue_viewing),
-                            listOf(
-                                AnnotatedString.Range(
-                                    SpanStyle(
-                                        color = MaterialTheme.colorScheme.primary,
-                                        fontWeight = FontWeight.Bold
-                                    ), 5, 9
-                                )
-                            )
-                        )
-                        Text(text = text, fontSize = 12.sp)
-                    }
-                } else {
-                    AnyImage(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .clip(MaterialTheme.shapes.extraLarge)
-                            .zoomablePeekOverlay(rememberZoomablePeekOverlayState()),
-                        any = videoMediaFileUrl.mediaFileCompanionUrl
-                    )
-                    IconButton(
-                        modifier = Modifier
-                            .padding(12.dp)
-                            .align(Alignment.Center),
-                        onClick = {
-                            if (onMediaClick != null) {
-                                onMediaClick(videoMediaFileUrl)
-                            }
-                        },
-                        colors = IconButtonDefaults.iconButtonColors(
-                            containerColor = MaterialTheme.colorScheme.tertiaryContainer
-                        )
-                    ) {
-                        Icon(
-                            painter = painterResource(id = xcj.app.compose_share.R.drawable.ic_slow_motion_video_24),
-                            contentDescription = null,
-                        )
-                    }
-                }
-            }
-            Spacer(modifier = Modifier.height(16.dp))
-        }
-    }
-}
-
-@Composable
-fun ScreenSectionOfContentPicturesPart(
-    screenInfo: ScreenInfo,
-    pictureStyleState: PictureStyleState,
-    onMediaClick: ((ScreenMediaFileUrl, List<ScreenMediaFileUrl>) -> Unit)?,
-    picInteractionFlow: ((Interaction, ScreenMediaFileUrl) -> Unit)?,
-) {
-    val pictureMediaFileUrls =
-        screenInfo.mediaFileUrls?.filter { !it.isVideoMedia }
-    if (pictureMediaFileUrls.isNullOrEmpty()) {
-        return
-    }
-    val remainder = pictureMediaFileUrls.size % pictureStyleState.oneLineCount
-    val temp = if (remainder > 0) {
-        1
-    } else {
-        0
-    }
-    val picRowCount =
-        (pictureMediaFileUrls.size / pictureStyleState.oneLineCount + temp)
-    if (picRowCount > 0) {
-        val pictureHeightOverride = when (pictureMediaFileUrls.size) {
-            1 -> {
-                pictureStyleState.lineHeight.times(1.8f)
-            }
-
-            2 -> {
-                pictureStyleState.lineHeight.times(1.4f)
-            }
-
-            3 -> {
-                pictureStyleState.lineHeight
-            }
-
-            4 -> {
-                pictureStyleState.lineHeight.times(0.95f)
-            }
-
-            else -> {
-                pictureStyleState.lineHeight.times(0.9f)
-            }
-        }
-        Column(verticalArrangement = Arrangement.spacedBy(1.dp)) {
-            repeat(picRowCount) { rowIndex ->
-                val start =
-                    (rowIndex * pictureStyleState.oneLineCount).coerceAtMost(
-                        pictureMediaFileUrls.size
-                    )
-                val end =
-                    (start + pictureStyleState.oneLineCount).coerceAtMost(
-                        pictureMediaFileUrls.size
-                    )
-                if (start < end) {
-                    val mediaFileUrls =
-                        pictureMediaFileUrls.subList(start, end)
-                    RowOfScreenPictures(
-                        modifier = Modifier,
-                        pictureMediaFileUrls,
-                        mediaFileUrls,
-                        picRowCount,
-                        rowIndex,
-                        pictureHeightOverride,
-                        onMediaClick,
-                        picInteractionFlow
                     )
                 }
             }
@@ -730,7 +570,7 @@ fun ScreenSectionOfContentTextPart(
 }
 
 @Composable
-fun ScreenSectionOfContentPartAllEmpty(modifier: Modifier) {
+fun ScreenSectionOfContentPartAllEmpty(modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
             .fillMaxWidth()
