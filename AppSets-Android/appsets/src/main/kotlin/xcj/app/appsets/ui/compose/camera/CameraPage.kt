@@ -44,13 +44,12 @@ import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.barcode.common.Barcode
 import xcj.app.appsets.ui.compose.LocalUseCaseOfQRCode
 import xcj.app.appsets.ui.compose.custom_component.DesignBottomBackButton
-import xcj.app.compose_share.components.BottomSheetContainer
 import xcj.app.appsets.usecase.QRCodeInfoScannedState
 import xcj.app.appsets.usecase.QRCodeUseCase
+import xcj.app.compose_share.components.BottomSheetContainer
 import xcj.app.compose_share.components.LocalAnyStateProvider
 import xcj.app.compose_share.ui.viewmodel.AnyStateViewModel.Companion.bottomSheetState
 import xcj.app.starter.android.util.PurpleLogger
-import kotlin.collections.first
 
 private const val TAG = "CameraPage"
 
@@ -145,14 +144,15 @@ fun CameraContent(
 
     Box(modifier = Modifier.fillMaxSize()) {
         AndroidView(
+            modifier = Modifier.fillMaxSize(),
             factory = {
                 val preview = PreviewView(it)
                 preview
-            },
-            modifier = modifier.fillMaxSize()
+            }
         ) {
             cameraComponents.bindToLifecycle(lifecycleOwner)
             cameraComponents.attachPreview(it)
+            cameraComponents.startCamera()
         }
         Column(
             modifier = Modifier

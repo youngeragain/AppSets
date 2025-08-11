@@ -239,7 +239,7 @@
     <string name="application">应用</string>
     <string name="user">用户</string>
     <string name="appsets_screen">Screen</string>
-    <string name="generate_a_qr_code">生成二维码</string>
+    <string name="mine_qr_code">我的二维码</string>
     <string name="tools">工具</string>
     <string name="text_based_content">文本内容</string>
     <string name="logging_in">正在登录</string>

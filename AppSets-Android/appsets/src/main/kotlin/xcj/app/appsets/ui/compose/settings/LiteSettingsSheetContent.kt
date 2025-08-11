@@ -169,7 +169,7 @@ fun LiteSettingsSheetContent(
                         useImage = false,
                         resource = xcj.app.compose_share.R.drawable.ic_outline_qr_code_24,
                     )
-                    Text(text = stringResource(xcj.app.appsets.R.string.generate_a_qr_code))
+                    Text(text = stringResource(xcj.app.appsets.R.string.mine_qr_code))
                 }
 
                 Row(

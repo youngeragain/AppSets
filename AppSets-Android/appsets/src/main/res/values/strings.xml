@@ -239,7 +239,7 @@
     <string name="application">Application</string>
     <string name="user">User</string>
     <string name="appsets_screen">Screen</string>
-    <string name="generate_a_qr_code">QR code generate</string>
+    <string name="mine_qr_code">Mine QR code</string>
     <string name="tools">Tools</string>
     <string name="text_based_content">Text based content</string>
     <string name="logging_in">Logging in</string>
