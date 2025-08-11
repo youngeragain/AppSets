@@ -50,7 +50,7 @@ abstract class AppDatabase : RoomDatabase(), DaoDefinitions {
                         AppDatabase::class.java,
                         databaseName
                     )
-                        .fallbackToDestructiveMigration()
+                        .fallbackToDestructiveMigration(false)
                         .addCallback(
                             DatabaseCallback(
                                 coroutineScope

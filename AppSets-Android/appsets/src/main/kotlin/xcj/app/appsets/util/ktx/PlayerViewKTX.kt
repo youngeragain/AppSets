@@ -15,7 +15,6 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.ui.DefaultTimeBar
 import androidx.media3.ui.PlayerControlView
 import androidx.media3.ui.PlayerView
-import androidx.media3.ui.R
 import androidx.media3.ui.TimeBar
 import androidx.media3.ui.TimeBar.OnScrubListener
 import xcj.app.appsets.util.reflect.getField
@@ -28,7 +27,7 @@ import java.util.concurrent.CopyOnWriteArraySet
 private const val TAG = "PlayerViewKTX"
 
 fun PlayerView.updateBottomControllerViewBackgroundColor(color: Int = Color.TRANSPARENT) {
-    findViewById<View>(R.id.exo_bottom_bar).setBackgroundColor(
+    findViewById<View>(androidx.media3.ui.R.id.exo_bottom_bar).setBackgroundColor(
         color
     )
 }
@@ -276,7 +275,7 @@ fun PlayerView.proxyTimeBar(timeBar: View) {
     }
     //
     val translationYForNoBars =
-        4f * timeBar.context.resources.getDimension(R.dimen.exo_styled_bottom_bar_height)//timeBar.measuredHeight.toFloat()
+        4f * timeBar.context.resources.getDimension(androidx.media3.ui.R.dimen.exo_styled_bottom_bar_height)//timeBar.measuredHeight.toFloat()
     val showAllBarsAnimator: AnimatorSet? =
         controlViewLayoutManager.getFieldValue<Any, AnimatorSet>(
             controlViewLayoutManager.javaClass,
