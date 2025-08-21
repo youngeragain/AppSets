@@ -11,7 +11,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.onPlaced
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.IntSize
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -46,8 +46,8 @@ fun StandardWindowHomeMainContent() {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .onPlaced {
-                boxSize = it.size
+            .onSizeChanged {
+                boxSize = it
             }
     ) {
         HorizontalPager(

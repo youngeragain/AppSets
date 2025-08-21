@@ -17,7 +17,7 @@ interface GroupInfoDao {
     suspend fun addGroup(vararg groupInfo: GroupInfo)
 
     @Query("SELECT * FROM groupinfo where group_id in (:groupId)")
-    suspend fun getGroups(vararg groupId: String): List<GroupInfo>?
+    suspend fun getGroups(vararg groupId: String): List<GroupInfo>
 
     companion object {
 

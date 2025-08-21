@@ -17,22 +17,22 @@ class UserInfoRepository(
         return@withContext userInfoDao.addUserInfo(*userInfoList.toTypedArray())
     }
 
-    suspend fun getRelatedUserList(): List<UserInfo>? = withContext(Dispatchers.IO) {
+    suspend fun getRelatedUserList(): List<UserInfo> = withContext(Dispatchers.IO) {
         PurpleLogger.current.d(TAG, "getRelatedUserList, thread:${Thread.currentThread()}")
         val uids = RelationsUseCase.getInstance().getRelatedUserIds()
         if (uids.isEmpty()) {
-            return@withContext null
+            return@withContext emptyList()
         }
         val userInfoList = userInfoDao.getUserInfoByUids(*uids.toTypedArray())
         PictureUrlMapper.mapPictureUrl(userInfoList)
         return@withContext userInfoList
     }
 
-    suspend fun getUnRelatedUserList(): List<UserInfo>? = withContext(Dispatchers.IO) {
+    suspend fun getUnRelatedUserList(): List<UserInfo> = withContext(Dispatchers.IO) {
         PurpleLogger.current.d(TAG, "getUnRelatedUserList, thread:${Thread.currentThread()}")
         val uids = RelationsUseCase.getInstance().getUnRelatedUserIds()
         if (uids.isEmpty()) {
-            return@withContext null
+            return@withContext emptyList()
         }
         val userInfoList = userInfoDao.getUserInfoByUids(*uids.toTypedArray())
         PictureUrlMapper.mapPictureUrl(userInfoList)

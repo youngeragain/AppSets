@@ -6,7 +6,7 @@ plugins {
 
 android {
     namespace = "xcj.app.compose_addons"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         minSdk = 24

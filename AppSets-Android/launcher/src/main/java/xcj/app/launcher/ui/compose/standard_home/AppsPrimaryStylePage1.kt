@@ -36,7 +36,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.layout.onPlaced
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.IntSize
@@ -82,8 +82,8 @@ fun AppsPrimaryStylePageVertical1(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .onPlaced {
-                containerSize = it.size
+            .onSizeChanged {
+                containerSize = it
             }
             .hazeSource(hazeState)
     ) {

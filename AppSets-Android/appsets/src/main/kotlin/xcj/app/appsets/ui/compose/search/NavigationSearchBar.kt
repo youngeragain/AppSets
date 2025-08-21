@@ -65,8 +65,8 @@ fun NavigationSearchBar(
                 sizeOfSearchBar = sizeOfSearchBar,
                 onBackClick = onBackClick,
                 onInputContent = onInputContent,
-                searchBarPlaced = {
-                    sizeOfSearchBar = it.size
+                onSearchBarSizeChanged = {
+                    sizeOfSearchBar = it
                 }
             )
         } else {

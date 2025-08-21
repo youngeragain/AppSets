@@ -80,7 +80,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.layout.onPlaced
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -302,8 +302,8 @@ fun ContentSelectSheetContent(
                 Spacer(modifier = Modifier.width(12.dp))
                 selectionTabs.forEachIndexed { index, selectionType ->
                     SegmentedButton(
-                        modifier = Modifier.onPlaced {
-                            buttonSize.value = it.size
+                        modifier = Modifier.onSizeChanged {
+                            buttonSize.value = it
                         },
                         selected = index == pagerState.currentPage,
                         onClick = {
@@ -725,8 +725,8 @@ fun PictureContentSelection(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .onPlaced {
-                boxSize = it.size
+            .onSizeChanged {
+                boxSize = it
             },
         contentAlignment = Alignment.Center
     )
@@ -770,10 +770,10 @@ fun PictureContentSelection(
                                         if (isSelected) {
                                             hapticFeedback.performHapticFeedback(HapticFeedbackType.ToggleOff)
                                             selectedContents.removeIf { it == contentUriProvider }
-                                        } else if(selectionTypeMaxCount ==1){
+                                        } else if (selectionTypeMaxCount == 1) {
                                             selectedContents.clear()
                                             selectedContents.add(contentUriProvider)
-                                        }else if (selectedContents.size >= selectionTypeMaxCount) {
+                                        } else if (selectedContents.size >= selectionTypeMaxCount) {
                                             return@clickable
                                         } else {
                                             hapticFeedback.performHapticFeedback(HapticFeedbackType.ToggleOn)
@@ -948,10 +948,10 @@ fun VideoContentSelection(
                                         if (isSelected) {
                                             hapticFeedback.performHapticFeedback(HapticFeedbackType.ToggleOff)
                                             selectedContents.removeIf { it == contentUriProvider }
-                                        } else if(selectionTypeMaxCount ==1){
+                                        } else if (selectionTypeMaxCount == 1) {
                                             selectedContents.clear()
                                             selectedContents.add(contentUriProvider)
-                                        }else if (selectedContents.size >= selectionTypeMaxCount) {
+                                        } else if (selectedContents.size >= selectionTypeMaxCount) {
                                             return@clickable
                                         } else {
                                             hapticFeedback.performHapticFeedback(HapticFeedbackType.ToggleOn)
@@ -1096,8 +1096,8 @@ fun AudioContentSelection(
                 OutlinedCard(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .onPlaced{
-                            itemSize = it.size
+                        .onSizeChanged {
+                            itemSize = it
                         }
                         .clip(itemClipShape)
                         .clickable {
@@ -1108,10 +1108,10 @@ fun AudioContentSelection(
                             if (isSelected) {
                                 hapticFeedback.performHapticFeedback(HapticFeedbackType.ToggleOff)
                                 selectedContents.removeIf { it == contentUriProvider }
-                            } else if(selectionTypeMaxCount ==1){
+                            } else if (selectionTypeMaxCount == 1) {
                                 selectedContents.clear()
                                 selectedContents.add(contentUriProvider)
-                            }else if (selectedContents.size >= selectionTypeMaxCount) {
+                            } else if (selectedContents.size >= selectionTypeMaxCount) {
                                 return@clickable
                             } else {
                                 hapticFeedback.performHapticFeedback(HapticFeedbackType.ToggleOn)
@@ -1243,8 +1243,8 @@ fun FileContentSelection(
                 OutlinedCard(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .onPlaced{
-                            itemSize = it.size
+                        .onSizeChanged {
+                            itemSize = it
                         }
                         .clip(itemClipShape)
                         .clickable {
@@ -1255,10 +1255,10 @@ fun FileContentSelection(
                             if (isSelected) {
                                 hapticFeedback.performHapticFeedback(HapticFeedbackType.ToggleOff)
                                 selectedContents.removeIf { it == contentUriProvider }
-                            } else if(selectionTypeMaxCount ==1){
+                            } else if (selectionTypeMaxCount == 1) {
                                 selectedContents.clear()
                                 selectedContents.add(contentUriProvider)
-                            }else if (selectedContents.size >= selectionTypeMaxCount) {
+                            } else if (selectedContents.size >= selectionTypeMaxCount) {
                                 return@clickable
                             } else {
                                 hapticFeedback.performHapticFeedback(HapticFeedbackType.ToggleOn)

@@ -13,22 +13,22 @@ class GroupInfoRepository(
     private val groupInfoDao: GroupInfoDao,
     private val userInfoDao: UserInfoDao
 ) {
-    suspend fun getRelatedGroupList(): List<GroupInfo>? = withContext(Dispatchers.IO) {
+    suspend fun getRelatedGroupList(): List<GroupInfo> = withContext(Dispatchers.IO) {
         PurpleLogger.current.d(TAG, "getRelatedGroupList, thread:${Thread.currentThread()}")
         val groupIds = RelationsUseCase.getInstance().getRelatedGroupIds()
         if (groupIds.isEmpty()) {
-            return@withContext null
+            return@withContext emptyList()
         }
         val groupInfoList = groupInfoDao.getGroups(*groupIds.toTypedArray())
         PictureUrlMapper.mapPictureUrl(groupInfoList)
         return@withContext groupInfoList
     }
 
-    suspend fun getUnRelatedGroupList(): List<GroupInfo>? = withContext(Dispatchers.IO) {
+    suspend fun getUnRelatedGroupList(): List<GroupInfo> = withContext(Dispatchers.IO) {
         PurpleLogger.current.d(TAG, "getUnRelatedGroupList, thread:${Thread.currentThread()}")
         val groupIds = RelationsUseCase.getInstance().getUnRelatedGroupIds()
         if (groupIds.isEmpty()) {
-            return@withContext null
+            return@withContext emptyList()
         }
         val groupInfoList = groupInfoDao.getGroups(*groupIds.toTypedArray())
         PictureUrlMapper.mapPictureUrl(groupInfoList)

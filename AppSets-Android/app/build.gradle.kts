@@ -32,7 +32,7 @@ android {
     defaultConfig {
         applicationId = "xcj.app.container"
         minSdk = 24
-        targetSdk = 35
+        targetSdk = 36
         versionCode = 20250630
         versionName = "3.2025.06.30"
 

@@ -184,12 +184,15 @@ class FlatImMessageRepository private constructor(
         val uids = flatImMessageList.distinctBy { it.uid }.map { it.uid }
 
         val userInfoList = getUserInfoByUids(uids)
+        if (userInfoList.isEmpty()) {
+            return@withContext null
+        }
         val userInfoMap =
-            userInfoList?.associateBy { it.uid }
+            userInfoList.associateBy { it.uid }
 
         val imMessageList = flatImMessageList.mapNotNull { flatImMessage ->
 
-            val messageFromUserInfo = userInfoMap?.get(flatImMessage.uid)
+            val messageFromUserInfo = userInfoMap[flatImMessage.uid]
 
             val fromInfo = MessageFromInfo(
                 flatImMessage.uid,
@@ -232,12 +235,15 @@ class FlatImMessageRepository private constructor(
         val uids = flatImMessageList.distinctBy { it.uid }.map { it.uid }
 
         val userInfoList = getUserInfoByUids(uids)
+        if (userInfoList.isEmpty()) {
+            return@withContext null
+        }
         val userInfoMap =
-            userInfoList?.associateBy { it.uid }
+            userInfoList.associateBy { it.uid }
 
         val imMessageList = flatImMessageList.mapNotNull { flatImMessage ->
 
-            val messageFromUserInfo = userInfoMap?.get(flatImMessage.uid)
+            val messageFromUserInfo = userInfoMap[flatImMessage.uid]
 
             val fromInfo = MessageFromInfo(
                 flatImMessage.uid,
@@ -253,7 +259,7 @@ class FlatImMessageRepository private constructor(
         return@withContext imMessageList
     }
 
-    private suspend fun getUserInfoByUids(uids: List<String>): List<UserInfo>? = withContext(
+    private suspend fun getUserInfoByUids(uids: List<String>): List<UserInfo> = withContext(
         Dispatchers.IO
     ) {
         PurpleLogger.current.d(TAG, "getUserInfoByUids, uids:$uids")
