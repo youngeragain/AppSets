@@ -6,6 +6,7 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -39,6 +40,7 @@ import xcj.app.compose_share.components.DesignHDivider
 fun AboutPage(
     updateHistory: List<UpdateCheckResult>,
     onBackClick: () -> Unit,
+    onWebsiteClick: () -> Unit,
     onHistoryExpandStateChanged: (Boolean) -> Unit,
     onDispose: () -> Unit,
 ) {
@@ -50,16 +52,38 @@ fun AboutPage(
             onBackClick = onBackClick,
             backButtonRightText = stringResource(xcj.app.appsets.R.string.about)
         )
-        Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+        Column(
+            modifier = Modifier
+                .padding(12.dp)
+                .verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
             Image(
                 modifier = Modifier.align(Alignment.CenterHorizontally),
                 painter = painterResource(xcj.app.compose_share.R.drawable.ic_launcher_foreground),
                 contentDescription = null
             )
-            var historyExpandState by remember {
-                mutableStateOf(false)
+            Column {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth(1f)
+                        .clip(MaterialTheme.shapes.extraLarge)
+                        .border(
+                            1.dp,
+                            MaterialTheme.colorScheme.outline,
+                            MaterialTheme.shapes.extraLarge
+                        )
+                        .clickable(onClick = onWebsiteClick)
+                        .padding(12.dp)
+                ) {
+                    Text(text = stringResource(xcj.app.appsets.R.string.website))
+                    Spacer(modifier = Modifier.weight(1f))
+                }
             }
-            Column(modifier = Modifier.padding(12.dp)) {
+            Column {
+                var historyExpandState by remember {
+                    mutableStateOf(false)
+                }
                 Row(
                     modifier = Modifier
                         .fillMaxWidth(1f)

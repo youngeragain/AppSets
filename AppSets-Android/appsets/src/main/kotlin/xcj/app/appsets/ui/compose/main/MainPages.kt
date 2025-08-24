@@ -263,10 +263,7 @@ fun MainScaffoldContainer(navController: NavHostController) {
                     if (uri == null) {
                         return@NewVersionSpace
                     }
-                    val downloadIntent = Intent(Intent.ACTION_VIEW, uri)
-                    runCatching {
-                        context.startActivity(downloadIntent)
-                    }
+                    navigateToExternalWeb(context, uri)
                 }
             )
             NowSpace(navController)

@@ -4,7 +4,6 @@ package xcj.app.launcher.ui.compose.standard_home
 
 import android.view.ContextThemeWrapper
 import androidx.activity.ComponentActivity
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -115,11 +114,6 @@ fun AppsPrimaryStylePageVertical(
             Column(
                 modifier = Modifier
                     .padding(bottom = space)
-                    .animateItem(
-                        fadeInSpec = tween(),
-                        placementSpec = tween(),
-                        fadeOutSpec = tween()
-                    )
             ) {
                 Card(
                     modifier = Modifier.size(boxWidthDp),

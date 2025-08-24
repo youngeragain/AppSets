@@ -5,9 +5,9 @@ import android.content.Context
 import android.os.Build
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.edit
+import xcj.app.appsets.notification.NotificationChannels
 import xcj.app.appsets.purple_module.ModuleConstant
 import xcj.app.appsets.purple_module.configCoil
-import xcj.app.appsets.notification.NotificationChannels
 import xcj.app.starter.test.LocalApplication
 
 interface ModuleSettings {
@@ -21,12 +21,16 @@ interface ModuleSettings {
 class AppSetsModuleSettings : ModuleSettings {
 
     companion object {
+
+        const val WEBSITE_URL = "http://162.14.70.230/?route=download"
+
         const val IM_BUBBLE_ALIGNMENT_ALL_START = "all_start"
         const val IM_BUBBLE_ALIGNMENT_ALL_END = "all_end"
         const val IM_BUBBLE_ALIGNMENT_START_END = "start_end"
 
         const val IM_MESSAGE_DELIVERY_TYPE_DI = "send_directly"
         const val IM_MESSAGE_DELIVERY_TYPE_RT = "relay_transmission"
+
 
         fun get(): AppSetsModuleSettings {
             return AppSettings.getModuleSettings<AppSetsModuleSettings>(ModuleConstant.MODULE_NAME)!!

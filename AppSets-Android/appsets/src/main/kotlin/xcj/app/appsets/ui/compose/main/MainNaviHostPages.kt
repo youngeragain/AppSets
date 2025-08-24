@@ -7,6 +7,7 @@ import android.app.Activity
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import androidx.activity.compose.PredictiveBackHandler
 import androidx.compose.animation.core.animateFloatAsState
@@ -90,6 +91,7 @@ import xcj.app.appsets.server.model.ScreenInfo
 import xcj.app.appsets.server.model.ScreenMediaFileUrl
 import xcj.app.appsets.server.model.UserInfo
 import xcj.app.appsets.server.model.VersionInfo
+import xcj.app.appsets.settings.AppSetsModuleSettings
 import xcj.app.appsets.ui.base.BaseIMViewModel
 import xcj.app.appsets.ui.compose.LocalUseCaseOfAppCreation
 import xcj.app.appsets.ui.compose.LocalUseCaseOfApps
@@ -1060,12 +1062,16 @@ fun MainNaviHostPages(
             }
 
             composable(PageRouteNames.AboutPage) {
+                val context = LocalContext.current
                 val systemUseCase = LocalUseCaseOfSystem.current
                 AboutPage(
                     updateHistory = systemUseCase.updateHistory,
                     onBackClick = navController::navigateUp,
                     onHistoryExpandStateChanged = {
                         systemUseCase.getUpdateHistory()
+                    },
+                    onWebsiteClick = {
+                        navigateToExternalWeb(context, AppSetsModuleSettings.WEBSITE_URL.toUri())
                     },
                     onDispose = {
                         systemUseCase.cleanUpdateHistory()
@@ -1638,6 +1644,15 @@ fun navigateToAppSetsShareActivity(context: Context, intentN: Intent?) {
     }
 }
 
+fun navigateToExternalWeb(context: Context, uri: Uri) {
+    val downloadIntent = Intent(Intent.ACTION_VIEW, uri)
+    runCatching {
+        context.startActivity(downloadIntent)
+    }.onFailure {
+        PurpleLogger.current.d(TAG, "navigateToExternalWeb, failed!, e:${it.message}")
+    }
+}
+
 suspend fun handleApplicationDownload(
     context: Context,
     application: Application,
@@ -1655,8 +1670,5 @@ suspend fun handleApplicationDownload(
     if (uri == null) {
         return
     }
-    val downloadIntent = Intent(Intent.ACTION_VIEW, uri)
-    runCatching {
-        context.startActivity(downloadIntent)
-    }
+    navigateToExternalWeb(context, uri)
 }
