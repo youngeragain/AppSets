@@ -20,7 +20,7 @@ interface UserInfoDao {
     suspend fun getUserInfoByUid(uid: String): UserInfo?
 
     @Query("select * from userinfo where uid in (:uids)")
-    suspend fun getUserInfoByUids(vararg uids: String): List<UserInfo>?
+    suspend fun getUserInfoByUids(vararg uids: String): List<UserInfo>
 
     companion object {
 

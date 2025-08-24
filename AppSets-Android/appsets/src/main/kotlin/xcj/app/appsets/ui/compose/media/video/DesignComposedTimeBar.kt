@@ -5,7 +5,6 @@ import android.content.Context
 import android.content.res.Configuration
 import android.view.ViewGroup
 import android.widget.FrameLayout
-import android.widget.FrameLayout.LayoutParams
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.background
@@ -42,7 +41,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.layout.onPlaced
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
@@ -324,8 +323,8 @@ class DesignComposedTimeBar(
                         modifier = Modifier
                             .align(Alignment.CenterHorizontally)
                             .fillMaxWidth()
-                            .onPlaced {
-                                boxSize.value = it.size
+                            .onSizeChanged {
+                                boxSize.value = it
                             },
                     ) {
                         Spacer(

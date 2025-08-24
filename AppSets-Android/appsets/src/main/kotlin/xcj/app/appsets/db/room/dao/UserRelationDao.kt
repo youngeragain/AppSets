@@ -14,7 +14,7 @@ import xcj.app.starter.android.util.PurpleLogger
 interface UserRelationDao {
 
     @Query("select * from userrelation")
-    suspend fun getRelationList(): List<UserRelation>?
+    suspend fun getRelationList(): List<UserRelation>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun addUserRelation(vararg userRelation: UserRelation)

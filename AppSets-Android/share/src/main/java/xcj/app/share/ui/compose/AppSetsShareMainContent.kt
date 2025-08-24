@@ -75,7 +75,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.layout.onPlaced
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -312,8 +312,8 @@ fun AppSetsShareContainer(
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f)
-                .onPlaced {
-                    boxSize = it.size
+                .onSizeChanged {
+                    boxSize = it
                 }
         ) {
             Box(

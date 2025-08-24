@@ -28,9 +28,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -38,7 +40,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.layout.onPlaced
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -50,16 +52,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
-
 import xcj.app.appsets.im.Bio
 import xcj.app.appsets.server.model.GroupInfo
-import xcj.app.compose_share.components.DesignHDivider
-import xcj.app.appsets.ui.compose.custom_component.DesignBottomBackButton
 import xcj.app.appsets.ui.compose.custom_component.AnyImage
-
+import xcj.app.appsets.ui.compose.custom_component.DesignBottomBackButton
 import xcj.app.appsets.ui.compose.theme.BigAvatarShape
 import xcj.app.appsets.ui.model.GroupInfoState
 import xcj.app.appsets.usecase.RelationsUseCase
+import xcj.app.compose_share.components.DesignHDivider
 import kotlin.math.roundToInt
 
 @Preview(showBackground = true)
@@ -111,7 +111,7 @@ fun GroupInfoPage(
             }
 
             is GroupInfoState.LoadSuccess -> {
-                val sizeOfGroupAvatar = remember {
+                var sizeOfGroupAvatar by remember {
                     mutableStateOf(IntSize.Zero)
                 }
                 val groupAvatarOffsetHeightPx = remember { mutableFloatStateOf(0f) }
@@ -128,7 +128,7 @@ fun GroupInfoPage(
                             val newOffset = groupAvatarOffsetHeightPx.floatValue + delta
                             groupAvatarOffsetHeightPx.floatValue =
                                 newOffset.coerceIn(
-                                    -sizeOfGroupAvatar.value.height.toFloat(),
+                                    -sizeOfGroupAvatar.height.toFloat(),
                                     0f
                                 )
                             // here's the catch: let's pretend we consumed 0 in any case, since we want
@@ -156,7 +156,7 @@ fun GroupInfoPage(
                         val density = LocalDensity.current
                         val paddingValues = with(density) {
                             PaddingValues(
-                                top = sizeOfGroupAvatar.value.height.toDp(),
+                                top = sizeOfGroupAvatar.height.toDp(),
                                 bottom = 68.dp
                             )
                         }
@@ -201,8 +201,8 @@ fun GroupInfoPage(
                     }
 
                     Column(modifier = Modifier
-                        .onPlaced {
-                            sizeOfGroupAvatar.value = it.size
+                        .onSizeChanged {
+                            sizeOfGroupAvatar = it
                         }
                     ) {
                         Column(

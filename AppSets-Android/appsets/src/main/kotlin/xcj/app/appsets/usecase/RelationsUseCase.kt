@@ -109,7 +109,7 @@ class RelationsUseCase private constructor(
         runCatching {
             val relationList = userRelationDao.getRelationList()
             PurpleLogger.current.d(TAG, "relationList:${relationList}")
-            if (relationList.isNullOrEmpty()) {
+            if (relationList.isEmpty()) {
                 return
             }
             val relatedUids = relatedUids

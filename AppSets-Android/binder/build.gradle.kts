@@ -6,7 +6,7 @@ plugins {
 android {
 
     namespace = "xcj.app.binder"
-    compileSdk = 35
+    compileSdk = 36
     defaultConfig {
         //applicationId = "xcj.app.binder"
         minSdk = 24

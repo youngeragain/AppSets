@@ -13,10 +13,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.layout.onPlaced
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.unit.toSize
+import androidx.compose.ui.unit.IntSize
 import xcj.app.appsets.im.Bio
 import xcj.app.appsets.server.model.ScreenMediaFileUrl
 import xcj.app.appsets.ui.compose.PageRouteNames
@@ -33,13 +32,13 @@ fun OutSidePage(
 ) {
     ShowNavBarWhenOnLaunch()
     var boxSizeFloat by remember {
-        mutableStateOf(Size(0f, 0f))
+        mutableStateOf(IntSize.Zero)
     }
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .onPlaced {
-                boxSizeFloat = it.size.toSize()
+            .onSizeChanged {
+                boxSizeFloat = it
             }
     ) {
         var bigImageAction by remember {

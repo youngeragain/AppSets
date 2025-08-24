@@ -5,7 +5,7 @@ plugins {
 
 android {
     namespace = "xcj.app.starter.purple_native"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         minSdk = 24

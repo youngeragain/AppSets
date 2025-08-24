@@ -69,8 +69,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Brush.Companion.linearGradient
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.layout.LayoutCoordinates
-import androidx.compose.ui.layout.onPlaced
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -131,7 +130,7 @@ fun SearchInputBar(
     sizeOfSearchBar: IntSize,
     onBackClick: () -> Unit,
     onInputContent: (String) -> Unit,
-    searchBarPlaced: (LayoutCoordinates) -> Unit,
+    onSearchBarSizeChanged: (IntSize) -> Unit,
 ) {
     var inputContent by remember {
         mutableStateOf(TextFieldValue())
@@ -176,7 +175,7 @@ fun SearchInputBar(
                 border = searchBorderStroke(searchState),
                 shape = cornerShape
             )
-            .onPlaced(searchBarPlaced),
+            .onSizeChanged(onSearchBarSizeChanged),
         leadingIcon = {
             Icon(
                 modifier = Modifier
@@ -338,11 +337,11 @@ fun SearchSuccessPages(
     val pagerState = rememberPagerState { searchSuccess.results.size }
     val coroutineScope = rememberCoroutineScope()
     val tabsScrollState = rememberScrollState()
-    val buttonSize = remember {
+    var buttonSize by remember {
         mutableStateOf(IntSize.Zero)
     }
     LaunchedEffect(pagerState.currentPage) {
-        tabsScrollState.animateScrollTo(buttonSize.value.width * pagerState.currentPage)
+        tabsScrollState.animateScrollTo(buttonSize.width * pagerState.currentPage)
     }
 
     Box {
@@ -421,8 +420,8 @@ fun SearchSuccessPages(
             searchSuccess.results.forEachIndexed { index, selectionType ->
                 SegmentedButton(
                     modifier = Modifier
-                        .onPlaced {
-                            buttonSize.value = it.size
+                        .onSizeChanged {
+                            buttonSize = it
                         },
                     colors = SegmentedButtonDefaults.colors()
                         .copy(inactiveContainerColor = MaterialTheme.colorScheme.surface),

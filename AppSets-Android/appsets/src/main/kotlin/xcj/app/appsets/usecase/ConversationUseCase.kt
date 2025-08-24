@@ -499,14 +499,14 @@ class ConversationUseCase private constructor() : IComposeLifecycleAware {
                 //User sessions
                 val userSessions = sessionsMap[USER]!!
                 val userInfoRepository = UserInfoRepository.getInstance()
-                userInfoRepository.getRelatedUserList()?.let { users ->
+                userInfoRepository.getRelatedUserList().let { users ->
                     PurpleLogger.current.d(
                         TAG,
                         "initSessions, RelatedUsers:${users}"
                     )
                     fillImMessageToSessions(userSessions, users)
                 }
-                userInfoRepository.getUnRelatedUserList()?.let { users ->
+                userInfoRepository.getUnRelatedUserList().let { users ->
                     PurpleLogger.current.d(
                         TAG,
                         "initSessions, UnRelatedUsers:${users}"
@@ -517,7 +517,7 @@ class ConversationUseCase private constructor() : IComposeLifecycleAware {
                 //Group sessions
                 val groupSessions = sessionsMap[GROUP]!!
                 val groupsRoomRepository = GroupInfoRepository.getInstance()
-                groupsRoomRepository.getRelatedGroupList()?.let { groups ->
+                groupsRoomRepository.getRelatedGroupList().let { groups ->
                     PurpleLogger.current.d(
                         TAG,
                         "initSessions, relatedGroups:${groups}"
@@ -527,7 +527,6 @@ class ConversationUseCase private constructor() : IComposeLifecycleAware {
 
                 val unRelatedGroupList =
                     groupsRoomRepository.getUnRelatedGroupList()
-                        ?: return@runCatching
                 val predicate: (GroupInfo) -> Boolean =
                     { it.id.startsWith(Application.BIO_ID_PREFIX) }
 
