@@ -17,7 +17,6 @@ import xcj.app.appsets.ui.compose.quickstep.UriQuickStepContent
 import xcj.app.appsets.ui.model.PostScreen
 import xcj.app.appsets.ui.model.PostScreenState
 import xcj.app.appsets.util.ktx.toastSuspend
-import xcj.app.appsets.util.model.MediaStoreDataUri
 import xcj.app.appsets.util.model.UriProvider
 import xcj.app.compose_share.dynamic.IComposeLifecycleAware
 import xcj.app.starter.server.requestNotNull
@@ -165,12 +164,12 @@ class ScreenPostUseCase(
         val uriQuickStepContents = quickStepContents.filterIsInstance<UriQuickStepContent>()
         uriQuickStepContents.forEach { quickStepContent ->
             if (ContentType.isImage(quickStepContent.uriContentType)) {
-                val mediaStoreDataUri = MediaStoreDataUri.fromUri(quickStepContent.uri)
-                val uriProviderList = listOf(mediaStoreDataUri)
+                val uriProvider = UriProvider.fromUri(quickStepContent.uri)!!
+                val uriProviderList = listOf(uriProvider)
                 updateSelectPictures(uriProviderList)
             } else if (ContentType.isVideo(quickStepContent.uriContentType)) {
-                val mediaStoreDataUri = MediaStoreDataUri.fromUri(quickStepContent.uri)
-                val uriProviderList = listOf(mediaStoreDataUri)
+                val uriProvider = UriProvider.fromUri(quickStepContent.uri)!!
+                val uriProviderList = listOf(uriProvider)
                 updateSelectVideo(uriProviderList)
             }
         }

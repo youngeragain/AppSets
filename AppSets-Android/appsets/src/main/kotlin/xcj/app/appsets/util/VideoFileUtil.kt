@@ -5,15 +5,19 @@ import android.graphics.Bitmap
 import android.media.MediaMetadataRetriever
 import android.net.Uri
 import androidx.core.net.toUri
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import xcj.app.appsets.util.ktx.writeBitmap
-import xcj.app.appsets.util.model.MediaStoreDataUri
+import xcj.app.starter.android.util.PurpleLogger
 import xcj.app.starter.test.LocalAndroidContextFileDir
 import java.io.File
 
 object VideoFileUtil {
-    suspend fun extractVideoFrame(context: Context, uriProvider: MediaStoreDataUri): Uri? {
-        val mediaMetadataRetriever: MediaMetadataRetriever = MediaMetadataRetriever()
-        val thumbnailBitmap = uriProvider.getThumbnail(context, mediaMetadataRetriever)
+
+    private const val TAG = "VideoFileUtil"
+    suspend fun getVideoFirstFrameAsUri(context: Context, uri: Uri): Uri? {
+        val mediaMetadataRetriever = MediaMetadataRetriever()
+        val thumbnailBitmap = getVideoFirstFrame(context, uri, mediaMetadataRetriever)
         if (thumbnailBitmap == null) {
             return null
         }
@@ -27,5 +31,26 @@ object VideoFileUtil {
         file.createNewFile()
         file.writeBitmap(thumbnailBitmap, Bitmap.CompressFormat.PNG, 65)
         return file.toUri()
+    }
+
+    suspend fun getVideoFirstFrame(
+        context: Context,
+        uri: Uri,
+        mediaMetadataRetriever: MediaMetadataRetriever
+    ): Bitmap? {
+        return withContext(Dispatchers.IO) {
+            runCatching {
+                PurpleLogger.current.d(TAG, "fillThumbnail before")
+                mediaMetadataRetriever.setDataSource(context, uri)
+                val thumbnailsBitmap = mediaMetadataRetriever.frameAtTime
+                mediaMetadataRetriever.release()
+                PurpleLogger.current.d(TAG, "fillThumbnail after")
+                return@withContext thumbnailsBitmap
+            }.onFailure {
+                PurpleLogger.current.d(TAG, "fillThumbnail failed!")
+            }
+            return@withContext null
+        }
+
     }
 }

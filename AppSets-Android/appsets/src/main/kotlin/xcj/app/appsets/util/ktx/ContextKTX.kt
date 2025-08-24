@@ -157,16 +157,19 @@ suspend fun Context.getSystemFileUris(
             val mimeType = cursor.getString(mimeTypeColumnIndex)
 
             if (size != 0L) {
-                val mediaStoreDataUri = MediaStoreDataUri(
-                    id = id,
-                    uri = createUri(id, mimeType),
-                    date = dataAdded,
-                    displayName = displayName,
-                    size = size,
-                    sizeReadable = ByteUtil.getNetFileSizeDescription(size),
-                    mimeType = mimeType
-                )
-                mediaStoreDataUris.add(mediaStoreDataUri)
+                val fullUri = createUri(id, mimeType)
+                if (fullUri != null) {
+                    val mediaStoreDataUri = MediaStoreDataUri(
+                        id = id,
+                        uri = fullUri,
+                        date = dataAdded,
+                        displayName = displayName,
+                        size = size,
+                        sizeReadable = ByteUtil.getNetFileSizeDescription(size),
+                        mimeType = mimeType
+                    )
+                    mediaStoreDataUris.add(mediaStoreDataUri)
+                }
             } else {
                 PurpleLogger.current.d(
                     TAG,
@@ -225,7 +228,7 @@ suspend fun Context.queryUriFileName(uri: Uri): String? = withContext(Dispatcher
     val projections: Array<String> = arrayOf(
         MediaStore.Files.FileColumns.DISPLAY_NAME
     )
-    var cursor = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+    val cursor = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
         contentResolver.query(uri, projections, null, null)
     } else {
         contentResolver.query(uri, projections, null, null, null)

@@ -237,12 +237,6 @@ fun LoginComponent1(
             ) {
                 Text(text = stringResource(xcj.app.appsets.R.string.login_with_qr_code))
             }
-            TextButton(
-                onClick = onScanQRCodeButtonClick,
-                colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.onSurface)
-            ) {
-                Text(text = stringResource(xcj.app.appsets.R.string.scan_qr_code))
-            }
         }
         Text(
             text = stringResource(id = xcj.app.appsets.R.string.login),

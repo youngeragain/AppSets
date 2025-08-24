@@ -1,12 +1,11 @@
 package xcj.app.appsets.ui.model
 
+import xcj.app.appsets.server.model.AppPlatform
 import xcj.app.appsets.server.model.Application
 import xcj.app.appsets.server.model.DownloadInfo
-import xcj.app.appsets.server.model.AppPlatform
 import xcj.app.appsets.server.model.ScreenshotInfo
 import xcj.app.appsets.server.model.VersionInfo
 import xcj.app.appsets.util.model.UriProvider
-import xcj.app.appsets.util.model.parseHttpUriHolder
 import xcj.app.starter.android.util.PurpleLogger
 import java.util.UUID
 
@@ -51,8 +50,8 @@ data class ApplicationForCreate(
             if (applicationForCreate != null) {
                 return applicationForCreate.copy(
                     appId = application.appId ?: "",
-                    iconUriHolder = application.iconUrl?.toString().parseHttpUriHolder(),
-                    bannerUriHolder = application.bannerUrl.parseHttpUriHolder(),
+                    iconUriHolder = UriProvider.fromString(application.iconUrl),
+                    bannerUriHolder = UriProvider.fromString(application.bannerUrl),
                     name = application.name ?: "",
                     category = application.category ?: "",
                     website = application.website ?: "",
@@ -65,8 +64,8 @@ data class ApplicationForCreate(
             }
             return ApplicationForCreate(
                 appId = application.appId ?: "",
-                iconUriHolder = application.bioUrl?.toString().parseHttpUriHolder(),
-                bannerUriHolder = application.bannerUrl.parseHttpUriHolder(),
+                iconUriHolder = UriProvider.fromString(application.bioUrl?.toString()),
+                bannerUriHolder = UriProvider.fromString(application.bannerUrl),
                 name = application.name ?: "",
                 category = application.category ?: "",
                 website = application.website ?: "",
@@ -135,8 +134,8 @@ data class VersionInfoForCreate(
         fun inflateFromVersionInfo(versionInfo: VersionInfo): VersionInfoForCreate {
             PurpleLogger.current.d(TAG, "inflateFromVersionInfo")
             return VersionInfoForCreate(
-                versionIconUriHolder = versionInfo.versionIconUrl.parseHttpUriHolder(),
-                versionBannerUriHolder = versionInfo.versionBannerUrl.parseHttpUriHolder(),
+                versionIconUriHolder = UriProvider.fromString(versionInfo.versionIconUrl),
+                versionBannerUriHolder = UriProvider.fromString(versionInfo.versionBannerUrl),
                 id = versionInfo.id ?: "",
                 version = versionInfo.version ?: "",
                 versionCode = versionInfo.versionCode ?: "",
@@ -172,7 +171,7 @@ data class ScreenshotInfoForCreate(
         fun inflateFromScreenshotInfo(screenshotInfo: ScreenshotInfo): ScreenshotInfoForCreate {
             PurpleLogger.current.d(TAG, "inflateFromScreenshotInfo")
             return ScreenshotInfoForCreate(
-                uriHolder = screenshotInfo.url.parseHttpUriHolder()
+                uriHolder = UriProvider.fromString(screenshotInfo.url)
             )
         }
     }

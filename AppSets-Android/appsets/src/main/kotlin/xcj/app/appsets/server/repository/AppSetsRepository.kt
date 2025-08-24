@@ -5,8 +5,8 @@ import android.net.Uri
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import xcj.app.appsets.account.LocalAccountManager
-import xcj.app.appsets.server.api.AppSetsApi
 import xcj.app.appsets.server.api.ApiProvider
+import xcj.app.appsets.server.api.AppSetsApi
 import xcj.app.appsets.server.model.Application
 import xcj.app.appsets.server.model.AppsWithCategory
 import xcj.app.appsets.server.model.MediaContent
@@ -82,9 +82,9 @@ class AppSetsRepository(
         val uploadUriList = mutableListOf<Uri>()
 
         val appIconUrlMarker = UUID.randomUUID().toString()
-        val appIconUri = applicationForCreate.iconUriHolder!!.provideUri()!!
+        val appIconUri = applicationForCreate.iconUriHolder!!.provideUri()
         val appBannerUrlMarker = UUID.randomUUID().toString()
-        val appBannerUri = applicationForCreate.bannerUriHolder!!.provideUri()!!
+        val appBannerUri = applicationForCreate.bannerUriHolder!!.provideUri()
         uploadUrlMarkerList.add(appIconUrlMarker)
         uploadUriList.add(appIconUri)
         uploadUrlMarkerList.add(appBannerUrlMarker)
@@ -122,13 +122,13 @@ class AppSetsRepository(
                     platformForCreate.versionInfoForCreates.forEach { versionInfoForCreate ->
                         val appVersionIconUrlMarker = UUID.randomUUID().toString()
                         val appVersionIconUri =
-                            versionInfoForCreate.versionIconUriHolder!!.provideUri()!!
+                            versionInfoForCreate.versionIconUriHolder!!.provideUri()
                         uploadUrlMarkerList.add(appVersionIconUrlMarker)
                         uploadUriList.add(appVersionIconUri)
 
                         val appVersionBannerUrlMarker = UUID.randomUUID().toString()
                         val appVersionBannerUri =
-                            versionInfoForCreate.versionBannerUriHolder!!.provideUri()!!
+                            versionInfoForCreate.versionBannerUriHolder!!.provideUri()
                         uploadUrlMarkerList.add(appVersionBannerUrlMarker)
                         uploadUriList.add(appVersionBannerUri)
 
@@ -153,7 +153,7 @@ class AppSetsRepository(
                             versionInfoForCreate.screenshotInfoForCreates.forEach { screenshotInfoForCreate ->
                                 val screenshotUrlMarker = UUID.randomUUID().toString()
                                 val screenshotUri =
-                                    screenshotInfoForCreate.uriHolder!!.provideUri()!!
+                                    screenshotInfoForCreate.uriHolder!!.provideUri()
                                 uploadUrlMarkerList.add(screenshotUrlMarker)
                                 uploadUriList.add(screenshotUri)
 

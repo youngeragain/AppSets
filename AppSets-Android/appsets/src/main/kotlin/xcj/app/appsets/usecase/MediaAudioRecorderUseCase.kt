@@ -1,16 +1,15 @@
 package xcj.app.appsets.usecase
 
 import android.content.Context
-import android.net.Uri
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.core.net.toUri
 import androidx.lifecycle.LifecycleOwner
 import androidx.navigation.NavController
 import kotlinx.coroutines.CoroutineScope
-import xcj.app.appsets.util.ktx.toast
 import xcj.app.appsets.ui.compose.PageRouteNames
 import xcj.app.appsets.util.DesignRecorder
+import xcj.app.appsets.util.ktx.toast
 import xcj.app.appsets.util.model.UriProvider
 import xcj.app.compose_share.dynamic.IComposeLifecycleAware
 import xcj.app.starter.android.ktx.asFileOrNull
@@ -109,17 +108,18 @@ class MediaAudioRecorderUseCase(
 
     fun getRecordFileUriProvider(): UriProvider? {
         val outPut = designRecorder.getOutPut()
-        if (outPut is DesignRecorder.OutPut) {
-            val uri = outPut.getOutPutFilePath().asFileOrNull()?.also {
-                it.setReadable(true)
-            }?.toUri()
-            if (uri != null) {
-                return object : UriProvider {
-                    override fun provideUri(): Uri? {
-                        return uri
-                    }
-                }
-            }
+        if (outPut !is DesignRecorder.OutPut) {
+            return null
+        }
+        val fileOrNull = outPut.getOutPutFilePath().asFileOrNull()
+        if (fileOrNull == null) {
+            return null
+        }
+        fileOrNull.setReadable(true)
+        val uri = fileOrNull.toUri()
+        val uriProvider = UriProvider.fromUri(uri)
+        if (uriProvider != null) {
+            return uriProvider
         }
         return null
     }

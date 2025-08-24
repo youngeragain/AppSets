@@ -86,9 +86,6 @@ object ImMessageGenerator {
 
             is UriProvider -> {
                 val uri = content.provideUri()
-                if (uri == null) {
-                    return ""
-                }
                 return context.queryUriFileName(uri) ?: ""
             }
 
@@ -152,7 +149,7 @@ object ImMessageGenerator {
 
             is UriProvider -> {
                 val uri = content.provideUri()
-                val path = uri?.path ?: return null
+                val path = uri.path ?: return null
                 val contentUrlMarker: String = UUID.randomUUID().toString()
                 LocalFileIO.current.uploadWithUri(
                     context,
@@ -228,8 +225,9 @@ object ImMessageGenerator {
     ): VideoMessageMetadata {
         val urlMaker = uploadContent(context, session, inputSelector, content)
         val mediaStoreDataUriWrapper = content as MediaStoreDataUri
+        val uri = mediaStoreDataUriWrapper.provideUri()
         val companionUrlMaker = UUID.randomUUID().toString()
-        val videoFrameUri = VideoFileUtil.extractVideoFrame(context, mediaStoreDataUriWrapper)
+        val videoFrameUri = VideoFileUtil.getVideoFirstFrameAsUri(context, uri)
         if (videoFrameUri != null) {
             LocalFileIO.current.uploadWithUri(
                 context,

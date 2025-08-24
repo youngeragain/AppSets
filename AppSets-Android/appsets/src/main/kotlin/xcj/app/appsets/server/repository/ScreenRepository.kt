@@ -17,6 +17,7 @@ import xcj.app.appsets.server.model.ScreenMediaFileUrl
 import xcj.app.appsets.server.model.ScreenReview
 import xcj.app.appsets.ui.model.PostScreen
 import xcj.app.appsets.util.PictureUrlMapper
+import xcj.app.appsets.util.VideoFileUtil
 import xcj.app.appsets.util.ktx.toastSuspend
 import xcj.app.appsets.util.ktx.writeBitmap
 import xcj.app.appsets.util.model.MediaStoreDataUri
@@ -120,7 +121,7 @@ class ScreenRepository(
         if (pictures.isNotEmpty()) {
             mediaFilUrls = mutableListOf()
             for (pic in pictures) {
-                val pictureUri = pic.provideUri() ?: continue
+                val pictureUri = pic.provideUri()
                 filesToUpload.add(pictureUri)
                 val contentUrlMarker = UUID.randomUUID().toString()
                 fileUrlMakers.add(contentUrlMarker)
@@ -142,37 +143,37 @@ class ScreenRepository(
                     .toastSuspend()
             } else {
                 val videoUri = video.provideUri()
-                if (videoUri != null) {
-                    if (mediaFilUrls == null) {
-                        mediaFilUrls = mutableListOf()
-                    }
-                    filesToUpload.add(videoUri)
-                    val contentUrlMarker = UUID.randomUUID().toString()
-                    fileUrlMakers.add(contentUrlMarker)
-                    val mediaFileUrl = ScreenMediaFileUrl(
-                        mediaFileUrl = contentUrlMarker,
-                        mediaFileCompanionUrl = null,
-                        mediaType = ContentType.VIDEO,
-                        mediaDescription = video.displayName ?: "",
-                        x18Content = 0
-                    )
-                    val mediaMetadataRetriever: MediaMetadataRetriever = MediaMetadataRetriever()
-                    val thumbnailBitmap = video.getThumbnail(context, mediaMetadataRetriever)
-                    if (thumbnailBitmap != null) {
-                        val cacheDir = LocalAndroidContextFileDir.current.tempImagesCacheDir
-                        if (!cacheDir.isNullOrEmpty()) {
-                            val fileName = "${UUID.randomUUID()}.png"
-                            val file = File(cacheDir, fileName)
-                            file.createNewFile()
-                            file.writeBitmap(thumbnailBitmap, Bitmap.CompressFormat.PNG, 85)
-                            filesToUpload.add(file.toUri())
-                            val contentCompanionUrlMarker = UUID.randomUUID().toString()
-                            fileUrlMakers.add(contentCompanionUrlMarker)
-                            mediaFileUrl.mediaFileCompanionUrl = contentCompanionUrlMarker
-                        }
-                    }
-                    mediaFilUrls.add(mediaFileUrl)
+                if (mediaFilUrls == null) {
+                    mediaFilUrls = mutableListOf()
                 }
+                filesToUpload.add(videoUri)
+                val contentUrlMarker = UUID.randomUUID().toString()
+                fileUrlMakers.add(contentUrlMarker)
+                val mediaFileUrl = ScreenMediaFileUrl(
+                    mediaFileUrl = contentUrlMarker,
+                    mediaFileCompanionUrl = null,
+                    mediaType = ContentType.VIDEO,
+                    mediaDescription = video.displayName ?: "",
+                    x18Content = 0
+                )
+                val mediaMetadataRetriever = MediaMetadataRetriever()
+
+                val thumbnailBitmap =
+                    VideoFileUtil.getVideoFirstFrame(context, videoUri, mediaMetadataRetriever)
+                if (thumbnailBitmap != null) {
+                    val cacheDir = LocalAndroidContextFileDir.current.tempImagesCacheDir
+                    if (!cacheDir.isNullOrEmpty()) {
+                        val fileName = "${UUID.randomUUID()}.png"
+                        val file = File(cacheDir, fileName)
+                        file.createNewFile()
+                        file.writeBitmap(thumbnailBitmap, Bitmap.CompressFormat.PNG, 85)
+                        filesToUpload.add(file.toUri())
+                        val contentCompanionUrlMarker = UUID.randomUUID().toString()
+                        fileUrlMakers.add(contentCompanionUrlMarker)
+                        mediaFileUrl.mediaFileCompanionUrl = contentCompanionUrlMarker
+                    }
+                }
+                mediaFilUrls.add(mediaFileUrl)
             }
         }
         if (filesToUpload.isNotEmpty()) {
