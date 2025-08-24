@@ -4,4 +4,5 @@
     <string name="delete">Delete</string>
     <string name="compose_plugin">Compose Plugin</string>
     <string name="compose_plugin_description">Using the dynamic capabilities of Compose to provide an application feature extension that can be dynamically added or remove</string>
+    <string name="back">back</string>
 </resources>

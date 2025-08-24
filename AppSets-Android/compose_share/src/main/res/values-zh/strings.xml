@@ -4,4 +4,5 @@
     <string name="delete">删除</string>
     <string name="compose_plugin">Compose 插件</string>
     <string name="compose_plugin_description">使用Compose的动态能力，提供一种可动态增加或移除的应用功能扩展</string>
+    <string name="back">返回</string>
 </resources>

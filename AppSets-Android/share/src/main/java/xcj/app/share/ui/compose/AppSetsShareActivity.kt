@@ -5,7 +5,6 @@ import android.content.ComponentName
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
-import android.os.Parcelable
 import androidx.activity.compose.setContent
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.ActivityResultCallback
@@ -13,6 +12,7 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.core.content.FileProvider
+import androidx.core.content.IntentCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.withCreated
 import kotlinx.coroutines.launch
@@ -26,7 +26,6 @@ import xcj.app.starter.android.ui.base.DesignComponentActivity
 import xcj.app.starter.android.usecase.PlatformUseCase
 import xcj.app.starter.android.util.PurpleLogger
 import xcj.app.starter.util.ContentType
-import kotlin.getValue
 
 class AppSetsShareActivity : DesignComponentActivity() {
     companion object {
@@ -126,7 +125,10 @@ class AppSetsShareActivity : DesignComponentActivity() {
         )
         intent.setComponent(componentName)
         runCatching {
-            val activityResultLauncher = getActivityResultLauncher<Intent>(Intent::class.java, null) as? ActivityResultLauncher<Intent>
+            val activityResultLauncher = getActivityResultLauncher<Intent>(
+                Intent::class.java,
+                null
+            ) as? ActivityResultLauncher<Intent>
             activityResultLauncher?.launch(intent)
         }.onFailure {
             it.printStackTrace()
@@ -171,11 +173,11 @@ class AppSetsShareActivity : DesignComponentActivity() {
                 return@ActivityResultCallback
             }
             val hasShareDeviceAddress = returnIntent.hasExtra("APPSETS_SHARE_DEVICE_ADDRESSES")
-            if(hasShareDeviceAddress){
+            if (hasShareDeviceAddress) {
                 val shareDeviceAddresses =
                     returnIntent.getStringArrayExtra("APPSETS_SHARE_DEVICE_ADDRESSES")
                 getShareMethod().onScanShareDeviceAddress(shareDeviceAddresses)
-            }else{
+            } else {
                 // 处理选择的多个文件
                 val clipData = returnIntent.clipData
                 if (clipData != null) {
@@ -286,16 +288,18 @@ class AppSetsShareActivity : DesignComponentActivity() {
         } else {
             val isMulti = intent.action == Intent.ACTION_SEND_MULTIPLE
             if (!isMulti) {
-                (intent.getParcelableExtra<Parcelable>(Intent.EXTRA_STREAM) as? Uri)?.let { uri ->
-                    viewModel.addPendingContent(this, uri, CONTENT_FORM_OTHER_APP)
-                }
-            } else {
-                intent.getParcelableArrayListExtra<Parcelable>(Intent.EXTRA_STREAM)
-                    ?.mapNotNull {
-                        it as? Uri
-                    }?.let { uris ->
-                        viewModel.addPendingContent(this, uris, CONTENT_FORM_OTHER_APP)
+                IntentCompat.getParcelableExtra(intent, Intent.EXTRA_STREAM, Uri::class.java)
+                    ?.let { uri ->
+                        viewModel.addPendingContent(this, uri, CONTENT_FORM_OTHER_APP)
                     }
+            } else {
+                IntentCompat.getParcelableArrayListExtra(
+                    intent,
+                    Intent.EXTRA_STREAM,
+                    Uri::class.java
+                )?.let { uris ->
+                    viewModel.addPendingContent(this, uris, CONTENT_FORM_OTHER_APP)
+                }
             }
         }
     }

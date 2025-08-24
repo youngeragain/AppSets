@@ -1,12 +1,14 @@
 package xcj.app.starter.android.util
 
-import xcj.app.starter.foundation.staticProvider
+import xcj.app.starter.foundation.lazyStaticProvider
 
 private fun purpleLoggingForPlatform(): PurpleLoggerForAndroid {
     return PurpleLoggerForAndroid()
 }
 
 @JvmField
-val PurpleLogger = staticProvider<PurpleLoggerForAndroid>().apply {
-    this provide purpleLoggingForPlatform()
+val PurpleLogger = lazyStaticProvider<PurpleLoggerForAndroid>().apply {
+    provide {
+        purpleLoggingForPlatform()
+    }
 }

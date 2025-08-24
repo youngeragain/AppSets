@@ -5,7 +5,7 @@ import xcj.app.share.http.base.HttpShareDevice
 import xcj.app.share.http.model.ContentInfoList
 import xcj.app.starter.foundation.http.DesignResponse
 import xcj.app.web.webserver.base.ContentDownloadN
-import xcj.app.web.webserver.base.FileUploadN
+import xcj.app.web.webserver.base.ContentUploadN
 
 interface ShareService {
     fun greeting(context: Context, clientHost: String): DesignResponse<String>
@@ -52,7 +52,7 @@ interface ShareService {
         context: Context,
         clientHost: String,
         shareToken: String,
-        fileUploadN: FileUploadN
+        contentUploadN: ContentUploadN
     ): DesignResponse<Boolean>
 
     fun postFileChunked(
@@ -62,7 +62,7 @@ interface ShareService {
         fileId: String,
         chunkCount: Int,
         chunk: Int,
-        fileUploadN: FileUploadN
+        contentUploadN: ContentUploadN
     ): DesignResponse<Boolean>
 
     fun getContent(

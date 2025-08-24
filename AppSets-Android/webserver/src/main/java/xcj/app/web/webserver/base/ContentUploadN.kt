@@ -11,7 +11,7 @@ import java.io.Closeable
 import java.io.File
 import java.util.UUID
 
-class FileUploadN(
+class ContentUploadN(
     val id: String = UUID.randomUUID().toString()
 ) : Closeable {
     companion object {

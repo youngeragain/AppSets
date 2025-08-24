@@ -15,8 +15,8 @@ import xcj.app.share.ui.compose.AppSetsShareActivity
 import xcj.app.starter.android.util.PurpleLogger
 import xcj.app.starter.foundation.http.DesignResponse
 import xcj.app.web.webserver.base.ContentDownloadN
+import xcj.app.web.webserver.base.ContentUploadN
 import xcj.app.web.webserver.base.DataProgressInfoPool
-import xcj.app.web.webserver.base.FileUploadN
 import xcj.app.web.webserver.base.ReadableData
 import java.io.ByteArrayInputStream
 import java.io.InputStream
@@ -155,7 +155,7 @@ class ShareServiceImpl : ShareService {
         context: Context,
         clientHost: String,
         shareToken: String,
-        fileUploadN: FileUploadN
+        contentUploadN: ContentUploadN
     ): DesignResponse<Boolean> {
         val shareMethod = getShareMethod(context)
         if (shareMethod == null) {
@@ -164,10 +164,10 @@ class ShareServiceImpl : ShareService {
         val clientInfo = ClientInfo(clientHost)
         PurpleLogger.current.d(
             TAG,
-            "postFile, clientHost:$clientHost, shareToken:$shareToken, fileUploadN:${fileUploadN}"
+            "postFile, clientHost:$clientHost, shareToken:$shareToken, fileUploadN:${contentUploadN}"
         )
         val handleResult =
-            postFileHelper.handleFile(context, shareMethod, clientInfo, fileUploadN)
+            postFileHelper.handleFile(context, shareMethod, clientInfo, contentUploadN)
 
         return DesignResponse(data = handleResult)
     }
@@ -180,7 +180,7 @@ class ShareServiceImpl : ShareService {
         fileId: String,
         chunkCount: Int,
         chunk: Int,
-        fileUploadN: FileUploadN
+        contentUploadN: ContentUploadN
     ): DesignResponse<Boolean> {
         val shareMethod = getShareMethod(context)
         if (shareMethod == null) {
@@ -188,10 +188,10 @@ class ShareServiceImpl : ShareService {
         }
         PurpleLogger.current.d(
             TAG,
-            "postFileChunked, clientHost:$clientHost, shareToken:$shareToken, fileUploadN:${fileUploadN}"
+            "postFileChunked, clientHost:$clientHost, shareToken:$shareToken, fileUploadN:${contentUploadN}"
         )
         val handleResult =
-            postFileHelper.handleChunkedFile(context, fileId, chunkCount, chunk, fileUploadN)
+            postFileHelper.handleChunkedFile(context, fileId, chunkCount, chunk, contentUploadN)
         return DesignResponse(data = handleResult)
     }
 

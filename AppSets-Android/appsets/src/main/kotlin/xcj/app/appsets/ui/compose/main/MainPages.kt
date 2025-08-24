@@ -74,7 +74,6 @@ import xcj.app.appsets.im.model.FriendRequestJson
 import xcj.app.appsets.im.model.GroupRequestJson
 import xcj.app.appsets.ui.compose.LocalNavHostController
 import xcj.app.appsets.ui.compose.LocalQuickStepContentHandlerRegistry
-import xcj.app.appsets.ui.compose.LocalUseCaseOfActivityLifecycle
 import xcj.app.appsets.ui.compose.LocalUseCaseOfAppCreation
 import xcj.app.appsets.ui.compose.LocalUseCaseOfApps
 import xcj.app.appsets.ui.compose.LocalUseCaseOfConversation
@@ -133,7 +132,6 @@ fun MainPages() {
     }
     CompositionLocalProvider(
         LocalUseCaseOfNavigation provides viewModel.navigationUseCase,
-        LocalUseCaseOfActivityLifecycle provides viewModel.activityLifecycleUseCase,
         LocalUseCaseOfComposeDynamic provides viewModel.composeDynamicUseCase,
         LocalUseCaseOfSystem provides viewModel.systemUseCase,
         LocalUseCaseOfScreenPost provides viewModel.screenPostUseCase,

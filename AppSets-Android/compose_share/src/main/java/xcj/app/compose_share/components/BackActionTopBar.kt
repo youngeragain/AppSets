@@ -19,6 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -49,7 +50,7 @@ fun BackActionTopBar(
                     painter = painterResource(
                         id = backIcon ?: xcj.app.compose_share.R.drawable.ic_arrow_back_24
                     ),
-                    contentDescription = "go back",
+                    contentDescription = stringResource(xcj.app.compose_share.R.string.back),
                     modifier = Modifier
                         .clip(CircleShape)
                         .clickable(onClick = onBackClick)

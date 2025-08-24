@@ -5,7 +5,7 @@ import xcj.app.share.base.ClientInfo
 import xcj.app.share.base.DataContent
 import xcj.app.share.http.HttpShareMethod
 import xcj.app.starter.android.util.PurpleLogger
-import xcj.app.web.webserver.base.FileUploadN
+import xcj.app.web.webserver.base.ContentUploadN
 
 class PostFileHelper {
 
@@ -18,7 +18,7 @@ class PostFileHelper {
         fileId: String,
         chunkCount: Int,
         chunk: Int,
-        fileUploadN: FileUploadN
+        contentUploadN: ContentUploadN
     ): Boolean {
         if (chunk < chunkCount) {
 
@@ -33,9 +33,9 @@ class PostFileHelper {
         context: Context,
         shareMethod: HttpShareMethod,
         clientInfo: ClientInfo,
-        fileUploadN: FileUploadN
+        contentUploadN: ContentUploadN
     ): Boolean {
-        val files = fileUploadN.getContents()
+        val files = contentUploadN.getContents()
         PurpleLogger.current.d(
             TAG,
             "handleFile, fileCount:${files.size}"
@@ -45,7 +45,7 @@ class PostFileHelper {
         }
         files.forEach { file ->
             shareMethod.onContentReceived(
-                DataContent.FileContent(file, null, clientInfo, fileUploadN.id)
+                DataContent.FileContent(file, null, clientInfo, contentUploadN.id)
             )
         }
         return true

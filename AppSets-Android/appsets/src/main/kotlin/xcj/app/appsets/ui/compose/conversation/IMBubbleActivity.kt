@@ -17,6 +17,9 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.core.os.BundleCompat
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.compose.currentStateAsState
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.withCreated
@@ -35,7 +38,6 @@ import xcj.app.appsets.im.message.VideoMessage
 import xcj.app.appsets.im.message.VoiceMessage
 import xcj.app.appsets.im.model.CommonURIJson
 import xcj.app.appsets.server.model.Application
-import xcj.app.appsets.ui.compose.LocalUseCaseOfActivityLifecycle
 import xcj.app.appsets.ui.compose.LocalUseCaseOfConversation
 import xcj.app.appsets.ui.compose.LocalUseCaseOfGroupInfo
 import xcj.app.appsets.ui.compose.LocalUseCaseOfMediaAudioRecorder
@@ -69,6 +71,7 @@ import xcj.app.appsets.ui.compose.user.UserProfilePage
 import xcj.app.appsets.ui.model.ApplicationForCreate
 import xcj.app.appsets.ui.viewmodel.IMBubbleViewModel
 import xcj.app.appsets.usecase.SystemUseCase
+import xcj.app.appsets.util.BundleDefaults
 import xcj.app.compose_share.components.BottomSheetContainer
 import xcj.app.compose_share.components.LocalAnyStateProvider
 import xcj.app.compose_share.ui.viewmodel.AnyStateViewModel.Companion.bottomSheetState
@@ -113,7 +116,6 @@ class IMBubbleActivity : DesignComponentActivity() {
 fun ImBubblePages() {
     val viewModel = viewModel<IMBubbleViewModel>()
     CompositionLocalProvider(
-        LocalUseCaseOfActivityLifecycle provides viewModel.activityLifecycleUseCase,
         LocalUseCaseOfSystem provides viewModel.systemUseCase,
         LocalUseCaseOfNavigation provides viewModel.navigationUseCase,
         LocalUseCaseOfGroupInfo provides viewModel.groupInfoUseCase,
@@ -560,7 +562,11 @@ fun ImSessionBubbleNaviHostPages(navController: NavHostController) {
 
             composable(PageRouteNames.AppDetailsPage) {
                 val application =
-                    it.arguments?.getParcelable(Constants.APP_INFO) as? Application
+                    BundleCompat.getParcelable(
+                        it.arguments ?: BundleDefaults.empty,
+                        Constants.APP_INFO,
+                        Application::class.java
+                    )
                 val context = LocalContext.current
                 val conversationUseCase = LocalUseCaseOfConversation.current
                 val anyStateProvider = LocalAnyStateProvider.current
@@ -657,15 +663,19 @@ fun ImSessionBubbleNaviHostPages(navController: NavHostController) {
 
             composable(PageRouteNames.PrivacyPage) {
                 val context = LocalContext.current
+                val lifecycleOwner = LocalLifecycleOwner.current
+                val lifecycle = lifecycleOwner.lifecycle
+                val lifecycleState by lifecycle.currentStateAsState()
+                val privacy = remember {
+                    SystemUseCase.providePrivacy(context)
+                }
                 var androidPermissionsUsageList by remember {
                     mutableStateOf(PlatformUseCase.providePlatformPermissions(context))
                 }
-                val activityLifecycleUseCase = LocalUseCaseOfActivityLifecycle.current
-                LaunchedEffect(activityLifecycleUseCase.activityResumeState.value) {
+                LaunchedEffect(lifecycleState) {
                     androidPermissionsUsageList =
                         PlatformUseCase.providePlatformPermissions(context)
                 }
-                val privacy = SystemUseCase.providePrivacy(context)
                 PrivacyPage(
                     onBackClick = navController::navigateUp,
                     privacy = privacy,

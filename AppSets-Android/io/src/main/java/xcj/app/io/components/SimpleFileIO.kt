@@ -27,7 +27,7 @@ import xcj.app.starter.android.ktx.startWithHttpSchema
 import xcj.app.starter.android.util.FileUtil
 import xcj.app.starter.android.util.LocalMessager
 import xcj.app.starter.android.util.PurpleLogger
-import xcj.app.starter.foundation.staticProvider
+import xcj.app.starter.foundation.lazyStaticProvider
 import xcj.app.starter.test.LocalAndroidContextFileDir
 import xcj.app.starter.test.LocalApplication
 import java.io.File
@@ -41,6 +41,8 @@ class SimpleFileIO : FileIO {
 
         const val MESSAGE_KEY_ON_COMPONENTS_INITIALED = "on_components_initialed"
     }
+
+    var shouldActive: Boolean = true
 
     var progressObserver: ProgressObserver? = null
 
@@ -58,6 +60,9 @@ class SimpleFileIO : FileIO {
     }
 
     fun initThirdComponents(tencentCosInfoProvider: TencentCosInfoProvider) {
+        if (!shouldActive) {
+            return
+        }
         PurpleLogger.current.d(TAG, "initThirdComponents")
         this.tencentCosInfoProvider = tencentCosInfoProvider
         LocalMessager.post(MESSAGE_KEY_ON_COMPONENTS_INITIALED, true)
@@ -157,6 +162,9 @@ class SimpleFileIO : FileIO {
         urlMarker: String,
         uploadOptions: ObjectUploadOptions?
     ) {
+        if (!shouldActive) {
+            return
+        }
         PurpleLogger.current.d(TAG, "uploadForUrlMarker")
         ensureCosXmlServiceIfNeeded()
         val cosInfoProvider = tencentCosInfoProvider
@@ -267,6 +275,9 @@ class SimpleFileIO : FileIO {
         contentUrlMarker: String?,
         objectPathOptions: ObjectUploadOptions? = null
     ): String? = withContext(Dispatchers.IO) {
+        if (!shouldActive) {
+            return@withContext "http://localhost/"
+        }
         if (System.currentTimeMillis() - lastExceptionTimeMills < 10 * 1000) {
             PurpleLogger.current.d(
                 TAG,
@@ -343,11 +354,20 @@ class SimpleFileIO : FileIO {
                 TAG,
                 "generatePreSign, exception, ${e.message}"
             )
+        } catch (e: Exception) {
+            lastExceptionTimeMills = System.currentTimeMillis()
+            PurpleLogger.current.d(
+                TAG,
+                "generatePreSign, exception, ${e.message}"
+            )
         }
         return@withContext contentUrlMarker
     }
 
     override suspend fun getFile(path: String): File? {
+        if (!shouldActive) {
+            return null
+        }
         val cosXmlService = cosXmlService ?: return null
         val getTencentCosRegionBucket =
             tencentCosInfoProvider?.getTencentCosRegionBucket() ?: return null
@@ -357,11 +377,7 @@ class SimpleFileIO : FileIO {
             path,
             tempFilesCacheDir.toString()
         )
-        objectRequest.progressListener = object : CosXmlProgressListener {
-            override fun onProgress(complete: Long, target: Long) {
-
-            }
-        }
+        objectRequest.progressListener = CosXmlProgressListener { complete, target -> }
 
         runCatching {
             val getObjectResult = cosXmlService.getObject(objectRequest)
@@ -379,6 +395,9 @@ class SimpleFileIO : FileIO {
 }
 
 @JvmField
-val LocalFileIO = staticProvider<SimpleFileIO>().apply {
-    provide(SimpleFileIO())
+val LocalFileIO = lazyStaticProvider<SimpleFileIO>().apply {
+    provide {
+        val simpleFileIO = SimpleFileIO()
+        simpleFileIO
+    }
 }

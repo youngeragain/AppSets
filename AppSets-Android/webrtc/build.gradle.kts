@@ -47,15 +47,15 @@ android {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
-    /*kotlin {
-        jvmToolchain(17)
-    }*/
-    kotlinOptions {
-        jvmTarget = "17"
-    }
+
     /*composeOptions {
         kotlinCompilerExtensionVersion = "1.5.3"
     }*/
+
+    kotlin {
+        jvmToolchain(17)
+        compilerOptions.jvmTarget.set(JvmTarget.JVM_17)
+    }
 }
 
 dependencies {

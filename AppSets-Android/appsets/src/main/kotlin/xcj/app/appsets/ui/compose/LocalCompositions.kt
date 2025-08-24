@@ -3,9 +3,7 @@ package xcj.app.appsets.ui.compose
 import androidx.activity.OnBackPressedDispatcher
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.navigation.NavHostController
-import xcj.app.appsets.ui.compose.quickstep.QuickStepContentHandler
 import xcj.app.appsets.ui.compose.quickstep.QuickStepContentHandlerRegistry
-import xcj.app.appsets.usecase.ActivityLifecycleUseCase
 import xcj.app.appsets.usecase.AppCreationUseCase
 import xcj.app.appsets.usecase.AppsUseCase
 import xcj.app.appsets.usecase.ConversationUseCase
@@ -24,9 +22,6 @@ import xcj.app.appsets.usecase.UserInfoUseCase
 
 val LocalBackPressedDispatcher =
     staticCompositionLocalOf<OnBackPressedDispatcher> { error("No Back Dispatcher provided") }
-
-val LocalUseCaseOfActivityLifecycle =
-    staticCompositionLocalOf<ActivityLifecycleUseCase> { error("No ActivityLifecycleUseCase provided") }
 
 val LocalUseCaseOfNavigation =
     staticCompositionLocalOf<NavigationUseCase> { error("No NavigationUseCase provided") }

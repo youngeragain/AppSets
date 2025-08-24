@@ -4,15 +4,15 @@ import android.app.Activity
 import android.app.Application
 import androidx.lifecycle.Lifecycle
 import kotlinx.coroutines.CoroutineScope
-import xcj.app.starter.foundation.staticProvider
+import xcj.app.starter.foundation.lazyStaticProvider
 
 @JvmField
-val LocalApplication = staticProvider<Application>().apply {
+val LocalApplication = lazyStaticProvider<Application>().apply {
     //Please provide this value in due course
 }
 
 @JvmField
-val LocalActivities = staticProvider<Map<Activity, Lifecycle.State>>().apply {
+val LocalActivities = lazyStaticProvider<Map<Activity, Lifecycle.State>>().apply {
     //Please provide this value in due course
 }
 
@@ -20,22 +20,22 @@ val LocalTopActivity: Activity
     get() = LocalActivities.current.keys.last()
 
 @JvmField
-val LocalPurpleCoroutineScope = staticProvider<CoroutineScope>().apply {
+val LocalPurpleCoroutineScope = lazyStaticProvider<CoroutineScope>().apply {
     //Please provide this value in due course
 }
 
 @JvmField
-val LocalAndroidContextFileDir = staticProvider<AndroidContextFileDir>().apply {
+val LocalAndroidContextFileDir = lazyStaticProvider<AndroidContextFileDir>().apply {
     //Please provide this value in due course
 }
 
 @JvmField
-val LocalPurple = staticProvider<PurpleContext>().apply {
+val LocalPurple = lazyStaticProvider<PurpleContext>().apply {
     //Please provide this value in due course
 }
 
 @JvmField
-val LocalPurpleEventPublisher = staticProvider<PurpleEventPublisher>().apply {
+val LocalPurpleEventPublisher = lazyStaticProvider<PurpleEventPublisher>().apply {
     //Please provide this value in due course
 }
 

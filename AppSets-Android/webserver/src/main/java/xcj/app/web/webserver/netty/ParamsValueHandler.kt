@@ -2,13 +2,23 @@ package xcj.app.web.webserver.netty
 
 import android.content.Context
 import io.netty.channel.ChannelHandlerContext
-import io.netty.handler.codec.http.*
+import io.netty.handler.codec.http.FullHttpMessage
+import io.netty.handler.codec.http.HttpHeaderNames
+import io.netty.handler.codec.http.HttpRequest
+import io.netty.handler.codec.http.HttpResponse
 import io.netty.handler.codec.http.multipart.HttpPostRequestDecoder
 import xcj.app.starter.android.util.PurpleLogger
 import xcj.app.starter.test.LocalTopActivity
 import xcj.app.starter.util.ContentType
-import xcj.app.web.webserver.base.FileUploadN
-import xcj.app.web.webserver.interfaces.*
+import xcj.app.web.webserver.base.ContentUploadN
+import xcj.app.web.webserver.interfaces.AndroidContext
+import xcj.app.web.webserver.interfaces.HttpBody
+import xcj.app.web.webserver.interfaces.HttpHeader
+import xcj.app.web.webserver.interfaces.HttpPathVariable
+import xcj.app.web.webserver.interfaces.HttpQueryParam
+import xcj.app.web.webserver.interfaces.HttpQueryParamOrder
+import xcj.app.web.webserver.interfaces.RequestBody
+import xcj.app.web.webserver.interfaces.RequestInfo
 import java.net.InetSocketAddress
 
 object ParamsValueHandler {
@@ -204,9 +214,9 @@ object ParamsValueHandler {
         contentTransformer: ContentTransformer,
         httpRequestWrapper: HttpRequestWrapper,
         type: Class<*>
-    ): FileUploadN? {
+    ): ContentUploadN? {
         PurpleLogger.current.d(TAG, "resolveFormDataFileBody")
-        val fileUploadN = httpRequestWrapper.fileUploadN
+        val fileUploadN = httpRequestWrapper.contentUploadN
         return fileUploadN
     }
 

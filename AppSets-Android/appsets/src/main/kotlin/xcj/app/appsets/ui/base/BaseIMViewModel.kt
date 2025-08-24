@@ -17,7 +17,6 @@ import xcj.app.appsets.server.repository.UserRepository
 import xcj.app.appsets.ui.compose.PageRouteNames
 import xcj.app.appsets.ui.compose.content_selection.ContentSelectionResult
 import xcj.app.appsets.ui.compose.content_selection.ContentSelectionTypes
-import xcj.app.appsets.usecase.ActivityLifecycleUseCase
 import xcj.app.appsets.usecase.ConversationUseCase
 import xcj.app.appsets.usecase.GroupInfoUseCase
 import xcj.app.appsets.usecase.MediaAudioRecorderUseCase
@@ -43,7 +42,6 @@ abstract class BaseIMViewModel : AnyStateViewModel() {
     val systemUseCase: SystemUseCase = SystemUseCase.getInstance()
 
     val nowSpaceContentUseCase: NowSpaceContentUseCase = NowSpaceContentUseCase.getInstance()
-    val activityLifecycleUseCase: ActivityLifecycleUseCase = ActivityLifecycleUseCase()
     val userInfoUseCase: UserInfoUseCase =
         UserInfoUseCase(
             viewModelScope,
@@ -73,7 +71,6 @@ abstract class BaseIMViewModel : AnyStateViewModel() {
     open fun onActivityCreated(activity: ComponentActivity) {
         PurpleLogger.current.d(TAG, "onActivityCreated")
         doActionsOnCreated()
-        activityLifecycleUseCase.setLifecycleOwner(activity)
         mediaRemoteExoUseCase.setLifecycleOwner(activity)
         mediaAudioRecorderUseCase.setLifecycleOwner(activity)
         observeSomeThings(activity)

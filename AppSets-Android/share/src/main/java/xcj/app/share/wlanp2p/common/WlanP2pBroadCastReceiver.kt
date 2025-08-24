@@ -8,6 +8,7 @@ import android.net.NetworkInfo
 import android.net.wifi.p2p.WifiP2pDevice
 import android.net.wifi.p2p.WifiP2pManager
 import android.os.Build
+import androidx.core.content.IntentCompat
 import xcj.app.share.wlanp2p.WlanP2pShareMethod
 import xcj.app.starter.android.util.PurpleLogger
 
@@ -80,8 +81,10 @@ class WlanP2pBroadCastReceiver(
                 )
                 // Connection state changed! We should probably do something about
                 // that.
-                val networkInfo: NetworkInfo? =
-                    intent.getParcelableExtra(WifiP2pManager.EXTRA_NETWORK_INFO) as? NetworkInfo
+                val networkInfo: NetworkInfo? = IntentCompat.getParcelableExtra(
+                    intent, WifiP2pManager.EXTRA_NETWORK_INFO,
+                    NetworkInfo::class.java
+                )
                 if (networkInfo == null) {
                     return
                 }
@@ -98,8 +101,10 @@ class WlanP2pBroadCastReceiver(
                     TAG,
                     "onReceive WIFI_P2P_THIS_DEVICE_CHANGED_ACTION"
                 )
-                val wifiP2pDevice =
-                    intent.getParcelableExtra(WifiP2pManager.EXTRA_WIFI_P2P_DEVICE) as? WifiP2pDevice
+                val wifiP2pDevice = IntentCompat.getParcelableExtra(
+                    intent, WifiP2pManager.EXTRA_WIFI_P2P_DEVICE,
+                    WifiP2pDevice::class.java
+                )
                 if (wifiP2pDevice == null) {
                     return
                 }

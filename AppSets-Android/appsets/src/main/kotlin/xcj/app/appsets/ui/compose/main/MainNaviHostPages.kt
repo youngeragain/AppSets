@@ -52,7 +52,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.net.toUri
+import androidx.core.os.BundleCompat
 import androidx.core.os.bundleOf
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.compose.currentStateAsState
 import androidx.navigation.NavController
 import androidx.navigation.NavDirections
 import androidx.navigation.NavGraphBuilder
@@ -88,7 +91,6 @@ import xcj.app.appsets.server.model.ScreenMediaFileUrl
 import xcj.app.appsets.server.model.UserInfo
 import xcj.app.appsets.server.model.VersionInfo
 import xcj.app.appsets.ui.base.BaseIMViewModel
-import xcj.app.appsets.ui.compose.LocalUseCaseOfActivityLifecycle
 import xcj.app.appsets.ui.compose.LocalUseCaseOfAppCreation
 import xcj.app.appsets.ui.compose.LocalUseCaseOfApps
 import xcj.app.appsets.ui.compose.LocalUseCaseOfConversation
@@ -146,6 +148,7 @@ import xcj.app.appsets.ui.model.ApplicationForCreate
 import xcj.app.appsets.ui.viewmodel.MainViewModel
 import xcj.app.appsets.usecase.AppsUseCase
 import xcj.app.appsets.usecase.SystemUseCase
+import xcj.app.appsets.util.BundleDefaults
 import xcj.app.appsets.util.ktx.toast
 import xcj.app.appsets.util.model.MediaStoreDataUri
 import xcj.app.compose_share.components.AnyStateProvider
@@ -216,7 +219,11 @@ fun MainNaviHostPages(
                 ) {
 
                     val application =
-                        it.arguments?.getParcelable(Constants.APP_INFO) as? Application
+                        BundleCompat.getParcelable(
+                            it.arguments ?: BundleDefaults.empty,
+                            Constants.APP_INFO,
+                            Application::class.java
+                        )
                     val context = LocalContext.current
                     val conversationUseCase = LocalUseCaseOfConversation.current
                     val anyStateProvider = LocalAnyStateProvider.current
@@ -307,8 +314,12 @@ fun MainNaviHostPages(
                     navBackStackEntry = it,
                     onBackClick = navController::navigateUp,
                 ) {
-                    val application =
-                        it.arguments?.getParcelable(Constants.APP_INFO) as? Application
+                    val application = BundleCompat.getParcelable(
+                        it.arguments ?: BundleDefaults.empty,
+                        Constants.APP_INFO,
+                        Application::class.java
+                    )
+
                     val platform =
                         it.arguments?.getString(Constants.PLATFORM_ID)?.let { platformId ->
                             application?.platforms?.firstOrNull { platform -> platform.id == platformId }
@@ -428,7 +439,7 @@ fun MainNaviHostPages(
                         onLikesClick = {
                             screensUseCase.userClickLikeScreen(context)
                         },
-                        onReviewConfirm = { reviewString->
+                        onReviewConfirm = { reviewString ->
                             screensUseCase.onReviewConfirm(context, reviewString)
                         },
                         onScreenMediaClick = { url, urls ->
@@ -471,8 +482,11 @@ fun MainNaviHostPages(
                     val screenPostUseCase = LocalUseCaseOfScreenPost.current
                     val systemUseCase = LocalUseCaseOfSystem.current
                     val anyStateProvider = LocalAnyStateProvider.current
-                    val quickStepContents =
-                        it.arguments?.getParcelableArrayList<QuickStepContent>(Constants.QUICK_STEP_CONTENT)
+                    val quickStepContents = BundleCompat.getParcelableArrayList(
+                        it.arguments ?: BundleDefaults.empty,
+                        Constants.QUICK_STEP_CONTENT,
+                        QuickStepContent::class.java
+                    )
                     CreateScreenPage(
                         quickStepContents = quickStepContents,
                         onBackClick = { shouldRefresh ->
@@ -903,8 +917,13 @@ fun MainNaviHostPages(
 
             composable(PageRouteNames.AppToolsDetailsPage) {
                 val type = it.arguments?.getString(TOOL_TYPE)
+
                 val quickStepContents =
-                    it.arguments?.getParcelableArrayList<QuickStepContent>(Constants.QUICK_STEP_CONTENT)
+                    BundleCompat.getParcelableArrayList(
+                        it.arguments ?: BundleDefaults.empty,
+                        Constants.QUICK_STEP_CONTENT,
+                        QuickStepContent::class.java
+                    )
                 AppToolsDetailsPage(
                     type = type,
                     quickStepContents = quickStepContents,
@@ -1056,15 +1075,19 @@ fun MainNaviHostPages(
 
             composable(PageRouteNames.PrivacyPage) {
                 val context = LocalContext.current
+                val lifecycleOwner = LocalLifecycleOwner.current
+                val lifecycle = lifecycleOwner.lifecycle
+                val lifecycleState by lifecycle.currentStateAsState()
+                val privacy = remember {
+                    SystemUseCase.providePrivacy(context)
+                }
                 var androidPermissionsUsageList by remember {
                     mutableStateOf(PlatformUseCase.providePlatformPermissions(context))
                 }
-                val activityLifecycleUseCase = LocalUseCaseOfActivityLifecycle.current
-                LaunchedEffect(activityLifecycleUseCase.activityResumeState.value) {
+                LaunchedEffect(lifecycleState) {
                     androidPermissionsUsageList =
                         PlatformUseCase.providePlatformPermissions(context)
                 }
-                val privacy = SystemUseCase.providePrivacy(context)
                 PrivacyPage(
                     onBackClick = navController::navigateUp,
                     privacy = privacy,

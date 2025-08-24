@@ -83,6 +83,6 @@ class UriQuickStepContent(
 }
 
 data class QuickStepContentHolder(
-    val intent:Intent,
+    val intent: Intent,
     val quickStepContents: List<QuickStepContent>
 )

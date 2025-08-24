@@ -8,7 +8,7 @@ import xcj.app.share.http.service.ShareServiceImpl
 import xcj.app.starter.android.util.PurpleLogger
 import xcj.app.starter.foundation.http.DesignResponse
 import xcj.app.web.webserver.base.ContentDownloadN
-import xcj.app.web.webserver.base.FileUploadN
+import xcj.app.web.webserver.base.ContentUploadN
 import xcj.app.web.webserver.interfaces.AndroidContext
 import xcj.app.web.webserver.interfaces.Controller
 import xcj.app.web.webserver.interfaces.HttpBody
@@ -139,13 +139,13 @@ class ShareController {
         @AndroidContext(AndroidContext.TYPE_ACTIVITY) context: Context,
         @RequestInfo(what = RequestInfo.WHAT_REQUEST_REMOTE_HOST) clientHost: String,
         @HttpHeader("share_token") shareToken: String,
-        @HttpBody(HttpBody.TYPE_FILE) fileUploadN: FileUploadN
+        @HttpBody(HttpBody.TYPE_FILE) contentUploadN: ContentUploadN
     ): DesignResponse<Boolean> {
         PurpleLogger.current.d(
             TAG,
-            "postFile, context:$context, fileUploadN:$fileUploadN, clientHost:$clientHost"
+            "postFile, context:$context, fileUploadN:$contentUploadN, clientHost:$clientHost"
         )
-        return shareService.postFile(context, clientHost, shareToken, fileUploadN)
+        return shareService.postFile(context, clientHost, shareToken, contentUploadN)
     }
 
     @RequestMapping(path = "/appsets/share/file/chunked", [HttpMethod.POST])
@@ -156,11 +156,11 @@ class ShareController {
         @HttpHeader("file_id") fileId: String,
         @HttpHeader("chunk_count") chunkCount: Int,
         @HttpHeader("chunk") chunk: Int,
-        @HttpBody(HttpBody.TYPE_FILE) fileUploadN: FileUploadN
+        @HttpBody(HttpBody.TYPE_FILE) contentUploadN: ContentUploadN
     ): DesignResponse<Boolean> {
         PurpleLogger.current.d(
             TAG,
-            "postFile, context:$context, fileUploadN:$fileUploadN, clientHost:$clientHost"
+            "postFile, context:$context, fileUploadN:$contentUploadN, clientHost:$clientHost"
         )
         return shareService.postFileChunked(
             context,
@@ -169,7 +169,7 @@ class ShareController {
             fileId,
             chunkCount,
             chunk,
-            fileUploadN
+            contentUploadN
         )
     }
 

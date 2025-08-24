@@ -26,7 +26,7 @@ object HttpFileUploadHelper {
                 e.printStackTrace()
             }
         }
-        val fileUploadN = httpRequestWrapper.fileUploadN
+        val fileUploadN = httpRequestWrapper.contentUploadN
         if (httpContent != null && fileUploadN != null) {
             fileUploadN.addHttpContent(httpContent, httpPostRequestDecoder, listenersProvider)
         }

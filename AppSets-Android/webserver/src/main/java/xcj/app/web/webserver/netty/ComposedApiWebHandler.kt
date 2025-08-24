@@ -6,13 +6,26 @@ import io.netty.buffer.Unpooled
 import io.netty.channel.ChannelFutureListener
 import io.netty.channel.ChannelHandlerContext
 import io.netty.channel.SimpleChannelInboundHandler
-import io.netty.handler.codec.http.*
+import io.netty.handler.codec.http.DefaultFullHttpResponse
+import io.netty.handler.codec.http.DefaultHttpResponse
+import io.netty.handler.codec.http.FullHttpRequest
+import io.netty.handler.codec.http.FullHttpResponse
+import io.netty.handler.codec.http.HttpContent
+import io.netty.handler.codec.http.HttpHeaderNames
+import io.netty.handler.codec.http.HttpObject
+import io.netty.handler.codec.http.HttpRequest
+import io.netty.handler.codec.http.HttpResponse
+import io.netty.handler.codec.http.HttpResponseStatus
+import io.netty.handler.codec.http.HttpUtil
+import io.netty.handler.codec.http.HttpVersion
+import io.netty.handler.codec.http.LastHttpContent
+import io.netty.handler.codec.http.QueryStringDecoder
 import io.netty.handler.codec.http.multipart.DefaultHttpDataFactory
 import io.netty.handler.codec.http.multipart.HttpPostRequestDecoder
 import xcj.app.starter.android.util.PurpleLogger
 import xcj.app.starter.test.ShareSystem
 import xcj.app.starter.util.ContentType
-import xcj.app.web.webserver.base.FileUploadN
+import xcj.app.web.webserver.base.ContentUploadN
 import xcj.app.web.webserver.interfaces.ListenersProvider
 
 class ComposedApiWebHandler(
@@ -263,14 +276,14 @@ class ComposedApiWebHandler(
                 val shareDirPath = ShareSystem.getShareDirPath()
                 defaultHttpDataFactory.setBaseDir(shareDirPath)
 
-                val fileUploadN = FileUploadN()
+                val contentUploadN = ContentUploadN()
 
-                httpRequestWrapper.fileUploadN = fileUploadN
+                httpRequestWrapper.contentUploadN = contentUploadN
                 if (HttpUtil.isContentLengthSet(httpRequest)) {
                     val length =
                         httpRequest.headers().get(HttpHeaderNames.CONTENT_LENGTH).toLongOrNull()
                             ?: 0
-                    fileUploadN.total = length
+                    contentUploadN.total = length
 
                 }
             }

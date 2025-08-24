@@ -2,11 +2,10 @@ package xcj.app.web.webserver.netty
 
 import io.netty.handler.codec.http.HttpContent
 import io.netty.handler.codec.http.HttpRequest
-import io.netty.handler.codec.http.LastHttpContent
 import io.netty.handler.codec.http.QueryStringDecoder
 import io.netty.handler.codec.http.multipart.HttpPostRequestDecoder
 import xcj.app.starter.android.util.PurpleLogger
-import xcj.app.web.webserver.base.FileUploadN
+import xcj.app.web.webserver.base.ContentUploadN
 import java.io.Closeable
 
 class HttpRequestWrapper(
@@ -19,7 +18,7 @@ class HttpRequestWrapper(
     }
 
     var httpPostRequestDecoder: HttpPostRequestDecoder? = null
-    var fileUploadN: FileUploadN? = null
+    var contentUploadN: ContentUploadN? = null
 
     var httpContent: HttpContent? = null
 
@@ -28,6 +27,6 @@ class HttpRequestWrapper(
         httpPostRequestDecoder?.destroy()
         httpPostRequestDecoder = null
         httpContent = null
-        fileUploadN?.close()
+        contentUploadN?.close()
     }
 }
