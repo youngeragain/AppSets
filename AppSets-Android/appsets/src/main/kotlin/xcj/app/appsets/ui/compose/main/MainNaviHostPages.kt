@@ -81,6 +81,7 @@ import xcj.app.appsets.im.message.MusicMessage
 import xcj.app.appsets.im.message.SystemMessage
 import xcj.app.appsets.im.message.VideoMessage
 import xcj.app.appsets.im.message.VoiceMessage
+import xcj.app.appsets.im.message.requireUri
 import xcj.app.appsets.im.model.CommonURIJson
 import xcj.app.appsets.purple_module.ModuleConstant
 import xcj.app.appsets.server.model.AppPlatform
@@ -291,11 +292,13 @@ fun MainNaviHostPages(
                             )
                         },
                         onAppScreenshotClick = { screenshot, screenshotList ->
+                            val currentUri = screenshot.url ?: return@AppDetailsPage
+                            val uriList = screenshotList.mapNotNull { screenshot -> screenshot.url }
                             showPictureViewDialog(
                                 anyStateProvider,
                                 context,
-                                screenshot.url,
-                                screenshotList.map { it.url }
+                                currentUri,
+                                uriList
                             )
                         },
                         onJoinToChatClick = { application ->
@@ -399,11 +402,14 @@ fun MainNaviHostPages(
                                 if (url.isVideoMedia) {
                                     navigateToVideoPlaybackActivity(context, url)
                                 } else {
+                                    val currentUri = url.mediaFileUrl
+                                    val uriList = urls.map { fileUrl -> fileUrl.mediaFileUrl }
                                     showPictureViewDialog(
                                         anyStateProvider,
                                         context,
-                                        url.mediaFileUrl,
-                                        urls.map { fileUrl -> fileUrl.mediaFileUrl })
+                                        currentUri,
+                                        uriList
+                                    )
                                 }
 
                             }
@@ -449,11 +455,14 @@ fun MainNaviHostPages(
                                 if (url.isVideoMedia) {
                                     navigateToVideoPlaybackActivity(context, url)
                                 } else {
+                                    val currentUri = url.mediaFileUrl
+                                    val uriList = urls.map { fileUrl -> fileUrl.mediaFileUrl }
                                     showPictureViewDialog(
                                         anyStateProvider,
                                         context,
-                                        url.mediaFileUrl,
-                                        urls.map { fileUrl -> fileUrl.mediaFileUrl })
+                                        currentUri,
+                                        uriList
+                                    )
                                 }
 
                             }
@@ -581,11 +590,24 @@ fun MainNaviHostPages(
                         },
                         onImMessageContentClick = { imMessage ->
                             when (imMessage) {
-                                is MusicMessage, is VoiceMessage -> {
+                                is MusicMessage -> {
+                                    val uri =
+                                        imMessage.requireUri() ?: return@ConversationOverviewPage
                                     val commonURIJson = CommonURIJson(
                                         imMessage.id,
                                         imMessage.metadata.description,
-                                        imMessage.metadata.url ?: ""
+                                        uri.toString()
+                                    )
+                                    mediaRemoteExoUseCase.playOrPauseAudio(commonURIJson)
+                                }
+
+                                is VoiceMessage -> {
+                                    val uri =
+                                        imMessage.requireUri() ?: return@ConversationOverviewPage
+                                    val commonURIJson = CommonURIJson(
+                                        imMessage.id,
+                                        imMessage.metadata.description,
+                                        uri.toString()
                                     )
                                     mediaRemoteExoUseCase.playOrPauseAudio(commonURIJson)
                                 }
@@ -595,14 +617,18 @@ fun MainNaviHostPages(
                                 }
 
                                 is ImageMessage -> {
-                                    val imMessageOfImageUrls =
+                                    val currentUri = imMessage.requireUri()
+                                        ?: return@ConversationOverviewPage
+                                    val uriList =
                                         conversationUseCase.findCurrentSessionAllImMessageOfImage()
-                                            .map { it.metadata.url }
+                                            .mapNotNull { imageMessage ->
+                                                imageMessage.requireUri()
+                                            }
                                     showPictureViewDialog(
                                         anyStateProvider,
                                         context,
-                                        imMessage.metadata.url,
-                                        imMessageOfImageUrls
+                                        currentUri,
+                                        uriList
                                     )
                                 }
 
@@ -663,6 +689,7 @@ fun MainNaviHostPages(
                                 mediaAudioRecorderUseCase.cleanUp("user stop")
                                 return@ConversationOverviewPage
                             }
+                            mediaAudioRecorderUseCase.resetState()
                             val uriProvider = mediaAudioRecorderUseCase.getRecordFileUriProvider()
                             if (uriProvider == null) {
                                 return@ConversationOverviewPage
@@ -722,11 +749,24 @@ fun MainNaviHostPages(
                         },
                         onImMessageContentClick = { imMessage ->
                             when (imMessage) {
-                                is MusicMessage, is VoiceMessage -> {
+                                is MusicMessage -> {
+                                    val uri =
+                                        imMessage.requireUri() ?: return@ConversationDetailsPage
                                     val commonURIJson = CommonURIJson(
                                         imMessage.id,
                                         imMessage.metadata.description,
-                                        imMessage.metadata.url ?: ""
+                                        uri.toString()
+                                    )
+                                    mediaRemoteExoUseCase.playOrPauseAudio(commonURIJson)
+                                }
+
+                                is VoiceMessage -> {
+                                    val uri =
+                                        imMessage.requireUri() ?: return@ConversationDetailsPage
+                                    val commonURIJson = CommonURIJson(
+                                        imMessage.id,
+                                        imMessage.metadata.description,
+                                        uri.toString()
                                     )
                                     mediaRemoteExoUseCase.playOrPauseAudio(commonURIJson)
                                 }
@@ -736,14 +776,18 @@ fun MainNaviHostPages(
                                 }
 
                                 is ImageMessage -> {
-                                    val imMessageOfImageUrls =
+                                    val currentUri = imMessage.requireUri()
+                                        ?: return@ConversationDetailsPage
+                                    val uriList =
                                         conversationUseCase.findCurrentSessionAllImMessageOfImage()
-                                            .map { it.metadata.url }
+                                            .mapNotNull { imageMessage ->
+                                                imageMessage.requireUri()
+                                            }
                                     showPictureViewDialog(
                                         anyStateProvider,
                                         context,
-                                        imMessage.metadata.url,
-                                        imMessageOfImageUrls
+                                        currentUri,
+                                        uriList
                                     )
                                 }
 
@@ -959,11 +1003,14 @@ fun MainNaviHostPages(
                                 if (url.isVideoMedia) {
                                     navigateToVideoPlaybackActivity(context, url)
                                 } else {
+                                    val currentUri = url.mediaFileUrl
+                                    val uriList = urls.map { fileUrl -> fileUrl.mediaFileUrl }
                                     showPictureViewDialog(
                                         anyStateProvider,
                                         context,
-                                        url.mediaFileUrl,
-                                        urls.map { fileUrl -> fileUrl.mediaFileUrl })
+                                        currentUri,
+                                        uriList
+                                    )
                                 }
                             }
                             if (url.isRestrictedContent) {
@@ -1160,11 +1207,14 @@ fun MainNaviHostPages(
                                 if (url.isVideoMedia) {
                                     navigateToVideoPlaybackActivity(context, url)
                                 } else {
+                                    val currentUri = url.mediaFileUrl
+                                    val uriList = urls.map { fileUrl -> fileUrl.mediaFileUrl }
                                     showPictureViewDialog(
                                         anyStateProvider,
                                         context,
-                                        url.mediaFileUrl,
-                                        urls.map { fileUrl -> fileUrl.mediaFileUrl })
+                                        currentUri,
+                                        uriList
+                                    )
                                 }
 
                             }
@@ -1394,11 +1444,11 @@ fun navigateToUserInfoPage(
     navController.navigate(PageRouteNames.UserProfilePage)
 }
 
-fun <D> showPictureViewDialog(
+fun showPictureViewDialog(
     anyStateProvider: AnyStateProvider,
     context: Context,
-    data: D,
-    dataList: List<D>,
+    data: Any,
+    dataList: List<Any>,
 ) {
     val immerseContentState = anyStateProvider.immerseContentState()
     immerseContentState.show {
@@ -1545,16 +1595,18 @@ fun navigateToVideoPlaybackActivity(context: Context, playbackContent: Any) {
         }
 
         is VideoMessage -> {
+            val uriPair = playbackContent.requireUri() ?: return
+            val url = uriPair.first?.toString() ?: return
             CommonURIJson(
                 playbackContent.id,
                 playbackContent.metadata.description,
-                playbackContent.metadata.url ?: ""
+                url
             )
         }
 
         is MediaStoreDataUri -> {
             CommonURIJson(
-                playbackContent.uri?.path ?: "",
+                playbackContent.id.toString(),
                 playbackContent.displayName ?: "",
                 playbackContent.uri.toString(),
                 true

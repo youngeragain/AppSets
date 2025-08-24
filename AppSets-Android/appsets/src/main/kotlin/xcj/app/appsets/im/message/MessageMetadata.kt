@@ -13,6 +13,8 @@ abstract class MessageMetadata<D>(
     @Transient
     var url: String? = null
 
+    var localData: Any? = null
+
     override fun toString(): String {
         return ImMessageGenerator.gson.toJson(this)
     }

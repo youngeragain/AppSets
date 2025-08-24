@@ -36,6 +36,7 @@ import xcj.app.appsets.im.message.MusicMessage
 import xcj.app.appsets.im.message.SystemMessage
 import xcj.app.appsets.im.message.VideoMessage
 import xcj.app.appsets.im.message.VoiceMessage
+import xcj.app.appsets.im.message.requireUri
 import xcj.app.appsets.im.model.CommonURIJson
 import xcj.app.appsets.server.model.Application
 import xcj.app.appsets.ui.compose.LocalUseCaseOfConversation
@@ -181,28 +182,39 @@ fun ImSessionBubbleNaviHostPages(navController: NavHostController) {
                     },
                     onImMessageContentClick = { imMessage ->
                         when (imMessage) {
-                            is MusicMessage, is VoiceMessage -> {
+                            is MusicMessage -> {
+                                val uri =
+                                    imMessage.requireUri() ?: return@ConversationDetailsPage
                                 val commonURIJson = CommonURIJson(
                                     imMessage.id,
                                     imMessage.metadata.description,
-                                    imMessage.metadata.url ?: ""
+                                    uri.toString()
                                 )
                                 mediaRemoteExoUseCase.playOrPauseAudio(commonURIJson)
                             }
 
-                            is VideoMessage -> {
-                                navigateToVideoPlaybackActivity(context, imMessage)
+                            is VoiceMessage -> {
+                                val uri =
+                                    imMessage.requireUri() ?: return@ConversationDetailsPage
+                                val commonURIJson = CommonURIJson(
+                                    imMessage.id,
+                                    imMessage.metadata.description,
+                                    uri.toString()
+                                )
+                                mediaRemoteExoUseCase.playOrPauseAudio(commonURIJson)
                             }
 
                             is ImageMessage -> {
-                                val imMessageOfImageUrls =
+                                val currentUri =
+                                    imMessage.requireUri() ?: return@ConversationDetailsPage
+                                val uriList =
                                     conversationUseCase.findCurrentSessionAllImMessageOfImage()
-                                        .map { it.metadata.url }
+                                        .mapNotNull { imageMessage -> imageMessage.requireUri() }
                                 showPictureViewDialog(
                                     anyStateProvider,
                                     context,
-                                    imMessage.metadata.url,
-                                    imMessageOfImageUrls
+                                    currentUri,
+                                    uriList
                                 )
                             }
 
@@ -284,11 +296,24 @@ fun ImSessionBubbleNaviHostPages(navController: NavHostController) {
                     },
                     onImMessageContentClick = { imMessage ->
                         when (imMessage) {
-                            is MusicMessage, is VoiceMessage -> {
+                            is MusicMessage -> {
+                                val uri =
+                                    imMessage.requireUri() ?: return@ConversationOverviewPage
                                 val commonURIJson = CommonURIJson(
                                     imMessage.id,
                                     imMessage.metadata.description,
-                                    imMessage.metadata.url ?: ""
+                                    uri.toString()
+                                )
+                                mediaRemoteExoUseCase.playOrPauseAudio(commonURIJson)
+                            }
+
+                            is VoiceMessage -> {
+                                val uri =
+                                    imMessage.requireUri() ?: return@ConversationOverviewPage
+                                val commonURIJson = CommonURIJson(
+                                    imMessage.id,
+                                    imMessage.metadata.description,
+                                    uri.toString()
                                 )
                                 mediaRemoteExoUseCase.playOrPauseAudio(commonURIJson)
                             }
@@ -298,14 +323,16 @@ fun ImSessionBubbleNaviHostPages(navController: NavHostController) {
                             }
 
                             is ImageMessage -> {
-                                val imMessageOfImageUrls =
+                                val currentUri =
+                                    imMessage.requireUri() ?: return@ConversationOverviewPage
+                                val uriList =
                                     conversationUseCase.findCurrentSessionAllImMessageOfImage()
-                                        .map { it.metadata.url }
+                                        .mapNotNull { imageMessage -> imageMessage.requireUri() }
                                 showPictureViewDialog(
                                     anyStateProvider,
                                     context,
-                                    imMessage.metadata.url,
-                                    imMessageOfImageUrls
+                                    currentUri,
+                                    uriList
                                 )
                             }
 
@@ -421,7 +448,7 @@ fun ImSessionBubbleNaviHostPages(navController: NavHostController) {
                     onLikesClick = {
                         screensUseCase.userClickLikeScreen(context)
                     },
-                    onReviewConfirm = { reviewString->
+                    onReviewConfirm = { reviewString ->
                         screensUseCase.onReviewConfirm(context, reviewString)
                     },
                     onScreenMediaClick = { url, urls ->
@@ -429,11 +456,14 @@ fun ImSessionBubbleNaviHostPages(navController: NavHostController) {
                             if (url.isVideoMedia) {
                                 navigateToVideoPlaybackActivity(context, url)
                             } else {
+                                val currentUri = url.mediaFileUrl
+                                val uriList = urls.map { fileUrl -> fileUrl.mediaFileUrl }
                                 showPictureViewDialog(
                                     anyStateProvider,
                                     context,
-                                    url.mediaFileUrl,
-                                    urls.map { fileUrl -> fileUrl.mediaFileUrl })
+                                    currentUri,
+                                    uriList
+                                )
                             }
 
                         }
@@ -496,11 +526,14 @@ fun ImSessionBubbleNaviHostPages(navController: NavHostController) {
                             if (url.isVideoMedia) {
                                 navigateToVideoPlaybackActivity(context, url)
                             } else {
+                                val currentUri = url.mediaFileUrl
+                                val uriList = urls.map { fileUrl -> fileUrl.mediaFileUrl }
                                 showPictureViewDialog(
                                     anyStateProvider,
                                     context,
-                                    url.mediaFileUrl,
-                                    urls.map { fileUrl -> fileUrl.mediaFileUrl })
+                                    currentUri,
+                                    uriList
+                                )
                             }
 
                         }
@@ -632,11 +665,13 @@ fun ImSessionBubbleNaviHostPages(navController: NavHostController) {
                         )
                     },
                     onAppScreenshotClick = { screenshot, screenshotList ->
+                        val currentUri = screenshot.url ?: return@AppDetailsPage
+                        val uriList = screenshotList.mapNotNull { screenshot -> screenshot.url }
                         showPictureViewDialog(
                             anyStateProvider,
                             context,
-                            screenshot.url,
-                            screenshotList.map { it.url }
+                            currentUri,
+                            uriList
                         )
                     },
                     onJoinToChatClick = { application ->

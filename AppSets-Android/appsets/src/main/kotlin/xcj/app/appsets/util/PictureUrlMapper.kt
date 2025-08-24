@@ -135,17 +135,17 @@ object PictureUrlMapper {
             }
 
             else -> {
-                val contentUrlMarker = imMessage.metadata.data.toString()
+                val urlEndpoint = imMessage.metadata.data.toString()
                 val signedUrl = fileIO.generatePreSign(
-                    contentUrlMarker,
+                    urlEndpoint,
                     ImMessageGenerator.imContentObjectUploadOptions
                 )
                 imMessage.metadata.url = signedUrl
                 if (imMessage is VideoMessage) {
                     val videoMessageMetadata = imMessage.metadata as VideoMessageMetadata
-                    val contentUrlMarker = (videoMessageMetadata).companionData
+                    val urlEndpoint = (videoMessageMetadata).companionData
                     val signedUrl = fileIO.generatePreSign(
-                        contentUrlMarker,
+                        urlEndpoint,
                         ImMessageGenerator.imContentObjectUploadOptions
                     )
                     videoMessageMetadata.companionUrl = signedUrl

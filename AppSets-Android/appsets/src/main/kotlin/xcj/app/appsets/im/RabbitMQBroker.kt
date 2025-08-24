@@ -16,6 +16,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import xcj.app.appsets.account.LocalAccountManager
 import xcj.app.appsets.im.message.ImMessage
+import xcj.app.appsets.im.message.MessageSendInfo
 import xcj.app.appsets.settings.AppSetsModuleSettings
 import xcj.app.appsets.usecase.ConversationUseCase
 import xcj.app.appsets.usecase.RelationsUseCase
@@ -342,14 +343,22 @@ class RabbitMQBroker : MessageBroker<RabbitMQBrokerConfig>,
     override suspend fun sendMessage(imObj: ImObj, imMessage: ImMessage) {
         if (!checkConnection()) {
             PurpleLogger.current.d(TAG, "sendMessage, broker connection not ready! return")
-            imMessage.messageSendInfo?.isSent = false
-            imMessage.messageSendInfo?.failureReason = "connection not ready!"
+            imMessage.updateSending(
+                MessageSendInfo(
+                    isSent = false,
+                    failureReason = "connection not ready!"
+                )
+            )
             return
         }
         val channel = channel
         if (channel == null) {
-            imMessage.messageSendInfo?.isSent = false
-            imMessage.messageSendInfo?.failureReason = "channel not ready!"
+            imMessage.updateSending(
+                MessageSendInfo(
+                    isSent = false,
+                    failureReason = "channel not ready!"
+                )
+            )
             return
         }
 
@@ -411,11 +420,15 @@ class RabbitMQBroker : MessageBroker<RabbitMQBrokerConfig>,
             )
             runCatching {
                 channel.basicPublish(exchange, routingKey, properties, contentBytes)
-                imMessage.messageSendInfo?.isSent = true
+                imMessage.updateSending(MessageSendInfo(isSent = true))
             }.onFailure {
                 PurpleLogger.current.e(TAG, "sendMessage, failed, ${it.message}")
-                imMessage.messageSendInfo?.isSent = false
-                imMessage.messageSendInfo?.failureReason = it.localizedMessage
+                imMessage.updateSending(
+                    MessageSendInfo(
+                        isSent = false,
+                        failureReason = it.localizedMessage
+                    )
+                )
             }
         }
     }

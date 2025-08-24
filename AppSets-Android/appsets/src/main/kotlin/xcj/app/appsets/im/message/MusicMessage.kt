@@ -1,8 +1,11 @@
 package xcj.app.appsets.im.message
 
+import android.net.Uri
+import androidx.core.net.toUri
 import xcj.app.appsets.im.ImMessageDesignType
 import xcj.app.appsets.im.MessageFromInfo
 import xcj.app.appsets.im.MessageToInfo
+import xcj.app.appsets.util.model.UriProvider
 import java.util.Date
 import java.util.UUID
 
@@ -15,3 +18,19 @@ data class MusicMessage(
     override val metadata: StringMessageMetadata,
     override val messageType: String = ImMessageDesignType.TYPE_MUSIC
 ) : ImMessage()
+
+fun MusicMessage.requireUri(): Uri? {
+    if (isReceivedMessage) {
+        return metadata.url?.toUri()
+    }
+
+    val messageSendInfo = messageSending?.sendInfoState?.value
+    if (messageSendInfo != null) {
+        if (messageSendInfo.isSent) {
+            return metadata.url?.toUri()
+        } else {
+            return (metadata.localData as? UriProvider)?.provideUri()
+        }
+    }
+    return null
+}

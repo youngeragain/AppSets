@@ -1,8 +1,11 @@
 package xcj.app.appsets.im.message
 
+import android.net.Uri
+import androidx.core.net.toUri
 import xcj.app.appsets.im.ImMessageDesignType
 import xcj.app.appsets.im.MessageFromInfo
 import xcj.app.appsets.im.MessageToInfo
+import xcj.app.appsets.util.model.UriProvider
 import java.util.Date
 import java.util.UUID
 
@@ -15,3 +18,21 @@ data class VideoMessage(
     override val metadata: MessageMetadata<*>,
     override val messageType: String = ImMessageDesignType.TYPE_VIDEO
 ) : ImMessage()
+
+fun VideoMessage.requireUri(): Pair<Uri?, Uri?>? {
+    val videoMessageMetadata = metadata as VideoMessageMetadata
+    if (isReceivedMessage) {
+        return videoMessageMetadata.url?.toUri() to videoMessageMetadata.companionUrl?.toUri()
+    }
+
+    val messageSendInfo = messageSending?.sendInfoState?.value
+    if (messageSendInfo != null) {
+        if (messageSendInfo.isSent) {
+            return videoMessageMetadata.url?.toUri() to videoMessageMetadata.companionUrl?.toUri()
+        } else {
+            val pair = videoMessageMetadata.localData as? Pair<UriProvider, UriProvider>
+            return pair?.first?.provideUri() to pair?.second?.provideUri()
+        }
+    }
+    return null
+}

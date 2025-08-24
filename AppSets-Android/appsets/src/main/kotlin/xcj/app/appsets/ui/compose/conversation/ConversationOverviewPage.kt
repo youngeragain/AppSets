@@ -634,8 +634,7 @@ fun ConversationOverviewSimpleItemComponent(
                     shape = MaterialTheme.shapes.large
                 )
                 .clip(MaterialTheme.shapes.large),
-            any = session.imObj.avatarUrl,
-            defaultColor = MaterialTheme.colorScheme.outline
+            any = session.imObj.avatarUrl
         )
         Column(
             modifier = Modifier
@@ -676,7 +675,6 @@ fun ConversationOverviewSimpleItemComponent(
                                 .size(20.dp)
                                 .clip(MaterialTheme.shapes.small),
                             any = imMessage.fromInfo.bioUrl,
-                            defaultColor = MaterialTheme.colorScheme.outline,
                             error = imMessage.fromInfo.name
                         )
                         val context = LocalContext.current
@@ -874,7 +872,6 @@ fun GroupJoinRequestFeedbackCard(
                     .size(18.dp)
                     .clip(RoundedCornerShape(4.dp)),
                 any = imMessage.fromInfo.bioUrl,
-                defaultColor = MaterialTheme.colorScheme.secondaryContainer
             )
             Text(
                 text = ImMessage.readableContent(context, imMessage) ?: "",
@@ -907,8 +904,7 @@ fun FriendRequestFeedbackCard(
                 modifier = Modifier
                     .size(18.dp)
                     .clip(RoundedCornerShape(4.dp)),
-                any = imMessage.fromInfo.bioUrl,
-                defaultColor = MaterialTheme.colorScheme.secondaryContainer
+                any = imMessage.fromInfo.bioUrl
             )
             Text(
                 text = ImMessage.readableContent(context, imMessage) ?: "",
@@ -1143,7 +1139,6 @@ fun FriendRequestCard(
                         MaterialTheme.shapes.extraLarge
                     ),
                 any = friendRequestJson.avatarUrl,
-                defaultColor = MaterialTheme.colorScheme.secondaryContainer
             )
             Text(
                 text = friendRequestJson.name ?: "",

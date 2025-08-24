@@ -41,11 +41,11 @@ class UserRepository(private val userApi: UserApi) {
         userInfoModification: UserInfoModification,
     ): DesignResponse<Boolean> = withContext(Dispatchers.IO) {
         PurpleLogger.current.d(TAG, "updateUserInfo, thread:${Thread.currentThread()}")
-        var avatarUrlMarker: String? = null
+        var avatarUrlEndpoint: String? = null
         val avatarImageUri = userInfoModification.userAvatarUri?.provideUri()
         if (avatarImageUri != null) {
-            avatarUrlMarker = UUID.randomUUID().toString()
-            LocalFileIO.current.uploadWithUri(context, avatarImageUri, avatarUrlMarker)
+            avatarUrlEndpoint = UUID.randomUUID().toString()
+            LocalFileIO.current.uploadWithUri(context, avatarImageUri, avatarUrlEndpoint)
         }
         val updateParams = hashMapOf<String, String?>().apply {
             if (userInfoModification.userName.isNotEmpty() && userInfoModification.userName != oldUserInfo.name) {
@@ -66,8 +66,8 @@ class UserRepository(private val userApi: UserApi) {
             if (userInfoModification.userAddress.isNotEmpty() && userInfoModification.userAddress != oldUserInfo.address) {
                 put("address", userInfoModification.userAddress)
             }
-            if (!avatarUrlMarker.isNullOrEmpty()) {
-                put("avatarUrl", avatarUrlMarker)
+            if (!avatarUrlEndpoint.isNullOrEmpty()) {
+                put("avatarUrl", avatarUrlEndpoint)
             }
             if (userInfoModification.userIntroduction.isNotEmpty() && userInfoModification.userIntroduction != oldUserInfo.introduction) {
                 put("intro", userInfoModification.userIntroduction)
@@ -102,18 +102,18 @@ class UserRepository(private val userApi: UserApi) {
         groupCreateInfo: GroupCreateInfo
     ): DesignResponse<Boolean> = withContext(Dispatchers.IO) {
         PurpleLogger.current.d(TAG, "createChatGroup, thread:${Thread.currentThread()}")
-        var iconUrlMarker: String? = null
+        var iconUrlEndpoint: String? = null
         val uri = groupCreateInfo.icon?.provideUri()
         if (uri != null) {
-            iconUrlMarker = UUID.randomUUID().toString()
-            LocalFileIO.current.uploadWithUri(context, uri, iconUrlMarker)
+            iconUrlEndpoint = UUID.randomUUID().toString()
+            LocalFileIO.current.uploadWithUri(context, uri, iconUrlEndpoint)
         }
         return@withContext userApi.createChatGroup(hashMapOf<String, Any?>().apply {
             put("name", groupCreateInfo.name)
             put("maxMembers", groupCreateInfo.membersCount)
             put("isPublic", groupCreateInfo.isPublic)
             put("introduction", groupCreateInfo.introduction)
-            iconUrlMarker?.let {
+            iconUrlEndpoint?.let {
                 put("iconUrl", it)
             }
         })
@@ -278,12 +278,12 @@ class UserRepository(private val userApi: UserApi) {
         signUpUserInfo: SignUpUserInfo
     ): DesignResponse<Boolean> = withContext(Dispatchers.IO) {
         PurpleLogger.current.d(TAG, "signUp, thread:${Thread.currentThread()}")
-        var avatarUrlMarker: String? = null
+        var avatarUrlEndpoint: String? = null
         val avatarImageUri = signUpUserInfo.userAvatar?.provideUri()
         if (avatarImageUri != null) {
-            avatarUrlMarker = UUID.randomUUID().toString()
+            avatarUrlEndpoint = UUID.randomUUID().toString()
             LocalFileIO.current
-                .uploadWithUri(context, avatarImageUri, avatarUrlMarker)
+                .uploadWithUri(context, avatarImageUri, avatarUrlEndpoint)
         }
         return@withContext userApi.signUp(
             hashMapOf<String, Any?>(
@@ -293,8 +293,8 @@ class UserRepository(private val userApi: UserApi) {
                 if (signUpUserInfo.userName.isNotEmpty()) {
                     put("name", signUpUserInfo.userName)
                 }
-                if (!avatarUrlMarker.isNullOrEmpty()) {
-                    put("avatarUrl", avatarUrlMarker)
+                if (!avatarUrlEndpoint.isNullOrEmpty()) {
+                    put("avatarUrl", avatarUrlEndpoint)
                 }
                 if (signUpUserInfo.userIntroduction.isNotEmpty()) {
                     put("introduction", signUpUserInfo.userIntroduction)

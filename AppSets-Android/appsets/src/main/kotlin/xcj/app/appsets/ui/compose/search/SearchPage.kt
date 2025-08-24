@@ -616,8 +616,7 @@ fun SearchedUserComponent(modifier: Modifier, userInfo: UserInfo) {
                     shape = MaterialTheme.shapes.large
                 )
                 .clip(MaterialTheme.shapes.large),
-            any = userInfo.bioUrl,
-            defaultColor = MaterialTheme.colorScheme.outline
+            any = userInfo.bioUrl
         )
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(text = userInfo.name ?: "")
@@ -642,8 +641,7 @@ fun SearchedGroupComponent(modifier: Modifier, groupInfo: GroupInfo) {
                     shape = MaterialTheme.shapes.large
                 )
                 .clip(MaterialTheme.shapes.large),
-            any = groupInfo.bioUrl,
-            defaultColor = MaterialTheme.colorScheme.outline
+            any = groupInfo.bioUrl
         )
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(text = groupInfo.name ?: "")

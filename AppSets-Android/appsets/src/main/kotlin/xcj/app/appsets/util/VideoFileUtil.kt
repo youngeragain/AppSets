@@ -4,10 +4,10 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.media.MediaMetadataRetriever
 import android.net.Uri
-import androidx.core.net.toUri
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import xcj.app.appsets.util.ktx.writeBitmap
+import xcj.app.appsets.util.model.UriProvider
 import xcj.app.starter.android.util.PurpleLogger
 import xcj.app.starter.test.LocalAndroidContextFileDir
 import java.io.File
@@ -15,7 +15,7 @@ import java.io.File
 object VideoFileUtil {
 
     private const val TAG = "VideoFileUtil"
-    suspend fun getVideoFirstFrameAsUri(context: Context, uri: Uri): Uri? {
+    suspend fun getVideoFirstFrameAsUriProvider(context: Context, uri: Uri): UriProvider? {
         val mediaMetadataRetriever = MediaMetadataRetriever()
         val thumbnailBitmap = getVideoFirstFrame(context, uri, mediaMetadataRetriever)
         if (thumbnailBitmap == null) {
@@ -30,7 +30,7 @@ object VideoFileUtil {
         val file = File(filePathDir, fileName)
         file.createNewFile()
         file.writeBitmap(thumbnailBitmap, Bitmap.CompressFormat.PNG, 65)
-        return file.toUri()
+        return UriProvider.fromFile(file)
     }
 
     suspend fun getVideoFirstFrame(

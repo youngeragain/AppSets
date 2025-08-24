@@ -137,7 +137,6 @@ fun UserInfoHeader(
                         shape = BigAvatarShape
                     ),
                 any = userInfo.bioUrl,
-                defaultColor = MaterialTheme.colorScheme.secondaryContainer,
                 error = userInfo.name
             )
 
@@ -189,8 +188,7 @@ fun UserInfoHeader(
                             color = MaterialTheme.colorScheme.outline,
                             shape = BigAvatarShape
                         ),
-                    any = userInfo.bioUrl,
-                    defaultColor = MaterialTheme.colorScheme.secondaryContainer
+                    any = userInfo.bioUrl
                 )
                 Text(
                     text = userInfo.name ?: "",

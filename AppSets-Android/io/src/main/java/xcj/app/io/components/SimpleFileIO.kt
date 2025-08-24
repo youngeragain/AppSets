@@ -97,14 +97,14 @@ class SimpleFileIO : FileIO {
         cosXmlService = null
     }
 
-    private fun getUpdateResultListener(urlMarker: String): CosXmlResultListener {
+    private fun getUpdateResultListener(urlEndpoint: String): CosXmlResultListener {
         return object : CosXmlResultListener {
             override fun onSuccess(request: CosXmlRequest, result: CosXmlResult) {
                 //val uploadResult = result as COSXMLUploadTaskResult
                 PurpleLogger.current.d(TAG, "UpdateResultListener, onSuccess")
                 val resultObserver = uploadResultObserver
-                if (resultObserver != null && resultObserver.id() == urlMarker) {
-                    resultObserver.onResult(urlMarker, true, null, null)
+                if (resultObserver != null && resultObserver.id() == urlEndpoint) {
+                    resultObserver.onResult(urlEndpoint, true, null, null)
                     if (resultObserver.removeOnDone()) {
                         uploadResultObserver = null
                     }
@@ -117,8 +117,8 @@ class SimpleFileIO : FileIO {
                 serviceException: CosXmlServiceException?
             ) {
                 val resultObserver = uploadResultObserver
-                if (resultObserver != null && resultObserver.id() == urlMarker) {
-                    resultObserver.onResult(urlMarker, false, clientException, serviceException)
+                if (resultObserver != null && resultObserver.id() == urlEndpoint) {
+                    resultObserver.onResult(urlEndpoint, false, clientException, serviceException)
                     if (resultObserver.removeOnDone()) {
                         uploadResultObserver = null
                     }
@@ -132,15 +132,13 @@ class SimpleFileIO : FileIO {
         }
     }
 
-    private fun getUploadProgressListener(urlMarker: String): CosXmlProgressListener {
-        return object : CosXmlProgressListener {
-            override fun onProgress(complete: Long, target: Long) {
-                val progressObserver = this@SimpleFileIO.progressObserver
-                if (progressObserver != null && progressObserver.id() == urlMarker) {
-                    progressObserver.onProgress(urlMarker, target, complete)
-                    if (target == complete && progressObserver.removeOnDone()) {
-                        progressObserver.removeOnDone()
-                    }
+    private fun getUploadProgressListener(urlEndpoint: String): CosXmlProgressListener {
+        return CosXmlProgressListener { complete, target ->
+            val progressObserver = this@SimpleFileIO.progressObserver
+            if (progressObserver != null && progressObserver.id() == urlEndpoint) {
+                progressObserver.onProgress(urlEndpoint, target, complete)
+                if (target == complete && progressObserver.removeSelfWhenDone()) {
+                    this@SimpleFileIO.progressObserver = null
                 }
             }
         }
@@ -149,45 +147,48 @@ class SimpleFileIO : FileIO {
     override suspend fun uploadWithFile(
         context: Context,
         file: File,
-        urlMarker: String,
+        urlEndpoint: String,
         uploadOptions: ObjectUploadOptions?
     ) {
-        finalUploadPreCheck(context, file, urlMarker, uploadOptions)
+        finalUploadPreCheck(context, file, urlEndpoint, uploadOptions)
     }
 
 
     private suspend fun finalUploadPreCheck(
         context: Context,
         file: File,
-        urlMarker: String,
+        urlEndpoint: String,
         uploadOptions: ObjectUploadOptions?
     ) {
         if (!shouldActive) {
             return
         }
-        PurpleLogger.current.d(TAG, "uploadForUrlMarker")
+        PurpleLogger.current.d(TAG, "finalUploadPreCheck")
         ensureCosXmlServiceIfNeeded()
         val cosInfoProvider = tencentCosInfoProvider
         if (cosInfoProvider == null) {
             PurpleLogger.current.d(
                 TAG,
-                "uploadForUrlMarker, tencentCosInfoProvider is not init! return"
+                "finalUploadPreCheck, tencentCosInfoProvider is not init! return"
             )
             return
         }
         val transferManager = transferManager
         if (transferManager == null) {
-            PurpleLogger.current.d(TAG, "uploadForUrlMarker, transferManager is null! return")
+            PurpleLogger.current.d(TAG, "finalUploadPreCheck, transferManager is null! return")
             return
         }
 
         val tencentCosRegionBucket = tencentCosInfoProvider?.getTencentCosRegionBucket()
         if (tencentCosRegionBucket == null) {
-            PurpleLogger.current.d(TAG, "finalUpload, tencentCosRegionBucket is null, return")
+            PurpleLogger.current.d(
+                TAG,
+                "finalUploadPreCheck, tencentCosRegionBucket is null, return"
+            )
             return
         }
         if (!file.exists() || !file.isFile || !file.canRead()) {
-            PurpleLogger.current.d(TAG, "uploadForUrlMarker, file not valid! return")
+            PurpleLogger.current.d(TAG, "finalUploadPreCheck, file not valid! return")
             return
         }
         withContext(Dispatchers.IO) {
@@ -196,7 +197,7 @@ class SimpleFileIO : FileIO {
                 tencentCosRegionBucket,
                 transferManager,
                 fileToUpload,
-                urlMarker,
+                urlEndpoint,
                 uploadOptions
             )
         }
@@ -214,28 +215,28 @@ class SimpleFileIO : FileIO {
         tencentCosRegionBucket: TencentCosRegionBucket,
         transferManager: TransferManager,
         file: File,
-        urlMarker: String,
+        urlEndpoint: String,
         uploadOptions: ObjectUploadOptions?
     ) {
         PurpleLogger.current.d(TAG, "finalUpload")
         val bucket = tencentCosRegionBucket.bucketName
         val infixPath = uploadOptions?.getInfixPath()
         val cosPath = if (infixPath != null) {
-            "${tencentCosRegionBucket.filePathPrefix}${infixPath}${urlMarker}"
+            "${tencentCosRegionBucket.filePathPrefix}${infixPath}${urlEndpoint}"
         } else {
-            "${tencentCosRegionBucket.filePathPrefix}${urlMarker}"
+            "${tencentCosRegionBucket.filePathPrefix}${urlEndpoint}"
         }
         val srcPath = file.toString()
         val uploadId: String? = null
         val cosxmlUploadTask = transferManager.upload(bucket, cosPath, srcPath, uploadId)
-        cosxmlUploadTask.setCosXmlProgressListener(getUploadProgressListener(urlMarker))
-        cosxmlUploadTask.setCosXmlResultListener(getUpdateResultListener(urlMarker))
+        cosxmlUploadTask.setCosXmlProgressListener(getUploadProgressListener(urlEndpoint))
+        cosxmlUploadTask.setCosXmlResultListener(getUpdateResultListener(urlEndpoint))
     }
 
     override suspend fun uploadWithUri(
         context: Context,
         uri: Uri,
-        urlMarker: String,
+        urlEndpoint: String,
         uploadOptions: ObjectUploadOptions?,
     ) {
         val file = FileUtil.parseUriToAndroidUriFile(context, uri)?.file
@@ -247,13 +248,13 @@ class SimpleFileIO : FileIO {
             TAG,
             "uploadWithUri uri content file: $file"
         )
-        finalUploadPreCheck(context, file, urlMarker, uploadOptions)
+        finalUploadPreCheck(context, file, urlEndpoint, uploadOptions)
     }
 
     override suspend fun uploadWithMultiFile(
         context: Context,
         files: List<File>,
-        urlMarkers: List<String>,
+        urlEndpoints: List<String>,
         uploadOptions: ObjectUploadOptions?
     ) {
 
@@ -262,17 +263,17 @@ class SimpleFileIO : FileIO {
     override suspend fun uploadWithMultiUri(
         context: Context,
         uris: List<Uri>,
-        urlMarkers: List<String>,
+        urlEndpoints: List<String>,
         uploadOptions: ObjectUploadOptions?
     ) {
         PurpleLogger.current.d(TAG, "uploadWithMultiUri")
         uris.forEachIndexed { index, uri ->
-            uploadWithUri(context, uri, urlMarkers[index], uploadOptions)
+            uploadWithUri(context, uri, urlEndpoints[index], uploadOptions)
         }
     }
 
     suspend fun generatePreSign(
-        contentUrlMarker: String?,
+        urlEndpoint: String?,
         objectPathOptions: ObjectUploadOptions? = null
     ): String? = withContext(Dispatchers.IO) {
         if (!shouldActive) {
@@ -283,21 +284,21 @@ class SimpleFileIO : FileIO {
                 TAG,
                 "generatePreSign, lastExceptionTimeMills is closer fo now, return"
             )
-            return@withContext contentUrlMarker
+            return@withContext urlEndpoint
         }
-        if (contentUrlMarker.isNullOrEmpty()) {
+        if (urlEndpoint.isNullOrEmpty()) {
             PurpleLogger.current.d(
                 TAG,
-                "generatePreSign, contentUrlMarker is null or empty, return"
+                "generatePreSign, urlEndpoint is null or empty, return"
             )
             return@withContext null
         }
-        if (contentUrlMarker.startWithHttpSchema()) {
+        if (urlEndpoint.startWithHttpSchema()) {
             PurpleLogger.current.d(
                 TAG,
-                "generatePreSign, contentUrlMarker http or https schema, return"
+                "generatePreSign, urlEndpoint http or https schema, return"
             )
-            return@withContext contentUrlMarker
+            return@withContext urlEndpoint
         }
         ensureCosXmlServiceIfNeeded()
         val xmlService = cosXmlService
@@ -306,7 +307,7 @@ class SimpleFileIO : FileIO {
                 TAG,
                 "generatePreSign, cosXmlService is null, return"
             )
-            return@withContext contentUrlMarker
+            return@withContext urlEndpoint
         }
 
         val cosInfoProvider = tencentCosInfoProvider
@@ -315,7 +316,7 @@ class SimpleFileIO : FileIO {
                 TAG,
                 "generatePreSign, tencentCosInfoProvider is null, return"
             )
-            return@withContext contentUrlMarker
+            return@withContext urlEndpoint
         }
 
         val tencentCosRegionBucket = cosInfoProvider.getTencentCosRegionBucket()
@@ -324,15 +325,15 @@ class SimpleFileIO : FileIO {
                 TAG,
                 "generatePreSign, tencentCosRegionBucket is null, return"
             )
-            return@withContext contentUrlMarker
+            return@withContext urlEndpoint
         }
         val bucket = tencentCosRegionBucket.bucketName
 
         val infixPath = objectPathOptions?.getInfixPath()
         val cosPath = if (!infixPath.isNullOrEmpty()) {
-            "${tencentCosRegionBucket.filePathPrefix}${infixPath}${contentUrlMarker}"
+            "${tencentCosRegionBucket.filePathPrefix}${infixPath}${urlEndpoint}"
         } else {
-            "${tencentCosRegionBucket.filePathPrefix}${contentUrlMarker}"
+            "${tencentCosRegionBucket.filePathPrefix}${urlEndpoint}"
         }
 
         val method = GET
@@ -361,7 +362,7 @@ class SimpleFileIO : FileIO {
                 "generatePreSign, exception, ${e.message}"
             )
         }
-        return@withContext contentUrlMarker
+        return@withContext urlEndpoint
     }
 
     override suspend fun getFile(path: String): File? {

@@ -78,20 +78,20 @@ class AppSetsRepository(
         val uid = LocalAccountManager.userInfo.uid
         val currentTimeMills = System.currentTimeMillis().toString()
         val app = hashMapOf<String, Any?>()
-        val uploadUrlMarkerList = mutableListOf<String>()
+        val uploadUrlEndpoints = mutableListOf<String>()
         val uploadUriList = mutableListOf<Uri>()
 
-        val appIconUrlMarker = UUID.randomUUID().toString()
+        val appIconUrlEndpoint = UUID.randomUUID().toString()
         val appIconUri = applicationForCreate.iconUriHolder!!.provideUri()
-        val appBannerUrlMarker = UUID.randomUUID().toString()
+        val appBannerUrlEndpoint = UUID.randomUUID().toString()
         val appBannerUri = applicationForCreate.bannerUriHolder!!.provideUri()
-        uploadUrlMarkerList.add(appIconUrlMarker)
+        uploadUrlEndpoints.add(appIconUrlEndpoint)
         uploadUriList.add(appIconUri)
-        uploadUrlMarkerList.add(appBannerUrlMarker)
+        uploadUrlEndpoints.add(appBannerUrlEndpoint)
         uploadUriList.add(appBannerUri)
         with(app) {
-            put("icon_url", appIconUrlMarker)
-            put("banner_url", appBannerUrlMarker)
+            put("icon_url", appIconUrlEndpoint)
+            put("banner_url", appBannerUrlEndpoint)
             put("name", applicationForCreate.name)
             put("category", applicationForCreate.category)
             put("website", applicationForCreate.website)
@@ -120,23 +120,23 @@ class AppSetsRepository(
                     val versionInfos = mutableListOf<HashMap<String, Any?>>()
                     platform["version_infos"] = versionInfos
                     platformForCreate.versionInfoForCreates.forEach { versionInfoForCreate ->
-                        val appVersionIconUrlMarker = UUID.randomUUID().toString()
+                        val appVersionIconUrlEndpoint = UUID.randomUUID().toString()
                         val appVersionIconUri =
                             versionInfoForCreate.versionIconUriHolder!!.provideUri()
-                        uploadUrlMarkerList.add(appVersionIconUrlMarker)
+                        uploadUrlEndpoints.add(appVersionIconUrlEndpoint)
                         uploadUriList.add(appVersionIconUri)
 
-                        val appVersionBannerUrlMarker = UUID.randomUUID().toString()
+                        val appVersionBannerUrlEndpoint = UUID.randomUUID().toString()
                         val appVersionBannerUri =
                             versionInfoForCreate.versionBannerUriHolder!!.provideUri()
-                        uploadUrlMarkerList.add(appVersionBannerUrlMarker)
+                        uploadUrlEndpoints.add(appVersionBannerUrlEndpoint)
                         uploadUriList.add(appVersionBannerUri)
 
                         val versionInfo = hashMapOf<String, Any?>()
                         versionInfos.add(versionInfo)
                         with(versionInfo) {
-                            put("version_icon_url", appVersionIconUrlMarker)
-                            put("version_banner_url", appVersionIconUrlMarker)
+                            put("version_icon_url", appVersionIconUrlEndpoint)
+                            put("version_banner_url", appVersionIconUrlEndpoint)
                             put("version", versionInfoForCreate.version)
                             put("version_code", versionInfoForCreate.versionCode)
                             put("changes", versionInfoForCreate.changes)
@@ -151,16 +151,16 @@ class AppSetsRepository(
                             val screenShotInfos = mutableListOf<HashMap<String, Any?>>()
                             versionInfo["screenshot_infos"] = screenShotInfos
                             versionInfoForCreate.screenshotInfoForCreates.forEach { screenshotInfoForCreate ->
-                                val screenshotUrlMarker = UUID.randomUUID().toString()
+                                val screenshotUrlEndpoint = UUID.randomUUID().toString()
                                 val screenshotUri =
                                     screenshotInfoForCreate.uriHolder!!.provideUri()
-                                uploadUrlMarkerList.add(screenshotUrlMarker)
+                                uploadUrlEndpoints.add(screenshotUrlEndpoint)
                                 uploadUriList.add(screenshotUri)
 
                                 val screenShotInfo = hashMapOf<String, Any?>()
                                 screenShotInfos.add(screenShotInfo)
                                 with(screenShotInfo) {
-                                    put("url", screenshotUrlMarker)
+                                    put("url", screenshotUrlEndpoint)
                                     put("type", "picture")
                                     put("content_type", "image/*")
                                     put("create_uid", uid)
@@ -192,7 +192,7 @@ class AppSetsRepository(
                 }
             }
         }
-        LocalFileIO.current.uploadWithMultiUri(context, uploadUriList, uploadUrlMarkerList)
+        LocalFileIO.current.uploadWithMultiUri(context, uploadUriList, uploadUrlEndpoints)
         return@withContext appSetsApi.createApplication(app)
     }
 

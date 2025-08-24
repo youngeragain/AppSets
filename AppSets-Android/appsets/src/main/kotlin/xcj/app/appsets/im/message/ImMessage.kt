@@ -1,6 +1,8 @@
 package xcj.app.appsets.im.message
 
 import android.content.Context
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
 import xcj.app.appsets.im.ImMessageDesignType
 import xcj.app.appsets.im.ImMessageGenerator
 import xcj.app.appsets.im.ImObj
@@ -12,10 +14,18 @@ import xcj.app.appsets.im.model.RequestFeedbackJson
 import xcj.app.starter.util.ContentType
 import java.util.Date
 
-class MessageSendInfo {
-    var progress: Float = 0f
-    var isSent: Boolean = false
-    var failureReason: String? = null
+data class MessageSendInfo(
+    val progress: Float = 0f,
+    val isSent: Boolean = false,
+    val failureReason: String? = null
+)
+
+class MessageSending {
+    val sendInfoState: MutableState<MessageSendInfo?> = mutableStateOf(null)
+
+    fun updateSendInfo(messageSendInfo: MessageSendInfo) {
+        sendInfoState.value = messageSendInfo
+    }
 }
 
 
@@ -145,13 +155,17 @@ abstract class ImMessage {
      */
     abstract val messageType: String
 
-    var messageSendInfo: MessageSendInfo? = null
+    var messageSending: MessageSending? = null
+
+    fun updateSending(messageSendInfo: MessageSendInfo) {
+        messageSending?.updateSendInfo(messageSendInfo)
+    }
 
     val isSendMessage: Boolean
-        get() = messageSendInfo != null
+        get() = messageSending != null
 
     val isReceivedMessage: Boolean
-        get() = messageSendInfo == null
+        get() = messageSending == null
 
     val readableDate: String
         get() {

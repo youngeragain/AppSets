@@ -106,6 +106,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil3.compose.rememberAsyncImagePainter
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.hazeEffect
 import dev.chrisbanes.haze.hazeSource
@@ -142,6 +143,7 @@ import xcj.app.appsets.ui.compose.custom_component.third_part.waveslider.WaveSli
 import xcj.app.appsets.ui.compose.custom_component.third_part.waveslider.WaveSliderDefaults
 import xcj.app.appsets.usecase.SessionState
 import xcj.app.appsets.util.DesignRecorder
+import xcj.app.appsets.util.model.UriProvider
 import xcj.app.compose_share.components.DesignHDivider
 import xcj.app.compose_share.modifier.combinedClickableSingle
 import xcj.app.starter.android.ktx.startWithHttpSchema
@@ -612,7 +614,6 @@ private fun UserAvatarComponent(modifier: Modifier, imMessage: ImMessage) {
     AnyImage(
         modifier = modifier,
         any = imMessage.fromInfo.bioUrl,
-        defaultColor = MaterialTheme.colorScheme.secondaryContainer,
         error = imMessage.fromInfo.name
     )
 }
@@ -622,7 +623,6 @@ private fun UserAvatar2Component(modifier: Modifier, imObj: ImObj?) {
     AnyImage(
         modifier = modifier,
         any = imObj?.avatarUrl,
-        defaultColor = MaterialTheme.colorScheme.secondaryContainer,
         error = imObj?.name
     )
 }
@@ -718,6 +718,7 @@ private fun ImMessageItemCenterComponent(
     imMessage: ImMessage,
     onImMessageContentClick: (ImMessage) -> Unit,
 ) {
+    val messageSendInfo = imMessage.messageSending?.sendInfoState?.value
     val appSetsModuleSettings = AppSetsModuleSettings.get()
     val horizontalAlignment = when (appSetsModuleSettings.imBubbleAlignment) {
         AppSetsModuleSettings.IM_BUBBLE_ALIGNMENT_ALL_START -> {
@@ -798,7 +799,7 @@ private fun ImMessageItemCenterComponent(
         }
 
         Row {
-            if (imMessage.messageSendInfo?.failureReason != null) {
+            if (messageSendInfo?.failureReason != null) {
                 Text(text = stringResource(xcj.app.appsets.R.string.failure), fontSize = 10.sp)
             }
         }
@@ -1037,6 +1038,9 @@ private fun ImMessageItemVideoComponent(
     imMessage: VideoMessage,
     onImMessageContentClick: (ImMessage) -> Unit,
 ) {
+    val videoMessageMetadata = imMessage.metadata as VideoMessageMetadata
+    val videoLocalData = videoMessageMetadata.localData as? Pair<UriProvider, UriProvider>
+    val localVideoFirstFrameUri = videoLocalData?.second?.provideUri()
     Box(
         modifier = Modifier
             .imMessageBackgroundVideoModifier(
@@ -1053,7 +1057,9 @@ private fun ImMessageItemVideoComponent(
                 .height(355.dp)
                 .width(200.dp)
                 .clip(MaterialTheme.shapes.extraLarge),
-            any = (imMessage.metadata as VideoMessageMetadata).companionUrl
+            any = videoMessageMetadata.companionUrl,
+            placeHolder = rememberAsyncImagePainter(localVideoFirstFrameUri),
+            error = rememberAsyncImagePainter(localVideoFirstFrameUri)
         )
         IconButton(
             onClick = {
@@ -1172,6 +1178,7 @@ private fun ImMessageItemImageComponent(
     imMessage: ImageMessage,
     onImMessageContentClick: (ImMessage) -> Unit,
 ) {
+    val localUri = (imMessage.metadata.localData as? UriProvider)?.provideUri()
     Box(
         modifier = Modifier
             .imMessageBackgroundImageModifier(
@@ -1187,7 +1194,9 @@ private fun ImMessageItemImageComponent(
                 .height(355.dp)
                 .width(200.dp)
                 .clip(MaterialTheme.shapes.extraLarge),
-            any = imMessage.metadata.url
+            any = imMessage.metadata.url,
+            placeHolder = rememberAsyncImagePainter(localUri),
+            error = rememberAsyncImagePainter(localUri)
         )
     }
 }

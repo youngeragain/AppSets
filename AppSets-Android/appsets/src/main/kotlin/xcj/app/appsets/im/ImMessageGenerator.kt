@@ -18,7 +18,7 @@ import xcj.app.appsets.im.message.ImMessage
 import xcj.app.appsets.im.message.ImageMessage
 import xcj.app.appsets.im.message.LocationMessage
 import xcj.app.appsets.im.message.LocationMessageMetadata
-import xcj.app.appsets.im.message.MessageSendInfo
+import xcj.app.appsets.im.message.MessageSending
 import xcj.app.appsets.im.message.MusicMessage
 import xcj.app.appsets.im.message.StringMessageMetadata
 import xcj.app.appsets.im.message.SystemMessage
@@ -26,9 +26,7 @@ import xcj.app.appsets.im.message.TextMessage
 import xcj.app.appsets.im.message.VideoMessage
 import xcj.app.appsets.im.message.VideoMessageMetadata
 import xcj.app.appsets.im.message.VoiceMessage
-import xcj.app.appsets.settings.AppConfig
 import xcj.app.appsets.ui.compose.content_selection.ContentSelectionResult
-import xcj.app.appsets.ui.compose.conversation.GenerativeAISession
 import xcj.app.appsets.util.PictureUrlMapper
 import xcj.app.appsets.util.VideoFileUtil
 import xcj.app.appsets.util.ktx.queryUriFileName
@@ -105,62 +103,52 @@ object ImMessageGenerator {
 
     /**
      * 发送的内容为本地文件时，需要先上传到文件服务器获取其Url
-     * @return 文件的UrlMarker
+     * @return 文件的UrlEndpoint
      *
      */
     private suspend fun uploadContent(
         context: Context,
         session: Session,
         inputSelector: Int,
-        content: Any
-    ): String? {
-        if (AppConfig.isTest) {
-            return "184c2b67-0e0b-4d31-8576-c04cdb3fe000"
-        }
-        if (session.imObj.bio is GenerativeAISession.AIBio) {
-            return "184c2b67-0e0b-4d31-8576-c04cdb3fe000"
-        }
+        content: Any,
+        urlEndpoint: String
+    ): Boolean {
         when (content) {
             is File -> {
-                if (content.exists()) {
-                    return null
+                if (!content.exists()) {
+                    return false
                 }
-                val contentUrlMarker: String = UUID.randomUUID().toString()
                 LocalFileIO.current.uploadWithFile(
                     context,
                     content,
-                    contentUrlMarker,
+                    urlEndpoint,
                     imContentObjectUploadOptions
                 )
-                return contentUrlMarker
+                return true
             }
 
             is Uri -> {
-                val path = content.path ?: return null
-                val contentUrlMarker: String = UUID.randomUUID().toString()
                 LocalFileIO.current.uploadWithUri(
                     context,
                     content,
-                    contentUrlMarker,
+                    urlEndpoint,
                     imContentObjectUploadOptions
                 )
-                return contentUrlMarker
+                return true
             }
 
             is UriProvider -> {
                 val uri = content.provideUri()
-                val path = uri.path ?: return null
-                val contentUrlMarker: String = UUID.randomUUID().toString()
                 LocalFileIO.current.uploadWithUri(
                     context,
                     uri,
-                    contentUrlMarker,
+                    urlEndpoint,
                     imContentObjectUploadOptions
                 )
-                return contentUrlMarker
+                return true
             }
 
-            else -> return null
+            else -> return false
         }
     }
 
@@ -193,28 +181,38 @@ object ImMessageGenerator {
         context: Context,
         session: Session,
         inputSelector: Int,
-        messageSendInfo: MessageSendInfo,
         content: Any
     ): StringMessageMetadata {
-        val urlMaker = uploadContent(context, session, inputSelector, content)
+        val urlEndpoint = UUID.randomUUID().toString()
+
         LocalFileIO.current.progressObserver = object : FileIO.ProgressObserver {
             override fun id(): String {
-                return urlMaker ?: ""
+                return urlEndpoint
             }
 
             override fun onProgress(id: String, total: Long, current: Long) {
-                messageSendInfo.progress = current.toFloat() / total.toFloat()
+                val progress = current.toFloat() / total.toFloat()
+                /*val messageSendInfo = imageMessage.messageSending.sendInfoState.value
+                if (messageSendInfo != null) {
+                    val newMessageSendInfo = messageSendInfo.copy(progress = progress)
+                    imageMessage.messageSending.updateSendInfo(newMessageSendInfo)
+                }*/
             }
         }
+
+        uploadContent(context, session, inputSelector, content, urlEndpoint)
+
         val description = getContentName(context, content)
-        return StringMessageMetadata(
+        val messageMetadata = StringMessageMetadata(
             description,
             0,
             true,
             "url",
-            urlMaker ?: "",
+            urlEndpoint,
             ContentType.IMAGE
         )
+        messageMetadata.localData = content
+        return messageMetadata
     }
 
     private suspend fun getImMessageMetadataForVideo(
@@ -223,29 +221,33 @@ object ImMessageGenerator {
         inputSelector: Int,
         content: Any
     ): VideoMessageMetadata {
-        val urlMaker = uploadContent(context, session, inputSelector, content)
+        val urlEndpoint = UUID.randomUUID().toString()
+        uploadContent(context, session, inputSelector, content, urlEndpoint)
         val mediaStoreDataUriWrapper = content as MediaStoreDataUri
         val uri = mediaStoreDataUriWrapper.provideUri()
-        val companionUrlMaker = UUID.randomUUID().toString()
-        val videoFrameUri = VideoFileUtil.getVideoFirstFrameAsUri(context, uri)
-        if (videoFrameUri != null) {
-            LocalFileIO.current.uploadWithUri(
+        val companionUrlEndpoint = UUID.randomUUID().toString()
+        val videoFrameUriProvider = VideoFileUtil.getVideoFirstFrameAsUriProvider(context, uri)
+        if (videoFrameUriProvider != null) {
+            uploadContent(
                 context,
-                videoFrameUri,
-                companionUrlMaker,
-                imContentObjectUploadOptions
+                session,
+                inputSelector,
+                videoFrameUriProvider,
+                companionUrlEndpoint
             )
         }
         val description = getContentName(context, content)
-        return VideoMessageMetadata(
+        val messageMetadata = VideoMessageMetadata(
             description,
             0,
             true,
             "none",
             ContentType.VIDEO,
-            data = urlMaker ?: "",
-            companionData = companionUrlMaker
+            data = urlEndpoint,
+            companionData = companionUrlEndpoint
         )
+        messageMetadata.localData = content to videoFrameUriProvider
+        return messageMetadata
     }
 
     private suspend fun getImMessageMetadataForMusic(
@@ -254,16 +256,19 @@ object ImMessageGenerator {
         inputSelector: Int,
         content: Any
     ): StringMessageMetadata {
-        val urlMaker = uploadContent(context, session, inputSelector, content)
+        val urlEndpoint = UUID.randomUUID().toString()
+        uploadContent(context, session, inputSelector, content, urlEndpoint)
         val description = getContentName(context, content)
-        return StringMessageMetadata(
+        val messageMetadata = StringMessageMetadata(
             description,
             0,
             true,
             "none",
-            urlMaker ?: "",
+            urlEndpoint,
             ContentType.AUDIO_MUSIC
         )
+        messageMetadata.localData = content
+        return messageMetadata
     }
 
     private suspend fun getImMessageMetadataForVoice(
@@ -272,16 +277,19 @@ object ImMessageGenerator {
         inputSelector: Int,
         content: Any
     ): StringMessageMetadata {
-        val urlMaker = uploadContent(context, session, inputSelector, content)
+        val urlEndpoint = UUID.randomUUID().toString()
+        uploadContent(context, session, inputSelector, content, urlEndpoint)
         val description = getContentName(context, content)
-        return StringMessageMetadata(
+        val messageMetadata = StringMessageMetadata(
             description,
             0,
             true,
             "none",
-            urlMaker ?: "",
+            urlEndpoint,
             ContentType.AUDIO
         )
+        messageMetadata.localData = content
+        return messageMetadata
     }
 
     private suspend fun getImMessageMetadataForFile(
@@ -290,16 +298,19 @@ object ImMessageGenerator {
         inputSelector: Int,
         content: Any
     ): StringMessageMetadata {
-        val urlMaker = uploadContent(context, session, inputSelector, content)
+        val urlEndpoint = UUID.randomUUID().toString()
+        uploadContent(context, session, inputSelector, content, urlEndpoint)
         val description = getContentName(context, content)
-        return StringMessageMetadata(
+        val messageMetadata = StringMessageMetadata(
             description,
             0,
             true,
             "none",
-            urlMaker ?: "",
+            urlEndpoint,
             ContentType.APPLICATION_FILE
         )
+        messageMetadata.localData = content
+        return messageMetadata
     }
 
     private suspend fun getImMessageMetadataForLocation(
@@ -310,7 +321,7 @@ object ImMessageGenerator {
     ): LocationMessageMetadata {
         val locationInfo = content as ContentSelectionResult.LocationInfo
         val description = getContentName(context, content)
-        return LocationMessageMetadata(
+        val messageMetadata = LocationMessageMetadata(
             description,
             0,
             true,
@@ -318,6 +329,8 @@ object ImMessageGenerator {
             ContentType.APPLICATION_GEO,
             locationInfo,
         )
+        messageMetadata.localData = content
+        return messageMetadata
     }
 
     private suspend fun getImMessageMetadataForHTML(
@@ -327,7 +340,7 @@ object ImMessageGenerator {
         content: Any
     ): StringMessageMetadata {
         val description = getContentName(context, content)
-        return StringMessageMetadata(
+        val messageMetadata = StringMessageMetadata(
             description,
             0,
             true,
@@ -335,6 +348,8 @@ object ImMessageGenerator {
             content.toString(),//"html url or html raw content",
             ContentType.APPLICATION_TEXT
         )
+        messageMetadata.localData = content
+        return messageMetadata
     }
 
     private suspend fun getImMessageMetadataForAD(
@@ -344,7 +359,7 @@ object ImMessageGenerator {
         content: Any
     ): StringMessageMetadata {
         val description = getContentName(context, content)
-        return StringMessageMetadata(
+        val messageMetadata = StringMessageMetadata(
             description,
             0,
             true,
@@ -352,6 +367,8 @@ object ImMessageGenerator {
             "[AD]$context", //"advertisement",
             ContentType.APPLICATION_TEXT
         )
+        messageMetadata.localData = content
+        return messageMetadata
     }
 
     private suspend fun getImMessageMetadataForText(
@@ -363,7 +380,7 @@ object ImMessageGenerator {
         val text = content.toString()
         val size = text.toByteArray().size
         val description = getContentName(context, content)
-        return StringMessageMetadata(
+        val messageMetadata = StringMessageMetadata(
             description,
             size,
             false,
@@ -371,6 +388,8 @@ object ImMessageGenerator {
             text,
             ContentType.APPLICATION_TEXT
         )
+        messageMetadata.localData = content
+        return messageMetadata
     }
 
     suspend fun generateBySend(
@@ -386,7 +405,7 @@ object ImMessageGenerator {
         val messageFromInfo =
             MessageFromInfo(fromUserInfo.uid, fromUserInfo.name, fromUserInfo.avatarUrl)
         val messageToInfo = MessageToInfo.Companion.fromImObj(session.imObj)
-        val messageSendInfo = MessageSendInfo()
+        val messageSending = MessageSending()
         val imMessage = when (inputSelector) {
             InputSelector.IMAGE -> {
                 val metadata =
@@ -394,7 +413,6 @@ object ImMessageGenerator {
                         context,
                         session,
                         inputSelector,
-                        messageSendInfo,
                         content
                     )
                 ImageMessage(
@@ -486,8 +504,8 @@ object ImMessageGenerator {
                 TextMessage(messageId, timestamp, messageFromInfo, messageToInfo, null, metadata)
             }
         }
+        imMessage.messageSending = messageSending
         PurpleLogger.current.d(TAG, "generateBySend, final imMessage:$imMessage")
-        imMessage.messageSendInfo = messageSendInfo
         return imMessage
     }
 

@@ -14,7 +14,7 @@ interface FileIO {
 
     interface ProgressObserver {
         fun id(): String
-        fun removeOnDone(): Boolean = true
+        fun removeSelfWhenDone(): Boolean = true
         fun onProgress(id: String, total: Long, current: Long)
     }
 
@@ -32,28 +32,28 @@ interface FileIO {
     suspend fun uploadWithFile(
         context: Context,
         file: File,
-        urlMarker: String,
+        urlEndpoint: String,
         uploadOptions: ObjectUploadOptions? = null
     )
 
     suspend fun uploadWithUri(
         context: Context,
         uri: Uri,
-        urlMarker: String,
+        urlEndpoint: String,
         uploadOptions: ObjectUploadOptions? = null
     )
 
     suspend fun uploadWithMultiFile(
         context: Context,
         files: List<File>,
-        urlMarkers: List<String>,
+        urlEndpoints: List<String>,
         uploadOptions: ObjectUploadOptions? = null
     )
 
     suspend fun uploadWithMultiUri(
         context: Context,
         uris: List<Uri>,
-        urlMarkers: List<String>,
+        urlEndpoints: List<String>,
         uploadOptions: ObjectUploadOptions? = null
     )
 

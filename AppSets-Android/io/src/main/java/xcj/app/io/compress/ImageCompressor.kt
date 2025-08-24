@@ -28,7 +28,7 @@ class ImageCompressor : NothingCompressor() {
         if (compressedFile.exists()) {
             PurpleLogger.current.d(
                 TAG,
-                "uploadForUrlMarker, compressed image file:${compressedFile}"
+                "compress, compressed image file:${compressedFile}"
             )
             return compressedFile
         }

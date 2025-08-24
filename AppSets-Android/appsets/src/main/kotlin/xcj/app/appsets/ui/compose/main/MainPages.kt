@@ -470,8 +470,7 @@ fun MessageQuickAccessBar(
                                                 MaterialTheme.colorScheme.outline,
                                                 MaterialTheme.shapes.extraLarge
                                             ),
-                                        any = systemContentInterface.avatarUrl,
-                                        defaultColor = MaterialTheme.colorScheme.secondaryContainer
+                                        any = systemContentInterface.avatarUrl
                                     )
                                     Text(text = systemContentInterface.name ?: "", fontSize = 12.sp)
                                 }
@@ -492,8 +491,7 @@ fun MessageQuickAccessBar(
                                                 MaterialTheme.colorScheme.outline,
                                                 MaterialTheme.shapes.extraLarge
                                             ),
-                                        any = systemContentInterface.avatarUrl,
-                                        defaultColor = MaterialTheme.colorScheme.secondaryContainer
+                                        any = systemContentInterface.avatarUrl
                                     )
                                     Text(text = systemContentInterface.name ?: "", fontSize = 12.sp)
                                 }

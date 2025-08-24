@@ -125,7 +125,8 @@ fun MixedAIModelsPage() {
             style = MaterialTheme.typography.titleSmall
         )
         Box(
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
                 .weight(1f)
         ) {
             LazyColumn(
@@ -153,8 +154,7 @@ fun MixedAIModelsPage() {
                                     shape = MaterialTheme.shapes.large
                                 )
                                 .clip(MaterialTheme.shapes.large),
-                            any = sessionTemplate.session.imObj.avatarUrl,
-                            defaultColor = MaterialTheme.colorScheme.outline
+                            any = sessionTemplate.session.imObj.avatarUrl
                         )
                         Column(
                             modifier = Modifier
@@ -238,7 +238,8 @@ fun DeviceLocalAIModelsPage() {
             style = MaterialTheme.typography.titleSmall
         )
         Box(
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
                 .weight(1f)
         ) {
             LazyColumn(
@@ -266,8 +267,7 @@ fun DeviceLocalAIModelsPage() {
                                     shape = MaterialTheme.shapes.large
                                 )
                                 .clip(MaterialTheme.shapes.large),
-                            any = sessionTemplate.session.imObj.avatarUrl,
-                            defaultColor = MaterialTheme.colorScheme.outline
+                            any = sessionTemplate.session.imObj.avatarUrl
                         )
                         Column(
                             modifier = Modifier
@@ -379,8 +379,7 @@ fun OnlineAIModelsPage() {
                                     shape = MaterialTheme.shapes.large
                                 )
                                 .clip(MaterialTheme.shapes.large),
-                            any = sessionTemplate.session.imObj.avatarUrl,
-                            defaultColor = MaterialTheme.colorScheme.outline
+                            any = sessionTemplate.session.imObj.avatarUrl
                         )
                         Column(
                             modifier = Modifier

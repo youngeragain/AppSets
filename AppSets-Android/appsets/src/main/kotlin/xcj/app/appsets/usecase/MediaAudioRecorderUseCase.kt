@@ -128,7 +128,12 @@ class MediaAudioRecorderUseCase(
 
     }
 
+    fun resetState() {
+        recorderState.value = DesignRecorder.AudioRecorderState()
+    }
+
     fun cleanUp(by: String) {
+        resetState()
         designRecorder.cleanUp(by)
     }
 }

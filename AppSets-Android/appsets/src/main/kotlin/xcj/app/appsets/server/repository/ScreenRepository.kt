@@ -92,7 +92,7 @@ class ScreenRepository(
     ): DesignResponse<Boolean> = withContext(Dispatchers.IO) {
         PurpleLogger.current.d(TAG, "addScreen, thread:${Thread.currentThread()}")
         val mediaFilUrls =
-            generateFileUrlMarkers(context, postScreen.pictures, postScreen.videos.firstOrNull())
+            buildScreenMediaFileUrls(context, postScreen.pictures, postScreen.videos.firstOrNull())
         return@withContext userApi.addScreen(
             AddUserScreenParams(
                 postScreen.content,
@@ -106,28 +106,28 @@ class ScreenRepository(
         )
     }
 
-    private suspend fun generateFileUrlMarkers(
+    private suspend fun buildScreenMediaFileUrls(
         context: Context,
         pictures: List<UriProvider>,
         video: UriProvider?
     ): List<ScreenMediaFileUrl>? {
         if (pictures.isEmpty() && video == null) {
-            PurpleLogger.current.d(TAG, "generateFileUrlMarkers, nothing need to do, return")
+            PurpleLogger.current.d(TAG, "buildScreenMediaFileUrls, nothing need to do, return")
             return null
         }
         var mediaFilUrls: MutableList<ScreenMediaFileUrl>? = null
         val filesToUpload = mutableListOf<Uri>()
-        val fileUrlMakers = mutableListOf<String>()
+        val fileUrlEndpoints = mutableListOf<String>()
         if (pictures.isNotEmpty()) {
             mediaFilUrls = mutableListOf()
             for (pic in pictures) {
                 val pictureUri = pic.provideUri()
                 filesToUpload.add(pictureUri)
-                val contentUrlMarker = UUID.randomUUID().toString()
-                fileUrlMakers.add(contentUrlMarker)
+                val urlEndpoint = UUID.randomUUID().toString()
+                fileUrlEndpoints.add(urlEndpoint)
                 mediaFilUrls.add(
                     ScreenMediaFileUrl(
-                        contentUrlMarker,
+                        urlEndpoint,
                         null,
                         ContentType.IMAGE,
                         "picture",
@@ -147,10 +147,10 @@ class ScreenRepository(
                     mediaFilUrls = mutableListOf()
                 }
                 filesToUpload.add(videoUri)
-                val contentUrlMarker = UUID.randomUUID().toString()
-                fileUrlMakers.add(contentUrlMarker)
+                val urlEndpoint = UUID.randomUUID().toString()
+                fileUrlEndpoints.add(urlEndpoint)
                 val mediaFileUrl = ScreenMediaFileUrl(
-                    mediaFileUrl = contentUrlMarker,
+                    mediaFileUrl = urlEndpoint,
                     mediaFileCompanionUrl = null,
                     mediaType = ContentType.VIDEO,
                     mediaDescription = video.displayName ?: "",
@@ -168,17 +168,17 @@ class ScreenRepository(
                         file.createNewFile()
                         file.writeBitmap(thumbnailBitmap, Bitmap.CompressFormat.PNG, 85)
                         filesToUpload.add(file.toUri())
-                        val contentCompanionUrlMarker = UUID.randomUUID().toString()
-                        fileUrlMakers.add(contentCompanionUrlMarker)
-                        mediaFileUrl.mediaFileCompanionUrl = contentCompanionUrlMarker
+                        val contentCompanionUrlEndpoint = UUID.randomUUID().toString()
+                        fileUrlEndpoints.add(contentCompanionUrlEndpoint)
+                        mediaFileUrl.mediaFileCompanionUrl = contentCompanionUrlEndpoint
                     }
                 }
                 mediaFilUrls.add(mediaFileUrl)
             }
         }
         if (filesToUpload.isNotEmpty()) {
-            PurpleLogger.current.d(TAG, "generateFileUrlMarkers, filesToUpload is not empty!")
-            LocalFileIO.current.uploadWithMultiUri(context, filesToUpload, fileUrlMakers)
+            PurpleLogger.current.d(TAG, "buildScreenMediaFileUrls, filesToUpload is not empty!")
+            LocalFileIO.current.uploadWithMultiUri(context, filesToUpload, fileUrlEndpoints)
         }
         return mediaFilUrls
     }
