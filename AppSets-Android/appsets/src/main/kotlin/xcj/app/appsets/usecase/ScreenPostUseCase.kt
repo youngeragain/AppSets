@@ -14,8 +14,8 @@ import xcj.app.appsets.ui.compose.content_selection.ContentSelectionTypes
 import xcj.app.appsets.ui.compose.quickstep.QuickStepContent
 import xcj.app.appsets.ui.compose.quickstep.TextQuickStepContent
 import xcj.app.appsets.ui.compose.quickstep.UriQuickStepContent
-import xcj.app.appsets.ui.model.PostScreen
-import xcj.app.appsets.ui.model.PostScreenState
+import xcj.app.appsets.ui.model.ScreenInfoForCreate
+import xcj.app.appsets.ui.model.page_state.PostScreenPageState
 import xcj.app.appsets.util.ktx.toastSuspend
 import xcj.app.appsets.util.model.UriProvider
 import xcj.app.compose_share.dynamic.IComposeLifecycleAware
@@ -32,79 +32,79 @@ class ScreenPostUseCase(
         private const val TAG = "ScreenPostUseCase"
     }
 
-    val postScreenState: MutableState<PostScreenState> =
-        mutableStateOf(PostScreenState.NewPostScreen())
+    val postScreenPageState: MutableState<PostScreenPageState> =
+        mutableStateOf(PostScreenPageState.NewPostScreenPage())
 
     fun onIsPublicClick(isPublic: Boolean) {
-        PostScreen.updateStateIsPublic(postScreenState, isPublic)
+        ScreenInfoForCreate.updateStateIsPublic(postScreenPageState, isPublic)
     }
 
     fun onInputContent(content: String) {
-        PostScreen.updateStateContent(postScreenState, content)
+        ScreenInfoForCreate.updateStateContent(postScreenPageState, content)
     }
 
     fun onInputTopics(associateTopics: String) {
-        PostScreen.updateStateAssociateTopics(postScreenState, associateTopics)
+        ScreenInfoForCreate.updateStateAssociateTopics(postScreenPageState, associateTopics)
     }
 
     fun onInputPeoples(associatePeoples: String) {
-        PostScreen.updateStateAssociatePeoples(postScreenState, associatePeoples)
+        ScreenInfoForCreate.updateStateAssociatePeoples(postScreenPageState, associatePeoples)
     }
 
     fun onAddMediaFallClick() {
-        PostScreen.updateStateAddMediaFallClick(postScreenState)
+        ScreenInfoForCreate.updateStateAddMediaFallClick(postScreenPageState)
     }
 
     fun updateSelectPictures(uriProviderList: List<UriProvider>) {
-        PostScreen.updateStateSelectPictures(postScreenState, uriProviderList)
+        ScreenInfoForCreate.updateStateSelectPictures(postScreenPageState, uriProviderList)
     }
 
     fun updateSelectVideo(uriProviderList: List<UriProvider>) {
-        PostScreen.updateStateSelectVideos(postScreenState, uriProviderList)
+        ScreenInfoForCreate.updateStateSelectVideos(postScreenPageState, uriProviderList)
     }
 
     fun createScreen(context: Context) {
-        val postScreenState = this.postScreenState.value
-        if (postScreenState is PostScreenState.Posting) {
+        val postScreenState = this.postScreenPageState.value
+        if (postScreenState is PostScreenPageState.Posting) {
             return
         }
-        if (postScreenState !is PostScreenState.NewPostScreen) {
+        if (postScreenState !is PostScreenPageState.NewPostScreenPage) {
             return
         }
-        val postScreen = postScreenState.postScreen
-        this.postScreenState.value = PostScreenState.Posting(postScreen)
+        val postScreen = postScreenState.screenInfoForCreate
+        this.postScreenPageState.value = PostScreenPageState.Posting(postScreen)
         coroutineScope.launch {
             requestNotNull(
                 action = {
                     screenRepository.addScreen(
                         context,
-                        postScreenState.postScreen
+                        postScreenState.screenInfoForCreate
                     )
                 },
                 onSuccess = { isAddSuccess ->
                     if (isAddSuccess) {
                         delay(1200)
                         context.getString(xcj.app.appsets.R.string.create_success).toastSuspend()
-                        this@ScreenPostUseCase.postScreenState.value =
-                            PostScreenState.PostSuccess(postScreen)
+                        this@ScreenPostUseCase.postScreenPageState.value =
+                            PostScreenPageState.PostSuccessPage(postScreen)
                     } else {
                         context.getString(xcj.app.appsets.R.string.create_failed).toastSuspend()
-                        this@ScreenPostUseCase.postScreenState.value =
-                            PostScreenState.PostFailed(postScreen)
+                        this@ScreenPostUseCase.postScreenPageState.value =
+                            PostScreenPageState.PostFailedPage(postScreen)
                     }
                 },
                 onFailed = {
                     context.getString(xcj.app.appsets.R.string.create_failed).toastSuspend()
-                    this@ScreenPostUseCase.postScreenState.value =
-                        PostScreenState.PostFailed(postScreen)
+                    this@ScreenPostUseCase.postScreenPageState.value =
+                        PostScreenPageState.PostFailedPage(postScreen)
                 }
             )
         }
     }
 
     fun generateContent(context: Context) {
-        val postScreenState = this@ScreenPostUseCase.postScreenState.value
-        if (postScreenState !is PostScreenState.NewPostScreen) {
+        val postScreenState = this@ScreenPostUseCase.postScreenPageState.value
+        if (postScreenState !is PostScreenPageState.NewPostScreenPage) {
             return
         }
         coroutineScope.launch {
@@ -113,7 +113,10 @@ class ScreenPostUseCase(
                     generationAIRepository.getGenerateContentWithNoneContext()
                 },
                 onSuccess = {
-                    PostScreen.updateStateContent(this@ScreenPostUseCase.postScreenState, "")
+                    ScreenInfoForCreate.updateStateContent(
+                        this@ScreenPostUseCase.postScreenPageState,
+                        ""
+                    )
                     flow {
                         it.toCharArray().forEach {
                             emit(it)
@@ -121,9 +124,9 @@ class ScreenPostUseCase(
                         }
                     }.collectLatest {
                         val oldPostScreen =
-                            (this@ScreenPostUseCase.postScreenState.value as? PostScreenState.NewPostScreen)?.postScreen
-                        PostScreen.updateStateContent(
-                            this@ScreenPostUseCase.postScreenState,
+                            (this@ScreenPostUseCase.postScreenPageState.value as? PostScreenPageState.NewPostScreenPage)?.screenInfoForCreate
+                        ScreenInfoForCreate.updateStateContent(
+                            this@ScreenPostUseCase.postScreenPageState,
                             (oldPostScreen?.content ?: "") + it
                         )
                     }
@@ -133,22 +136,24 @@ class ScreenPostUseCase(
     }
 
     fun onRemoveMediaContent(type: String, uriProvider: UriProvider) {
-        val postScreenState = postScreenState.value
-        if (postScreenState !is PostScreenState.NewPostScreen) {
+        val postScreenState = postScreenPageState.value
+        if (postScreenState !is PostScreenPageState.NewPostScreenPage) {
             return
         }
-        val postScreen = postScreenState.postScreen
+        val postScreen = postScreenState.screenInfoForCreate
         if (type == ContentSelectionTypes.IMAGE) {
             val newPostScreen =
                 postScreen.copy(pictures = postScreen.pictures.toMutableList().apply {
                     remove(uriProvider)
                 })
-            this.postScreenState.value = postScreenState.copy(postScreen = newPostScreen)
+            this.postScreenPageState.value =
+                postScreenState.copy(screenInfoForCreate = newPostScreen)
         } else if (type == ContentSelectionTypes.VIDEO) {
             val newPostScreen = postScreen.copy(videos = postScreen.videos.toMutableList().apply {
                 remove(uriProvider)
             })
-            this.postScreenState.value = postScreenState.copy(postScreen = newPostScreen)
+            this.postScreenPageState.value =
+                postScreenState.copy(screenInfoForCreate = newPostScreen)
         } else {
             null
         }
@@ -176,7 +181,7 @@ class ScreenPostUseCase(
     }
 
     override fun onComposeDispose(by: String?) {
-        postScreenState.value = PostScreenState.NewPostScreen()
+        postScreenPageState.value = PostScreenPageState.NewPostScreenPage()
     }
 
 }

@@ -159,11 +159,6 @@ class ShareRepository() {
                 PurpleLogger.current.d(TAG, "sendContent, StringContent")
                 postText(context, shareMethod, dataSendContent.dstDevice, dataContent)
             }
-
-
-            else -> {
-                PurpleLogger.current.d(TAG, "sendContent, not implementation!")
-            }
         }
     }
 

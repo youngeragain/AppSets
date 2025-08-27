@@ -1,9 +1,9 @@
 package xcj.app.appsets.ui.model
 
-import xcj.app.appsets.server.model.ScreenReview
 import xcj.app.appsets.server.model.ScreenInfo
+import xcj.app.appsets.server.model.ScreenReview
 
-data class ViewScreenInfo(
+data class ScreenInfoForCard(
     val screenInfo: ScreenInfo? = null,
     val reviews: List<ScreenReview>? = null,
     val userInputReview: String? = null,

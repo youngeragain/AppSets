@@ -17,15 +17,15 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.IntSize
 import xcj.app.appsets.im.Bio
+import xcj.app.appsets.server.model.ScreenInfo
 import xcj.app.appsets.server.model.ScreenMediaFileUrl
 import xcj.app.appsets.ui.compose.PageRouteNames
 import xcj.app.appsets.ui.compose.custom_component.LoadMoreHandler
 import xcj.app.appsets.ui.compose.custom_component.ShowNavBarWhenOnLaunch
-import xcj.app.appsets.ui.model.ScreenState
 
 @Composable
 fun OutSidePage(
-    screens: List<ScreenState>,
+    screens: List<ScreenInfo>,
     onBioClick: (Bio) -> Unit,
     onLoadMore: () -> Unit,
     onScreenMediaClick: (ScreenMediaFileUrl, List<ScreenMediaFileUrl>) -> Unit,

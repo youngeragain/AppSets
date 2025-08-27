@@ -3,6 +3,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import xcj.app.appsets.ui.compose.LocalUseCaseOfMediaRemoteExo
+import xcj.app.appsets.ui.model.state.SpotLight
 import java.util.UUID
 
 sealed interface TabAction {
@@ -82,7 +83,7 @@ sealed interface TabItem {
         override val isSelect: Boolean = false,
         override val actions: MutableList<TabAction>? = null,
         override val tabId: UUID = UUID.randomUUID(),
-        val playbackItem: SpotLightState.AudioPlayer? = null
+        val playbackItem: SpotLight.AudioPlayer? = null
     ) : TabItem {
 
         override val isVisible: Boolean

@@ -6,7 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.google.mlkit.vision.barcode.common.Barcode
 import xcj.app.appsets.server.repository.QRCodeRepository
 import xcj.app.appsets.server.repository.UserRepository
-import xcj.app.appsets.ui.model.LoginSignUpState
+import xcj.app.appsets.ui.model.page_state.LoginSignUpPageState
 import xcj.app.appsets.usecase.QRCodeUseCase
 import xcj.app.compose_share.ui.viewmodel.AnyStateViewModel
 import xcj.app.starter.android.util.PurpleLogger
@@ -23,7 +23,7 @@ class DesignCameraViewModel : AnyStateViewModel() {
 
     val qrCodeUseCase: QRCodeUseCase = QRCodeUseCase(
         viewModelScope,
-        mutableStateOf(LoginSignUpState.Nothing),
+        mutableStateOf(LoginSignUpPageState.Nothing),
         QRCodeRepository.getInstance(),
         UserRepository.getInstance()
     )

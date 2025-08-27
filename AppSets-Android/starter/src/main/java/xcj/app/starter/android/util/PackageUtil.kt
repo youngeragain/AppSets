@@ -8,7 +8,6 @@ import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
 import android.content.pm.PackageManager.MATCH_ALL
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.withContext
@@ -62,29 +61,26 @@ object PackageUtil {
             val queryIntentActivities =
                 packageManager.queryIntentActivities(launcherIntent, MATCH_ALL)
             PurpleLogger.current.d(TAG, "getLauncherIntentAppDefinitionList 3")
+            val appDefinitions = queryIntentActivities.mapNotNull { resolveInfo ->
+                val app = if (resolveInfo.activityInfo.packageName == minePackageName) {
+                    null
+                } else {
+                    val appDefinition = AppDefinition(
+                        UUID.randomUUID().toString()
+                    )
+                    val applicationInfo = resolveInfo.activityInfo.applicationInfo
+                    appDefinition.applicationInfo = applicationInfo
+                    appDefinition.name =
+                        applicationInfo.loadLabel(context.packageManager).toString()
+                            .trim()
 
-            val chunkedIntents = queryIntentActivities.chunked(10)
-            chunkedIntents.forEach { chunkedIntent ->
-                val chunkedAppDefinitions = chunkedIntent.mapNotNull { resolveInfo ->
-                    if (resolveInfo.activityInfo.packageName == minePackageName) {
-                        null
-                    } else {
-                        val appDefinition = AppDefinition(
-                            UUID.randomUUID().toString()
-                        )
-                        val applicationInfo = resolveInfo.activityInfo.applicationInfo
-                        appDefinition.applicationInfo = applicationInfo
-                        appDefinition.name =
-                            applicationInfo.loadLabel(context.packageManager).toString()
-                                .trim()
-
-                        appDefinition.icon =
-                            applicationInfo.loadIcon(context.packageManager)
-                        appDefinition
-                    }
+                    appDefinition.icon =
+                        applicationInfo.loadIcon(context.packageManager)
+                    appDefinition
                 }
-                emit(chunkedAppDefinitions)
+                app
             }
+            emit(appDefinitions)
             PurpleLogger.current.d(TAG, "getLauncherIntentAppDefinitionList 4")
         }
 }

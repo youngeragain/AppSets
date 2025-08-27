@@ -91,8 +91,6 @@ import xcj.app.appsets.server.model.ScreenInfo
 import xcj.app.appsets.server.model.ScreenMediaFileUrl
 import xcj.app.appsets.ui.compose.PageRouteNames
 import xcj.app.appsets.ui.compose.custom_component.AnyImage
-import xcj.app.appsets.ui.model.PictureStyleState
-import xcj.app.appsets.ui.model.ScreenState
 import xcj.app.appsets.util.saveComposeNodeAsBitmap
 import xcj.app.starter.android.util.PurpleLogger
 import xcj.app.starter.util.ContentType
@@ -103,7 +101,7 @@ private const val TAG = "ScreensList"
 fun ScreensList(
     modifier: Modifier,
     currentDestinationRoute: String,
-    screens: List<ScreenState>,
+    screens: List<ScreenInfo>,
     scrollableState: ScrollableState,
     onBioClick: (Bio) -> Unit,
     pictureInteractionFlowCollector: (Interaction, ScreenMediaFileUrl) -> Unit,
@@ -140,7 +138,7 @@ fun ScreensList(
 fun LandscapeScreenList(
     modifier: Modifier,
     currentDestinationRoute: String,
-    screens: List<ScreenState>,
+    screens: List<ScreenInfo>,
     scrollableState: ScrollableState,
     onBioClick: (Bio) -> Unit,
     pictureInteractionFlowCollector: (Interaction, ScreenMediaFileUrl) -> Unit,
@@ -163,34 +161,32 @@ fun LandscapeScreenList(
         item {
             headerContent?.invoke()
         }
-        itemsIndexed(screens, { index, _ -> index }) { _, screenState ->
-            if (screenState is ScreenState.Screen) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(
-                            MaterialTheme.colorScheme.surface,
-                            MaterialTheme.shapes.extraLarge
-                        )
-                        .border(
-                            width = 1.dp,
-                            color = MaterialTheme.colorScheme.outline,
-                            MaterialTheme.shapes.extraLarge
-                        )
-                        .clip(MaterialTheme.shapes.extraLarge)
-                        .clickable {
-                            onBioClick(screenState.screenInfo)
-                        }
-                        .padding(12.dp)
-                ) {
-                    ScreenComponent(
-                        currentDestinationRoute = currentDestinationRoute,
-                        screenInfo = screenState.screenInfo,
-                        onBioClick = onBioClick,
-                        pictureInteractionFlowCollector = pictureInteractionFlowCollector,
-                        onScreenMediaClick = onScreenMediaClick
+        itemsIndexed(screens, { index, screenInfo -> screenInfo.id }) { _, screenInfo ->
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(
+                        MaterialTheme.colorScheme.surface,
+                        MaterialTheme.shapes.extraLarge
                     )
-                }
+                    .border(
+                        width = 1.dp,
+                        color = MaterialTheme.colorScheme.outline,
+                        MaterialTheme.shapes.extraLarge
+                    )
+                    .clip(MaterialTheme.shapes.extraLarge)
+                    .clickable {
+                        onBioClick(screenInfo)
+                    }
+                    .padding(12.dp)
+            ) {
+                ScreenComponent(
+                    currentDestinationRoute = currentDestinationRoute,
+                    screenInfo = screenInfo,
+                    onBioClick = onBioClick,
+                    pictureInteractionFlowCollector = pictureInteractionFlowCollector,
+                    onScreenMediaClick = onScreenMediaClick
+                )
             }
         }
         item {
@@ -203,7 +199,7 @@ fun LandscapeScreenList(
 fun PortraitScreenList(
     modifier: Modifier,
     currentDestinationRoute: String,
-    screens: List<ScreenState>,
+    screens: List<ScreenInfo>,
     scrollableState: ScrollableState,
     onBioClick: (Bio) -> Unit,
     pictureInteractionFlowCollector: (Interaction, ScreenMediaFileUrl) -> Unit,
@@ -228,41 +224,35 @@ fun PortraitScreenList(
         }
         itemsIndexed(
             items = screens,
-            key = { index, screenState ->
-                if (screenState is ScreenState.Screen) {
-                    screenState.screenInfo.id
-                } else {
-                    index
-                }
+            key = { index, screenInfo ->
+                screenInfo.id
             }
-        ) { _, screenState ->
-            if (screenState is ScreenState.Screen) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(
-                            MaterialTheme.colorScheme.surface,
-                            MaterialTheme.shapes.extraLarge
-                        )
-                        .border(
-                            width = 1.dp,
-                            color = MaterialTheme.colorScheme.outline,
-                            MaterialTheme.shapes.extraLarge
-                        )
-                        .clip(MaterialTheme.shapes.extraLarge)
-                        .clickable {
-                            onBioClick(screenState.screenInfo)
-                        }
-                        .padding(12.dp)
-                ) {
-                    ScreenComponent(
-                        currentDestinationRoute = currentDestinationRoute,
-                        screenInfo = screenState.screenInfo,
-                        onBioClick = onBioClick,
-                        pictureInteractionFlowCollector = pictureInteractionFlowCollector,
-                        onScreenMediaClick = onScreenMediaClick
+        ) { _, screenInfo ->
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(
+                        MaterialTheme.colorScheme.surface,
+                        MaterialTheme.shapes.extraLarge
                     )
-                }
+                    .border(
+                        width = 1.dp,
+                        color = MaterialTheme.colorScheme.outline,
+                        MaterialTheme.shapes.extraLarge
+                    )
+                    .clip(MaterialTheme.shapes.extraLarge)
+                    .clickable {
+                        onBioClick(screenInfo)
+                    }
+                    .padding(12.dp)
+            ) {
+                ScreenComponent(
+                    currentDestinationRoute = currentDestinationRoute,
+                    screenInfo = screenInfo,
+                    onBioClick = onBioClick,
+                    pictureInteractionFlowCollector = pictureInteractionFlowCollector,
+                    onScreenMediaClick = onScreenMediaClick
+                )
             }
         }
 
@@ -276,7 +266,6 @@ fun PortraitScreenList(
 fun ScreenComponent(
     currentDestinationRoute: String,
     screenInfo: ScreenInfo,
-    pictureStyleState: PictureStyleState = rememberPictureStyleState(),
     onBioClick: (Bio) -> Unit,
     pictureInteractionFlowCollector: ((Interaction, ScreenMediaFileUrl) -> Unit),
     onScreenMediaClick: (ScreenMediaFileUrl, List<ScreenMediaFileUrl>) -> Unit,
@@ -295,7 +284,6 @@ fun ScreenComponent(
                 ScreenTopActionsPart(
                     currentDestinationRoute = currentDestinationRoute,
                     screenInfo = screenInfo,
-                    pictureStyleState = pictureStyleState,
                     capturingViewBounds = capturingViewBounds
                 )
 
@@ -304,17 +292,6 @@ fun ScreenComponent(
                     onMediaClick = onScreenMediaClick,
                     mediaInteractionFlowCollector = pictureInteractionFlowCollector
                 )
-                /* ScreenSectionOfContentPicturesPart(
-                     screenInfo = screenInfo,
-                     pictureStyleState = pictureStyleState,
-                     onMediaClick = onScreenMediaClick,
-                     picInteractionFlow = pictureInteractionFlowCollector
-                 )
-                 ScreenSectionOfContentVideosPart(
-                     screenInfo = screenInfo,
-                     pictureStyleState = pictureStyleState,
-                     onMediaClick = onScreenMediaClick
-                 )*/
                 ScreenSectionOfContentTextPart(
                     screenInfo = screenInfo,
                     currentDestinationRoute = currentDestinationRoute
@@ -335,7 +312,6 @@ fun ScreenComponent(
 fun ScreenTopActionsPart(
     currentDestinationRoute: String,
     screenInfo: ScreenInfo,
-    pictureStyleState: PictureStyleState,
     capturingViewBounds: Rect?,
 ) {
     val context = LocalContext.current
@@ -764,14 +740,6 @@ fun RowOfScreenPictures(
             }
         }
     }
-}
-
-@Composable
-fun rememberPictureStyleState(): PictureStyleState {
-    val pictureStyleState = remember {
-        PictureStyleState()
-    }
-    return pictureStyleState
 }
 
 private suspend fun shareAppSetsUserScreen(

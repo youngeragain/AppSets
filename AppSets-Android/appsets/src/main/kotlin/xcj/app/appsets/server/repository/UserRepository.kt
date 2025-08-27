@@ -8,8 +8,8 @@ import xcj.app.appsets.server.api.ApiProvider
 import xcj.app.appsets.server.api.UserApi
 import xcj.app.appsets.server.model.GroupInfo
 import xcj.app.appsets.server.model.UserInfo
-import xcj.app.appsets.ui.model.SignUpUserInfo
-import xcj.app.appsets.ui.model.UserInfoModification
+import xcj.app.appsets.ui.model.UserInfoForCreate
+import xcj.app.appsets.ui.model.UserInfoForModify
 import xcj.app.appsets.usecase.GroupCreateInfo
 import xcj.app.appsets.util.DeviceInfoHelper
 import xcj.app.appsets.util.PictureUrlMapper
@@ -38,42 +38,42 @@ class UserRepository(private val userApi: UserApi) {
     suspend fun updateUserInfo(
         context: Context,
         oldUserInfo: UserInfo,
-        userInfoModification: UserInfoModification,
+        userInfoForModify: UserInfoForModify,
     ): DesignResponse<Boolean> = withContext(Dispatchers.IO) {
         PurpleLogger.current.d(TAG, "updateUserInfo, thread:${Thread.currentThread()}")
         var avatarUrlEndpoint: String? = null
-        val avatarImageUri = userInfoModification.userAvatarUri?.provideUri()
+        val avatarImageUri = userInfoForModify.userAvatarUri?.provideUri()
         if (avatarImageUri != null) {
             avatarUrlEndpoint = UUID.randomUUID().toString()
             LocalFileIO.current.uploadWithUri(context, avatarImageUri, avatarUrlEndpoint)
         }
         val updateParams = hashMapOf<String, String?>().apply {
-            if (userInfoModification.userName.isNotEmpty() && userInfoModification.userName != oldUserInfo.name) {
-                put("name", userInfoModification.userName)
+            if (userInfoForModify.userName.isNotEmpty() && userInfoForModify.userName != oldUserInfo.name) {
+                put("name", userInfoForModify.userName)
             }
-            if (userInfoModification.userAge.isNotEmpty() && userInfoModification.userAge.toInt() != oldUserInfo.age) {
-                put("age", userInfoModification.userAge)
+            if (userInfoForModify.userAge.isNotEmpty() && userInfoForModify.userAge.toInt() != oldUserInfo.age) {
+                put("age", userInfoForModify.userAge)
             }
-            if (userInfoModification.userSex.isNotEmpty() && userInfoModification.userSex != oldUserInfo.sex) {
-                put("sex", userInfoModification.userSex)
+            if (userInfoForModify.userSex.isNotEmpty() && userInfoForModify.userSex != oldUserInfo.sex) {
+                put("sex", userInfoForModify.userSex)
             }
-            if (userInfoModification.userEmail.isNotEmpty() && userInfoModification.userEmail != oldUserInfo.email) {
-                put("email", userInfoModification.userEmail)
+            if (userInfoForModify.userEmail.isNotEmpty() && userInfoForModify.userEmail != oldUserInfo.email) {
+                put("email", userInfoForModify.userEmail)
             }
-            if (userInfoModification.userPhone.isNotEmpty() && userInfoModification.userPhone != oldUserInfo.phone) {
-                put("phone", userInfoModification.userPhone)
+            if (userInfoForModify.userPhone.isNotEmpty() && userInfoForModify.userPhone != oldUserInfo.phone) {
+                put("phone", userInfoForModify.userPhone)
             }
-            if (userInfoModification.userAddress.isNotEmpty() && userInfoModification.userAddress != oldUserInfo.address) {
-                put("address", userInfoModification.userAddress)
+            if (userInfoForModify.userAddress.isNotEmpty() && userInfoForModify.userAddress != oldUserInfo.address) {
+                put("address", userInfoForModify.userAddress)
             }
             if (!avatarUrlEndpoint.isNullOrEmpty()) {
                 put("avatarUrl", avatarUrlEndpoint)
             }
-            if (userInfoModification.userIntroduction.isNotEmpty() && userInfoModification.userIntroduction != oldUserInfo.introduction) {
-                put("intro", userInfoModification.userIntroduction)
+            if (userInfoForModify.userIntroduction.isNotEmpty() && userInfoForModify.userIntroduction != oldUserInfo.introduction) {
+                put("intro", userInfoForModify.userIntroduction)
             }
-            if (userInfoModification.userWebsite.isNotEmpty() && userInfoModification.userWebsite != oldUserInfo.website) {
-                put("website", userInfoModification.userWebsite)
+            if (userInfoForModify.userWebsite.isNotEmpty() && userInfoForModify.userWebsite != oldUserInfo.website) {
+                put("website", userInfoForModify.userWebsite)
             }
         }
         if (updateParams.isEmpty()) {
@@ -275,11 +275,11 @@ class UserRepository(private val userApi: UserApi) {
         context: Context,
         account: String,
         password: String,
-        signUpUserInfo: SignUpUserInfo
+        userInfoForCreate: UserInfoForCreate
     ): DesignResponse<Boolean> = withContext(Dispatchers.IO) {
         PurpleLogger.current.d(TAG, "signUp, thread:${Thread.currentThread()}")
         var avatarUrlEndpoint: String? = null
-        val avatarImageUri = signUpUserInfo.userAvatar?.provideUri()
+        val avatarImageUri = userInfoForCreate.userAvatar?.provideUri()
         if (avatarImageUri != null) {
             avatarUrlEndpoint = UUID.randomUUID().toString()
             LocalFileIO.current
@@ -290,38 +290,38 @@ class UserRepository(private val userApi: UserApi) {
                 "account" to account,
                 "password" to password
             ).apply {
-                if (signUpUserInfo.userName.isNotEmpty()) {
-                    put("name", signUpUserInfo.userName)
+                if (userInfoForCreate.userName.isNotEmpty()) {
+                    put("name", userInfoForCreate.userName)
                 }
                 if (!avatarUrlEndpoint.isNullOrEmpty()) {
                     put("avatarUrl", avatarUrlEndpoint)
                 }
-                if (signUpUserInfo.userIntroduction.isNotEmpty()) {
-                    put("introduction", signUpUserInfo.userIntroduction)
+                if (userInfoForCreate.userIntroduction.isNotEmpty()) {
+                    put("introduction", userInfoForCreate.userIntroduction)
                 }
-                if (signUpUserInfo.userTags.isNotEmpty()) {
-                    put("tags", signUpUserInfo.userTags)
+                if (userInfoForCreate.userTags.isNotEmpty()) {
+                    put("tags", userInfoForCreate.userTags)
                 }
-                if (signUpUserInfo.userSex.isNotEmpty()) {
-                    put("sex", signUpUserInfo.userSex)
+                if (userInfoForCreate.userSex.isNotEmpty()) {
+                    put("sex", userInfoForCreate.userSex)
                 }
-                if (signUpUserInfo.userAge.isNotEmpty()) {
-                    put("age", signUpUserInfo.userAge.toIntOrNull() ?: 0)
+                if (userInfoForCreate.userAge.isNotEmpty()) {
+                    put("age", userInfoForCreate.userAge.toIntOrNull() ?: 0)
                 }
-                if (signUpUserInfo.userPhone.isNotEmpty()) {
-                    put("phone", signUpUserInfo.userPhone)
+                if (userInfoForCreate.userPhone.isNotEmpty()) {
+                    put("phone", userInfoForCreate.userPhone)
                 }
-                if (signUpUserInfo.userEmail.isNotEmpty()) {
-                    put("email", signUpUserInfo.userEmail)
+                if (userInfoForCreate.userEmail.isNotEmpty()) {
+                    put("email", userInfoForCreate.userEmail)
                 }
-                if (signUpUserInfo.userArea.isNotEmpty()) {
-                    put("area", signUpUserInfo.userArea)
+                if (userInfoForCreate.userArea.isNotEmpty()) {
+                    put("area", userInfoForCreate.userArea)
                 }
-                if (signUpUserInfo.userAddress.isNotEmpty()) {
-                    put("address", signUpUserInfo.userAddress)
+                if (userInfoForCreate.userAddress.isNotEmpty()) {
+                    put("address", userInfoForCreate.userAddress)
                 }
-                if (signUpUserInfo.userWebsite.isNotEmpty()) {
-                    put("website", signUpUserInfo.userWebsite)
+                if (userInfoForCreate.userWebsite.isNotEmpty()) {
+                    put("website", userInfoForCreate.userWebsite)
                 }
             }
         )

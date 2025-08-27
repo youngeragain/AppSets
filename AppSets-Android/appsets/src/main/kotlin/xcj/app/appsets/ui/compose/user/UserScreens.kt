@@ -15,15 +15,15 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.sp
 import xcj.app.appsets.im.Bio
+import xcj.app.appsets.server.model.ScreenInfo
 import xcj.app.appsets.server.model.ScreenMediaFileUrl
-import xcj.app.appsets.ui.compose.custom_component.LoadMoreHandler
 import xcj.app.appsets.ui.compose.PageRouteNames
+import xcj.app.appsets.ui.compose.custom_component.LoadMoreHandler
 import xcj.app.appsets.ui.compose.outside.ScreensList
-import xcj.app.appsets.ui.model.ScreenState
 
 @Composable
 fun UserScreens(
-    screens: List<ScreenState>,
+    screens: List<ScreenInfo>,
     onBioClick: (Bio) -> Unit,
     onLoadMore: () -> Unit,
     onScreenMediaClick: (ScreenMediaFileUrl, List<ScreenMediaFileUrl>) -> Unit

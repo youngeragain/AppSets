@@ -6,21 +6,19 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.async
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import xcj.app.appsets.account.LocalAccountManager
-import xcj.app.starter.server.requestNotNull
-import xcj.app.starter.server.requestNotNullRaw
-import xcj.app.appsets.util.ktx.toast
-import xcj.app.appsets.util.ktx.toastSuspend
 import xcj.app.appsets.server.model.ScreenInfo
 import xcj.app.appsets.server.repository.ScreenRepository
 import xcj.app.appsets.ui.compose.PageRouteNames
-import xcj.app.appsets.ui.model.ScreenState
-import xcj.app.appsets.ui.model.ViewScreenInfo
+import xcj.app.appsets.ui.model.ScreenInfoForCard
+import xcj.app.appsets.util.ktx.toast
+import xcj.app.appsets.util.ktx.toastSuspend
 import xcj.app.compose_share.dynamic.IComposeLifecycleAware
 import xcj.app.starter.android.util.PurpleLogger
 import xcj.app.starter.foundation.http.DesignResponse
+import xcj.app.starter.server.requestNotNull
+import xcj.app.starter.server.requestNotNullRaw
 
 class ScreenUseCase(
     private val coroutineScope: CoroutineScope,
@@ -37,14 +35,15 @@ class ScreenUseCase(
         var pageSize: Int = 15
         var lastScreensSize: Int = -1
         val isRequesting: MutableState<Boolean> = mutableStateOf(false)
-        val screens: MutableList<ScreenState> = mutableStateListOf()
+        val screens: MutableList<ScreenInfo> = mutableStateListOf()
     }
 
     val systemScreensContainer: ScreensContainer = ScreensContainer()
 
     val userScreensContainer: ScreensContainer = ScreensContainer()
 
-    val currentViewScreenInfo: MutableState<ViewScreenInfo> = mutableStateOf(ViewScreenInfo())
+    val currentScreenInfoForCard: MutableState<ScreenInfoForCard> =
+        mutableStateOf(ScreenInfoForCard())
 
     /**
      * 辅助信息
@@ -91,21 +90,15 @@ class ScreenUseCase(
                     PurpleLogger.current.d(TAG, "requestScreens, onSuccess")
                     container.lastScreensSize = userScreenInfoList.size
                     if (userScreenInfoList.isNotEmpty()) {
-                        val screenStateList =
-                            userScreenInfoList.map { userScreen -> ScreenState.Screen(userScreen) }
                         if (container.page == 1) {
                             container.screens.clear()
-                            container.screens.addAll(screenStateList)
+                            container.screens.addAll(userScreenInfoList)
                         } else {
-                            container.screens.addAll(screenStateList)
+                            container.screens.addAll(userScreenInfoList)
                         }
                     } else {
                         container.page -= 1
                     }
-                    if (userScreenInfoList.size < container.pageSize) {
-                        container.screens.add(ScreenState.NoMore)
-                    }
-                    delay(1000)
                     container.isRequesting.value = false
                 },
                 onFailed = {
@@ -137,10 +130,10 @@ class ScreenUseCase(
     fun updateCurrentViewScreen(currentDestination: String?, screenInfo: ScreenInfo?) {
         this.currentDestination = currentDestination
         if (screenInfo == null) {
-            currentViewScreenInfo.value = ViewScreenInfo()
+            currentScreenInfoForCard.value = ScreenInfoForCard()
             return
         }
-        currentViewScreenInfo.value = ViewScreenInfo(
+        currentScreenInfoForCard.value = ScreenInfoForCard(
             screenInfo = screenInfo
         )
 
@@ -158,7 +151,8 @@ class ScreenUseCase(
                                 "updateCurrentViewScreen, screenReviews:$reviews"
                             )
                             if (!reviews.isNullOrEmpty()) {
-                                currentViewScreenInfo.value = currentViewScreenInfo.value.copy(
+                                currentScreenInfoForCard.value =
+                                    currentScreenInfoForCard.value.copy(
                                     reviews = reviews
                                 )
                             }
@@ -177,7 +171,7 @@ class ScreenUseCase(
                                 TAG,
                                 "updateCurrentViewScreen, screenViewCount:$viewCount"
                             )
-                            currentViewScreenInfo.value = currentViewScreenInfo.value.copy(
+                            currentScreenInfoForCard.value = currentScreenInfoForCard.value.copy(
                                 viewCount = viewCount
                             )
                         }
@@ -191,7 +185,7 @@ class ScreenUseCase(
                                 "updateCurrentViewScreen, screenLikedCount:${likedCount}"
                             )
 
-                            currentViewScreenInfo.value = currentViewScreenInfo.value.copy(
+                            currentScreenInfoForCard.value = currentScreenInfoForCard.value.copy(
                                 likedCount = likedCount
                             )
                         }
@@ -206,7 +200,7 @@ class ScreenUseCase(
                                 TAG,
                                 "screenIsCollectByUser, screen is collect by user:${isCollectedByUser}"
                             )
-                            currentViewScreenInfo.value = currentViewScreenInfo.value.copy(
+                            currentScreenInfoForCard.value = currentScreenInfoForCard.value.copy(
                                 isCollectedByUser = isCollectedByUser
                             )
                         }
@@ -232,7 +226,7 @@ class ScreenUseCase(
             context.getString(xcj.app.appsets.R.string.login_required).toast()
             return
         }
-        val viewScreenInfo = currentViewScreenInfo.value
+        val viewScreenInfo = currentScreenInfoForCard.value
         val screenId: String = viewScreenInfo.screenInfo?.screenId ?: return
         coroutineScope.launch {
             requestNotNull(
@@ -241,7 +235,7 @@ class ScreenUseCase(
                 },
                 onSuccess = {
                     if (it) {
-                        currentViewScreenInfo.value = viewScreenInfo.copy(
+                        currentScreenInfoForCard.value = viewScreenInfo.copy(
                             likedCount = viewScreenInfo.likedCount + 1
                         )
                     }
@@ -256,7 +250,7 @@ class ScreenUseCase(
             context.getString(xcj.app.appsets.R.string.login_required).toast()
             return
         }
-        val viewScreenInfo = currentViewScreenInfo.value
+        val viewScreenInfo = currentScreenInfoForCard.value
         val screenId: String = viewScreenInfo.screenInfo?.screenId ?: return
         coroutineScope.launch {
             requestNotNullRaw(
@@ -278,7 +272,7 @@ class ScreenUseCase(
                         response.info.toastSuspend()
                         return@requestNotNullRaw
                     }
-                    currentViewScreenInfo.value = viewScreenInfo.copy(
+                    currentScreenInfoForCard.value = viewScreenInfo.copy(
                         isCollectedByUser = !viewScreenInfo.isCollectedByUser
                     )
                 }
@@ -287,7 +281,7 @@ class ScreenUseCase(
     }
 
     fun changeScreenPublicState(isPublic: Boolean) {
-        val viewScreenInfo = currentViewScreenInfo.value
+        val viewScreenInfo = currentScreenInfoForCard.value
         val screenId = viewScreenInfo.screenInfo?.screenId ?: return
         coroutineScope.launch {
             requestNotNull(
@@ -304,7 +298,7 @@ class ScreenUseCase(
                     } else {
                         0
                     }
-                    currentViewScreenInfo.value = viewScreenInfo.copy(
+                    currentScreenInfoForCard.value = viewScreenInfo.copy(
                         screenInfo = viewScreenInfo.screenInfo
                     )
                 }
@@ -313,12 +307,12 @@ class ScreenUseCase(
     }
 
 
-    private fun addScreenReview(context: Context, reviewString:String?) {
+    private fun addScreenReview(context: Context, reviewString: String?) {
         if (!LocalAccountManager.isLogged()) {
             context.getString(xcj.app.appsets.R.string.login_required).toast()
             return
         }
-        val viewScreenInfo = currentViewScreenInfo.value
+        val viewScreenInfo = currentScreenInfoForCard.value
         val reviewString = reviewString
         if (reviewString.isNullOrEmpty()) {
             context.getString(xcj.app.appsets.R.string.reply_is_empty).toast()
@@ -343,7 +337,7 @@ class ScreenUseCase(
                     }
                 },
                 onSuccess = { screenReviews ->
-                    currentViewScreenInfo.value = viewScreenInfo.copy(
+                    currentScreenInfoForCard.value = viewScreenInfo.copy(
                         userInputReview = null,
                         reviews = screenReviews
                     )
@@ -355,50 +349,31 @@ class ScreenUseCase(
         }
     }
 
-    fun onReviewConfirm(context: Context, reviewString:String?) {
+    fun onReviewConfirm(context: Context, reviewString: String?) {
         addScreenReview(context, reviewString)
     }
 
-    fun onChangeScreenStyleClick(
-        screenInfo: ScreenInfo,
-        currentDestinationRoute: String
-    ) {
-        val replace: (ScreenState) -> ScreenState = { screenState ->
-            if (screenState is ScreenState.Screen && screenState.screenInfo.screenId == screenInfo.screenId) {
-                screenState.copy(screenInfo = screenInfo)
-            } else {
-                screenState
-            }
-        }
-        if (currentDestinationRoute != PageRouteNames.UserProfilePage) {
-            systemScreensContainer.screens.replaceAll(replace)
-        } else {
-
-            userScreensContainer.screens.replaceAll(replace)
-        }
-    }
-
     fun updatePageShowPrevious() {
-        val currentScreenInfo = currentViewScreenInfo.value.screenInfo
+        val currentScreenInfo = currentScreenInfoForCard.value.screenInfo
         if (currentDestination == PageRouteNames.OutSidePage) {
             if (systemScreensContainer.screens.size < 2) {
                 return
             }
             val currentScreenInfoIndex =
-                systemScreensContainer.screens.indexOfFirst { it is ScreenState.Screen && it.screenInfo == currentScreenInfo }
+                systemScreensContainer.screens.indexOfFirst { it == currentScreenInfo }
             val previousScreenInfoIndex = currentScreenInfoIndex - 1
             val previousScreenInfo =
-                (systemScreensContainer.screens[previousScreenInfoIndex] as? ScreenState.Screen)?.screenInfo
+                systemScreensContainer.screens[previousScreenInfoIndex]
             updateCurrentViewScreen(currentDestination, previousScreenInfo)
         } else {
             if (userScreensContainer.screens.size < 2) {
                 return
             }
             val currentScreenInfoIndex =
-                userScreensContainer.screens.indexOfFirst { it is ScreenState.Screen && it.screenInfo == currentScreenInfo }
+                userScreensContainer.screens.indexOfFirst { it == currentScreenInfo }
             val nextScreenInfoIndex = currentScreenInfoIndex - 1
             val previousScreenInfo =
-                (userScreensContainer.screens[nextScreenInfoIndex] as? ScreenState.Screen)?.screenInfo
+                userScreensContainer.screens[nextScreenInfoIndex]
             updateCurrentViewScreen(currentDestination, previousScreenInfo)
         }
     }

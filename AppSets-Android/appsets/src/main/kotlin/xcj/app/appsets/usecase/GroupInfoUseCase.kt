@@ -5,13 +5,13 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import xcj.app.starter.server.requestNotNull
 import xcj.app.appsets.server.model.GroupInfo
 import xcj.app.appsets.server.repository.UserRepository
-import xcj.app.appsets.ui.model.GroupInfoState
+import xcj.app.appsets.ui.model.page_state.GroupInfoPageState
 import xcj.app.appsets.util.PictureUrlMapper
 import xcj.app.compose_share.dynamic.IComposeLifecycleAware
 import xcj.app.starter.android.util.PurpleLogger
+import xcj.app.starter.server.requestNotNull
 
 class GroupInfoUseCase(
     private val coroutineScope: CoroutineScope,
@@ -21,15 +21,15 @@ class GroupInfoUseCase(
         private const val TAG = "GroupInfoUseCase"
     }
 
-    val groupInfoState: MutableState<GroupInfoState> =
-        mutableStateOf(GroupInfoState.Loading)
+    val groupInfoPageState: MutableState<GroupInfoPageState> =
+        mutableStateOf(GroupInfoPageState.Loading)
 
     fun updateGroupInfo(context: Context, groupInfo: GroupInfo?) {
         if (groupInfo == null) {
-            groupInfoState.value = GroupInfoState.NotFound
+            groupInfoPageState.value = GroupInfoPageState.NotFound
             return
         }
-        groupInfoState.value = GroupInfoState.LoadSuccess(groupInfo)
+        groupInfoPageState.value = GroupInfoPageState.LoadSuccess(groupInfo)
         if (groupInfo.userInfoList == null) {
             updateGroupInfoByGroupId(context, groupId = groupInfo.groupId)
         }
@@ -37,10 +37,10 @@ class GroupInfoUseCase(
 
     private fun updateGroupInfoByGroupId(context: Context, groupId: String?) {
         if (groupId.isNullOrEmpty()) {
-            groupInfoState.value = GroupInfoState.NotFound
+            groupInfoPageState.value = GroupInfoPageState.NotFound
             return
         }
-        groupInfoState.value = GroupInfoState.Loading
+        groupInfoPageState.value = GroupInfoPageState.Loading
         coroutineScope.launch {
             requestNotNull(
                 action = {
@@ -48,10 +48,10 @@ class GroupInfoUseCase(
                 },
                 onSuccess = { groupInfo ->
                     PictureUrlMapper.mapPictureUrl(groupInfo)
-                    groupInfoState.value = GroupInfoState.LoadSuccess(groupInfo)
+                    groupInfoPageState.value = GroupInfoPageState.LoadSuccess(groupInfo)
                 },
                 onFailed = {
-                    groupInfoState.value = GroupInfoState.NotFound
+                    groupInfoPageState.value = GroupInfoPageState.NotFound
                     PurpleLogger.current.d(
                         TAG,
                         "updateGroupInfoByGroupId failed:${it.e?.message}"

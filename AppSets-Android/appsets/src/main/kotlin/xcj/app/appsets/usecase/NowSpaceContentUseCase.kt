@@ -5,7 +5,7 @@ import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import xcj.app.appsets.im.Session
 import xcj.app.appsets.im.message.ImMessage
-import xcj.app.appsets.ui.model.NowSpaceObjectState
+import xcj.app.appsets.ui.model.state.NowSpaceObject
 import xcj.app.compose_share.dynamic.IComposeLifecycleAware
 import xcj.app.starter.android.util.PurpleLogger
 
@@ -24,22 +24,22 @@ class NowSpaceContentUseCase private constructor() : IComposeLifecycleAware {
         }
     }
 
-    private val _content: MutableState<NowSpaceObjectState> =
-        mutableStateOf(NowSpaceObjectState.NULL)
+    private val _content: MutableState<NowSpaceObject> =
+        mutableStateOf(NowSpaceObject.NULL)
 
-    val content: State<NowSpaceObjectState> = _content
+    val content: State<NowSpaceObject> = _content
 
     fun onNewImMessage(session: Session, imMessage: ImMessage) {
         PurpleLogger.current.d(TAG, "onNewImMessage")
-        _content.value = NowSpaceObjectState.NewImMessage(session, imMessage)
+        _content.value = NowSpaceObject.NewImMessage(session, imMessage)
     }
 
     fun removeContent() {
         PurpleLogger.current.d(TAG, "removeContent")
-        _content.value = NowSpaceObjectState.NULL
+        _content.value = NowSpaceObject.NULL
     }
 
-    fun removeContentIf(test: (NowSpaceObjectState) -> Boolean) {
+    fun removeContentIf(test: (NowSpaceObject) -> Boolean) {
         PurpleLogger.current.d(TAG, "removeContentIf")
         if (test(content.value)) {
             removeContent()

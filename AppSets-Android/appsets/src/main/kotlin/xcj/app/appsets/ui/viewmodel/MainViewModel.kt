@@ -42,7 +42,7 @@ class MainViewModel : BaseIMViewModel() {
     )
     val qrCodeUseCase: QRCodeUseCase = QRCodeUseCase(
         viewModelScope,
-        systemUseCase.loginSignUpState,
+        systemUseCase.loginSignUpPageState,
         QRCodeRepository.getInstance(),
         UserRepository.getInstance()
     )

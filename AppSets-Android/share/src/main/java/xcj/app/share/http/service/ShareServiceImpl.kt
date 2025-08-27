@@ -299,10 +299,6 @@ class ShareServiceImpl : ShareService {
                 is DataContent.ByteArrayContent -> {
                     ContentInfo(it.id, it.name, it.bytes.size.toLong(), ContentInfo.TYPE_BYTES)
                 }
-
-                else -> {
-                    null
-                }
             }
         }
         val contentInfoListWrapper =

@@ -41,7 +41,7 @@ import xcj.app.appsets.ui.compose.custom_component.AnyImage
 import xcj.app.appsets.ui.compose.custom_component.ImageButtonComponent
 import xcj.app.appsets.ui.compose.custom_component.SwipeContainer
 import xcj.app.appsets.ui.compose.search.LocalAccountUserAvatar
-import xcj.app.appsets.ui.model.LoginStatusState
+import xcj.app.appsets.ui.model.state.AccountStatus
 import xcj.app.appsets.usecase.QRCodeInfoScannedState
 import xcj.app.appsets.usecase.QRCodeUseCase
 import xcj.app.appsets.usecase.SystemUseCase
@@ -58,7 +58,7 @@ fun LiteSettingsSheetContent(
     onQRCodeConfirmClick: () -> Unit,
 ) {
     val context = LocalContext.current
-    val loginStatusState by LocalAccountManager.loginStatusState
+    val loginStatusState by LocalAccountManager.accountStatus
     var isShowSwapToLogout = remember {
         mutableStateOf(false)
     }
@@ -95,7 +95,7 @@ fun LiteSettingsSheetContent(
                 }
             }
 
-            if (loginStatusState is LoginStatusState.Logged) {
+            if (loginStatusState is AccountStatus.Logged) {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -146,14 +146,14 @@ fun LiteSettingsSheetContent(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 LocalAccountUserAvatar()
-                val name = if (loginStatusState is LoginStatusState.Logged) {
+                val name = if (loginStatusState is AccountStatus.Logged) {
                     loginStatusState.userInfo.name ?: stringResource(xcj.app.appsets.R.string.jkx)
                 } else {
                     stringResource(xcj.app.appsets.R.string.login_to_appsets)
                 }
                 Text(text = name)
             }
-            if (loginStatusState is LoginStatusState.Logged) {
+            if (loginStatusState is AccountStatus.Logged) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth(1f)
@@ -260,7 +260,7 @@ fun LiteSettingsSheetContent(
                             resource = null,
                         )
                         val loginOrLogOutTextRes =
-                            if (loginStatusState is LoginStatusState.Logged) {
+                            if (loginStatusState is AccountStatus.Logged) {
                                 xcj.app.appsets.R.string.logout
                             } else {
                                 xcj.app.appsets.R.string.login_or_signup

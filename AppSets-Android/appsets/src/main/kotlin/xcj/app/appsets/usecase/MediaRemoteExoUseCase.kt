@@ -8,7 +8,7 @@ import kotlinx.coroutines.CoroutineScope
 import xcj.app.appsets.im.model.CommonURIJson
 import xcj.app.appsets.server.model.MediaContent
 import xcj.app.appsets.server.repository.AppSetsRepository
-import xcj.app.appsets.ui.model.SpotLightState
+import xcj.app.appsets.ui.model.state.SpotLight
 import xcj.app.appsets.usecase.component.media.RemoteExoPlayer
 import xcj.app.compose_share.dynamic.IComposeLifecycleAware
 
@@ -22,8 +22,8 @@ class MediaRemoteExoUseCase(
         const val DEFAULT_EMPTY_UUID = "00000000-0000-0000-0000-000000000000"
     }
 
-    val audioPlayerState: MutableState<SpotLightState.AudioPlayer> =
-        mutableStateOf(SpotLightState.AudioPlayer())
+    val audioPlayerState: MutableState<SpotLight.AudioPlayer> =
+        mutableStateOf(SpotLight.AudioPlayer())
 
     val isPlaying: Boolean
         get() = remoteExoPlayer.isPlaying()

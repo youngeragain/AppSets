@@ -47,12 +47,12 @@ import xcj.app.appsets.server.model.Application
 import xcj.app.appsets.ui.compose.custom_component.AnyImage
 import xcj.app.appsets.ui.compose.custom_component.ShowNavBarWhenOnLaunch
 import xcj.app.appsets.ui.compose.theme.AppSetsShapes
-import xcj.app.appsets.usecase.AppCenterState
+import xcj.app.appsets.ui.model.page_state.AppCenterPageState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AppsCenterPage(
-    appCenterState: AppCenterState,
+    appCenterPageState: AppCenterPageState,
     onBioClick: (Bio) -> Unit,
     onApplicationLongPress: (Application) -> Unit
 ) {
@@ -60,7 +60,7 @@ fun AppsCenterPage(
 
     val coroutineScope = rememberCoroutineScope()
 
-    var allApplications = appCenterState.apps.flatMap { it.applications }
+    var allApplications = appCenterPageState.apps.flatMap { it.applications }
     val iconAnimationStates = remember {
         val animations = mutableListOf<AnimationState<Float, AnimationVector1D>>()
         val allCount = allApplications.size
@@ -70,7 +70,7 @@ fun AppsCenterPage(
         animations
     }
     LaunchedEffect(true) {
-        if (appCenterState is AppCenterState.LoadSuccess) {
+        if (appCenterPageState is AppCenterPageState.LoadSuccess) {
             val allCount = iconAnimationStates.size
             val center = (allCount) / 2 + 1
             iconAnimationStates.forEachIndexed { index, animation ->
@@ -128,13 +128,13 @@ fun AppsCenterPage(
                         .combinedClickable(
                             enabled = true,
                             onClick = {
-                                if (appCenterState !is AppCenterState.LoadSuccess) {
+                                if (appCenterPageState !is AppCenterPageState.LoadSuccess) {
                                     return@combinedClickable
                                 }
                                 onBioClick(application)
                             },
                             onLongClick = {
-                                if (appCenterState !is AppCenterState.LoadSuccess) {
+                                if (appCenterPageState !is AppCenterPageState.LoadSuccess) {
                                     return@combinedClickable
                                 }
                                 hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)

@@ -95,8 +95,8 @@ import xcj.app.appsets.ui.compose.custom_component.AnyImage
 import xcj.app.appsets.ui.compose.custom_component.ShowNavBarWhenOnLaunch
 import xcj.app.appsets.ui.compose.outside.ScreenComponent
 import xcj.app.appsets.ui.compose.theme.AppSetsShapes
-import xcj.app.appsets.ui.model.SearchResult
-import xcj.app.appsets.ui.model.SearchState
+import xcj.app.appsets.ui.model.page_state.SearchPageState
+import xcj.app.appsets.ui.model.state.SearchResult
 import xcj.app.compose_share.components.DesignTextField
 
 @Composable
@@ -106,19 +106,19 @@ fun SearchPage(
 ) {
 
     ShowNavBarWhenOnLaunch()
-
+    val coroutineScope = rememberCoroutineScope()
     val searchUseCase = LocalUseCaseOfSearch.current
-    val searchState by searchUseCase.searchState
+    val searchState by searchUseCase.searchPageState
 
     DisposableEffect(key1 = true, effect = {
-        searchUseCase.attachToSearchFlow()
+        searchUseCase.attachToSearchFlow(coroutineScope)
         onDispose {
             searchUseCase.detachToSearchFlow()
         }
     })
 
     SearchPageResults(
-        searchState = searchState,
+        searchPageState = searchState,
         onBioClick = onBioClick,
         onScreenMediaClick = onScreenMediaClick
     )
@@ -126,7 +126,7 @@ fun SearchPage(
 
 @Composable
 fun SearchInputBar(
-    searchState: SearchState,
+    searchPageState: SearchPageState,
     sizeOfSearchBar: IntSize,
     onBackClick: () -> Unit,
     onInputContent: (String) -> Unit,
@@ -140,7 +140,7 @@ fun SearchInputBar(
         FocusRequester()
     }
     LaunchedEffect(key1 = true, block = {
-        val searchKeywords = searchState.keywords
+        val searchKeywords = searchPageState.keywords
         if (!searchKeywords.isNullOrEmpty()) {
             inputContent = inputContent.copy(searchKeywords, TextRange(searchKeywords.length))
         }
@@ -172,7 +172,7 @@ fun SearchInputBar(
             .fillMaxWidth()
             .focusRequester(requester)
             .border(
-                border = searchBorderStroke(searchState),
+                border = searchBorderStroke(searchPageState),
                 shape = cornerShape
             )
             .onSizeChanged(onSearchBarSizeChanged),
@@ -221,8 +221,8 @@ fun SearchInputBar(
 }
 
 @Composable
-fun searchBorderStroke(searchState: SearchState): BorderStroke {
-    val targetWidth = if (searchState is SearchState.Searching) {
+fun searchBorderStroke(searchPageState: SearchPageState): BorderStroke {
+    val targetWidth = if (searchPageState is SearchPageState.Searching) {
         2.dp
     } else {
         1.dp
@@ -234,7 +234,7 @@ fun searchBorderStroke(searchState: SearchState): BorderStroke {
     )
     val outlineColor = MaterialTheme.colorScheme.outline
     val stroke by rememberUpdatedState(
-        if (searchState is SearchState.Searching) {
+        if (searchPageState is SearchPageState.Searching) {
             BorderStroke(
                 targetWidthState.value, linearGradient(
                     0.0f to Color.Red,
@@ -254,12 +254,12 @@ fun searchBorderStroke(searchState: SearchState): BorderStroke {
 
 @Composable
 fun SearchPageResults(
-    searchState: SearchState,
+    searchPageState: SearchPageState,
     onBioClick: (Bio) -> Unit,
     onScreenMediaClick: (ScreenMediaFileUrl, List<ScreenMediaFileUrl>) -> Unit,
 ) {
     AnimatedContent(
-        targetState = searchState,
+        targetState = searchPageState,
         contentAlignment = Alignment.TopCenter,
         transitionSpec = {
             (fadeIn(animationSpec = tween(450)) +
@@ -279,27 +279,27 @@ fun SearchPageResults(
                 .fillMaxSize()
         ) {
             when (targetSearchState) {
-                is SearchState.None -> {
+                is SearchPageState.None -> {
                     Text(
                         text = stringResource(xcj.app.appsets.R.string.no_content),
                         modifier = Modifier.align(Alignment.Center)
                     )
                 }
 
-                is SearchState.Searching -> {
+                is SearchPageState.Searching -> {
                     Column(
                         modifier = Modifier.align(Alignment.Center),
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        targetSearchState.tips?.let {
+                        targetSearchState.tipsIntRes?.let {
                             Text(text = stringResource(id = it))
                         }
 
                     }
                 }
 
-                is SearchState.SearchFailed -> {
-                    targetSearchState.tips?.let {
+                is SearchPageState.SearchPageFailed -> {
+                    targetSearchState.tipsIntRes?.let {
                         Text(
                             text = stringResource(id = it),
                             modifier = Modifier.align(Alignment.Center)
@@ -307,9 +307,9 @@ fun SearchPageResults(
                     }
                 }
 
-                is SearchState.SearchSuccess -> {
+                is SearchPageState.SearchPageSuccess -> {
                     if (targetSearchState.results.isEmpty()) {
-                        targetSearchState.tips?.let {
+                        targetSearchState.tipsIntRes?.let {
                             Text(
                                 text = stringResource(id = it),
                                 modifier = Modifier.align(Alignment.Center)
@@ -330,7 +330,7 @@ fun SearchPageResults(
 
 @Composable
 fun SearchSuccessPages(
-    searchSuccess: SearchState.SearchSuccess,
+    searchSuccess: SearchPageState.SearchPageSuccess,
     onBioClick: (Bio) -> Unit,
     onScreenMediaClick: (ScreenMediaFileUrl, List<ScreenMediaFileUrl>) -> Unit,
 ) {

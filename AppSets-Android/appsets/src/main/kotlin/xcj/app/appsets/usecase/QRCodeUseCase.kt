@@ -20,7 +20,7 @@ import xcj.app.appsets.server.model.UserInfo
 import xcj.app.appsets.server.repository.QRCodeRepository
 import xcj.app.appsets.server.repository.UserRepository
 import xcj.app.appsets.ui.compose.camera.DesignCameraActivity
-import xcj.app.appsets.ui.model.LoginSignUpState
+import xcj.app.appsets.ui.model.page_state.LoginSignUpPageState
 import xcj.app.compose_share.dynamic.IComposeLifecycleAware
 import xcj.app.starter.android.util.PurpleLogger
 import xcj.app.starter.foundation.http.DesignResponse
@@ -49,7 +49,7 @@ sealed interface QRCodeInfoScannedState {
 
 class QRCodeUseCase(
     private val coroutineScope: CoroutineScope,
-    private val loginSignUpState: MutableState<LoginSignUpState>,
+    private val loginSignUpPageState: MutableState<LoginSignUpPageState>,
     private val qrCodeRepository: QRCodeRepository,
     private val userRepository: UserRepository
 ) : IComposeLifecycleAware {
@@ -187,11 +187,11 @@ class QRCodeUseCase(
     private fun startQuickLogin(
         token: String
     ) {
-        val oldLoginSignUpState = loginSignUpState.value
-        if (oldLoginSignUpState is LoginSignUpState.Logging) {
+        val oldLoginSignUpState = loginSignUpPageState.value
+        if (oldLoginSignUpState is LoginSignUpPageState.Logging) {
             return
         }
-        loginSignUpState.value = LoginSignUpState.Logging
+        loginSignUpPageState.value = LoginSignUpPageState.Logging()
         coroutineScope.launch {
             requestNotNullRaw(
                 action = {
@@ -200,7 +200,7 @@ class QRCodeUseCase(
                     val token = loginResponse.data
                     if (!loginResponse.success || token.isNullOrEmpty()) {
                         PurpleLogger.current.d(TAG, loginResponse.info)
-                        loginSignUpState.value = LoginSignUpState.LoggingFail
+                        loginSignUpPageState.value = LoginSignUpPageState.LoggingFail()
                         return@requestNotNullRaw
                     }
                     LocalAccountManager.onUserLogged(UserInfo.default(), token, true)
@@ -208,11 +208,11 @@ class QRCodeUseCase(
                     val userInfo = userInfoResponse.data
                     if (userInfo == null) {
                         PurpleLogger.current.d(TAG, "startQuickLogin failed! userInfo is null ")
-                        loginSignUpState.value = LoginSignUpState.LoggingFail
+                        loginSignUpPageState.value = LoginSignUpPageState.LoggingFail()
                         return@requestNotNullRaw
                     }
                     LocalAccountManager.onUserLogged(userInfo, token, false)
-                    loginSignUpState.value = LoginSignUpState.LoggingFinish
+                    loginSignUpPageState.value = LoginSignUpPageState.LoggingFinish()
                 }
             )
         }

@@ -32,14 +32,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import xcj.app.appsets.im.Bio
 import xcj.app.appsets.server.model.Application
+import xcj.app.appsets.server.model.ScreenInfo
 import xcj.app.appsets.server.model.ScreenMediaFileUrl
 import xcj.app.appsets.server.model.UserInfo
 import xcj.app.appsets.ui.compose.LocalUseCaseOfUserInfo
 import xcj.app.appsets.ui.compose.custom_component.DesignBottomBackButton
 import xcj.app.appsets.ui.compose.custom_component.DesignBottomDropDownButton
 import xcj.app.appsets.ui.compose.custom_component.HideNavBarWhenOnLaunch
-import xcj.app.appsets.ui.model.ScreenState
-import xcj.app.appsets.ui.model.UserProfileState
+import xcj.app.appsets.ui.model.page_state.UserProfilePageState
 import xcj.app.compose_share.components.BackActionTopBar
 
 private const val NONE = "None"
@@ -53,12 +53,12 @@ private const val GOODS = "Goods"
 @Composable
 fun UserProfilePage(
     onBackClick: () -> Unit,
-    userProfileState: UserProfileState,
+    userProfilePageState: UserProfilePageState,
     userApplications: List<Application>,
     userFollowers: List<UserInfo>,
     userFollowed: List<UserInfo>,
     isLoginUserFollowedThisUser: Boolean,
-    userScreens: List<ScreenState>,
+    userScreens: List<ScreenInfo>,
     onAddFriendClick: (UserInfo) -> Unit,
     onFlipFollowClick: (UserInfo) -> Unit,
     onChatClick: (UserInfo) -> Unit,
@@ -84,8 +84,8 @@ fun UserProfilePage(
         modifier = Modifier
             .fillMaxSize()
     ) {
-        when (userProfileState) {
-            is UserProfileState.Loading -> {
+        when (userProfilePageState) {
+            is UserProfilePageState.Loading -> {
                 Box(modifier = Modifier.fillMaxSize()) {
                     CircularProgressIndicator(
                         modifier = Modifier
@@ -99,7 +99,7 @@ fun UserProfilePage(
                 }
             }
 
-            is UserProfileState.NotFound -> {
+            is UserProfilePageState.NotFound -> {
                 Box(modifier = Modifier.fillMaxSize()) {
                     Text(
                         text = stringResource(xcj.app.appsets.R.string.not_found),
@@ -112,7 +112,7 @@ fun UserProfilePage(
                 }
             }
 
-            is UserProfileState.LoadSuccess -> {
+            is UserProfilePageState.LoadSuccess -> {
                 Column(modifier = Modifier.fillMaxSize()) {
                     BackActionTopBar(
                         onBackClick = onBackClick
@@ -126,7 +126,7 @@ fun UserProfilePage(
                     }
                     UserInfoHeader(
                         modifier = Modifier,
-                        userInfo = userProfileState.userInfo,
+                        userInfo = userProfilePageState.userInfo,
                         userFollowers = userFollowers,
                         userFollowed = userFollowed,
                         isLoginUserFollowedThisUser = isLoginUserFollowedThisUser,
@@ -137,7 +137,7 @@ fun UserProfilePage(
                                 }
 
                                 UserAction.ACTION_SCREEN -> {
-                                    onLoadMoreScreens(userProfileState.userInfo.uid, true)
+                                    onLoadMoreScreens(userProfilePageState.userInfo.uid, true)
                                     currentShowContent = SCREEN
                                 }
 
@@ -150,15 +150,15 @@ fun UserProfilePage(
                                 }
 
                                 UserAction.ACTION_FLIP_FOLLOW -> {
-                                    onFlipFollowClick(userProfileState.userInfo)
+                                    onFlipFollowClick(userProfilePageState.userInfo)
                                 }
 
                                 UserAction.ACTION_CHAT -> {
-                                    onChatClick(userProfileState.userInfo)
+                                    onChatClick(userProfilePageState.userInfo)
                                 }
 
                                 UserAction.ACTION_ADD_FRIEND -> {
-                                    onAddFriendClick(userProfileState.userInfo)
+                                    onAddFriendClick(userProfilePageState.userInfo)
                                 }
                             }
                         }
@@ -198,7 +198,7 @@ fun UserProfilePage(
                             } else {
                                 stringResource(
                                     xcj.app.appsets.R.string.a_of_b,
-                                    userProfileState.userInfo.name ?: "",
+                                    userProfilePageState.userInfo.name ?: "",
                                     currentShowContent
                                 )
                             }
@@ -218,7 +218,7 @@ fun UserProfilePage(
                                         currentShowContent = NONE
                                     },
                                     onLoadMore = {
-                                        onLoadMoreScreens(userProfileState.userInfo.uid, false)
+                                        onLoadMoreScreens(userProfilePageState.userInfo.uid, false)
                                     },
                                     onScreenMediaClick = onScreenMediaClick
                                 )
@@ -233,7 +233,7 @@ fun UserProfilePage(
 
                             FOLLOWER_FOLLOWED -> {
                                 UserFollowers(
-                                    uid = userProfileState.userInfo.uid,
+                                    uid = userProfilePageState.userInfo.uid,
                                     userFollowers = userFollowers,
                                     userFollowed = userFollowed,
                                     onBioClick = { userInfo ->
@@ -245,7 +245,7 @@ fun UserProfilePage(
 
                             MODIFY_PROFILE -> {
                                 ProfileModificationComponent(
-                                    userInfo = userProfileState.userInfo,
+                                    userInfo = userProfilePageState.userInfo,
                                     onSelectUserAvatarClick = onSelectUserAvatarClick,
                                     onConfirmClick = onModifyProfileConfirmClick
                                 )

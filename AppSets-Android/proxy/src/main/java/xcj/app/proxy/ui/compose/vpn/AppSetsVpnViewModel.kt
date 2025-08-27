@@ -10,6 +10,7 @@ import android.net.VpnService
 import android.widget.Toast
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
+import androidx.core.content.edit
 import xcj.app.proxy.ui.compose.vpn.AppSetsVpnActivity.Prefs
 import xcj.app.starter.android.ui.base.DesignViewModel
 import java.util.Arrays
@@ -93,18 +94,21 @@ class AppSetsVpnViewModel : DesignViewModel() {
                 0
             }
 
-            prefs.edit()
-                .putString(
+            prefs.edit {
+                putString(
                     Prefs.SERVER_ADDRESS,
                     appSetsVpnData.serverAddress
                 )
-                .putInt(Prefs.SERVER_PORT, serverPortNum)
-                .putString(Prefs.SHARED_SECRET, appSetsVpnData.sharedSecret)
-                .putString(Prefs.PROXY_HOSTNAME, appSetsVpnData.httpProxyHostname)
-                .putInt(Prefs.PROXY_PORT, proxyPortNum)
-                .putBoolean(Prefs.ALLOW, appSetsVpnData.packagesCommaSeparatedAllowed == "Allow")
-                .putStringSet(Prefs.PACKAGES, packageSet)
-                .apply()
+                    .putInt(Prefs.SERVER_PORT, serverPortNum)
+                    .putString(Prefs.SHARED_SECRET, appSetsVpnData.sharedSecret)
+                    .putString(Prefs.PROXY_HOSTNAME, appSetsVpnData.httpProxyHostname)
+                    .putInt(Prefs.PROXY_PORT, proxyPortNum)
+                    .putBoolean(
+                        Prefs.ALLOW,
+                        appSetsVpnData.packagesCommaSeparatedAllowed == "Allow"
+                    )
+                    .putStringSet(Prefs.PACKAGES, packageSet)
+            }
             val intent = VpnService.prepare(activity)
             if (intent != null) {
                 activity.startActivityForResult(intent, 0)

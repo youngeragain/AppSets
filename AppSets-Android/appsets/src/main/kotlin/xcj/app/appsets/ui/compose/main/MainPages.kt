@@ -93,10 +93,10 @@ import xcj.app.appsets.ui.compose.custom_component.AnyImage
 import xcj.app.appsets.ui.compose.media.video.fall.MediaFallActivity
 import xcj.app.appsets.ui.compose.quickstep.QuickStepContentHandlerRegistry
 import xcj.app.appsets.ui.compose.settings.LiteSettingsSheetContent
-import xcj.app.appsets.ui.model.NowSpaceObjectState
-import xcj.app.appsets.ui.model.NowSpaceObjectState.NewImMessage
 import xcj.app.appsets.ui.model.TabAction
 import xcj.app.appsets.ui.model.TabItem
+import xcj.app.appsets.ui.model.state.NowSpaceObject
+import xcj.app.appsets.ui.model.state.NowSpaceObject.NewImMessage
 import xcj.app.appsets.ui.viewmodel.MainViewModel
 import xcj.app.appsets.usecase.ConversationUseCase
 import xcj.app.appsets.usecase.SessionState
@@ -361,7 +361,7 @@ fun NowSpace(navController: NavController) {
         val currentSession =
             (conversationUseCase.currentSessionState.value as? SessionState.Normal)?.session
         when (content) {
-            is NowSpaceObjectState.NewImMessage -> {
+            is NewImMessage -> {
 
                 val messageColorBarVisibility =
                     (navController.currentDestination?.route != PageRouteNames.ConversationDetailsPage ||
@@ -395,7 +395,7 @@ fun NowSpace(navController: NavController) {
                 }
             }
 
-            NowSpaceObjectState.NULL -> {
+            NowSpaceObject.NULL -> {
                 Spacer(modifier = Modifier.height(0.dp))
             }
         }

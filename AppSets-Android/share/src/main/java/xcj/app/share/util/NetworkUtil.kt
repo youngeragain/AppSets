@@ -140,7 +140,7 @@ object NetworkUtil {
         if (inetAddress is Inet6Address) {
             return getInet6HostAddress(inetAddress)
         }
-        return inetAddress.hostAddress
+        return inetAddress.hostAddress ?: ""
     }
 
     private fun getInet6HostAddress(inet6Address: Inet6Address): String {

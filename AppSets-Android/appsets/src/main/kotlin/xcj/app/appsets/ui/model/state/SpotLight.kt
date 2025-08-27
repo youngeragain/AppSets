@@ -1,6 +1,5 @@
-package xcj.app.appsets.ui.model
+package xcj.app.appsets.ui.model.state
 
-import android.net.Uri
 import androidx.media3.common.MediaMetadata
 import androidx.media3.common.Player
 import xcj.app.appsets.constants.Constants
@@ -9,40 +8,40 @@ import xcj.app.appsets.usecase.MediaRemoteExoUseCase
 import xcj.app.starter.android.AppDefinition
 import xcj.app.starter.android.ItemDefinition
 
-sealed class SpotLightState {
+sealed class SpotLight {
 
     data class PinnedApp(
         val items: List<AppDefinition>
-    ) : SpotLightState()
+    ) : SpotLight()
 
     data class RecommendedItem(
         val items: List<ItemDefinition>
-    ) : SpotLightState()
+    ) : SpotLight()
 
     data class BingWallpaper(
         val items: List<MicrosoftBingWallpaper>
-    ) : SpotLightState()
+    ) : SpotLight()
 
     data class WordOfTheDay(
         val items: List<Any>
-    ) : SpotLightState()
+    ) : SpotLight()
 
     data class PopularSearch(
         val icon: Int,
         val title: String,
         val items: List<Any>
-    ) : SpotLightState()
+    ) : SpotLight()
 
     data class AudioPlayer(
         val playbackState: Int = Player.STATE_IDLE,
         val mediaMetadata: MediaMetadata? = null,
-        val id: String? = MediaRemoteExoUseCase.DEFAULT_EMPTY_UUID,
+        val id: String? = MediaRemoteExoUseCase.Companion.DEFAULT_EMPTY_UUID,
         val duration: String = Constants.STR_EMPTY,
         val durationRawValue: Long = 0,
         val currentDuration: String = Constants.STR_EMPTY,
         val currentDurationRawValue: Long = 0,
         val defaultOrder: Int = 1
-    ) : SpotLightState() {
+    ) : SpotLight() {
 
         val progress: Float
             get() {
@@ -75,6 +74,6 @@ sealed class SpotLightState {
         val playId: String,
         val playbackState: Int? = null,
         val mediaMetadata: MediaMetadata? = null
-    ) : SpotLightState()
+    ) : SpotLight()
 
 }

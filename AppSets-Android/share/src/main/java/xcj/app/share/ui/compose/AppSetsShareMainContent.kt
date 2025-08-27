@@ -1,5 +1,6 @@
 @file:OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 
+import android.content.ClipData
 import android.graphics.Bitmap
 import android.net.wifi.p2p.WifiP2pDevice
 import androidx.compose.animation.AnimatedContent
@@ -76,13 +77,13 @@ import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.onSizeChanged
-import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.ClipEntry
+import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -1211,8 +1212,6 @@ fun AppSetsShareActionsSpace(
                         .height(350.dp)
                         .fillMaxWidth(),
                     colors = TextFieldDefaults.colors(
-                        unfocusedContainerColor = MaterialTheme.colorScheme.outline,
-                        focusedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
                         unfocusedIndicatorColor = Color.Transparent,
                         focusedIndicatorColor = Color.Transparent
                     )
@@ -1450,8 +1449,9 @@ fun SendSpace(
 fun ReceivedSpace(
     onContentViewClick: (DataContent) -> Unit,
 ) {
-    val clipboardManager = LocalClipboardManager.current
+    val clipboard = LocalClipboard.current
     val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
     val appSetsShareActivity = context as AppSetsShareActivity
     val viewModel = viewModel<AppSetsShareViewModel>()
     val receivedContentList = viewModel.receivedContentList
@@ -1552,11 +1552,12 @@ fun ReceivedSpace(
                                         }
                                         FilledTonalButton(
                                             onClick = {
-                                                clipboardManager.setText(
-                                                    AnnotatedString(
-                                                        dataContent.content
-                                                    )
-                                                )
+                                                val newPlainText =
+                                                    ClipData.newPlainText("", dataContent.content)
+                                                val clipEntry = ClipEntry(newPlainText)
+                                                coroutineScope.launch {
+                                                    clipboard.setClipEntry(clipEntry)
+                                                }
                                             }
                                         ) {
                                             Text(

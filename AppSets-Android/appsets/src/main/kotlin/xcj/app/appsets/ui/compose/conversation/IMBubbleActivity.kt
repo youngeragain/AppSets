@@ -352,7 +352,7 @@ fun ImSessionBubbleNaviHostPages(navController: NavHostController) {
                 val screensUseCase = LocalUseCaseOfScreen.current
                 val anyStateProvider = LocalAnyStateProvider.current
                 ScreenDetailsPage(
-                    viewScreenInfo = screensUseCase.currentViewScreenInfo.value,
+                    screenInfoForCard = screensUseCase.currentScreenInfoForCard.value,
                     onBackClick = navController::navigateUp,
                     onBioClick = { bio ->
                         onBioClick(context, navController, bio)
@@ -397,7 +397,7 @@ fun ImSessionBubbleNaviHostPages(navController: NavHostController) {
                 val screensUseCase = LocalUseCaseOfScreen.current
                 UserProfilePage(
                     onBackClick = navController::navigateUp,
-                    userProfileState = userInfoUseCase.currentUserInfoState.value,
+                    userProfilePageState = userInfoUseCase.currentUserInfoState.value,
                     userApplications = userInfoUseCase.applicationsState.value,
                     userFollowers = userInfoUseCase.followerUsersState.value,
                     userFollowed = userInfoUseCase.followedUsersState.value,
@@ -461,9 +461,9 @@ fun ImSessionBubbleNaviHostPages(navController: NavHostController) {
                 val groupInfoUseCase = LocalUseCaseOfGroupInfo.current
                 val conversationUseCase = LocalUseCaseOfConversation.current
                 val systemUseCase = LocalUseCaseOfSystem.current
-                val groupInfoState = groupInfoUseCase.groupInfoState.value
+                val groupInfoState = groupInfoUseCase.groupInfoPageState.value
                 GroupInfoPage(
-                    groupInfoState = groupInfoState,
+                    groupInfoPageState = groupInfoState,
                     onBackClick = navController::navigateUp,
                     onBioClick = { bio ->
                         onBioClick(context, navController, bio)
@@ -582,7 +582,7 @@ fun ImSessionBubbleNaviHostPages(navController: NavHostController) {
             composable(PageRouteNames.ScreenEditPage) {
                 val screenUseCase = LocalUseCaseOfScreen.current
                 ScreenEditPage(
-                    screenInfo = screenUseCase.currentViewScreenInfo.value.screenInfo,
+                    screenInfo = screenUseCase.currentScreenInfoForCard.value.screenInfo,
                     onBackClick = navController::navigateUp,
                     onPublicStateChanged = { newIsPublic ->
                         screenUseCase.changeScreenPublicState(newIsPublic)

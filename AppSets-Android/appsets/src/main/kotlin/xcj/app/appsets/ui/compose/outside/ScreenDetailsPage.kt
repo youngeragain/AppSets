@@ -3,7 +3,6 @@
 package xcj.app.appsets.ui.compose.outside
 
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.spring
@@ -20,7 +19,6 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -63,15 +61,11 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dev.chrisbanes.haze.HazeState
-import dev.chrisbanes.haze.hazeEffect
-import dev.chrisbanes.haze.hazeSource
 import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
-import dev.chrisbanes.haze.materials.HazeMaterials
 import kotlinx.coroutines.launch
 import xcj.app.appsets.account.LocalAccountManager
 import xcj.app.appsets.im.Bio
@@ -81,7 +75,7 @@ import xcj.app.appsets.ui.compose.PageRouteNames
 import xcj.app.appsets.ui.compose.custom_component.AnyImage
 import xcj.app.appsets.ui.compose.custom_component.DesignBottomBackButton
 import xcj.app.appsets.ui.compose.custom_component.HideNavBarWhenOnLaunch
-import xcj.app.appsets.ui.model.ViewScreenInfo
+import xcj.app.appsets.ui.model.ScreenInfoForCard
 import xcj.app.compose_share.components.DesignHDivider
 import xcj.app.compose_share.components.DesignTextField
 import xcj.app.compose_share.components.LocalAnyStateProvider
@@ -90,7 +84,7 @@ import xcj.app.compose_share.ui.viewmodel.AnyStateViewModel.Companion.bottomShee
 
 @Composable
 fun ScreenDetailsPage(
-    viewScreenInfo: ViewScreenInfo,
+    screenInfoForCard: ScreenInfoForCard,
     onBackClick: () -> Unit,
     onBioClick: (Bio) -> Unit,
     onEditClick: () -> Unit,
@@ -102,7 +96,7 @@ fun ScreenDetailsPage(
     onPageShowNext: () -> Unit
 ) {
     HideNavBarWhenOnLaunch()
-    if (viewScreenInfo.screenInfo == null) {
+    if (screenInfoForCard.screenInfo == null) {
         Box(modifier = Modifier.fillMaxSize()) {
             Text(
                 text = stringResource(xcj.app.appsets.R.string.no_corresponding_screen_found),
@@ -131,7 +125,7 @@ fun ScreenDetailsPage(
             ) {
                 Box {
                     val backgroundImage =
-                        viewScreenInfo.screenInfo.mediaFileUrls?.firstOrNull {
+                        screenInfoForCard.screenInfo.mediaFileUrls?.firstOrNull {
                             if (it.isVideoMedia) {
                                 !it.mediaFileCompanionUrl.isNullOrEmpty()
                             } else {
@@ -156,7 +150,7 @@ fun ScreenDetailsPage(
                         Spacer(modifier = Modifier.windowInsetsTopHeight(WindowInsets.statusBars))
                         val hapticFeedback = LocalHapticFeedback.current
                         ScreenDetailsTopBar(
-                            viewScreenInfo = viewScreenInfo,
+                            screenInfoForCard = screenInfoForCard,
                             onBackClick = onBackClick,
                             onBioClick = onBioClick,
                             onEditClick = onEditClick,
@@ -172,7 +166,7 @@ fun ScreenDetailsPage(
                     }
                 }
                 ScreenDetailsPager(
-                    viewScreenInfo = viewScreenInfo,
+                    screenInfoForCard = screenInfoForCard,
                     onBioClick = onBioClick,
                     onScreenMediaClick = onScreenMediaClick,
                     onPageShowPrevious = onPageShowPrevious,
@@ -291,8 +285,6 @@ fun AddReviewSpace(
                         .height(350.dp)
                         .fillMaxWidth(),
                     colors = TextFieldDefaults.colors(
-                        unfocusedContainerColor = MaterialTheme.colorScheme.outline,
-                        focusedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
                         unfocusedIndicatorColor = Color.Transparent,
                         focusedIndicatorColor = Color.Transparent
                     )
@@ -305,7 +297,7 @@ fun AddReviewSpace(
 
 @Composable
 fun ScreenDetailsPager(
-    viewScreenInfo: ViewScreenInfo,
+    screenInfoForCard: ScreenInfoForCard,
     onBioClick: (Bio) -> Unit,
     onScreenMediaClick: (ScreenMediaFileUrl, List<ScreenMediaFileUrl>) -> Unit,
     onPageShowPrevious: () -> Unit,
@@ -328,7 +320,7 @@ fun ScreenDetailsPager(
                 SelectionContainer {
                     ScreenComponent(
                         currentDestinationRoute = PageRouteNames.ScreenDetailsPage,
-                        screenInfo = viewScreenInfo.screenInfo!!,
+                        screenInfo = screenInfoForCard.screenInfo!!,
                         onBioClick = onBioClick,
                         pictureInteractionFlowCollector = { a, b -> },
                         onScreenMediaClick = onScreenMediaClick,
@@ -337,7 +329,7 @@ fun ScreenDetailsPager(
 
             }
             DesignHDivider()
-            ScreenReviews(viewScreenInfo.reviews, onBioClick)
+            ScreenReviews(screenInfoForCard.reviews, onBioClick)
         }
     }
 
@@ -345,7 +337,7 @@ fun ScreenDetailsPager(
 
 @Composable
 fun ScreenDetailsTopBar(
-    viewScreenInfo: ViewScreenInfo,
+    screenInfoForCard: ScreenInfoForCard,
     onBackClick: () -> Unit,
     onBioClick: (Bio) -> Unit,
     onEditClick: () -> Unit,
@@ -380,7 +372,7 @@ fun ScreenDetailsTopBar(
                 Row() {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         AnimatedContent(
-                            targetState = viewScreenInfo.viewCount,
+                            targetState = screenInfoForCard.viewCount,
                             transitionSpec = {
                                 fadeIn() togetherWith fadeOut()
                             },
@@ -399,7 +391,7 @@ fun ScreenDetailsTopBar(
                     }
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         AnimatedContent(
-                            targetState = viewScreenInfo.likedCount,
+                            targetState = screenInfoForCard.likedCount,
                             transitionSpec = {
                                 fadeIn() togetherWith fadeOut()
                             },
@@ -421,7 +413,7 @@ fun ScreenDetailsTopBar(
                         )
                     }
                     if (
-                        LocalAccountManager.isLoggedUser(viewScreenInfo.screenInfo?.userInfo?.uid)
+                        LocalAccountManager.isLoggedUser(screenInfoForCard.screenInfo?.userInfo?.uid)
                     ) {
                         Icon(
                             painterResource(id = xcj.app.compose_share.R.drawable.ic_edit_24),
@@ -434,7 +426,7 @@ fun ScreenDetailsTopBar(
                                 .padding(12.dp)
                         )
                     } else {
-                        val resId = if (viewScreenInfo.isCollectedByUser) {
+                        val resId = if (screenInfoForCard.isCollectedByUser) {
                             xcj.app.compose_share.R.drawable.ic_round_bookmarks_24
                         } else {
                             xcj.app.compose_share.R.drawable.ic_bookmarks_24
@@ -446,7 +438,7 @@ fun ScreenDetailsTopBar(
                             modifier = Modifier
                                 .clip(CircleShape)
                                 .combinedClickableSingle(role = Role.Button) {
-                                    if (viewScreenInfo.isCollectedByUser) {
+                                    if (screenInfoForCard.isCollectedByUser) {
                                         onCollectClick(null)
                                     } else {
                                         val bottomSheetContainerState =

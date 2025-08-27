@@ -36,7 +36,7 @@ import xcj.app.appsets.account.LocalAccountManager
 import xcj.app.appsets.im.BrokerTest
 import xcj.app.appsets.ui.compose.LocalUseCaseOfSearch
 import xcj.app.appsets.ui.compose.custom_component.ImageButtonComponent
-import xcj.app.appsets.ui.model.LoginStatusState
+import xcj.app.appsets.ui.model.state.AccountStatus
 import xcj.app.appsets.util.ktx.toast
 
 private const val TAG = "NavigationSearchBar"
@@ -51,7 +51,7 @@ fun NavigationSearchBar(
     onBioClick: () -> Unit,
 ) {
     val searchUseCase = LocalUseCaseOfSearch.current
-    val searchState by searchUseCase.searchState
+    val searchState by searchUseCase.searchPageState
     var sizeOfSearchBar by remember {
         mutableStateOf(IntSize.Zero)
     }
@@ -61,7 +61,7 @@ fun NavigationSearchBar(
         ) {
             Spacer(modifier = Modifier.height(4.dp))
             SearchInputBar(
-                searchState = searchState,
+                searchPageState = searchState,
                 sizeOfSearchBar = sizeOfSearchBar,
                 onBackClick = onBackClick,
                 onInputContent = onInputContent,
@@ -124,10 +124,10 @@ fun SearchClickableBar(
 
 @Composable
 fun LocalAccountUserAvatar(onClick: (() -> Unit)? = null) {
-    val loginState by LocalAccountManager.loginStatusState
+    val loginState by LocalAccountManager.accountStatus
     val targetBorderColor = remember {
         derivedStateOf {
-            if (loginState is LoginStatusState.Logged && BrokerTest.onlineState.value) {
+            if (loginState is AccountStatus.Logged && BrokerTest.onlineState.value) {
                 Color.Green
             } else {
                 Color.Red
@@ -136,7 +136,7 @@ fun LocalAccountUserAvatar(onClick: (() -> Unit)? = null) {
     }
     val resource by remember {
         derivedStateOf {
-            if (loginState is LoginStatusState.Logged) {
+            if (loginState is AccountStatus.Logged) {
                 loginState.userInfo.bioUrl
             } else {
                 xcj.app.compose_share.R.drawable.ic_outline_face_24
@@ -148,7 +148,7 @@ fun LocalAccountUserAvatar(onClick: (() -> Unit)? = null) {
         targetValue = targetBorderColor.value,
         label = "border_color_animate"
     )
-    val modifier = if (loginState is LoginStatusState.Logged) {
+    val modifier = if (loginState is AccountStatus.Logged) {
         Modifier.border(2.dp, borderColor, CircleShape)
     } else {
         Modifier

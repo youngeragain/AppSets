@@ -15,7 +15,7 @@ import xcj.app.appsets.server.model.AddUserScreenParams
 import xcj.app.appsets.server.model.ScreenInfo
 import xcj.app.appsets.server.model.ScreenMediaFileUrl
 import xcj.app.appsets.server.model.ScreenReview
-import xcj.app.appsets.ui.model.PostScreen
+import xcj.app.appsets.ui.model.ScreenInfoForCreate
 import xcj.app.appsets.util.PictureUrlMapper
 import xcj.app.appsets.util.VideoFileUtil
 import xcj.app.appsets.util.ktx.toastSuspend
@@ -88,20 +88,24 @@ class ScreenRepository(
 
     suspend fun addScreen(
         context: Context,
-        postScreen: PostScreen,
+        screenInfoForCreate: ScreenInfoForCreate,
     ): DesignResponse<Boolean> = withContext(Dispatchers.IO) {
         PurpleLogger.current.d(TAG, "addScreen, thread:${Thread.currentThread()}")
         val mediaFilUrls =
-            buildScreenMediaFileUrls(context, postScreen.pictures, postScreen.videos.firstOrNull())
+            buildScreenMediaFileUrls(
+                context,
+                screenInfoForCreate.pictures,
+                screenInfoForCreate.videos.firstOrNull()
+            )
         return@withContext userApi.addScreen(
             AddUserScreenParams(
-                postScreen.content,
-                postScreen.associateTopics,
-                postScreen.associatePeoples,
+                screenInfoForCreate.content,
+                screenInfoForCreate.associateTopics,
+                screenInfoForCreate.associatePeoples,
                 mediaFilUrls,
-                postScreen.isPublic,
+                screenInfoForCreate.isPublic,
                 "normal add from android app",
-                postScreen.addToMediaFall
+                screenInfoForCreate.addToMediaFall
             )
         )
     }

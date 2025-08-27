@@ -10,8 +10,8 @@ import xcj.app.appsets.server.model.Application
 import xcj.app.appsets.server.model.UserInfo
 import xcj.app.appsets.server.repository.AppSetsRepository
 import xcj.app.appsets.server.repository.UserRepository
-import xcj.app.appsets.ui.model.UserInfoModification
-import xcj.app.appsets.ui.model.UserProfileState
+import xcj.app.appsets.ui.model.UserInfoForModify
+import xcj.app.appsets.ui.model.page_state.UserProfilePageState
 import xcj.app.appsets.util.ktx.toastSuspend
 import xcj.app.appsets.util.model.UriProvider
 import xcj.app.compose_share.dynamic.IComposeLifecycleAware
@@ -24,8 +24,8 @@ class UserInfoUseCase(
     private val appSetsRepository: AppSetsRepository,
 ) : IComposeLifecycleAware {
 
-    val currentUserInfoState: MutableState<UserProfileState> = mutableStateOf(
-        UserProfileState.Loading
+    val currentUserInfoState: MutableState<UserProfilePageState> = mutableStateOf(
+        UserProfilePageState.Loading
     )
 
     val loggedUserFollowedState: MutableState<Boolean> = mutableStateOf(false)
@@ -36,8 +36,8 @@ class UserInfoUseCase(
 
     val applicationsState: MutableState<List<Application>> = mutableStateOf(emptyList())
 
-    val userInfoModificationState: MutableState<UserInfoModification> = mutableStateOf(
-        UserInfoModification()
+    val userInfoForModifyState: MutableState<UserInfoForModify> = mutableStateOf(
+        UserInfoForModify()
     )
 
     private fun fetchUserRelateInformation(
@@ -45,10 +45,10 @@ class UserInfoUseCase(
         requestOnlyUserInfo: Boolean = false,
     ) {
         if (userInfo == null) {
-            currentUserInfoState.value = UserProfileState.NotFound
+            currentUserInfoState.value = UserProfilePageState.NotFound
             return
         }
-        currentUserInfoState.value = UserProfileState.LoadSuccess(userInfo)
+        currentUserInfoState.value = UserProfilePageState.LoadSuccess(userInfo)
         if (requestOnlyUserInfo) {
             return
         }
@@ -105,7 +105,7 @@ class UserInfoUseCase(
 
     fun updateUserFollowState() {
         val userInfo =
-            (currentUserInfoState.value as? UserProfileState.LoadSuccess)?.userInfo
+            (currentUserInfoState.value as? UserProfilePageState.LoadSuccess)?.userInfo
                 ?: return
         coroutineScope.launch {
             requestNotNullRaw(
@@ -137,7 +137,7 @@ class UserInfoUseCase(
     ) {
 
         val currentUserInfoState = currentUserInfoState.value
-        if (currentUserInfoState !is UserProfileState.LoadSuccess) {
+        if (currentUserInfoState !is UserProfilePageState.LoadSuccess) {
             return
         }
         val userInfo = currentUserInfoState.userInfo
@@ -145,7 +145,7 @@ class UserInfoUseCase(
         if (!LocalAccountManager.isLoggedUser(userInfo.uid)) {
             return
         }
-        val userInfoModification = userInfoModificationState.value
+        val userInfoModification = userInfoForModifyState.value
         coroutineScope.launch {
             requestNotNull(
                 action = {
@@ -167,7 +167,7 @@ class UserInfoUseCase(
     }
 
     fun updateUserSelectAvatarUri(uriProvider: UriProvider) {
-        UserInfoModification.updateStateUserAvatarUri(userInfoModificationState, uriProvider)
+        UserInfoForModify.updateStateUserAvatarUri(userInfoForModifyState, uriProvider)
     }
 
     override fun onComposeDispose(by: String?) {
@@ -175,6 +175,6 @@ class UserInfoUseCase(
         followedUsersState.value = emptyList()
         followerUsersState.value = emptyList()
         applicationsState.value = emptyList()
-        userInfoModificationState.value = UserInfoModification()
+        userInfoForModifyState.value = UserInfoForModify()
     }
 }

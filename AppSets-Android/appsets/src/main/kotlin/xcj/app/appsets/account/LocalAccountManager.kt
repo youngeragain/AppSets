@@ -9,13 +9,13 @@ import xcj.app.appsets.db.room.AppDatabase
 import xcj.app.appsets.im.BrokerTest
 import xcj.app.appsets.purple_module.ModuleConstant
 import xcj.app.appsets.purple_module.MySharedPreferences
-import xcj.app.starter.server.ApiDesignKeys
 import xcj.app.appsets.server.model.UserInfo
-import xcj.app.appsets.ui.model.LoginStatusState
+import xcj.app.appsets.ui.model.state.AccountStatus
 import xcj.app.appsets.util.PictureUrlMapper
 import xcj.app.starter.android.ModuleHelper
 import xcj.app.starter.android.util.LocalMessager
 import xcj.app.starter.android.util.PurpleLogger
+import xcj.app.starter.server.ApiDesignKeys
 import xcj.app.starter.test.LocalPurpleCoroutineScope
 
 object LocalAccountManager {
@@ -36,17 +36,17 @@ object LocalAccountManager {
     //当用户退出登录后
     const val MESSAGE_KEY_ON_LOGOUT = "on_logout"
 
-    val loginStatusState: MutableState<LoginStatusState> =
-        mutableStateOf(LoginStatusState.NotLogged())
+    val accountStatus: MutableState<AccountStatus> =
+        mutableStateOf(AccountStatus.NotLogged())
 
     private var appToken: String? = null
 
     val token: String?
         get() {
-            val statusState = loginStatusState.value
-            if (statusState is LoginStatusState.Logged) {
+            val statusState = accountStatus.value
+            if (statusState is AccountStatus.Logged) {
                 return statusState.token
-            } else if (statusState is LoginStatusState.TempLogged) {
+            } else if (statusState is AccountStatus.TempLogged) {
                 return statusState.token
             }
             return null
@@ -54,7 +54,7 @@ object LocalAccountManager {
 
     val userInfo: UserInfo
         get() {
-            return loginStatusState.value.userInfo
+            return accountStatus.value.userInfo
         }
 
     fun provideAppToken(): String? {
@@ -67,12 +67,12 @@ object LocalAccountManager {
     }
 
     fun isLogged(): Boolean {
-        return loginStatusState.value is LoginStatusState.Logged
+        return accountStatus.value is AccountStatus.Logged
     }
 
     suspend fun restoreLoginStatusStateIfNeeded() {
         PurpleLogger.current.d(TAG, "restoreLoginStateIfNeeded")
-        if (loginStatusState.value is LoginStatusState.Logged) {
+        if (accountStatus.value is AccountStatus.Logged) {
             PurpleLogger.current.d(TAG, "restoreLoginStateIfNeeded, already logged, return")
             return
         }
@@ -123,11 +123,11 @@ object LocalAccountManager {
         )
 
         if (isTemp) {
-            loginStatusState.value = LoginStatusState.TempLogged(userInfo, token)
+            accountStatus.value = AccountStatus.TempLogged(userInfo, token)
             return
         }
 
-        loginStatusState.value = LoginStatusState.Logged(userInfo, token, isFromLocal)
+        accountStatus.value = AccountStatus.Logged(userInfo, token, isFromLocal)
 
         if (isFromLocal) {
             LocalMessager.post(MESSAGE_KEY_ON_LOGIN, LOGIN_BY_RESTORE, 600)
@@ -140,7 +140,7 @@ object LocalAccountManager {
 
     fun onUserLogout(by: String = LOGOUT_BY_MANUALLY) {
         PurpleLogger.current.d(TAG, "onUserLogout, by:$by")
-        loginStatusState.value = LoginStatusState.NotLogged()
+        accountStatus.value = AccountStatus.NotLogged()
         LocalPurpleCoroutineScope.current.launch(Dispatchers.IO) {
             MySharedPreferences.clear()
             ModuleHelper.getDataBase<AppDatabase>(ModuleConstant.MODULE_NAME)?.clearAllTables()
@@ -150,14 +150,14 @@ object LocalAccountManager {
     }
 
     fun isLoggedUser(uid: String?): Boolean {
-        return uid == (loginStatusState.value as? LoginStatusState.Logged)?.userInfo?.uid
+        return uid == (accountStatus.value as? AccountStatus.Logged)?.userInfo?.uid
     }
 
     fun produceTokenError() {
-        if (loginStatusState.value !is LoginStatusState.Logged) {
+        if (accountStatus.value !is AccountStatus.Logged) {
             return
         }
-        loginStatusState.value = LoginStatusState.Expired()
+        accountStatus.value = AccountStatus.Expired()
         onUserLogout(LOGOUT_BY_TOKEN_EXPIRE)
     }
 
@@ -168,11 +168,11 @@ object LocalAccountManager {
         if (!isLoggedUser(userInfo.uid)) {
             return
         }
-        if (UserInfo.isContentSame(loginStatusState.value.userInfo, userInfo)) {
+        if (UserInfo.isContentSame(accountStatus.value.userInfo, userInfo)) {
             return
         }
-        loginStatusState.value =
-            (loginStatusState.value as LoginStatusState.Logged).copy(info = userInfo)
+        accountStatus.value =
+            (accountStatus.value as AccountStatus.Logged).copy(userInfo = userInfo)
         saveUserInfo(userInfo, "updateUserInfoIfNeeded")
     }
 }

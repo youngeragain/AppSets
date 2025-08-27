@@ -26,14 +26,14 @@ import kotlinx.coroutines.launch
 import xcj.app.appsets.constants.Constants
 import xcj.app.appsets.im.model.CommonURIJson
 import xcj.app.appsets.service.MediaPlayback101Service
-import xcj.app.appsets.ui.model.SpotLightState
+import xcj.app.appsets.ui.model.state.SpotLight
 import xcj.app.appsets.usecase.MediaRemoteExoUseCase
 import xcj.app.starter.android.functions.timestampToMSS
 import xcj.app.starter.android.util.PurpleLogger
 
 class RemoteExoPlayer(
     private val coroutineScope: CoroutineScope,
-    private val audioPlayerState: MutableState<SpotLightState.AudioPlayer>
+    private val audioPlayerState: MutableState<SpotLight.AudioPlayer>
 ) : DefaultLifecycleObserver {
 
     companion object {

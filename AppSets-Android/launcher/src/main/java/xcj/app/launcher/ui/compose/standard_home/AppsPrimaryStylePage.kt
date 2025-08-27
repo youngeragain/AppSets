@@ -5,7 +5,6 @@ package xcj.app.launcher.ui.compose.standard_home
 import android.view.ContextThemeWrapper
 import androidx.activity.ComponentActivity
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -132,11 +131,6 @@ fun AppsPrimaryStylePageVertical(
                                 .align(Alignment.Center)
                                 .size(settings.appIconSize.dp)
                                 .clip(MaterialTheme.shapes.large)
-                                .border(
-                                    1.dp,
-                                    MaterialTheme.colorScheme.outline,
-                                    MaterialTheme.shapes.large
-                                ),
                         )
                         Row(
                             modifier = Modifier

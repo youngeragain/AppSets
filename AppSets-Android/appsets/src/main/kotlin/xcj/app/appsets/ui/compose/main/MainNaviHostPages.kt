@@ -117,10 +117,6 @@ import xcj.app.appsets.ui.compose.apps.DownloadBottomSheetContent
 import xcj.app.appsets.ui.compose.apps.tools.AppToolsDetailsPage
 import xcj.app.appsets.ui.compose.apps.tools.AppToolsPage
 import xcj.app.appsets.ui.compose.apps.tools.TOOL_TYPE
-import xcj.app.appsets.ui.compose.apps.tools.TOOL_TYPE_AppSets_Compose_plugin
-import xcj.app.appsets.ui.compose.apps.tools.TOOL_TYPE_AppSets_Launcher
-import xcj.app.appsets.ui.compose.apps.tools.TOOL_TYPE_AppSets_Proxy
-import xcj.app.appsets.ui.compose.apps.tools.TOOL_TYPE_AppSets_Share
 import xcj.app.appsets.ui.compose.camera.DesignCameraActivity
 import xcj.app.appsets.ui.compose.content_selection.ContentSelectSheetContent
 import xcj.app.appsets.ui.compose.content_selection.ContentSelectionRequest
@@ -206,7 +202,7 @@ fun MainNaviHostPages(
                 val appsUseCase = LocalUseCaseOfApps.current
                 val conversationUseCase = LocalUseCaseOfConversation.current
                 AppsCenterPage(
-                    appCenterState = appsUseCase.appCenterState.value,
+                    appCenterPageState = appsUseCase.appCenterPageState.value,
                     onBioClick = { bio ->
                         onBioClick(context, navController, bio)
                     },
@@ -359,7 +355,7 @@ fun MainNaviHostPages(
                         createStep = createStep,
                         platform = platform,
                         versionInfo = versionInfo,
-                        createApplicationState = appCreationUseCase.createApplicationState.value,
+                        createApplicationPageState = appCreationUseCase.createApplicationPageState.value,
                         onApplicationForCreateFiledChanged = appCreationUseCase::onApplicationForCreateFiledChanged,
                         onChoosePictureClick = { any, filedName, uriHolder ->
                             val requestKey = "CREATE_APP_PICTURE_REQUEST"
@@ -428,7 +424,7 @@ fun MainNaviHostPages(
                     val screensUseCase = LocalUseCaseOfScreen.current
                     val anyStateProvider = LocalAnyStateProvider.current
                     ScreenDetailsPage(
-                        viewScreenInfo = screensUseCase.currentViewScreenInfo.value,
+                        screenInfoForCard = screensUseCase.currentScreenInfoForCard.value,
                         onBackClick = navController::navigateUp,
                         onBioClick = { bio ->
                             onBioClick(context, navController, bio)
@@ -538,7 +534,7 @@ fun MainNaviHostPages(
                 ) {
                     val screenUseCase = LocalUseCaseOfScreen.current
                     ScreenEditPage(
-                        screenInfo = screenUseCase.currentViewScreenInfo.value.screenInfo,
+                        screenInfo = screenUseCase.currentScreenInfoForCard.value.screenInfo,
                         onBackClick = navController::navigateUp,
                         onPublicStateChanged = { newIsPublic ->
                             screenUseCase.changeScreenPublicState(newIsPublic)
@@ -759,7 +755,7 @@ fun MainNaviHostPages(
                     systemUseCase.prepareLoginState()
                 }
                 LoginPage(
-                    loginSignUpState = systemUseCase.loginSignUpState.value,
+                    loginSignUpPageState = systemUseCase.loginSignUpPageState.value,
                     onBackClick = navController::navigateUp,
                     qrCodeInfo = qrCodeUseCase.generatedQRCodeInfo.value,
                     onLoggingFinish = {
@@ -798,7 +794,7 @@ fun MainNaviHostPages(
                     systemUseCase.prepareSignUpState()
                 }
                 SignUpPage(
-                    loginState = systemUseCase.loginSignUpState.value,
+                    loginState = systemUseCase.loginSignUpPageState.value,
                     onBackClick = navController::navigateUp,
                     onSelectUserAvatarClick = { requestKey ->
                         showContentSelectionDialog(
@@ -822,35 +818,32 @@ fun MainNaviHostPages(
                 val context = LocalContext.current
                 AppToolsPage(
                     onBackClick = navController::navigateUp,
-                    onToolClick = { type ->
-                        when (type) {
-                            TOOL_TYPE_AppSets_Compose_plugin -> {
-                                navController.navigate(xcj.app.compose_share.ui.purple_module.ComposeEventHandler.ROUTE_COMPOSE_DYNAMIC)
-                            }
-
-                            TOOL_TYPE_AppSets_Share -> {
-                                navigateToAppSetsShareActivity(context, null)
-                            }
-
-                            TOOL_TYPE_AppSets_Launcher -> {
-                                navigateToAppSetsLauncherActivity(context)
-                            }
-
-                            TOOL_TYPE_AppSets_Proxy -> {
-                                navigateToAppSetsVpnActivity(context)
-                            }
-
-                            else -> {
-                                navigateWithBundle(
-                                    navController,
-                                    PageRouteNames.AppToolsDetailsPage,
-                                    bundleCreator = {
-                                        bundleOf().apply {
-                                            putString(TOOL_TYPE, type)
-                                        }
+                    onToolClick = { appTool ->
+                        val routeBuilder = appTool.routeBuilder
+                        if (routeBuilder == null) {
+                            navigateWithBundle(
+                                navController,
+                                PageRouteNames.AppToolsDetailsPage,
+                                bundleCreator = {
+                                    bundleOf().apply {
+                                        putString(TOOL_TYPE, appTool.type)
                                     }
-                                )
-                            }
+                                }
+                            )
+                            return@AppToolsPage
+                        }
+                        if (appTool.routeType == "activity_on_host" ||
+                            appTool.routeType == "activity_on_lib"
+                        ) {
+                            routeBuilder.invoke(context, navController)
+                            return@AppToolsPage
+                        }
+                        val route = routeBuilder.invoke(context, navController)
+                        if (route == null) {
+                            return@AppToolsPage
+                        }
+                        if (route is String) {
+                            navController.navigate(route)
                         }
                     }
                 )
@@ -917,9 +910,9 @@ fun MainNaviHostPages(
                     val groupInfoUseCase = LocalUseCaseOfGroupInfo.current
                     val conversationUseCase = LocalUseCaseOfConversation.current
                     val systemUseCase = LocalUseCaseOfSystem.current
-                    val groupInfoState = groupInfoUseCase.groupInfoState.value
+                    val groupInfoState = groupInfoUseCase.groupInfoPageState.value
                     GroupInfoPage(
-                        groupInfoState = groupInfoState,
+                        groupInfoPageState = groupInfoState,
                         onBackClick = navController::navigateUp,
                         onBioClick = { bio ->
                             onBioClick(context, navController, bio)
@@ -1055,7 +1048,7 @@ fun MainNaviHostPages(
                     val screensUseCase = LocalUseCaseOfScreen.current
                     UserProfilePage(
                         onBackClick = navController::navigateUp,
-                        userProfileState = userInfoUseCase.currentUserInfoState.value,
+                        userProfilePageState = userInfoUseCase.currentUserInfoState.value,
                         userApplications = userInfoUseCase.applicationsState.value,
                         userFollowers = userInfoUseCase.followerUsersState.value,
                         userFollowed = userInfoUseCase.followedUsersState.value,

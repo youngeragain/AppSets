@@ -6,7 +6,7 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.media3.ui.PlayerView
 import xcj.app.appsets.im.model.CommonURIJson
 import xcj.app.appsets.ui.compose.media.video.fall.VideoMediaContent
-import xcj.app.appsets.ui.model.SpotLightState
+import xcj.app.appsets.ui.model.state.SpotLight
 import xcj.app.appsets.usecase.component.media.LocalExoPlayer
 import xcj.app.compose_share.dynamic.IComposeLifecycleAware
 import xcj.app.starter.android.util.PurpleLogger
@@ -17,8 +17,8 @@ class MediaLocalExoUseCase() : IComposeLifecycleAware {
         private const val TAG = "MediaLocalExoUseCase"
     }
 
-    private val videoPlayerState: MutableState<SpotLightState.VideoPlayer> =
-        mutableStateOf(SpotLightState.VideoPlayer(playId = Int.MAX_VALUE.toString()))
+    private val videoPlayerState: MutableState<SpotLight.VideoPlayer> =
+        mutableStateOf(SpotLight.VideoPlayer(playId = Int.MAX_VALUE.toString()))
 
     private val localExoPlayer: LocalExoPlayer =
         LocalExoPlayer(videoPlayerState)

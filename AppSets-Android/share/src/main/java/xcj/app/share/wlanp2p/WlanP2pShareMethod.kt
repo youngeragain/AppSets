@@ -89,9 +89,9 @@ class WlanP2pShareMethod : ShareMethod(), ContentReceivedListener {
 
     override fun init(
         activity: AppSetsShareActivity,
-        appSetsShareViewModel: AppSetsShareViewModel
+        viewModel: AppSetsShareViewModel
     ) {
-        super.init(activity, appSetsShareViewModel)
+        super.init(activity, viewModel)
         PurpleLogger.current.d(TAG, "init")
         open()
     }

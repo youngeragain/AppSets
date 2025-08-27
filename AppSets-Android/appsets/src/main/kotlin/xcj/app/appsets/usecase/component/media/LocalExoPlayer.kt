@@ -10,12 +10,12 @@ import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.PlayerView
 import xcj.app.appsets.im.model.CommonURIJson
-import xcj.app.appsets.ui.model.SpotLightState
+import xcj.app.appsets.ui.model.state.SpotLight
 import xcj.app.appsets.util.ktx.asContextOrNull
 import xcj.app.starter.android.util.PurpleLogger
 
 class LocalExoPlayer(
-    private val videoPlayerState: MutableState<SpotLightState.VideoPlayer>
+    private val videoPlayerState: MutableState<SpotLight.VideoPlayer>
 ) : DefaultLifecycleObserver {
     companion object {
         private const val TAG = "LocalExoplayer"

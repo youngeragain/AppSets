@@ -27,7 +27,7 @@ import xcj.app.appsets.server.model.UserInfo
 import xcj.app.appsets.ui.compose.LocalUseCaseOfUserInfo
 import xcj.app.appsets.ui.compose.custom_component.AnyImage
 import xcj.app.appsets.ui.compose.theme.BigAvatarShape
-import xcj.app.appsets.ui.model.UserInfoModification
+import xcj.app.appsets.ui.model.UserInfoForModify
 import xcj.app.compose_share.components.DesignHDivider
 import xcj.app.compose_share.components.DesignTextField
 
@@ -38,7 +38,7 @@ fun ProfileModificationComponent(
     onConfirmClick: () -> Unit,
 ) {
     val userInfoUseCase = LocalUseCaseOfUserInfo.current
-    val userInfoModification by userInfoUseCase.userInfoModificationState
+    val userInfoModification by userInfoUseCase.userInfoForModifyState
     Column(
         modifier = Modifier.verticalScroll(rememberScrollState())
     ) {
@@ -101,8 +101,8 @@ fun ProfileModificationComponent(
                     } else {
                         it
                     }
-                    UserInfoModification.updateStateUserName(
-                        userInfoUseCase.userInfoModificationState,
+                    UserInfoForModify.updateStateUserName(
+                        userInfoUseCase.userInfoForModifyState,
                         newUserName
                     )
                 }, placeholder = {
@@ -118,8 +118,8 @@ fun ProfileModificationComponent(
                 modifier = Modifier.fillMaxWidth(),
                 value = userInfoModification.userIntroduction,
                 onValueChange = {
-                    UserInfoModification.updateStateUserIntroduction(
-                        userInfoUseCase.userInfoModificationState,
+                    UserInfoForModify.updateStateUserIntroduction(
+                        userInfoUseCase.userInfoForModifyState,
                         it
                     )
                 },
@@ -135,8 +135,8 @@ fun ProfileModificationComponent(
             DesignTextField(
                 modifier = Modifier.fillMaxWidth(), value = userInfoModification.userTags,
                 onValueChange = {
-                    UserInfoModification.updateStateUserTags(
-                        userInfoUseCase.userInfoModificationState,
+                    UserInfoForModify.updateStateUserTags(
+                        userInfoUseCase.userInfoForModifyState,
                         it
                     )
                 }, placeholder = {
@@ -151,8 +151,8 @@ fun ProfileModificationComponent(
             DesignTextField(
                 modifier = Modifier.fillMaxWidth(), value = userInfoModification.userSex,
                 onValueChange = {
-                    UserInfoModification.updateStateUserSex(
-                        userInfoUseCase.userInfoModificationState,
+                    UserInfoForModify.updateStateUserSex(
+                        userInfoUseCase.userInfoForModifyState,
                         it
                     )
                 }, placeholder = {
@@ -178,8 +178,8 @@ fun ProfileModificationComponent(
                     } else {
                         ""
                     }
-                    UserInfoModification.updateStateUserAge(
-                        userInfoUseCase.userInfoModificationState,
+                    UserInfoForModify.updateStateUserAge(
+                        userInfoUseCase.userInfoForModifyState,
                         userAge
                     )
                 },
@@ -198,8 +198,8 @@ fun ProfileModificationComponent(
                 modifier = Modifier.fillMaxWidth(),
                 value = userInfoModification.userPhone,
                 onValueChange = {
-                    UserInfoModification.updateStateUserPhone(
-                        userInfoUseCase.userInfoModificationState,
+                    UserInfoForModify.updateStateUserPhone(
+                        userInfoUseCase.userInfoForModifyState,
                         it
                     )
                 }, placeholder = {
@@ -216,8 +216,8 @@ fun ProfileModificationComponent(
             DesignTextField(
                 modifier = Modifier.fillMaxWidth(), value = userInfoModification.userEmail,
                 onValueChange = {
-                    UserInfoModification.updateStateUserEmail(
-                        userInfoUseCase.userInfoModificationState,
+                    UserInfoForModify.updateStateUserEmail(
+                        userInfoUseCase.userInfoForModifyState,
                         it
                     )
                 }, placeholder = {
@@ -234,8 +234,8 @@ fun ProfileModificationComponent(
             DesignTextField(
                 modifier = Modifier.fillMaxWidth(), value = userInfoModification.userArea,
                 onValueChange = {
-                    UserInfoModification.updateStateUserArea(
-                        userInfoUseCase.userInfoModificationState,
+                    UserInfoForModify.updateStateUserArea(
+                        userInfoUseCase.userInfoForModifyState,
                         it
                     )
                 }, placeholder = {
@@ -250,8 +250,8 @@ fun ProfileModificationComponent(
             DesignTextField(
                 modifier = Modifier.fillMaxWidth(), value = userInfoModification.userAddress,
                 onValueChange = {
-                    UserInfoModification.updateStateUserAddress(
-                        userInfoUseCase.userInfoModificationState,
+                    UserInfoForModify.updateStateUserAddress(
+                        userInfoUseCase.userInfoForModifyState,
                         it
                     )
                 }, placeholder = {
@@ -271,8 +271,8 @@ fun ProfileModificationComponent(
                     } else {
                         it
                     }
-                    UserInfoModification.updateStateUserWebsite(
-                        userInfoUseCase.userInfoModificationState,
+                    UserInfoForModify.updateStateUserWebsite(
+                        userInfoUseCase.userInfoForModifyState,
                         userWebsite
                     )
                 }, placeholder = {

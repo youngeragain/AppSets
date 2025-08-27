@@ -661,11 +661,11 @@ class HttpShareMethod : ShareMethod(), ContentReceivedListener, ListenersProvide
         return super.findShareDeviceForClientInfo(clientInfo) as? HttpShareDevice
     }
 
-    override fun onScanShareDeviceAddress(addresses: Array<String>?) {
-        if (addresses.isNullOrEmpty()) {
+    override fun onScanShareDeviceAddress(address: Array<String>?) {
+        if (address.isNullOrEmpty()) {
             return
         }
-        addresses.forEach { address ->
+        address.forEach { address ->
             activity.lifecycleScope.launch {
                 requestRaw(
                     action = {

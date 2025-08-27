@@ -39,26 +39,25 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-
 import xcj.app.appsets.ui.compose.LocalUseCaseOfSystem
-import xcj.app.compose_share.components.DesignTextField
 import xcj.app.appsets.ui.compose.custom_component.AnyImage
-import xcj.app.appsets.ui.model.LoginSignUpState
-import xcj.app.appsets.ui.model.SignUpUserInfo
+import xcj.app.appsets.ui.model.UserInfoForCreate
+import xcj.app.appsets.ui.model.page_state.LoginSignUpPageState
 import xcj.app.compose_share.components.BackActionTopBar
+import xcj.app.compose_share.components.DesignTextField
 
 private const val TAG = "SignUpPage"
 
 @Composable
 fun SignUpPage(
-    loginState: LoginSignUpState,
+    loginState: LoginSignUpPageState,
     onBackClick: () -> Unit,
     onSelectUserAvatarClick: (String) -> Unit,
     onConfirmClick: () -> Unit,
 ) {
 
     LaunchedEffect(key1 = loginState, block = {
-        if (loginState is LoginSignUpState.SignUpFinish) {
+        if (loginState is LoginSignUpPageState.SignUpPageFinish) {
             onBackClick()
         }
     })
@@ -86,10 +85,10 @@ fun SignUpPage(
                     .verticalScroll(rememberScrollState())
             ) {
                 val signUpUserInfo = when (loginState) {
-                    is LoginSignUpState.SignUp -> loginState.signUpUserInfo
-                    is LoginSignUpState.SignUping -> loginState.signUpUserInfo
-                    is LoginSignUpState.SignUpFinish -> loginState.signUpUserInfo
-                    is LoginSignUpState.SignUpFail -> loginState.signUpUserInfo
+                    is LoginSignUpPageState.SignUpPage -> loginState.userInfoForCreate
+                    is LoginSignUpPageState.SignUpingPage -> loginState.userInfoForCreate
+                    is LoginSignUpPageState.SignUpPageFinish -> loginState.userInfoForCreate
+                    is LoginSignUpPageState.SignUpPageFail -> loginState.userInfoForCreate
                     else -> null
                 }
                 if (signUpUserInfo != null) {
@@ -132,8 +131,8 @@ fun SignUpPage(
                             modifier = Modifier.fillMaxWidth(),
                             value = signUpUserInfo.account,
                             onValueChange = {
-                                SignUpUserInfo.updateStateUserAccount(
-                                    systemUseCase.loginSignUpState,
+                                UserInfoForCreate.updateStateUserAccount(
+                                    systemUseCase.loginSignUpPageState,
                                     it
                                 )
                             },
@@ -154,8 +153,8 @@ fun SignUpPage(
                             modifier = Modifier.fillMaxWidth(),
                             value = signUpUserInfo.password,
                             onValueChange = {
-                                SignUpUserInfo.updateStateUserPassword(
-                                    systemUseCase.loginSignUpState,
+                                UserInfoForCreate.updateStateUserPassword(
+                                    systemUseCase.loginSignUpPageState,
                                     it
                                 )
                             },
@@ -233,8 +232,8 @@ fun SignUpPage(
                                 } else {
                                     it
                                 }
-                                SignUpUserInfo.updateStateUserName(
-                                    systemUseCase.loginSignUpState,
+                                UserInfoForCreate.updateStateUserName(
+                                    systemUseCase.loginSignUpPageState,
                                     userName
                                 )
                             },
@@ -255,8 +254,8 @@ fun SignUpPage(
                             modifier = Modifier.fillMaxWidth(),
                             value = signUpUserInfo.userIntroduction,
                             onValueChange = {
-                                SignUpUserInfo.updateStateUserIntroduction(
-                                    systemUseCase.loginSignUpState,
+                                UserInfoForCreate.updateStateUserIntroduction(
+                                    systemUseCase.loginSignUpPageState,
                                     it
                                 )
                             },
@@ -273,8 +272,8 @@ fun SignUpPage(
                             modifier = Modifier.fillMaxWidth(),
                             value = signUpUserInfo.userTags,
                             onValueChange = {
-                                SignUpUserInfo.updateStateUserTags(
-                                    systemUseCase.loginSignUpState,
+                                UserInfoForCreate.updateStateUserTags(
+                                    systemUseCase.loginSignUpPageState,
                                     it
                                 )
                             },
@@ -291,8 +290,8 @@ fun SignUpPage(
                             modifier = Modifier.fillMaxWidth(),
                             value = signUpUserInfo.userSex,
                             onValueChange = {
-                                SignUpUserInfo.updateStateUserSex(
-                                    systemUseCase.loginSignUpState,
+                                UserInfoForCreate.updateStateUserSex(
+                                    systemUseCase.loginSignUpPageState,
                                     it
                                 )
                             },
@@ -319,8 +318,8 @@ fun SignUpPage(
                                 } else {
                                     ""
                                 }
-                                SignUpUserInfo.updateStateUserAge(
-                                    systemUseCase.loginSignUpState,
+                                UserInfoForCreate.updateStateUserAge(
+                                    systemUseCase.loginSignUpPageState,
                                     userAge
                                 )
                             },
@@ -340,8 +339,8 @@ fun SignUpPage(
                             value = signUpUserInfo.userPhone,
                             onValueChange = {
                                 val userPhone = it.toIntOrNull()?.toString() ?: ""
-                                SignUpUserInfo.updateStateUserPhone(
-                                    systemUseCase.loginSignUpState,
+                                UserInfoForCreate.updateStateUserPhone(
+                                    systemUseCase.loginSignUpPageState,
                                     userPhone
                                 )
                             }, placeholder = {
@@ -360,8 +359,8 @@ fun SignUpPage(
                             value = signUpUserInfo.userEmail,
 
                             onValueChange = {
-                                SignUpUserInfo.updateStateUserEmail(
-                                    systemUseCase.loginSignUpState,
+                                UserInfoForCreate.updateStateUserEmail(
+                                    systemUseCase.loginSignUpPageState,
                                     it
                                 )
                             },
@@ -383,8 +382,8 @@ fun SignUpPage(
                             modifier = Modifier.fillMaxWidth(),
                             value = signUpUserInfo.userArea,
                             onValueChange = {
-                                SignUpUserInfo.updateStateUserArea(
-                                    systemUseCase.loginSignUpState,
+                                UserInfoForCreate.updateStateUserArea(
+                                    systemUseCase.loginSignUpPageState,
                                     it
                                 )
                             },
@@ -401,8 +400,8 @@ fun SignUpPage(
                             modifier = Modifier.fillMaxWidth(),
                             value = signUpUserInfo.userAddress,
                             onValueChange = {
-                                SignUpUserInfo.updateStateUserAddress(
-                                    systemUseCase.loginSignUpState,
+                                UserInfoForCreate.updateStateUserAddress(
+                                    systemUseCase.loginSignUpPageState,
                                     it
                                 )
                             },
@@ -424,8 +423,8 @@ fun SignUpPage(
                                 } else {
                                     it
                                 }
-                                SignUpUserInfo.updateStateUserWebsite(
-                                    systemUseCase.loginSignUpState,
+                                UserInfoForCreate.updateStateUserWebsite(
+                                    systemUseCase.loginSignUpPageState,
                                     userWebsite
                                 )
                             },
@@ -443,14 +442,14 @@ fun SignUpPage(
                 }
             }
         }
-        SignUpIndicator(loginSignUpState = loginState)
+        SignUpIndicator(loginSignUpPageState = loginState)
     }
 }
 
 @Composable
-fun SignUpIndicator(loginSignUpState: LoginSignUpState) {
+fun SignUpIndicator(loginSignUpPageState: LoginSignUpPageState) {
     val isShow: Boolean =
-        loginSignUpState is LoginSignUpState.SignUping || loginSignUpState is LoginSignUpState.SignUpFail
+        loginSignUpPageState is LoginSignUpPageState.SignUpingPage || loginSignUpPageState is LoginSignUpPageState.SignUpPageFail
     AnimatedVisibility(
         visible = isShow,
         enter = fadeIn(tween()) + scaleIn(
@@ -488,12 +487,9 @@ fun SignUpIndicator(loginSignUpState: LoginSignUpState) {
                         painter = painterResource(xcj.app.compose_share.R.drawable.ic_launcher_foreground),
                         contentDescription = null
                     )
-                    val tipsIntRes = loginSignUpState.tips
-                    val text = if (tipsIntRes != null) {
-                        stringResource(tipsIntRes)
-                    } else {
-                        stringResource(xcj.app.appsets.R.string.processing)
-                    }
+                    val tipsIntRes =
+                        loginSignUpPageState.tipsIntRes ?: xcj.app.appsets.R.string.processing
+                    val text = stringResource(tipsIntRes)
                     Text(text, fontSize = 12.sp)
                 }
             }

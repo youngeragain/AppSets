@@ -57,7 +57,7 @@ import xcj.app.appsets.ui.compose.LocalUseCaseOfQRCode
 import xcj.app.appsets.ui.compose.custom_component.AnyImage
 import xcj.app.appsets.ui.compose.custom_component.DesignBottomBackButton
 import xcj.app.appsets.ui.compose.custom_component.HideNavBarWhenOnLaunch
-import xcj.app.appsets.ui.model.LoginSignUpState
+import xcj.app.appsets.ui.model.page_state.LoginSignUpPageState
 import xcj.app.appsets.usecase.QRCodeInfoScannedState
 import xcj.app.appsets.usecase.QRCodeUseCase
 import xcj.app.compose_share.components.DesignTextField
@@ -67,7 +67,7 @@ private const val TAG = "LoginPage"
 @Composable
 fun LoginPage(
     onBackClick: () -> Unit,
-    loginSignUpState: LoginSignUpState,
+    loginSignUpPageState: LoginSignUpPageState,
     qrCodeInfo: QRCodeInfoScannedState.AppSetsQRCodeInfo?,
     onLoggingFinish: () -> Unit,
     onSignUpButtonClick: () -> Unit,
@@ -76,8 +76,8 @@ fun LoginPage(
     onLoginConfirmButtonClick: (String, String) -> Unit,
 ) {
     HideNavBarWhenOnLaunch()
-    LaunchedEffect(loginSignUpState) {
-        if (loginSignUpState is LoginSignUpState.LoggingFinish) {
+    LaunchedEffect(loginSignUpPageState) {
+        if (loginSignUpPageState is LoginSignUpPageState.LoggingFinish) {
             onLoggingFinish()
         }
     }
@@ -102,7 +102,7 @@ fun LoginPage(
             LoginComponent2(
                 modifier = Modifier.align(Alignment.BottomCenter),
                 onBackClick = onBackClick,
-                loginSignUpState = loginSignUpState,
+                loginSignUpPageState = loginSignUpPageState,
                 onLoginConfirmButtonClick = onLoginConfirmButtonClick
             )
         } else {
@@ -128,21 +128,21 @@ fun LoginPage(
                     LoginComponent2(
                         modifier = Modifier.align(Alignment.BottomCenter),
                         onBackClick = onBackClick,
-                        loginSignUpState = loginSignUpState,
+                        loginSignUpPageState = loginSignUpPageState,
                         onLoginConfirmButtonClick = onLoginConfirmButtonClick
                     )
                 }
             }
         }
 
-        LoginIndicator(loginSignUpState = loginSignUpState)
+        LoginIndicator(loginSignUpPageState = loginSignUpPageState)
     }
 }
 
 @Composable
 fun LoginComponent2(
     modifier: Modifier,
-    loginSignUpState: LoginSignUpState,
+    loginSignUpPageState: LoginSignUpPageState,
     onBackClick: () -> Unit,
     onLoginConfirmButtonClick: (String, String) -> Unit,
 ) {
@@ -190,7 +190,7 @@ fun LoginComponent2(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(TextFieldDefaults.MinHeight),
-                enabled = loginSignUpState is LoginSignUpState.Nothing,
+                enabled = loginSignUpPageState is LoginSignUpPageState.Nothing,
                 onClick = {
                     hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
                     onLoginConfirmButtonClick(accountText, passwordText)
@@ -288,9 +288,9 @@ fun LoginComponent1(
 }
 
 @Composable
-fun LoginIndicator(loginSignUpState: LoginSignUpState) {
+fun LoginIndicator(loginSignUpPageState: LoginSignUpPageState) {
     AnimatedVisibility(
-        visible = loginSignUpState is LoginSignUpState.Logging,
+        visible = loginSignUpPageState is LoginSignUpPageState.Logging,
         enter = fadeIn(tween()) + scaleIn(
             tween(),
             2f

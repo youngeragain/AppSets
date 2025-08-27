@@ -72,11 +72,11 @@ import xcj.app.appsets.ui.compose.LocalUseCaseOfAppCreation
 import xcj.app.appsets.ui.compose.custom_component.AnyImage
 import xcj.app.appsets.ui.compose.custom_component.HideNavBarWhenOnLaunch
 import xcj.app.appsets.ui.model.ApplicationForCreate
-import xcj.app.appsets.ui.model.CreateApplicationState
 import xcj.app.appsets.ui.model.DownloadInfoForCreate
 import xcj.app.appsets.ui.model.PlatformForCreate
 import xcj.app.appsets.ui.model.ScreenshotInfoForCreate
 import xcj.app.appsets.ui.model.VersionInfoForCreate
+import xcj.app.appsets.ui.model.page_state.CreateApplicationPageState
 import xcj.app.appsets.util.ktx.toast
 import xcj.app.appsets.util.model.UriProvider
 import xcj.app.compose_share.components.BackActionTopBar
@@ -91,7 +91,7 @@ import xcj.app.compose_share.ui.viewmodel.AnyStateViewModel.Companion.bottomShee
 @Composable
 fun CreateAppPagePreview() {
     CreateAppPage(
-        createApplicationState = CreateApplicationState.NewApplication(),
+        createApplicationPageState = CreateApplicationPageState.NewApplicationPage(),
         onBackClick = {},
         onApplicationForCreateFiledChanged = { a, b, c -> },
         onChoosePictureClick = { a, b, c -> },
@@ -106,7 +106,7 @@ fun CreateAppPage(
     createStep: String = ApplicationForCreate.CREATE_STEP_APPLICATION,
     platform: AppPlatform? = null,
     versionInfo: VersionInfo? = null,
-    createApplicationState: CreateApplicationState,
+    createApplicationPageState: CreateApplicationPageState,
     onApplicationForCreateFiledChanged: (Any, String, String) -> Unit,
     onChoosePictureClick: (Any, String, UriProvider?) -> Unit,
     onConfirmClick: () -> Unit,
@@ -120,7 +120,7 @@ fun CreateAppPage(
         }
     }
     SideEffect {
-        if (createApplicationState is CreateApplicationState.CreateSuccess) {
+        if (createApplicationPageState is CreateApplicationPageState.CreateSuccessPage) {
             onBackClick()
         }
     }
@@ -176,7 +176,7 @@ fun CreateAppPage(
                     }
                 }
             }
-            val applicationForCreate = createApplicationState.applicationForCreate
+            val applicationForCreate = createApplicationPageState.applicationForCreate
             LazyColumn(modifier = Modifier.imePadding()) {
 
                 item {
@@ -476,14 +476,14 @@ fun CreateAppPage(
 
         }
 
-        CreateApplicationIndicator(createApplicationState = createApplicationState)
+        CreateApplicationIndicator(createApplicationPageState = createApplicationPageState)
     }
 }
 
 @Composable
-fun CreateApplicationIndicator(createApplicationState: CreateApplicationState) {
+fun CreateApplicationIndicator(createApplicationPageState: CreateApplicationPageState) {
     AnimatedVisibility(
-        visible = createApplicationState is CreateApplicationState.Creating,
+        visible = createApplicationPageState is CreateApplicationPageState.Creating,
         enter = fadeIn(tween()) + scaleIn(
             tween(),
             2f

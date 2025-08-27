@@ -9,14 +9,15 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import xcj.app.appsets.db.room.repository.PinnedAppsRepository
-import xcj.app.starter.server.requestNotNullRaw
 import xcj.app.appsets.server.repository.AppSetsRepository
-import xcj.app.appsets.ui.model.SpotLightState
+import xcj.app.appsets.ui.model.state.SpotLight
+import xcj.app.compose_share.R
 import xcj.app.compose_share.dynamic.IComposeLifecycleAware
 import xcj.app.starter.android.AppDefinition
 import xcj.app.starter.android.ItemDefinition
 import xcj.app.starter.android.util.PackageUtil
 import xcj.app.starter.android.util.PurpleLogger
+import xcj.app.starter.server.requestNotNullRaw
 import xcj.app.starter.test.LocalApplication
 
 class StartUseCase(
@@ -29,15 +30,15 @@ class StartUseCase(
         private const val TAG = "StartUseCase"
     }
 
-    val spotLightsState: MutableList<SpotLightState> = mutableStateListOf()
+    val spotLightsState: MutableList<SpotLight> = mutableStateListOf()
 
     var allApps: MutableList<AppDefinition> = mutableStateListOf()
 
-    val pinnedApp: MutableState<SpotLightState.PinnedApp> =
-        mutableStateOf(SpotLightState.PinnedApp(emptyList()))
+    val pinnedApp: MutableState<SpotLight.PinnedApp> =
+        mutableStateOf(SpotLight.PinnedApp(emptyList()))
 
-    val recommendItems: MutableState<SpotLightState.RecommendedItem> =
-        mutableStateOf(SpotLightState.RecommendedItem(emptyList()))
+    val recommendItems: MutableState<SpotLight.RecommendedItem> =
+        mutableStateOf(SpotLight.RecommendedItem(emptyList()))
 
     private val pinnedAppPackageNames: LiveData<List<String>> =
         pinnedAppsRepository.getAllPinnedAppsLiveData()
@@ -67,7 +68,7 @@ class StartUseCase(
 
     private fun updateRecommendItems(
         context: Context,
-        recommendItems: MutableState<SpotLightState.RecommendedItem>
+        recommendItems: MutableState<SpotLight.RecommendedItem>
     ) {
         val appDefinitionMutableList = allApps
         val forYouText = context.getString(xcj.app.appsets.R.string.for_you)
@@ -88,13 +89,13 @@ class StartUseCase(
                 addAll(elements)
             }
         }
-        recommendItems.value = SpotLightState.RecommendedItem(mutableListOf)
+        recommendItems.value = SpotLight.RecommendedItem(mutableListOf)
     }
 
     private fun updatePinnedApps(
         allApps: MutableList<AppDefinition>,
         pinnedAppPackageNames: List<String>?,
-        pinnedApp: MutableState<SpotLightState.PinnedApp>
+        pinnedApp: MutableState<SpotLight.PinnedApp>
     ) {
         val pinnedAppDefinitionList = mutableListOf<AppDefinition>()
         for (app in allApps) {
@@ -103,7 +104,7 @@ class StartUseCase(
                 pinnedAppDefinitionList.add(app)
             }
         }
-        pinnedApp.value = SpotLightState.PinnedApp(pinnedAppDefinitionList)
+        pinnedApp.value = SpotLight.PinnedApp(pinnedAppDefinitionList)
     }
 
     fun addPinnedApp(pinnedAppPackageName: String?) {
@@ -124,12 +125,12 @@ class StartUseCase(
 
 
     fun onSnapShotPageStateClick(
-        spotLightState: SpotLightState,
+        spotLight: SpotLight,
         context: Context,
         payload: Any?
     ) {
-        when (spotLightState) {
-            is SpotLightState.PinnedApp -> {
+        when (spotLight) {
+            is SpotLight.PinnedApp -> {
                 if (payload !is AppDefinition) {
                     return
                 }
@@ -144,7 +145,7 @@ class StartUseCase(
                 }
             }
 
-            is SpotLightState.RecommendedItem -> {
+            is SpotLight.RecommendedItem -> {
                 if (payload is ItemDefinition) {
                     if (payload !is AppDefinition) {
                         return
@@ -178,20 +179,20 @@ class StartUseCase(
 
                     spotLight.microsoftBingWallpaperList?.let {
                         val bingWallpaper =
-                            SpotLightState.BingWallpaper(it)
+                            SpotLight.BingWallpaper(it)
                         spotLightsState.add(bingWallpaper)
                     }
 
                     val wordOfDayItems: MutableList<Any> = mutableListOf()
-                    val wordOfDay = SpotLightState.WordOfTheDay(wordOfDayItems)
+                    val wordOfDay = SpotLight.WordOfTheDay(wordOfDayItems)
                     spotLight.wordOfTheDayList?.let(wordOfDayItems::addAll)
                     spotLight.todayInHistoryList?.let(wordOfDayItems::addAll)
                     spotLightsState.add(wordOfDay)
 
                     val words: MutableList<Any> = mutableListOf()
 
-                    val popularSearch = SpotLightState.PopularSearch(
-                        xcj.app.compose_share.R.drawable.ic_call_missed_outgoing_24,
+                    val popularSearch = SpotLight.PopularSearch(
+                        R.drawable.ic_call_missed_outgoing_24,
                         context.getString(xcj.app.appsets.R.string.hotspot),
                         words
                     )

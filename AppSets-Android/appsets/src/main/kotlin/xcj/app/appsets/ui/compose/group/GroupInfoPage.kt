@@ -57,7 +57,7 @@ import xcj.app.appsets.server.model.GroupInfo
 import xcj.app.appsets.ui.compose.custom_component.AnyImage
 import xcj.app.appsets.ui.compose.custom_component.DesignBottomBackButton
 import xcj.app.appsets.ui.compose.theme.BigAvatarShape
-import xcj.app.appsets.ui.model.GroupInfoState
+import xcj.app.appsets.ui.model.page_state.GroupInfoPageState
 import xcj.app.appsets.usecase.RelationsUseCase
 import xcj.app.compose_share.components.DesignHDivider
 import kotlin.math.roundToInt
@@ -70,7 +70,7 @@ fun GroupInfoPagePreview() {
 
 @Composable
 fun GroupInfoPage(
-    groupInfoState: GroupInfoState,
+    groupInfoPageState: GroupInfoPageState,
     onBackClick: () -> Unit,
     onBioClick: (Bio) -> Unit,
     onChatClick: (GroupInfo) -> Unit,
@@ -80,8 +80,8 @@ fun GroupInfoPage(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
     ) {
-        when (groupInfoState) {
-            is GroupInfoState.Loading -> {
+        when (groupInfoPageState) {
+            is GroupInfoPageState.Loading -> {
                 Box(modifier = Modifier.fillMaxSize()) {
                     CircularProgressIndicator(
                         modifier = Modifier
@@ -95,9 +95,9 @@ fun GroupInfoPage(
                 }
             }
 
-            is GroupInfoState.NotFound -> {
+            is GroupInfoPageState.NotFound -> {
                 Box(modifier = Modifier.fillMaxSize()) {
-                    groupInfoState.tips?.let {
+                    groupInfoPageState.tipsIntRes?.let {
                         Text(
                             text = stringResource(id = it),
                             modifier = Modifier.align(Alignment.Center)
@@ -110,7 +110,7 @@ fun GroupInfoPage(
                 }
             }
 
-            is GroupInfoState.LoadSuccess -> {
+            is GroupInfoPageState.LoadSuccess -> {
                 var sizeOfGroupAvatar by remember {
                     mutableStateOf(IntSize.Zero)
                 }
@@ -143,7 +143,7 @@ fun GroupInfoPage(
                         .fillMaxSize()
                         .nestedScroll(nestedScrollConnection)
                 ) {
-                    val userInfoList = groupInfoState.groupInfo.userInfoList
+                    val userInfoList = groupInfoPageState.groupInfo.userInfoList
                     if (userInfoList.isNullOrEmpty()) {
                         Box(
                             Modifier
@@ -224,8 +224,8 @@ fun GroupInfoPage(
                                         .padding(12.dp)
                                 )
                                 if (RelationsUseCase.getInstance()
-                                        .hasGroupRelated(groupInfoState.groupInfo.groupId)
-                                    || groupInfoState.groupInfo.public == 1
+                                        .hasGroupRelated(groupInfoPageState.groupInfo.groupId)
+                                    || groupInfoPageState.groupInfo.public == 1
                                 ) {
                                     Row(
                                         modifier = Modifier
@@ -234,7 +234,7 @@ fun GroupInfoPage(
                                     ) {
                                         TextButton(
                                             onClick = {
-                                                onChatClick(groupInfoState.groupInfo)
+                                                onChatClick(groupInfoPageState.groupInfo)
                                             }
                                         ) {
                                             Text(text = stringResource(xcj.app.appsets.R.string.chat))
@@ -248,7 +248,7 @@ fun GroupInfoPage(
                                     ) {
                                         FilledTonalButton(
                                             onClick = {
-                                                onJoinGroupRequestClick(groupInfoState.groupInfo)
+                                                onJoinGroupRequestClick(groupInfoPageState.groupInfo)
                                             }
                                         ) {
                                             Text(text = stringResource(xcj.app.appsets.R.string.apply_to_join))
@@ -281,8 +281,8 @@ fun GroupInfoPage(
                                         MaterialTheme.colorScheme.outline,
                                         BigAvatarShape
                                     ),
-                                any = groupInfoState.groupInfo.bioUrl,
-                                error = groupInfoState.groupInfo.name
+                                any = groupInfoPageState.groupInfo.bioUrl,
+                                error = groupInfoPageState.groupInfo.name
                             )
                             Column(
                                 modifier = Modifier
@@ -297,9 +297,9 @@ fun GroupInfoPage(
                                 horizontalAlignment = Alignment.CenterHorizontally,
                                 verticalArrangement = Arrangement.spacedBy(6.dp)
                             ) {
-                                Text(text = "${(groupInfoState.groupInfo.name ?: "")}(${userInfoList?.size ?: 0})")
+                                Text(text = "${(groupInfoPageState.groupInfo.name ?: "")}(${userInfoList?.size ?: 0})")
                                 Text(
-                                    text = groupInfoState.groupInfo.introduction
+                                    text = groupInfoPageState.groupInfo.introduction
                                         ?: stringResource(xcj.app.appsets.R.string.no_introduction),
                                     fontSize = 12.sp
                                 )
