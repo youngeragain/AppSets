@@ -1,5 +1,7 @@
 package xcj.app.starter.test
 
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.io.File
 
 data class AndroidContextFileDir(
@@ -15,7 +17,7 @@ data class AndroidContextFileDir(
     var tempAudiosCacheDir: String? = null,
     var appSetsShareDir: String? = null,
 ) {
-    fun cleanCaches() {
+    suspend fun cleanCaches() = withContext(Dispatchers.IO) {
         runCatching {
             listOf(
                 tempFilesCacheDir,

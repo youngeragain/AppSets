@@ -1,5 +1,6 @@
 package xcj.app.appsets.usecase
 
+import android.content.Context
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.LifecycleOwner
@@ -8,7 +9,7 @@ import xcj.app.appsets.im.model.CommonURIJson
 import xcj.app.appsets.server.model.MediaContent
 import xcj.app.appsets.server.repository.AppSetsRepository
 import xcj.app.appsets.ui.model.SpotLightState
-import xcj.app.appsets.usecase.component.media.RemoteExoplayer
+import xcj.app.appsets.usecase.component.media.RemoteExoPlayer
 import xcj.app.compose_share.dynamic.IComposeLifecycleAware
 
 class MediaRemoteExoUseCase(
@@ -25,45 +26,44 @@ class MediaRemoteExoUseCase(
         mutableStateOf(SpotLightState.AudioPlayer())
 
     val isPlaying: Boolean
-        get() = remoteExoplayer.isPlaying
+        get() = remoteExoPlayer.isPlaying()
 
-    private val remoteExoplayer: RemoteExoplayer = RemoteExoplayer(coroutineScope, audioPlayerState)
+    private val remoteExoPlayer: RemoteExoPlayer = RemoteExoPlayer(coroutineScope, audioPlayerState)
 
     val serverMusicMediaContentList: MutableState<List<MediaContent>?> = mutableStateOf(null)
 
     var currentPlaybackMediaContent: MediaContent? = null
 
     fun pauseAudio() {
-        remoteExoplayer.pause()
+        remoteExoPlayer.pause()
     }
 
-    fun playAudio(musicURLJson: CommonURIJson) {
-        remoteExoplayer.playAudio(musicURLJson)
+    fun playAudio(context: Context, musicURLJson: CommonURIJson) {
+        remoteExoPlayer.playAudio(context, musicURLJson)
     }
 
-    fun playOrPauseAudio(musicURLJson: CommonURIJson) {
-        remoteExoplayer.playOrPauseAudio(musicURLJson)
+    fun playOrPauseAudio(context: Context, musicURLJson: CommonURIJson) {
+        remoteExoPlayer.playOrPauseAudio(context, musicURLJson)
     }
 
     fun requestPause() {
-        remoteExoplayer.pause()
+        remoteExoPlayer.pause()
     }
 
     fun requestPlay() {
-        remoteExoplayer.play()
+        remoteExoPlayer.play()
     }
 
     fun requestSeekTo(duration: Long) {
-        remoteExoplayer.seekTo(duration)
+        remoteExoPlayer.seekTo(duration)
     }
 
     fun isPreparingState(): Boolean {
-        return remoteExoplayer.isPreparingState()
+        return remoteExoPlayer.isPreparingState()
     }
 
-
     fun setLifecycleOwner(owner: LifecycleOwner) {
-        owner.lifecycle.addObserver(remoteExoplayer)
+        owner.lifecycle.addObserver(remoteExoPlayer)
     }
 
     override fun onComposeDispose(by: String?) {

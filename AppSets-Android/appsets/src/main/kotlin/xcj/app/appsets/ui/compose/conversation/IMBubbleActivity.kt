@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -30,14 +31,7 @@ import kotlinx.coroutines.launch
 import xcj.app.appsets.constants.Constants
 import xcj.app.appsets.im.InputSelector
 import xcj.app.appsets.im.Session
-import xcj.app.appsets.im.message.HTMLMessage
-import xcj.app.appsets.im.message.ImageMessage
-import xcj.app.appsets.im.message.MusicMessage
 import xcj.app.appsets.im.message.SystemMessage
-import xcj.app.appsets.im.message.VideoMessage
-import xcj.app.appsets.im.message.VoiceMessage
-import xcj.app.appsets.im.message.requireUri
-import xcj.app.appsets.im.model.CommonURIJson
 import xcj.app.appsets.server.model.Application
 import xcj.app.appsets.ui.compose.LocalUseCaseOfConversation
 import xcj.app.appsets.ui.compose.LocalUseCaseOfGroupInfo
@@ -56,13 +50,13 @@ import xcj.app.appsets.ui.compose.group.GroupInfoPage
 import xcj.app.appsets.ui.compose.main.DesignNaviHost
 import xcj.app.appsets.ui.compose.main.ImmerseContentContainer
 import xcj.app.appsets.ui.compose.main.handleApplicationDownload
+import xcj.app.appsets.ui.compose.main.handleImMessageContentClick
+import xcj.app.appsets.ui.compose.main.handleScreenMediaClick
 import xcj.app.appsets.ui.compose.main.navigateToCreateAppPage
 import xcj.app.appsets.ui.compose.main.navigateToUserInfoPage
-import xcj.app.appsets.ui.compose.main.navigateToVideoPlaybackActivity
 import xcj.app.appsets.ui.compose.main.onBioClick
 import xcj.app.appsets.ui.compose.main.showContentSelectionDialog
 import xcj.app.appsets.ui.compose.main.showPictureViewDialog
-import xcj.app.appsets.ui.compose.main.showWebBrowserDialog
 import xcj.app.appsets.ui.compose.outside.RestrictedContentDialog
 import xcj.app.appsets.ui.compose.outside.ScreenDetailsPage
 import xcj.app.appsets.ui.compose.outside.ScreenEditPage
@@ -150,12 +144,16 @@ fun ImSessionBubbleScaffoldContainer(navController: NavHostController) {
 
 @Composable
 fun ImSessionBubbleNaviHostPages(navController: NavHostController) {
-    var isShowRestrictedContentDialog by remember {
+    val isShowRestrictedContentDialogState = remember {
         mutableStateOf(false)
     }
-    var restrictedContentConfirmCallback: (() -> Unit)? by remember {
+    val restrictedContentConfirmCallbackState: MutableState<(() -> Unit)?> = remember {
         mutableStateOf(null)
     }
+
+    var isShowRestrictedContentDialog by isShowRestrictedContentDialogState
+    val restrictedContentConfirmCallback by restrictedContentConfirmCallbackState
+
     Box {
         DesignNaviHost(
             navController = navController,
@@ -181,51 +179,13 @@ fun ImSessionBubbleNaviHostPages(navController: NavHostController) {
                         onBioClick(context, navController, bio)
                     },
                     onImMessageContentClick = { imMessage ->
-                        when (imMessage) {
-                            is MusicMessage -> {
-                                val uri =
-                                    imMessage.requireUri() ?: return@ConversationDetailsPage
-                                val commonURIJson = CommonURIJson(
-                                    imMessage.id,
-                                    imMessage.metadata.description,
-                                    uri.toString()
-                                )
-                                mediaRemoteExoUseCase.playOrPauseAudio(commonURIJson)
-                            }
-
-                            is VoiceMessage -> {
-                                val uri =
-                                    imMessage.requireUri() ?: return@ConversationDetailsPage
-                                val commonURIJson = CommonURIJson(
-                                    imMessage.id,
-                                    imMessage.metadata.description,
-                                    uri.toString()
-                                )
-                                mediaRemoteExoUseCase.playOrPauseAudio(commonURIJson)
-                            }
-
-                            is ImageMessage -> {
-                                val currentUri =
-                                    imMessage.requireUri() ?: return@ConversationDetailsPage
-                                val uriList =
-                                    conversationUseCase.findCurrentSessionAllImMessageOfImage()
-                                        .mapNotNull { imageMessage -> imageMessage.requireUri() }
-                                showPictureViewDialog(
-                                    anyStateProvider,
-                                    context,
-                                    currentUri,
-                                    uriList
-                                )
-                            }
-
-                            is HTMLMessage -> {
-                                showWebBrowserDialog(
-                                    context,
-                                    anyStateProvider,
-                                    imMessage.metadata.data
-                                )
-                            }
-                        }
+                        handleImMessageContentClick(
+                            context,
+                            imMessage,
+                            conversationUseCase,
+                            mediaRemoteExoUseCase,
+                            anyStateProvider
+                        )
                     },
                     onInputMoreAction = { requestKey ->
                         showContentSelectionDialog(
@@ -295,55 +255,13 @@ fun ImSessionBubbleNaviHostPages(navController: NavHostController) {
                         onBioClick(context, navController, bio)
                     },
                     onImMessageContentClick = { imMessage ->
-                        when (imMessage) {
-                            is MusicMessage -> {
-                                val uri =
-                                    imMessage.requireUri() ?: return@ConversationOverviewPage
-                                val commonURIJson = CommonURIJson(
-                                    imMessage.id,
-                                    imMessage.metadata.description,
-                                    uri.toString()
-                                )
-                                mediaRemoteExoUseCase.playOrPauseAudio(commonURIJson)
-                            }
-
-                            is VoiceMessage -> {
-                                val uri =
-                                    imMessage.requireUri() ?: return@ConversationOverviewPage
-                                val commonURIJson = CommonURIJson(
-                                    imMessage.id,
-                                    imMessage.metadata.description,
-                                    uri.toString()
-                                )
-                                mediaRemoteExoUseCase.playOrPauseAudio(commonURIJson)
-                            }
-
-                            is VideoMessage -> {
-                                navigateToVideoPlaybackActivity(context, imMessage)
-                            }
-
-                            is ImageMessage -> {
-                                val currentUri =
-                                    imMessage.requireUri() ?: return@ConversationOverviewPage
-                                val uriList =
-                                    conversationUseCase.findCurrentSessionAllImMessageOfImage()
-                                        .mapNotNull { imageMessage -> imageMessage.requireUri() }
-                                showPictureViewDialog(
-                                    anyStateProvider,
-                                    context,
-                                    currentUri,
-                                    uriList
-                                )
-                            }
-
-                            is HTMLMessage -> {
-                                showWebBrowserDialog(
-                                    context,
-                                    anyStateProvider,
-                                    imMessage.metadata.data
-                                )
-                            }
-                        }
+                        handleImMessageContentClick(
+                            context,
+                            imMessage,
+                            conversationUseCase,
+                            mediaRemoteExoUseCase,
+                            anyStateProvider
+                        )
                     },
                     onAddAIModelClick = {
                         navController.navigate(PageRouteNames.ConversationAIGCMarketPage)
@@ -452,26 +370,14 @@ fun ImSessionBubbleNaviHostPages(navController: NavHostController) {
                         screensUseCase.onReviewConfirm(context, reviewString)
                     },
                     onScreenMediaClick = { url, urls ->
-                        restrictedContentConfirmCallback = {
-                            if (url.isVideoMedia) {
-                                navigateToVideoPlaybackActivity(context, url)
-                            } else {
-                                val currentUri = url.mediaFileUrl
-                                val uriList = urls.map { fileUrl -> fileUrl.mediaFileUrl }
-                                showPictureViewDialog(
-                                    anyStateProvider,
-                                    context,
-                                    currentUri,
-                                    uriList
-                                )
-                            }
-
-                        }
-                        if (url.isRestrictedContent) {
-                            isShowRestrictedContentDialog = true
-                        } else {
-                            restrictedContentConfirmCallback?.invoke()
-                        }
+                        handleScreenMediaClick(
+                            context,
+                            isShowRestrictedContentDialogState,
+                            restrictedContentConfirmCallbackState,
+                            anyStateProvider,
+                            url,
+                            urls
+                        )
                     },
                     onPageShowPrevious = {
                         screensUseCase.updatePageShowPrevious()
@@ -522,26 +428,14 @@ fun ImSessionBubbleNaviHostPages(navController: NavHostController) {
                         onBioClick(context, navController, bio)
                     },
                     onScreenMediaClick = { url, urls ->
-                        restrictedContentConfirmCallback = {
-                            if (url.isVideoMedia) {
-                                navigateToVideoPlaybackActivity(context, url)
-                            } else {
-                                val currentUri = url.mediaFileUrl
-                                val uriList = urls.map { fileUrl -> fileUrl.mediaFileUrl }
-                                showPictureViewDialog(
-                                    anyStateProvider,
-                                    context,
-                                    currentUri,
-                                    uriList
-                                )
-                            }
-
-                        }
-                        if (url.isRestrictedContent) {
-                            isShowRestrictedContentDialog = true
-                        } else {
-                            restrictedContentConfirmCallback?.invoke()
-                        }
+                        handleScreenMediaClick(
+                            context,
+                            isShowRestrictedContentDialogState,
+                            restrictedContentConfirmCallbackState,
+                            anyStateProvider,
+                            url,
+                            urls
+                        )
                     },
                     onLoadMoreScreens = { uid, force ->
                         screensUseCase.loadMore(uid, force)

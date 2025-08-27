@@ -55,8 +55,8 @@ class IMBubbleViewModel : BaseIMViewModel() {
         )
     }
 
-    override fun observeSomeThings(activity: ComponentActivity) {
-        super.observeSomeThings(activity)
+    override fun observeSomeThingsOnCreated(activity: ComponentActivity) {
+        super.observeSomeThingsOnCreated(activity)
         PurpleLogger.current.d(TAG, "observeSomeThings")
         LocalMessager.observe<String, Boolean>(
             activity,

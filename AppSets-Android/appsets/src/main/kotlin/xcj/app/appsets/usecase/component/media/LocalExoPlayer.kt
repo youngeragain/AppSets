@@ -2,7 +2,6 @@ package xcj.app.appsets.usecase.component.media
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.net.Uri
 import androidx.compose.runtime.MutableState
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
@@ -15,7 +14,7 @@ import xcj.app.appsets.ui.model.SpotLightState
 import xcj.app.appsets.util.ktx.asContextOrNull
 import xcj.app.starter.android.util.PurpleLogger
 
-class LocalExoplayer(
+class LocalExoPlayer(
     private val videoPlayerState: MutableState<SpotLightState.VideoPlayer>
 ) : DefaultLifecycleObserver {
     companion object {
@@ -35,8 +34,9 @@ class LocalExoplayer(
         exoPlayer = ExoPlayer.Builder(context).build().also {
             it.playWhenReady = playWhenReady
             val playId = videoPlayerState.value.playId
+            val playbackItem = playbackItem
             if (playbackItem != null) {
-                it.addMediaItem(playbackItem!!)
+                it.addMediaItem(playbackItem)
                 if (playbackPosition != 0L) {
                     it.seekTo(playerCurrentMediaItemIndex, playbackPosition)
                 }
@@ -146,14 +146,14 @@ class LocalExoplayer(
         if (exoPlayer == null) {
             return
         }
-        if (videoUriJson.id == videoPlayerState.value.playId
+        val spotLightStateVideoPlayer = videoPlayerState.value
+        if (videoUriJson.id == spotLightStateVideoPlayer.playId
             && (exoPlayer.isPlaying || exoPlayer.isLoading)
         ) {
             return
         }
-        videoPlayerState.apply {
-            value = value.copy(playId = videoUriJson.id)
-        }
+        videoPlayerState.value = spotLightStateVideoPlayer.copy(playId = videoUriJson.id)
+
         val mediaItem = MediaItem.fromUri(videoUriJson.uri)
 
         if (addToList) {

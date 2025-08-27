@@ -25,40 +25,39 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import xcj.app.appsets.constants.Constants
 import xcj.app.appsets.im.model.CommonURIJson
-import xcj.app.appsets.util.ktx.asContextOrNull
 import xcj.app.appsets.service.MediaPlayback101Service
 import xcj.app.appsets.ui.model.SpotLightState
 import xcj.app.appsets.usecase.MediaRemoteExoUseCase
 import xcj.app.starter.android.functions.timestampToMSS
 import xcj.app.starter.android.util.PurpleLogger
 
-class RemoteExoplayer(
+class RemoteExoPlayer(
     private val coroutineScope: CoroutineScope,
     private val audioPlayerState: MutableState<SpotLightState.AudioPlayer>
 ) : DefaultLifecycleObserver {
 
     companion object {
-        private const val TAG = "RemoteExoplayer"
+        private const val TAG = "RemoteExoPlayer"
     }
 
-
     private lateinit var controllerFuture: ListenableFuture<MediaController>
-    private lateinit var controller: MediaController
+    private lateinit var mediaController: MediaController
 
     private var progressRetrieveJob: Job? = null
 
-    val isPlaying: Boolean
-        get() = isBound() && controller.isPlaying == true
+    fun isPlaying(): Boolean {
+        return isBound() && mediaController.isPlaying
+    }
 
     fun isBound(): Boolean {
         return ::controllerFuture.isInitialized
                 && controllerFuture.isDone
-                && ::controller.isInitialized
-                && controller.isConnected
+                && ::mediaController.isInitialized
+                && mediaController.isConnected
     }
 
     @SuppressLint("RestrictedApi")
-    private fun initializeController(context: Context) {
+    private fun initializeController(context: Context, onDone: (() -> Unit)? = null) {
         if (::controllerFuture.isInitialized) {
             return
         }
@@ -73,7 +72,7 @@ class RemoteExoplayer(
         val futureCallback = object : FutureCallback<MediaController> {
             override fun onSuccess(result: MediaController) {
                 PurpleLogger.current.d(TAG, "initializeController, Futures onSuccess")
-                controller = result
+                mediaController = result
                 setupController(result)
             }
 
@@ -82,11 +81,9 @@ class RemoteExoplayer(
             }
         }
         Futures.addCallback(controllerFuture, futureCallback, MoreExecutors.directExecutor())
-        coroutineScope.launch {
-            //controllerFuture.get()
-        }
+        controllerFuture.get()
+        onDone?.invoke()
     }
-
 
     private fun setupController(controller: MediaController) {
         val playerListener = object : Player.Listener {
@@ -119,7 +116,6 @@ class RemoteExoplayer(
             }
 
             override fun onPlaybackStateChanged(playbackState: Int) {
-                val mediaController = this@RemoteExoplayer.controller
                 PurpleLogger.current.d(
                     TAG,
                     "onPlaybackStateChanged:$playbackState"
@@ -171,7 +167,7 @@ class RemoteExoplayer(
         if (!isBound()) {
             return
         }
-        val mediaController = this.controller
+        val mediaController = this.mediaController
         val oldState = audioPlayerState.value
         val duration = if (mediaController.duration == C.TIME_UNSET) {
             0
@@ -198,16 +194,19 @@ class RemoteExoplayer(
         audioPlayerState.value = oldState.copy(playbackState = state)
     }
 
-    fun playAudio(mediaJson: CommonURIJson) {
-        PurpleLogger.current.d(TAG, "playAudio, mediaController:$controller")
+    fun playAudio(context: Context, mediaJson: CommonURIJson) {
+        PurpleLogger.current.d(TAG, "playAudio, mediaController:$mediaController")
         if (!isBound()) {
+            initializeController(context) {
+                playAudio(context, mediaJson)
+            }
             return
         }
         val oldState = audioPlayerState.value
 
         if (oldState.id == mediaJson.id) {
             //same audio
-            controller.play()
+            mediaController.play()
             return
         }
         //new audio to play
@@ -227,30 +226,30 @@ class RemoteExoplayer(
         val commandBundle = Bundle().apply {
             putString("url", mediaJson.uri)
         }
-        controller.sendCustomCommand(
+        mediaController.sendCustomCommand(
             SessionCommand("set_playback_item", commandBundle),
             Bundle.EMPTY
         )
     }
 
-    fun playOrPauseAudio(musicURLJson: CommonURIJson) {
+    fun playOrPauseAudio(context: Context, musicURLJson: CommonURIJson) {
         val oldState = audioPlayerState.value
         if (oldState.id == musicURLJson.id) {
-            if (isPlaying) {
+            if (isPlaying()) {
                 pause()
             } else {
                 play()
             }
             return
         }
-        playAudio(musicURLJson)
+        playAudio(context, musicURLJson)
     }
 
     fun play() {
         if (!isBound()) {
             return
         }
-        controller.play()
+        mediaController.play()
     }
 
 
@@ -258,21 +257,21 @@ class RemoteExoplayer(
         if (!isBound()) {
             return
         }
-        controller.pause()
+        mediaController.pause()
     }
 
     fun stop() {
         if (!isBound()) {
             return
         }
-        controller.stop()
+        mediaController.stop()
     }
 
     fun seekTo(duration: Long) {
         if (!isBound()) {
             return
         }
-        controller.seekTo(duration)
+        mediaController.seekTo(duration)
     }
 
     override fun onCreate(owner: LifecycleOwner) {
@@ -280,9 +279,9 @@ class RemoteExoplayer(
     }
 
     override fun onStart(owner: LifecycleOwner) {
-        owner.asContextOrNull()?.let { context ->
+        /*owner.asContextOrNull()?.let { context ->
             initializeController(context)
-        }
+        }*/
     }
 
     override fun onResume(owner: LifecycleOwner) {
@@ -317,7 +316,7 @@ class RemoteExoplayer(
             return true
         }
 
-        if (isPlaying) {
+        if (isPlaying()) {
             return false
         }
         return false

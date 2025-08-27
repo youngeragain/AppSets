@@ -37,6 +37,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -76,6 +77,7 @@ import xcj.app.appsets.im.MessageFromInfo
 import xcj.app.appsets.im.MessageToInfo
 import xcj.app.appsets.im.Session
 import xcj.app.appsets.im.message.HTMLMessage
+import xcj.app.appsets.im.message.ImMessage
 import xcj.app.appsets.im.message.ImageMessage
 import xcj.app.appsets.im.message.MusicMessage
 import xcj.app.appsets.im.message.SystemMessage
@@ -150,6 +152,8 @@ import xcj.app.appsets.ui.compose.web.WebSheetContent
 import xcj.app.appsets.ui.model.ApplicationForCreate
 import xcj.app.appsets.ui.viewmodel.MainViewModel
 import xcj.app.appsets.usecase.AppsUseCase
+import xcj.app.appsets.usecase.ConversationUseCase
+import xcj.app.appsets.usecase.MediaRemoteExoUseCase
 import xcj.app.appsets.usecase.SystemUseCase
 import xcj.app.appsets.util.BundleDefaults
 import xcj.app.appsets.util.ktx.toast
@@ -178,12 +182,15 @@ fun MainNaviHostPages(
     hazeState: HazeState,
 ) {
 
-    var isShowRestrictedContentDialog by remember {
+    val isShowRestrictedContentDialogState = remember {
         mutableStateOf(false)
     }
-    var restrictedContentConfirmCallback: (() -> Unit)? by remember {
+    val restrictedContentConfirmCallbackState: MutableState<(() -> Unit)?> = remember {
         mutableStateOf(null)
     }
+
+    var isShowRestrictedContentDialog by isShowRestrictedContentDialogState
+    val restrictedContentConfirmCallback by restrictedContentConfirmCallbackState
 
     Box {
         DesignNaviHost(
@@ -398,26 +405,14 @@ fun MainNaviHostPages(
                             screensUseCase.loadMore(null, false)
                         },
                         onScreenMediaClick = { url, urls ->
-                            restrictedContentConfirmCallback = {
-                                if (url.isVideoMedia) {
-                                    navigateToVideoPlaybackActivity(context, url)
-                                } else {
-                                    val currentUri = url.mediaFileUrl
-                                    val uriList = urls.map { fileUrl -> fileUrl.mediaFileUrl }
-                                    showPictureViewDialog(
-                                        anyStateProvider,
-                                        context,
-                                        currentUri,
-                                        uriList
-                                    )
-                                }
-
-                            }
-                            if (url.isRestrictedContent) {
-                                isShowRestrictedContentDialog = true
-                            } else {
-                                restrictedContentConfirmCallback?.invoke()
-                            }
+                            handleScreenMediaClick(
+                                context,
+                                isShowRestrictedContentDialogState,
+                                restrictedContentConfirmCallbackState,
+                                anyStateProvider,
+                                url,
+                                urls
+                            )
                         }
                     )
                 }
@@ -451,26 +446,14 @@ fun MainNaviHostPages(
                             screensUseCase.onReviewConfirm(context, reviewString)
                         },
                         onScreenMediaClick = { url, urls ->
-                            restrictedContentConfirmCallback = {
-                                if (url.isVideoMedia) {
-                                    navigateToVideoPlaybackActivity(context, url)
-                                } else {
-                                    val currentUri = url.mediaFileUrl
-                                    val uriList = urls.map { fileUrl -> fileUrl.mediaFileUrl }
-                                    showPictureViewDialog(
-                                        anyStateProvider,
-                                        context,
-                                        currentUri,
-                                        uriList
-                                    )
-                                }
-
-                            }
-                            if (url.isRestrictedContent) {
-                                isShowRestrictedContentDialog = true
-                            } else {
-                                restrictedContentConfirmCallback?.invoke()
-                            }
+                            handleScreenMediaClick(
+                                context,
+                                isShowRestrictedContentDialogState,
+                                restrictedContentConfirmCallbackState,
+                                anyStateProvider,
+                                url,
+                                urls
+                            )
                         },
                         onPageShowPrevious = {
                             screensUseCase.updatePageShowPrevious()
@@ -589,57 +572,13 @@ fun MainNaviHostPages(
                             onBioClick(context, navController, bio)
                         },
                         onImMessageContentClick = { imMessage ->
-                            when (imMessage) {
-                                is MusicMessage -> {
-                                    val uri =
-                                        imMessage.requireUri() ?: return@ConversationOverviewPage
-                                    val commonURIJson = CommonURIJson(
-                                        imMessage.id,
-                                        imMessage.metadata.description,
-                                        uri.toString()
-                                    )
-                                    mediaRemoteExoUseCase.playOrPauseAudio(commonURIJson)
-                                }
-
-                                is VoiceMessage -> {
-                                    val uri =
-                                        imMessage.requireUri() ?: return@ConversationOverviewPage
-                                    val commonURIJson = CommonURIJson(
-                                        imMessage.id,
-                                        imMessage.metadata.description,
-                                        uri.toString()
-                                    )
-                                    mediaRemoteExoUseCase.playOrPauseAudio(commonURIJson)
-                                }
-
-                                is VideoMessage -> {
-                                    navigateToVideoPlaybackActivity(context, imMessage)
-                                }
-
-                                is ImageMessage -> {
-                                    val currentUri = imMessage.requireUri()
-                                        ?: return@ConversationOverviewPage
-                                    val uriList =
-                                        conversationUseCase.findCurrentSessionAllImMessageOfImage()
-                                            .mapNotNull { imageMessage ->
-                                                imageMessage.requireUri()
-                                            }
-                                    showPictureViewDialog(
-                                        anyStateProvider,
-                                        context,
-                                        currentUri,
-                                        uriList
-                                    )
-                                }
-
-                                is HTMLMessage -> {
-                                    showWebBrowserDialog(
-                                        context,
-                                        anyStateProvider,
-                                        imMessage.metadata.data
-                                    )
-                                }
-                            }
+                            handleImMessageContentClick(
+                                context,
+                                imMessage,
+                                conversationUseCase,
+                                mediaRemoteExoUseCase,
+                                anyStateProvider
+                            )
                         },
                         onAddAIModelClick = {
                             navController.navigate(PageRouteNames.ConversationAIGCMarketPage)
@@ -748,57 +687,13 @@ fun MainNaviHostPages(
                             onBioClick(context, navController, bio)
                         },
                         onImMessageContentClick = { imMessage ->
-                            when (imMessage) {
-                                is MusicMessage -> {
-                                    val uri =
-                                        imMessage.requireUri() ?: return@ConversationDetailsPage
-                                    val commonURIJson = CommonURIJson(
-                                        imMessage.id,
-                                        imMessage.metadata.description,
-                                        uri.toString()
-                                    )
-                                    mediaRemoteExoUseCase.playOrPauseAudio(commonURIJson)
-                                }
-
-                                is VoiceMessage -> {
-                                    val uri =
-                                        imMessage.requireUri() ?: return@ConversationDetailsPage
-                                    val commonURIJson = CommonURIJson(
-                                        imMessage.id,
-                                        imMessage.metadata.description,
-                                        uri.toString()
-                                    )
-                                    mediaRemoteExoUseCase.playOrPauseAudio(commonURIJson)
-                                }
-
-                                is VideoMessage -> {
-                                    navigateToVideoPlaybackActivity(context, imMessage)
-                                }
-
-                                is ImageMessage -> {
-                                    val currentUri = imMessage.requireUri()
-                                        ?: return@ConversationDetailsPage
-                                    val uriList =
-                                        conversationUseCase.findCurrentSessionAllImMessageOfImage()
-                                            .mapNotNull { imageMessage ->
-                                                imageMessage.requireUri()
-                                            }
-                                    showPictureViewDialog(
-                                        anyStateProvider,
-                                        context,
-                                        currentUri,
-                                        uriList
-                                    )
-                                }
-
-                                is HTMLMessage -> {
-                                    showWebBrowserDialog(
-                                        context,
-                                        anyStateProvider,
-                                        imMessage.metadata.data
-                                    )
-                                }
-                            }
+                            handleImMessageContentClick(
+                                context,
+                                imMessage,
+                                conversationUseCase,
+                                mediaRemoteExoUseCase,
+                                anyStateProvider
+                            )
                         },
                         onInputMoreAction = { requestType ->
                             showContentSelectionDialog(
@@ -999,28 +894,16 @@ fun MainNaviHostPages(
                             onBioClick(context, navController, bio)
                         },
                         onScreenMediaClick = { url, urls ->
-                            restrictedContentConfirmCallback = {
-                                if (url.isVideoMedia) {
-                                    navigateToVideoPlaybackActivity(context, url)
-                                } else {
-                                    val currentUri = url.mediaFileUrl
-                                    val uriList = urls.map { fileUrl -> fileUrl.mediaFileUrl }
-                                    showPictureViewDialog(
-                                        anyStateProvider,
-                                        context,
-                                        currentUri,
-                                        uriList
-                                    )
-                                }
-                            }
-                            if (url.isRestrictedContent) {
-                                isShowRestrictedContentDialog = true
-                            } else {
-                                restrictedContentConfirmCallback?.invoke()
-                            }
-                        },
-
-                        )
+                            handleScreenMediaClick(
+                                context,
+                                isShowRestrictedContentDialogState,
+                                restrictedContentConfirmCallbackState,
+                                anyStateProvider,
+                                url,
+                                urls
+                            )
+                        }
+                    )
                 }
             }
 
@@ -1203,26 +1086,14 @@ fun MainNaviHostPages(
                             onBioClick(context, navController, bio)
                         },
                         onScreenMediaClick = { url, urls ->
-                            restrictedContentConfirmCallback = {
-                                if (url.isVideoMedia) {
-                                    navigateToVideoPlaybackActivity(context, url)
-                                } else {
-                                    val currentUri = url.mediaFileUrl
-                                    val uriList = urls.map { fileUrl -> fileUrl.mediaFileUrl }
-                                    showPictureViewDialog(
-                                        anyStateProvider,
-                                        context,
-                                        currentUri,
-                                        uriList
-                                    )
-                                }
-
-                            }
-                            if (url.isRestrictedContent) {
-                                isShowRestrictedContentDialog = true
-                            } else {
-                                restrictedContentConfirmCallback?.invoke()
-                            }
+                            handleScreenMediaClick(
+                                context,
+                                isShowRestrictedContentDialogState,
+                                restrictedContentConfirmCallbackState,
+                                anyStateProvider,
+                                url,
+                                urls
+                            )
                         },
                         onLoadMoreScreens = { uid, force ->
                             screensUseCase.loadMore(uid, force)
@@ -1723,4 +1594,95 @@ suspend fun handleApplicationDownload(
         return
     }
     navigateToExternalWeb(context, uri)
+}
+
+fun handleImMessageContentClick(
+    context: Context,
+    imMessage: ImMessage,
+    conversationUseCase: ConversationUseCase,
+    mediaRemoteExoUseCase: MediaRemoteExoUseCase,
+    anyStateProvider: AnyStateProvider
+) {
+    when (imMessage) {
+        is MusicMessage -> {
+            val uri =
+                imMessage.requireUri() ?: return
+            val commonURIJson = CommonURIJson(
+                imMessage.id,
+                imMessage.metadata.description,
+                uri.toString()
+            )
+            mediaRemoteExoUseCase.playOrPauseAudio(context, commonURIJson)
+        }
+
+        is VoiceMessage -> {
+            val uri =
+                imMessage.requireUri() ?: return
+            val commonURIJson = CommonURIJson(
+                imMessage.id,
+                imMessage.metadata.description,
+                uri.toString()
+            )
+            mediaRemoteExoUseCase.playOrPauseAudio(context, commonURIJson)
+        }
+
+        is VideoMessage -> {
+            navigateToVideoPlaybackActivity(context, imMessage)
+        }
+
+        is ImageMessage -> {
+            val currentUri = imMessage.requireUri()
+                ?: return
+            val uriList =
+                conversationUseCase.findCurrentSessionAllImMessageOfImage()
+                    .mapNotNull { imageMessage ->
+                        imageMessage.requireUri()
+                    }
+            showPictureViewDialog(
+                anyStateProvider,
+                context,
+                currentUri,
+                uriList
+            )
+        }
+
+        is HTMLMessage -> {
+            showWebBrowserDialog(
+                context,
+                anyStateProvider,
+                imMessage.metadata.data
+            )
+        }
+    }
+}
+
+fun handleScreenMediaClick(
+    context: Context,
+    isShowRestrictedContentDialogState: MutableState<Boolean>,
+    restrictedContentConfirmCallbackState: MutableState<(() -> Unit)?>,
+    anyStateProvider: AnyStateProvider,
+    url: ScreenMediaFileUrl,
+    urls: List<ScreenMediaFileUrl>,
+) {
+    val callback = {
+        if (url.isVideoMedia) {
+            navigateToVideoPlaybackActivity(context, url)
+        } else {
+            val currentUri = url.mediaFileUrl
+            val uriList = urls.map { fileUrl -> fileUrl.mediaFileUrl }
+            showPictureViewDialog(
+                anyStateProvider,
+                context,
+                currentUri,
+                uriList
+            )
+        }
+
+    }
+    if (url.isRestrictedContent) {
+        restrictedContentConfirmCallbackState.value = callback
+        isShowRestrictedContentDialogState.value = true
+    } else {
+        callback.invoke()
+    }
 }

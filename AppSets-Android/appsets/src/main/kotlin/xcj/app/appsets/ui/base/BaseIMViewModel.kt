@@ -73,12 +73,12 @@ abstract class BaseIMViewModel : AnyStateViewModel() {
         doActionsOnCreated()
         mediaRemoteExoUseCase.setLifecycleOwner(activity)
         mediaAudioRecorderUseCase.setLifecycleOwner(activity)
-        observeSomeThings(activity)
+        observeSomeThingsOnCreated(activity)
     }
 
     @CallStep(2)
-    open fun observeSomeThings(activity: ComponentActivity) {
-        PurpleLogger.current.d(TAG, "observeSomeThings")
+    open fun observeSomeThingsOnCreated(activity: ComponentActivity) {
+        PurpleLogger.current.d(TAG, "observeSomeThingsOnCreated")
 
         LocalMessager.observe<String, ContentSelectionResult>(
             activity,

@@ -321,7 +321,6 @@ class ConversationUseCase private constructor() : IComposeLifecycleAware {
                 return session
             }
         }
-        return null
     }
 
     private fun addMessageToSession(

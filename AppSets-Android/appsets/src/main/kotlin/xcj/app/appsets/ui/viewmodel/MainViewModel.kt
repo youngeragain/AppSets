@@ -80,8 +80,8 @@ class MainViewModel : BaseIMViewModel() {
         systemUseCase.cleanCaches()
     }
 
-    override fun observeSomeThings(activity: ComponentActivity) {
-        super.observeSomeThings(activity)
+    override fun observeSomeThingsOnCreated(activity: ComponentActivity) {
+        super.observeSomeThingsOnCreated(activity)
 
         LocalMessager.observe<String, String>(
             activity,
