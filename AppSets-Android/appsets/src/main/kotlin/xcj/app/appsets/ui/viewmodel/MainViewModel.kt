@@ -106,7 +106,7 @@ class MainViewModel : BaseIMViewModel() {
 
     override fun dispatchContentSelectedResult(
         context: Context,
-        contentSelectionResult: ContentSelectionResult
+        contentSelectionResult: ContentSelectionResult,
     ) {
         super.dispatchContentSelectedResult(context, contentSelectionResult)
         PurpleLogger.current.d(
