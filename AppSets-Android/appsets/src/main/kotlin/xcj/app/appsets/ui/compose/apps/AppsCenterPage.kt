@@ -141,7 +141,7 @@ fun AppsCenterPage(
                                 onApplicationLongPress(application)
                             }
                         ),
-                    any = application.bioUrl
+                    model = application.bioUrl
                 )
                 Text(
                     text = application.name ?: "",

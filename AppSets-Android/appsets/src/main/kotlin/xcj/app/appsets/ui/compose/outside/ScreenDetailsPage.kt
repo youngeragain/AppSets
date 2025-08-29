@@ -142,7 +142,7 @@ fun ScreenDetailsPage(
                             modifier = Modifier
                                 .matchParentSize()
                                 .blur(30.dp, BlurredEdgeTreatment.Unbounded),
-                            any = backgroundImageUrl
+                            model = backgroundImageUrl
                         )
                     }
 
@@ -493,7 +493,7 @@ fun CollectEditSheetContent(
             FilledTonalButton(
                 onClick = onConfirmClick
             ) {
-                Text(text = stringResource(xcj.app.appsets.R.string.sure))
+                Text(text = stringResource(xcj.app.appsets.R.string.ok))
             }
         }
 
@@ -551,7 +551,7 @@ fun ScreenReviews(
                                 .clickable {
                                     review.userInfo?.let { onBioClick.invoke(it) }
                                 },
-                            any = review.userInfo?.bioUrl
+                            model = review.userInfo?.bioUrl
                         )
                     }
                     Column(horizontalAlignment = Alignment.Start) {

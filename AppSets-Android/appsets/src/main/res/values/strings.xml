@@ -60,7 +60,7 @@
     <string name="add_favorite_category">Add favorite category</string>
     <string name="close">Close</string>
     <string name="default_">Default</string>
-    <string name="sure">OK</string>
+    <string name="ok">OK</string>
     <string name="favorite">Favorite</string>
     <string name="no_corresponding_screen_found">No corresponding Screen found</string>
     <string name="add_reply">Add Reply</string>
@@ -189,11 +189,11 @@
     <string name="information_updated">Information has been updated</string>
     <string name="updated_failed">Update failed</string>
     <string name="example_smart_car_huawei">Example: smart car, Huawei</string>
-    <string name="example_jiang_kaixin_li_wenyi">Example: Jiang Kaixin, Li Wenyi</string>
+    <string name="example_jiang_kaixin">Example: Jiang Kaixin</string>
     <string name="need_to_update_app">Need to update app</string>
     <string name="ai">AI</string>
     <string name="generative_ai">Generative AI</string>
-    <string name="empty_ai_message_list">No dialogue</string>
+    <string name="empty_ai_message_list">No conversation</string>
     <string name="prompt">Prompt</string>
     <string name="cancel">Cancel</string>
     <string name="confirm">Confirm</string>
@@ -331,7 +331,7 @@
     <string name="reply_is_empty">Replay is empty</string>
     <string name="reply_failed">Replay failed</string>
     <string name="login_status_expire_login_require_tips">Login has expired or your login information was not found \nPlease try logging in again!</string>
-    <string name="temporary_dialogue">%1$s (temporary)</string>
+    <string name="temporary_conversation">%1$s (temporary)</string>
     <string name="reply">Reply</string>
     <string name="file_permission_tips">The application can read files on the device, such as images and videos.</string>
     <string name="file_permission_app_usage_des">Used for social attributes and application creation.</string>
@@ -352,13 +352,13 @@
     <string name="register_appsets_success">Successfully registered an AppSet account</string>
     <string name="register_failed">An error occurred during registration</string>
     <string name="a_account_exist_please_retry">The account already exists, please replace it with another account</string>
-    <string name="current_version_cannot_regiest">The current version cannot be registered!</string>
+    <string name="current_version_cannot_be_registered">The current version cannot be registered!</string>
     <string name="audio_record_exception">Microphone capture abnormality</string>
     <string name="app_notification_channel_conversation_1_name">Conversation</string>
     <string name="app_notification_channel_conversation_1_description">Some people will send you a message</string>
     <string name="application_paid_download_tips">The creator has specified the single item price of the application, so this application can only be downloaded after purchase, and the purchased application can be downloaded directly in the future.</string>
     <string name="founded_support_qr_code">Discovered supported QR codes</string>
-    <string name="founded_unsupport_qr_code">Discovered unsupported QR codes</string>
+    <string name="founded_unsupported_qr_code">Discovered unsupported QR codes</string>
     <string name="scan">Scan</string>
     <string name="not_found">Not found</string>
     <string name="bing_search">Bing search</string>
@@ -458,4 +458,5 @@
     <string name="remove">Remove</string>
     <string name="there_is_nothing_here">There is nothing here</string>
     <string name="no_x_permission">No %s permission</string>
+    <string name="new_folder">New Folder</string>
 </resources>

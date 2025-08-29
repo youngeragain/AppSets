@@ -1,14 +1,21 @@
+@file:OptIn(ExperimentalMaterial3Api::class)
+
 package xcj.app.appsets.ui.compose.apps.tools
 
 import android.Manifest
-import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.os.Environment
 import android.provider.Settings
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -16,38 +23,57 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.currentStateAsState
+import kotlinx.coroutines.launch
+import xcj.app.appsets.ui.compose.apps.tools.file_manager.AbstractFile
+import xcj.app.appsets.ui.compose.apps.tools.file_manager.AbstractFileContext
+import xcj.app.appsets.ui.compose.apps.tools.file_manager.DefaultFile
+import xcj.app.appsets.ui.compose.custom_component.AnyImage
 import xcj.app.appsets.ui.compose.quickstep.QuickStepContent
 import xcj.app.appsets.util.ktx.asComponentActivityOrNull
 import xcj.app.compose_share.components.BackActionTopBar
-import java.io.File
+import xcj.app.compose_share.components.DesignTextField
+import xcj.app.starter.android.util.FileUtil
 
 private const val TAG = "AppToolFileManagerPage"
 
@@ -60,35 +86,37 @@ fun AppToolFileManagerPage(
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     val lifecycle = lifecycleOwner.lifecycle
+    val coroutineScope = rememberCoroutineScope()
     val lifecycleState by lifecycle.currentStateAsState()
     var hasManageStoragePermission by remember {
         mutableStateOf(false)
     }
 
-    val rootFileItem: FileItem? by remember(hasManageStoragePermission) {
-        derivedStateOf {
-            if (!hasManageStoragePermission) {
-                null
-            } else {
-                FileItem.DefaultFileItemCreator(context).create()
-            }
-        }
+    var abstractFileContext by remember {
+        mutableStateOf<AbstractFileContext?>(null)
     }
-    var currentFileItem: FileItem? by remember {
-        mutableStateOf(null)
-    }
-    val fileItemChildren: List<FileItem>? by remember(currentFileItem) {
-        derivedStateOf {
-            currentFileItem?.listChildren()
-        }
+    var currentAbstractFile by remember {
+        mutableStateOf<AbstractFile<*>?>(null)
     }
 
-    LaunchedEffect(rootFileItem) {
-        if (rootFileItem != null && currentFileItem == null) {
-            currentFileItem = rootFileItem
+    val abstractFileChildren by remember(currentAbstractFile) {
+        derivedStateOf<List<AbstractFile<*>>?> {
+            currentAbstractFile?.listChildren() as? List<AbstractFile<*>>?
         }
     }
+    LaunchedEffect(hasManageStoragePermission) {
+        if (hasManageStoragePermission && abstractFileContext == null) {
+            val rootAbstractFile = DefaultFile.DefaultFileAbstractFileCreator().create(context)
+            abstractFileContext =
+                AbstractFileContext(
+                    rootAbstractFile = rootAbstractFile,
+                    onCurrentChanged = { updateType, abstractFile ->
+                        currentAbstractFile = abstractFile
+                    }
+                )
 
+        }
+    }
 
     LaunchedEffect(lifecycleState) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
@@ -105,66 +133,157 @@ fun AppToolFileManagerPage(
         }
     }
 
+    var isShowFileCreation by remember {
+        mutableStateOf(false)
+    }
+
+    var isShowCreateDictionarySheet by remember {
+        mutableStateOf(false)
+    }
+
     Column {
         BackActionTopBar(
             onBackClick = onBackClick,
             backButtonRightText = stringResource(xcj.app.appsets.R.string.file_manager)
         )
 
-        Box(modifier = Modifier.weight(1f)) {
-            LazyColumn(
-                contentPadding = PaddingValues(
-                    bottom = WindowInsets.navigationBars.asPaddingValues()
-                        .calculateBottomPadding() + 52.dp
-                )
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .animateContentSize()
             ) {
-                if (currentFileItem != null) {
-                    item {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 12.dp, vertical = 6.dp)
-                        ) {
-                            Text(
-                                text = currentFileItem?.file?.path ?: "",
-                                maxLines = 1,
-                                modifier = Modifier.horizontalScroll(
-                                    rememberScrollState()
-                                )
+                if (currentAbstractFile != null) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 12.dp, vertical = 6.dp)
+                    ) {
+                        Text(
+                            text = currentAbstractFile?.path() ?: "",
+                            maxLines = 1,
+                            modifier = Modifier.horizontalScroll(
+                                rememberScrollState()
                             )
-                        }
-
+                        )
                     }
                 }
-
-                if (!fileItemChildren.isNullOrEmpty()) {
-                    items(fileItemChildren!!) { fileItem ->
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable(
-                                    onClick = {
-                                        if (fileItem.file.isDirectory) {
-                                            currentFileItem = fileItem
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    contentPadding = PaddingValues(
+                        bottom = WindowInsets.navigationBars.asPaddingValues()
+                            .calculateBottomPadding() + 52.dp
+                    )
+                ) {
+                    if (!abstractFileChildren.isNullOrEmpty()) {
+                        items(abstractFileChildren!!) { abstractFile ->
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable(
+                                        onClick = {
+                                            abstractFileContext?.setCurrent(
+                                                abstractFile,
+                                                "push_new"
+                                            )
                                         }
-                                    }
-                                )
-                                .padding(horizontal = 12.dp, vertical = 6.dp)
-                                .animateItem(),
-                            horizontalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            val icon = if (fileItem.file.isDirectory) {
-                                xcj.app.compose_share.R.drawable.ic_folder_24
-                            } else {
-                                xcj.app.compose_share.R.drawable.ic_insert_drive_file_24
+                                    )
+                                    .padding(horizontal = 12.dp, vertical = 6.dp)
+                                    .animateItem(),
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                val icon = if (abstractFile.isFolder()) {
+                                    xcj.app.compose_share.R.drawable.ic_folder_24
+                                } else {
+                                    xcj.app.compose_share.R.drawable.ic_insert_drive_file_24
+                                }
+                                Icon(painter = painterResource(icon), contentDescription = null)
+                                Text(text = abstractFile.name)
                             }
-                            Icon(painter = painterResource(icon), contentDescription = null)
-                            Text(text = fileItem.file.name)
                         }
                     }
                 }
             }
-            if (currentFileItem != null && fileItemChildren.isNullOrEmpty()) {
+
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .navigationBarsPadding()
+                    .align(Alignment.BottomCenter)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .animateContentSize(alignment = Alignment.BottomCenter),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    if (isShowFileCreation) {
+                        FileItemCreation(
+                            onCreateButtonClick = { createType ->
+                                if (createType == "file_folder") {
+                                    isShowCreateDictionarySheet = true
+                                }
+                            }
+                        )
+                    }
+                    Row(
+                        modifier = Modifier
+                            .horizontalScroll(rememberScrollState())
+                    ) {
+                        if (currentAbstractFile != null && !currentAbstractFile!!.isRoot) {
+                            FilledTonalIconButton(
+                                onClick = {
+                                    abstractFileContext?.navigateUp()
+                                }
+                            ) {
+                                Icon(
+                                    painter = painterResource(xcj.app.compose_share.R.drawable.ic_arrow_back_24),
+                                    contentDescription = null
+                                )
+                            }
+                        }
+                        FilledTonalIconButton(
+                            onClick = {
+                                isShowFileCreation = !isShowFileCreation
+                            }
+                        ) {
+                            Icon(
+                                modifier = Modifier.graphicsLayer {
+                                    rotationZ = if (isShowFileCreation) {
+                                        45f
+                                    } else {
+                                        0f
+                                    }
+                                },
+                                painter = painterResource(xcj.app.compose_share.R.drawable.ic_round_add_24),
+                                contentDescription = null
+                            )
+                        }
+
+                        FilledTonalIconButton(
+                            onClick = {
+                                //currentFileItem = currentFileItem?.getParent()
+                            }
+                        ) {
+                            Icon(
+                                painter = painterResource(xcj.app.compose_share.R.drawable.ic_outline_more_vert_24),
+                                contentDescription = null
+                            )
+                        }
+                    }
+                }
+
+            }
+
+
+            if (currentAbstractFile != null && currentAbstractFile!!.isFolder() && abstractFileChildren.isNullOrEmpty()) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -175,6 +294,7 @@ fun AppToolFileManagerPage(
                     Text(text = "No files or dictionary")
                 }
             }
+
             if (!hasManageStoragePermission) {
                 Box(
                     modifier = Modifier
@@ -209,93 +329,155 @@ fun AppToolFileManagerPage(
                     )
                 }
             }
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .navigationBarsPadding()
-                    .align(Alignment.BottomCenter)
+
+
+            FileItemDetails(
+                abstractFile = currentAbstractFile,
+                onClose = {
+                    abstractFileContext?.navigateUp()
+                }
+            )
+        }
+    }
+
+    if (isShowCreateDictionarySheet) {
+        var newFolderName by remember {
+            mutableStateOf("")
+        }
+        ModalBottomSheet(
+            onDismissRequest = {
+                isShowCreateDictionarySheet = false
+            }
+        ) {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Row(
-                    modifier = Modifier
-                        .align(Alignment.Center)
-                        .animateContentSize()
-                ) {
-                    if (currentFileItem != null && !currentFileItem!!.isRoot) {
-                        FilledTonalIconButton(
-                            onClick = {
-                                currentFileItem = currentFileItem?.getParent()
+                Text(text = stringResource(xcj.app.appsets.R.string.new_folder))
+                DesignTextField(
+                    value = newFolderName,
+                    onValueChange = {
+                        newFolderName = it
+                    },
+                    placeholder = {
+                        Text(text = stringResource(xcj.app.appsets.R.string.name))
+                    }
+                )
+                FilledTonalButton(
+                    modifier = Modifier.widthIn(min = TextFieldDefaults.MinWidth),
+                    onClick = {
+                        isShowCreateDictionarySheet = false
+                        coroutineScope.launch {
+                            val abstractFile = abstractFileContext?.getCurrent()
+                            if (abstractFile == null) {
+                                return@launch
                             }
-                        ) {
-                            Icon(
-                                painter = painterResource(xcj.app.compose_share.R.drawable.ic_arrow_back_24),
-                                contentDescription = null
-                            )
+                            val isCreated = abstractFile.createFileFolder(newFolderName)
+                            if (isCreated) {
+                                val newAbstractFile = abstractFile.newInstance()
+                                abstractFileContext?.setCurrent(newAbstractFile, "push_update")
+                            }
                         }
-                    }
-                    FilledTonalIconButton(
-                        onClick = {
-                            //currentFileItem = currentFileItem?.getParent()
-                        }
-                    ) {
-                        Icon(
-                            painter = painterResource(xcj.app.compose_share.R.drawable.ic_round_add_24),
-                            contentDescription = null
-                        )
-                    }
-                    FilledTonalIconButton(
-                        onClick = {
-                            //currentFileItem = currentFileItem?.getParent()
-                        }
-                    ) {
-                        Icon(
-                            painter = painterResource(xcj.app.compose_share.R.drawable.ic_outline_more_vert_24),
-                            contentDescription = null
-                        )
-                    }
+                    }) {
+                    Text(text = stringResource(xcj.app.appsets.R.string.ok))
                 }
             }
         }
-
     }
 }
 
-data class FileItem(
-    val file: File,
-    val accessible: Boolean = true,
-    var parentFileItem: FileItem? = null
-) {
-    val isRoot: Boolean
-        get() = parentFileItem == null || parentFileItem == this
-
-    fun getParent(): FileItem? {
-        return parentFileItem
-    }
-
-    fun listChildren(): List<FileItem>? {
-        if (!file.isDirectory) {
-            return null
+@Composable
+fun FileItemDetails(abstractFile: AbstractFile<*>?, onClose: () -> Unit) {
+    AnimatedVisibility(
+        modifier = Modifier.fillMaxSize(),
+        enter = fadeIn(animationSpec = tween(350)) + expandVertically(animationSpec = tween(350)),
+        exit = fadeOut(animationSpec = tween(350)) + shrinkVertically(animationSpec = tween(350)),
+        visible = abstractFile != null && !abstractFile.isFolder()
+    ) {
+        Surface(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(12.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Row {
+                    Spacer(modifier = Modifier.weight(1f))
+                    Text(
+                        text = abstractFile?.name ?: "",
+                        maxLines = 2,
+                        overflow = TextOverflow.StartEllipsis,
+                        modifier = Modifier
+                            .widthIn(max = TextFieldDefaults.MinWidth / 2)
+                    )
+                    Spacer(modifier = Modifier.weight(1f))
+                    FilledTonalIconButton(
+                        onClick = onClose
+                    ) {
+                        Icon(
+                            painter = painterResource(xcj.app.compose_share.R.drawable.ic_round_close_24),
+                            contentDescription = stringResource(xcj.app.appsets.R.string.close)
+                        )
+                    }
+                }
+                if (FileUtil.isImage(abstractFile!!.extension)) {
+                    AnyImage(
+                        model = abstractFile.asUri(),
+                        modifier = Modifier
+                            .align(Alignment.CenterHorizontally)
+                            .size(250.dp)
+                    )
+                }
+            }
         }
-        val files = file.listFiles()
-        return files?.map {
-            val fileItem = FileItem(it)
-            fileItem.parentFileItem = this
-            fileItem
+    }
+}
+
+@Composable
+fun FileItemActions(abstractFile: AbstractFile<*>) {
+
+}
+
+@Composable
+fun FileItemCreation(onCreateButtonClick: (String) -> Unit) {
+    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        FilledTonalButton(
+            onClick = {
+                onCreateButtonClick("file")
+            }
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(2.dp)
+            ) {
+                Icon(
+                    painter = painterResource(xcj.app.compose_share.R.drawable.ic_insert_drive_file_24),
+                    contentDescription = null
+                )
+                Text(text = "Create File")
+            }
         }
-    }
 
-    interface FileItemCreator {
-        fun create(): FileItem
-    }
-
-    class DefaultFileItemCreator(private val context: Context) : FileItemCreator {
-        override fun create(): FileItem {
-            val storageDirectory = Environment.getExternalStorageDirectory()
-            val fileItem = FileItem(
-                storageDirectory,
-                Environment.getExternalStorageState() == Environment.MEDIA_MOUNTED
-            )
-            fileItem.parentFileItem = fileItem
-            return fileItem
+        FilledTonalButton(
+            onClick = {
+                onCreateButtonClick("file_folder")
+            }
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(2.dp)
+            ) {
+                Icon(
+                    painter = painterResource(xcj.app.compose_share.R.drawable.ic_folder_24),
+                    contentDescription = null
+                )
+                Text(text = "Create Folder")
+            }
         }
     }
 }

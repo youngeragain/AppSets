@@ -5,7 +5,6 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.view.MotionEvent
@@ -15,9 +14,7 @@ import androidx.activity.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import xcj.app.appsets.notification.NotificationPusher
 import xcj.app.appsets.ui.compose.theme.AppSetsTheme
 import xcj.app.appsets.ui.viewmodel.MainViewModel
@@ -25,8 +22,8 @@ import xcj.app.appsets.util.SplashScreenHelper
 import xcj.app.compose_share.ui.viewmodel.AnyStateViewModel.Companion.bottomSheetState
 import xcj.app.starter.android.AppDefinition
 import xcj.app.starter.android.ui.base.DesignComponentActivity
+import xcj.app.starter.android.util.PackageUtil
 import xcj.app.starter.android.util.PurpleLogger
-import java.util.UUID
 
 class MainActivity : DesignComponentActivity() {
 
@@ -184,29 +181,12 @@ class MainActivity : DesignComponentActivity() {
 
     private suspend fun getCallActivityAppDefinition(): AppDefinition? {
         val callingPackage = getCallingPackage()
-        return if (callingPackage != null) {
-            getAppNameFromPackageName(callingPackage)
-        } else {
-            null
+        if (callingPackage.isNullOrEmpty()) {
+            return null
         }
+        return PackageUtil.getAppDefinitionByPackageName(this, callingPackage)
     }
 
-    private suspend fun getAppNameFromPackageName(packageName: String): AppDefinition? =
-        withContext(
-            Dispatchers.IO
-        ) {
-            try {
-                val appInfo = packageManager.getApplicationInfo(packageName, 0)
-                val appDefinition = AppDefinition(UUID.randomUUID().toString())
-                appDefinition.applicationInfo = appInfo
-                appDefinition.name = appInfo.loadLabel(packageManager).toString().trim()
-                appDefinition.icon = appInfo.loadIcon(packageManager)
-                return@withContext appDefinition
-            } catch (e: PackageManager.NameNotFoundException) {
-                e.printStackTrace()
-                return@withContext null
-            }
-        }
 
     override fun onEnterAnimationComplete() {
         PurpleLogger.current.d(TAG, "onEnterAnimationComplete")

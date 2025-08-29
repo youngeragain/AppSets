@@ -65,7 +65,7 @@ fun ProfileModificationComponent(
                     modifier = Modifier.padding(vertical = 12.dp)
                 )
                 AnyImage(
-                    any = userInfoModification.userAvatarUri?.provideUri() ?: userInfo.bioUrl,
+                    model = userInfoModification.userAvatarUri?.provideUri() ?: userInfo.bioUrl,
                     modifier = Modifier
                         .size(250.dp)
                         .clip(BigAvatarShape)

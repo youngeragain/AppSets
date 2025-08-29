@@ -161,7 +161,7 @@ fun CreateAppPage(
             BackActionTopBar(
                 onBackClick = onBackClick,
                 backButtonRightText = backButtonRightText,
-                endButtonText = stringResource(id = xcj.app.appsets.R.string.sure),
+                endButtonText = stringResource(id = xcj.app.appsets.R.string.ok),
                 onEndButtonClick = onConfirmClick
             )
             var newPlatformName: String? by remember {
@@ -565,7 +565,7 @@ fun CustomPlatformAddSheetContent(
 
                 }
             ) {
-                Text(text = stringResource(id = xcj.app.appsets.R.string.sure))
+                Text(text = stringResource(id = xcj.app.appsets.R.string.ok))
             }
         }
         Text(text = stringResource(xcj.app.appsets.R.string.platform_name_english_only))
@@ -646,7 +646,7 @@ fun IconAndBanner(
                         modifier = Modifier
                             .fillMaxSize()
                             .clip(MaterialTheme.shapes.extraLarge),
-                        any = uri
+                        model = uri
                     )
                 } else {
                     if (showSelect) {
@@ -704,7 +704,7 @@ fun IconAndBanner(
                         modifier = Modifier
                             .fillMaxSize()
                             .clip(MaterialTheme.shapes.extraLarge),
-                        any = uri
+                        model = uri
                     )
                 } else {
                     if (showSelect) {
@@ -1059,7 +1059,7 @@ fun VersionForPlatform(
                                         MaterialTheme.shapes.medium
                                     )
                                     .clip(MaterialTheme.shapes.medium),
-                                any = screenShot.uriHolder?.provideUri()
+                                model = screenShot.uriHolder?.provideUri()
                             )
                         }
                     }

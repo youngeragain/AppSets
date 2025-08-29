@@ -1,6 +1,5 @@
 package xcj.app.appsets.ui.compose.conversation.quickstep
 
-import android.content.Context
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -19,6 +18,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.os.bundleOf
@@ -30,21 +30,15 @@ import xcj.app.appsets.ui.compose.quickstep.QuickStepContent
 import xcj.app.appsets.ui.compose.quickstep.QuickStepContentHandler
 import xcj.app.appsets.ui.compose.quickstep.QuickStepContentHolder
 
-class ConversationQuickStepHandler(context: Context) : QuickStepContentHandler(context) {
+class ConversationQuickStepHandler : QuickStepContentHandler {
 
     private var mQuickStepContentHolder: QuickStepContentHolder? = null
 
-    override fun getName(): String {
-        return context.getString(xcj.app.appsets.R.string.conversation)
-    }
+    override val name: Int = xcj.app.appsets.R.string.conversation
 
-    override fun getDescription(): String {
-        return context.getString(xcj.app.appsets.R.string.send_to_people)
-    }
+    override val description: Int = xcj.app.appsets.R.string.send_to_people
 
-    override fun getCategory(): String {
-        return context.getString(xcj.app.appsets.R.string.social)
-    }
+    override val category: Int = xcj.app.appsets.R.string.social
 
     override fun accept(quickStepContentHolder: QuickStepContentHolder): Boolean {
         mQuickStepContentHolder = quickStepContentHolder
@@ -55,8 +49,8 @@ class ConversationQuickStepHandler(context: Context) : QuickStepContentHandler(c
         val contentCompose = @Composable {
             val navController = LocalNavHostController.current
             ConversationQuickStepHandlerContent(
-                name = getName(),
-                description = getDescription(),
+                name = stringResource(name),
+                description = stringResource(description),
                 onClick = {
                     val quickStepContents = mQuickStepContentHolder?.quickStepContents?.let {
                         arrayListOf<QuickStepContent>().apply {

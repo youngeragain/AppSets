@@ -28,6 +28,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -44,7 +45,8 @@ import xcj.app.starter.util.ContentType
 fun QuickStepSheet(
     quickStepContentHolder: QuickStepContentHolder
 ) {
-    val requester = remember {
+    val context = LocalContext.current
+    val focusRequester = remember {
         FocusRequester()
     }
     var searchContent by remember {
@@ -54,9 +56,10 @@ fun QuickStepSheet(
     val filteredContentHandlersMap by remember {
         derivedStateOf {
             quickStepContentHandlerRegistry.findHandlers(
+                context,
                 quickStepContentHolder,
                 searchContent.text
-            ).groupBy { it.getCategory() }
+            ).groupBy { it.category }
         }
     }
     val filteredContentHandlerCategories = filteredContentHandlersMap.keys.toList()
@@ -88,7 +91,7 @@ fun QuickStepSheet(
             },
             modifier = Modifier
                 .fillMaxWidth()
-                .focusRequester(requester)
+                .focusRequester(focusRequester)
                 .border(1.dp, MaterialTheme.colorScheme.outline, MaterialTheme.shapes.extraLarge),
             maxLines = 1
         )
@@ -99,20 +102,24 @@ fun QuickStepSheet(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             items(filteredContentHandlerCategories) { contentHandlerCategory ->
+                val contentHandlers = filteredContentHandlersMap[contentHandlerCategory]
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
                         .animateItem(),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    Text(text = contentHandlerCategory, fontWeight = FontWeight.Bold)
+                    Text(
+                        text = stringResource(contentHandlerCategory),
+                        fontWeight = FontWeight.Bold
+                    )
                     FlowRow(
                         modifier = Modifier
                             .fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(12.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        val contentHandlers = filteredContentHandlersMap[contentHandlerCategory]
+
                         contentHandlers?.forEach { contentHandler ->
                             contentHandler.getContent(
                                 onClick = {}
@@ -162,7 +169,7 @@ fun QuickStepContentComponent(quickStepContent: QuickStepContent) {
                             modifier = Modifier
                                 .size(120.dp)
                                 .clip(MaterialTheme.shapes.extraLarge),
-                            any = quickStepContent.uri
+                            model = quickStepContent.uri
                         )
                     }
 
@@ -175,7 +182,7 @@ fun QuickStepContentComponent(quickStepContent: QuickStepContent) {
                             modifier = Modifier
                                 .size(120.dp)
                                 .clip(MaterialTheme.shapes.extraLarge),
-                            any = quickStepContent.uri
+                            model = quickStepContent.uri
                         )
                     }
 

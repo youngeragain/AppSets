@@ -566,7 +566,7 @@ class SystemUseCase(
         context: Context,
     ) {
         if (!AppConfig.appConfiguration.canSignUp) {
-            context.getString(xcj.app.appsets.R.string.current_version_cannot_regiest).toast()
+            context.getString(xcj.app.appsets.R.string.current_version_cannot_be_registered).toast()
             return
         }
         val oldLoginSignUpState = loginSignUpPageState.value

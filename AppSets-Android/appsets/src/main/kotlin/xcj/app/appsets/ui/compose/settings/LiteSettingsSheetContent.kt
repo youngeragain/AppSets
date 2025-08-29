@@ -114,7 +114,7 @@ fun LiteSettingsSheetContent(
                                             MaterialTheme.shapes.extraLarge
                                         )
                                         .clip(MaterialTheme.shapes.extraLarge),
-                                    any = qrCodeBitmap
+                                    model = qrCodeBitmap
                                 )
                             }
                         }

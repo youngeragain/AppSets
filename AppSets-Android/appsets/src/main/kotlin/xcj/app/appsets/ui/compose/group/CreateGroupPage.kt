@@ -41,14 +41,13 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-
 import xcj.app.appsets.ui.compose.LocalUseCaseOfSystem
-import xcj.app.compose_share.components.DesignTextField
-import xcj.app.appsets.ui.compose.custom_component.HideNavBarWhenOnLaunch
 import xcj.app.appsets.ui.compose.custom_component.AnyImage
+import xcj.app.appsets.ui.compose.custom_component.HideNavBarWhenOnLaunch
 import xcj.app.appsets.usecase.CreateGroupState
 import xcj.app.appsets.usecase.GroupCreateInfo
 import xcj.app.compose_share.components.BackActionTopBar
+import xcj.app.compose_share.components.DesignTextField
 
 private const val TAG = "CreateGroupPage"
 
@@ -70,7 +69,7 @@ fun CreateGroupPage(
         Column {
             BackActionTopBar(
                 backButtonRightText = stringResource(id = xcj.app.appsets.R.string.create_group),
-                endButtonText = stringResource(id = xcj.app.appsets.R.string.sure),
+                endButtonText = stringResource(id = xcj.app.appsets.R.string.ok),
                 onBackClick = onBackClick,
                 onEndButtonClick = onConfirmAction
             )
@@ -109,7 +108,7 @@ fun CreateGroupPage(
                                 createGroupState.groupCreateInfo.icon?.provideUri()
                                     ?: xcj.app.compose_share.R.drawable.ic_emoji_nature_24
                             AnyImage(
-                                any = groupIconUri,
+                                model = groupIconUri,
                                 modifier = Modifier
                                     .size(98.dp)
                                     .clip(MaterialTheme.shapes.extraLarge)

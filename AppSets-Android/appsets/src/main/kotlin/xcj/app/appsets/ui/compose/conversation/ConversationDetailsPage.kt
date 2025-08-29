@@ -613,7 +613,7 @@ fun TopToolBar(
 private fun UserAvatarComponent(modifier: Modifier, imMessage: ImMessage) {
     AnyImage(
         modifier = modifier,
-        any = imMessage.fromInfo.bioUrl,
+        model = imMessage.fromInfo.bioUrl,
         error = imMessage.fromInfo.name
     )
 }
@@ -622,7 +622,7 @@ private fun UserAvatarComponent(modifier: Modifier, imMessage: ImMessage) {
 private fun UserAvatar2Component(modifier: Modifier, imObj: ImObj?) {
     AnyImage(
         modifier = modifier,
-        any = imObj?.avatarUrl,
+        model = imObj?.avatarUrl,
         error = imObj?.name
     )
 }
@@ -1057,7 +1057,7 @@ private fun ImMessageItemVideoComponent(
                 .height(355.dp)
                 .width(200.dp)
                 .clip(MaterialTheme.shapes.extraLarge),
-            any = videoMessageMetadata.companionUrl,
+            model = videoMessageMetadata.companionUrl,
             placeHolder = rememberAsyncImagePainter(localVideoFirstFrameUri),
             error = rememberAsyncImagePainter(localVideoFirstFrameUri)
         )
@@ -1194,7 +1194,7 @@ private fun ImMessageItemImageComponent(
                 .height(355.dp)
                 .width(200.dp)
                 .clip(MaterialTheme.shapes.extraLarge),
-            any = imMessage.metadata.url,
+            model = imMessage.metadata.url,
             placeHolder = rememberAsyncImagePainter(localUri),
             error = rememberAsyncImagePainter(localUri)
         )

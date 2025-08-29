@@ -71,7 +71,7 @@ fun ImageButtonComponent(
                     )
                 } else {
                     AnyImage(
-                        any = resource,
+                        model = resource,
                         modifier = Modifier
                             .size(42.dp)
                             .clip(CircleShape)
@@ -89,7 +89,7 @@ fun ImageButtonComponent(
                     )
                 } else {
                     AnyImage(
-                        any = resource,
+                        model = resource,
                         modifier = Modifier
                             .size(42.dp)
                             .clip(CircleShape)

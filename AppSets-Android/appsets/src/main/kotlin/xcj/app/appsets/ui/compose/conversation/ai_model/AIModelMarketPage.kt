@@ -154,7 +154,7 @@ fun MixedAIModelsPage() {
                                     shape = MaterialTheme.shapes.large
                                 )
                                 .clip(MaterialTheme.shapes.large),
-                            any = sessionTemplate.session.imObj.avatarUrl
+                            model = sessionTemplate.session.imObj.avatarUrl
                         )
                         Column(
                             modifier = Modifier
@@ -267,7 +267,7 @@ fun DeviceLocalAIModelsPage() {
                                     shape = MaterialTheme.shapes.large
                                 )
                                 .clip(MaterialTheme.shapes.large),
-                            any = sessionTemplate.session.imObj.avatarUrl
+                            model = sessionTemplate.session.imObj.avatarUrl
                         )
                         Column(
                             modifier = Modifier
@@ -379,7 +379,7 @@ fun OnlineAIModelsPage() {
                                     shape = MaterialTheme.shapes.large
                                 )
                                 .clip(MaterialTheme.shapes.large),
-                            any = sessionTemplate.session.imObj.avatarUrl
+                            model = sessionTemplate.session.imObj.avatarUrl
                         )
                         Column(
                             modifier = Modifier

@@ -17,8 +17,6 @@ import xcj.app.starter.android.ktx.SCHEMA_FIlE
 import xcj.app.starter.util.ByteUtil
 import java.io.File
 import java.io.FileOutputStream
-import java.lang.Exception
-import java.lang.NumberFormatException
 import java.util.Objects
 import kotlin.math.min
 
@@ -158,7 +156,7 @@ object FileUtil {
     @JvmStatic
     private fun getPathFromExtSD(pathData: Array<String>): String {
         val type: String? = pathData[0]
-        val relativePath = "/" + pathData[1]
+        val relativePath = File.separator + pathData[1]
 
 
         // on my Sony devices (4.4.4 & 5.1.1), `type` is a dynamic string
@@ -506,6 +504,40 @@ object FileUtil {
             return true
         }
         return false // 无法确定或 MIME 类型不是文件夹类型，认为不是文件夹
+    }
+
+    fun isImage(extension: String): Boolean {
+        return when (extension) {
+            "png", "webp", "jpeg", "bmp", "svg", "jpg", "tif", "tiff" -> true
+            else -> false
+        }
+    }
+
+    fun isVideo(extension: String): Boolean {
+        return when (extension.lowercase()) {
+            "mp4", "avi", "mkv", "mov", "wmv", "flv", "webm", "ts", "mpeg", "mpg", "m2ts", "ogv" -> true
+            else -> false
+        }
+    }
+
+    fun isAudio(extension: String): Boolean {
+        return when (extension.lowercase()) {
+            "mp3", "aac", "wav", "flac", "ogg", "opus", "wma", "aiff", "m4a" -> true
+            else -> false
+        }
+    }
+
+
+    fun File.isImage(): Boolean {
+        return isImage(extension)
+    }
+
+    fun File.isVideo(): Boolean {
+        return isVideo(extension)
+    }
+
+    fun File.isAudio(): Boolean {
+        return isAudio(extension)
     }
 }
 

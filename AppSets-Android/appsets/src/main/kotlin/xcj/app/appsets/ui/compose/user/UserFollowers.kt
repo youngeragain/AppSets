@@ -149,7 +149,7 @@ fun UserAvatarNameIntroductionComponent(
                 modifier = Modifier
                     .size(36.dp)
                     .clip(MaterialTheme.shapes.large),
-                any = userInfo.bioUrl
+                model = userInfo.bioUrl
             )
             Spacer(modifier = Modifier.width(10.dp))
             Column {

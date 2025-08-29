@@ -1,30 +1,24 @@
 package xcj.app.starter.foundation
 
-import java.lang.reflect.ParameterizedType
+open class StaticProvider<T> {
 
-class StaticProvider<T> {
+    protected var t: T? = null
 
-    private var t: T? = null
-
-    val current: T
+    open val current: T
         get() = t
             ?: throw IllegalStateException(
-                "current is null, nothing can provide, t class:${
-                    (this::class.java.genericSuperclass as? ParameterizedType)?.actualTypeArguments?.get(
-                        0
-                    )?.javaClass?.name
-                }!"
+                "current is null, nothing can provide!"
             )
 
-    fun provider(provider: () -> T?) {
+    open fun provider(provider: () -> T?) {
         t = provider()
     }
 
-    infix fun provide(t: T?) {
+    open infix fun provide(t: T?) {
         provider { t }
     }
 
-    infix fun provide(provider: () -> T?) {
+    open infix fun provide(provider: () -> T?) {
         provider(provider)
     }
 }

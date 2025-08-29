@@ -1,6 +1,5 @@
 package xcj.app.appsets.ui.compose.apps.quickstep
 
-import android.content.Context
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -19,6 +18,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.os.bundleOf
@@ -27,28 +27,21 @@ import xcj.app.appsets.ui.compose.LocalNavHostController
 import xcj.app.appsets.ui.compose.PageRouteNames
 import xcj.app.appsets.ui.compose.apps.tools.TOOL_TYPE
 import xcj.app.appsets.ui.compose.apps.tools.TOOL_TYPE_AppSets_Graphic
-import xcj.app.appsets.ui.compose.apps.tools.TOOL_TYPE_AppSets_Intent_Caller
 import xcj.app.appsets.ui.compose.main.navigateWithBundle
 import xcj.app.appsets.ui.compose.quickstep.QuickStepContent
 import xcj.app.appsets.ui.compose.quickstep.QuickStepContentHandler
 import xcj.app.appsets.ui.compose.quickstep.QuickStepContentHolder
 import xcj.app.appsets.ui.compose.quickstep.TextQuickStepContent
 
-class ToolGraphicQuickStepHandler(context: Context) : QuickStepContentHandler(context) {
+class ToolGraphicQuickStepHandler : QuickStepContentHandler {
 
     private var mQuickStepContentHolder: QuickStepContentHolder? = null
 
-    override fun getName(): String {
-        return context.getString(xcj.app.appsets.R.string.graphic)
-    }
+    override val name: Int = xcj.app.appsets.R.string.graphic
 
-    override fun getDescription(): String {
-        return context.getString(xcj.app.appsets.R.string.graphic_description)
-    }
+    override val description: Int = xcj.app.appsets.R.string.graphic_description
 
-    override fun getCategory(): String {
-        return context.getString(xcj.app.appsets.R.string.tools)
-    }
+    override val category: Int = xcj.app.appsets.R.string.tools
 
     override fun accept(quickStepContentHolder: QuickStepContentHolder): Boolean {
         val firstTextQuickStepContent =
@@ -65,8 +58,8 @@ class ToolGraphicQuickStepHandler(context: Context) : QuickStepContentHandler(co
         val contentCompose = @Composable {
             val navController = LocalNavHostController.current
             ToolGraphicQuickStepHandlerContent(
-                name = getName(),
-                description = getDescription(),
+                name = stringResource(name),
+                description = stringResource(description),
                 onClick = {
                     val quickStepContents = mQuickStepContentHolder?.quickStepContents?.let {
                         arrayListOf<QuickStepContent>().apply {
@@ -122,7 +115,7 @@ fun ToolGraphicQuickStepHandlerContent(
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Icon(
-                    painter = painterResource(xcj.app.compose_share.R.drawable.ic_call_made_24),
+                    painter = painterResource(xcj.app.compose_share.R.drawable.ic_square_foot_24),
                     contentDescription = null
                 )
                 Column {

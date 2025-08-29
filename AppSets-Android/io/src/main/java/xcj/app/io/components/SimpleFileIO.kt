@@ -382,7 +382,7 @@ class SimpleFileIO : FileIO {
 
         runCatching {
             val getObjectResult = cosXmlService.getObject(objectRequest)
-            return File(tempFilesCacheDir + path.substringAfterLast("/")).run {
+            return File(tempFilesCacheDir + path.substringAfterLast(File.separator)).run {
                 if (exists()) {
                     this
                 } else {
@@ -390,7 +390,6 @@ class SimpleFileIO : FileIO {
                 }
             }
         }
-
         return null
     }
 }

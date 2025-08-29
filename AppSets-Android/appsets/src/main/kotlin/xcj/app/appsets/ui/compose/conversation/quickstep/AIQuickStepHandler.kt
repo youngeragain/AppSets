@@ -1,6 +1,5 @@
 package xcj.app.appsets.ui.compose.conversation.quickstep
 
-import android.content.Context
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -19,10 +18,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.os.bundleOf
-import xcj.app.appsets.R
 import xcj.app.appsets.constants.Constants
 import xcj.app.appsets.ui.compose.LocalNavHostController
 import xcj.app.appsets.ui.compose.PageRouteNames
@@ -31,21 +30,15 @@ import xcj.app.appsets.ui.compose.quickstep.QuickStepContent
 import xcj.app.appsets.ui.compose.quickstep.QuickStepContentHandler
 import xcj.app.appsets.ui.compose.quickstep.QuickStepContentHolder
 
-class AIQuickStepHandler(context: Context) : QuickStepContentHandler(context) {
+class AIQuickStepHandler : QuickStepContentHandler {
 
     private var mQuickStepContentHolder: QuickStepContentHolder? = null
 
-    override fun getName(): String {
-        return context.getString(R.string.ai)
-    }
+    override val name: Int = xcj.app.appsets.R.string.ai
 
-    override fun getDescription(): String {
-        return context.getString(R.string.get_suggestions)
-    }
+    override val description: Int = xcj.app.appsets.R.string.get_suggestions
 
-    override fun getCategory(): String {
-        return context.getString(R.string.tools)
-    }
+    override val category: Int = xcj.app.appsets.R.string.tools
 
     override fun accept(quickStepContentHolder: QuickStepContentHolder): Boolean {
         mQuickStepContentHolder = quickStepContentHolder
@@ -56,8 +49,8 @@ class AIQuickStepHandler(context: Context) : QuickStepContentHandler(context) {
         val contentCompose = @Composable {
             val navController = LocalNavHostController.current
             AIQuickStepHandlerContent(
-                name = getName(),
-                description = getDescription(),
+                name = stringResource(name),
+                description = stringResource(description),
                 onClick = {
                     val quickStepContents = mQuickStepContentHolder?.quickStepContents?.let {
                         arrayListOf<QuickStepContent>().apply {

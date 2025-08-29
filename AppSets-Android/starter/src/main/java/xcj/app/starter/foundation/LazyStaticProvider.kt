@@ -1,51 +1,46 @@
 package xcj.app.starter.foundation
 
-import java.lang.reflect.ParameterizedType
-
-class LazyStaticProvider<T> {
+class LazyStaticProvider<T> : StaticProvider<T>() {
 
     private var provider: (() -> T?)? = null
-    private var t: T? = null
 
-    val current: T
+    override val current: T
         get() {
             if (t != null) {
                 return t!!
             }
-            if (provider != null) {
-                t = provider?.invoke()
+            val theProvider = provider
+            if (theProvider != null) {
+                t = theProvider.invoke()
+                provider = null
                 return t!!
             }
             throw IllegalStateException(
-                "current is null, nothing can provide, t class:${
-                    (this::class.java.genericSuperclass as? ParameterizedType)?.actualTypeArguments?.get(
-                        0
-                    )?.javaClass?.name
-                }!"
+                "current is null, nothing can provide!"
             )
         }
 
-    fun provider(provider: () -> T?) {
+    override fun provider(provider: () -> T?) {
         this.provider = provider
     }
 
-    infix fun provide(t: T?) {
+    override infix fun provide(t: T?) {
         provider { t }
     }
 
-    infix fun provide(provider: () -> T?) {
+    override infix fun provide(provider: () -> T?) {
         provider(provider)
     }
 }
 
-fun <T> lazyStaticProvider(provider: () -> T?): StaticProvider<T> {
-    return StaticProvider<T>().apply {
+fun <T> lazyStaticProvider(provider: () -> T?): LazyStaticProvider<T> {
+    return LazyStaticProvider<T>().apply {
         provide(provider)
     }
 }
 
-fun <T> lazyStaticProvider(): StaticProvider<T> {
-    return StaticProvider()
+fun <T> lazyStaticProvider(): LazyStaticProvider<T> {
+    return LazyStaticProvider()
 }
 
 

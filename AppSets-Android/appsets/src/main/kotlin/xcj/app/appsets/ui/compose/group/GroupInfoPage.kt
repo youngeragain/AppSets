@@ -178,7 +178,7 @@ fun GroupInfoPage(
                                     verticalArrangement = Arrangement.spacedBy(10.dp)
                                 ) {
                                     AnyImage(
-                                        any = userInfo.bioUrl,
+                                        model = userInfo.bioUrl,
                                         modifier = Modifier
                                             .size(52.dp)
                                             .clip(MaterialTheme.shapes.extraLarge)
@@ -281,7 +281,7 @@ fun GroupInfoPage(
                                         MaterialTheme.colorScheme.outline,
                                         BigAvatarShape
                                     ),
-                                any = groupInfoPageState.groupInfo.bioUrl,
+                                model = groupInfoPageState.groupInfo.bioUrl,
                                 error = groupInfoPageState.groupInfo.name
                             )
                             Column(

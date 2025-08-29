@@ -21,18 +21,24 @@ fun LoadMoreHandler(
     val shouldLoadMoreState by remember {
         derivedStateOf {
             var needRequest = false
-            if (scrollableState is LazyStaggeredGridState) {
-                val layoutInfo = scrollableState.layoutInfo
-                needRequest = ((layoutInfo.visibleItemsInfo.lastOrNull()?.index
-                    ?: 0) + 1) > layoutInfo.totalItemsCount - buffer
-            } else if (scrollableState is LazyListState) {
-                val layoutInfo = scrollableState.layoutInfo
-                needRequest = ((layoutInfo.visibleItemsInfo.lastOrNull()?.index
-                    ?: 0) + 1) > layoutInfo.totalItemsCount - buffer
-            } else if (scrollableState is LazyGridState) {
-                val layoutInfo = scrollableState.layoutInfo
-                needRequest = ((layoutInfo.visibleItemsInfo.lastOrNull()?.index
-                    ?: 0) + 1) > layoutInfo.totalItemsCount - buffer
+            when (scrollableState) {
+                is LazyStaggeredGridState -> {
+                    val layoutInfo = scrollableState.layoutInfo
+                    needRequest = ((layoutInfo.visibleItemsInfo.lastOrNull()?.index
+                        ?: 0) + 1) > layoutInfo.totalItemsCount - buffer
+                }
+
+                is LazyListState -> {
+                    val layoutInfo = scrollableState.layoutInfo
+                    needRequest = ((layoutInfo.visibleItemsInfo.lastOrNull()?.index
+                        ?: 0) + 1) > layoutInfo.totalItemsCount - buffer
+                }
+
+                is LazyGridState -> {
+                    val layoutInfo = scrollableState.layoutInfo
+                    needRequest = ((layoutInfo.visibleItemsInfo.lastOrNull()?.index
+                        ?: 0) + 1) > layoutInfo.totalItemsCount - buffer
+                }
             }
             needRequest
         }

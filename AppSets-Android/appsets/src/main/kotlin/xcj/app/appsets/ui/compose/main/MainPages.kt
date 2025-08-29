@@ -442,7 +442,7 @@ fun MessageQuickAccessBar(
                                 MaterialTheme.colorScheme.outline,
                                 MaterialTheme.shapes.extraLarge
                             ),
-                        any = targetNewImMessage.session.imObj.avatarUrl
+                        model = targetNewImMessage.session.imObj.avatarUrl
                     )
                     Text(text = targetNewImMessage.session.imObj.name)
                 }
@@ -470,7 +470,7 @@ fun MessageQuickAccessBar(
                                                 MaterialTheme.colorScheme.outline,
                                                 MaterialTheme.shapes.extraLarge
                                             ),
-                                        any = systemContentInterface.avatarUrl
+                                        model = systemContentInterface.avatarUrl
                                     )
                                     Text(text = systemContentInterface.name ?: "", fontSize = 12.sp)
                                 }
@@ -491,7 +491,7 @@ fun MessageQuickAccessBar(
                                                 MaterialTheme.colorScheme.outline,
                                                 MaterialTheme.shapes.extraLarge
                                             ),
-                                        any = systemContentInterface.avatarUrl
+                                        model = systemContentInterface.avatarUrl
                                     )
                                     Text(text = systemContentInterface.name ?: "", fontSize = 12.sp)
                                 }

@@ -217,7 +217,7 @@ fun ApplicationContentComponent(
                         color = MaterialTheme.colorScheme.outline,
                         shape = BigAvatarShape
                     ),
-                any = application.bioUrl
+                model = application.bioUrl
             )
             Spacer(modifier = Modifier.height(16.dp))
             AnimatedVisibility(visible = getApplicationButtonVisible) {
@@ -401,7 +401,7 @@ fun DownloadBottomSheetContent(
                             MaterialTheme.colorScheme.outline,
                             MaterialTheme.shapes.extraLarge
                         ),
-                    any = application.bioUrl
+                    model = application.bioUrl
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(text = application.name ?: "")
@@ -728,7 +728,7 @@ fun VersionInfo(
                                         onAppScreenshotClick(screenShot, version.screenshotInfos)
                                     }
                                 ),
-                            any = screenShot.url
+                            model = screenShot.url
                         )
                         if (index == version.screenshotInfos.size - 1) {
                             Spacer(modifier = Modifier.width(12.dp))

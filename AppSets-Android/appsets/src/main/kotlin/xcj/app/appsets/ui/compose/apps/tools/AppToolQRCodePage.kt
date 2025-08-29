@@ -62,7 +62,6 @@ import kotlinx.coroutines.launch
 import xcj.app.appsets.ui.compose.custom_component.AnyImage
 import xcj.app.appsets.ui.compose.quickstep.QuickStepContent
 import xcj.app.appsets.ui.compose.quickstep.TextQuickStepContent
-import xcj.app.appsets.usecase.QRCodeUseCase
 import xcj.app.appsets.util.encrypt.AESHelper
 import xcj.app.appsets.util.encrypt.EncryptionUtil
 import xcj.app.appsets.util.encrypt.RSAHelper
@@ -327,7 +326,7 @@ fun TransformedQRPage(
         ) {
             Spacer(Modifier.height(32.dp))
             AnyImage(
-                any = transformedContent.bitmap,
+                model = transformedContent.bitmap,
                 modifier = Modifier
                     .size(sizeOfQRState.dp)
                     .border(

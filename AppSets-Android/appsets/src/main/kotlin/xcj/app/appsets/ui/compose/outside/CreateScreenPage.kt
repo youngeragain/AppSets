@@ -112,7 +112,7 @@ fun CreateScreenPage(
         ) {
             BackActionTopBar(
                 backButtonRightText = stringResource(xcj.app.appsets.R.string.create_screen),
-                endButtonText = stringResource(id = xcj.app.appsets.R.string.sure),
+                endButtonText = stringResource(id = xcj.app.appsets.R.string.ok),
                 onBackClick = {
                     onBackClick(false)
                 },
@@ -317,7 +317,7 @@ fun NewPostScreenComponent(
                 .fillMaxWidth(),
             placeholder = {
                 Text(
-                    text = stringResource(xcj.app.appsets.R.string.example_jiang_kaixin_li_wenyi),
+                    text = stringResource(xcj.app.appsets.R.string.example_jiang_kaixin),
                     fontSize = 11.sp
                 )
             },
@@ -349,7 +349,7 @@ fun NewPostScreenComponent(
                         AnyImage(
                             modifier = Modifier
                                 .fillMaxSize(),
-                            any = contentUriProvider.provideUri()
+                            model = contentUriProvider.provideUri()
                         )
                     }
                 }
@@ -428,7 +428,7 @@ fun NewPostScreenComponent(
                     modifier = Modifier
                         .fillMaxSize()
                         .clip(MaterialTheme.shapes.extraLarge),
-                    any = mediaStoreDataUri.provideUri()
+                    model = mediaStoreDataUri.provideUri()
                 )
             }
 

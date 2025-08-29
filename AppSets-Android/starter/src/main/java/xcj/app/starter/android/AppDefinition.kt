@@ -5,7 +5,7 @@ import android.net.Uri
 
 data class AppDefinition(
     val id: String
-) : ItemDefinition, Pinned {
+) : ItemDefinition, Pinable {
     var applicationInfo: ApplicationInfo? = null
     override var icon: Any? = null
     override var name: String? = null

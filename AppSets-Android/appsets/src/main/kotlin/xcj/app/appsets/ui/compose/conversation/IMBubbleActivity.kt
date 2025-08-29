@@ -45,6 +45,8 @@ import xcj.app.appsets.ui.compose.LocalUseCaseOfUserInfo
 import xcj.app.appsets.ui.compose.PageRouteNames
 import xcj.app.appsets.ui.compose.apps.AppDetailsPage
 import xcj.app.appsets.ui.compose.apps.DownloadBottomSheetContent
+import xcj.app.appsets.ui.compose.content_selection.ContentSelectionTypes
+import xcj.app.appsets.ui.compose.content_selection.defaultAllSelectionTypeParam
 import xcj.app.appsets.ui.compose.content_selection.defaultImageSelectionTypeParam
 import xcj.app.appsets.ui.compose.group.GroupInfoPage
 import xcj.app.appsets.ui.compose.main.DesignNaviHost
@@ -300,6 +302,13 @@ fun ImSessionBubbleNaviHostPages(navController: NavHostController) {
                             navController,
                             PageRouteNames.ConversationDetailsPage,
                             requestKey,
+                            requestSelectionTypeParams = defaultAllSelectionTypeParam { selectionType ->
+                                if (selectionType == ContentSelectionTypes.IMAGE) {
+                                    100
+                                } else {
+                                    1
+                                }
+                            }
                         )
                     },
                     onVoiceAction = {
@@ -447,7 +456,7 @@ fun ImSessionBubbleNaviHostPages(navController: NavHostController) {
                             navController,
                             PageRouteNames.UserProfilePage,
                             requestKey,
-                            requestSelectionTypeParams = defaultImageSelectionTypeParam
+                            requestSelectionTypeParams = defaultImageSelectionTypeParam()
                         )
                     },
                     onModifyProfileConfirmClick = {

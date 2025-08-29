@@ -120,6 +120,7 @@ import xcj.app.appsets.ui.compose.apps.tools.TOOL_TYPE
 import xcj.app.appsets.ui.compose.camera.DesignCameraActivity
 import xcj.app.appsets.ui.compose.content_selection.ContentSelectSheetContent
 import xcj.app.appsets.ui.compose.content_selection.ContentSelectionRequest
+import xcj.app.appsets.ui.compose.content_selection.ContentSelectionTypes
 import xcj.app.appsets.ui.compose.content_selection.defaultAllSelectionTypeParam
 import xcj.app.appsets.ui.compose.content_selection.defaultImageSelectionTypeParam
 import xcj.app.appsets.ui.compose.conversation.ConversationDetailsMoreInfoSheetContent
@@ -368,7 +369,7 @@ fun MainNaviHostPages(
                                 navController,
                                 PageRouteNames.CreateAppPage,
                                 requestKey,
-                                requestSelectionTypeParams = defaultImageSelectionTypeParam
+                                requestSelectionTypeParams = defaultImageSelectionTypeParam()
                             )
                         },
                         onConfirmClick = {
@@ -506,8 +507,10 @@ fun MainNaviHostPages(
                                 requestKey,
                                 requestSelectionTypeParams = listOf(
                                     ContentSelectionRequest.SelectionTypeParam(
-                                        requestType,
-                                        requestTypeMaxCount
+                                        selectionType = requestType,
+                                        maxCount = { selectionType ->
+                                            requestTypeMaxCount
+                                        }
                                     )
                                 ),
                                 defaultSelectionType = requestType
@@ -613,6 +616,13 @@ fun MainNaviHostPages(
                                 navController,
                                 PageRouteNames.ConversationDetailsPage,
                                 requestKey,
+                                requestSelectionTypeParams = defaultAllSelectionTypeParam { selectionType ->
+                                    if (selectionType == ContentSelectionTypes.IMAGE) {
+                                        100
+                                    } else {
+                                        1
+                                    }
+                                }
                             )
                         },
                         onVoiceAction = {
@@ -697,7 +707,14 @@ fun MainNaviHostPages(
                                 anyStateProvider,
                                 navController,
                                 PageRouteNames.ConversationDetailsPage,
-                                requestType
+                                requestType,
+                                requestSelectionTypeParams = defaultAllSelectionTypeParam { selectionType ->
+                                    if (selectionType == ContentSelectionTypes.IMAGE) {
+                                        100
+                                    } else {
+                                        1
+                                    }
+                                }
                             )
                         },
                         onVoiceAction = {
@@ -803,7 +820,7 @@ fun MainNaviHostPages(
                             navController,
                             PageRouteNames.SignUpPage,
                             requestKey,
-                            requestSelectionTypeParams = defaultImageSelectionTypeParam
+                            requestSelectionTypeParams = defaultImageSelectionTypeParam()
                         )
                     },
                     onConfirmClick = {
@@ -959,7 +976,7 @@ fun MainNaviHostPages(
                                 navController,
                                 PageRouteNames.CreateGroupPage,
                                 requestKey,
-                                requestSelectionTypeParams = defaultImageSelectionTypeParam
+                                requestSelectionTypeParams = defaultImageSelectionTypeParam()
                             )
                         }
                     )
@@ -1098,7 +1115,7 @@ fun MainNaviHostPages(
                                 navController,
                                 PageRouteNames.UserProfilePage,
                                 requestKey,
-                                requestSelectionTypeParams = defaultImageSelectionTypeParam
+                                requestSelectionTypeParams = defaultImageSelectionTypeParam()
                             )
                         },
                         onModifyProfileConfirmClick = {
@@ -1346,7 +1363,7 @@ fun showPictureViewDialog(
                     modifier = Modifier
                         .fillMaxSize()
                         .zoomable(rememberZoomableState()),
-                    any = dataList[pageIndex],
+                    model = dataList[pageIndex],
                     contentScale = ContentScale.FillWidth
                 )
             }
@@ -1405,7 +1422,7 @@ fun showContentSelectionDialog(
     navController: NavController,
     contextName: String,
     requestKey: String,
-    requestSelectionTypeParams: List<ContentSelectionRequest.SelectionTypeParam> = defaultAllSelectionTypeParam,
+    requestSelectionTypeParams: List<ContentSelectionRequest.SelectionTypeParam> = defaultAllSelectionTypeParam(),
     defaultSelectionType: String = requestSelectionTypeParams.first().selectionType,
 ) {
     val platformPermissionsUsageOfFile =
@@ -1517,7 +1534,8 @@ fun navigateToAppSetsLauncherActivity(context: Context) {
         context.startActivity(intent)
         if (context is Activity) {
             context.overridePendingTransition(
-                android.R.anim.fade_in, android.R.anim.fade_out
+                android.R.anim.fade_in,
+                android.R.anim.fade_out
             )
         }
     }.onFailure {

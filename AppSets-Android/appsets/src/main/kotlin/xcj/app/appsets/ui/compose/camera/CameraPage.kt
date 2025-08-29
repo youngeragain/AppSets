@@ -190,7 +190,7 @@ fun OthersQRCodeInfoHandlerSheetContent(scannedQRCodeInfo: QRCodeInfoScannedStat
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         Text(
-            stringResource(xcj.app.appsets.R.string.founded_unsupport_qr_code),
+            stringResource(xcj.app.appsets.R.string.founded_unsupported_qr_code),
             fontSize = 16.sp
         )
         SelectionContainer {
