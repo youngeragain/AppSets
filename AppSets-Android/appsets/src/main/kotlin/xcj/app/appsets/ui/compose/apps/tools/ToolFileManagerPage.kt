@@ -69,20 +69,22 @@ import xcj.app.appsets.ui.compose.apps.tools.file_manager.AbstractFile
 import xcj.app.appsets.ui.compose.apps.tools.file_manager.AbstractFileContext
 import xcj.app.appsets.ui.compose.apps.tools.file_manager.DefaultFile
 import xcj.app.appsets.ui.compose.custom_component.AnyImage
+import xcj.app.appsets.ui.compose.custom_component.HideNavBarWhenOnLaunch
 import xcj.app.appsets.ui.compose.quickstep.QuickStepContent
 import xcj.app.appsets.util.ktx.asComponentActivityOrNull
 import xcj.app.compose_share.components.BackActionTopBar
 import xcj.app.compose_share.components.DesignTextField
 import xcj.app.starter.android.util.FileUtil
 
-private const val TAG = "AppToolFileManagerPage"
+private const val TAG = "ToolFileManagerPage"
 
 @Composable
-fun AppToolFileManagerPage(
+fun ToolFileManagerPage(
     quickStepContents: List<QuickStepContent>?,
-    onBackClick: () -> Unit
+    onBackClick: () -> Unit,
+    onCreateFileClick: (AbstractFile<*>) -> Unit,
 ) {
-
+    HideNavBarWhenOnLaunch()
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     val lifecycle = lifecycleOwner.lifecycle
@@ -137,7 +139,7 @@ fun AppToolFileManagerPage(
         mutableStateOf(false)
     }
 
-    var isShowCreateDictionarySheet by remember {
+    var isShowCreateFolderSheet by remember {
         mutableStateOf(false)
     }
 
@@ -219,25 +221,28 @@ fun AppToolFileManagerPage(
             ) {
                 Column(
                     modifier = Modifier
-                        .align(Alignment.Center)
-                        .animateContentSize(alignment = Alignment.BottomCenter),
+                        .align(Alignment.Center),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    if (isShowFileCreation) {
+                    AnimatedVisibility(isShowFileCreation) {
                         FileItemCreation(
                             onCreateButtonClick = { createType ->
                                 if (createType == "file_folder") {
-                                    isShowCreateDictionarySheet = true
+                                    isShowCreateFolderSheet = true
+                                } else if (createType == "file") {
+                                    val abstractFile = currentAbstractFile
+                                    if (abstractFile != null) {
+                                        onCreateFileClick(abstractFile)
+                                    }
                                 }
                             }
                         )
                     }
                     Row(
                         modifier = Modifier
-                            .horizontalScroll(rememberScrollState())
                     ) {
-                        if (currentAbstractFile != null && !currentAbstractFile!!.isRoot) {
+                        AnimatedVisibility(currentAbstractFile != null && !currentAbstractFile!!.isRoot) {
                             FilledTonalIconButton(
                                 onClick = {
                                     abstractFileContext?.navigateUp()
@@ -340,13 +345,13 @@ fun AppToolFileManagerPage(
         }
     }
 
-    if (isShowCreateDictionarySheet) {
+    if (isShowCreateFolderSheet) {
         var newFolderName by remember {
             mutableStateOf("")
         }
         ModalBottomSheet(
             onDismissRequest = {
-                isShowCreateDictionarySheet = false
+                isShowCreateFolderSheet = false
             }
         ) {
             Column(
@@ -367,7 +372,7 @@ fun AppToolFileManagerPage(
                 FilledTonalButton(
                     modifier = Modifier.widthIn(min = TextFieldDefaults.MinWidth),
                     onClick = {
-                        isShowCreateDictionarySheet = false
+                        isShowCreateFolderSheet = false
                         coroutineScope.launch {
                             val abstractFile = abstractFileContext?.getCurrent()
                             if (abstractFile == null) {
@@ -379,7 +384,8 @@ fun AppToolFileManagerPage(
                                 abstractFileContext?.setCurrent(newAbstractFile, "push_update")
                             }
                         }
-                    }) {
+                    }
+                ) {
                     Text(text = stringResource(xcj.app.appsets.R.string.ok))
                 }
             }
@@ -408,14 +414,6 @@ fun FileItemDetails(abstractFile: AbstractFile<*>?, onClose: () -> Unit) {
             ) {
                 Row {
                     Spacer(modifier = Modifier.weight(1f))
-                    Text(
-                        text = abstractFile?.name ?: "",
-                        maxLines = 2,
-                        overflow = TextOverflow.StartEllipsis,
-                        modifier = Modifier
-                            .widthIn(max = TextFieldDefaults.MinWidth / 2)
-                    )
-                    Spacer(modifier = Modifier.weight(1f))
                     FilledTonalIconButton(
                         onClick = onClose
                     ) {
@@ -433,6 +431,15 @@ fun FileItemDetails(abstractFile: AbstractFile<*>?, onClose: () -> Unit) {
                             .size(250.dp)
                     )
                 }
+
+                Text(
+                    text = abstractFile.name,
+                    maxLines = 1,
+                    overflow = TextOverflow.StartEllipsis,
+                    modifier = Modifier
+                        .align(Alignment.CenterHorizontally)
+                        .widthIn(max = TextFieldDefaults.MinWidth)
+                )
             }
         }
     }

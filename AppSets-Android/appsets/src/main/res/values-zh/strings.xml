@@ -458,6 +458,9 @@
     <string name="remove">移除</string>
     <string name="there_is_nothing_here">什么都没有</string>
     <string name="no_x_permission">还没有%s权限</string>
-    <string name="new_folder">New Folder</string>
+    <string name="new_folder">新文件夹</string>
+    <string name="save_to_file">保存到文件</string>
+    <string name="save">保存</string>
+    <string name="new_file">新文件</string>
 
 </resources>

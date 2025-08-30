@@ -44,19 +44,25 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import xcj.app.appsets.server.model.WeatherInfo
 import xcj.app.appsets.ui.compose.LocalUseCaseOfSystem
+import xcj.app.appsets.ui.compose.custom_component.HideNavBarWhenOnLaunch
+import xcj.app.appsets.ui.compose.quickstep.QuickStepContent
 import xcj.app.compose_share.components.BackActionTopBar
 import xcj.app.compose_share.components.DesignTextField
 import java.util.Calendar
 
 @Composable
-fun AppToolWeatherPage(onBackClick: () -> Unit) {
+fun ToolWeatherPage(
+    quickStepContents: List<QuickStepContent>?,
+    onBackClick: () -> Unit,
+) {
+    HideNavBarWhenOnLaunch()
+    val configuration = LocalConfiguration.current
     Column {
         BackActionTopBar(
             onBackClick = onBackClick,
             backButtonRightText = stringResource(xcj.app.appsets.R.string.weather)
         )
         Box(Modifier.weight(1f)) {
-            val configuration = LocalConfiguration.current
             if (configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
                 LandscapeWeatherComponent()
             } else {
@@ -205,7 +211,8 @@ fun PortraitWeatherComponent() {
             }
 
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                Row(horizontalArrangement = Arrangement.spacedBy(12.dp),
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
                     modifier = Modifier
                         .background(
                             MaterialTheme.colorScheme.secondaryContainer,
@@ -223,7 +230,8 @@ fun PortraitWeatherComponent() {
                     )
                     Text(text = stringResource(id = xcj.app.appsets.R.string.auto))
                 }
-                Row(horizontalArrangement = Arrangement.spacedBy(12.dp),
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
                     modifier = Modifier
                         .background(
                             MaterialTheme.colorScheme.secondaryContainer,
@@ -387,7 +395,8 @@ fun LandscapeWeatherComponent() {
                 }
 
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
                         modifier = Modifier
                             .background(
                                 MaterialTheme.colorScheme.secondaryContainer,
@@ -404,7 +413,8 @@ fun LandscapeWeatherComponent() {
                         )
                         Text(text = stringResource(id = xcj.app.appsets.R.string.auto))
                     }
-                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
                         modifier = Modifier
                             .background(
                                 MaterialTheme.colorScheme.secondaryContainer,

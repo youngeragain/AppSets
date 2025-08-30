@@ -60,7 +60,7 @@ fun AppsCenterPage(
 
     val coroutineScope = rememberCoroutineScope()
 
-    var allApplications = appCenterPageState.apps.flatMap { it.applications }
+    val allApplications = appCenterPageState.apps.flatMap { it.applications }
     val iconAnimationStates = remember {
         val animations = mutableListOf<AnimationState<Float, AnimationVector1D>>()
         val allCount = allApplications.size

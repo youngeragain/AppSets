@@ -32,13 +32,13 @@ import xcj.app.appsets.ui.compose.quickstep.QuickStepContentHandler
 import xcj.app.appsets.ui.compose.quickstep.QuickStepContentHolder
 import xcj.app.appsets.ui.compose.quickstep.TextQuickStepContent
 
-class ToolGraphicQuickStepHandler : QuickStepContentHandler {
+class ToolFileCreateQuickStepHandler : QuickStepContentHandler {
 
     private var mQuickStepContentHolder: QuickStepContentHolder? = null
 
-    override val name: Int = xcj.app.appsets.R.string.graphic
+    override val name: Int = xcj.app.appsets.R.string.file
 
-    override val description: Int = xcj.app.appsets.R.string.graphic_description
+    override val description: Int = xcj.app.appsets.R.string.save_to_file
 
     override val category: Int = xcj.app.appsets.R.string.tools
 
@@ -56,7 +56,7 @@ class ToolGraphicQuickStepHandler : QuickStepContentHandler {
     override fun getContent(onClick: () -> Unit): @Composable (() -> Unit) {
         val contentCompose = @Composable {
             val navController = LocalNavHostController.current
-            ToolGraphicQuickStepHandlerContent(
+            ToolFileCreateQuickStepHandlerContent(
                 name = stringResource(name),
                 description = stringResource(description),
                 onClick = {
@@ -67,10 +67,10 @@ class ToolGraphicQuickStepHandler : QuickStepContentHandler {
                     }
 
                     if (quickStepContents == null) {
-                        return@ToolGraphicQuickStepHandlerContent
+                        return@ToolFileCreateQuickStepHandlerContent
                     }
                     navController.navigateWithBundle(
-                        PageRouteNames.ToolsDetailsPage + AppTool.TOOL_TYPE_AppSets_Graphic,
+                        PageRouteNames.ToolsDetailsPage + AppTool.TOOL_TYPE_AppSets_File_Creator,
                         bundleCreator = {
                             bundleOf().apply {
                                 putParcelableArrayList(
@@ -89,7 +89,7 @@ class ToolGraphicQuickStepHandler : QuickStepContentHandler {
 }
 
 @Composable
-fun ToolGraphicQuickStepHandlerContent(
+fun ToolFileCreateQuickStepHandlerContent(
     name: String,
     description: String,
     onClick: () -> Unit
@@ -112,7 +112,7 @@ fun ToolGraphicQuickStepHandlerContent(
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Icon(
-                    painter = painterResource(xcj.app.compose_share.R.drawable.ic_square_foot_24),
+                    painter = painterResource(xcj.app.compose_share.R.drawable.ic_insert_drive_file_24),
                     contentDescription = null
                 )
                 Column {

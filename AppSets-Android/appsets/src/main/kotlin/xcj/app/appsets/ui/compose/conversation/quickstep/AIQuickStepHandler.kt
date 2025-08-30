@@ -60,8 +60,7 @@ class AIQuickStepHandler : QuickStepContentHandler {
                     if (quickStepContents == null) {
                         return@AIQuickStepHandlerContent
                     }
-                    navigateWithBundle(
-                        navController,
+                    navController.navigateWithBundle(
                         PageRouteNames.ConversationOverviewPage,
                         bundleCreator = {
                             bundleOf().apply {

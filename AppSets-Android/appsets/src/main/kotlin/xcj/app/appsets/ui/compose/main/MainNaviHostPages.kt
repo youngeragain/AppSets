@@ -114,9 +114,14 @@ import xcj.app.appsets.ui.compose.apps.AppDetailsPage
 import xcj.app.appsets.ui.compose.apps.AppsCenterPage
 import xcj.app.appsets.ui.compose.apps.CreateAppPage
 import xcj.app.appsets.ui.compose.apps.DownloadBottomSheetContent
-import xcj.app.appsets.ui.compose.apps.tools.AppToolsDetailsPage
-import xcj.app.appsets.ui.compose.apps.tools.AppToolsPage
-import xcj.app.appsets.ui.compose.apps.tools.TOOL_TYPE
+import xcj.app.appsets.ui.compose.apps.tools.AppTool
+import xcj.app.appsets.ui.compose.apps.tools.ToolContentTransformPage
+import xcj.app.appsets.ui.compose.apps.tools.ToolFileCreatePage
+import xcj.app.appsets.ui.compose.apps.tools.ToolFileManagerPage
+import xcj.app.appsets.ui.compose.apps.tools.ToolGraphicPage
+import xcj.app.appsets.ui.compose.apps.tools.ToolIntentCallerPage
+import xcj.app.appsets.ui.compose.apps.tools.ToolStartPage
+import xcj.app.appsets.ui.compose.apps.tools.ToolWeatherPage
 import xcj.app.appsets.ui.compose.camera.DesignCameraActivity
 import xcj.app.appsets.ui.compose.content_selection.ContentSelectSheetContent
 import xcj.app.appsets.ui.compose.content_selection.ContentSelectionRequest
@@ -352,11 +357,11 @@ fun MainNaviHostPages(
                     })
 
                     CreateAppPage(
-                        onBackClick = navController::navigateUp,
                         createStep = createStep,
                         platform = platform,
                         versionInfo = versionInfo,
                         createApplicationPageState = appCreationUseCase.createApplicationPageState.value,
+                        onBackClick = navController::navigateUp,
                         onApplicationForCreateFiledChanged = appCreationUseCase::onApplicationForCreateFiledChanged,
                         onChoosePictureClick = { any, filedName, uriHolder ->
                             val requestKey = "CREATE_APP_PICTURE_REQUEST"
@@ -773,8 +778,8 @@ fun MainNaviHostPages(
                 }
                 LoginPage(
                     loginSignUpPageState = systemUseCase.loginSignUpPageState.value,
-                    onBackClick = navController::navigateUp,
                     qrCodeInfo = qrCodeUseCase.generatedQRCodeInfo.value,
+                    onBackClick = navController::navigateUp,
                     onLoggingFinish = {
                         val lastNavDestination = navigationUseCase.lastNavDestination
                         if (lastNavDestination.isNullOrEmpty()) {
@@ -831,52 +836,108 @@ fun MainNaviHostPages(
                 )
             }
 
-            composable(PageRouteNames.AppToolsPage) {
+            composable(PageRouteNames.ToolsStartPage) {
                 val context = LocalContext.current
-                AppToolsPage(
+                ToolStartPage(
                     onBackClick = navController::navigateUp,
                     onToolClick = { appTool ->
-                        val routeBuilder = appTool.routeBuilder
-                        if (routeBuilder == null) {
-                            navigateWithBundle(
-                                navController,
-                                PageRouteNames.AppToolsDetailsPage,
-                                bundleCreator = {
-                                    bundleOf().apply {
-                                        putString(TOOL_TYPE, appTool.type)
-                                    }
-                                }
-                            )
-                            return@AppToolsPage
-                        }
-                        if (appTool.routeType == "activity_on_host" ||
-                            appTool.routeType == "activity_on_lib"
-                        ) {
-                            routeBuilder.invoke(context, navController)
-                            return@AppToolsPage
-                        }
-                        val route = routeBuilder.invoke(context, navController)
-                        if (route == null) {
-                            return@AppToolsPage
-                        }
-                        if (route is String) {
-                            navController.navigate(route)
-                        }
+                        appTool.routeBuilder?.invoke(context, navController)
                     }
                 )
             }
 
-            composable(PageRouteNames.AppToolsDetailsPage) {
-                val type = it.arguments?.getString(TOOL_TYPE)
-
+            composable(PageRouteNames.ToolsDetailsPage + AppTool.TOOL_TYPE_AppSets_Transform) {
                 val quickStepContents =
                     BundleCompat.getParcelableArrayList(
                         it.arguments ?: BundleDefaults.empty,
                         Constants.QUICK_STEP_CONTENT,
                         QuickStepContent::class.java
                     )
-                AppToolsDetailsPage(
-                    type = type,
+
+                ToolContentTransformPage(
+                    quickStepContents = quickStepContents,
+                    onBackClick = navController::navigateUp
+                )
+            }
+
+            composable(PageRouteNames.ToolsDetailsPage + AppTool.TOOL_TYPE_AppSets_Weather) {
+                val quickStepContents =
+                    BundleCompat.getParcelableArrayList(
+                        it.arguments ?: BundleDefaults.empty,
+                        Constants.QUICK_STEP_CONTENT,
+                        QuickStepContent::class.java
+                    )
+
+                ToolWeatherPage(
+                    quickStepContents = quickStepContents,
+                    onBackClick = navController::navigateUp
+                )
+            }
+
+            composable(PageRouteNames.ToolsDetailsPage + AppTool.TOOL_TYPE_AppSets_Intent_Caller) {
+                val quickStepContents =
+                    BundleCompat.getParcelableArrayList(
+                        it.arguments ?: BundleDefaults.empty,
+                        Constants.QUICK_STEP_CONTENT,
+                        QuickStepContent::class.java
+                    )
+
+                ToolIntentCallerPage(
+                    quickStepContents = quickStepContents,
+                    onBackClick = navController::navigateUp
+                )
+            }
+
+            composable(PageRouteNames.ToolsDetailsPage + AppTool.TOOL_TYPE_AppSets_File_Manager) {
+                val quickStepContents =
+                    BundleCompat.getParcelableArrayList(
+                        it.arguments ?: BundleDefaults.empty,
+                        Constants.QUICK_STEP_CONTENT,
+                        QuickStepContent::class.java
+                    )
+
+                ToolFileManagerPage(
+                    quickStepContents = quickStepContents,
+                    onBackClick = navController::navigateUp,
+                    onCreateFileClick = { abstractFile ->
+                        navController.navigateWithBundle(PageRouteNames.ToolsDetailsPage + AppTool.TOOL_TYPE_AppSets_File_Creator) {
+                            bundleOf().apply {
+                                putParcelable(Constants.URI, abstractFile.asUri())
+                            }
+                        }
+                    }
+                )
+            }
+
+            composable(PageRouteNames.ToolsDetailsPage + AppTool.TOOL_TYPE_AppSets_File_Creator) {
+                val quickStepContents =
+                    BundleCompat.getParcelableArrayList(
+                        it.arguments ?: BundleDefaults.empty,
+                        Constants.QUICK_STEP_CONTENT,
+                        QuickStepContent::class.java
+                    )
+                val uri =
+                    BundleCompat.getParcelable(
+                        it.arguments ?: BundleDefaults.empty,
+                        Constants.URI,
+                        Uri::class.java
+                    )
+                ToolFileCreatePage(
+                    quickStepContents = quickStepContents,
+                    uri = uri,
+                    onBackClick = navController::navigateUp
+                )
+            }
+
+            composable(PageRouteNames.ToolsDetailsPage + AppTool.TOOL_TYPE_AppSets_Graphic) {
+                val quickStepContents =
+                    BundleCompat.getParcelableArrayList(
+                        it.arguments ?: BundleDefaults.empty,
+                        Constants.QUICK_STEP_CONTENT,
+                        QuickStepContent::class.java
+                    )
+
+                ToolGraphicPage(
                     quickStepContents = quickStepContents,
                     onBackClick = navController::navigateUp
                 )
@@ -1035,9 +1096,9 @@ fun MainNaviHostPages(
                         PlatformUseCase.providePlatformPermissions(context)
                 }
                 PrivacyPage(
-                    onBackClick = navController::navigateUp,
                     privacy = privacy,
                     platformPermissionsUsageList = androidPermissionsUsageList,
+                    onBackClick = navController::navigateUp,
                     onRequest = { permission, type ->
                         if (type == 0) {
                             PlatformUseCase.navigateToExternalSystemAppDetails(context)
@@ -1064,13 +1125,13 @@ fun MainNaviHostPages(
                     val systemUseCase = LocalUseCaseOfSystem.current
                     val screensUseCase = LocalUseCaseOfScreen.current
                     UserProfilePage(
-                        onBackClick = navController::navigateUp,
                         userProfilePageState = userInfoUseCase.currentUserInfoState.value,
                         userApplications = userInfoUseCase.applicationsState.value,
                         userFollowers = userInfoUseCase.followerUsersState.value,
                         userFollowed = userInfoUseCase.followedUsersState.value,
                         isLoginUserFollowedThisUser = userInfoUseCase.loggedUserFollowedState.value,
                         userScreens = screensUseCase.userScreensContainer.screens,
+                        onBackClick = navController::navigateUp,
                         onAddFriendClick = { userInfo ->
                             systemUseCase.requestAddFriend(
                                 context,
@@ -1236,8 +1297,7 @@ fun navigateToAppDetailsPage(
     appsUseCase: AppsUseCase,
     application: Application,
 ) {
-    navigateWithBundle(
-        navController,
+    navController.navigateWithBundle(
         PageRouteNames.AppDetailsPage,
         bundleCreator = {
             bundleOf().apply {
@@ -1247,27 +1307,6 @@ fun navigateToAppDetailsPage(
             }
         }
     )
-}
-
-@SuppressLint("RestrictedApi")
-fun navigateWithBundle(
-    navController: NavHostController,
-    route: String,
-    bundleCreator: () -> Bundle,
-) {
-    val destinationId = navController.findDestination(route)?.id
-    if (destinationId == null) {
-        PurpleLogger.current.d(
-            TAG,
-            "navigateWithBundle, route:$route, destinationId is null, return"
-        )
-        return
-    }
-    val navDirections: NavDirections = object : NavDirections {
-        override val actionId: Int = destinationId
-        override val arguments: Bundle = bundleCreator()
-    }
-    navController.navigate(navDirections)
 }
 
 @SuppressLint("RestrictedApi")

@@ -3,6 +3,7 @@ package xcj.app.appsets.ui.compose.quickstep
 import android.content.Context
 import xcj.app.appsets.ui.compose.apps.quickstep.ToolAppSetsShareQuickStepHandler
 import xcj.app.appsets.ui.compose.apps.quickstep.ToolContentTransformQuickStepHandler
+import xcj.app.appsets.ui.compose.apps.quickstep.ToolFileCreateQuickStepHandler
 import xcj.app.appsets.ui.compose.apps.quickstep.ToolGraphicQuickStepHandler
 import xcj.app.appsets.ui.compose.apps.quickstep.ToolIntentCallerQuickStepHandler
 import xcj.app.appsets.ui.compose.conversation.quickstep.AIQuickStepHandler
@@ -16,6 +17,7 @@ class QuickStepContentHandlerRegistry {
             registry.addContentHandler(ToolAppSetsShareQuickStepHandler())
             registry.addContentHandler(ToolIntentCallerQuickStepHandler())
             registry.addContentHandler(ToolGraphicQuickStepHandler())
+            registry.addContentHandler(ToolFileCreateQuickStepHandler())
             registry.addContentHandler(ConversationQuickStepHandler())
             registry.addContentHandler(AIQuickStepHandler())
             registry.addContentHandler(OutSideQuickStepHandler())

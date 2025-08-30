@@ -14,14 +14,19 @@ data class DefaultFile(
     var parentDefaultFile: DefaultFile? = null
 ) : AbstractFile<DefaultFile> {
 
-    override val name: String = file.name
+    override val name: String
+        get() = file.name
 
-    override val nameWithoutExtension: String = file.nameWithoutExtension
+    override val nameWithoutExtension: String
+        get() = file.nameWithoutExtension
 
     override val extension: String = file.extension
 
     override val isRoot: Boolean
         get() = parentDefaultFile == null || parentDefaultFile == this
+
+    override val isHidden: Boolean
+        get() = file.isHidden
 
     override fun getParent(): DefaultFile? {
         return parentDefaultFile

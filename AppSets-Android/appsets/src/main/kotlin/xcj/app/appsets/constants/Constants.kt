@@ -5,13 +5,14 @@ object Constants {
     const val STR_EMPTY = ""
     const val STR_NULL_LOWERCASE = "null"
 
-    const val QUICK_STEP_CONTENT = "QUICK_STEP_CONTENT"
-    const val APP_THEME = "APP_THEME"
-    const val APP_INFO = "APP_INFO"
+    const val URI = "uri"
+    const val QUICK_STEP_CONTENT = "quick_step_content"
+
+    const val APP_THEME = "app_theme"
+    const val APP_INFO = "app_info"
     const val PLATFORM_ID = "platform_id"
     const val VERSION_ID = "version_id"
     const val CREATE_STEP = "create_step"
-
 
     const val Android = "Android"
     const val IOS = "iOS"

@@ -25,8 +25,7 @@ import androidx.core.os.bundleOf
 import xcj.app.appsets.constants.Constants
 import xcj.app.appsets.ui.compose.LocalNavHostController
 import xcj.app.appsets.ui.compose.PageRouteNames
-import xcj.app.appsets.ui.compose.apps.tools.TOOL_TYPE
-import xcj.app.appsets.ui.compose.apps.tools.TOOL_TYPE_AppSets_Intent_Caller
+import xcj.app.appsets.ui.compose.apps.tools.AppTool
 import xcj.app.appsets.ui.compose.main.navigateWithBundle
 import xcj.app.appsets.ui.compose.quickstep.QuickStepContent
 import xcj.app.appsets.ui.compose.quickstep.QuickStepContentHandler
@@ -70,12 +69,10 @@ class ToolIntentCallerQuickStepHandler : QuickStepContentHandler {
                     if (quickStepContents == null) {
                         return@ToolIntentCallerQuickStepHandlerContent
                     }
-                    navigateWithBundle(
-                        navController,
-                        PageRouteNames.AppToolsDetailsPage,
+                    navController.navigateWithBundle(
+                        PageRouteNames.ToolsDetailsPage + AppTool.TOOL_TYPE_AppSets_Intent_Caller,
                         bundleCreator = {
                             bundleOf().apply {
-                                putString(TOOL_TYPE, TOOL_TYPE_AppSets_Intent_Caller)
                                 putParcelableArrayList(
                                     Constants.QUICK_STEP_CONTENT,
                                     quickStepContents

@@ -41,6 +41,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import xcj.app.appsets.ui.compose.custom_component.HideNavBarWhenOnLaunch
 import xcj.app.appsets.ui.compose.quickstep.QuickStepContent
 import xcj.app.appsets.ui.compose.quickstep.TextQuickStepContent
 import xcj.app.compose_share.components.BackActionTopBar
@@ -125,15 +126,16 @@ sealed interface IntentCallerModel {
 }
 
 @Composable
-fun AppToolIntentCallerPage(
+fun ToolIntentCallerPage(
     quickStepContents: List<QuickStepContent>?,
     onBackClick: () -> Unit
 ) {
+    HideNavBarWhenOnLaunch()
     val dateFormater = remember {
         SimpleDateFormat.getDateInstance()
     }
-    val calledIntentList: MutableList<IntentCallerModel> = remember {
-        mutableStateListOf()
+    val calledIntentList = remember {
+        mutableStateListOf<IntentCallerModel>()
     }
     Column {
         BackActionTopBar(
@@ -416,5 +418,5 @@ fun DeepLinkCaller(
 )
 @Composable
 fun AppToolIntentCallerPagePreview() {
-    AppToolIntentCallerPage(emptyList(), {})
+    ToolIntentCallerPage(emptyList(), {})
 }

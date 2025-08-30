@@ -73,7 +73,7 @@ import xcj.app.appsets.server.model.ScreenMediaFileUrl
 import xcj.app.appsets.server.model.ScreenReview
 import xcj.app.appsets.ui.compose.PageRouteNames
 import xcj.app.appsets.ui.compose.custom_component.AnyImage
-import xcj.app.appsets.ui.compose.custom_component.DesignBottomBackButton
+import xcj.app.appsets.ui.compose.custom_component.DesignBackButton
 import xcj.app.appsets.ui.compose.custom_component.HideNavBarWhenOnLaunch
 import xcj.app.appsets.ui.model.ScreenInfoForCard
 import xcj.app.compose_share.components.DesignHDivider
@@ -104,7 +104,7 @@ fun ScreenDetailsPage(
                     Alignment.Center
                 )
             )
-            DesignBottomBackButton(
+            DesignBackButton(
                 modifier = Modifier.align(Alignment.BottomCenter),
                 onClick = onBackClick
             )

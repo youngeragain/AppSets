@@ -55,7 +55,7 @@ import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
 import xcj.app.appsets.im.Bio
 import xcj.app.appsets.server.model.GroupInfo
 import xcj.app.appsets.ui.compose.custom_component.AnyImage
-import xcj.app.appsets.ui.compose.custom_component.DesignBottomBackButton
+import xcj.app.appsets.ui.compose.custom_component.DesignBackButton
 import xcj.app.appsets.ui.compose.theme.BigAvatarShape
 import xcj.app.appsets.ui.model.page_state.GroupInfoPageState
 import xcj.app.appsets.usecase.RelationsUseCase
@@ -88,7 +88,7 @@ fun GroupInfoPage(
                             .size(36.dp)
                             .align(Alignment.Center)
                     )
-                    DesignBottomBackButton(
+                    DesignBackButton(
                         modifier = Modifier.align(Alignment.BottomCenter),
                         onClick = onBackClick
                     )
@@ -103,7 +103,7 @@ fun GroupInfoPage(
                             modifier = Modifier.align(Alignment.Center)
                         )
                     }
-                    DesignBottomBackButton(
+                    DesignBackButton(
                         modifier = Modifier.align(Alignment.BottomCenter),
                         onClick = onBackClick
                     )

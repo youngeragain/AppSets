@@ -11,6 +11,7 @@ interface AbstractFile<T> : AbstractFileActions {
 
     val isRoot: Boolean
 
+    val isHidden: Boolean
 
     fun listChildren(): List<T>?
 

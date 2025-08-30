@@ -81,8 +81,7 @@ class OutSideQuickStepHandler : QuickStepContentHandler {
                     if (quickStepContents == null) {
                         return@OutSideQuickStepHandlerContent
                     }
-                    navigateWithBundle(
-                        navController,
+                    navController.navigateWithBundle(
                         PageRouteNames.CreateScreenPage,
                         bundleCreator = {
                             bundleOf().apply {

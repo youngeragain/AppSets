@@ -2,6 +2,7 @@ package xcj.app.appsets.ui.compose.main
 
 import android.annotation.SuppressLint
 import android.content.Intent
+import android.os.Bundle
 import androidx.activity.BackEventCompat
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
@@ -59,6 +60,7 @@ import androidx.compose.ui.unit.sp
 import androidx.core.net.toUri
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import androidx.navigation.NavDirections
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
@@ -109,6 +111,7 @@ import xcj.app.compose_share.components.ProgressedComposeContainerState
 import xcj.app.compose_share.ui.viewmodel.AnyStateViewModel.Companion.bottomSheetState
 import xcj.app.compose_share.ui.viewmodel.AnyStateViewModel.Companion.immerseContentState
 import xcj.app.starter.android.ktx.startWithHttpSchema
+import xcj.app.starter.android.util.PurpleLogger
 
 private const val TAG = "MainPages"
 
@@ -119,6 +122,26 @@ fun NavHostController.navigateWithClearStack(route: String) {
         }
         launchSingleTop = true
     }
+}
+
+@SuppressLint("RestrictedApi")
+fun NavHostController.navigateWithBundle(
+    route: String,
+    bundleCreator: () -> Bundle,
+) {
+    val destinationId = findDestination(route)?.id
+    if (destinationId == null) {
+        PurpleLogger.current.d(
+            TAG,
+            "navigateWithBundle, route:$route, destinationId is null, return"
+        )
+        return
+    }
+    val navDirections: NavDirections = object : NavDirections {
+        override val actionId: Int = destinationId
+        override val arguments: Bundle = bundleCreator()
+    }
+    navigate(navDirections)
 }
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")

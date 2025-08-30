@@ -85,7 +85,6 @@ import xcj.app.compose_share.components.DesignVDivider
 import xcj.app.compose_share.components.LocalAnyStateProvider
 import xcj.app.compose_share.ui.viewmodel.AnyStateViewModel.Companion.bottomSheetState
 
-
 @UnstableApi
 @Preview(showBackground = true)
 @Composable
@@ -102,11 +101,11 @@ fun CreateAppPagePreview() {
 @OptIn(ExperimentalLayoutApi::class, ExperimentalFoundationApi::class)
 @Composable
 fun CreateAppPage(
-    onBackClick: () -> Unit,
     createStep: String = ApplicationForCreate.CREATE_STEP_APPLICATION,
     platform: AppPlatform? = null,
     versionInfo: VersionInfo? = null,
     createApplicationPageState: CreateApplicationPageState,
+    onBackClick: () -> Unit,
     onApplicationForCreateFiledChanged: (Any, String, String) -> Unit,
     onChoosePictureClick: (Any, String, UriProvider?) -> Unit,
     onConfirmClick: () -> Unit,

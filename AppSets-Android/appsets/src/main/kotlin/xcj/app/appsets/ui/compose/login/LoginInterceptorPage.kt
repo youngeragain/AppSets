@@ -19,7 +19,7 @@ import androidx.navigation.NavController
 import xcj.app.appsets.account.LocalAccountManager
 import xcj.app.appsets.ui.compose.LocalPageRouteNameNeedLoggedProvider
 import xcj.app.appsets.ui.compose.PageRouteNames
-import xcj.app.appsets.ui.compose.custom_component.DesignBottomBackButton
+import xcj.app.appsets.ui.compose.custom_component.DesignBackButton
 import xcj.app.appsets.ui.compose.custom_component.HideNavBarWhenOnLaunch
 
 @Composable
@@ -51,7 +51,7 @@ fun LoginInterceptorPage(
                     .padding(horizontal = 12.dp, vertical = 6.dp),
                 color = MaterialTheme.colorScheme.primary
             )
-            DesignBottomBackButton(
+            DesignBackButton(
                 modifier = Modifier.align(Alignment.BottomCenter),
                 onClick = onBackClick
             )

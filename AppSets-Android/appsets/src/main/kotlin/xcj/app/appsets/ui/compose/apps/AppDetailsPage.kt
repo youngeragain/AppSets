@@ -71,7 +71,7 @@ import xcj.app.appsets.server.model.DownloadInfo
 import xcj.app.appsets.server.model.ScreenshotInfo
 import xcj.app.appsets.server.model.VersionInfo
 import xcj.app.appsets.ui.compose.custom_component.AnyImage
-import xcj.app.appsets.ui.compose.custom_component.DesignBottomBackButton
+import xcj.app.appsets.ui.compose.custom_component.DesignBackButton
 import xcj.app.appsets.ui.compose.custom_component.HideNavBarWhenOnLaunch
 import xcj.app.appsets.ui.compose.theme.BigAvatarShape
 import xcj.app.compose_share.components.BackActionTopBar
@@ -101,7 +101,7 @@ fun AppDetailsPage(
                     Alignment.Center
                 )
             )
-            DesignBottomBackButton(
+            DesignBackButton(
                 modifier = Modifier.align(Alignment.BottomCenter),
                 onClick = onBackClick
             )

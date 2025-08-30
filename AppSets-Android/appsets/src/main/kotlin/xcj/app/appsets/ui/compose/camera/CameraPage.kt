@@ -43,7 +43,7 @@ import com.google.mlkit.vision.barcode.BarcodeScannerOptions
 import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.barcode.common.Barcode
 import xcj.app.appsets.ui.compose.LocalUseCaseOfQRCode
-import xcj.app.appsets.ui.compose.custom_component.DesignBottomBackButton
+import xcj.app.appsets.ui.compose.custom_component.DesignBackButton
 import xcj.app.appsets.usecase.QRCodeInfoScannedState
 import xcj.app.appsets.usecase.QRCodeUseCase
 import xcj.app.compose_share.components.BottomSheetContainer
@@ -173,7 +173,7 @@ fun CameraContent(
                     .padding(12.dp)
             )
         }
-        DesignBottomBackButton(
+        DesignBackButton(
             modifier = Modifier.align(Alignment.BottomCenter),
             onClick = onBackClick
         )

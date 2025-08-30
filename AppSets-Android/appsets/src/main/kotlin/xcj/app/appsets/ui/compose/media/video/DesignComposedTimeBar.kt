@@ -56,7 +56,7 @@ import androidx.media3.ui.TimeBar
 import androidx.media3.ui.TimeBar.OnScrubListener
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import xcj.app.appsets.ui.compose.custom_component.DesignBottomBackButton
+import xcj.app.appsets.ui.compose.custom_component.DesignBackButton
 import xcj.app.starter.android.util.PurpleLogger
 import java.util.Formatter
 import java.util.Locale
@@ -351,7 +351,7 @@ class DesignComposedTimeBar(
 
 
                     val backPressedDispatcherOwner = LocalOnBackPressedDispatcherOwner.current
-                    DesignBottomBackButton(modifier = Modifier.align(Alignment.CenterHorizontally)) {
+                    DesignBackButton(modifier = Modifier.align(Alignment.CenterHorizontally)) {
                         backPressedDispatcherOwner?.onBackPressedDispatcher?.onBackPressed()
                     }
                 }

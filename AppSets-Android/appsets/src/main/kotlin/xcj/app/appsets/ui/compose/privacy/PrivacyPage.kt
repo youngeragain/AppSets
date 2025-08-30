@@ -34,16 +34,16 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import xcj.app.appsets.ui.compose.apps.tools.PageIndicator
-import xcj.app.appsets.ui.compose.custom_component.DesignBottomBackButton
+import xcj.app.appsets.ui.compose.custom_component.DesignBackButton
 import xcj.app.appsets.ui.compose.custom_component.HideNavBarWhenOnLaunch
 import xcj.app.starter.android.ui.model.PlatformPermissionsUsage
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun PrivacyPage(
-    onBackClick: () -> Unit,
     privacy: String?,
     platformPermissionsUsageList: List<PlatformPermissionsUsage>,
+    onBackClick: () -> Unit,
     onRequest: (PlatformPermissionsUsage, Int) -> Unit,
 ) {
     HideNavBarWhenOnLaunch()
@@ -71,7 +71,7 @@ fun PrivacyPage(
             }
         }
 
-        DesignBottomBackButton(
+        DesignBackButton(
             modifier = Modifier
                 .align(Alignment.BottomCenter), onClick = onBackClick
         )
@@ -205,5 +205,5 @@ fun PermissionCard(
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun PrivacyAndPermissionsPagePreview() {
-    PrivacyPage({}, null, emptyList(), { a, b -> })
+    PrivacyPage(null, emptyList(), {}, { a, b -> })
 }

@@ -60,6 +60,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import xcj.app.appsets.ui.compose.custom_component.AnyImage
+import xcj.app.appsets.ui.compose.custom_component.HideNavBarWhenOnLaunch
 import xcj.app.appsets.ui.compose.quickstep.QuickStepContent
 import xcj.app.appsets.ui.compose.quickstep.TextQuickStepContent
 import xcj.app.appsets.util.encrypt.AESHelper
@@ -95,10 +96,11 @@ sealed class TransformedContent(val transformedContent: String?, val bitmap: Bit
 
 @OptIn(ExperimentalEncodingApi::class)
 @Composable
-fun AppToolQRCodePage(
+fun ToolContentTransformPage(
     quickStepContents: List<QuickStepContent>?,
     onBackClick: () -> Unit
 ) {
+    HideNavBarWhenOnLaunch()
     Column {
         BackActionTopBar(
             onBackClick = onBackClick,
