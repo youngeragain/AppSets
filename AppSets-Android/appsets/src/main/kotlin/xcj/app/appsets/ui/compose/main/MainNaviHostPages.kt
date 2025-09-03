@@ -58,6 +58,7 @@ import androidx.core.os.BundleCompat
 import androidx.core.os.bundleOf
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.currentStateAsState
+import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import androidx.navigation.NavDirections
 import androidx.navigation.NavGraphBuilder
@@ -351,7 +352,7 @@ fun MainNaviHostPages(
                     val context = LocalContext.current
                     val appCreationUseCase = LocalUseCaseOfAppCreation.current
                     val anyStateProvider = LocalAnyStateProvider.current
-
+                    val coroutineScope = rememberCoroutineScope()
                     LaunchedEffect(key1 = true, block = {
                         appCreationUseCase.inflateApplication(application)
                     })
@@ -383,7 +384,9 @@ fun MainNaviHostPages(
                                     .toast()
                                 return@CreateAppPage
                             }
-                            appCreationUseCase.finishCreateApp(context)
+                            coroutineScope.launch {
+                                appCreationUseCase.finishCreateApp(context)
+                            }
                         }
                     )
                 }
@@ -398,13 +401,16 @@ fun MainNaviHostPages(
                     val context = LocalContext.current
                     val screensUseCase = LocalUseCaseOfScreen.current
                     val anyStateProvider = LocalAnyStateProvider.current
+                    val coroutineScope = rememberCoroutineScope()
                     OutSidePage(
                         screens = screensUseCase.systemScreensContainer.screens,
                         onBioClick = { bio ->
                             onBioClick(context, navController, bio)
                         },
                         onLoadMore = {
-                            screensUseCase.loadMore(null, false)
+                            coroutineScope.launch {
+                                screensUseCase.loadMore(null, false)
+                            }
                         },
                         onScreenMediaClick = { url, urls ->
                             handleScreenMediaClick(
@@ -427,10 +433,11 @@ fun MainNaviHostPages(
                     onBackClick = navController::navigateUp,
                 ) {
                     val context = LocalContext.current
-                    val screensUseCase = LocalUseCaseOfScreen.current
+                    val screenUseCase = LocalUseCaseOfScreen.current
                     val anyStateProvider = LocalAnyStateProvider.current
+                    val coroutineScope = rememberCoroutineScope()
                     ScreenDetailsPage(
-                        screenInfoForCard = screensUseCase.currentScreenInfoForCard.value,
+                        screenInfoForCard = screenUseCase.currentScreenInfoForCard.value,
                         onBackClick = navController::navigateUp,
                         onBioClick = { bio ->
                             onBioClick(context, navController, bio)
@@ -439,13 +446,19 @@ fun MainNaviHostPages(
                             navController.navigate(PageRouteNames.ScreenEditPage)
                         },
                         onCollectClick = { category ->
-                            screensUseCase.userClickCollectScreen(context, category)
+                            coroutineScope.launch {
+                                screenUseCase.userClickCollectScreen(context, category)
+                            }
                         },
                         onLikesClick = {
-                            screensUseCase.userClickLikeScreen(context)
+                            coroutineScope.launch {
+                                screenUseCase.userClickLikeScreen(context)
+                            }
                         },
                         onReviewConfirm = { reviewString ->
-                            screensUseCase.onReviewConfirm(context, reviewString)
+                            coroutineScope.launch {
+                                screenUseCase.onReviewConfirm(context, reviewString)
+                            }
                         },
                         onScreenMediaClick = { url, urls ->
                             handleScreenMediaClick(
@@ -458,10 +471,12 @@ fun MainNaviHostPages(
                             )
                         },
                         onPageShowPrevious = {
-                            screensUseCase.updatePageShowPrevious()
+                            coroutineScope.launch {
+                                screenUseCase.updatePageShowPrevious()
+                            }
                         },
                         onPageShowNext = {
-                            screensUseCase.updatePageShowNext()
+                            screenUseCase.updatePageShowNext()
                         }
                     )
                 }
@@ -483,20 +498,27 @@ fun MainNaviHostPages(
                         Constants.QUICK_STEP_CONTENT,
                         QuickStepContent::class.java
                     )
+                    val coroutineScope = rememberCoroutineScope()
                     CreateScreenPage(
                         quickStepContents = quickStepContents,
                         onBackClick = { shouldRefresh ->
                             if (shouldRefresh) {
-                                screenUseCase.loadOutSideScreens()
+                                coroutineScope.launch {
+                                    screenUseCase.loadOutSideScreens()
+                                }
                             }
                             navController.navigateUp()
                         },
                         onConfirmClick = {
-                            screenPostUseCase.createScreen(context)
+                            coroutineScope.launch {
+                                screenPostUseCase.createScreen(context)
+                            }
                         },
                         onIsPublicClick = screenPostUseCase::onIsPublicClick,
                         onGenerateClick = {
-                            screenPostUseCase.generateContent(context)
+                            coroutineScope.launch {
+                                screenPostUseCase.generateContent(context)
+                            }
                         },
                         onInputContent = screenPostUseCase::onInputContent,
                         onInputTopics = screenPostUseCase::onInputTopics,
@@ -541,11 +563,14 @@ fun MainNaviHostPages(
                     onBackClick = navController::navigateUp,
                 ) {
                     val screenUseCase = LocalUseCaseOfScreen.current
+                    val coroutineScope = rememberCoroutineScope()
                     ScreenEditPage(
                         screenInfo = screenUseCase.currentScreenInfoForCard.value.screenInfo,
                         onBackClick = navController::navigateUp,
                         onPublicStateChanged = { newIsPublic ->
-                            screenUseCase.changeScreenPublicState(newIsPublic)
+                            coroutineScope.launch {
+                                screenUseCase.changeScreenPublicState(newIsPublic)
+                            }
                         }
                     )
                 }
@@ -773,6 +798,7 @@ fun MainNaviHostPages(
                 val qrCodeUseCase = LocalUseCaseOfQRCode.current
                 val anyStateProvider = LocalAnyStateProvider.current
                 val navigationUseCase = LocalUseCaseOfNavigation.current
+                val coroutineScope = rememberCoroutineScope()
                 LaunchedEffect(true) {
                     systemUseCase.prepareLoginState()
                 }
@@ -791,7 +817,9 @@ fun MainNaviHostPages(
                         navController.navigate(PageRouteNames.SignUpPage)
                     },
                     onQRCodeLoginButtonClick = {
-                        qrCodeUseCase.requestGenerateQRCode()
+                        coroutineScope.launch {
+                            qrCodeUseCase.requestGenerateQRCode()
+                        }
                     },
                     onScanQRCodeButtonClick = {
                         navigateToCameraActivity(context, navController)
@@ -1025,7 +1053,7 @@ fun MainNaviHostPages(
                     val systemUseCase = LocalUseCaseOfSystem.current
                     val anyStateProvider = LocalAnyStateProvider.current
                     CreateGroupPage(
-                        createGroupState = systemUseCase.createGroupState.value,
+                        createGroupPageState = systemUseCase.createGroupPageState.value,
                         onBackClick = navController::navigateUp,
                         onConfirmAction = {
                             systemUseCase.createGroup(context)
@@ -1123,14 +1151,15 @@ fun MainNaviHostPages(
                     val anyStateProvider = LocalAnyStateProvider.current
                     val conversationUseCase = LocalUseCaseOfConversation.current
                     val systemUseCase = LocalUseCaseOfSystem.current
-                    val screensUseCase = LocalUseCaseOfScreen.current
+                    val screenUseCase = LocalUseCaseOfScreen.current
+                    val coroutineScope = rememberCoroutineScope()
                     UserProfilePage(
                         userProfilePageState = userInfoUseCase.currentUserInfoState.value,
                         userApplications = userInfoUseCase.applicationsState.value,
                         userFollowers = userInfoUseCase.followerUsersState.value,
                         userFollowed = userInfoUseCase.followedUsersState.value,
                         isLoginUserFollowedThisUser = userInfoUseCase.loggedUserFollowedState.value,
-                        userScreens = screensUseCase.userScreensContainer.screens,
+                        userScreens = screenUseCase.userScreensContainer.screens,
                         onBackClick = navController::navigateUp,
                         onAddFriendClick = { userInfo ->
                             systemUseCase.requestAddFriend(
@@ -1141,9 +1170,7 @@ fun MainNaviHostPages(
                             )
                         },
                         onFlipFollowClick = { userInfo ->
-                            systemUseCase.flipFollowToUserState(userInfo) {
-                                userInfoUseCase.updateUserFollowState()
-                            }
+                            systemUseCase.flipFollowToUserState(userInfo, userInfoUseCase)
                         },
                         onChatClick = { userInfo ->
                             conversationUseCase.updateCurrentSessionByBio(userInfo)
@@ -1167,7 +1194,9 @@ fun MainNaviHostPages(
                             )
                         },
                         onLoadMoreScreens = { uid, force ->
-                            screensUseCase.loadMore(uid, force)
+                            coroutineScope.launch {
+                                screenUseCase.loadMore(uid, force)
+                            }
                         },
                         onSelectUserAvatarClick = { requestKey ->
                             showContentSelectionDialog(
@@ -1180,7 +1209,9 @@ fun MainNaviHostPages(
                             )
                         },
                         onModifyProfileConfirmClick = {
-                            userInfoUseCase.modifyUserInfo(context)
+                            coroutineScope.launch {
+                                userInfoUseCase.modifyUserInfo(context)
+                            }
                         }
                     )
                 }
@@ -1271,7 +1302,9 @@ fun onBioClick(
         }
 
         is GroupInfo -> {
-            baseViewModel.groupInfoUseCase.updateGroupInfo(context, bio)
+            baseViewModel.viewModelScope.launch {
+                baseViewModel.groupInfoUseCase.updateGroupInfo(context, bio)
+            }
             navController.navigate(PageRouteNames.GroupInfoPage)
         }
 
@@ -1282,10 +1315,12 @@ fun onBioClick(
         }
 
         is ScreenInfo -> {
-            baseViewModel.screensUseCase.updateCurrentViewScreen(
-                navController.currentDestination?.route,
-                bio
-            )
+            baseViewModel.viewModelScope.launch {
+                baseViewModel.screensUseCase.updateCurrentViewScreen(
+                    navController.currentDestination?.route,
+                    bio
+                )
+            }
             navController.navigate(PageRouteNames.ScreenDetailsPage)
         }
     }
@@ -1360,7 +1395,9 @@ fun navigateToUserInfoPage(
     if (baseViewModel !is BaseIMViewModel) {
         return
     }
-    baseViewModel.userInfoUseCase.updateCurrentUserInfoByUid(uid)
+    baseViewModel.viewModelScope.launch {
+        baseViewModel.userInfoUseCase.updateCurrentUserInfoByUid(uid)
+    }
     navController.navigate(PageRouteNames.UserProfilePage)
 }
 

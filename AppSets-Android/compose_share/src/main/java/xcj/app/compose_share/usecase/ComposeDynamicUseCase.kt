@@ -5,10 +5,9 @@ import android.content.Context
 import android.content.Intent
 import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.LifecycleObserver
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
 import xcj.app.compose_share.dynamic.ComposeMethodsAware
 import xcj.app.compose_share.dynamic.ComposeMethodsWrapper
+import xcj.app.compose_share.dynamic.IComposeLifecycleAware
 import xcj.app.compose_share.dynamic.PluginsRegistry
 import xcj.app.starter.android.usecase.PlatformUseCase
 import xcj.app.starter.android.util.FileUtil
@@ -16,9 +15,7 @@ import xcj.app.starter.android.util.PurpleLogger
 import xcj.app.starter.test.LocalAndroidContextFileDir
 import xcj.app.starter.util.ContentType
 
-class ComposeDynamicUseCase(
-    private val coroutineScope: CoroutineScope
-) : ComposeMethodsAware, LifecycleObserver {
+class ComposeDynamicUseCase() : ComposeMethodsAware, IComposeLifecycleAware, LifecycleObserver {
 
     val composeMethodsState: MutableList<ComposeMethodsWrapper> =
         mutableStateListOf()
@@ -32,10 +29,8 @@ class ComposeDynamicUseCase(
         }
     }
 
-    fun doLoad() {
-        coroutineScope.launch {
-            PluginsRegistry.loadMethodsToContainer(this@ComposeDynamicUseCase)
-        }
+    suspend fun doLoad() {
+        PluginsRegistry.loadMethodsToContainer(this@ComposeDynamicUseCase)
     }
 
     fun onAddClick(context: Context) {
@@ -46,7 +41,7 @@ class ComposeDynamicUseCase(
         )
     }
 
-    fun onActivityResult(
+    suspend fun onActivityResult(
         context: Context,
         requestCode: Int,
         resultCode: Int,
@@ -59,24 +54,22 @@ class ComposeDynamicUseCase(
         ) {
             return
         }
-        coroutineScope.launch {
-            val desFilePath = FileUtil.copyFileToInternalStorage(
-                context,
-                fileUri,
-                LocalAndroidContextFileDir.current.dynamicAARDir,
-                null
+        val desFilePath = FileUtil.copyFileToInternalStorage(
+            context,
+            fileUri,
+            LocalAndroidContextFileDir.current.dynamicAARDir,
+            null
+        )
+        if (desFilePath.isNullOrEmpty()) {
+            PurpleLogger.current.d(
+                TAG,
+                "onExternalAARFileSelectActivityResult early return, desFilePath is null"
             )
-            if (desFilePath.isNullOrEmpty()) {
-                PurpleLogger.current.d(
-                    TAG,
-                    "onExternalAARFileSelectActivityResult early return, desFilePath is null"
-                )
-                return@launch
-            }
-            val result = PluginsRegistry.registerAARFromExternal(desFilePath)
-            if (result) {
-                doLoad()
-            }
+            return
+        }
+        val result = PluginsRegistry.registerAARFromExternal(desFilePath)
+        if (result) {
+            doLoad()
         }
     }
 
@@ -105,8 +98,8 @@ class ComposeDynamicUseCase(
         }
     }
 
-    fun onParentComposeDispose() {
-        composeMethodsState.forEach { it.iComposeMethods.onComposeDispose("parent dispose") }
+    override fun onComposeDispose(by: String?) {
+        composeMethodsState.forEach { it.iComposeMethods.onComposeDispose("dispose") }
         setMethodsContainer(mutableListOf())
     }
 

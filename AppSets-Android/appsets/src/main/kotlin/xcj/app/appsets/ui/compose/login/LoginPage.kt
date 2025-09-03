@@ -58,7 +58,7 @@ import xcj.app.appsets.ui.compose.custom_component.AnyImage
 import xcj.app.appsets.ui.compose.custom_component.DesignBackButton
 import xcj.app.appsets.ui.compose.custom_component.HideNavBarWhenOnLaunch
 import xcj.app.appsets.ui.model.page_state.LoginSignUpPageState
-import xcj.app.appsets.usecase.QRCodeInfoScannedState
+import xcj.app.appsets.ui.model.state.QRCodeInfoScannedState
 import xcj.app.appsets.usecase.QRCodeUseCase
 import xcj.app.compose_share.components.DesignTextField
 

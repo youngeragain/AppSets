@@ -2,7 +2,6 @@ package xcj.app.appsets.ui.compose.camera
 
 import android.app.Activity
 import androidx.compose.runtime.mutableStateOf
-import androidx.lifecycle.viewModelScope
 import com.google.mlkit.vision.barcode.common.Barcode
 import xcj.app.appsets.server.repository.QRCodeRepository
 import xcj.app.appsets.server.repository.UserRepository
@@ -22,7 +21,6 @@ class DesignCameraViewModel : AnyStateViewModel() {
     }
 
     val qrCodeUseCase: QRCodeUseCase = QRCodeUseCase(
-        viewModelScope,
         mutableStateOf(LoginSignUpPageState.Nothing),
         QRCodeRepository.getInstance(),
         UserRepository.getInstance()

@@ -7,6 +7,7 @@ import android.os.Bundle
 import androidx.compose.runtime.MutableState
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.lifecycleScope
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
@@ -19,8 +20,8 @@ import com.google.common.util.concurrent.FutureCallback
 import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
 import com.google.common.util.concurrent.MoreExecutors
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import xcj.app.appsets.constants.Constants
@@ -32,7 +33,6 @@ import xcj.app.starter.android.functions.timestampToMSS
 import xcj.app.starter.android.util.PurpleLogger
 
 class RemoteExoPlayer(
-    private val coroutineScope: CoroutineScope,
     private val audioPlayerState: MutableState<SpotLight.AudioPlayer>
 ) : DefaultLifecycleObserver {
 
@@ -42,6 +42,8 @@ class RemoteExoPlayer(
 
     private lateinit var controllerFuture: ListenableFuture<MediaController>
     private lateinit var mediaController: MediaController
+
+    private var mLifecycleOwner: LifecycleOwner? = null
 
     private var progressRetrieveJob: Job? = null
 
@@ -122,7 +124,9 @@ class RemoteExoPlayer(
                 )
                 updateAudioPlaybackState(playbackState)
                 if (playbackState == Player.STATE_READY && mediaController.playWhenReady) {
-                    startRetrieveProgress(mediaController)
+                    mLifecycleOwner?.lifecycleScope?.launch {
+                        startRetrieveProgress(mediaController)
+                    }
                 } else if (playbackState == Player.STATE_ENDED) {
                     endRetrieveProgress()
                 }
@@ -136,7 +140,7 @@ class RemoteExoPlayer(
         PurpleLogger.current.d(TAG, "endRetrieveProgress")
     }
 
-    private fun startRetrieveProgress(mediaController: MediaController) {
+    private suspend fun startRetrieveProgress(mediaController: MediaController) {
         val itemDurationMills = mediaController.duration
         PurpleLogger.current.d(TAG, "startRetrieveProgress, duration in ms:${itemDurationMills}")
         if (itemDurationMills == C.TIME_UNSET) {
@@ -144,20 +148,22 @@ class RemoteExoPlayer(
             return
         }
         progressRetrieveJob?.cancel()
-        progressRetrieveJob = coroutineScope.launch {
-            val oldState = audioPlayerState.value
-            val interval = 30L
-            val count = itemDurationMills / interval
-            for (i in 0..count) {
-                val newState = oldState.copy(
-                    duration = timestampToMSS(itemDurationMills),
-                    durationRawValue = itemDurationMills,
-                    currentDurationRawValue = mediaController.currentPosition,
-                    currentDuration = timestampToMSS(mediaController.currentPosition)
-                )
-                audioPlayerState.value = newState
-                PurpleLogger.current.d(TAG, "startRetrieveProgress:newState:${newState}")
-                delay(interval)
+        progressRetrieveJob = coroutineScope {
+            launch {
+                val oldState = audioPlayerState.value
+                val interval = 30L
+                val count = itemDurationMills / interval
+                for (i in 0..count) {
+                    val newState = oldState.copy(
+                        duration = timestampToMSS(itemDurationMills),
+                        durationRawValue = itemDurationMills,
+                        currentDurationRawValue = mediaController.currentPosition,
+                        currentDuration = timestampToMSS(mediaController.currentPosition)
+                    )
+                    audioPlayerState.value = newState
+                    PurpleLogger.current.d(TAG, "startRetrieveProgress:newState:${newState}")
+                    delay(interval)
+                }
             }
         }
     }

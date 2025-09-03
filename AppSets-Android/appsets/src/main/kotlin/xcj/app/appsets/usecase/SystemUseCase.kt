@@ -27,9 +27,11 @@ import xcj.app.appsets.server.repository.UserRepository
 import xcj.app.appsets.service.MainService
 import xcj.app.appsets.settings.AppConfig
 import xcj.app.appsets.ui.compose.PageRouteNames
-import xcj.app.appsets.ui.compose.content_selection.ContentSelectionResult
 import xcj.app.appsets.ui.compose.login.UserAgreementComposeViewProvider
+import xcj.app.appsets.ui.model.GroupInfoForCreate
+import xcj.app.appsets.ui.model.SelectedContentsStateHolder
 import xcj.app.appsets.ui.model.UserInfoForCreate
+import xcj.app.appsets.ui.model.page_state.CreateGroupPageState
 import xcj.app.appsets.ui.model.page_state.LoginSignUpPageState
 import xcj.app.appsets.util.ktx.toast
 import xcj.app.appsets.util.ktx.toastSuspend
@@ -45,78 +47,6 @@ import xcj.app.starter.test.LocalAndroidContextFileDir
 import xcj.app.starter.test.LocalApplication
 import xcj.app.starter.test.LocalPurpleCoroutineScope
 import java.util.Calendar
-
-data class SelectedContents(
-    val contents: MutableMap<String, ContentSelectionResult> = mutableMapOf()
-)
-
-class SelectedContentsStateHolder {
-
-    val selectedContentsState: MutableState<SelectedContents> = mutableStateOf(SelectedContents())
-
-    fun updateSelectedContent(contentSelectionResult: ContentSelectionResult) {
-        val selectedContents = selectedContentsState.value
-        selectedContents.contents.put(contentSelectionResult.request.requestKey, contentSelectionResult)
-        selectedContentsState.value = SelectedContents(selectedContents.contents)
-    }
-}
-
-
-data class GroupCreateInfo(
-    val name: String = "",
-    val membersCount: String = "",
-    val isPublic: Boolean = false,
-    val introduction: String = "",
-    val icon: UriProvider? = null
-) {
-    companion object {
-        fun updateGroupCreateIconUri(
-            state: MutableState<CreateGroupState>,
-            uriProvider: UriProvider?
-        ) {
-            val newGroupState = state.value as? CreateGroupState.NewGroup ?: return
-            state.value = newGroupState.copy(newGroupState.groupCreateInfo.copy(icon = uriProvider))
-        }
-
-        fun updateGroupCreatePublicStatus(
-            state: MutableState<CreateGroupState>,
-            isPublic: Boolean
-        ) {
-            val newGroupState = state.value as? CreateGroupState.NewGroup ?: return
-            state.value =
-                newGroupState.copy(newGroupState.groupCreateInfo.copy(isPublic = isPublic))
-        }
-
-        fun updateGroupCreateName(state: MutableState<CreateGroupState>, string: String) {
-            val newGroupState = state.value as? CreateGroupState.NewGroup ?: return
-            state.value = newGroupState.copy(newGroupState.groupCreateInfo.copy(name = string))
-        }
-
-        fun updateGroupCreateMembersCount(state: MutableState<CreateGroupState>, string: String) {
-            val newGroupState = state.value as? CreateGroupState.NewGroup ?: return
-            state.value =
-                newGroupState.copy(newGroupState.groupCreateInfo.copy(membersCount = string))
-        }
-
-        fun updateGroupCreateDescription(
-            state: MutableState<CreateGroupState>,
-            string: String
-        ) {
-            val newGroupState = state.value as? CreateGroupState.NewGroup ?: return
-            state.value =
-                newGroupState.copy(newGroupState.groupCreateInfo.copy(introduction = string))
-        }
-    }
-}
-
-sealed interface CreateGroupState {
-    val groupCreateInfo: GroupCreateInfo
-
-    data class NewGroup(override val groupCreateInfo: GroupCreateInfo) : CreateGroupState
-    data class Creating(override val groupCreateInfo: GroupCreateInfo) : CreateGroupState
-    data class CreateFailed(override val groupCreateInfo: GroupCreateInfo) : CreateGroupState
-    data class CreateFinish(override val groupCreateInfo: GroupCreateInfo) : CreateGroupState
-}
 
 class SystemUseCase(
     private val userRepository: UserRepository,
@@ -135,9 +65,9 @@ class SystemUseCase(
     val loginSignUpPageState: MutableState<LoginSignUpPageState> =
         mutableStateOf(LoginSignUpPageState.Nothing)
 
-    val createGroupState: MutableState<CreateGroupState> = mutableStateOf(
-        CreateGroupState.NewGroup(
-            GroupCreateInfo()
+    val createGroupPageState: MutableState<CreateGroupPageState> = mutableStateOf(
+        CreateGroupPageState.NewGroupPage(
+            GroupInfoForCreate()
         )
     )
 
@@ -402,7 +332,7 @@ class SystemUseCase(
         }
     }
 
-    fun flipFollowToUserState(userInfo: UserInfo, callback: (() -> Unit)? = null) {
+    fun flipFollowToUserState(userInfo: UserInfo, userInfoUseCase: UserInfoUseCase) {
         PurpleLogger.current.d(TAG, "flipFollowToUserState")
         coroutineScope.launch {
             requestNotNull(
@@ -414,7 +344,7 @@ class SystemUseCase(
                         TAG,
                         "flipFollowToUserState, result:${it}"
                     )
-                    callback?.invoke()
+                    userInfoUseCase.updateUserFollowState()
                 }
             )
         }
@@ -458,7 +388,7 @@ class SystemUseCase(
     }
 
     fun updateGroupCreateIconUri(uriProvider: UriProvider) {
-        GroupCreateInfo.updateGroupCreateIconUri(createGroupState, uriProvider)
+        GroupInfoForCreate.updateGroupCreateIconUri(createGroupPageState, uriProvider)
     }
 
     fun login(
@@ -669,17 +599,17 @@ class SystemUseCase(
     fun createGroup(
         context: Context
     ) {
-        val groupCreateState = createGroupState.value
-        if (groupCreateState !is CreateGroupState.NewGroup) {
+        val groupCreateState = createGroupPageState.value
+        if (groupCreateState !is CreateGroupPageState.NewGroupPage) {
             return
         }
-        val groupCreateInfo = groupCreateState.groupCreateInfo
+        val groupCreateInfo = groupCreateState.groupInfoForCreate
         if (groupCreateInfo.name.isEmpty()) {
             context.getString(xcj.app.appsets.R.string.group_name_can_not_be_empty).toast()
             return
         }
         PurpleLogger.current.d(TAG, "createGroup")
-        createGroupState.value = CreateGroupState.Creating(groupCreateInfo)
+        createGroupPageState.value = CreateGroupPageState.Creating(groupCreateInfo)
         coroutineScope.launch {
             requestNotNullRaw(
                 action = {
@@ -688,7 +618,8 @@ class SystemUseCase(
                     if (preCheckRes.data != true) {
                         context.getString(xcj.app.appsets.R.string.a_group_name_existed_please_retry)
                             .toastSuspend()
-                        createGroupState.value = CreateGroupState.NewGroup(groupCreateInfo)
+                        createGroupPageState.value =
+                            CreateGroupPageState.NewGroupPage(groupCreateInfo)
                         return@requestNotNullRaw
                     }
 
@@ -699,28 +630,33 @@ class SystemUseCase(
                     if (createChatGroupRes.data == true) {
                         context.getString(xcj.app.appsets.R.string.create_success).toastSuspend()
                         startServiceToSyncGroupsFromServer(context)
-                        createGroupState.value = CreateGroupState.CreateFinish(groupCreateInfo)
+                        createGroupPageState.value =
+                            CreateGroupPageState.CreateFinishPage(groupCreateInfo)
                         delay(300)
-                        createGroupState.value = CreateGroupState.NewGroup(groupCreateInfo)
+                        createGroupPageState.value =
+                            CreateGroupPageState.NewGroupPage(groupCreateInfo)
                     } else {
                         context.getString(xcj.app.appsets.R.string.create_failed).toastSuspend()
-                        createGroupState.value = CreateGroupState.CreateFailed(groupCreateInfo)
+                        createGroupPageState.value =
+                            CreateGroupPageState.CreateFailedPage(groupCreateInfo)
                         delay(300)
-                        createGroupState.value = CreateGroupState.NewGroup(groupCreateInfo)
+                        createGroupPageState.value =
+                            CreateGroupPageState.NewGroupPage(groupCreateInfo)
                     }
                 },
                 onFailed = {
                     context.getString(xcj.app.appsets.R.string.create_failed).toastSuspend()
-                    createGroupState.value = CreateGroupState.CreateFailed(groupCreateInfo)
+                    createGroupPageState.value =
+                        CreateGroupPageState.CreateFailedPage(groupCreateInfo)
                     delay(300)
-                    createGroupState.value = CreateGroupState.NewGroup(groupCreateInfo)
+                    createGroupPageState.value = CreateGroupPageState.NewGroupPage(groupCreateInfo)
                 }
             )
         }
     }
 
     override fun onComposeDispose(by: String?) {
-        createGroupState.value = CreateGroupState.NewGroup(GroupCreateInfo())
+        createGroupPageState.value = CreateGroupPageState.NewGroupPage(GroupInfoForCreate())
         loginSignUpPageState.value = LoginSignUpPageState.Nothing
     }
 

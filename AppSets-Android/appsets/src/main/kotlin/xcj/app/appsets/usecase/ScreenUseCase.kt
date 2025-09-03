@@ -4,9 +4,6 @@ import android.content.Context
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.async
-import kotlinx.coroutines.launch
 import xcj.app.appsets.account.LocalAccountManager
 import xcj.app.appsets.server.model.ScreenInfo
 import xcj.app.appsets.server.repository.ScreenRepository
@@ -21,7 +18,6 @@ import xcj.app.starter.server.requestNotNull
 import xcj.app.starter.server.requestNotNullRaw
 
 class ScreenUseCase(
-    private val coroutineScope: CoroutineScope,
     private val screenRepository: ScreenRepository
 ) : IComposeLifecycleAware {
 
@@ -50,12 +46,12 @@ class ScreenUseCase(
      */
     private var currentDestination: String? = null
 
-    fun loadOutSideScreens() {
+    suspend fun loadOutSideScreens() {
         PurpleLogger.current.d(TAG, "loadOutSideScreens")
         loadMore(null, true)
     }
 
-    private fun requestScreens(container: ScreensContainer) {
+    private suspend fun requestScreens(container: ScreensContainer) {
         PurpleLogger.current.d(
             TAG,
             "requestScreens, container uid:${container.uid}"
@@ -74,43 +70,41 @@ class ScreenUseCase(
         }
 
         container.isRequesting.value = true
-        coroutineScope.launch {
-            requestNotNull(
-                action = {
-                    val uid = container.uid
-                    if (uid.isNullOrEmpty()) {
-                        screenRepository
-                            .getIndexRecommendScreens(container.page, container.pageSize)
+        requestNotNull(
+            action = {
+                val uid = container.uid
+                if (uid.isNullOrEmpty()) {
+                    screenRepository
+                        .getIndexRecommendScreens(container.page, container.pageSize)
+                } else {
+                    screenRepository
+                        .getScreensByUid(uid, container.page, container.pageSize)
+                }
+            },
+            onSuccess = { userScreenInfoList ->
+                PurpleLogger.current.d(TAG, "requestScreens, onSuccess")
+                container.lastScreensSize = userScreenInfoList.size
+                if (userScreenInfoList.isNotEmpty()) {
+                    if (container.page == 1) {
+                        container.screens.clear()
+                        container.screens.addAll(userScreenInfoList)
                     } else {
-                        screenRepository
-                            .getScreensByUid(uid, container.page, container.pageSize)
+                        container.screens.addAll(userScreenInfoList)
                     }
-                },
-                onSuccess = { userScreenInfoList ->
-                    PurpleLogger.current.d(TAG, "requestScreens, onSuccess")
-                    container.lastScreensSize = userScreenInfoList.size
-                    if (userScreenInfoList.isNotEmpty()) {
-                        if (container.page == 1) {
-                            container.screens.clear()
-                            container.screens.addAll(userScreenInfoList)
-                        } else {
-                            container.screens.addAll(userScreenInfoList)
-                        }
-                    } else {
-                        container.page -= 1
-                    }
-                    container.isRequesting.value = false
-                },
-                onFailed = {
-                    PurpleLogger.current.e(TAG, "requestScreens, onFailed:${it}")
-                    container.isRequesting.value = false
+                } else {
                     container.page -= 1
                 }
-            )
-        }
+                container.isRequesting.value = false
+            },
+            onFailed = {
+                PurpleLogger.current.e(TAG, "requestScreens, onFailed:${it}")
+                container.isRequesting.value = false
+                container.page -= 1
+            }
+        )
     }
 
-    fun loadMore(uid: String? = null, force: Boolean = true) {
+    suspend fun loadMore(uid: String? = null, force: Boolean = true) {
         PurpleLogger.current.d(TAG, "loadMore")
         val container = if (uid.isNullOrEmpty()) {
             systemScreensContainer
@@ -127,7 +121,7 @@ class ScreenUseCase(
         requestScreens(container)
     }
 
-    fun updateCurrentViewScreen(currentDestination: String?, screenInfo: ScreenInfo?) {
+    suspend fun updateCurrentViewScreen(currentDestination: String?, screenInfo: ScreenInfo?) {
         this.currentDestination = currentDestination
         if (screenInfo == null) {
             currentScreenInfoForCard.value = ScreenInfoForCard()
@@ -139,175 +133,152 @@ class ScreenUseCase(
 
         val screenId = screenInfo.screenId ?: return
 
-        coroutineScope.launch {
-            requestNotNullRaw(
-                action = {
-                    val e = async {
-                        runCatching {
-                            val response = screenRepository.getScreenReviews(screenId)
-                            val reviews = response.data
-                            PurpleLogger.current.d(
-                                TAG,
-                                "updateCurrentViewScreen, screenReviews:$reviews"
-                            )
-                            if (!reviews.isNullOrEmpty()) {
-                                currentScreenInfoForCard.value =
-                                    currentScreenInfoForCard.value.copy(
-                                    reviews = reviews
-                                )
-                            }
-                        }
-                    }
-                    val a = async {
-                        runCatching {
-                            screenRepository.screenViewedByUser(screenId)
-                        }
-                    }
-                    val b = async {
-                        runCatching {
-                            val response = screenRepository.getScreenViewCount(screenId)
-                            val viewCount = response.data ?: 0
-                            PurpleLogger.current.d(
-                                TAG,
-                                "updateCurrentViewScreen, screenViewCount:$viewCount"
-                            )
-                            currentScreenInfoForCard.value = currentScreenInfoForCard.value.copy(
-                                viewCount = viewCount
-                            )
-                        }
-                    }
-                    val c = async {
-                        runCatching {
-                            val response = screenRepository.getScreenLikedCount(screenId)
-                            val likedCount = response.data ?: 0
-                            PurpleLogger.current.d(
-                                TAG,
-                                "updateCurrentViewScreen, screenLikedCount:${likedCount}"
-                            )
-
-                            currentScreenInfoForCard.value = currentScreenInfoForCard.value.copy(
-                                likedCount = likedCount
-                            )
-                        }
-                    }
-
-                    val d = async {
-                        runCatching {
-                            val response =
-                                screenRepository.screenIsCollectByUser(screenId)
-                            val isCollectedByUser = response.data == true
-                            PurpleLogger.current.d(
-                                TAG,
-                                "screenIsCollectByUser, screen is collect by user:${isCollectedByUser}"
-                            )
-                            currentScreenInfoForCard.value = currentScreenInfoForCard.value.copy(
-                                isCollectedByUser = isCollectedByUser
-                            )
-                        }
-                    }
-                    e.await()
-                    a.await()
-                    b.await()
-                    c.await()
-                    d.await()
-                },
-                onFailed = {
+        requestNotNullRaw(
+            action = {
+                runCatching {
+                    val response = screenRepository.getScreenReviews(screenId)
+                    val reviews = response.data
                     PurpleLogger.current.d(
                         TAG,
-                        "updateCurrentViewScreen, failed:${it}"
+                        "updateCurrentViewScreen, screenReviews:$reviews"
+                    )
+                    if (!reviews.isNullOrEmpty()) {
+                        currentScreenInfoForCard.value =
+                            currentScreenInfoForCard.value.copy(
+                                reviews = reviews
+                            )
+                    }
+                }
+                runCatching {
+                    screenRepository.screenViewedByUser(screenId)
+                }
+                runCatching {
+                    val response = screenRepository.getScreenViewCount(screenId)
+                    val viewCount = response.data ?: 0
+                    PurpleLogger.current.d(
+                        TAG,
+                        "updateCurrentViewScreen, screenViewCount:$viewCount"
+                    )
+                    currentScreenInfoForCard.value = currentScreenInfoForCard.value.copy(
+                        viewCount = viewCount
                     )
                 }
-            )
-        }
+                runCatching {
+                    val response = screenRepository.getScreenLikedCount(screenId)
+                    val likedCount = response.data ?: 0
+                    PurpleLogger.current.d(
+                        TAG,
+                        "updateCurrentViewScreen, screenLikedCount:${likedCount}"
+                    )
+
+                    currentScreenInfoForCard.value = currentScreenInfoForCard.value.copy(
+                        likedCount = likedCount
+                    )
+                }
+
+                runCatching {
+                    val response =
+                        screenRepository.screenIsCollectByUser(screenId)
+                    val isCollectedByUser = response.data == true
+                    PurpleLogger.current.d(
+                        TAG,
+                        "screenIsCollectByUser, screen is collect by user:${isCollectedByUser}"
+                    )
+                    currentScreenInfoForCard.value = currentScreenInfoForCard.value.copy(
+                        isCollectedByUser = isCollectedByUser
+                    )
+                }
+            },
+            onFailed = {
+                PurpleLogger.current.d(
+                    TAG,
+                    "updateCurrentViewScreen, failed:${it}"
+                )
+            }
+        )
     }
 
-    fun userClickLikeScreen(context: Context) {
+    suspend fun userClickLikeScreen(context: Context) {
         if (!LocalAccountManager.isLogged()) {
             context.getString(xcj.app.appsets.R.string.login_required).toast()
             return
         }
         val viewScreenInfo = currentScreenInfoForCard.value
         val screenId: String = viewScreenInfo.screenInfo?.screenId ?: return
-        coroutineScope.launch {
-            requestNotNull(
-                action = {
-                    screenRepository.screenLikeItByUser(screenId)
-                },
-                onSuccess = {
-                    if (it) {
-                        currentScreenInfoForCard.value = viewScreenInfo.copy(
-                            likedCount = viewScreenInfo.likedCount + 1
-                        )
-                    }
-                }
-            )
-        }
-    }
-
-
-    fun userClickCollectScreen(context: Context, category: String?) {
-        if (!LocalAccountManager.isLogged()) {
-            context.getString(xcj.app.appsets.R.string.login_required).toast()
-            return
-        }
-        val viewScreenInfo = currentScreenInfoForCard.value
-        val screenId: String = viewScreenInfo.screenInfo?.screenId ?: return
-        coroutineScope.launch {
-            requestNotNullRaw(
-                action = {
-                    if (viewScreenInfo.isCollectedByUser) {
-                        screenRepository.removeCollectedScreen(screenId)
-                    } else {
-                        screenRepository.screenCollectByUser(screenId, category)
-                    }
-
-                },
-                onSuccess = { response ->
-                    val isSuccess = response.data == true
-                    PurpleLogger.current.d(
-                        TAG,
-                        "userClickCollectScreen, isSuccess:$isSuccess"
-                    )
-                    if (response.data != true) {
-                        response.info.toastSuspend()
-                        return@requestNotNullRaw
-                    }
+        requestNotNull(
+            action = {
+                screenRepository.screenLikeItByUser(screenId)
+            },
+            onSuccess = {
+                if (it) {
                     currentScreenInfoForCard.value = viewScreenInfo.copy(
-                        isCollectedByUser = !viewScreenInfo.isCollectedByUser
+                        likedCount = viewScreenInfo.likedCount + 1
                     )
                 }
-            )
-        }
+            }
+        )
     }
 
-    fun changeScreenPublicState(isPublic: Boolean) {
+
+    suspend fun userClickCollectScreen(context: Context, category: String?) {
+        if (!LocalAccountManager.isLogged()) {
+            context.getString(xcj.app.appsets.R.string.login_required).toast()
+            return
+        }
+        val viewScreenInfo = currentScreenInfoForCard.value
+        val screenId: String = viewScreenInfo.screenInfo?.screenId ?: return
+        requestNotNullRaw(
+            action = {
+                if (viewScreenInfo.isCollectedByUser) {
+                    screenRepository.removeCollectedScreen(screenId)
+                } else {
+                    screenRepository.screenCollectByUser(screenId, category)
+                }
+
+            },
+            onSuccess = { response ->
+                val isSuccess = response.data == true
+                PurpleLogger.current.d(
+                    TAG,
+                    "userClickCollectScreen, isSuccess:$isSuccess"
+                )
+                if (response.data != true) {
+                    response.info.toastSuspend()
+                    return@requestNotNullRaw
+                }
+                currentScreenInfoForCard.value = viewScreenInfo.copy(
+                    isCollectedByUser = !viewScreenInfo.isCollectedByUser
+                )
+            }
+        )
+    }
+
+    suspend fun changeScreenPublicState(isPublic: Boolean) {
         val viewScreenInfo = currentScreenInfoForCard.value
         val screenId = viewScreenInfo.screenInfo?.screenId ?: return
-        coroutineScope.launch {
-            requestNotNull(
-                action = {
-                    screenRepository.changeScreenPublicState(screenId, isPublic)
-                },
-                onSuccess = { isChangeSuccess ->
-                    PurpleLogger.current.d(
-                        TAG,
-                        "changeScreenPublicState, result:$isChangeSuccess"
-                    )
-                    viewScreenInfo.screenInfo.isPublic = if (isPublic) {
-                        1
-                    } else {
-                        0
-                    }
-                    currentScreenInfoForCard.value = viewScreenInfo.copy(
-                        screenInfo = viewScreenInfo.screenInfo
-                    )
+        requestNotNull(
+            action = {
+                screenRepository.changeScreenPublicState(screenId, isPublic)
+            },
+            onSuccess = { isChangeSuccess ->
+                PurpleLogger.current.d(
+                    TAG,
+                    "changeScreenPublicState, result:$isChangeSuccess"
+                )
+                viewScreenInfo.screenInfo.isPublic = if (isPublic) {
+                    1
+                } else {
+                    0
                 }
-            )
-        }
+                currentScreenInfoForCard.value = viewScreenInfo.copy(
+                    screenInfo = viewScreenInfo.screenInfo
+                )
+            }
+        )
     }
 
 
-    private fun addScreenReview(context: Context, reviewString: String?) {
+    private suspend fun addScreenReview(context: Context, reviewString: String?) {
         if (!LocalAccountManager.isLogged()) {
             context.getString(xcj.app.appsets.R.string.login_required).toast()
             return
@@ -319,41 +290,39 @@ class ScreenUseCase(
             return
         }
         val screenInfo = viewScreenInfo.screenInfo ?: return
-        coroutineScope.launch {
-            requestNotNull(
-                action = {
-                    val response =
-                        screenRepository.addScreenReview(
-                            screenInfo.screenId!!,
-                            reviewString,
-                            true,
-                            null
-                        )
-                    if (response.data != true) {
-                        context.getString(xcj.app.appsets.R.string.reply_failed).toastSuspend()
-                        DesignResponse()
-                    } else {
-                        screenRepository.getScreenReviews(screenInfo.screenId)
-                    }
-                },
-                onSuccess = { screenReviews ->
-                    currentScreenInfoForCard.value = viewScreenInfo.copy(
-                        userInputReview = null,
-                        reviews = screenReviews
+        requestNotNull(
+            action = {
+                val response =
+                    screenRepository.addScreenReview(
+                        screenInfo.screenId!!,
+                        reviewString,
+                        true,
+                        null
                     )
-                },
-                onFailed = {
+                if (response.data != true) {
                     context.getString(xcj.app.appsets.R.string.reply_failed).toastSuspend()
+                    DesignResponse()
+                } else {
+                    screenRepository.getScreenReviews(screenInfo.screenId)
                 }
-            )
-        }
+            },
+            onSuccess = { screenReviews ->
+                currentScreenInfoForCard.value = viewScreenInfo.copy(
+                    userInputReview = null,
+                    reviews = screenReviews
+                )
+            },
+            onFailed = {
+                context.getString(xcj.app.appsets.R.string.reply_failed).toastSuspend()
+            }
+        )
     }
 
-    fun onReviewConfirm(context: Context, reviewString: String?) {
+    suspend fun onReviewConfirm(context: Context, reviewString: String?) {
         addScreenReview(context, reviewString)
     }
 
-    fun updatePageShowPrevious() {
+    suspend fun updatePageShowPrevious() {
         val currentScreenInfo = currentScreenInfoForCard.value.screenInfo
         if (currentDestination == PageRouteNames.OutSidePage) {
             if (systemScreensContainer.screens.size < 2) {

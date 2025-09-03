@@ -318,7 +318,6 @@ fun ToolFileManagerPage(
                                     val uri: Uri? =
                                         Uri.fromParts("package", context.packageName, null)
                                     intent.setData(uri)
-                                    // 启动这个Intent
                                     context.startActivity(intent)
                                 }
                             } else {

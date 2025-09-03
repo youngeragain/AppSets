@@ -44,28 +44,22 @@ abstract class BaseIMViewModel : AnyStateViewModel() {
     val nowSpaceContentUseCase: NowSpaceContentUseCase = NowSpaceContentUseCase.getInstance()
     val userInfoUseCase: UserInfoUseCase =
         UserInfoUseCase(
-            viewModelScope,
             UserRepository.getInstance(),
             AppSetsRepository.getInstance()
         )
     val groupInfoUseCase: GroupInfoUseCase = GroupInfoUseCase(
-        viewModelScope,
         UserRepository.getInstance()
     )
     val screensUseCase: ScreenUseCase = ScreenUseCase(
-        viewModelScope,
         ScreenRepository.getInstance()
     )
     val conversationUseCase: ConversationUseCase = ConversationUseCase.getInstance()
     //val mediaLocalExoUseCase: MediaLocalExoUseCase = MediaLocalExoUseCase()
 
     val mediaRemoteExoUseCase: MediaRemoteExoUseCase = MediaRemoteExoUseCase(
-        viewModelScope,
         AppSetsRepository.getInstance()
     )
-    val mediaAudioRecorderUseCase: MediaAudioRecorderUseCase = MediaAudioRecorderUseCase(
-        viewModelScope
-    )
+    val mediaAudioRecorderUseCase: MediaAudioRecorderUseCase = MediaAudioRecorderUseCase()
 
     @CallStep(1)
     open fun onActivityCreated(activity: ComponentActivity) {
@@ -108,7 +102,9 @@ abstract class BaseIMViewModel : AnyStateViewModel() {
             activity,
             SimpleFileIO.MESSAGE_KEY_ON_COMPONENTS_INITIALED
         ) {
-            doActionWhenFileIOInitialed()
+            viewModelScope.launch {
+                doActionWhenFileIOInitialed()
+            }
         }
 
         LocalMessager.observe<String, String>(
@@ -145,7 +141,7 @@ abstract class BaseIMViewModel : AnyStateViewModel() {
     }
 
     @CallStep(5)
-    open fun doActionWhenFileIOInitialed() {
+    open suspend fun doActionWhenFileIOInitialed() {
         PurpleLogger.current.d(TAG, "doActionWhenFileIOInitialed")
         systemUseCase.updateIMBrokerProperties()
         systemUseCase.restoreLoginStatusStateIfNeeded()

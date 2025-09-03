@@ -8,29 +8,29 @@ import xcj.app.appsets.usecase.MediaRemoteExoUseCase
 import xcj.app.starter.android.AppDefinition
 import xcj.app.starter.android.ItemDefinition
 
-sealed class SpotLight {
+sealed interface SpotLight {
 
     data class PinnedApp(
         val items: List<AppDefinition>
-    ) : SpotLight()
+    ) : SpotLight
 
     data class RecommendedItem(
         val items: List<ItemDefinition>
-    ) : SpotLight()
+    ) : SpotLight
 
     data class BingWallpaper(
         val items: List<MicrosoftBingWallpaper>
-    ) : SpotLight()
+    ) : SpotLight
 
     data class WordOfTheDay(
         val items: List<Any>
-    ) : SpotLight()
+    ) : SpotLight
 
     data class PopularSearch(
         val icon: Int,
         val title: String,
         val items: List<Any>
-    ) : SpotLight()
+    ) : SpotLight
 
     data class AudioPlayer(
         val playbackState: Int = Player.STATE_IDLE,
@@ -41,7 +41,7 @@ sealed class SpotLight {
         val currentDuration: String = Constants.STR_EMPTY,
         val currentDurationRawValue: Long = 0,
         val defaultOrder: Int = 1
-    ) : SpotLight() {
+    ) : SpotLight {
 
         val progress: Float
             get() {
@@ -74,6 +74,6 @@ sealed class SpotLight {
         val playId: String,
         val playbackState: Int? = null,
         val mediaMetadata: MediaMetadata? = null
-    ) : SpotLight()
+    ) : SpotLight
 
 }

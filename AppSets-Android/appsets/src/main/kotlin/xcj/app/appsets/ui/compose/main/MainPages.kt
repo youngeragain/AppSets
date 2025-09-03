@@ -323,6 +323,7 @@ fun NavigationBarContainer(
     val enable = systemUseCase.newVersionState.value?.forceUpdate != true
     val inSearchModel = navController.currentDestination?.route == PageRouteNames.SearchPage
     val searchUseCase = LocalUseCaseOfSearch.current
+    val coroutineScope = rememberCoroutineScope()
     NavigationBar(
         modifier = modifier,
         hazeState = hazeState,
@@ -355,13 +356,17 @@ fun NavigationBarContainer(
                         systemUseCase.loginToggle(context, navController)
                     },
                     onGenQRCodeClick = {
-                        qrCodeUseCase.requestGenerateQRCode()
+                        coroutineScope.launch {
+                            qrCodeUseCase.requestGenerateQRCode()
+                        }
                     },
                     onToScanQRCodeClick = {
                         navigateToCameraActivity(context, navController)
                     },
                     onQRCodeConfirmClick = {
-                        qrCodeUseCase.doConfirm()
+                        coroutineScope.launch {
+                            qrCodeUseCase.doConfirm()
+                        }
                     }
                 )
             }
@@ -609,6 +614,7 @@ fun rememberNavigationBarOnTabClickListener(navController: NavController): (TabI
     val context = LocalContext.current
     val screenUseCase = LocalUseCaseOfScreen.current
     val conversationUseCase = LocalUseCaseOfConversation.current
+    val coroutineScope = rememberCoroutineScope()
     val listener: (TabItem, TabAction?) -> Unit = remember {
         { tab, tabAction ->
             if (tabAction != null) {
@@ -629,7 +635,9 @@ fun rememberNavigationBarOnTabClickListener(navController: NavController): (TabI
                         if (tabAction.route.isNullOrEmpty()) {
                             when (tabAction.action) {
                                 TabAction.ACTION_REFRESH -> {
-                                    screenUseCase.loadOutSideScreens()
+                                    coroutineScope.launch {
+                                        screenUseCase.loadOutSideScreens()
+                                    }
                                 }
                             }
                         } else {
