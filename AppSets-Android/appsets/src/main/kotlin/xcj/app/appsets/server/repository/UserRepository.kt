@@ -8,9 +8,9 @@ import xcj.app.appsets.server.api.ApiProvider
 import xcj.app.appsets.server.api.UserApi
 import xcj.app.appsets.server.model.GroupInfo
 import xcj.app.appsets.server.model.UserInfo
+import xcj.app.appsets.ui.model.GroupInfoForCreate
 import xcj.app.appsets.ui.model.UserInfoForCreate
 import xcj.app.appsets.ui.model.UserInfoForModify
-import xcj.app.appsets.usecase.GroupCreateInfo
 import xcj.app.appsets.util.DeviceInfoHelper
 import xcj.app.appsets.util.PictureUrlMapper
 import xcj.app.io.components.LocalFileIO
@@ -99,20 +99,20 @@ class UserRepository(private val userApi: UserApi) {
 
     suspend fun createChatGroup(
         context: Context,
-        groupCreateInfo: GroupCreateInfo
+        groupInfoForCreate: GroupInfoForCreate
     ): DesignResponse<Boolean> = withContext(Dispatchers.IO) {
         PurpleLogger.current.d(TAG, "createChatGroup, thread:${Thread.currentThread()}")
         var iconUrlEndpoint: String? = null
-        val uri = groupCreateInfo.icon?.provideUri()
+        val uri = groupInfoForCreate.icon?.provideUri()
         if (uri != null) {
             iconUrlEndpoint = UUID.randomUUID().toString()
             LocalFileIO.current.uploadWithUri(context, uri, iconUrlEndpoint)
         }
         return@withContext userApi.createChatGroup(hashMapOf<String, Any?>().apply {
-            put("name", groupCreateInfo.name)
-            put("maxMembers", groupCreateInfo.membersCount)
-            put("isPublic", groupCreateInfo.isPublic)
-            put("introduction", groupCreateInfo.introduction)
+            put("name", groupInfoForCreate.name)
+            put("maxMembers", groupInfoForCreate.membersCount)
+            put("isPublic", groupInfoForCreate.isPublic)
+            put("introduction", groupInfoForCreate.introduction)
             iconUrlEndpoint?.let {
                 put("iconUrl", it)
             }

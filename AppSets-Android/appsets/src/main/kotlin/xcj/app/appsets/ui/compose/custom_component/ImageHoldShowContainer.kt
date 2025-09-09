@@ -74,7 +74,7 @@ fun ImageHoldShowContainer(url: String) {
                 .align(Alignment.TopCenter)
                 .size(size.value)
                 .clip(MaterialTheme.shapes.extraLarge),
-            any = url,
+            model = url,
             contentScale = ContentScale.FillWidth
         )
     }

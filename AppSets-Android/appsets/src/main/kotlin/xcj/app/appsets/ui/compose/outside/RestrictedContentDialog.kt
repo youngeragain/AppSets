@@ -97,7 +97,7 @@ fun RestrictedContentDialog(
                         contentPadding = PaddingValues(0.dp)
                     ) {
                         val textId = if (requestToView) {
-                            xcj.app.appsets.R.string.sure
+                            xcj.app.appsets.R.string.ok
                         } else {
                             xcj.app.appsets.R.string.request_to_view
                         }

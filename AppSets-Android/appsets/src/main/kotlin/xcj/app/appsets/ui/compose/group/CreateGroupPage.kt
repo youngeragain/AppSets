@@ -41,20 +41,19 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-
 import xcj.app.appsets.ui.compose.LocalUseCaseOfSystem
-import xcj.app.compose_share.components.DesignTextField
-import xcj.app.appsets.ui.compose.custom_component.HideNavBarWhenOnLaunch
 import xcj.app.appsets.ui.compose.custom_component.AnyImage
-import xcj.app.appsets.usecase.CreateGroupState
-import xcj.app.appsets.usecase.GroupCreateInfo
+import xcj.app.appsets.ui.compose.custom_component.HideNavBarWhenOnLaunch
+import xcj.app.appsets.ui.model.GroupInfoForCreate
+import xcj.app.appsets.ui.model.page_state.CreateGroupPageState
 import xcj.app.compose_share.components.BackActionTopBar
+import xcj.app.compose_share.components.DesignTextField
 
 private const val TAG = "CreateGroupPage"
 
 @Composable
 fun CreateGroupPage(
-    createGroupState: CreateGroupState,
+    createGroupPageState: CreateGroupPageState,
     onBackClick: () -> Unit,
     onConfirmAction: () -> Unit,
     onSelectGroupIconClick: (String) -> Unit
@@ -70,7 +69,7 @@ fun CreateGroupPage(
         Column {
             BackActionTopBar(
                 backButtonRightText = stringResource(id = xcj.app.appsets.R.string.create_group),
-                endButtonText = stringResource(id = xcj.app.appsets.R.string.sure),
+                endButtonText = stringResource(id = xcj.app.appsets.R.string.ok),
                 onBackClick = onBackClick,
                 onEndButtonClick = onConfirmAction
             )
@@ -106,10 +105,10 @@ fun CreateGroupPage(
                             contentAlignment = Alignment.Center
                         ) {
                             val groupIconUri =
-                                createGroupState.groupCreateInfo.icon?.provideUri()
+                                createGroupPageState.groupInfoForCreate.icon?.provideUri()
                                     ?: xcj.app.compose_share.R.drawable.ic_emoji_nature_24
                             AnyImage(
-                                any = groupIconUri,
+                                model = groupIconUri,
                                 modifier = Modifier
                                     .size(98.dp)
                                     .clip(MaterialTheme.shapes.extraLarge)
@@ -136,10 +135,10 @@ fun CreateGroupPage(
                 Text(text = stringResource(id = xcj.app.appsets.R.string.status))
                 Row() {
                     FilterChip(
-                        selected = createGroupState.groupCreateInfo.isPublic,
+                        selected = createGroupPageState.groupInfoForCreate.isPublic,
                         onClick = {
-                            GroupCreateInfo.updateGroupCreatePublicStatus(
-                                systemUseCase.createGroupState,
+                            GroupInfoForCreate.updateGroupCreatePublicStatus(
+                                systemUseCase.createGroupPageState,
                                 true
                             )
                         },
@@ -150,10 +149,10 @@ fun CreateGroupPage(
                     )
                     Spacer(modifier = Modifier.width(12.dp))
                     FilterChip(
-                        selected = !createGroupState.groupCreateInfo.isPublic,
+                        selected = !createGroupPageState.groupInfoForCreate.isPublic,
                         onClick = {
-                            GroupCreateInfo.updateGroupCreatePublicStatus(
-                                systemUseCase.createGroupState,
+                            GroupInfoForCreate.updateGroupCreatePublicStatus(
+                                systemUseCase.createGroupPageState,
                                 false
                             )
                         },
@@ -174,14 +173,17 @@ fun CreateGroupPage(
                 DesignTextField(
                     modifier = Modifier.fillMaxWidth(),
                     maxLines = 1,
-                    value = createGroupState.groupCreateInfo.name,
+                    value = createGroupPageState.groupInfoForCreate.name,
                     onValueChange = {
                         val name = if (it.length > 30) {
                             it.substring(0, 30)
                         } else {
                             it
                         }
-                        GroupCreateInfo.updateGroupCreateName(systemUseCase.createGroupState, name)
+                        GroupInfoForCreate.updateGroupCreateName(
+                            systemUseCase.createGroupPageState,
+                            name
+                        )
                     }, placeholder = {
                         Text(text = stringResource(xcj.app.appsets.R.string.group_name))
                     })
@@ -192,11 +194,11 @@ fun CreateGroupPage(
                 DesignTextField(
                     modifier = Modifier.fillMaxWidth(),
                     maxLines = 1,
-                    value = createGroupState.groupCreateInfo.membersCount,
+                    value = createGroupPageState.groupInfoForCreate.membersCount,
                     keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
                     onValueChange = {
-                        GroupCreateInfo.updateGroupCreateMembersCount(
-                            systemUseCase.createGroupState,
+                        GroupInfoForCreate.updateGroupCreateMembersCount(
+                            systemUseCase.createGroupPageState,
                             it.toIntOrNull()?.toString() ?: "100"
                         )
                     },
@@ -210,10 +212,10 @@ fun CreateGroupPage(
                 )
                 DesignTextField(
                     modifier = Modifier.fillMaxWidth(),
-                    value = createGroupState.groupCreateInfo.introduction,
+                    value = createGroupPageState.groupInfoForCreate.introduction,
                     onValueChange = {
-                        GroupCreateInfo.updateGroupCreateDescription(
-                            systemUseCase.createGroupState,
+                        GroupInfoForCreate.updateGroupCreateDescription(
+                            systemUseCase.createGroupPageState,
                             it
                         )
                     },
@@ -225,15 +227,15 @@ fun CreateGroupPage(
             }
         }
 
-        CreateGroupIndicator(createGroupState = createGroupState)
+        CreateGroupIndicator(createGroupPageState = createGroupPageState)
     }
 
 }
 
 @Composable
-fun CreateGroupIndicator(createGroupState: CreateGroupState) {
+fun CreateGroupIndicator(createGroupPageState: CreateGroupPageState) {
     AnimatedVisibility(
-        visible = createGroupState is CreateGroupState.Creating,
+        visible = createGroupPageState is CreateGroupPageState.Creating,
         enter = fadeIn(tween()) + scaleIn(
             tween(),
             2f

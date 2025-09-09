@@ -1,6 +1,5 @@
 package xcj.app.appsets.ui.compose.apps.quickstep
 
-import android.content.Context
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -19,35 +18,29 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.os.bundleOf
 import xcj.app.appsets.constants.Constants
 import xcj.app.appsets.ui.compose.LocalNavHostController
 import xcj.app.appsets.ui.compose.PageRouteNames
-import xcj.app.appsets.ui.compose.apps.tools.TOOL_TYPE
-import xcj.app.appsets.ui.compose.apps.tools.TOOL_TYPE_AppSets_Intent_Caller
+import xcj.app.appsets.ui.compose.apps.tools.AppTool
 import xcj.app.appsets.ui.compose.main.navigateWithBundle
 import xcj.app.appsets.ui.compose.quickstep.QuickStepContent
 import xcj.app.appsets.ui.compose.quickstep.QuickStepContentHandler
 import xcj.app.appsets.ui.compose.quickstep.QuickStepContentHolder
 import xcj.app.appsets.ui.compose.quickstep.TextQuickStepContent
 
-class ToolIntentCallerQuickStepHandler(context: Context) : QuickStepContentHandler(context) {
+class ToolIntentCallerQuickStepHandler : QuickStepContentHandler {
 
     private var mQuickStepContentHolder: QuickStepContentHolder? = null
 
-    override fun getName(): String {
-        return context.getString(xcj.app.appsets.R.string.intent_caller)
-    }
+    override val name: Int = xcj.app.appsets.R.string.intent_caller
 
-    override fun getDescription(): String {
-        return context.getString(xcj.app.appsets.R.string.deeplink)
-    }
+    override val description: Int = xcj.app.appsets.R.string.deeplink
 
-    override fun getCategory(): String {
-        return context.getString(xcj.app.appsets.R.string.tools)
-    }
+    override val category: Int = xcj.app.appsets.R.string.tools
 
     override fun accept(quickStepContentHolder: QuickStepContentHolder): Boolean {
         val firstTextQuickStepContent =
@@ -64,8 +57,8 @@ class ToolIntentCallerQuickStepHandler(context: Context) : QuickStepContentHandl
         val contentCompose = @Composable {
             val navController = LocalNavHostController.current
             ToolIntentCallerQuickStepHandlerContent(
-                name = getName(),
-                description = getDescription(),
+                name = stringResource(name),
+                description = stringResource(description),
                 onClick = {
                     val quickStepContents = mQuickStepContentHolder?.quickStepContents?.let {
                         arrayListOf<QuickStepContent>().apply {
@@ -76,12 +69,10 @@ class ToolIntentCallerQuickStepHandler(context: Context) : QuickStepContentHandl
                     if (quickStepContents == null) {
                         return@ToolIntentCallerQuickStepHandlerContent
                     }
-                    navigateWithBundle(
-                        navController,
-                        PageRouteNames.AppToolsDetailsPage,
+                    navController.navigateWithBundle(
+                        PageRouteNames.ToolsDetailsPage + AppTool.TOOL_TYPE_AppSets_Intent_Caller,
                         bundleCreator = {
                             bundleOf().apply {
-                                putString(TOOL_TYPE, TOOL_TYPE_AppSets_Intent_Caller)
                                 putParcelableArrayList(
                                     Constants.QUICK_STEP_CONTENT,
                                     quickStepContents

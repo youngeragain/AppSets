@@ -42,14 +42,14 @@ import xcj.app.appsets.ui.compose.custom_component.ImageButtonComponent
 import xcj.app.appsets.ui.compose.custom_component.SwipeContainer
 import xcj.app.appsets.ui.compose.search.LocalAccountUserAvatar
 import xcj.app.appsets.ui.model.state.AccountStatus
-import xcj.app.appsets.usecase.QRCodeInfoScannedState
+import xcj.app.appsets.ui.model.state.QRCodeInfoScannedState
 import xcj.app.appsets.usecase.QRCodeUseCase
 import xcj.app.appsets.usecase.SystemUseCase
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LiteSettingsSheetContent(
-    qrCodeInfo: QRCodeInfoScannedState.AppSetsQRCodeInfo?,
+    qrCodeInfo: QRCodeInfoScannedState?,
     onBioClick: () -> Unit,
     onSettingsClick: () -> Unit,
     onSettingsLoginClick: () -> Unit,
@@ -102,9 +102,10 @@ fun LiteSettingsSheetContent(
                         .animateContentSize(tween()),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    when (qrCodeInfo?.state) {
+                    val qrCode = (qrCodeInfo as? QRCodeInfoScannedState.AppSetsQRCodeInfo)
+                    when (qrCode?.state) {
                         QRCodeUseCase.QR_STATE_NEW -> {
-                            val qrCodeBitmap = qrCodeInfo.bitmap?.asImageBitmap()
+                            val qrCodeBitmap = qrCode.bitmap?.asImageBitmap()
                             if (qrCodeBitmap != null) {
                                 AnyImage(
                                     modifier = Modifier
@@ -114,7 +115,7 @@ fun LiteSettingsSheetContent(
                                             MaterialTheme.shapes.extraLarge
                                         )
                                         .clip(MaterialTheme.shapes.extraLarge),
-                                    any = qrCodeBitmap
+                                    model = qrCodeBitmap
                                 )
                             }
                         }

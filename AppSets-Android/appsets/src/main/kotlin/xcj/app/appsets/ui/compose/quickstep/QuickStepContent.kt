@@ -8,7 +8,7 @@ import xcj.app.starter.android.util.AndroidUriFile
 import xcj.app.starter.util.ContentType
 
 interface QuickStepContent : Parcelable {
-    fun getContentTypes(): List<String>
+    fun getContentType(): String
 }
 
 class TextQuickStepContent(
@@ -27,8 +27,8 @@ class TextQuickStepContent(
         return 0
     }
 
-    override fun getContentTypes(): List<String> {
-        return listOf(ContentType.TEXT_PLAIN)
+    override fun getContentType(): String {
+        return ContentType.TEXT_PLAIN
     }
 
     companion object CREATOR : Parcelable.Creator<TextQuickStepContent> {
@@ -48,8 +48,8 @@ class UriQuickStepContent(
     val androidUriFile: AndroidUriFile?,
     val uriContentType: String
 ) : QuickStepContent {
-    override fun getContentTypes(): List<String> {
-        return listOf(uriContentType)
+    override fun getContentType(): String {
+        return uriContentType
     }
 
     constructor(parcel: Parcel) : this(

@@ -85,7 +85,6 @@ import xcj.app.compose_share.components.DesignVDivider
 import xcj.app.compose_share.components.LocalAnyStateProvider
 import xcj.app.compose_share.ui.viewmodel.AnyStateViewModel.Companion.bottomSheetState
 
-
 @UnstableApi
 @Preview(showBackground = true)
 @Composable
@@ -102,11 +101,11 @@ fun CreateAppPagePreview() {
 @OptIn(ExperimentalLayoutApi::class, ExperimentalFoundationApi::class)
 @Composable
 fun CreateAppPage(
-    onBackClick: () -> Unit,
     createStep: String = ApplicationForCreate.CREATE_STEP_APPLICATION,
     platform: AppPlatform? = null,
     versionInfo: VersionInfo? = null,
     createApplicationPageState: CreateApplicationPageState,
+    onBackClick: () -> Unit,
     onApplicationForCreateFiledChanged: (Any, String, String) -> Unit,
     onChoosePictureClick: (Any, String, UriProvider?) -> Unit,
     onConfirmClick: () -> Unit,
@@ -161,7 +160,7 @@ fun CreateAppPage(
             BackActionTopBar(
                 onBackClick = onBackClick,
                 backButtonRightText = backButtonRightText,
-                endButtonText = stringResource(id = xcj.app.appsets.R.string.sure),
+                endButtonText = stringResource(id = xcj.app.appsets.R.string.ok),
                 onEndButtonClick = onConfirmClick
             )
             var newPlatformName: String? by remember {
@@ -565,7 +564,7 @@ fun CustomPlatformAddSheetContent(
 
                 }
             ) {
-                Text(text = stringResource(id = xcj.app.appsets.R.string.sure))
+                Text(text = stringResource(id = xcj.app.appsets.R.string.ok))
             }
         }
         Text(text = stringResource(xcj.app.appsets.R.string.platform_name_english_only))
@@ -646,7 +645,7 @@ fun IconAndBanner(
                         modifier = Modifier
                             .fillMaxSize()
                             .clip(MaterialTheme.shapes.extraLarge),
-                        any = uri
+                        model = uri
                     )
                 } else {
                     if (showSelect) {
@@ -704,7 +703,7 @@ fun IconAndBanner(
                         modifier = Modifier
                             .fillMaxSize()
                             .clip(MaterialTheme.shapes.extraLarge),
-                        any = uri
+                        model = uri
                     )
                 } else {
                     if (showSelect) {
@@ -1059,7 +1058,7 @@ fun VersionForPlatform(
                                         MaterialTheme.shapes.medium
                                     )
                                     .clip(MaterialTheme.shapes.medium),
-                                any = screenShot.uriHolder?.provideUri()
+                                model = screenShot.uriHolder?.provideUri()
                             )
                         }
                     }

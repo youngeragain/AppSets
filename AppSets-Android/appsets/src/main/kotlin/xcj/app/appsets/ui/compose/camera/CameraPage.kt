@@ -27,6 +27,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -42,9 +43,10 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.mlkit.vision.barcode.BarcodeScannerOptions
 import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.barcode.common.Barcode
+import kotlinx.coroutines.launch
 import xcj.app.appsets.ui.compose.LocalUseCaseOfQRCode
-import xcj.app.appsets.ui.compose.custom_component.DesignBottomBackButton
-import xcj.app.appsets.usecase.QRCodeInfoScannedState
+import xcj.app.appsets.ui.compose.custom_component.DesignBackButton
+import xcj.app.appsets.ui.model.state.QRCodeInfoScannedState
 import xcj.app.appsets.usecase.QRCodeUseCase
 import xcj.app.compose_share.components.BottomSheetContainer
 import xcj.app.compose_share.components.LocalAnyStateProvider
@@ -173,7 +175,7 @@ fun CameraContent(
                     .padding(12.dp)
             )
         }
-        DesignBottomBackButton(
+        DesignBackButton(
             modifier = Modifier.align(Alignment.BottomCenter),
             onClick = onBackClick
         )
@@ -190,7 +192,7 @@ fun OthersQRCodeInfoHandlerSheetContent(scannedQRCodeInfo: QRCodeInfoScannedStat
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         Text(
-            stringResource(xcj.app.appsets.R.string.founded_unsupport_qr_code),
+            stringResource(xcj.app.appsets.R.string.founded_unsupported_qr_code),
             fontSize = 16.sp
         )
         SelectionContainer {
@@ -207,6 +209,7 @@ fun AppSetsQRCodeInfoHandlerSheetContent(
     appSetsQRCodeInfo: QRCodeInfoScannedState.AppSetsQRCodeInfo,
 ) {
     val qrCodeUseCase = LocalUseCaseOfQRCode.current
+    val coroutineScope = rememberCoroutineScope()
     Column(
         Modifier
             .fillMaxWidth()
@@ -224,24 +227,39 @@ fun AppSetsQRCodeInfoHandlerSheetContent(
                     QRCodeUseCase.QR_STATE_NEW -> {
                         FilledTonalButton(
                             onClick = {
-                                qrCodeUseCase.doScanAction()
+                                coroutineScope.launch {
+                                    qrCodeUseCase.doScanAction()
+                                }
                             }
                         ) {
                             Text(text = stringResource(xcj.app.appsets.R.string.scan))
                         }
                     }
 
-                    QRCodeUseCase.QR_STATE_SCANNED -> FilledTonalButton(
-                        onClick = {
-                            qrCodeUseCase.doAfterScanConfirmAction()
+                    QRCodeUseCase.QR_STATE_SCANNED -> {
+                        FilledTonalButton(
+                            onClick = {
+                                coroutineScope.launch {
+                                    qrCodeUseCase.doAfterScanConfirmAction()
+                                }
+                            }
+                        ) {
+                            Text(text = stringResource(id = xcj.app.starter.R.string.ok))
                         }
-                    ) {
-                        Text(text = stringResource(id = xcj.app.starter.R.string.ok))
+
                     }
 
-                    QRCodeUseCase.QR_STATE_CONFIRMED -> Text(text = stringResource(id = xcj.app.appsets.R.string.done))
-                    QRCodeUseCase.QR_STATE_NO_EXIST_OR_EXPIRED -> Text(text = stringResource(id = xcj.app.appsets.R.string.invalid))
-                    else -> Text(text = stringResource(id = xcj.app.appsets.R.string.unknown_state))
+                    QRCodeUseCase.QR_STATE_CONFIRMED -> {
+                        Text(text = stringResource(id = xcj.app.appsets.R.string.done))
+                    }
+
+                    QRCodeUseCase.QR_STATE_NO_EXIST_OR_EXPIRED -> {
+                        Text(text = stringResource(id = xcj.app.appsets.R.string.invalid))
+                    }
+
+                    else -> {
+                        Text(text = stringResource(id = xcj.app.appsets.R.string.unknown_state))
+                    }
                 }
             }
         } else {

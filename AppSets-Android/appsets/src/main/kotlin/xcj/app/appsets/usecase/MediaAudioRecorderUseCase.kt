@@ -6,7 +6,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.core.net.toUri
 import androidx.lifecycle.LifecycleOwner
 import androidx.navigation.NavController
-import kotlinx.coroutines.CoroutineScope
 import xcj.app.appsets.ui.compose.PageRouteNames
 import xcj.app.appsets.util.DesignRecorder
 import xcj.app.appsets.util.ktx.toast
@@ -18,9 +17,7 @@ import xcj.app.starter.android.util.PurpleLogger
 import xcj.app.starter.test.LocalAndroidContextFileDir
 import java.io.File
 
-class MediaAudioRecorderUseCase(
-    private val coroutineScope: CoroutineScope,
-) : IComposeLifecycleAware {
+class MediaAudioRecorderUseCase() : IComposeLifecycleAware {
     companion object {
         private const val TAG = "MediaAudioRecorderUseCase"
     }

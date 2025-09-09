@@ -19,12 +19,12 @@ object PackageUtil {
 
     @SuppressLint("QueryPermissionsNeeded")
     @JvmStatic
-    suspend fun getPackageList(context: Context): List<AppDefinition> =
+    suspend fun getAppDefinitionList(context: Context): List<AppDefinition> =
         withContext(Dispatchers.IO) {
+            val packageManager = context.packageManager
             val installedPackages =
-                context.packageManager.getInstalledPackages(PackageManager.GET_ACTIVITIES)
-            val appDefinitionList = mutableListOf<AppDefinition>()
-            installedPackages.mapNotNullTo(appDefinitionList) { packageInfo ->
+                packageManager.getInstalledPackages(PackageManager.GET_ACTIVITIES)
+            return@withContext installedPackages.mapNotNull { packageInfo ->
                 val applicationInfo = packageInfo.applicationInfo
                 if (applicationInfo == null) {
                     null
@@ -34,7 +34,6 @@ object PackageUtil {
                     appDefinition
                 }
             }
-            return@withContext appDefinitionList
         }
 
     @JvmStatic
@@ -48,8 +47,8 @@ object PackageUtil {
 
     @SuppressLint("QueryPermissionsNeeded")
     @JvmStatic
-    fun getLauncherIntentAppDefinitionList(context: Context): Flow<List<AppDefinition>> =
-        flow<List<AppDefinition>> {
+    fun getLauncherIntentAppDefinitionListFlow(context: Context): Flow<List<AppDefinition>> =
+        flow {
             PurpleLogger.current.d(TAG, "getLauncherIntentAppDefinitionList 1")
             val packageManager: PackageManager = context.packageManager
             val minePackageName = context.packageName
@@ -82,5 +81,26 @@ object PackageUtil {
             }
             emit(appDefinitions)
             PurpleLogger.current.d(TAG, "getLauncherIntentAppDefinitionList 4")
+        }
+
+    suspend fun getAppDefinitionByPackageName(
+        context: Context,
+        packageName: String
+    ): AppDefinition? =
+        withContext(
+            Dispatchers.IO
+        ) {
+            try {
+                val packageManager = context.packageManager
+                val appInfo = packageManager.getApplicationInfo(packageName, 0)
+                val appDefinition = AppDefinition(UUID.randomUUID().toString())
+                appDefinition.applicationInfo = appInfo
+                appDefinition.name = appInfo.loadLabel(packageManager).toString().trim()
+                appDefinition.icon = appInfo.loadIcon(packageManager)
+                return@withContext appDefinition
+            } catch (e: PackageManager.NameNotFoundException) {
+                e.printStackTrace()
+                return@withContext null
+            }
         }
 }

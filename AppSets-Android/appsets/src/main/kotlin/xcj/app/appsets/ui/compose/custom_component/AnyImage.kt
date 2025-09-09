@@ -12,7 +12,7 @@ import coil3.request.crossfade
 @Composable
 fun AnyImage(
     modifier: Modifier = Modifier,
-    any: Any?,
+    model: Any?,
     placeHolder: Any? = null,
     error: Any? = null,
     contentScale: ContentScale = ContentScale.Crop,
@@ -21,7 +21,7 @@ fun AnyImage(
     val errorPainter = error?.let { anyPainter(it) }
     AsyncImage(
         model = ImageRequest.Builder(LocalContext.current)
-            .data(any)
+            .data(model)
             .diskCachePolicy(CachePolicy.DISABLED)
             .crossfade(true)
             .build(),

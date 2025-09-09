@@ -1,5 +1,5 @@
 package xcj.app.starter.android
 
-interface Pinned {
+interface Pinable {
     val isPinned: Boolean
 }

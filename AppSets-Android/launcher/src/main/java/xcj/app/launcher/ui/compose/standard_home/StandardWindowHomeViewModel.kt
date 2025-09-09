@@ -42,7 +42,7 @@ class StandardWindowHomeViewModel : ViewModel() {
 
     fun prepare(context: Context) {
         val launcherIntentAppDefinitionListFlow =
-            PackageUtil.getLauncherIntentAppDefinitionList(context)
+            PackageUtil.getLauncherIntentAppDefinitionListFlow(context)
         viewModelScope.launch {
             launcherIntentAppDefinitionListFlow.collect { appDefinitionList ->
                 appDefinitionList.forEach { appDefinition ->

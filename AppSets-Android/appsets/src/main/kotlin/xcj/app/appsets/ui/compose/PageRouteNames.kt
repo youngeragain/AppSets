@@ -9,6 +9,7 @@ object PageRouteNames {
     const val OutSidePage = "Main/OutSidePage"
     const val ScreenDetailsPage = "Main/ScreenDetailsPage"
     const val ScreenEditPage = "Main/ScreenEditPage"
+
     const val ConversationOverviewPage = "Main/ConversationOverviewPage"
     const val ConversationAIGCMarketPage = "Main/ConversationAIGCMarketPage"
     const val UserProfilePage = "Main/UserProfilePage"
@@ -16,15 +17,16 @@ object PageRouteNames {
     const val SearchPage = "Main/SearchPage"
     const val SettingsPage = "Main/SettingsPage"
     const val AboutPage = "Main/AboutPage"
-
     const val AppsCenterPage = "Main/AppsCenterPage"
     const val AppDetailsPage = "Main/AppDetailsPage/{appid}"
     const val CreateAppPage = "Main/CreateAppPage/{appid}"
+
     const val CreateAppPageTemplate = "Main/CreateAppPage/%s"
-    const val AppToolsPage = "Main/AppToolsPage"
-    const val AppToolsDetailsPage = "Main/AppToolsDetailsPage"
+    const val ToolsStartPage = "Main/ToolsStartPage"
+    const val ToolsDetailsPage = "Main/ToolsDetailsPage/"
     const val ConversationDetailsPage = "Main/ConversationDetailsPage"
     const val CreateScreenPage = "Main/CreateScreenPage"
+
     const val AppDetailsPageTemplate = "Main/AppDetailsPage/%s"
     const val CreateGroupPage = "Main/CreateGroupPage"
     const val MediaFallPage = "Media/MediaFallPage"

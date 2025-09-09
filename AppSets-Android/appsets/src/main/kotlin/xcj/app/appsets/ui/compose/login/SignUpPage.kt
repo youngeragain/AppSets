@@ -189,7 +189,7 @@ fun SignUpPage(
                                         signUpUserInfo.userAvatar?.provideUri()
                                             ?: xcj.app.compose_share.R.drawable.ic_outline_face_24
                                     AnyImage(
-                                        any = avatarUri,
+                                        model = avatarUri,
                                         modifier = Modifier
                                             .size(98.dp)
                                             .clip(MaterialTheme.shapes.extraLarge)

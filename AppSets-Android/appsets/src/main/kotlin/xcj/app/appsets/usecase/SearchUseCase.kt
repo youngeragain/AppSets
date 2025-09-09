@@ -24,7 +24,6 @@ import xcj.app.starter.server.requestNotNull
 import kotlin.time.Duration.Companion.milliseconds
 
 class SearchUseCase(
-    private val coroutineScope: CoroutineScope,
     private val searchRepository: SearchRepository,
 ) : IComposeLifecycleAware {
 

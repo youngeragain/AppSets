@@ -583,7 +583,7 @@ fun SearchedApplicationsPage(
                                 onBioClick(application)
                             }
                         ),
-                    any = application.bioUrl
+                    model = application.bioUrl
                 )
                 Text(
                     text = application.name ?: "",
@@ -616,7 +616,7 @@ fun SearchedUserComponent(modifier: Modifier, userInfo: UserInfo) {
                     shape = MaterialTheme.shapes.large
                 )
                 .clip(MaterialTheme.shapes.large),
-            any = userInfo.bioUrl
+            model = userInfo.bioUrl
         )
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(text = userInfo.name ?: "")
@@ -641,7 +641,7 @@ fun SearchedGroupComponent(modifier: Modifier, groupInfo: GroupInfo) {
                     shape = MaterialTheme.shapes.large
                 )
                 .clip(MaterialTheme.shapes.large),
-            any = groupInfo.bioUrl
+            model = groupInfo.bioUrl
         )
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(text = groupInfo.name ?: "")
@@ -702,7 +702,7 @@ fun SearchedApplicationComponent(
                         .clickable {
                             onBioClick(application)
                         },
-                    any = application.bioUrl
+                    model = application.bioUrl
                 )
                 Text(
                     text = application.name ?: "",

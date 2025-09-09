@@ -3,6 +3,7 @@ package xcj.app.appsets.ui.compose.quickstep
 import android.content.Context
 import xcj.app.appsets.ui.compose.apps.quickstep.ToolAppSetsShareQuickStepHandler
 import xcj.app.appsets.ui.compose.apps.quickstep.ToolContentTransformQuickStepHandler
+import xcj.app.appsets.ui.compose.apps.quickstep.ToolFileCreateQuickStepHandler
 import xcj.app.appsets.ui.compose.apps.quickstep.ToolGraphicQuickStepHandler
 import xcj.app.appsets.ui.compose.apps.quickstep.ToolIntentCallerQuickStepHandler
 import xcj.app.appsets.ui.compose.conversation.quickstep.AIQuickStepHandler
@@ -12,13 +13,14 @@ import xcj.app.appsets.ui.compose.outside.quickstep.OutSideQuickStepHandler
 class QuickStepContentHandlerRegistry {
     companion object {
         fun initHandlers(context: Context, registry: QuickStepContentHandlerRegistry) {
-            registry.addContentHandler(ToolContentTransformQuickStepHandler(context))
-            registry.addContentHandler(ToolAppSetsShareQuickStepHandler(context))
-            registry.addContentHandler(ToolIntentCallerQuickStepHandler(context))
-            registry.addContentHandler(ToolGraphicQuickStepHandler(context))
-            registry.addContentHandler(ConversationQuickStepHandler(context))
-            registry.addContentHandler(AIQuickStepHandler(context))
-            registry.addContentHandler(OutSideQuickStepHandler(context))
+            registry.addContentHandler(ToolContentTransformQuickStepHandler())
+            registry.addContentHandler(ToolAppSetsShareQuickStepHandler())
+            registry.addContentHandler(ToolIntentCallerQuickStepHandler())
+            registry.addContentHandler(ToolGraphicQuickStepHandler())
+            registry.addContentHandler(ToolFileCreateQuickStepHandler())
+            registry.addContentHandler(ConversationQuickStepHandler())
+            registry.addContentHandler(AIQuickStepHandler())
+            registry.addContentHandler(OutSideQuickStepHandler())
         }
 
         fun deInitHandlers(registry: QuickStepContentHandlerRegistry) {
@@ -45,6 +47,7 @@ class QuickStepContentHandlerRegistry {
     }
 
     fun findHandlers(
+        context: Context,
         quickStepContentHolder: QuickStepContentHolder,
         searchContent: String,
     ): List<QuickStepContentHandler> {
@@ -59,8 +62,10 @@ class QuickStepContentHandlerRegistry {
             if (searchContent.isEmpty()) {
                 true
             } else {
-                it.getName().contains(searchContent) ||
-                        it.getCategory().contains(searchContent)
+                val name = context.getString(it.name)
+                val category = context.getString(it.category)
+                name.contains(searchContent) ||
+                        category.contains(searchContent)
             }
         }
         return filtered

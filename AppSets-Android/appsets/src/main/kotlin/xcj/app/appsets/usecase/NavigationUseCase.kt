@@ -30,7 +30,7 @@ class NavigationUseCase : IComposeLifecycleAware {
             isSelect = true,
             actions = mutableListOf(
                 TabAction.SampleTabAction(
-                    route = PageRouteNames.AppToolsPage,
+                    route = PageRouteNames.ToolsStartPage,
                     icon = xcj.app.compose_share.R.drawable.ic_architecture_24,
                     action = TabAction.ACTION_APP_TOOLS,
                     description = "app tools"

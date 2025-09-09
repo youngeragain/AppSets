@@ -60,7 +60,7 @@
     <string name="add_favorite_category">添加收藏分类</string>
     <string name="close">关闭</string>
     <string name="default_">默认</string>
-    <string name="sure">确定</string>
+    <string name="ok">确定</string>
     <string name="favorite">收藏</string>
     <string name="no_corresponding_screen_found">没有找到对应的Screen</string>
     <string name="add_reply">添加回复</string>
@@ -189,7 +189,7 @@
     <string name="information_updated">信息已更新</string>
     <string name="updated_failed">更新失败</string>
     <string name="example_smart_car_huawei">示例: 智能汽车,华为</string>
-    <string name="example_jiang_kaixin_li_wenyi">示例: 蒋开心,李文亦</string>
+    <string name="example_jiang_kaixin">示例: 蒋开心</string>
     <string name="need_to_update_app">需要更新AppSets</string>
     <string name="ai">AI</string>
     <string name="generative_ai">Generative AI</string>
@@ -331,7 +331,7 @@
     <string name="reply_is_empty">回复为空</string>
     <string name="reply_failed">回复失败</string>
     <string name="login_status_expire_login_require_tips">登录已过期或未找到你的登录信息.\n请尝试重新登录!</string>
-    <string name="temporary_dialogue">%1$s (临时对话)</string>
+    <string name="temporary_conversation">%1$s (临时对话)</string>
     <string name="reply">回复</string>
     <string name="file_permission_tips">应用能读取设备上的文件，例如图片，视频。</string>
     <string name="file_permission_app_usage_des">用于社交属性以及应用创建。</string>
@@ -352,13 +352,13 @@
     <string name="register_appsets_success">成功注册AppSets账号</string>
     <string name="register_failed">注册时出现错误</string>
     <string name="a_account_exist_please_retry">账号已经存在，请更换另一个账号</string>
-    <string name="current_version_cannot_regiest">当前版本无法注册!</string>
+    <string name="current_version_cannot_be_registered">当前版本无法注册!</string>
     <string name="audio_record_exception">麦克风捕获异常</string>
     <string name="app_notification_channel_conversation_1_name">对话</string>
     <string name="app_notification_channel_conversation_1_description">有些人会给你发信息</string>
     <string name="application_paid_download_tips">创建者指定了应用的单品价格，因此只有购买后才可下载此应用，购买后的应用往后可以直接下载。</string>
     <string name="founded_support_qr_code">发现受支持的二维码</string>
-    <string name="founded_unsupport_qr_code">发现不受支持的二维码</string>
+    <string name="founded_unsupported_qr_code">发现不受支持的二维码</string>
     <string name="scan">扫描</string>
     <string name="not_found">未找到</string>
     <string name="bing_search">必应搜索</string>
@@ -458,5 +458,9 @@
     <string name="remove">移除</string>
     <string name="there_is_nothing_here">什么都没有</string>
     <string name="no_x_permission">还没有%s权限</string>
+    <string name="new_folder">新文件夹</string>
+    <string name="save_to_file">保存到文件</string>
+    <string name="save">保存</string>
+    <string name="new_file">新文件</string>
 
 </resources>

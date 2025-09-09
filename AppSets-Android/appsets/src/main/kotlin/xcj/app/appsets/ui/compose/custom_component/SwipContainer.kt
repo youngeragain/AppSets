@@ -29,7 +29,6 @@ import androidx.compose.ui.unit.dp
 import xcj.app.appsets.ui.compose.content_selection.DragValue
 import kotlin.math.roundToInt
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun SwipeContainer(
     squareSize: Dp = 48.dp,

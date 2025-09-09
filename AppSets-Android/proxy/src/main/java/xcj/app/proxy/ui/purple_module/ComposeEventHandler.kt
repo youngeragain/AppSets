@@ -1,14 +1,9 @@
 package xcj.app.proxy.ui.purple_module
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.FilledTonalButton
-import androidx.compose.material3.Text
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
+import xcj.app.proxy.ui.compose.vpn.AppSetsVpnMainContent
 import xcj.app.starter.test.ComposeEvent
 import xcj.app.starter.test.NaviHostParams
 
@@ -34,16 +29,11 @@ class ComposeEventHandler {
     ) {
 
         navGraphBuilder.composable(ROUTE_APPSETS_PROXY) {
-            Box(modifier = Modifier.fillMaxSize()) {
-                FilledTonalButton(
-                    modifier = Modifier.align(Alignment.Center),
-                    onClick = {
-                        navController.navigateUp()
-                    }
-                ) {
-                    Text("Hello ComposeNavHostFormedEvent from Launcher")
+            AppSetsVpnMainContent(
+                onConnectButtonClick = {
+
                 }
-            }
+            )
         }
     }
 }

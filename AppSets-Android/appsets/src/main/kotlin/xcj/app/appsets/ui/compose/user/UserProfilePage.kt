@@ -36,8 +36,8 @@ import xcj.app.appsets.server.model.ScreenInfo
 import xcj.app.appsets.server.model.ScreenMediaFileUrl
 import xcj.app.appsets.server.model.UserInfo
 import xcj.app.appsets.ui.compose.LocalUseCaseOfUserInfo
-import xcj.app.appsets.ui.compose.custom_component.DesignBottomBackButton
-import xcj.app.appsets.ui.compose.custom_component.DesignBottomDropDownButton
+import xcj.app.appsets.ui.compose.custom_component.DesignBackButton
+import xcj.app.appsets.ui.compose.custom_component.DesignDropDownButton
 import xcj.app.appsets.ui.compose.custom_component.HideNavBarWhenOnLaunch
 import xcj.app.appsets.ui.model.page_state.UserProfilePageState
 import xcj.app.compose_share.components.BackActionTopBar
@@ -52,13 +52,13 @@ private const val GOODS = "Goods"
 
 @Composable
 fun UserProfilePage(
-    onBackClick: () -> Unit,
     userProfilePageState: UserProfilePageState,
     userApplications: List<Application>,
     userFollowers: List<UserInfo>,
     userFollowed: List<UserInfo>,
     isLoginUserFollowedThisUser: Boolean,
     userScreens: List<ScreenInfo>,
+    onBackClick: () -> Unit,
     onAddFriendClick: (UserInfo) -> Unit,
     onFlipFollowClick: (UserInfo) -> Unit,
     onChatClick: (UserInfo) -> Unit,
@@ -92,7 +92,7 @@ fun UserProfilePage(
                             .size(36.dp)
                             .align(Alignment.Center)
                     )
-                    DesignBottomBackButton(
+                    DesignBackButton(
                         modifier = Modifier.align(Alignment.BottomCenter),
                         onClick = onBackClick
                     )
@@ -105,7 +105,7 @@ fun UserProfilePage(
                         text = stringResource(xcj.app.appsets.R.string.not_found),
                         modifier = Modifier.align(Alignment.Center)
                     )
-                    DesignBottomBackButton(
+                    DesignBackButton(
                         modifier = Modifier.align(Alignment.BottomCenter),
                         onClick = onBackClick
                     )
@@ -254,7 +254,7 @@ fun UserProfilePage(
                     }
                 }
                 if (currentShowContent != NONE) {
-                    DesignBottomDropDownButton(modifier = Modifier.align(Alignment.BottomCenter)) {
+                    DesignDropDownButton(modifier = Modifier.align(Alignment.BottomCenter)) {
                         currentShowContent = NONE
                     }
                 }

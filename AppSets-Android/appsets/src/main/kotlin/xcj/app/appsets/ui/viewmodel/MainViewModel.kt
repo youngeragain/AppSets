@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import androidx.activity.ComponentActivity
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.launch
 import xcj.app.appsets.account.LocalAccountManager
 import xcj.app.appsets.server.repository.AppSetsRepository
 import xcj.app.appsets.server.repository.GenerationAIRepository
@@ -30,30 +31,26 @@ class MainViewModel : BaseIMViewModel() {
         private const val TAG = "MainViewModel"
     }
 
-    val composeDynamicUseCase: ComposeDynamicUseCase = ComposeDynamicUseCase(viewModelScope)
+    val composeDynamicUseCase: ComposeDynamicUseCase = ComposeDynamicUseCase()
     val screenPostUseCase: ScreenPostUseCase = ScreenPostUseCase(
-        viewModelScope,
+
         ScreenRepository.getInstance(),
         GenerationAIRepository.newInstance()
     )
     val searchUseCase: SearchUseCase = SearchUseCase(
-        viewModelScope,
         SearchRepository.getInstance()
     )
     val qrCodeUseCase: QRCodeUseCase = QRCodeUseCase(
-        viewModelScope,
         systemUseCase.loginSignUpPageState,
         QRCodeRepository.getInstance(),
         UserRepository.getInstance()
     )
     val appCreationUseCase: AppCreationUseCase = AppCreationUseCase(
-        viewModelScope,
         AppSetsRepository.getInstance()
     )
 
     val navigationUseCase: NavigationUseCase = NavigationUseCase()
     val appsUseCase: AppsUseCase = AppsUseCase(
-        viewModelScope,
         AppSetsRepository.getInstance()
     )
 
@@ -66,7 +63,7 @@ class MainViewModel : BaseIMViewModel() {
         PurpleLogger.current.d(TAG, "onCleared")
     }
 
-    override fun doActionWhenFileIOInitialed() {
+    override suspend fun doActionWhenFileIOInitialed() {
         super.doActionWhenFileIOInitialed()
         PurpleLogger.current.d(TAG, "doActionWhenFileIOInitialed")
         appsUseCase.loadHomeApplications()
@@ -100,13 +97,15 @@ class MainViewModel : BaseIMViewModel() {
         if (data == null) {
             return
         }
-        qrCodeUseCase.onActivityResult(context, requestCode, resultCode, data)
-        composeDynamicUseCase.onActivityResult(context, requestCode, resultCode, data)
+        viewModelScope.launch {
+            qrCodeUseCase.onActivityResult(context, requestCode, resultCode, data)
+            composeDynamicUseCase.onActivityResult(context, requestCode, resultCode, data)
+        }
     }
 
     override fun dispatchContentSelectedResult(
         context: Context,
-        contentSelectionResult: ContentSelectionResult
+        contentSelectionResult: ContentSelectionResult,
     ) {
         super.dispatchContentSelectedResult(context, contentSelectionResult)
         PurpleLogger.current.d(

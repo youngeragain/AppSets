@@ -60,21 +60,22 @@ object ImMessageGenerator {
         SimpleDateFormat("MM/dd HH:mm", Locale.CHINA)
     }
 
-    val imContentObjectUploadOptions = object : ObjectUploadOptions {
-        private val compressOptions = object : ICompressor.CompressOptions {
-            override fun imageCompressQuality(): Int {
-                return 55
+    val imContentObjectUploadOptions: ObjectUploadOptions
+        get() = object : ObjectUploadOptions {
+            private val compressOptions = object : ICompressor.CompressOptions {
+                override fun imageCompressQuality(): Int {
+                    return 55
+                }
+            }
+
+            override fun getInfixPath(): String {
+                return "im/"
+            }
+
+            override fun compressOptions(): ICompressor.CompressOptions {
+                return compressOptions
             }
         }
-
-        override fun getInfixPath(): String {
-            return "im/"
-        }
-
-        override fun compressOptions(): ICompressor.CompressOptions {
-            return compressOptions
-        }
-    }
 
     private suspend fun getContentName(context: Context, content: Any): String {
         when (content) {

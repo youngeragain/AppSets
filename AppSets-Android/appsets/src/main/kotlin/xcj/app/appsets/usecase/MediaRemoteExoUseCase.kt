@@ -4,7 +4,6 @@ import android.content.Context
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.LifecycleOwner
-import kotlinx.coroutines.CoroutineScope
 import xcj.app.appsets.im.model.CommonURIJson
 import xcj.app.appsets.server.model.MediaContent
 import xcj.app.appsets.server.repository.AppSetsRepository
@@ -13,7 +12,6 @@ import xcj.app.appsets.usecase.component.media.RemoteExoPlayer
 import xcj.app.compose_share.dynamic.IComposeLifecycleAware
 
 class MediaRemoteExoUseCase(
-    private val coroutineScope: CoroutineScope,
     private val appSetsRepository: AppSetsRepository,
 ) : IComposeLifecycleAware {
 
@@ -28,7 +26,7 @@ class MediaRemoteExoUseCase(
     val isPlaying: Boolean
         get() = remoteExoPlayer.isPlaying()
 
-    private val remoteExoPlayer: RemoteExoPlayer = RemoteExoPlayer(coroutineScope, audioPlayerState)
+    private val remoteExoPlayer: RemoteExoPlayer = RemoteExoPlayer(audioPlayerState)
 
     val serverMusicMediaContentList: MutableState<List<MediaContent>?> = mutableStateOf(null)
 

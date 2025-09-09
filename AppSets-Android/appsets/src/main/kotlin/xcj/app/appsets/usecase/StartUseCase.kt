@@ -61,7 +61,7 @@ class StartUseCase(
     }
 
     private suspend fun updateAllApps(allApps: MutableList<AppDefinition>) {
-        PackageUtil.getLauncherIntentAppDefinitionList(LocalApplication.current).collect{
+        PackageUtil.getLauncherIntentAppDefinitionListFlow(LocalApplication.current).collect {
             allApps.addAll(it)
         }
     }

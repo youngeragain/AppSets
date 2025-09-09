@@ -3,9 +3,7 @@ package xcj.app.appsets.usecase
 import android.content.Context
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import xcj.app.appsets.R
 import xcj.app.appsets.server.model.Application
 import xcj.app.appsets.server.repository.AppSetsRepository
@@ -23,7 +21,6 @@ import xcj.app.starter.android.util.PurpleLogger
 import xcj.app.starter.server.requestNotNullRaw
 
 class AppCreationUseCase(
-    private val coroutineScope: CoroutineScope,
     private val appSetsRepository: AppSetsRepository
 ) : IComposeLifecycleAware {
     companion object {
@@ -53,7 +50,7 @@ class AppCreationUseCase(
         createApplicationPageState.value = CreateApplicationPageState.NewApplicationPage()
     }
 
-    fun finishCreateApp(context: Context) {
+    suspend fun finishCreateApp(context: Context) {
         val createApplicationState = this@AppCreationUseCase.createApplicationPageState.value
         if (createApplicationState is CreateApplicationPageState.Creating) {
             context.getString(xcj.app.appsets.R.string.creating_application_please_wait).toast()
@@ -68,44 +65,25 @@ class AppCreationUseCase(
         }
         this@AppCreationUseCase.createApplicationPageState.value =
             CreateApplicationPageState.Creating(applicationForCreate)
-        coroutineScope.launch {
-            requestNotNullRaw(
-                action = {
-                    val createApplicationPreCheckRes =
-                        appSetsRepository
-                            .createApplicationPreCheck(applicationForCreate.name)
-                    if (createApplicationPreCheckRes.data != true) {
-                        this@AppCreationUseCase.createApplicationPageState.value =
-                            CreateApplicationPageState.CreateFailedPage(
-                                applicationForCreate,
-                                R.string.please_use_another_application_name
-                            )
-                        delay(2000)
-                        this@AppCreationUseCase.createApplicationPageState.value =
-                            CreateApplicationPageState.NewApplicationPage(applicationForCreate)
-                        return@requestNotNullRaw
-                    }
-                    val createApplicationRes =
-                        appSetsRepository.createApplication(context, applicationForCreate)
-                    if (createApplicationRes.data != true) {
-                        this@AppCreationUseCase.createApplicationPageState.value =
-                            CreateApplicationPageState.CreateFailedPage(
-                                applicationForCreate,
-                                R.string.create_application_failed
-                            )
-                        delay(2000)
-                        this@AppCreationUseCase.createApplicationPageState.value =
-                            CreateApplicationPageState.NewApplicationPage(applicationForCreate)
-                        return@requestNotNullRaw
-                    }
+        requestNotNullRaw(
+            action = {
+                val createApplicationPreCheckRes =
+                    appSetsRepository
+                        .createApplicationPreCheck(applicationForCreate.name)
+                if (createApplicationPreCheckRes.data != true) {
                     this@AppCreationUseCase.createApplicationPageState.value =
-                        CreateApplicationPageState.CreateSuccessPage(applicationForCreate)
-                },
-                onFailed = {
-                    PurpleLogger.current.d(
-                        "CreateApplicationUseCase",
-                        "finishCreateApp failed:${it}"
-                    )
+                        CreateApplicationPageState.CreateFailedPage(
+                            applicationForCreate,
+                            R.string.please_use_another_application_name
+                        )
+                    delay(2000)
+                    this@AppCreationUseCase.createApplicationPageState.value =
+                        CreateApplicationPageState.NewApplicationPage(applicationForCreate)
+                    return@requestNotNullRaw
+                }
+                val createApplicationRes =
+                    appSetsRepository.createApplication(context, applicationForCreate)
+                if (createApplicationRes.data != true) {
                     this@AppCreationUseCase.createApplicationPageState.value =
                         CreateApplicationPageState.CreateFailedPage(
                             applicationForCreate,
@@ -114,8 +92,26 @@ class AppCreationUseCase(
                     delay(2000)
                     this@AppCreationUseCase.createApplicationPageState.value =
                         CreateApplicationPageState.NewApplicationPage(applicationForCreate)
-                })
-        }
+                    return@requestNotNullRaw
+                }
+                this@AppCreationUseCase.createApplicationPageState.value =
+                    CreateApplicationPageState.CreateSuccessPage(applicationForCreate)
+            },
+            onFailed = {
+                PurpleLogger.current.d(
+                    "CreateApplicationUseCase",
+                    "finishCreateApp failed:${it}"
+                )
+                this@AppCreationUseCase.createApplicationPageState.value =
+                    CreateApplicationPageState.CreateFailedPage(
+                        applicationForCreate,
+                        R.string.create_application_failed
+                    )
+                delay(2000)
+                this@AppCreationUseCase.createApplicationPageState.value =
+                    CreateApplicationPageState.NewApplicationPage(applicationForCreate)
+            }
+        )
     }
 
     private fun checkAppIntegrity(

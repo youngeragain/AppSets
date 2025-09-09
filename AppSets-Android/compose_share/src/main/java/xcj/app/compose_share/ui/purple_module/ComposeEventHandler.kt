@@ -1,8 +1,10 @@
 package xcj.app.compose_share.ui.purple_module
 
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.compose.composable
+import kotlinx.coroutines.launch
 import xcj.app.compose_share.components.LocalUseCaseOfComposeDynamic
 import xcj.app.compose_share.dynamic.DynamicPage
 import xcj.app.starter.test.ComposeEvent
@@ -35,10 +37,13 @@ class ComposeEventHandler {
         navGraphBuilder.composable(ROUTE_COMPOSE_DYNAMIC) {
             val context = LocalContext.current
             val composeDynamicUseCase = LocalUseCaseOfComposeDynamic.current
+            val coroutineScope = rememberCoroutineScope()
             DisposableEffect(key1 = true) {
-                composeDynamicUseCase.doLoad()
+                coroutineScope.launch {
+                    composeDynamicUseCase.doLoad()
+                }
                 onDispose {
-                    composeDynamicUseCase.onParentComposeDispose()
+                    composeDynamicUseCase.onComposeDispose("page dispose")
                 }
             }
             DynamicPage(

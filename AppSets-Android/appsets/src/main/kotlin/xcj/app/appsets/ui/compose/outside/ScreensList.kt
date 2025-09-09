@@ -490,7 +490,7 @@ fun MediaCard(
                 modifier = Modifier
                     .fillMaxSize()
                     .zoomablePeekOverlay(rememberZoomablePeekOverlayState()),
-                any = if (mediaFileUrl.isVideoMedia) {
+                model = if (mediaFileUrl.isVideoMedia) {
                     mediaFileUrl.mediaFileCompanionUrl
                 } else {
                     mediaFileUrl.mediaFileUrl
@@ -621,7 +621,7 @@ fun ScreenSectionOfUserPart(
                     fontSize = 12.sp
                 )
                 AnyImage(
-                    any = screenInfo.userInfo?.bioUrl,
+                    model = screenInfo.userInfo?.bioUrl,
                     modifier = Modifier
                         .size(24.dp)
                         .clip(CircleShape),
@@ -729,7 +729,7 @@ fun RowOfScreenPictures(
                         }
                     } else {
                         AnyImage(
-                            any = mediaFileUrl.mediaFileUrl,
+                            model = mediaFileUrl.mediaFileUrl,
                             modifier = Modifier
                                 .fillMaxSize()
                                 .clip(shape)

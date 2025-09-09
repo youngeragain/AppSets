@@ -8,6 +8,7 @@ import android.graphics.Color
 import android.provider.MediaStore
 import androidx.camera.view.PreviewView
 import androidx.camera.view.PreviewView.ImplementationMode
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.AnimationState
 import androidx.compose.animation.core.animateDpAsState
@@ -15,6 +16,8 @@ import androidx.compose.animation.core.animateTo
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -109,45 +112,49 @@ import java.io.File
 
 enum class DragValue { Start, Center, End }
 
-val defaultAllSelectionTypeParam: List<SelectionTypeParam>
-    get() = listOf(
-        SelectionTypeParam(ContentSelectionTypes.IMAGE, 1),
-        SelectionTypeParam(ContentSelectionTypes.VIDEO, 1),
-        SelectionTypeParam(ContentSelectionTypes.AUDIO, 1),
-        SelectionTypeParam(ContentSelectionTypes.FILE, 1),
-        SelectionTypeParam(ContentSelectionTypes.LOCATION, 1),
-        SelectionTypeParam(ContentSelectionTypes.CAMERA, 1),
+
+typealias CountProvider = (String) -> Int
+
+private val defaultMaxCountProvider: CountProvider
+    get() = { 1 }
+
+fun defaultImageSelectionTypeParam(countProvider: CountProvider = defaultMaxCountProvider): List<SelectionTypeParam> =
+    listOf(
+        SelectionTypeParam(ContentSelectionTypes.IMAGE, countProvider)
     )
 
-val defaultImageSelectionTypeParam: List<SelectionTypeParam>
-    get() = listOf(
-        SelectionTypeParam(ContentSelectionTypes.IMAGE, 1)
+fun defaultVideoSelectionTypeParam(countProvider: CountProvider = defaultMaxCountProvider): List<SelectionTypeParam> =
+    listOf(
+        SelectionTypeParam(ContentSelectionTypes.VIDEO, countProvider)
     )
 
-val defaultVideoSelectionTypeParam: List<SelectionTypeParam>
-    get() = listOf(
-        SelectionTypeParam(ContentSelectionTypes.VIDEO, 1)
+fun defaultAudioSelectionTypeParam(countProvider: CountProvider = defaultMaxCountProvider): List<SelectionTypeParam> =
+    listOf(
+        SelectionTypeParam(ContentSelectionTypes.AUDIO, countProvider)
     )
 
-val defaultAudioSelectionTypeParam: List<SelectionTypeParam>
-    get() = listOf(
-        SelectionTypeParam(ContentSelectionTypes.AUDIO, 1)
+fun defaultFileSelectionTypeParam(countProvider: CountProvider = defaultMaxCountProvider): List<SelectionTypeParam> =
+    listOf(
+        SelectionTypeParam(ContentSelectionTypes.FILE, countProvider)
     )
 
-val defaultFileSelectionTypeParam: List<SelectionTypeParam>
-    get() = listOf(
-        SelectionTypeParam(ContentSelectionTypes.FILE, 1)
+fun defaultLocationSelectionTypeParam(countProvider: CountProvider = defaultMaxCountProvider): List<SelectionTypeParam> =
+    listOf(
+        SelectionTypeParam(ContentSelectionTypes.LOCATION, countProvider)
     )
 
-val defaultLocationSelectionTypeParam: List<SelectionTypeParam>
-    get() = listOf(
-        SelectionTypeParam(ContentSelectionTypes.LOCATION, 1)
+fun defaultCameraSelectionTypeParam(countProvider: CountProvider = defaultMaxCountProvider): List<SelectionTypeParam> =
+    listOf(
+        SelectionTypeParam(ContentSelectionTypes.CAMERA, countProvider)
     )
 
-val defaultCameraSelectionTypeParam: List<SelectionTypeParam>
-    get() = listOf(
-        SelectionTypeParam(ContentSelectionTypes.CAMERA, 1)
-    )
+fun defaultAllSelectionTypeParam(countProvider: CountProvider = defaultMaxCountProvider): List<SelectionTypeParam> =
+    defaultImageSelectionTypeParam(countProvider) +
+            defaultVideoSelectionTypeParam(countProvider) +
+            defaultAudioSelectionTypeParam(countProvider) +
+            defaultFileSelectionTypeParam(countProvider) +
+            defaultLocationSelectionTypeParam(countProvider) +
+            defaultCameraSelectionTypeParam(countProvider)
 
 data class ContentSelectionTab(
     val selectionType: String,
@@ -165,10 +172,12 @@ data class ContentSelectionRequest(
     val defaultSelectionType: String
 ) {
     fun selectionTypeMaxCount(selectionType: String): Int {
-        return selectionTypeParams.firstOrNull { it.selectionType == selectionType }?.maxCount ?: 0
+        return selectionTypeParams.firstOrNull { it.selectionType == selectionType }
+            ?.maxCount(selectionType)
+            ?: 0
     }
 
-    data class SelectionTypeParam(val selectionType: String, val maxCount: Int)
+    data class SelectionTypeParam(val selectionType: String, val maxCount: CountProvider)
 }
 
 sealed interface ContentSelectionResult {
@@ -476,7 +485,7 @@ fun CameraContentSelection(
                                         )
                                     onContentSelected(results)
                                 },
-                            any = capturedPictureFile
+                            model = capturedPictureFile
                         )
                         DesignVDivider(modifier = Modifier.height(32.dp))
                         Text(
@@ -781,7 +790,7 @@ fun PictureContentSelection(
                                         }
                                     }
                                 ),
-                            any = contentUriProvider.provideUri()
+                            model = contentUriProvider.provideUri()
                         )
                         if (isSearchMode) {
                             Column(
@@ -964,7 +973,7 @@ fun VideoContentSelection(
                                         }
                                     }
                                 ),
-                            any = contentUriProvider.provideUri()
+                            model = contentUriProvider.provideUri()
                         )
 
                         FilledTonalIconButton(
@@ -1365,55 +1374,72 @@ fun BottomActions(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(12.dp)
-                .animateContentSize(alignment = Alignment.BottomCenter),
+                .padding(12.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         )
         {
-            if (isSearchMode) {
-                Box(modifier = Modifier.padding(vertical = 6.dp)) {
-                    DesignTextField(
-                        modifier = Modifier,
-                        textStyle = LocalTextStyle.current.copy(fontSize = 12.sp),
-                        value = searchText,
-                        onValueChange = {
-                            onSearchContentChanged(it)
-                        },
-                        placeholder = {
-                            Text(
-                                text = stringResource(xcj.app.appsets.R.string.search),
-                                fontSize = 12.sp
-                            )
-                        },
-                        colors = TextFieldDefaults.colors(
-                            unfocusedIndicatorColor = androidx.compose.ui.graphics.Color.Transparent,
-                            focusedIndicatorColor = androidx.compose.ui.graphics.Color.Transparent
-                        )
-                    )
-                }
-            }
-            if (isReachMinCount) {
-                Box(modifier = Modifier.padding(vertical = 6.dp)) {
-                    FilledTonalButton(
-                        modifier = Modifier
-                            .width(TextFieldDefaults.MinWidth)
-                            .height(TextFieldDefaults.MinHeight),
-                        onClick = {
-                            hapticFeedback.performHapticFeedback(HapticFeedbackType.Confirm)
-                            val results =
-                                ContentSelectionResult.RichMediaContentSelectionResult(
-                                    context,
-                                    request,
-                                    contentSelectionType,
-                                    selectedContents
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .animateContentSize(
+                        alignment = Alignment.BottomCenter
+                    ),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                AnimatedVisibility(
+                    visible = isSearchMode,
+                    enter = fadeIn() + slideInVertically { it },
+                    exit = fadeOut() + slideOutVertically { it }
+                ) {
+                    Box(modifier = Modifier.padding(vertical = 6.dp)) {
+                        DesignTextField(
+                            modifier = Modifier,
+                            textStyle = LocalTextStyle.current.copy(fontSize = 12.sp),
+                            value = searchText,
+                            onValueChange = {
+                                onSearchContentChanged(it)
+                            },
+                            placeholder = {
+                                Text(
+                                    text = stringResource(xcj.app.appsets.R.string.search),
+                                    fontSize = 12.sp
                                 )
-                            onContentSelected(results)
+                            },
+                            colors = TextFieldDefaults.colors(
+                                unfocusedIndicatorColor = androidx.compose.ui.graphics.Color.Transparent,
+                                focusedIndicatorColor = androidx.compose.ui.graphics.Color.Transparent
+                            )
+                        )
+                    }
+                }
+                AnimatedVisibility(
+                    visible = isReachMinCount,
+                    enter = fadeIn() + slideInVertically { it },
+                    exit = fadeOut() + slideOutVertically { it }
+                ) {
+                    Box(modifier = Modifier.padding(vertical = 6.dp)) {
+                        FilledTonalButton(
+                            modifier = Modifier
+                                .width(TextFieldDefaults.MinWidth)
+                                .height(TextFieldDefaults.MinHeight),
+                            onClick = {
+                                hapticFeedback.performHapticFeedback(HapticFeedbackType.Confirm)
+                                val results =
+                                    ContentSelectionResult.RichMediaContentSelectionResult(
+                                        context,
+                                        request,
+                                        contentSelectionType,
+                                        selectedContents
+                                    )
+                                onContentSelected(results)
+                            }
+                        ) {
+                            Text(text = stringResource(xcj.app.appsets.R.string.confirm))
                         }
-                    ) {
-                        Text(text = stringResource(xcj.app.appsets.R.string.confirm))
                     }
                 }
             }
+
             Box(
                 modifier = Modifier.fillMaxWidth()
             ) {
@@ -1464,8 +1490,9 @@ fun BottomActions(
                     items(selectedContents) { uriProvider ->
                         AnyImage(
                             modifier = modifier
+                                .animateItem()
                                 .size(25.dp),
-                            any = uriProvider.provideUri()
+                            model = uriProvider.provideUri()
                         )
                     }
 

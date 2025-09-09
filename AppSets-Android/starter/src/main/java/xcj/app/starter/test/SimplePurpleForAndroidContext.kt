@@ -5,7 +5,6 @@ import xcj.app.starter.android.util.PurpleLogger
 import xcj.app.starter.foundation.DesignEvent
 import java.text.SimpleDateFormat
 import java.util.Calendar
-import java.util.Locale
 
 /**
  * @param any any must be android.app.Application, else be error!
@@ -38,10 +37,8 @@ class SimplePurpleForAndroidContext(any: Any) : PurpleContext() {
 
     override fun onStart() {
         PurpleLogger.current.d(TAG, "onStart")
-        val startDateTime = SimpleDateFormat(
-            "yyyy/MM/dd HH:mm:ss",
-            Locale.getDefault()
-        ).format(Calendar.getInstance().time)
+        val startDateTime =
+            SimpleDateFormat.getDateTimeInstance().format(Calendar.getInstance().time)
         val purpleStartEvent = PurpleStartEvent(startDateTime, "Context is healthy!")
         publishEvent(purpleStartEvent)
     }

@@ -1,6 +1,5 @@
 package xcj.app.appsets.ui.compose.apps.quickstep
 
-import android.content.Context
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -19,35 +18,29 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.os.bundleOf
 import xcj.app.appsets.constants.Constants
 import xcj.app.appsets.ui.compose.LocalNavHostController
 import xcj.app.appsets.ui.compose.PageRouteNames
-import xcj.app.appsets.ui.compose.apps.tools.TOOL_TYPE
-import xcj.app.appsets.ui.compose.apps.tools.TOOL_TYPE_AppSets_Transform
+import xcj.app.appsets.ui.compose.apps.tools.AppTool
 import xcj.app.appsets.ui.compose.main.navigateWithBundle
 import xcj.app.appsets.ui.compose.quickstep.QuickStepContent
 import xcj.app.appsets.ui.compose.quickstep.QuickStepContentHandler
 import xcj.app.appsets.ui.compose.quickstep.QuickStepContentHolder
 import xcj.app.appsets.ui.compose.quickstep.TextQuickStepContent
 
-class ToolContentTransformQuickStepHandler(context: Context) : QuickStepContentHandler(context) {
+class ToolContentTransformQuickStepHandler : QuickStepContentHandler {
 
     private var mQuickStepContentHolder: QuickStepContentHolder? = null
 
-    override fun getName(): String {
-        return context.getString(xcj.app.appsets.R.string.transform_content)
-    }
+    override val name: Int = xcj.app.appsets.R.string.transform_content
 
-    override fun getDescription(): String {
-        return context.getString(xcj.app.appsets.R.string.transform_content)
-    }
+    override val description: Int = xcj.app.appsets.R.string.transform_content
 
-    override fun getCategory(): String {
-        return context.getString(xcj.app.appsets.R.string.tools)
-    }
+    override val category: Int = xcj.app.appsets.R.string.transform_content
 
     override fun accept(quickStepContentHolder: QuickStepContentHolder): Boolean {
         val firstTextQuickStepContent =
@@ -64,8 +57,8 @@ class ToolContentTransformQuickStepHandler(context: Context) : QuickStepContentH
         val contentCompose = @Composable {
             val navController = LocalNavHostController.current
             ToolContentTransformQuickStepHandlerContent(
-                name = getName(),
-                description = getDescription(),
+                name = stringResource(name),
+                description = stringResource(description),
                 onClick = {
                     val quickStepContents = mQuickStepContentHolder?.quickStepContents?.let {
                         arrayListOf<QuickStepContent>().apply {
@@ -76,12 +69,10 @@ class ToolContentTransformQuickStepHandler(context: Context) : QuickStepContentH
                     if (quickStepContents == null) {
                         return@ToolContentTransformQuickStepHandlerContent
                     }
-                    navigateWithBundle(
-                        navController,
-                        PageRouteNames.AppToolsDetailsPage,
+                    navController.navigateWithBundle(
+                        PageRouteNames.ToolsDetailsPage + AppTool.TOOL_TYPE_AppSets_Transform,
                         bundleCreator = {
                             bundleOf().apply {
-                                putString(TOOL_TYPE, TOOL_TYPE_AppSets_Transform)
                                 putParcelableArrayList(
                                     Constants.QUICK_STEP_CONTENT,
                                     quickStepContents
@@ -100,7 +91,7 @@ class ToolContentTransformQuickStepHandler(context: Context) : QuickStepContentH
 @Composable
 fun ToolContentTransformQuickStepHandlerContent(
     name: String,
-    description:String,
+    description: String,
     onClick: () -> Unit
 ) {
     Column(

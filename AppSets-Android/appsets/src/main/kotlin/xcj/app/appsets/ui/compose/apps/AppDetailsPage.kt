@@ -71,7 +71,7 @@ import xcj.app.appsets.server.model.DownloadInfo
 import xcj.app.appsets.server.model.ScreenshotInfo
 import xcj.app.appsets.server.model.VersionInfo
 import xcj.app.appsets.ui.compose.custom_component.AnyImage
-import xcj.app.appsets.ui.compose.custom_component.DesignBottomBackButton
+import xcj.app.appsets.ui.compose.custom_component.DesignBackButton
 import xcj.app.appsets.ui.compose.custom_component.HideNavBarWhenOnLaunch
 import xcj.app.appsets.ui.compose.theme.BigAvatarShape
 import xcj.app.compose_share.components.BackActionTopBar
@@ -101,7 +101,7 @@ fun AppDetailsPage(
                     Alignment.Center
                 )
             )
-            DesignBottomBackButton(
+            DesignBackButton(
                 modifier = Modifier.align(Alignment.BottomCenter),
                 onClick = onBackClick
             )
@@ -217,7 +217,7 @@ fun ApplicationContentComponent(
                         color = MaterialTheme.colorScheme.outline,
                         shape = BigAvatarShape
                     ),
-                any = application.bioUrl
+                model = application.bioUrl
             )
             Spacer(modifier = Modifier.height(16.dp))
             AnimatedVisibility(visible = getApplicationButtonVisible) {
@@ -401,7 +401,7 @@ fun DownloadBottomSheetContent(
                             MaterialTheme.colorScheme.outline,
                             MaterialTheme.shapes.extraLarge
                         ),
-                    any = application.bioUrl
+                    model = application.bioUrl
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(text = application.name ?: "")
@@ -728,7 +728,7 @@ fun VersionInfo(
                                         onAppScreenshotClick(screenShot, version.screenshotInfos)
                                     }
                                 ),
-                            any = screenShot.url
+                            model = screenShot.url
                         )
                         if (index == version.screenshotInfos.size - 1) {
                             Spacer(modifier = Modifier.width(12.dp))

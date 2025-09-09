@@ -47,7 +47,7 @@ import xcj.app.appsets.ui.compose.LocalUseCaseOfConversation
 import xcj.app.appsets.ui.compose.apps.tools.PageIndicator
 import xcj.app.appsets.ui.compose.conversation.GenerativeAISession
 import xcj.app.appsets.ui.compose.custom_component.AnyImage
-import xcj.app.appsets.ui.compose.custom_component.DesignBottomBackButton
+import xcj.app.appsets.ui.compose.custom_component.DesignBackButton
 import xcj.app.appsets.ui.compose.custom_component.HideNavBarWhenOnLaunch
 
 data class AIGCSessionTemplate(
@@ -92,7 +92,7 @@ fun AIGCMarketPage(
             }
         }
 
-        DesignBottomBackButton(
+        DesignBackButton(
             modifier = Modifier
                 .align(Alignment.BottomCenter), onClick = onBackClick
         )
@@ -154,7 +154,7 @@ fun MixedAIModelsPage() {
                                     shape = MaterialTheme.shapes.large
                                 )
                                 .clip(MaterialTheme.shapes.large),
-                            any = sessionTemplate.session.imObj.avatarUrl
+                            model = sessionTemplate.session.imObj.avatarUrl
                         )
                         Column(
                             modifier = Modifier
@@ -267,7 +267,7 @@ fun DeviceLocalAIModelsPage() {
                                     shape = MaterialTheme.shapes.large
                                 )
                                 .clip(MaterialTheme.shapes.large),
-                            any = sessionTemplate.session.imObj.avatarUrl
+                            model = sessionTemplate.session.imObj.avatarUrl
                         )
                         Column(
                             modifier = Modifier
@@ -379,7 +379,7 @@ fun OnlineAIModelsPage() {
                                     shape = MaterialTheme.shapes.large
                                 )
                                 .clip(MaterialTheme.shapes.large),
-                            any = sessionTemplate.session.imObj.avatarUrl
+                            model = sessionTemplate.session.imObj.avatarUrl
                         )
                         Column(
                             modifier = Modifier

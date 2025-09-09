@@ -5,21 +5,16 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
 import android.view.MotionEvent
 import android.window.OnBackInvokedDispatcher
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.withCreated
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
+import androidx.lifecycle.repeatOnLifecycle
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import xcj.app.appsets.notification.NotificationPusher
 import xcj.app.appsets.ui.compose.theme.AppSetsTheme
 import xcj.app.appsets.ui.viewmodel.MainViewModel
@@ -27,8 +22,8 @@ import xcj.app.appsets.util.SplashScreenHelper
 import xcj.app.compose_share.ui.viewmodel.AnyStateViewModel.Companion.bottomSheetState
 import xcj.app.starter.android.AppDefinition
 import xcj.app.starter.android.ui.base.DesignComponentActivity
+import xcj.app.starter.android.util.PackageUtil
 import xcj.app.starter.android.util.PurpleLogger
-import java.util.UUID
 
 class MainActivity : DesignComponentActivity() {
 
@@ -57,31 +52,38 @@ class MainActivity : DesignComponentActivity() {
             }
         }
         lifecycleScope.launch {
-            lifecycle.withCreated {
-                createBroadcastReceiver()
+            lifecycle.repeatOnLifecycle(Lifecycle.State.CREATED) {
+                listenBroadcast()
                 viewModel.onActivityCreated(this@MainActivity)
+            }
+            lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
                 viewModel.handleIntent(intent)
-
-                Handler(Looper.getMainLooper()).post {
-                    lifecycleScope.launch {
-                        handleExternalShareContentIfNeeded(intent)
-                    }
-                }
+                handleExternalShareContentIfNeeded(intent)
+            }
+            lifecycle.repeatOnLifecycle(Lifecycle.State.DESTROYED) {
+                unListenBroadcast()
             }
         }
     }
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
-        viewModel.handleIntent(intent)
         lifecycleScope.launch {
+            viewModel.handleIntent(intent)
             handleExternalShareContentIfNeeded(intent)
         }
     }
 
+    private fun unListenBroadcast() {
+        PurpleLogger.current.d(TAG, "unListenBroadcast")
+        if (::mImMessageNotificationIntentReceiver.isInitialized) {
+            unregisterReceiver(mImMessageNotificationIntentReceiver)
+        }
+    }
+
     @SuppressLint("UnspecifiedRegisterReceiverFlag")
-    private fun createBroadcastReceiver() {
-        PurpleLogger.current.d(TAG, "createBroadcastReceiver")
+    private fun listenBroadcast() {
+        PurpleLogger.current.d(TAG, "listenBroadcast")
         if (::mImMessageNotificationIntentReceiver.isInitialized) {
             return
         }
@@ -133,14 +135,7 @@ class MainActivity : DesignComponentActivity() {
         return super.onTouchEvent(event)
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        if (::mImMessageNotificationIntentReceiver.isInitialized) {
-            unregisterReceiver(mImMessageNotificationIntentReceiver)
-        }
-    }
-
-    private suspend fun handleExternalShareContentIfNeeded(intent: Intent?) {
+    private fun handleExternalShareContentIfNeeded(intent: Intent?) {
         if (intent == null) {
             return
         }
@@ -151,31 +146,32 @@ class MainActivity : DesignComponentActivity() {
         }
     }
 
-    private suspend fun handleIntentExternalContent(
-        intent: Intent
+    private fun handleIntentExternalContent(
+        intent: Intent,
     ) {
         //wait compose first frame draw finish
-        delay(150)
-        val fromAppDefinition = getCallActivityAppDefinition()
-        val composeContainerState = viewModel.bottomSheetState()
-        composeContainerState.setShouldBackgroundSink(true)
-        composeContainerState.show {
-            ExternalContentSheetContent(
-                intent = intent,
-                fromAppDefinition = fromAppDefinition,
-                onConfirmClick = { handleType ->
-                    when (handleType) {
-                        EXTERNAL_CONTENT_HANDLE_BY_LOCAL_SHARE -> {
-                            composeContainerState.hide()
-                            handleExternalDataByAppSetsShare(intent)
+        lifecycleScope.launch {
+            val fromAppDefinition = getCallActivityAppDefinition()
+            val composeContainerState = viewModel.bottomSheetState()
+            composeContainerState.setShouldBackgroundSink(true)
+            composeContainerState.show {
+                ExternalContentSheetContent(
+                    intent = intent,
+                    fromAppDefinition = fromAppDefinition,
+                    onConfirmClick = { handleType ->
+                        when (handleType) {
+                            EXTERNAL_CONTENT_HANDLE_BY_LOCAL_SHARE -> {
+                                composeContainerState.hide()
+                                handleExternalDataByAppSetsShare(intent)
 
-                        }
+                            }
 
-                        EXTERNAL_CONTENT_HANDLE_BY_APPSETS -> {
+                            EXTERNAL_CONTENT_HANDLE_BY_APPSETS -> {
+                            }
                         }
                     }
-                }
-            )
+                )
+            }
         }
     }
 
@@ -185,29 +181,12 @@ class MainActivity : DesignComponentActivity() {
 
     private suspend fun getCallActivityAppDefinition(): AppDefinition? {
         val callingPackage = getCallingPackage()
-        return if (callingPackage != null) {
-            getAppNameFromPackageName(callingPackage)
-        } else {
-            null
+        if (callingPackage.isNullOrEmpty()) {
+            return null
         }
+        return PackageUtil.getAppDefinitionByPackageName(this, callingPackage)
     }
 
-    private suspend fun getAppNameFromPackageName(packageName: String): AppDefinition? =
-        withContext(
-            Dispatchers.IO
-        ) {
-            try {
-                val appInfo = packageManager.getApplicationInfo(packageName, 0)
-                val appDefinition = AppDefinition(UUID.randomUUID().toString())
-                appDefinition.applicationInfo = appInfo
-                appDefinition.name = appInfo.loadLabel(packageManager).toString().trim()
-                appDefinition.icon = appInfo.loadIcon(packageManager)
-                return@withContext appDefinition
-            } catch (e: PackageManager.NameNotFoundException) {
-                e.printStackTrace()
-                return@withContext null
-            }
-        }
 
     override fun onEnterAnimationComplete() {
         PurpleLogger.current.d(TAG, "onEnterAnimationComplete")

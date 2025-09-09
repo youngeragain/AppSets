@@ -3,8 +3,6 @@ package xcj.app.appsets.usecase
 import android.content.Context
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
 import xcj.app.appsets.server.model.GroupInfo
 import xcj.app.appsets.server.repository.UserRepository
 import xcj.app.appsets.ui.model.page_state.GroupInfoPageState
@@ -14,7 +12,6 @@ import xcj.app.starter.android.util.PurpleLogger
 import xcj.app.starter.server.requestNotNull
 
 class GroupInfoUseCase(
-    private val coroutineScope: CoroutineScope,
     private val userRepository: UserRepository
 ) : IComposeLifecycleAware {
     companion object {
@@ -24,7 +21,7 @@ class GroupInfoUseCase(
     val groupInfoPageState: MutableState<GroupInfoPageState> =
         mutableStateOf(GroupInfoPageState.Loading)
 
-    fun updateGroupInfo(context: Context, groupInfo: GroupInfo?) {
+    suspend fun updateGroupInfo(context: Context, groupInfo: GroupInfo?) {
         if (groupInfo == null) {
             groupInfoPageState.value = GroupInfoPageState.NotFound
             return
@@ -35,30 +32,28 @@ class GroupInfoUseCase(
         }
     }
 
-    private fun updateGroupInfoByGroupId(context: Context, groupId: String?) {
+    private suspend fun updateGroupInfoByGroupId(context: Context, groupId: String?) {
         if (groupId.isNullOrEmpty()) {
             groupInfoPageState.value = GroupInfoPageState.NotFound
             return
         }
         groupInfoPageState.value = GroupInfoPageState.Loading
-        coroutineScope.launch {
-            requestNotNull(
-                action = {
-                    userRepository.getGroupInfoById(groupId)
-                },
-                onSuccess = { groupInfo ->
-                    PictureUrlMapper.mapPictureUrl(groupInfo)
-                    groupInfoPageState.value = GroupInfoPageState.LoadSuccess(groupInfo)
-                },
-                onFailed = {
-                    groupInfoPageState.value = GroupInfoPageState.NotFound
-                    PurpleLogger.current.d(
-                        TAG,
-                        "updateGroupInfoByGroupId failed:${it.e?.message}"
-                    )
-                }
-            )
-        }
+        requestNotNull(
+            action = {
+                userRepository.getGroupInfoById(groupId)
+            },
+            onSuccess = { groupInfo ->
+                PictureUrlMapper.mapPictureUrl(groupInfo)
+                groupInfoPageState.value = GroupInfoPageState.LoadSuccess(groupInfo)
+            },
+            onFailed = {
+                groupInfoPageState.value = GroupInfoPageState.NotFound
+                PurpleLogger.current.d(
+                    TAG,
+                    "updateGroupInfoByGroupId failed:${it.e?.message}"
+                )
+            }
+        )
     }
 
     override fun onComposeDispose(by: String?) {

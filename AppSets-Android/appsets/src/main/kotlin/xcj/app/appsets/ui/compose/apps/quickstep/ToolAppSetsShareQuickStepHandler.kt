@@ -1,6 +1,5 @@
 package xcj.app.appsets.ui.compose.apps.quickstep
 
-import android.content.Context
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -18,7 +17,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import xcj.app.appsets.ui.compose.main.navigateToAppSetsShareActivity
@@ -26,21 +27,15 @@ import xcj.app.appsets.ui.compose.quickstep.QuickStepContent
 import xcj.app.appsets.ui.compose.quickstep.QuickStepContentHandler
 import xcj.app.appsets.ui.compose.quickstep.QuickStepContentHolder
 
-class ToolAppSetsShareQuickStepHandler(context: Context) : QuickStepContentHandler(context) {
+class ToolAppSetsShareQuickStepHandler : QuickStepContentHandler {
 
     private var mQuickStepContentHolder: QuickStepContentHolder? = null
 
-    override fun getName(): String {
-        return context.getString(xcj.app.appsets.R.string.appsets_share)
-    }
+    override val name: Int = xcj.app.appsets.R.string.appsets_share
 
-    override fun getDescription(): String {
-        return context.getString(xcj.app.appsets.R.string.nearby_share)
-    }
+    override val description: Int = xcj.app.appsets.R.string.nearby_share
 
-    override fun getCategory(): String {
-        return context.getString(xcj.app.appsets.R.string.tools)
-    }
+    override val category: Int = xcj.app.appsets.R.string.tools
 
     override fun accept(quickStepContentHolder: QuickStepContentHolder): Boolean {
         mQuickStepContentHolder = quickStepContentHolder
@@ -50,9 +45,10 @@ class ToolAppSetsShareQuickStepHandler(context: Context) : QuickStepContentHandl
 
     override fun getContent(onClick: () -> Unit): @Composable (() -> Unit) {
         val contentCompose = @Composable {
+            val context = LocalContext.current
             ToolAppSetsShareQuickStepHandlerContent(
-                name = getName(),
-                description = getDescription(),
+                name = stringResource(name),
+                description = stringResource(description),
                 onClick = {
                     val quickStepContents = mQuickStepContentHolder?.quickStepContents?.let {
                         arrayListOf<QuickStepContent>().apply {

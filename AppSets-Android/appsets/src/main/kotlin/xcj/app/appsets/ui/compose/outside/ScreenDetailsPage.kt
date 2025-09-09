@@ -73,7 +73,7 @@ import xcj.app.appsets.server.model.ScreenMediaFileUrl
 import xcj.app.appsets.server.model.ScreenReview
 import xcj.app.appsets.ui.compose.PageRouteNames
 import xcj.app.appsets.ui.compose.custom_component.AnyImage
-import xcj.app.appsets.ui.compose.custom_component.DesignBottomBackButton
+import xcj.app.appsets.ui.compose.custom_component.DesignBackButton
 import xcj.app.appsets.ui.compose.custom_component.HideNavBarWhenOnLaunch
 import xcj.app.appsets.ui.model.ScreenInfoForCard
 import xcj.app.compose_share.components.DesignHDivider
@@ -104,7 +104,7 @@ fun ScreenDetailsPage(
                     Alignment.Center
                 )
             )
-            DesignBottomBackButton(
+            DesignBackButton(
                 modifier = Modifier.align(Alignment.BottomCenter),
                 onClick = onBackClick
             )
@@ -142,7 +142,7 @@ fun ScreenDetailsPage(
                             modifier = Modifier
                                 .matchParentSize()
                                 .blur(30.dp, BlurredEdgeTreatment.Unbounded),
-                            any = backgroundImageUrl
+                            model = backgroundImageUrl
                         )
                     }
 
@@ -493,7 +493,7 @@ fun CollectEditSheetContent(
             FilledTonalButton(
                 onClick = onConfirmClick
             ) {
-                Text(text = stringResource(xcj.app.appsets.R.string.sure))
+                Text(text = stringResource(xcj.app.appsets.R.string.ok))
             }
         }
 
@@ -551,7 +551,7 @@ fun ScreenReviews(
                                 .clickable {
                                     review.userInfo?.let { onBioClick.invoke(it) }
                                 },
-                            any = review.userInfo?.bioUrl
+                            model = review.userInfo?.bioUrl
                         )
                     }
                     Column(horizontalAlignment = Alignment.Start) {

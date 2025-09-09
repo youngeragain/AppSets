@@ -58,6 +58,7 @@ import androidx.core.os.BundleCompat
 import androidx.core.os.bundleOf
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.currentStateAsState
+import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import androidx.navigation.NavDirections
 import androidx.navigation.NavGraphBuilder
@@ -114,12 +115,18 @@ import xcj.app.appsets.ui.compose.apps.AppDetailsPage
 import xcj.app.appsets.ui.compose.apps.AppsCenterPage
 import xcj.app.appsets.ui.compose.apps.CreateAppPage
 import xcj.app.appsets.ui.compose.apps.DownloadBottomSheetContent
-import xcj.app.appsets.ui.compose.apps.tools.AppToolsDetailsPage
-import xcj.app.appsets.ui.compose.apps.tools.AppToolsPage
-import xcj.app.appsets.ui.compose.apps.tools.TOOL_TYPE
+import xcj.app.appsets.ui.compose.apps.tools.AppTool
+import xcj.app.appsets.ui.compose.apps.tools.ToolContentTransformPage
+import xcj.app.appsets.ui.compose.apps.tools.ToolFileCreatePage
+import xcj.app.appsets.ui.compose.apps.tools.ToolFileManagerPage
+import xcj.app.appsets.ui.compose.apps.tools.ToolGraphicPage
+import xcj.app.appsets.ui.compose.apps.tools.ToolIntentCallerPage
+import xcj.app.appsets.ui.compose.apps.tools.ToolStartPage
+import xcj.app.appsets.ui.compose.apps.tools.ToolWeatherPage
 import xcj.app.appsets.ui.compose.camera.DesignCameraActivity
 import xcj.app.appsets.ui.compose.content_selection.ContentSelectSheetContent
 import xcj.app.appsets.ui.compose.content_selection.ContentSelectionRequest
+import xcj.app.appsets.ui.compose.content_selection.ContentSelectionTypes
 import xcj.app.appsets.ui.compose.content_selection.defaultAllSelectionTypeParam
 import xcj.app.appsets.ui.compose.content_selection.defaultImageSelectionTypeParam
 import xcj.app.appsets.ui.compose.conversation.ConversationDetailsMoreInfoSheetContent
@@ -345,17 +352,17 @@ fun MainNaviHostPages(
                     val context = LocalContext.current
                     val appCreationUseCase = LocalUseCaseOfAppCreation.current
                     val anyStateProvider = LocalAnyStateProvider.current
-
+                    val coroutineScope = rememberCoroutineScope()
                     LaunchedEffect(key1 = true, block = {
                         appCreationUseCase.inflateApplication(application)
                     })
 
                     CreateAppPage(
-                        onBackClick = navController::navigateUp,
                         createStep = createStep,
                         platform = platform,
                         versionInfo = versionInfo,
                         createApplicationPageState = appCreationUseCase.createApplicationPageState.value,
+                        onBackClick = navController::navigateUp,
                         onApplicationForCreateFiledChanged = appCreationUseCase::onApplicationForCreateFiledChanged,
                         onChoosePictureClick = { any, filedName, uriHolder ->
                             val requestKey = "CREATE_APP_PICTURE_REQUEST"
@@ -368,7 +375,7 @@ fun MainNaviHostPages(
                                 navController,
                                 PageRouteNames.CreateAppPage,
                                 requestKey,
-                                requestSelectionTypeParams = defaultImageSelectionTypeParam
+                                requestSelectionTypeParams = defaultImageSelectionTypeParam()
                             )
                         },
                         onConfirmClick = {
@@ -377,7 +384,9 @@ fun MainNaviHostPages(
                                     .toast()
                                 return@CreateAppPage
                             }
-                            appCreationUseCase.finishCreateApp(context)
+                            coroutineScope.launch {
+                                appCreationUseCase.finishCreateApp(context)
+                            }
                         }
                     )
                 }
@@ -392,13 +401,16 @@ fun MainNaviHostPages(
                     val context = LocalContext.current
                     val screensUseCase = LocalUseCaseOfScreen.current
                     val anyStateProvider = LocalAnyStateProvider.current
+                    val coroutineScope = rememberCoroutineScope()
                     OutSidePage(
                         screens = screensUseCase.systemScreensContainer.screens,
                         onBioClick = { bio ->
                             onBioClick(context, navController, bio)
                         },
                         onLoadMore = {
-                            screensUseCase.loadMore(null, false)
+                            coroutineScope.launch {
+                                screensUseCase.loadMore(null, false)
+                            }
                         },
                         onScreenMediaClick = { url, urls ->
                             handleScreenMediaClick(
@@ -421,10 +433,11 @@ fun MainNaviHostPages(
                     onBackClick = navController::navigateUp,
                 ) {
                     val context = LocalContext.current
-                    val screensUseCase = LocalUseCaseOfScreen.current
+                    val screenUseCase = LocalUseCaseOfScreen.current
                     val anyStateProvider = LocalAnyStateProvider.current
+                    val coroutineScope = rememberCoroutineScope()
                     ScreenDetailsPage(
-                        screenInfoForCard = screensUseCase.currentScreenInfoForCard.value,
+                        screenInfoForCard = screenUseCase.currentScreenInfoForCard.value,
                         onBackClick = navController::navigateUp,
                         onBioClick = { bio ->
                             onBioClick(context, navController, bio)
@@ -433,13 +446,19 @@ fun MainNaviHostPages(
                             navController.navigate(PageRouteNames.ScreenEditPage)
                         },
                         onCollectClick = { category ->
-                            screensUseCase.userClickCollectScreen(context, category)
+                            coroutineScope.launch {
+                                screenUseCase.userClickCollectScreen(context, category)
+                            }
                         },
                         onLikesClick = {
-                            screensUseCase.userClickLikeScreen(context)
+                            coroutineScope.launch {
+                                screenUseCase.userClickLikeScreen(context)
+                            }
                         },
                         onReviewConfirm = { reviewString ->
-                            screensUseCase.onReviewConfirm(context, reviewString)
+                            coroutineScope.launch {
+                                screenUseCase.onReviewConfirm(context, reviewString)
+                            }
                         },
                         onScreenMediaClick = { url, urls ->
                             handleScreenMediaClick(
@@ -452,10 +471,12 @@ fun MainNaviHostPages(
                             )
                         },
                         onPageShowPrevious = {
-                            screensUseCase.updatePageShowPrevious()
+                            coroutineScope.launch {
+                                screenUseCase.updatePageShowPrevious()
+                            }
                         },
                         onPageShowNext = {
-                            screensUseCase.updatePageShowNext()
+                            screenUseCase.updatePageShowNext()
                         }
                     )
                 }
@@ -477,20 +498,27 @@ fun MainNaviHostPages(
                         Constants.QUICK_STEP_CONTENT,
                         QuickStepContent::class.java
                     )
+                    val coroutineScope = rememberCoroutineScope()
                     CreateScreenPage(
                         quickStepContents = quickStepContents,
                         onBackClick = { shouldRefresh ->
                             if (shouldRefresh) {
-                                screenUseCase.loadOutSideScreens()
+                                coroutineScope.launch {
+                                    screenUseCase.loadOutSideScreens()
+                                }
                             }
                             navController.navigateUp()
                         },
                         onConfirmClick = {
-                            screenPostUseCase.createScreen(context)
+                            coroutineScope.launch {
+                                screenPostUseCase.createScreen(context)
+                            }
                         },
                         onIsPublicClick = screenPostUseCase::onIsPublicClick,
                         onGenerateClick = {
-                            screenPostUseCase.generateContent(context)
+                            coroutineScope.launch {
+                                screenPostUseCase.generateContent(context)
+                            }
                         },
                         onInputContent = screenPostUseCase::onInputContent,
                         onInputTopics = screenPostUseCase::onInputTopics,
@@ -506,8 +534,10 @@ fun MainNaviHostPages(
                                 requestKey,
                                 requestSelectionTypeParams = listOf(
                                     ContentSelectionRequest.SelectionTypeParam(
-                                        requestType,
-                                        requestTypeMaxCount
+                                        selectionType = requestType,
+                                        maxCount = { selectionType ->
+                                            requestTypeMaxCount
+                                        }
                                     )
                                 ),
                                 defaultSelectionType = requestType
@@ -533,11 +563,14 @@ fun MainNaviHostPages(
                     onBackClick = navController::navigateUp,
                 ) {
                     val screenUseCase = LocalUseCaseOfScreen.current
+                    val coroutineScope = rememberCoroutineScope()
                     ScreenEditPage(
                         screenInfo = screenUseCase.currentScreenInfoForCard.value.screenInfo,
                         onBackClick = navController::navigateUp,
                         onPublicStateChanged = { newIsPublic ->
-                            screenUseCase.changeScreenPublicState(newIsPublic)
+                            coroutineScope.launch {
+                                screenUseCase.changeScreenPublicState(newIsPublic)
+                            }
                         }
                     )
                 }
@@ -613,6 +646,13 @@ fun MainNaviHostPages(
                                 navController,
                                 PageRouteNames.ConversationDetailsPage,
                                 requestKey,
+                                requestSelectionTypeParams = defaultAllSelectionTypeParam { selectionType ->
+                                    if (selectionType == ContentSelectionTypes.IMAGE) {
+                                        100
+                                    } else {
+                                        1
+                                    }
+                                }
                             )
                         },
                         onVoiceAction = {
@@ -697,7 +737,14 @@ fun MainNaviHostPages(
                                 anyStateProvider,
                                 navController,
                                 PageRouteNames.ConversationDetailsPage,
-                                requestType
+                                requestType,
+                                requestSelectionTypeParams = defaultAllSelectionTypeParam { selectionType ->
+                                    if (selectionType == ContentSelectionTypes.IMAGE) {
+                                        100
+                                    } else {
+                                        1
+                                    }
+                                }
                             )
                         },
                         onVoiceAction = {
@@ -751,13 +798,14 @@ fun MainNaviHostPages(
                 val qrCodeUseCase = LocalUseCaseOfQRCode.current
                 val anyStateProvider = LocalAnyStateProvider.current
                 val navigationUseCase = LocalUseCaseOfNavigation.current
+                val coroutineScope = rememberCoroutineScope()
                 LaunchedEffect(true) {
                     systemUseCase.prepareLoginState()
                 }
                 LoginPage(
                     loginSignUpPageState = systemUseCase.loginSignUpPageState.value,
-                    onBackClick = navController::navigateUp,
                     qrCodeInfo = qrCodeUseCase.generatedQRCodeInfo.value,
+                    onBackClick = navController::navigateUp,
                     onLoggingFinish = {
                         val lastNavDestination = navigationUseCase.lastNavDestination
                         if (lastNavDestination.isNullOrEmpty()) {
@@ -769,7 +817,9 @@ fun MainNaviHostPages(
                         navController.navigate(PageRouteNames.SignUpPage)
                     },
                     onQRCodeLoginButtonClick = {
-                        qrCodeUseCase.requestGenerateQRCode()
+                        coroutineScope.launch {
+                            qrCodeUseCase.requestGenerateQRCode()
+                        }
                     },
                     onScanQRCodeButtonClick = {
                         navigateToCameraActivity(context, navController)
@@ -803,7 +853,7 @@ fun MainNaviHostPages(
                             navController,
                             PageRouteNames.SignUpPage,
                             requestKey,
-                            requestSelectionTypeParams = defaultImageSelectionTypeParam
+                            requestSelectionTypeParams = defaultImageSelectionTypeParam()
                         )
                     },
                     onConfirmClick = {
@@ -814,52 +864,108 @@ fun MainNaviHostPages(
                 )
             }
 
-            composable(PageRouteNames.AppToolsPage) {
+            composable(PageRouteNames.ToolsStartPage) {
                 val context = LocalContext.current
-                AppToolsPage(
+                ToolStartPage(
                     onBackClick = navController::navigateUp,
                     onToolClick = { appTool ->
-                        val routeBuilder = appTool.routeBuilder
-                        if (routeBuilder == null) {
-                            navigateWithBundle(
-                                navController,
-                                PageRouteNames.AppToolsDetailsPage,
-                                bundleCreator = {
-                                    bundleOf().apply {
-                                        putString(TOOL_TYPE, appTool.type)
-                                    }
-                                }
-                            )
-                            return@AppToolsPage
-                        }
-                        if (appTool.routeType == "activity_on_host" ||
-                            appTool.routeType == "activity_on_lib"
-                        ) {
-                            routeBuilder.invoke(context, navController)
-                            return@AppToolsPage
-                        }
-                        val route = routeBuilder.invoke(context, navController)
-                        if (route == null) {
-                            return@AppToolsPage
-                        }
-                        if (route is String) {
-                            navController.navigate(route)
-                        }
+                        appTool.routeBuilder?.invoke(context, navController)
                     }
                 )
             }
 
-            composable(PageRouteNames.AppToolsDetailsPage) {
-                val type = it.arguments?.getString(TOOL_TYPE)
-
+            composable(PageRouteNames.ToolsDetailsPage + AppTool.TOOL_TYPE_AppSets_Transform) {
                 val quickStepContents =
                     BundleCompat.getParcelableArrayList(
                         it.arguments ?: BundleDefaults.empty,
                         Constants.QUICK_STEP_CONTENT,
                         QuickStepContent::class.java
                     )
-                AppToolsDetailsPage(
-                    type = type,
+
+                ToolContentTransformPage(
+                    quickStepContents = quickStepContents,
+                    onBackClick = navController::navigateUp
+                )
+            }
+
+            composable(PageRouteNames.ToolsDetailsPage + AppTool.TOOL_TYPE_AppSets_Weather) {
+                val quickStepContents =
+                    BundleCompat.getParcelableArrayList(
+                        it.arguments ?: BundleDefaults.empty,
+                        Constants.QUICK_STEP_CONTENT,
+                        QuickStepContent::class.java
+                    )
+
+                ToolWeatherPage(
+                    quickStepContents = quickStepContents,
+                    onBackClick = navController::navigateUp
+                )
+            }
+
+            composable(PageRouteNames.ToolsDetailsPage + AppTool.TOOL_TYPE_AppSets_Intent_Caller) {
+                val quickStepContents =
+                    BundleCompat.getParcelableArrayList(
+                        it.arguments ?: BundleDefaults.empty,
+                        Constants.QUICK_STEP_CONTENT,
+                        QuickStepContent::class.java
+                    )
+
+                ToolIntentCallerPage(
+                    quickStepContents = quickStepContents,
+                    onBackClick = navController::navigateUp
+                )
+            }
+
+            composable(PageRouteNames.ToolsDetailsPage + AppTool.TOOL_TYPE_AppSets_File_Manager) {
+                val quickStepContents =
+                    BundleCompat.getParcelableArrayList(
+                        it.arguments ?: BundleDefaults.empty,
+                        Constants.QUICK_STEP_CONTENT,
+                        QuickStepContent::class.java
+                    )
+
+                ToolFileManagerPage(
+                    quickStepContents = quickStepContents,
+                    onBackClick = navController::navigateUp,
+                    onCreateFileClick = { abstractFile ->
+                        navController.navigateWithBundle(PageRouteNames.ToolsDetailsPage + AppTool.TOOL_TYPE_AppSets_File_Creator) {
+                            bundleOf().apply {
+                                putParcelable(Constants.URI, abstractFile.asUri())
+                            }
+                        }
+                    }
+                )
+            }
+
+            composable(PageRouteNames.ToolsDetailsPage + AppTool.TOOL_TYPE_AppSets_File_Creator) {
+                val quickStepContents =
+                    BundleCompat.getParcelableArrayList(
+                        it.arguments ?: BundleDefaults.empty,
+                        Constants.QUICK_STEP_CONTENT,
+                        QuickStepContent::class.java
+                    )
+                val uri =
+                    BundleCompat.getParcelable(
+                        it.arguments ?: BundleDefaults.empty,
+                        Constants.URI,
+                        Uri::class.java
+                    )
+                ToolFileCreatePage(
+                    quickStepContents = quickStepContents,
+                    uri = uri,
+                    onBackClick = navController::navigateUp
+                )
+            }
+
+            composable(PageRouteNames.ToolsDetailsPage + AppTool.TOOL_TYPE_AppSets_Graphic) {
+                val quickStepContents =
+                    BundleCompat.getParcelableArrayList(
+                        it.arguments ?: BundleDefaults.empty,
+                        Constants.QUICK_STEP_CONTENT,
+                        QuickStepContent::class.java
+                    )
+
+                ToolGraphicPage(
                     quickStepContents = quickStepContents,
                     onBackClick = navController::navigateUp
                 )
@@ -947,7 +1053,7 @@ fun MainNaviHostPages(
                     val systemUseCase = LocalUseCaseOfSystem.current
                     val anyStateProvider = LocalAnyStateProvider.current
                     CreateGroupPage(
-                        createGroupState = systemUseCase.createGroupState.value,
+                        createGroupPageState = systemUseCase.createGroupPageState.value,
                         onBackClick = navController::navigateUp,
                         onConfirmAction = {
                             systemUseCase.createGroup(context)
@@ -959,7 +1065,7 @@ fun MainNaviHostPages(
                                 navController,
                                 PageRouteNames.CreateGroupPage,
                                 requestKey,
-                                requestSelectionTypeParams = defaultImageSelectionTypeParam
+                                requestSelectionTypeParams = defaultImageSelectionTypeParam()
                             )
                         }
                     )
@@ -1018,9 +1124,9 @@ fun MainNaviHostPages(
                         PlatformUseCase.providePlatformPermissions(context)
                 }
                 PrivacyPage(
-                    onBackClick = navController::navigateUp,
                     privacy = privacy,
                     platformPermissionsUsageList = androidPermissionsUsageList,
+                    onBackClick = navController::navigateUp,
                     onRequest = { permission, type ->
                         if (type == 0) {
                             PlatformUseCase.navigateToExternalSystemAppDetails(context)
@@ -1045,15 +1151,16 @@ fun MainNaviHostPages(
                     val anyStateProvider = LocalAnyStateProvider.current
                     val conversationUseCase = LocalUseCaseOfConversation.current
                     val systemUseCase = LocalUseCaseOfSystem.current
-                    val screensUseCase = LocalUseCaseOfScreen.current
+                    val screenUseCase = LocalUseCaseOfScreen.current
+                    val coroutineScope = rememberCoroutineScope()
                     UserProfilePage(
-                        onBackClick = navController::navigateUp,
                         userProfilePageState = userInfoUseCase.currentUserInfoState.value,
                         userApplications = userInfoUseCase.applicationsState.value,
                         userFollowers = userInfoUseCase.followerUsersState.value,
                         userFollowed = userInfoUseCase.followedUsersState.value,
                         isLoginUserFollowedThisUser = userInfoUseCase.loggedUserFollowedState.value,
-                        userScreens = screensUseCase.userScreensContainer.screens,
+                        userScreens = screenUseCase.userScreensContainer.screens,
+                        onBackClick = navController::navigateUp,
                         onAddFriendClick = { userInfo ->
                             systemUseCase.requestAddFriend(
                                 context,
@@ -1063,9 +1170,7 @@ fun MainNaviHostPages(
                             )
                         },
                         onFlipFollowClick = { userInfo ->
-                            systemUseCase.flipFollowToUserState(userInfo) {
-                                userInfoUseCase.updateUserFollowState()
-                            }
+                            systemUseCase.flipFollowToUserState(userInfo, userInfoUseCase)
                         },
                         onChatClick = { userInfo ->
                             conversationUseCase.updateCurrentSessionByBio(userInfo)
@@ -1089,7 +1194,9 @@ fun MainNaviHostPages(
                             )
                         },
                         onLoadMoreScreens = { uid, force ->
-                            screensUseCase.loadMore(uid, force)
+                            coroutineScope.launch {
+                                screenUseCase.loadMore(uid, force)
+                            }
                         },
                         onSelectUserAvatarClick = { requestKey ->
                             showContentSelectionDialog(
@@ -1098,11 +1205,13 @@ fun MainNaviHostPages(
                                 navController,
                                 PageRouteNames.UserProfilePage,
                                 requestKey,
-                                requestSelectionTypeParams = defaultImageSelectionTypeParam
+                                requestSelectionTypeParams = defaultImageSelectionTypeParam()
                             )
                         },
                         onModifyProfileConfirmClick = {
-                            userInfoUseCase.modifyUserInfo(context)
+                            coroutineScope.launch {
+                                userInfoUseCase.modifyUserInfo(context)
+                            }
                         }
                     )
                 }
@@ -1193,7 +1302,9 @@ fun onBioClick(
         }
 
         is GroupInfo -> {
-            baseViewModel.groupInfoUseCase.updateGroupInfo(context, bio)
+            baseViewModel.viewModelScope.launch {
+                baseViewModel.groupInfoUseCase.updateGroupInfo(context, bio)
+            }
             navController.navigate(PageRouteNames.GroupInfoPage)
         }
 
@@ -1204,10 +1315,12 @@ fun onBioClick(
         }
 
         is ScreenInfo -> {
-            baseViewModel.screensUseCase.updateCurrentViewScreen(
-                navController.currentDestination?.route,
-                bio
-            )
+            baseViewModel.viewModelScope.launch {
+                baseViewModel.screensUseCase.updateCurrentViewScreen(
+                    navController.currentDestination?.route,
+                    bio
+                )
+            }
             navController.navigate(PageRouteNames.ScreenDetailsPage)
         }
     }
@@ -1219,8 +1332,7 @@ fun navigateToAppDetailsPage(
     appsUseCase: AppsUseCase,
     application: Application,
 ) {
-    navigateWithBundle(
-        navController,
+    navController.navigateWithBundle(
         PageRouteNames.AppDetailsPage,
         bundleCreator = {
             bundleOf().apply {
@@ -1230,27 +1342,6 @@ fun navigateToAppDetailsPage(
             }
         }
     )
-}
-
-@SuppressLint("RestrictedApi")
-fun navigateWithBundle(
-    navController: NavHostController,
-    route: String,
-    bundleCreator: () -> Bundle,
-) {
-    val destinationId = navController.findDestination(route)?.id
-    if (destinationId == null) {
-        PurpleLogger.current.d(
-            TAG,
-            "navigateWithBundle, route:$route, destinationId is null, return"
-        )
-        return
-    }
-    val navDirections: NavDirections = object : NavDirections {
-        override val actionId: Int = destinationId
-        override val arguments: Bundle = bundleCreator()
-    }
-    navController.navigate(navDirections)
 }
 
 @SuppressLint("RestrictedApi")
@@ -1304,7 +1395,9 @@ fun navigateToUserInfoPage(
     if (baseViewModel !is BaseIMViewModel) {
         return
     }
-    baseViewModel.userInfoUseCase.updateCurrentUserInfoByUid(uid)
+    baseViewModel.viewModelScope.launch {
+        baseViewModel.userInfoUseCase.updateCurrentUserInfoByUid(uid)
+    }
     navController.navigate(PageRouteNames.UserProfilePage)
 }
 
@@ -1346,7 +1439,7 @@ fun showPictureViewDialog(
                     modifier = Modifier
                         .fillMaxSize()
                         .zoomable(rememberZoomableState()),
-                    any = dataList[pageIndex],
+                    model = dataList[pageIndex],
                     contentScale = ContentScale.FillWidth
                 )
             }
@@ -1405,7 +1498,7 @@ fun showContentSelectionDialog(
     navController: NavController,
     contextName: String,
     requestKey: String,
-    requestSelectionTypeParams: List<ContentSelectionRequest.SelectionTypeParam> = defaultAllSelectionTypeParam,
+    requestSelectionTypeParams: List<ContentSelectionRequest.SelectionTypeParam> = defaultAllSelectionTypeParam(),
     defaultSelectionType: String = requestSelectionTypeParams.first().selectionType,
 ) {
     val platformPermissionsUsageOfFile =
@@ -1517,7 +1610,8 @@ fun navigateToAppSetsLauncherActivity(context: Context) {
         context.startActivity(intent)
         if (context is Activity) {
             context.overridePendingTransition(
-                android.R.anim.fade_in, android.R.anim.fade_out
+                android.R.anim.fade_in,
+                android.R.anim.fade_out
             )
         }
     }.onFailure {

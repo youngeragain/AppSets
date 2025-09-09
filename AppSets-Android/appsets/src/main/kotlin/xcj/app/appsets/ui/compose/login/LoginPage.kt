@@ -55,10 +55,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import xcj.app.appsets.ui.compose.LocalUseCaseOfQRCode
 import xcj.app.appsets.ui.compose.custom_component.AnyImage
-import xcj.app.appsets.ui.compose.custom_component.DesignBottomBackButton
+import xcj.app.appsets.ui.compose.custom_component.DesignBackButton
 import xcj.app.appsets.ui.compose.custom_component.HideNavBarWhenOnLaunch
 import xcj.app.appsets.ui.model.page_state.LoginSignUpPageState
-import xcj.app.appsets.usecase.QRCodeInfoScannedState
+import xcj.app.appsets.ui.model.state.QRCodeInfoScannedState
 import xcj.app.appsets.usecase.QRCodeUseCase
 import xcj.app.compose_share.components.DesignTextField
 
@@ -66,9 +66,9 @@ private const val TAG = "LoginPage"
 
 @Composable
 fun LoginPage(
-    onBackClick: () -> Unit,
     loginSignUpPageState: LoginSignUpPageState,
     qrCodeInfo: QRCodeInfoScannedState.AppSetsQRCodeInfo?,
+    onBackClick: () -> Unit,
     onLoggingFinish: () -> Unit,
     onSignUpButtonClick: () -> Unit,
     onQRCodeLoginButtonClick: () -> Unit,
@@ -199,7 +199,7 @@ fun LoginComponent2(
                 Text(text = stringResource(id = xcj.app.starter.R.string.ok))
             }
             Spacer(Modifier.height(12.dp))
-            DesignBottomBackButton(
+            DesignBackButton(
                 modifier = Modifier.align(Alignment.CenterHorizontally),
                 onClick = onBackClick
             )
@@ -263,7 +263,7 @@ fun LoginComponent1(
                                         MaterialTheme.shapes.extraLarge
                                     )
                                     .clip(MaterialTheme.shapes.extraLarge),
-                                any = qrCodeBitmap
+                                model = qrCodeBitmap
                             )
                         }
                     }

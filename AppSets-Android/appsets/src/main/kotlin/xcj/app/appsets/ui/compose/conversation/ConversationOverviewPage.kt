@@ -634,7 +634,7 @@ fun ConversationOverviewSimpleItemComponent(
                     shape = MaterialTheme.shapes.large
                 )
                 .clip(MaterialTheme.shapes.large),
-            any = session.imObj.avatarUrl
+            model = session.imObj.avatarUrl
         )
         Column(
             modifier = Modifier
@@ -674,7 +674,7 @@ fun ConversationOverviewSimpleItemComponent(
                             modifier = Modifier
                                 .size(20.dp)
                                 .clip(MaterialTheme.shapes.small),
-                            any = imMessage.fromInfo.bioUrl,
+                            model = imMessage.fromInfo.bioUrl,
                             error = imMessage.fromInfo.name
                         )
                         val context = LocalContext.current
@@ -871,7 +871,7 @@ fun GroupJoinRequestFeedbackCard(
                 modifier = Modifier
                     .size(18.dp)
                     .clip(RoundedCornerShape(4.dp)),
-                any = imMessage.fromInfo.bioUrl,
+                model = imMessage.fromInfo.bioUrl,
             )
             Text(
                 text = ImMessage.readableContent(context, imMessage) ?: "",
@@ -904,7 +904,7 @@ fun FriendRequestFeedbackCard(
                 modifier = Modifier
                     .size(18.dp)
                     .clip(RoundedCornerShape(4.dp)),
-                any = imMessage.fromInfo.bioUrl
+                model = imMessage.fromInfo.bioUrl
             )
             Text(
                 text = ImMessage.readableContent(context, imMessage) ?: "",
@@ -942,7 +942,7 @@ fun GroupRequestCard(
                         MaterialTheme.colorScheme.outline,
                         MaterialTheme.shapes.extraLarge
                     ),
-                any = imMessage.fromInfo.bioUrl
+                model = imMessage.fromInfo.bioUrl
             )
             Text(
                 text = stringResource(xcj.app.appsets.R.string.apply_to_join_the_group),
@@ -989,7 +989,7 @@ fun GroupRequestCard(
                             MaterialTheme.colorScheme.outline,
                             MaterialTheme.shapes.extraLarge
                         ),
-                    any = groupRequestJson.avatarUrl
+                    model = groupRequestJson.avatarUrl
                 )
                 Text(
                     text = groupRequestJson.name ?: "",
@@ -1026,7 +1026,7 @@ fun GroupRequestCard(
                             MaterialTheme.colorScheme.outline,
                             MaterialTheme.shapes.extraLarge
                         ),
-                    any = groupRequestJson.groupIconUrl
+                    model = groupRequestJson.groupIconUrl
                 )
                 Text(
                     text = groupRequestJson.groupName,
@@ -1104,7 +1104,7 @@ fun FriendRequestCard(
                         MaterialTheme.colorScheme.outline,
                         MaterialTheme.shapes.extraLarge
                     ),
-                any = imMessage.fromInfo.bioUrl
+                model = imMessage.fromInfo.bioUrl
             )
             Text(
                 text = stringResource(xcj.app.appsets.R.string.new_friend_application),
@@ -1138,7 +1138,7 @@ fun FriendRequestCard(
                         MaterialTheme.colorScheme.outline,
                         MaterialTheme.shapes.extraLarge
                     ),
-                any = friendRequestJson.avatarUrl,
+                model = friendRequestJson.avatarUrl,
             )
             Text(
                 text = friendRequestJson.name ?: "",
