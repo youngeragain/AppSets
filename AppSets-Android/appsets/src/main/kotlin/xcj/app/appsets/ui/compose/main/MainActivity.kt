@@ -14,6 +14,7 @@ import androidx.activity.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import xcj.app.appsets.notification.NotificationPusher
 import xcj.app.appsets.ui.compose.theme.AppSetsTheme
@@ -68,10 +69,8 @@ class MainActivity : DesignComponentActivity() {
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
-        lifecycleScope.launch {
-            viewModel.handleIntent(intent)
-            handleExternalShareContentIfNeeded(intent)
-        }
+        viewModel.handleIntent(intent)
+        handleExternalShareContentIfNeeded(intent)
     }
 
     private fun unListenBroadcast() {
@@ -151,6 +150,7 @@ class MainActivity : DesignComponentActivity() {
     ) {
         //wait compose first frame draw finish
         lifecycleScope.launch {
+            delay(120)
             val fromAppDefinition = getCallActivityAppDefinition()
             val composeContainerState = viewModel.bottomSheetState()
             composeContainerState.setShouldBackgroundSink(true)

@@ -482,7 +482,6 @@ object FileUtil {
                 }
 
             }
-            return@withContext null
         }
 
     fun isDirectoryUriByType(context: Context, uri: Uri?): Boolean {

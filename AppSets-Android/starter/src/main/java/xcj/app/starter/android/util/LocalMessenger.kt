@@ -32,8 +32,8 @@ class MockLifecycleOwner() : LifecycleOwner {
 
 }
 
-object LocalMessager {
-    private const val TAG = "LocalMessager"
+object LocalMessenger {
+    private const val TAG = "LocalMessenger"
 
     val designMessageDeliver = DesignMessageDeliver()
 

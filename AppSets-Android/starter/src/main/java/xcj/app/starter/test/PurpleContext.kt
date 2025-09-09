@@ -78,22 +78,19 @@ abstract class PurpleContext : PurpleLifecycle, PurpleEventPublisher, PurpleEven
     override fun publishEvent(event: DesignEvent) {
         var eventOverride = event
         val eventHandlers = getEventHandlers()
-        if (eventHandlers.isNotEmpty()) {
-            val eventPreHandlers = eventHandlers.filterIsInstance<EventPreHandler>()
-            if (eventPreHandlers.isNotEmpty()) {
-                eventPreHandlers.forEach {
-                    eventOverride = it.processEvent(eventOverride)
-                }
-            }
-
-            val eventPostHandlers = eventHandlers.filterIsInstance<EventPostHandler>()
-            if (eventPostHandlers.isNotEmpty()) {
-                eventPostHandlers.forEach {
-                    eventOverride = it.processEvent(eventOverride)
-                }
+        val eventPreHandlers = eventHandlers.filterIsInstance<EventPreHandler>()
+        if (eventPreHandlers.isNotEmpty()) {
+            eventPreHandlers.forEach {
+                eventOverride = it.processEvent(eventOverride)
             }
         }
         onEvent(eventOverride)
+        val eventPostHandlers = eventHandlers.filterIsInstance<EventPostHandler>()
+        if (eventPostHandlers.isNotEmpty()) {
+            eventPostHandlers.forEach {
+                eventOverride = it.processEvent(eventOverride)
+            }
+        }
     }
 
     override fun onEvent(event: DesignEvent) {

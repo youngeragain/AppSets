@@ -29,7 +29,7 @@ import androidx.compose.ui.unit.sp
 import xcj.app.appsets.im.Bio
 import xcj.app.appsets.server.model.Application
 import xcj.app.appsets.ui.compose.custom_component.AnyImage
-import xcj.app.appsets.ui.compose.theme.AppSetsShapes
+import xcj.app.appsets.ui.compose.theme.extShapes
 
 @Composable
 fun UserApplications(
@@ -57,12 +57,15 @@ fun UserApplications(
                     AnyImage(
                         modifier = Modifier
                             .size(68.dp)
-                            .clip(AppSetsShapes.large)
-                            .background(MaterialTheme.colorScheme.outline, AppSetsShapes.large)
+                            .clip(MaterialTheme.shapes.extShapes.large)
+                            .background(
+                                MaterialTheme.colorScheme.outline,
+                                MaterialTheme.shapes.extShapes.large
+                            )
                             .border(
                                 1.dp,
                                 MaterialTheme.colorScheme.outline,
-                                AppSetsShapes.large
+                                MaterialTheme.shapes.extShapes.large
                             )
                             .clickable {
                                 onBioClick.invoke(application)

@@ -20,7 +20,7 @@ import xcj.app.appsets.im.message.MessageSendInfo
 import xcj.app.appsets.settings.AppSetsModuleSettings
 import xcj.app.appsets.usecase.ConversationUseCase
 import xcj.app.appsets.usecase.RelationsUseCase
-import xcj.app.starter.android.util.LocalMessager
+import xcj.app.starter.android.util.LocalMessenger
 import xcj.app.starter.android.util.PurpleLogger
 import xcj.app.starter.test.LocalApplication
 import xcj.app.starter.test.LocalPurpleCoroutineScope
@@ -334,7 +334,7 @@ class RabbitMQBroker : MessageBroker<RabbitMQBrokerConfig>,
             ImMessageGenerator.generateByReceived(message)?.let { imMessage ->
                 ConversationUseCase.getInstance()
                     .onMessage(LocalApplication.current, imMessage, false)
-                LocalMessager.post(MessageBrokerConstants.MESSAGE_KEY_ON_IM_MESSAGE, imMessage)
+                LocalMessenger.post(MessageBrokerConstants.MESSAGE_KEY_ON_IM_MESSAGE, imMessage)
             }
         }
     }

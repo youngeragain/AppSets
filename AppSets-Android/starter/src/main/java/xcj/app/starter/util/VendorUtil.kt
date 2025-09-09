@@ -1,5 +1,6 @@
 package xcj.app.starter.util
 
+import android.annotation.SuppressLint
 import android.os.Build
 
 object VendorUtil {
@@ -22,6 +23,7 @@ object VendorUtil {
         return getSystemProperty("ro.product.manufacturer") == "Google"
     }
 
+    @SuppressLint("PrivateApi")
     @JvmStatic
     private fun getSystemProperty(propName: String): String? {
         try {

@@ -94,7 +94,7 @@ import xcj.app.appsets.ui.compose.PageRouteNames
 import xcj.app.appsets.ui.compose.custom_component.AnyImage
 import xcj.app.appsets.ui.compose.custom_component.ShowNavBarWhenOnLaunch
 import xcj.app.appsets.ui.compose.outside.ScreenComponent
-import xcj.app.appsets.ui.compose.theme.AppSetsShapes
+import xcj.app.appsets.ui.compose.theme.extShapes
 import xcj.app.appsets.ui.model.page_state.SearchPageState
 import xcj.app.appsets.ui.model.state.SearchResult
 import xcj.app.compose_share.components.DesignTextField
@@ -571,12 +571,15 @@ fun SearchedApplicationsPage(
                 AnyImage(
                     modifier = Modifier
                         .size(68.dp)
-                        .clip(AppSetsShapes.large)
-                        .background(MaterialTheme.colorScheme.outline, AppSetsShapes.large)
+                        .clip(MaterialTheme.shapes.extShapes.large)
+                        .background(
+                            MaterialTheme.colorScheme.outline,
+                            MaterialTheme.shapes.extShapes.large
+                        )
                         .border(
                             1.dp,
                             MaterialTheme.colorScheme.outline,
-                            AppSetsShapes.large
+                            MaterialTheme.shapes.extShapes.large
                         )
                         .clickable(
                             onClick = {
@@ -692,12 +695,15 @@ fun SearchedApplicationComponent(
                 AnyImage(
                     modifier = Modifier
                         .size(68.dp)
-                        .clip(AppSetsShapes.large)
-                        .background(MaterialTheme.colorScheme.outline, AppSetsShapes.large)
+                        .clip(MaterialTheme.shapes.extShapes.large)
+                        .background(
+                            MaterialTheme.colorScheme.outline,
+                            MaterialTheme.shapes.extShapes.large
+                        )
                         .border(
                             1.dp,
                             MaterialTheme.colorScheme.outline,
-                            AppSetsShapes.large
+                            MaterialTheme.shapes.extShapes.large
                         )
                         .clickable {
                             onBioClick(application)

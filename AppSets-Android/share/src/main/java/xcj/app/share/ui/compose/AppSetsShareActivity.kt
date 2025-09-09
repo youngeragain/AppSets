@@ -47,9 +47,9 @@ class AppSetsShareActivity : DesignComponentActivity() {
     override fun <I> getActivityResultLauncher(
         inputClazz: Class<I>,
         requestPrams: Any?
-    ): ActivityResultLauncher<*>? {
+    ): ActivityResultLauncher<I>? {
         if (inputClazz == Intent::class.java) {
-            return intentResultLauncher
+            return intentResultLauncher as? ActivityResultLauncher<I>
         }
         return null
     }

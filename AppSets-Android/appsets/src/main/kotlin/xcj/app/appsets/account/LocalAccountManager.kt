@@ -13,7 +13,7 @@ import xcj.app.appsets.server.model.UserInfo
 import xcj.app.appsets.ui.model.state.AccountStatus
 import xcj.app.appsets.util.PictureUrlMapper
 import xcj.app.starter.android.ModuleHelper
-import xcj.app.starter.android.util.LocalMessager
+import xcj.app.starter.android.util.LocalMessenger
 import xcj.app.starter.android.util.PurpleLogger
 import xcj.app.starter.server.ApiDesignKeys
 import xcj.app.starter.test.LocalPurpleCoroutineScope
@@ -63,7 +63,7 @@ object LocalAccountManager {
 
     fun saveAppToken(token: String?) {
         appToken = token
-        LocalMessager.post(MESSAGE_KEY_ON_APP_TOKEN_GOT, token)
+        LocalMessenger.post(MESSAGE_KEY_ON_APP_TOKEN_GOT, token)
     }
 
     fun isLogged(): Boolean {
@@ -130,11 +130,11 @@ object LocalAccountManager {
         accountStatus.value = AccountStatus.Logged(userInfo, token, isFromLocal)
 
         if (isFromLocal) {
-            LocalMessager.post(MESSAGE_KEY_ON_LOGIN, LOGIN_BY_RESTORE, 600)
+            LocalMessenger.post(MESSAGE_KEY_ON_LOGIN, LOGIN_BY_RESTORE, 600)
         } else {
             saveToken(token)
             saveUserInfo(userInfo, "onUserLogged")
-            LocalMessager.post(MESSAGE_KEY_ON_LOGIN, LOGIN_BY_NEW, 200)
+            LocalMessenger.post(MESSAGE_KEY_ON_LOGIN, LOGIN_BY_NEW, 200)
         }
     }
 
@@ -145,7 +145,7 @@ object LocalAccountManager {
             MySharedPreferences.clear()
             ModuleHelper.getDataBase<AppDatabase>(ModuleConstant.MODULE_NAME)?.clearAllTables()
             BrokerTest.close()
-            LocalMessager.post(MESSAGE_KEY_ON_LOGOUT, by, 200)
+            LocalMessenger.post(MESSAGE_KEY_ON_LOGOUT, by, 200)
         }
     }
 

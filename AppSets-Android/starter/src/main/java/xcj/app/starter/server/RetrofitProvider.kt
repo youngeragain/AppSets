@@ -51,13 +51,13 @@ object RetrofitProvider {
         notReuse: Boolean = false,
     ): T {
         if (notReuse) {
-            var okHttpClientOverride = okHttpClient ?: defaultOkHttpClient
+            val okHttpClientOverride = okHttpClient ?: defaultOkHttpClient
             val retrofit = mRetrofitBuilder.baseUrl(baseUrl).client(okHttpClientOverride).build()
             return retrofit.create(clazz) as T
 
         }
         return retrofitMap.getOrPut(baseUrl) {
-            var okHttpClientOverride = okHttpClient ?: defaultOkHttpClient
+            val okHttpClientOverride = okHttpClient ?: defaultOkHttpClient
             mRetrofitBuilder.baseUrl(baseUrl).client(okHttpClientOverride).build()
         }.create(clazz) as T
     }

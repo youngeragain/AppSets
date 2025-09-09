@@ -11,7 +11,6 @@ import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 
 val DarkColorPalette = darkColorScheme(
@@ -19,8 +18,6 @@ val DarkColorPalette = darkColorScheme(
     onPrimary = Purple700,
     secondary = Teal200
      */
-    outline = colorDarkOutline,
-    outlineVariant = colorDarkOutlineVariant
 )
 
 val LightColorPalette = lightColorScheme(
@@ -35,8 +32,6 @@ val LightColorPalette = lightColorScheme(
     onBackground = Color.Black,
     onSurface = Color.Black,
     */
-    outline = colorLightOutline,
-    outlineVariant = Color(0xD1DADADA)
 )
 
 @Composable
@@ -55,8 +50,15 @@ fun AppSetsTheme(darkTheme: Boolean = isSystemInDarkTheme(), content: @Composabl
                 outlineVariant = colorLightOutlineVariant
             )
 
-        darkTheme -> DarkColorPalette
-        else -> LightColorPalette
+        darkTheme -> DarkColorPalette.copy(
+            outline = colorDarkOutline,
+            outlineVariant = colorDarkOutlineVariant
+        )
+
+        else -> LightColorPalette.copy(
+            outline = colorLightOutline,
+            outlineVariant = colorLightOutlineVariant
+        )
     }
 
     MaterialExpressiveTheme(

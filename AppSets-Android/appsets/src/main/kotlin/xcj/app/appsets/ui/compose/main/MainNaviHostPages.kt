@@ -170,7 +170,7 @@ import xcj.app.io.components.LocalFileIO
 import xcj.app.starter.android.ktx.startWithHttpSchema
 import xcj.app.starter.android.ui.base.DesignComponentActivity
 import xcj.app.starter.android.usecase.PlatformUseCase
-import xcj.app.starter.android.util.LocalMessager
+import xcj.app.starter.android.util.LocalMessenger
 import xcj.app.starter.android.util.PurpleLogger
 import xcj.app.starter.test.ComposeEvent
 import xcj.app.starter.test.LocalPurpleEventPublisher
@@ -1525,7 +1525,7 @@ fun showContentSelectionDialog(
             request = request,
             onContentSelected = {
                 bottomSheetContainerState.hide()
-                LocalMessager.post(ModuleConstant.MESSAGE_KEY_ON_CONTENT_SELECT_RESULT, it)
+                LocalMessenger.post(ModuleConstant.MESSAGE_KEY_ON_CONTENT_SELECT_RESULT, it)
             }
         )
     }

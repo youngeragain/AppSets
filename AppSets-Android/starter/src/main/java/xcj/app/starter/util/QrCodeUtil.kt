@@ -3,6 +3,7 @@ package xcj.app.starter.util
 import android.graphics.Bitmap
 import android.graphics.Color.BLACK
 import android.graphics.Color.WHITE
+import androidx.core.graphics.createBitmap
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.EncodeHintType
 import com.google.zxing.MultiFormatWriter
@@ -41,7 +42,7 @@ object QrCodeUtil {
                 pixels[offset + x] = if (result[x, y]) BLACK else WHITE
             }
         }
-        val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_4444)
+        val bitmap = createBitmap(width, height, Bitmap.Config.ARGB_4444)
         bitmap.setPixels(pixels, 0, width, 0, 0, width, height)
         return@withContext bitmap
     }

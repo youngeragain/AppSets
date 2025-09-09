@@ -25,7 +25,7 @@ import xcj.app.io.tencent.TencentCosInfoProvider
 import xcj.app.io.tencent.TencentCosRegionBucket
 import xcj.app.starter.android.ktx.startWithHttpSchema
 import xcj.app.starter.android.util.FileUtil
-import xcj.app.starter.android.util.LocalMessager
+import xcj.app.starter.android.util.LocalMessenger
 import xcj.app.starter.android.util.PurpleLogger
 import xcj.app.starter.foundation.lazyStaticProvider
 import xcj.app.starter.test.LocalAndroidContextFileDir
@@ -65,7 +65,7 @@ class SimpleFileIO : FileIO {
         }
         PurpleLogger.current.d(TAG, "initThirdComponents")
         this.tencentCosInfoProvider = tencentCosInfoProvider
-        LocalMessager.post(MESSAGE_KEY_ON_COMPONENTS_INITIALED, true)
+        LocalMessenger.post(MESSAGE_KEY_ON_COMPONENTS_INITIALED, true)
     }
 
     private fun ensureCosXmlServiceIfNeeded() {

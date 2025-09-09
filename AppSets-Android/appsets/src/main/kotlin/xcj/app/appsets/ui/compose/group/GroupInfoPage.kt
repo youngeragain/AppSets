@@ -56,7 +56,7 @@ import xcj.app.appsets.im.Bio
 import xcj.app.appsets.server.model.GroupInfo
 import xcj.app.appsets.ui.compose.custom_component.AnyImage
 import xcj.app.appsets.ui.compose.custom_component.DesignBackButton
-import xcj.app.appsets.ui.compose.theme.BigAvatarShape
+import xcj.app.appsets.ui.compose.theme.ExtraLarge2
 import xcj.app.appsets.ui.model.page_state.GroupInfoPageState
 import xcj.app.appsets.usecase.RelationsUseCase
 import xcj.app.compose_share.components.DesignHDivider
@@ -275,11 +275,11 @@ fun GroupInfoPage(
                             AnyImage(
                                 modifier = Modifier
                                     .size(250.dp)
-                                    .clip(BigAvatarShape)
+                                    .clip(ExtraLarge2)
                                     .border(
                                         1.dp,
                                         MaterialTheme.colorScheme.outline,
-                                        BigAvatarShape
+                                        ExtraLarge2
                                     ),
                                 model = groupInfoPageState.groupInfo.bioUrl,
                                 error = groupInfoPageState.groupInfo.name

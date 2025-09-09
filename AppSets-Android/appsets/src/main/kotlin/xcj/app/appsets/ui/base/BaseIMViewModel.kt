@@ -30,7 +30,7 @@ import xcj.app.appsets.util.ktx.asComponentActivityOrNull
 import xcj.app.appsets.worker.LastSyncWorker
 import xcj.app.compose_share.ui.viewmodel.AnyStateViewModel
 import xcj.app.io.components.SimpleFileIO
-import xcj.app.starter.android.util.LocalMessager
+import xcj.app.starter.android.util.LocalMessenger
 import xcj.app.starter.android.util.PurpleLogger
 
 abstract class BaseIMViewModel : AnyStateViewModel() {
@@ -74,7 +74,7 @@ abstract class BaseIMViewModel : AnyStateViewModel() {
     open fun observeSomeThingsOnCreated(activity: ComponentActivity) {
         PurpleLogger.current.d(TAG, "observeSomeThingsOnCreated")
 
-        LocalMessager.observe<String, ContentSelectionResult>(
+        LocalMessenger.observe<String, ContentSelectionResult>(
             activity,
             ModuleConstant.MESSAGE_KEY_ON_CONTENT_SELECT_RESULT
         ) {
@@ -84,21 +84,21 @@ abstract class BaseIMViewModel : AnyStateViewModel() {
             dispatchContentSelectedResult(activity, it)
         }
 
-        LocalMessager.observe<String, ImMessage>(
+        LocalMessenger.observe<String, ImMessage>(
             activity,
             MessageBrokerConstants.MESSAGE_KEY_ON_IM_MESSAGE
         ) {
             PurpleLogger.current.d(TAG, "MESSAGE_KEY_ON_IM_MESSAGE")
         }
 
-        LocalMessager.observe<String, String>(
+        LocalMessenger.observe<String, String>(
             activity,
             LocalAccountManager.MESSAGE_KEY_ON_APP_TOKEN_GOT
         ) {
             doActionsWhenAppTokenGot()
         }
 
-        LocalMessager.observe<String, Boolean>(
+        LocalMessenger.observe<String, Boolean>(
             activity,
             SimpleFileIO.MESSAGE_KEY_ON_COMPONENTS_INITIALED
         ) {
@@ -107,7 +107,7 @@ abstract class BaseIMViewModel : AnyStateViewModel() {
             }
         }
 
-        LocalMessager.observe<String, String>(
+        LocalMessenger.observe<String, String>(
             activity,
             LocalAccountManager.MESSAGE_KEY_ON_LOGIN
         ) {
@@ -118,7 +118,7 @@ abstract class BaseIMViewModel : AnyStateViewModel() {
             }
         }
 
-        LocalMessager.observe<String, Boolean>(
+        LocalMessenger.observe<String, Boolean>(
             activity,
             LastSyncWorker.MESSAGE_KEY_DATA_SYNC_FINISH
         ) {

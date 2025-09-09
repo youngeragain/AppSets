@@ -73,7 +73,7 @@ import xcj.app.appsets.server.model.VersionInfo
 import xcj.app.appsets.ui.compose.custom_component.AnyImage
 import xcj.app.appsets.ui.compose.custom_component.DesignBackButton
 import xcj.app.appsets.ui.compose.custom_component.HideNavBarWhenOnLaunch
-import xcj.app.appsets.ui.compose.theme.BigAvatarShape
+import xcj.app.appsets.ui.compose.theme.ExtraLarge2
 import xcj.app.compose_share.components.BackActionTopBar
 import xcj.app.compose_share.components.DesignHDivider
 
@@ -211,11 +211,11 @@ fun ApplicationContentComponent(
             AnyImage(
                 modifier = Modifier
                     .size(250.dp)
-                    .clip(BigAvatarShape)
+                    .clip(ExtraLarge2)
                     .border(
                         width = 1.dp,
                         color = MaterialTheme.colorScheme.outline,
-                        shape = BigAvatarShape
+                        shape = ExtraLarge2
                     ),
                 model = application.bioUrl
             )

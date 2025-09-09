@@ -23,7 +23,7 @@ import xcj.app.appsets.usecase.QRCodeUseCase
 import xcj.app.appsets.usecase.ScreenPostUseCase
 import xcj.app.appsets.usecase.SearchUseCase
 import xcj.app.compose_share.usecase.ComposeDynamicUseCase
-import xcj.app.starter.android.util.LocalMessager
+import xcj.app.starter.android.util.LocalMessenger
 import xcj.app.starter.android.util.PurpleLogger
 
 class MainViewModel : BaseIMViewModel() {
@@ -80,7 +80,7 @@ class MainViewModel : BaseIMViewModel() {
     override fun observeSomeThingsOnCreated(activity: ComponentActivity) {
         super.observeSomeThingsOnCreated(activity)
 
-        LocalMessager.observe<String, String>(
+        LocalMessenger.observe<String, String>(
             activity,
             LocalAccountManager.MESSAGE_KEY_ON_LOGOUT
         ) {

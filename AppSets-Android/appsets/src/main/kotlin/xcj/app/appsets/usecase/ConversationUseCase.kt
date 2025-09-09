@@ -37,7 +37,7 @@ import xcj.app.appsets.ui.compose.PageRouteNames
 import xcj.app.appsets.ui.compose.conversation.GenerativeAISession
 import xcj.app.appsets.ui.model.state.NowSpaceObject
 import xcj.app.compose_share.dynamic.IComposeLifecycleAware
-import xcj.app.starter.android.util.LocalMessager
+import xcj.app.starter.android.util.LocalMessenger
 import xcj.app.starter.android.util.PurpleLogger
 import xcj.app.starter.test.LocalPurpleCoroutineScope
 
@@ -555,9 +555,9 @@ class ConversationUseCase private constructor() : IComposeLifecycleAware {
             }.onSuccess {
                 PurpleLogger.current.d(TAG, "initSessions list successful!")
                 sessionsInitTimes += 1
-                LocalMessager.post(KEY_SESSIONS_INIT_RESULT, true)
+                LocalMessenger.post(KEY_SESSIONS_INIT_RESULT, true)
             }.onFailure {
-                LocalMessager.post(KEY_SESSIONS_INIT_RESULT, false)
+                LocalMessenger.post(KEY_SESSIONS_INIT_RESULT, false)
                 PurpleLogger.current.d(
                     TAG,
                     "initSessions list failed, ${it.message}"

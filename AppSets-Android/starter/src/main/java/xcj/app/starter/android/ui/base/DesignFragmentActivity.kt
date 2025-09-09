@@ -83,7 +83,7 @@ abstract class DesignFragmentActivity :
     override fun <I> getActivityResultLauncher(
         inputClazz: Class<I>,
         requestPrams: Any?
-    ): ActivityResultLauncher<*>? {
+    ): ActivityResultLauncher<I>? {
         return null
     }
 

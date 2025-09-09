@@ -32,7 +32,7 @@ import androidx.compose.ui.unit.sp
 import xcj.app.appsets.account.LocalAccountManager
 import xcj.app.appsets.server.model.UserInfo
 import xcj.app.appsets.ui.compose.custom_component.AnyImage
-import xcj.app.appsets.ui.compose.theme.BigAvatarShape
+import xcj.app.appsets.ui.compose.theme.ExtraLarge2
 import xcj.app.appsets.usecase.RelationsUseCase
 import xcj.app.compose_share.components.DesignHDivider
 
@@ -130,11 +130,11 @@ fun UserInfoHeader(
             AnyImage(
                 modifier = Modifier
                     .size(250.dp)
-                    .clip(BigAvatarShape)
+                    .clip(ExtraLarge2)
                     .border(
                         width = 1.dp,
                         color = MaterialTheme.colorScheme.outline,
-                        shape = BigAvatarShape
+                        shape = ExtraLarge2
                     ),
                 model = userInfo.bioUrl,
                 error = userInfo.name
@@ -182,11 +182,11 @@ fun UserInfoHeader(
                 AnyImage(
                     modifier = Modifier
                         .size(250.dp)
-                        .clip(BigAvatarShape)
+                        .clip(ExtraLarge2)
                         .border(
                             width = 1.dp,
                             color = MaterialTheme.colorScheme.outline,
-                            shape = BigAvatarShape
+                            shape = ExtraLarge2
                         ),
                     model = userInfo.bioUrl
                 )

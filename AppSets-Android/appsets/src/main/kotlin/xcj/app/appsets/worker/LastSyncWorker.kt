@@ -5,7 +5,7 @@ import android.content.Intent
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import xcj.app.appsets.service.MainService
-import xcj.app.starter.android.util.LocalMessager
+import xcj.app.starter.android.util.LocalMessenger
 import xcj.app.starter.android.util.PurpleLogger
 
 class LastSyncWorker(
@@ -20,7 +20,7 @@ class LastSyncWorker(
 
     override suspend fun doWork(): Result {
         PurpleLogger.current.d(TAG, "doWork")
-        LocalMessager.post(MESSAGE_KEY_DATA_SYNC_FINISH, true)
+        LocalMessenger.post(MESSAGE_KEY_DATA_SYNC_FINISH, true)
         applicationContext.stopService(Intent(applicationContext, MainService::class.java))
         return Result.success()
     }

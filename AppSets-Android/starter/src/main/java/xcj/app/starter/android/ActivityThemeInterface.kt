@@ -8,7 +8,7 @@ interface ActivityThemeInterface {
     fun <I> getActivityResultLauncher(
         inputClazz: Class<I>,
         requestPrams:Any?,
-    ): ActivityResultLauncher<*>? = null
+    ): ActivityResultLauncher<I>? = null
 
     fun makeActivityResultLauncher() {
 

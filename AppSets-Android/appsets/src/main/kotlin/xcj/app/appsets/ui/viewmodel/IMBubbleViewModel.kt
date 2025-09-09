@@ -8,7 +8,7 @@ import xcj.app.appsets.ui.base.BaseIMViewModel
 import xcj.app.appsets.ui.compose.content_selection.ContentSelectionResult
 import xcj.app.appsets.usecase.ConversationUseCase
 import xcj.app.appsets.usecase.NavigationUseCase
-import xcj.app.starter.android.util.LocalMessager
+import xcj.app.starter.android.util.LocalMessenger
 import xcj.app.starter.android.util.PurpleLogger
 
 class IMBubbleViewModel : BaseIMViewModel() {
@@ -58,7 +58,7 @@ class IMBubbleViewModel : BaseIMViewModel() {
     override fun observeSomeThingsOnCreated(activity: ComponentActivity) {
         super.observeSomeThingsOnCreated(activity)
         PurpleLogger.current.d(TAG, "observeSomeThings")
-        LocalMessager.observe<String, Boolean>(
+        LocalMessenger.observe<String, Boolean>(
             activity,
             ConversationUseCase.KEY_SESSIONS_INIT_RESULT
         ) { initSuccess ->

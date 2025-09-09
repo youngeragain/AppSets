@@ -63,13 +63,13 @@ class SimplePurpleForAndroidContext(any: Any) : PurpleContext() {
     }
 
     override fun publishEvent(event: DesignEvent) {
-        PurpleLogger.current.d(TAG, "publishEvent: event:$event")
         super.publishEvent(event)
+        PurpleLogger.current.d(TAG, "publishEvent: event:$event")
     }
 
     override fun onEvent(event: DesignEvent) {
-        PurpleLogger.current.d(TAG, "onEvent: event:$event")
         super.onEvent(event)
+        PurpleLogger.current.d(TAG, "onEvent: event:$event")
         dispatchEvent(event)
     }
 

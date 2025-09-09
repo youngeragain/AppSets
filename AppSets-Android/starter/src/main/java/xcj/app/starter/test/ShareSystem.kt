@@ -2,11 +2,6 @@ package xcj.app.starter.test
 
 import xcj.app.starter.android.util.PurpleLogger
 import java.io.File
-import kotlin.io.extension
-import kotlin.io.nameWithoutExtension
-import kotlin.onFailure
-import kotlin.plus
-import kotlin.runCatching
 
 object ShareSystem {
 
@@ -21,7 +16,7 @@ object ShareSystem {
 
     fun makeFileIfNeeded(fileName: String, createFile: Boolean = true): File? {
         val pathPrefix = getShareDirPath()
-        var filePath = pathPrefix + fileName
+        val filePath = pathPrefix + fileName
         var file = File(filePath)
         val firstNameWithoutExtension = file.nameWithoutExtension
         var count = 0
@@ -56,9 +51,8 @@ object ShareSystem {
                 "makeFileIfNeeded, file:${file}, exist find next available file..."
             )
             count += 1
-            var filePath = pathPrefix + firstNameWithoutExtension + "-$count." + file.extension
+            val filePath = pathPrefix + firstNameWithoutExtension + "-$count." + file.extension
             file = File(filePath)
         } while (true)
-        return null
     }
 }
