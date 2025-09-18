@@ -8,8 +8,6 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.navigation.NavController
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import xcj.app.appsets.R
@@ -25,7 +23,7 @@ import xcj.app.appsets.server.model.WeatherInfo
 import xcj.app.appsets.server.repository.AppSetsRepository
 import xcj.app.appsets.server.repository.UserRepository
 import xcj.app.appsets.service.MainService
-import xcj.app.appsets.settings.AppConfig
+import xcj.app.appsets.settings.ModuleConfig
 import xcj.app.appsets.ui.compose.PageRouteNames
 import xcj.app.appsets.ui.compose.login.UserAgreementComposeViewProvider
 import xcj.app.appsets.ui.model.GroupInfoForCreate
@@ -37,9 +35,9 @@ import xcj.app.appsets.util.ktx.toast
 import xcj.app.appsets.util.ktx.toastSuspend
 import xcj.app.appsets.util.message_digest.MessageDigestUtil
 import xcj.app.appsets.util.model.UriProvider
-import xcj.app.compose_share.components.AnyStateProvider
+import xcj.app.compose_share.components.VisibilityComposeStateProvider
 import xcj.app.compose_share.dynamic.IComposeLifecycleAware
-import xcj.app.compose_share.ui.viewmodel.AnyStateViewModel.Companion.bottomSheetState
+import xcj.app.compose_share.ui.viewmodel.VisibilityComposeStateViewModel.Companion.bottomSheetState
 import xcj.app.starter.android.util.PurpleLogger
 import xcj.app.starter.server.requestNotNull
 import xcj.app.starter.server.requestNotNullRaw
@@ -50,15 +48,12 @@ import java.util.Calendar
 
 class SystemUseCase(
     private val userRepository: UserRepository,
-    private val appSetsRepository: AppSetsRepository,
-    private val coroutineScope: CoroutineScope = LocalPurpleCoroutineScope.current,
+    private val appSetsRepository: AppSetsRepository
 ) : IComposeLifecycleAware {
 
     val selectedContentsStateHolder: SelectedContentsStateHolder = SelectedContentsStateHolder()
 
     private val requestIdMap: MutableMap<String, String> = mutableMapOf()
-
-    private var newVersionStatePendingDismissJob: Job? = null
 
     val newVersionState: MutableState<UpdateCheckResult?> = mutableStateOf(null)
 
@@ -77,17 +72,11 @@ class SystemUseCase(
      */
     val updateHistory: MutableList<UpdateCheckResult> = mutableStateListOf()
 
-    init {
-        initAppToken()
-    }
-
     fun dismissNewVersionTips() {
         val updateCheckResult = newVersionState.value ?: return
         if (updateCheckResult.forceUpdate == true) {
             return
         }
-        newVersionStatePendingDismissJob?.cancel()
-        newVersionStatePendingDismissJob = null
         newVersionState.value = null
         PurpleLogger.current.d(TAG, "dismissNewVersionTips")
     }
@@ -95,43 +84,39 @@ class SystemUseCase(
     /**
      * 部分数据可以直接公开，不过也需要有访问权限
      */
-    private fun initAppToken() {
+    private suspend fun initAppToken() {
         PurpleLogger.current.d(TAG, "initAppToken")
-        coroutineScope.launch {
-            requestNotNull(
-                action = {
-                    appSetsRepository.getAppToken()
-                },
-                onSuccess = {
-                    LocalAccountManager.saveAppToken(it)
-                },
-                onFailed = {
-                    PurpleLogger.current.e(TAG, "initAppToken failed:${it.info}")
-                }
-            )
-        }
+        requestNotNull(
+            action = {
+                appSetsRepository.getAppToken()
+            },
+            onSuccess = {
+                LocalAccountManager.saveAppToken(it)
+            },
+            onFailed = {
+                PurpleLogger.current.e(TAG, "initAppToken failed:${it.info}")
+            }
+        )
     }
 
-    fun updateIMBrokerProperties() {
-        if (!AppConfig.isNeedUpdateImBrokerProperties()) {
+    suspend fun updateIMBrokerProperties() {
+        if (!ModuleConfig.isNeedUpdateImBrokerProperties()) {
             return
         }
-        coroutineScope.launch {
-            requestNotNull(
-                action = {
-                    appSetsRepository.getIMBrokerProperties()
-                },
-                onSuccess = { properties ->
-                    if (properties.isEmpty()) {
-                        return@requestNotNull
-                    }
-                    AppConfig.updateImBrokerProperties(properties)
+        requestNotNull(
+            action = {
+                appSetsRepository.getIMBrokerProperties()
+            },
+            onSuccess = { properties ->
+                if (properties.isEmpty()) {
+                    return@requestNotNull
                 }
-            )
-        }
+                ModuleConfig.updateImBrokerProperties(properties)
+            }
+        )
     }
 
-    fun checkUpdate() {
+    suspend fun checkUpdate() {
         val context = LocalApplication.current
         val packageInfo = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             context.packageManager.getPackageInfo(
@@ -141,43 +126,37 @@ class SystemUseCase(
         } else {
             context.packageManager.getPackageInfo(context.packageName, 0)
         }
-        coroutineScope.launch {
-            requestNotNull(
-                action = {
-                    appSetsRepository.checkUpdate(packageInfo.versionCode)
-                },
-                onSuccess = {
-                    if (!it.canUpdate) {
-                        return@requestNotNull
-                    }
-                    delay(4000)
-                    it.versionFromTo = "${packageInfo.versionName} → ${it.newestVersion}"
-                    newVersionState.value = it
-                    if (it.forceUpdate != true) {
-                        newVersionStatePendingDismissJob = launch {
-                            delay(1000 * 300)
-                            newVersionState.value = null
-                        }
-                    }
+        requestNotNull(
+            action = {
+                appSetsRepository.checkUpdate(packageInfo.versionCode)
+            },
+            onSuccess = {
+                if (!it.canUpdate) {
+                    return@requestNotNull
                 }
-            )
-        }
+                delay(4000)
+                it.versionFromTo = "${packageInfo.versionName} → ${it.newestVersion}"
+                newVersionState.value = it
+                if (it.forceUpdate != true) {
+                    delay(1000 * 300)
+                    newVersionState.value = null
+                }
+            }
+        )
     }
 
-    fun getUpdateHistory() {
+    suspend fun getUpdateHistory() {
         if (updateHistory.isNotEmpty()) {
             return
         }
-        coroutineScope.launch {
-            requestNotNull(
-                action = {
-                    appSetsRepository.getUpdateHistory()
-                },
-                onSuccess = { updateCheckResultList ->
-                    updateHistory.addAll(updateCheckResultList.sortedByDescending { it.publishDateTime })
-                }
-            )
-        }
+        requestNotNull(
+            action = {
+                appSetsRepository.getUpdateHistory()
+            },
+            onSuccess = { updateCheckResultList ->
+                updateHistory.addAll(updateCheckResultList.sortedByDescending { it.publishDateTime })
+            }
+        )
     }
 
 
@@ -194,7 +173,7 @@ class SystemUseCase(
     ) {
         PurpleLogger.current.d(TAG, "userFeedbackJoinGroupRequest")
         imMessage.handling.value = true
-        coroutineScope.launch {
+        LocalPurpleCoroutineScope.current.launch {
             requestNotNull(
                 action = {
                     userRepository.sendRequestJoinGroupFeedback(
@@ -239,7 +218,7 @@ class SystemUseCase(
         }
         PurpleLogger.current.d(TAG, "userFeedbackFriendsRequest")
         imMessage.handling.value = true
-        coroutineScope.launch {
+        LocalPurpleCoroutineScope.current.launch {
             requestNotNull(
                 action = {
                     userRepository.sendAddRequestFriendFeedback(
@@ -277,7 +256,7 @@ class SystemUseCase(
             return
         }
         PurpleLogger.current.d(TAG, "requestAddFriend")
-        coroutineScope.launch {
+        LocalPurpleCoroutineScope.current.launch {
             requestNotNullRaw(
                 action = {
                     userRepository.requestAddFriend(uid, hello, reason)
@@ -308,7 +287,7 @@ class SystemUseCase(
             return
         }
         PurpleLogger.current.d(TAG, "requestJoinGroup")
-        coroutineScope.launch {
+        LocalPurpleCoroutineScope.current.launch {
             requestNotNullRaw(
                 action = {
                     userRepository.requestJoinGroup(groupId, hello, reason)
@@ -334,7 +313,7 @@ class SystemUseCase(
 
     fun flipFollowToUserState(userInfo: UserInfo, userInfoUseCase: UserInfoUseCase) {
         PurpleLogger.current.d(TAG, "flipFollowToUserState")
-        coroutineScope.launch {
+        LocalPurpleCoroutineScope.current.launch {
             requestNotNull(
                 action = {
                     userRepository.flipFollowToUserState(userInfo.uid)
@@ -378,7 +357,7 @@ class SystemUseCase(
     }
 
     fun cleanCaches() {
-        coroutineScope.launch {
+        LocalPurpleCoroutineScope.current.launch {
             LocalAndroidContextFileDir.current.cleanCaches()
         }
     }
@@ -391,11 +370,11 @@ class SystemUseCase(
         GroupInfoForCreate.updateGroupCreateIconUri(createGroupPageState, uriProvider)
     }
 
-    fun login(
+    suspend fun login(
         context: Context,
         account: String,
         password: String,
-        anyStateProvider: AnyStateProvider
+        visibilityComposeStateProvider: VisibilityComposeStateProvider
     ) {
         PurpleLogger.current.d(TAG, "login")
         val signUpState = loginSignUpPageState.value
@@ -411,73 +390,71 @@ class SystemUseCase(
             return
         }
         loginSignUpPageState.value = LoginSignUpPageState.Logging()
-        coroutineScope.launch {
-            requestNotNullRaw(
-                action = {
-                    delay(500)
-                    val accountEncode = MessageDigestUtil.transformWithMD5(account)?.outContent
-                    val passwordEncode = MessageDigestUtil.transformWithMD5(password)?.outContent
-                    if (accountEncode.isNullOrEmpty() || passwordEncode.isNullOrEmpty()) {
-                        return@requestNotNullRaw
-                    }
-                    val loginResponse =
-                        userRepository.login(
-                            accountEncode,
-                            passwordEncode
-                        )
-                    val token = loginResponse.data
-
-                    if (!loginResponse.success || token.isNullOrEmpty()) {
-                        PurpleLogger.current.d(TAG, "login, failed, token get failed!")
-                        loginSignUpPageState.value = LoginSignUpPageState.LoggingFail()
-                        loginResponse.info.toastSuspend()
-                        return@requestNotNullRaw
-                    }
-
-                    LocalAccountManager.onUserLogged(UserInfo.default(), token, isTemp = true)
-
-                    val userInfoResponse =
-                        userRepository.getLoggedUserInfo()
-                    val userInfo = userInfoResponse.data
-                    if (userInfo == null) {
-                        PurpleLogger.current.d(
-                            TAG,
-                            "login, failed, userInfo isNullOrEmpty!"
-                        )
-                        loginSignUpPageState.value = LoginSignUpPageState.LoggingFail()
-                        return@requestNotNullRaw
-                    }
-
-                    if (userInfo.agreeToTheAgreement == 1) {
-                        LocalAccountManager.onUserLogged(userInfo, token, false)
-                        loginSignUpPageState.value = LoginSignUpPageState.LoggingFinish()
-                        return@requestNotNullRaw
-                    }
-                    val bottomSheetContainerState = anyStateProvider.bottomSheetState()
-                    val provider = UserAgreementComposeViewProvider(onNextClick = {
-                        bottomSheetContainerState.hide()
-                        LocalAccountManager.onUserLogged(userInfo, token, false)
-                        loginSignUpPageState.value = LoginSignUpPageState.LoggingFinish()
-                    })
-                    delay(500)
-                    bottomSheetContainerState.show(provider)
-                    delay(2000)
-                    loginSignUpPageState.value = LoginSignUpPageState.Nothing
-                },
-                onFailed = {
-                    PurpleLogger.current.d(TAG, "login failed, ${it.info}")
-                    logout()
-                    loginSignUpPageState.value = LoginSignUpPageState.LoggingFail()
+        requestNotNullRaw(
+            action = {
+                delay(500)
+                val accountEncode = MessageDigestUtil.transformWithMD5(account)?.outContent
+                val passwordEncode = MessageDigestUtil.transformWithMD5(password)?.outContent
+                if (accountEncode.isNullOrEmpty() || passwordEncode.isNullOrEmpty()) {
+                    return@requestNotNullRaw
                 }
-            )
-        }
+                val loginResponse =
+                    userRepository.login(
+                        accountEncode,
+                        passwordEncode
+                    )
+                val token = loginResponse.data
+
+                if (!loginResponse.success || token.isNullOrEmpty()) {
+                    PurpleLogger.current.d(TAG, "login, failed, token get failed!")
+                    loginSignUpPageState.value = LoginSignUpPageState.LoggingFail()
+                    loginResponse.info.toastSuspend()
+                    return@requestNotNullRaw
+                }
+
+                LocalAccountManager.onUserLogged(UserInfo.default(), token, isTemp = true)
+
+                val userInfoResponse =
+                    userRepository.getLoggedUserInfo()
+                val userInfo = userInfoResponse.data
+                if (userInfo == null) {
+                    PurpleLogger.current.d(
+                        TAG,
+                        "login, failed, userInfo isNullOrEmpty!"
+                    )
+                    loginSignUpPageState.value = LoginSignUpPageState.LoggingFail()
+                    return@requestNotNullRaw
+                }
+
+                if (userInfo.agreeToTheAgreement == 1) {
+                    LocalAccountManager.onUserLogged(userInfo, token, false)
+                    loginSignUpPageState.value = LoginSignUpPageState.LoggingFinish()
+                    return@requestNotNullRaw
+                }
+                val bottomSheetContainerState = visibilityComposeStateProvider.bottomSheetState()
+                val provider = UserAgreementComposeViewProvider(onNextClick = {
+                    bottomSheetContainerState.hide()
+                    LocalAccountManager.onUserLogged(userInfo, token, false)
+                    loginSignUpPageState.value = LoginSignUpPageState.LoggingFinish()
+                })
+                delay(500)
+                bottomSheetContainerState.show(provider)
+                delay(2000)
+                loginSignUpPageState.value = LoginSignUpPageState.Nothing
+            },
+            onFailed = {
+                PurpleLogger.current.d(TAG, "login failed, ${it.info}")
+                logout()
+                loginSignUpPageState.value = LoginSignUpPageState.LoggingFail()
+            }
+        )
     }
 
     private fun logout() {
         PurpleLogger.current.d(TAG, "logout")
 
         LocalAccountManager.onUserLogout(LocalAccountManager.LOGOUT_BY_MANUALLY)
-        coroutineScope.launch {
+        LocalPurpleCoroutineScope.current.launch {
             requestNotNull(
                 action = userRepository::signOut
             )
@@ -492,10 +469,10 @@ class SystemUseCase(
         }
     }
 
-    fun signUp(
+    suspend fun signUp(
         context: Context,
     ) {
-        if (!AppConfig.appConfiguration.canSignUp) {
+        if (!ModuleConfig.moduleConfiguration.canSignUp) {
             context.getString(xcj.app.appsets.R.string.current_version_cannot_be_registered).toast()
             return
         }
@@ -523,65 +500,48 @@ class SystemUseCase(
         }
         PurpleLogger.current.d(TAG, "signUp")
         loginSignUpPageState.value = LoginSignUpPageState.SignUpingPage(signUpUserInfo)
-        coroutineScope.launch {
-            requestNotNullRaw(
-                action = {
-                    val accountEncode =
-                        MessageDigestUtil.transformWithMD5(signUpUserInfo.account)?.outContent
-                    val passwordEncode =
-                        MessageDigestUtil.transformWithMD5(signUpUserInfo.password)?.outContent
-                    if (accountEncode.isNullOrEmpty() || passwordEncode.isNullOrEmpty()) {
-                        loginSignUpPageState.value = LoginSignUpPageState.SignUpPage(signUpUserInfo)
-                        return@requestNotNullRaw
-                    }
-                    val preSignUpRes = userRepository.preSignUp(accountEncode)
-                    val canSignUp = preSignUpRes.data
-                    if (canSignUp == null) {
-                        loginSignUpPageState.value =
-                            LoginSignUpPageState.SignUpPageFail(
-                                signUpUserInfo,
-                                R.string.register_failed
-                            )
-                        delay(1000)
-                        context.getString(xcj.app.appsets.R.string.register_failed).toastSuspend()
-                        loginSignUpPageState.value = LoginSignUpPageState.Nothing
-                        return@requestNotNullRaw
-                    } else if (!canSignUp) {
-                        loginSignUpPageState.value =
-                            LoginSignUpPageState.SignUpPageFail(
-                                signUpUserInfo,
-                                R.string.a_account_exist_please_retry
-                            )
-                        context.getString(xcj.app.appsets.R.string.a_account_exist_please_retry)
-                            .toastSuspend()
-                        delay(1000)
-                        loginSignUpPageState.value = LoginSignUpPageState.SignUpPage(signUpUserInfo)
-                        return@requestNotNullRaw
-                    }
-                    val signUpRes = userRepository.signUp(
-                        context,
-                        accountEncode,
-                        passwordEncode,
-                        signUpUserInfo
-                    )
-                    val signUpSuccess = signUpRes.data
-                    if (signUpSuccess != true) {
-                        loginSignUpPageState.value =
-                            LoginSignUpPageState.SignUpPageFail(
-                                signUpUserInfo,
-                                R.string.register_failed
-                            )
-                        context.getString(xcj.app.appsets.R.string.register_failed).toastSuspend()
-                        delay(1000)
-                        loginSignUpPageState.value = LoginSignUpPageState.SignUpPage(signUpUserInfo)
-                        return@requestNotNullRaw
-                    }
+        requestNotNullRaw(
+            action = {
+                val accountEncode =
+                    MessageDigestUtil.transformWithMD5(signUpUserInfo.account)?.outContent
+                val passwordEncode =
+                    MessageDigestUtil.transformWithMD5(signUpUserInfo.password)?.outContent
+                if (accountEncode.isNullOrEmpty() || passwordEncode.isNullOrEmpty()) {
+                    loginSignUpPageState.value = LoginSignUpPageState.SignUpPage(signUpUserInfo)
+                    return@requestNotNullRaw
+                }
+                val preSignUpRes = userRepository.preSignUp(accountEncode)
+                val canSignUp = preSignUpRes.data
+                if (canSignUp == null) {
                     loginSignUpPageState.value =
-                        LoginSignUpPageState.SignUpPageFinish(signUpUserInfo)
-                    context.getString(xcj.app.appsets.R.string.register_appsets_success)
+                        LoginSignUpPageState.SignUpPageFail(
+                            signUpUserInfo,
+                            R.string.register_failed
+                        )
+                    delay(1000)
+                    context.getString(xcj.app.appsets.R.string.register_failed).toastSuspend()
+                    loginSignUpPageState.value = LoginSignUpPageState.Nothing
+                    return@requestNotNullRaw
+                } else if (!canSignUp) {
+                    loginSignUpPageState.value =
+                        LoginSignUpPageState.SignUpPageFail(
+                            signUpUserInfo,
+                            R.string.a_account_exist_please_retry
+                        )
+                    context.getString(xcj.app.appsets.R.string.a_account_exist_please_retry)
                         .toastSuspend()
-                },
-                onFailed = {
+                    delay(1000)
+                    loginSignUpPageState.value = LoginSignUpPageState.SignUpPage(signUpUserInfo)
+                    return@requestNotNullRaw
+                }
+                val signUpRes = userRepository.signUp(
+                    context,
+                    accountEncode,
+                    passwordEncode,
+                    signUpUserInfo
+                )
+                val signUpSuccess = signUpRes.data
+                if (signUpSuccess != true) {
                     loginSignUpPageState.value =
                         LoginSignUpPageState.SignUpPageFail(
                             signUpUserInfo,
@@ -590,10 +550,25 @@ class SystemUseCase(
                     context.getString(xcj.app.appsets.R.string.register_failed).toastSuspend()
                     delay(1000)
                     loginSignUpPageState.value = LoginSignUpPageState.SignUpPage(signUpUserInfo)
-                    it.info.toastSuspend()
+                    return@requestNotNullRaw
                 }
-            )
-        }
+                loginSignUpPageState.value =
+                    LoginSignUpPageState.SignUpPageFinish(signUpUserInfo)
+                context.getString(xcj.app.appsets.R.string.register_appsets_success)
+                    .toastSuspend()
+            },
+            onFailed = {
+                loginSignUpPageState.value =
+                    LoginSignUpPageState.SignUpPageFail(
+                        signUpUserInfo,
+                        R.string.register_failed
+                    )
+                context.getString(xcj.app.appsets.R.string.register_failed).toastSuspend()
+                delay(1000)
+                loginSignUpPageState.value = LoginSignUpPageState.SignUpPage(signUpUserInfo)
+                it.info.toastSuspend()
+            }
+        )
     }
 
     fun createGroup(
@@ -610,7 +585,7 @@ class SystemUseCase(
         }
         PurpleLogger.current.d(TAG, "createGroup")
         createGroupPageState.value = CreateGroupPageState.Creating(groupCreateInfo)
-        coroutineScope.launch {
+        LocalPurpleCoroutineScope.current.launch {
             requestNotNullRaw(
                 action = {
                     val preCheckRes =
@@ -671,10 +646,8 @@ class SystemUseCase(
         return WeatherInfo(temperatureInfo)
     }
 
-    fun restoreLoginStatusStateIfNeeded() {
-        coroutineScope.launch {
-            LocalAccountManager.restoreLoginStatusStateIfNeeded()
-        }
+    suspend fun restoreLoginStatusStateIfNeeded() {
+        LocalAccountManager.restoreLoginStatusStateIfNeeded()
     }
 
 

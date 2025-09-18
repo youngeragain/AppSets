@@ -4,9 +4,6 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
-import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.withCreated
-import kotlinx.coroutines.launch
 import xcj.app.appsets.ui.compose.theme.AppSetsTheme
 import xcj.app.appsets.ui.viewmodel.IMBubbleViewModel
 import xcj.app.starter.android.ui.base.DesignComponentActivity
@@ -30,12 +27,8 @@ class IMBubbleActivity : DesignComponentActivity() {
                 ImBubblePages()
             }
         }
-        lifecycleScope.launch {
-            lifecycle.withCreated {
-                viewModel.onActivityCreated(this@IMBubbleActivity)
-                viewModel.handleIntent(intent)
-            }
-        }
+        viewModel.onActivityCreated(this@IMBubbleActivity)
+        viewModel.handleIntent(intent)
     }
 
     override fun onNewIntent(intent: Intent) {

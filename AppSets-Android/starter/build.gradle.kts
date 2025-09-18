@@ -48,13 +48,13 @@ dependencies {
     //implementation(project(":purple_native"))
     api(libs.androidx.appcompat)
     api(libs.androidx.core.ktx)
-    api(libs.gson)
+    api(libs.google.gson)
 
     api(libs.retrofit.converter.gson)
     api(libs.okhttp.logging)
     api(libs.retrofit.kotlin.coroutines.adapter)
 
-    api(libs.zxing)
+    api(libs.google.zxing)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

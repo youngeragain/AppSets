@@ -2,31 +2,32 @@ package xcj.app.compose_share.ui.viewmodel
 
 import android.content.Intent
 import androidx.lifecycle.ViewModel
-import xcj.app.compose_share.components.AnyStateProvider
-import xcj.app.compose_share.components.ComposeContainerState
-import xcj.app.compose_share.components.ProgressedComposeContainerState
+import xcj.app.compose_share.components.ProgressiveVisibilityComposeState
+import xcj.app.compose_share.components.VisibilityComposeState
+import xcj.app.compose_share.components.VisibilityComposeStateProvider
 import xcj.app.starter.android.util.PurpleLogger
 
-abstract class AnyStateViewModel : ViewModel(), AnyStateProvider {
+abstract class VisibilityComposeStateViewModel : ViewModel(), VisibilityComposeStateProvider {
 
     companion object {
         private const val TAG = "AnyStateViewModel"
         private const val NAME_BOTTOM_SHEET_COMPOSE_STATE = "bottomSheetContainerComposeState"
         private const val NAME_IMMERSE_CONTENT_COMPOSE_STATE = "immerseContentComposeState"
 
-        fun AnyStateProvider.bottomSheetState(): ComposeContainerState {
+        fun VisibilityComposeStateProvider.bottomSheetState(): VisibilityComposeState {
             return provideState(NAME_BOTTOM_SHEET_COMPOSE_STATE)
         }
 
-        fun AnyStateProvider.immerseContentState(): ComposeContainerState {
+        fun VisibilityComposeStateProvider.immerseContentState(): VisibilityComposeState {
             return provideState(NAME_IMMERSE_CONTENT_COMPOSE_STATE)
         }
     }
 
-    private val composeContainerStateMap: MutableMap<String, ComposeContainerState> = mutableMapOf()
+    private val visibilityComposeStateMap: MutableMap<String, VisibilityComposeState> =
+        mutableMapOf()
 
-    override fun provideState(name: String): ComposeContainerState {
-        if (!composeContainerStateMap.containsKey(name)) {
+    override fun provideState(name: String): VisibilityComposeState {
+        if (!visibilityComposeStateMap.containsKey(name)) {
             PurpleLogger.current.d(
                 TAG,
                 "provideState, name:$name no state can provide!, new default provided!"
@@ -37,8 +38,8 @@ abstract class AnyStateViewModel : ViewModel(), AnyStateProvider {
                 "provideState, name:$name"
             )
         }
-        val containerState = composeContainerStateMap.getOrPut(name) {
-            ProgressedComposeContainerState()
+        val containerState = visibilityComposeStateMap.getOrPut(name) {
+            ProgressiveVisibilityComposeState()
         }
         return containerState
     }

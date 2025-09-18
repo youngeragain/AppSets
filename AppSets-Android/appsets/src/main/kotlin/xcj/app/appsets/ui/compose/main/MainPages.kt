@@ -1,6 +1,7 @@
 package xcj.app.appsets.ui.compose.main
 
 import android.annotation.SuppressLint
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.BackEventCompat
@@ -36,7 +37,6 @@ import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.windowInsetsTopHeight
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -67,7 +67,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navOptions
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.rememberHazeState
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import xcj.app.appsets.account.LocalAccountManager
 import xcj.app.appsets.im.message.ImMessage
@@ -101,15 +101,16 @@ import xcj.app.appsets.ui.model.state.NowSpaceObject
 import xcj.app.appsets.ui.model.state.NowSpaceObject.NewImMessage
 import xcj.app.appsets.ui.viewmodel.MainViewModel
 import xcj.app.appsets.usecase.ConversationUseCase
+import xcj.app.appsets.usecase.ScreenUseCase
 import xcj.app.appsets.usecase.SessionState
 import xcj.app.compose_share.components.BottomSheetContainer
-import xcj.app.compose_share.components.ComposeContainerState
 import xcj.app.compose_share.components.DesignHDivider
-import xcj.app.compose_share.components.LocalAnyStateProvider
 import xcj.app.compose_share.components.LocalUseCaseOfComposeDynamic
-import xcj.app.compose_share.components.ProgressedComposeContainerState
-import xcj.app.compose_share.ui.viewmodel.AnyStateViewModel.Companion.bottomSheetState
-import xcj.app.compose_share.ui.viewmodel.AnyStateViewModel.Companion.immerseContentState
+import xcj.app.compose_share.components.LocalVisibilityComposeStateProvider
+import xcj.app.compose_share.components.ProgressiveVisibilityComposeState
+import xcj.app.compose_share.components.VisibilityComposeState
+import xcj.app.compose_share.ui.viewmodel.VisibilityComposeStateViewModel.Companion.bottomSheetState
+import xcj.app.compose_share.ui.viewmodel.VisibilityComposeStateViewModel.Companion.immerseContentState
 import xcj.app.starter.android.ktx.startWithHttpSchema
 import xcj.app.starter.android.util.PurpleLogger
 
@@ -170,103 +171,25 @@ fun MainPages() {
         LocalUseCaseOfUserInfo provides viewModel.userInfoUseCase,
         LocalUseCaseOfNowSpaceContent provides viewModel.nowSpaceContentUseCase,
         LocalNavHostController provides navController,
-        LocalAnyStateProvider provides viewModel,
+        LocalVisibilityComposeStateProvider provides viewModel,
         LocalQuickStepContentHandlerRegistry provides quickStepContentHandlerRegistry
     ) {
+        OnScaffoldLaunch(navController)
         MainBox(navController = navController)
     }
 }
 
 @Composable
 fun MainBox(navController: NavHostController) {
-    Surface {
-        Box(
-            modifier = Modifier.mainBackgroundHandle()
-        ) {
-            MainScaffoldContainer(navController = navController)
-
-            ImmerseContentContainer(navController = navController)
-
-            BottomSheetContainer()
-
-        }
-    }
-}
-
-@Composable
-fun ImmerseContentContainer(
-    navController: NavHostController,
-) {
-    val context = LocalContext.current
-    val anyStateProvider = LocalAnyStateProvider.current
-    val immerseContentState = anyStateProvider.immerseContentState()
-    Box(
-        Modifier
-            .fillMaxSize()
-    ) {
-        AnimatedVisibility(
-            visible = immerseContentState.isShow,
-            enter = fadeIn(animationSpec = tween()) + scaleIn(
-                initialScale = 1.12f,
-                animationSpec = tween()
-            ),
-            exit = fadeOut() + scaleOut(
-                targetScale = 1.12f
-            ),
-        ) {
-            immerseContentState.getContent(context)?.Content()
-        }
-    }
-}
-
-@Composable
-fun OnScaffoldLaunch(navController: NavController) {
-    val context = LocalContext.current
-    val systemUseCase = LocalUseCaseOfSystem.current
-    val navigationUseCase = LocalUseCaseOfNavigation.current
-    val anyStateProvider = LocalAnyStateProvider.current
-    val localQuickStepContentHandlerRegistry = LocalQuickStepContentHandlerRegistry.current
-
-    LaunchedEffect(key1 = systemUseCase.newVersionState, block = {
-        if (systemUseCase.newVersionState.value?.forceUpdate == true) {
-            delay(200)
-            navigationUseCase.barVisible.value = false
-        }
-    })
-
-    DisposableEffect(key1 = Unit, effect = {
-        navigationUseCase.initTabItems()
-        val destinationChangedListener: NavController.OnDestinationChangedListener =
-            NavController.OnDestinationChangedListener { _, destination, _ ->
-                anyStateProvider.bottomSheetState().hide()
-                navigationUseCase.invalidateTabItemsOnRouteChanged(
-                    destination.route,
-                    "On Destination Changed"
-                )
-            }
-        navController.addOnDestinationChangedListener(destinationChangedListener)
-
-        QuickStepContentHandlerRegistry.initHandlers(context, localQuickStepContentHandlerRegistry)
-
-        onDispose {
-            navController.removeOnDestinationChangedListener(destinationChangedListener)
-            QuickStepContentHandlerRegistry.deInitHandlers(localQuickStepContentHandlerRegistry)
-        }
-    })
-}
-
-@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
-@Composable
-fun MainScaffoldContainer(navController: NavHostController) {
     val context = LocalContext.current
     val systemUseCase = LocalUseCaseOfSystem.current
     val updateCheckResult by systemUseCase.newVersionState
-    val onTabClick = rememberNavigationBarOnTabClickListener(navController)
-    OnScaffoldLaunch(navController)
     val hazeState = rememberHazeState()
+    val screenUseCase = LocalUseCaseOfScreen.current
+    val conversationUseCase = LocalUseCaseOfConversation.current
+    val coroutineScope = rememberCoroutineScope()
     Box(
         modifier = Modifier
-            .fillMaxSize()
             .mainScaffoldHandle(),
     ) {
         Column(
@@ -303,8 +226,153 @@ fun MainScaffoldContainer(navController: NavHostController) {
                 .align(Alignment.BottomCenter),
             navController = navController,
             hazeState = hazeState,
-            onTabClick = onTabClick,
+            onTabClick = { tab, tabAction ->
+                handleTabClick(
+                    context,
+                    coroutineScope,
+                    tab,
+                    tabAction,
+                    navController,
+                    screenUseCase,
+                    conversationUseCase
+                )
+            },
         )
+
+        ImmerseContentContainer()
+
+        BottomSheetContainer()
+
+    }
+}
+
+@Composable
+fun ImmerseContentContainer() {
+    val context = LocalContext.current
+    val anyStateProvider = LocalVisibilityComposeStateProvider.current
+    val immerseContentState = anyStateProvider.immerseContentState()
+    Box(
+        Modifier
+            .fillMaxSize()
+    ) {
+        AnimatedVisibility(
+            visible = immerseContentState.isShow,
+            enter = fadeIn(animationSpec = tween()) + scaleIn(
+                initialScale = 1.12f,
+                animationSpec = tween()
+            ),
+            exit = fadeOut() + scaleOut(
+                targetScale = 1.12f
+            ),
+        ) {
+            immerseContentState.getContent(context)?.Content()
+        }
+    }
+}
+
+@Composable
+fun OnScaffoldLaunch(navController: NavController) {
+    val context = LocalContext.current
+    val systemUseCase = LocalUseCaseOfSystem.current
+    val navigationUseCase = LocalUseCaseOfNavigation.current
+    val anyStateProvider = LocalVisibilityComposeStateProvider.current
+    val localQuickStepContentHandlerRegistry = LocalQuickStepContentHandlerRegistry.current
+
+    LaunchedEffect(Unit) {
+        anyStateProvider.bottomSheetState().markComposeAvailableState(true)
+    }
+    LaunchedEffect(key1 = systemUseCase.newVersionState, block = {
+        if (systemUseCase.newVersionState.value?.forceUpdate == true) {
+            navigationUseCase.barVisible.value = false
+        }
+    })
+
+    DisposableEffect(key1 = Unit, effect = {
+        navigationUseCase.initTabItems()
+        val destinationChangedListener: NavController.OnDestinationChangedListener =
+            NavController.OnDestinationChangedListener { _, destination, _ ->
+                anyStateProvider.bottomSheetState().hide()
+                navigationUseCase.invalidateTabItemsOnRouteChanged(
+                    destination.route,
+                    "On Destination Changed"
+                )
+            }
+        navController.addOnDestinationChangedListener(destinationChangedListener)
+
+        QuickStepContentHandlerRegistry.initHandlers(context, localQuickStepContentHandlerRegistry)
+
+        onDispose {
+            navController.removeOnDestinationChangedListener(destinationChangedListener)
+            QuickStepContentHandlerRegistry.deInitHandlers(localQuickStepContentHandlerRegistry)
+        }
+    })
+}
+
+fun handleTabClick(
+    context: Context,
+    coroutineScope: CoroutineScope,
+    tab: TabItem,
+    tabAction: TabAction?,
+    navController: NavController,
+    screenUseCase: ScreenUseCase,
+    conversationUseCase: ConversationUseCase
+) {
+    if (tabAction != null) {
+        when (tab.routeName) {
+            PageRouteNames.AppsCenterPage -> {
+                if (tabAction.route.isNullOrEmpty()) {
+                    when (tabAction.action) {
+                        TabAction.ACTION_APP_TOOLS -> {
+
+                        }
+                    }
+                } else {
+                    tabAction.route?.let(navController::navigate)
+                }
+            }
+
+            PageRouteNames.OutSidePage -> {
+                if (tabAction.route.isNullOrEmpty()) {
+                    when (tabAction.action) {
+                        TabAction.ACTION_REFRESH -> {
+                            coroutineScope.launch {
+                                screenUseCase.loadOutSideScreens()
+                            }
+                        }
+                    }
+                } else {
+                    when (tabAction.route) {
+                        PageRouteNames.MediaFallPage -> {
+                            context.startActivity(
+                                Intent(
+                                    context,
+                                    MediaFallActivity::class.java
+                                )
+                            )
+                        }
+
+                        else -> {
+                            tabAction.route?.let(navController::navigate)
+                        }
+                    }
+                }
+            }
+
+            PageRouteNames.ConversationOverviewPage -> {
+                conversationUseCase.toggleShowAddActions()
+            }
+        }
+    } else if (!tab.isSelect) {
+        navController.navigate(tab.routeName, navOptions {
+            popUpTo(navController.graph.findStartDestination().id) {
+                saveState = true
+            }
+            // Avoid multiple copies of the same destination when
+            // reselecting the same item
+            launchSingleTop = true
+            // Restore state when reselecting a previously selected item
+            restoreState = true
+        })
     }
 }
 
@@ -319,7 +387,7 @@ fun NavigationBarContainer(
     val navigationUseCase = LocalUseCaseOfNavigation.current
     val qrCodeUseCase = LocalUseCaseOfQRCode.current
     val systemUseCase = LocalUseCaseOfSystem.current
-    val anyStateProvider = LocalAnyStateProvider.current
+    val anyStateProvider = LocalVisibilityComposeStateProvider.current
     val enable = systemUseCase.newVersionState.value?.forceUpdate != true
     val inSearchModel = navController.currentDestination?.route == PageRouteNames.SearchPage
     val searchUseCase = LocalUseCaseOfSearch.current
@@ -376,24 +444,27 @@ fun NavigationBarContainer(
 
 @Composable
 fun NowSpace(navController: NavController) {
+    val nowSpaceContentUseCase = LocalUseCaseOfNowSpaceContent.current
+    val conversationUseCase = LocalUseCaseOfConversation.current
+    val content = nowSpaceContentUseCase.content.value
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .animateContentSize()
     ) {
-        val nowSpaceContentUseCase = LocalUseCaseOfNowSpaceContent.current
-        val conversationUseCase = LocalUseCaseOfConversation.current
 
-
-        val content = nowSpaceContentUseCase.content.value
-        val currentSession =
-            (conversationUseCase.currentSessionState.value as? SessionState.Normal)?.session
         when (content) {
             is NewImMessage -> {
 
-                val messageColorBarVisibility =
-                    (navController.currentDestination?.route != PageRouteNames.ConversationDetailsPage ||
-                            currentSession?.id != content.session.id)
+                val messageColorBarVisibility by remember {
+                    derivedStateOf {
+                        val currentSession =
+                            (conversationUseCase.currentSessionState.value as? SessionState.Normal)?.session
+                        (navController.currentDestination?.route != PageRouteNames.ConversationDetailsPage ||
+                                currentSession?.id != content.session.id)
+                    }
+                }
                 if (messageColorBarVisibility) {
                     MessageQuickAccessBar(
                         modifier = Modifier.clickable {
@@ -544,7 +615,7 @@ fun MessageQuickAccessBar(
 
 @Composable
 fun Modifier.mainBackgroundHandle() = composed {
-    val localAnyStateProvider = LocalAnyStateProvider.current
+    val localAnyStateProvider = LocalVisibilityComposeStateProvider.current
     val bottomSheetState = localAnyStateProvider.bottomSheetState()
     if (!bottomSheetState.shouldBackgroundSink()) {
         return@composed this
@@ -582,7 +653,7 @@ fun Modifier.mainBackgroundHandle() = composed {
 
 @Composable
 fun Modifier.mainScaffoldHandle(): Modifier = composed {
-    val anyStateProvider = LocalAnyStateProvider.current
+    val anyStateProvider = LocalVisibilityComposeStateProvider.current
     val immerseContentState = anyStateProvider.immerseContentState()
     val renderEffectAnimateState = remember {
         AnimationState(0f)
@@ -609,78 +680,7 @@ fun Modifier.mainScaffoldHandle(): Modifier = composed {
     }
 }
 
-@Composable
-fun rememberNavigationBarOnTabClickListener(navController: NavController): (TabItem, TabAction?) -> Unit {
-    val context = LocalContext.current
-    val screenUseCase = LocalUseCaseOfScreen.current
-    val conversationUseCase = LocalUseCaseOfConversation.current
-    val coroutineScope = rememberCoroutineScope()
-    val listener: (TabItem, TabAction?) -> Unit = remember {
-        { tab, tabAction ->
-            if (tabAction != null) {
-                when (tab.routeName) {
-                    PageRouteNames.AppsCenterPage -> {
-                        if (tabAction.route.isNullOrEmpty()) {
-                            when (tabAction.action) {
-                                TabAction.ACTION_APP_TOOLS -> {
-
-                                }
-                            }
-                        } else {
-                            tabAction.route?.let(navController::navigate)
-                        }
-                    }
-
-                    PageRouteNames.OutSidePage -> {
-                        if (tabAction.route.isNullOrEmpty()) {
-                            when (tabAction.action) {
-                                TabAction.ACTION_REFRESH -> {
-                                    coroutineScope.launch {
-                                        screenUseCase.loadOutSideScreens()
-                                    }
-                                }
-                            }
-                        } else {
-                            when (tabAction.route) {
-                                PageRouteNames.MediaFallPage -> {
-                                    context.startActivity(
-                                        Intent(
-                                            context,
-                                            MediaFallActivity::class.java
-                                        )
-                                    )
-                                }
-
-                                else -> {
-                                    tabAction.route?.let(navController::navigate)
-                                }
-                            }
-                        }
-                    }
-
-                    PageRouteNames.ConversationOverviewPage -> {
-                        conversationUseCase.toggleShowAddActions()
-                    }
-                }
-            } else if (!tab.isSelect) {
-                navController.navigate(tab.routeName, navOptions {
-                    popUpTo(navController.graph.findStartDestination().id) {
-                        saveState = true
-                    }
-                    // Avoid multiple copies of the same destination when
-                    // reselecting the same item
-                    launchSingleTop = true
-                    // Restore state when reselecting a previously selected item
-                    restoreState = true
-                })
-            }
-
-        }
-    }
-    return listener
-}
-
-private fun ComposeContainerState.mapToBackEventState(): BackEventCompat {
-    val ps = this as ProgressedComposeContainerState
+private fun VisibilityComposeState.asBackEventState(): BackEventCompat {
+    val ps = this as ProgressiveVisibilityComposeState
     return ps.progressState.value as BackEventCompat
 }

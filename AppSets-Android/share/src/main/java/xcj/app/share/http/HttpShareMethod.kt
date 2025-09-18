@@ -11,7 +11,7 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import xcj.app.compose_share.ui.viewmodel.AnyStateViewModel.Companion.bottomSheetState
+import xcj.app.compose_share.ui.viewmodel.VisibilityComposeStateViewModel.Companion.bottomSheetState
 import xcj.app.share.base.ClientInfo
 import xcj.app.share.base.DataContent
 import xcj.app.share.base.DeviceAddress

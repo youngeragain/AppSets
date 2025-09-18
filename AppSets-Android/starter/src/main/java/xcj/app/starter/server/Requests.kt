@@ -32,21 +32,19 @@ suspend inline fun <T> request(
     noinline onSuccess: (suspend (T?) -> Unit)? = null,
     noinline onFailed: (suspend (RequestFail) -> Unit)? = null,
 ) {
-    var methodStackName: String? = null
     runCatching {
-        methodStackName = Thread.currentThread().stackTrace.getOrNull(1)?.methodName
         action.invoke()
     }.onSuccess {
         if (it.success) {
             onSuccess?.invoke(it.data)
         } else {
             val failInfo =
-                RequestFail(it.code, it.info ?: "", null, "unknown url", methodStackName)
+                RequestFail(it.code, it.info ?: "", null, "unknown url")
             onFailed?.invoke(failInfo)
         }
     }.onFailure {
         onFailed?.invoke(
-            RequestFail(-99, it.message ?: "network layer error", it, methodName = methodStackName)
+            RequestFail(-99, it.message ?: "network layer error", it)
         )
     }
 }
@@ -56,9 +54,7 @@ suspend inline fun <T> requestNotNull(
     noinline onSuccess: (suspend (T) -> Unit)? = null,
     noinline onFailed: (suspend (RequestFail) -> Unit)? = null,
 ) {
-    var methodStackName: String? = null
     runCatching {
-        methodStackName = Thread.currentThread().stackTrace.getOrNull(1)?.methodName
         action.invoke()
     }.onSuccess {
         val data = it.data
@@ -66,12 +62,12 @@ suspend inline fun <T> requestNotNull(
             onSuccess?.invoke(data)
         } else {
             val failInfo =
-                RequestFail(it.code, it.info ?: "", null, "unknown url", methodStackName)
+                RequestFail(it.code, it.info ?: "", null, "unknown url")
             onFailed?.invoke(failInfo)
         }
     }.onFailure {
         onFailed?.invoke(
-            RequestFail(-1, it.message ?: "network layer error", it, methodName = methodStackName)
+            RequestFail(-1, it.message ?: "network layer error", it)
         )
     }
 }

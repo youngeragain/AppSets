@@ -12,7 +12,7 @@ import xcj.app.appsets.server.model.AppsWithCategory
 import xcj.app.appsets.server.model.MediaContent
 import xcj.app.appsets.server.model.SpotLight
 import xcj.app.appsets.server.model.UpdateCheckResult
-import xcj.app.appsets.settings.AppConfig
+import xcj.app.appsets.settings.ModuleConfig
 import xcj.app.appsets.ui.model.ApplicationForCreate
 import xcj.app.appsets.util.PictureUrlMapper
 import xcj.app.io.components.LocalFileIO
@@ -27,7 +27,7 @@ class AppSetsRepository(
     suspend fun getAppToken(): DesignResponse<String> = withContext(Dispatchers.IO) {
         PurpleLogger.current.d(TAG, "getAppToken, thread:${Thread.currentThread()}")
         val appTokenRes =
-            appSetsApi.getAppToken(mapOf("appSetsAppId" to AppConfig.appConfiguration.appsetsAppId))
+            appSetsApi.getAppToken(mapOf("appSetsAppId" to ModuleConfig.moduleConfiguration.appsetsAppId))
         return@withContext appTokenRes
     }
 

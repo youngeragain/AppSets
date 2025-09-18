@@ -29,8 +29,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -57,10 +59,10 @@ fun AppsCenterPage(
     onApplicationLongPress: (Application) -> Unit
 ) {
     ShowNavBarWhenOnLaunch()
-
+    val hapticFeedback = LocalHapticFeedback.current
     val coroutineScope = rememberCoroutineScope()
 
-    val allApplications = appCenterPageState.apps.flatMap { it.applications }
+    val allApplications by rememberUpdatedState(appCenterPageState.apps.flatMap { it.applications })
     val iconAnimationStates = remember {
         val animations = mutableListOf<AnimationState<Float, AnimationVector1D>>()
         val allCount = allApplications.size
@@ -91,7 +93,7 @@ fun AppsCenterPage(
             }
         }
     }
-    val hapticFeedback = LocalHapticFeedback.current
+
     LazyVerticalGrid(
         columns = GridCells.Adaptive(90.dp),
         modifier = Modifier,

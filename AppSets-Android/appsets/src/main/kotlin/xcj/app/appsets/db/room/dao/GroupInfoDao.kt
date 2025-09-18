@@ -24,7 +24,7 @@ interface GroupInfoDao {
         private const val TAG = "GroupInfoDao"
 
         fun getInstance(): GroupInfoDao {
-            val dataBase = ModuleHelper.getDataBase<AppDatabase>(ModuleConstant.MODULE_NAME)
+            val dataBase = ModuleHelper.get<AppDatabase>(ModuleConstant.MODULE_NAME + "/database")
             PurpleLogger.current.d(TAG, "getInstance, dataBase:${dataBase}")
             if (dataBase == null) {
                 PurpleLogger.current.e(TAG, "getInstance, dataBase is null!!!")

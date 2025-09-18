@@ -26,7 +26,7 @@ class SimplePurpleForAndroidContext(any: Any) : PurpleContext() {
     private fun initAndroid() {
         PurpleLogger.current.d(TAG, "initAndroid")
         androidContexts.simpleInit()
-        publishEvent(AndroidInitEvent())
+        publishEvent(AndroidEvent("onApplicationCreated"))
     }
 
     override fun onInit() {

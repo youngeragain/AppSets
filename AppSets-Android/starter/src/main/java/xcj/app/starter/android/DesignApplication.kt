@@ -12,6 +12,11 @@ open class DesignApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        purpleBootstrap(false)
+    }
+
+    open fun purpleBootstrap(isTest: Boolean) {
+        PurpleLogger.current.enable = isTest
         Purple().bootstrap(this)
     }
 

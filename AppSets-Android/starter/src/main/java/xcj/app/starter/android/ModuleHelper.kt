@@ -1,62 +1,54 @@
 package xcj.app.starter.android
 
 import xcj.app.starter.android.util.PurpleLogger
+import xcj.app.starter.foundation.Provider
 
 object ModuleHelper {
 
     private const val TAG = "ModuleHelper"
 
-    val databaseMap: MutableMap<String, Any> = mutableMapOf()
+    private val providers: MutableMap<String, Provider<String, *>> = mutableMapOf()
 
-    private val moduleMainMap: MutableMap<String, IPurpleModuleMain> = mutableMapOf()
-
-
-    fun moduleInit(
-        moduleName: String,
-        IPurpleModuleMain: IPurpleModuleMain
-    ){
-        if (moduleMainMap.containsKey(moduleName))
-            return
-        moduleMainMap[moduleName] = IPurpleModuleMain
-    }
-
-    fun removeModuleInitialization(moduleName: String){
-        if (moduleMainMap.containsKey(moduleName))
-            moduleMainMap.remove(moduleName)
+    fun moduleInitHooks(
+        iPurpleModule: IPurpleModule
+    ) {
+        iPurpleModule.initModule()
     }
 
     /**
-     * @param databaseKey 模块名
+     * @param provider
      */
-    fun addDataBase(databaseKey: String, database: Any) {
+    fun addProvider(provider: Provider<String, *>) {
         PurpleLogger.current.d(
-            TAG,
-            "addDataBase, databaseKey:$databaseKey, database:${database}"
+            TAG, "addProvider, providerKey:${provider.key()}"
         )
-        if (databaseMap.containsKey(databaseKey))
+
+        val key = provider.key().id
+        if (providers.containsKey(key)) {
             return
-        databaseMap[databaseKey] = database
+        }
+        providers[key] = provider
     }
 
     /**
-     * @param databaseKey 模块名
+     * @param key 模块名
      */
-    fun <DB> getDataBase(databaseKey: String): DB? {
+    fun <T> get(key: String): T? {
         PurpleLogger.current.d(
-            TAG,
-            "getDataBase, databaseKey:$databaseKey, databases size:${databaseMap.size}"
+            TAG, "get, key:$key, providers size:${providers.size}"
         )
-        return if (databaseMap.containsKey(databaseKey)) {
-            databaseMap[databaseKey] as? DB
-        } else null
+        if (!providers.containsKey(key)) {
+            return null
+        }
+        return providers[key]?.provide() as? T
     }
 
-    fun clearDataBase(databaseKey: String) {
-        return
+    fun removeProvider(key: String) {
+        providers.remove(key)
     }
 
-    fun isModuleInit(moduleName: String): Boolean {
-        return moduleMainMap.containsKey(moduleName)
+    fun removeAllProviders() {
+        providers.clear()
     }
 
 }

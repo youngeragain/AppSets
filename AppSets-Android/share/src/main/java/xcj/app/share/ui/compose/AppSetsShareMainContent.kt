@@ -97,7 +97,7 @@ import kotlinx.coroutines.launch
 import xcj.app.compose_share.components.BottomSheetContainer
 import xcj.app.compose_share.components.DesignHDivider
 import xcj.app.compose_share.components.DesignTextField
-import xcj.app.compose_share.components.LocalAnyStateProvider
+import xcj.app.compose_share.components.LocalVisibilityComposeStateProvider
 import xcj.app.compose_share.modifier.combinedClickableSingle
 import xcj.app.share.base.DataContent
 import xcj.app.share.base.ShareDevice
@@ -133,7 +133,7 @@ fun AppSetsShareMainContent(
 ) {
     val viewModel = viewModel<AppSetsShareViewModel>()
     CompositionLocalProvider(
-        LocalAnyStateProvider provides viewModel
+        LocalVisibilityComposeStateProvider provides viewModel
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
             AppSetsShareContainer(

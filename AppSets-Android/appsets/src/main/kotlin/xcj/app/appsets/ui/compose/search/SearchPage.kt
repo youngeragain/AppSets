@@ -81,8 +81,10 @@ import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import xcj.app.appsets.im.Bio
 import xcj.app.appsets.server.model.Application
 import xcj.app.appsets.server.model.GroupInfo
@@ -132,25 +134,30 @@ fun SearchInputBar(
     onInputContent: (String) -> Unit,
     onSearchBarSizeChanged: (IntSize) -> Unit,
 ) {
+    val keyboardController = LocalSoftwareKeyboardController.current
     var inputContent by remember {
         mutableStateOf(TextFieldValue())
     }
-
     val requester = remember {
         FocusRequester()
     }
+    val coroutineScope = rememberCoroutineScope()
+
     LaunchedEffect(key1 = true, block = {
         val searchKeywords = searchPageState.keywords
         if (!searchKeywords.isNullOrEmpty()) {
             inputContent = inputContent.copy(searchKeywords, TextRange(searchKeywords.length))
         }
         if (searchKeywords.isNullOrEmpty()) {
-            delay(450)
-            requester.requestFocus()
+            coroutineScope.launch(Dispatchers.IO) {
+                delay(450)
+                withContext(Dispatchers.Main) {
+                    requester.requestFocus()
+                }
+            }
         }
     })
-    val keyboardController = LocalSoftwareKeyboardController.current
-    val coroutineScope = rememberCoroutineScope()
+
     val corner = sizeOfSearchBar.height
         .div(2)
         .toFloat()

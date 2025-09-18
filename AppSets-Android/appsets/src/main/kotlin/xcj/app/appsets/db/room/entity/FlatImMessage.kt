@@ -52,6 +52,5 @@ data class FlatImMessage(
                 messageType = ImMessageDesignType.getType(imMessage)
             )
         }
-
     }
 }

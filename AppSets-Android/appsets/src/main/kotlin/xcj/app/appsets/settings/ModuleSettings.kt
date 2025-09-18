@@ -8,13 +8,14 @@ import androidx.core.content.edit
 import xcj.app.appsets.notification.NotificationChannels
 import xcj.app.appsets.purple_module.ModuleConstant
 import xcj.app.appsets.purple_module.configCoil
+import xcj.app.starter.android.ModuleHelper
+import xcj.app.starter.foundation.FinalProvider
+import xcj.app.starter.foundation.Identifiable
 import xcj.app.starter.test.LocalApplication
 
 interface ModuleSettings {
 
     fun initConfig()
-
-    fun name(): String
 
 }
 
@@ -33,7 +34,17 @@ class AppSetsModuleSettings : ModuleSettings {
 
 
         fun get(): AppSetsModuleSettings {
-            return AppSettings.getModuleSettings<AppSetsModuleSettings>(ModuleConstant.MODULE_NAME)!!
+            val moduleSettings =
+                ModuleHelper.get<AppSetsModuleSettings>(ModuleConstant.MODULE_NAME + "/settings")
+            if (moduleSettings != null) {
+                return moduleSettings
+            }
+            val provider = FinalProvider(
+                Identifiable.fromString(ModuleConstant.MODULE_NAME + "/settings"),
+                AppSetsModuleSettings()
+            )
+            ModuleHelper.addProvider(provider)
+            return provider.provide()
         }
     }
 
@@ -52,10 +63,6 @@ class AppSetsModuleSettings : ModuleSettings {
         prepareSettingsConfig()
         prepareNotificationsChanelConfig()
         prepareCoilConfig()
-    }
-
-    override fun name(): String {
-        return ModuleConstant.MODULE_NAME
     }
 
     private fun prepareSettingsConfig() {
@@ -131,24 +138,5 @@ class AppSetsModuleSettings : ModuleSettings {
         appSettingSharedPreferences.edit {
             putBoolean("is_im_message_date_show_seconds", show)
         }
-    }
-}
-
-object AppSettings {
-
-    private val moduleSettings: MutableList<ModuleSettings> = mutableListOf(
-        AppSetsModuleSettings()
-    )
-
-    fun collectAllModuleSettings(): List<ModuleSettings> {
-        return moduleSettings
-    }
-
-    fun initAppConfig() {
-        collectAllModuleSettings().forEach(ModuleSettings::initConfig)
-    }
-
-    fun <T : ModuleSettings> getModuleSettings(name: String): T? {
-        return moduleSettings.firstOrNull { it.name() == name } as? T
     }
 }

@@ -28,12 +28,12 @@ import xcj.app.appsets.usecase.ThirdPartUseCase
 import xcj.app.appsets.usecase.UserInfoUseCase
 import xcj.app.appsets.util.ktx.asComponentActivityOrNull
 import xcj.app.appsets.worker.LastSyncWorker
-import xcj.app.compose_share.ui.viewmodel.AnyStateViewModel
+import xcj.app.compose_share.ui.viewmodel.VisibilityComposeStateViewModel
 import xcj.app.io.components.SimpleFileIO
 import xcj.app.starter.android.util.LocalMessenger
 import xcj.app.starter.android.util.PurpleLogger
 
-abstract class BaseIMViewModel : AnyStateViewModel() {
+abstract class BaseIMViewModel : VisibilityComposeStateViewModel() {
 
     companion object {
         private const val TAG = "BaseIMViewModel"
@@ -41,7 +41,7 @@ abstract class BaseIMViewModel : AnyStateViewModel() {
 
     val systemUseCase: SystemUseCase = SystemUseCase.getInstance()
 
-    val nowSpaceContentUseCase: NowSpaceContentUseCase = NowSpaceContentUseCase.getInstance()
+    val nowSpaceContentUseCase: NowSpaceContentUseCase = NowSpaceContentUseCase()
     val userInfoUseCase: UserInfoUseCase =
         UserInfoUseCase(
             UserRepository.getInstance(),
@@ -54,7 +54,6 @@ abstract class BaseIMViewModel : AnyStateViewModel() {
         ScreenRepository.getInstance()
     )
     val conversationUseCase: ConversationUseCase = ConversationUseCase.getInstance()
-    //val mediaLocalExoUseCase: MediaLocalExoUseCase = MediaLocalExoUseCase()
 
     val mediaRemoteExoUseCase: MediaRemoteExoUseCase = MediaRemoteExoUseCase(
         AppSetsRepository.getInstance()

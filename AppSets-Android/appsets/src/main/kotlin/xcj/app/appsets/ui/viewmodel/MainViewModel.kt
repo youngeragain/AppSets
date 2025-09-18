@@ -33,7 +33,6 @@ class MainViewModel : BaseIMViewModel() {
 
     val composeDynamicUseCase: ComposeDynamicUseCase = ComposeDynamicUseCase()
     val screenPostUseCase: ScreenPostUseCase = ScreenPostUseCase(
-
         ScreenRepository.getInstance(),
         GenerationAIRepository.newInstance()
     )

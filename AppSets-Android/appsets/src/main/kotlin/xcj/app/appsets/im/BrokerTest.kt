@@ -6,7 +6,7 @@ import com.google.gson.Gson
 import com.google.gson.JsonObject
 import xcj.app.appsets.account.LocalAccountManager
 import xcj.app.appsets.im.message.ImMessage
-import xcj.app.appsets.settings.AppConfig
+import xcj.app.appsets.settings.ModuleConfig
 import xcj.app.starter.android.util.PurpleLogger
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
@@ -30,7 +30,7 @@ object BrokerTest {
             return
         }
 
-        val appConfig = AppConfig.appConfiguration
+        val appConfig = ModuleConfig.moduleConfiguration
         if (appConfig.imBrokerProperties.isEmpty()) {
             PurpleLogger.current.d(
                 TAG,

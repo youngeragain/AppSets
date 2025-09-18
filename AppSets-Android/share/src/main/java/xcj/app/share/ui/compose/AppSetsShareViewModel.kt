@@ -11,7 +11,7 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import xcj.app.compose_share.ui.viewmodel.AnyStateViewModel
+import xcj.app.compose_share.ui.viewmodel.VisibilityComposeStateViewModel
 import xcj.app.share.base.BasicShareDevice
 import xcj.app.share.base.DataContent
 import xcj.app.share.base.DeviceName
@@ -28,7 +28,7 @@ import xcj.app.web.webserver.base.DataProgressInfo
 import java.io.File
 import java.text.DecimalFormat
 
-class AppSetsShareViewModel : AnyStateViewModel() {
+class AppSetsShareViewModel : VisibilityComposeStateViewModel() {
 
     companion object {
         private const val TAG = "AppSetsShareViewModel"

@@ -52,8 +52,8 @@ import xcj.app.appsets.ui.compose.user.UserProfilePage
 import xcj.app.appsets.ui.model.ApplicationForCreate
 import xcj.app.appsets.usecase.SystemUseCase
 import xcj.app.appsets.util.BundleDefaults
-import xcj.app.compose_share.components.LocalAnyStateProvider
-import xcj.app.compose_share.ui.viewmodel.AnyStateViewModel.Companion.bottomSheetState
+import xcj.app.compose_share.components.LocalVisibilityComposeStateProvider
+import xcj.app.compose_share.ui.viewmodel.VisibilityComposeStateViewModel.Companion.bottomSheetState
 import xcj.app.starter.android.usecase.PlatformUseCase
 
 @Composable
@@ -76,7 +76,7 @@ fun ImBubbleNaviHostPages(navController: NavHostController) {
             composable(PageRouteNames.ConversationDetailsPage) {
                 val context = LocalContext.current
                 val conversationUseCase = LocalUseCaseOfConversation.current
-                val anyStateProvider = LocalAnyStateProvider.current
+                val anyStateProvider = LocalVisibilityComposeStateProvider.current
                 val mediaAudioRecorderUseCase = LocalUseCaseOfMediaAudioRecorder.current
                 val mediaRemoteExoUseCase = LocalUseCaseOfMediaRemoteExo.current
                 ConversationDetailsPage(
@@ -156,7 +156,7 @@ fun ImBubbleNaviHostPages(navController: NavHostController) {
             composable(PageRouteNames.ConversationOverviewPage) {
                 val context = LocalContext.current
                 val conversationUseCase = LocalUseCaseOfConversation.current
-                val anyStateProvider = LocalAnyStateProvider.current
+                val anyStateProvider = LocalVisibilityComposeStateProvider.current
                 val systemUseCase = LocalUseCaseOfSystem.current
                 val mediaAudioRecorderUseCase = LocalUseCaseOfMediaAudioRecorder.current
                 val mediaRemoteExoUseCase = LocalUseCaseOfMediaRemoteExo.current
@@ -271,7 +271,7 @@ fun ImBubbleNaviHostPages(navController: NavHostController) {
             composable(PageRouteNames.ScreenDetailsPage) {
                 val context = LocalContext.current
                 val screenUseCase = LocalUseCaseOfScreen.current
-                val anyStateProvider = LocalAnyStateProvider.current
+                val anyStateProvider = LocalVisibilityComposeStateProvider.current
                 val coroutineScope = rememberCoroutineScope()
                 ScreenDetailsPage(
                     screenInfoForCard = screenUseCase.currentScreenInfoForCard.value,
@@ -321,7 +321,7 @@ fun ImBubbleNaviHostPages(navController: NavHostController) {
             composable(PageRouteNames.UserProfilePage) {
                 val context = LocalContext.current
                 val userInfoUseCase = LocalUseCaseOfUserInfo.current
-                val anyStateProvider = LocalAnyStateProvider.current
+                val anyStateProvider = LocalVisibilityComposeStateProvider.current
                 val conversationUseCase = LocalUseCaseOfConversation.current
                 val systemUseCase = LocalUseCaseOfSystem.current
                 val screenUseCase = LocalUseCaseOfScreen.current
@@ -429,7 +429,7 @@ fun ImBubbleNaviHostPages(navController: NavHostController) {
                     )
                 val context = LocalContext.current
                 val conversationUseCase = LocalUseCaseOfConversation.current
-                val anyStateProvider = LocalAnyStateProvider.current
+                val anyStateProvider = LocalVisibilityComposeStateProvider.current
                 val coroutineScope = rememberCoroutineScope()
                 AppDetailsPage(
                     application = application,

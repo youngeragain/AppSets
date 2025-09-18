@@ -49,8 +49,8 @@ import xcj.app.appsets.ui.compose.custom_component.DesignBackButton
 import xcj.app.appsets.ui.model.state.QRCodeInfoScannedState
 import xcj.app.appsets.usecase.QRCodeUseCase
 import xcj.app.compose_share.components.BottomSheetContainer
-import xcj.app.compose_share.components.LocalAnyStateProvider
-import xcj.app.compose_share.ui.viewmodel.AnyStateViewModel.Companion.bottomSheetState
+import xcj.app.compose_share.components.LocalVisibilityComposeStateProvider
+import xcj.app.compose_share.ui.viewmodel.VisibilityComposeStateViewModel.Companion.bottomSheetState
 import xcj.app.starter.android.util.PurpleLogger
 
 private const val TAG = "CameraPage"
@@ -62,7 +62,7 @@ fun CameraPage(
     val viewModel = viewModel<DesignCameraViewModel>()
     CompositionLocalProvider(
         LocalUseCaseOfQRCode provides viewModel.qrCodeUseCase,
-        LocalAnyStateProvider provides viewModel
+        LocalVisibilityComposeStateProvider provides viewModel
     ) {
         CameraContent(modifier = Modifier, onBackClick = onBackClick)
         BottomSheetContainer()
@@ -78,7 +78,7 @@ fun CameraContent(
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     val qrCodeUseCase = LocalUseCaseOfQRCode.current
-    val anyStateProvider = LocalAnyStateProvider.current
+    val anyStateProvider = LocalVisibilityComposeStateProvider.current
 
     val viewModel = viewModel<DesignCameraViewModel>()
     val cameraComponents = remember {

@@ -143,7 +143,8 @@ object LocalAccountManager {
         accountStatus.value = AccountStatus.NotLogged()
         LocalPurpleCoroutineScope.current.launch(Dispatchers.IO) {
             MySharedPreferences.clear()
-            ModuleHelper.getDataBase<AppDatabase>(ModuleConstant.MODULE_NAME)?.clearAllTables()
+            val database = ModuleHelper.get<AppDatabase>(ModuleConstant.MODULE_NAME + "/database")
+                ?.clearAllTables()
             BrokerTest.close()
             LocalMessenger.post(MESSAGE_KEY_ON_LOGOUT, by, 200)
         }

@@ -7,7 +7,6 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.core.app.RemoteInput
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import xcj.app.appsets.account.LocalAccountManager
@@ -69,21 +68,18 @@ class ConversationUseCase private constructor() : IComposeLifecycleAware {
 
     private var sessionsInitTimes = 0
 
-    private val coroutineScope: CoroutineScope = LocalPurpleCoroutineScope.current
-    private val nowSpaceContentUseCase: NowSpaceContentUseCase =
-        NowSpaceContentUseCase.getInstance()
-
     private var mNotificationPusher: NotificationPusher? = null
     private val sessionsMap: MutableMap<String, MutableList<Session>> = mutableMapOf()
-
     val currentTab: MutableState<String> = mutableStateOf(AI)
+
     val isShowActions: MutableState<Boolean> = mutableStateOf(false)
-
     private var lastSessionState: SessionState = SessionState.None
-    val currentSessionState: MutableState<SessionState> = mutableStateOf(SessionState.None)
 
+    val currentSessionState: MutableState<SessionState> = mutableStateOf(SessionState.None)
     val complexContentSendingState: MutableState<Boolean> = mutableStateOf(false)
+
     private var navigationUseCase: NavigationUseCase? = null
+    private val nowSpaceContentUseCase: NowSpaceContentUseCase? = null
 
 
     init {
@@ -207,7 +203,7 @@ class ConversationUseCase private constructor() : IComposeLifecycleAware {
         val ifNeeded =
             RelationsUseCase.getInstance().updateRelatedGroupIfNeeded(bio)
         if (ifNeeded) {
-            coroutineScope.launch {
+            LocalPurpleCoroutineScope.current.launch {
                 BrokerTest.updateImGroupBindIfNeeded()
             }
         }
@@ -220,7 +216,7 @@ class ConversationUseCase private constructor() : IComposeLifecycleAware {
             lastSessionState = currentSessionState.value
             currentSessionState.value = SessionState.None
         } else {
-            nowSpaceContentUseCase.removeContentIf { topSpaceObjectState ->
+            nowSpaceContentUseCase?.removeContentIf { topSpaceObjectState ->
                 topSpaceObjectState is NowSpaceObject.NewImMessage && topSpaceObjectState.session.id == session.id
             }
             currentSessionState.value = SessionState.Normal(session)
@@ -397,10 +393,10 @@ class ConversationUseCase private constructor() : IComposeLifecycleAware {
                 return
             }
             if (navigationUseCase.currentRoute != PageRouteNames.ConversationDetailsPage) {
-                nowSpaceContentUseCase.onNewImMessage(session, imMessage)
+                nowSpaceContentUseCase?.onNewImMessage(session, imMessage)
             }
         } else {
-            nowSpaceContentUseCase.onNewImMessage(session, imMessage)
+            nowSpaceContentUseCase?.onNewImMessage(session, imMessage)
         }
     }
 
@@ -434,7 +430,7 @@ class ConversationUseCase private constructor() : IComposeLifecycleAware {
             return
         }
         val session = (currentSessionState as? SessionState.Normal)?.session ?: return
-        coroutineScope.launch {
+        LocalPurpleCoroutineScope.current.launch {
             if (InputSelector.isComplex(inputSelector)) {
                 complexContentSendingState.value = true
             }
@@ -473,14 +469,14 @@ class ConversationUseCase private constructor() : IComposeLifecycleAware {
     }
 
     fun onUserLogout() {
-        coroutineScope.launch {
+        LocalPurpleCoroutineScope.current.launch {
             currentSessionState.value = SessionState.None
             sessionsMap.values.forEach(MutableCollection<*>::clear)
             currentTab.value = USER
         }
     }
 
-    fun initSessionsIfNeeded(force: Boolean = true) {
+    suspend fun initSessionsIfNeeded(force: Boolean = true) {
         PurpleLogger.current.d(TAG, "initSessionsIfNeeded")
         if (force || sessionsInitTimes == 0) {
             initSessions()
@@ -490,79 +486,77 @@ class ConversationUseCase private constructor() : IComposeLifecycleAware {
     /**
      * 登录成功以及本地状态为已经登录即触发初始化会话列表
      */
-    private fun initSessions() {
+    private suspend fun initSessions() {
         PurpleLogger.current.d(TAG, "initSessions")
-        coroutineScope.launch {
+        runCatching {
             sessionsMap.values.forEach(MutableCollection<*>::clear)
-            runCatching {
-                //User sessions
-                val userSessions = sessionsMap[USER]!!
-                val userInfoRepository = UserInfoRepository.getInstance()
-                userInfoRepository.getRelatedUserList().let { users ->
-                    PurpleLogger.current.d(
-                        TAG,
-                        "initSessions, RelatedUsers:${users}"
-                    )
-                    fillImMessageToSessions(userSessions, users)
-                }
-                userInfoRepository.getUnRelatedUserList().let { users ->
-                    PurpleLogger.current.d(
-                        TAG,
-                        "initSessions, UnRelatedUsers:${users}"
-                    )
-                    fillImMessageToSessions(userSessions, users)
-                }
-
-                //Group sessions
-                val groupSessions = sessionsMap[GROUP]!!
-                val groupsRoomRepository = GroupInfoRepository.getInstance()
-                groupsRoomRepository.getRelatedGroupList().let { groups ->
-                    PurpleLogger.current.d(
-                        TAG,
-                        "initSessions, relatedGroups:${groups}"
-                    )
-                    fillImMessageToSessions(groupSessions, groups)
-                }
-
-                val unRelatedGroupList =
-                    groupsRoomRepository.getUnRelatedGroupList()
-                val predicate: (GroupInfo) -> Boolean =
-                    { it.id.startsWith(Application.BIO_ID_PREFIX) }
-
-                unRelatedGroupList.filterNot(predicate).let { filteredGroups ->
-                    PurpleLogger.current.d(
-                        TAG,
-                        "initSessions, UnRelatedGroups[Group]:${filteredGroups}"
-                    )
-                    fillImMessageToSessions(groupSessions, filteredGroups)
-                }
-
-                //Application sessions
-                unRelatedGroupList.filter(predicate).let { filteredGroups ->
-                    PurpleLogger.current.d(
-                        TAG,
-                        "initSessions, UnRelatedGroups[Application]:${filteredGroups}"
-                    )
-                    val applications = filteredGroups.map { group ->
-                        Application.basic(
-                            group.id.substringAfter(Application.BIO_ID_PREFIX),
-                            group.name,
-                            group.iconUrl
-                        )
-                    }
-                    fillImMessageToSessions(groupSessions, applications)
-                }
-            }.onSuccess {
-                PurpleLogger.current.d(TAG, "initSessions list successful!")
-                sessionsInitTimes += 1
-                LocalMessenger.post(KEY_SESSIONS_INIT_RESULT, true)
-            }.onFailure {
-                LocalMessenger.post(KEY_SESSIONS_INIT_RESULT, false)
+            //User sessions
+            val userSessions = sessionsMap[USER]!!
+            val userInfoRepository = UserInfoRepository.getInstance()
+            userInfoRepository.getRelatedUserList().let { users ->
                 PurpleLogger.current.d(
                     TAG,
-                    "initSessions list failed, ${it.message}"
+                    "initSessions, RelatedUsers:${users}"
                 )
+                fillImMessageToSessions(userSessions, users)
             }
+            userInfoRepository.getUnRelatedUserList().let { users ->
+                PurpleLogger.current.d(
+                    TAG,
+                    "initSessions, UnRelatedUsers:${users}"
+                )
+                fillImMessageToSessions(userSessions, users)
+            }
+
+            //Group sessions
+            val groupSessions = sessionsMap[GROUP]!!
+            val groupsRoomRepository = GroupInfoRepository.getInstance()
+            groupsRoomRepository.getRelatedGroupList().let { groups ->
+                PurpleLogger.current.d(
+                    TAG,
+                    "initSessions, relatedGroups:${groups}"
+                )
+                fillImMessageToSessions(groupSessions, groups)
+            }
+
+            val unRelatedGroupList =
+                groupsRoomRepository.getUnRelatedGroupList()
+            val predicate: (GroupInfo) -> Boolean =
+                { it.id.startsWith(Application.BIO_ID_PREFIX) }
+
+            unRelatedGroupList.filterNot(predicate).let { filteredGroups ->
+                PurpleLogger.current.d(
+                    TAG,
+                    "initSessions, UnRelatedGroups[Group]:${filteredGroups}"
+                )
+                fillImMessageToSessions(groupSessions, filteredGroups)
+            }
+
+            //Application sessions
+            unRelatedGroupList.filter(predicate).let { filteredGroups ->
+                PurpleLogger.current.d(
+                    TAG,
+                    "initSessions, UnRelatedGroups[Application]:${filteredGroups}"
+                )
+                val applications = filteredGroups.map { group ->
+                    Application.basic(
+                        group.id.substringAfter(Application.BIO_ID_PREFIX),
+                        group.name,
+                        group.iconUrl
+                    )
+                }
+                fillImMessageToSessions(groupSessions, applications)
+            }
+        }.onSuccess {
+            PurpleLogger.current.d(TAG, "initSessions list successful!")
+            sessionsInitTimes += 1
+            LocalMessenger.post(KEY_SESSIONS_INIT_RESULT, true)
+        }.onFailure {
+            LocalMessenger.post(KEY_SESSIONS_INIT_RESULT, false)
+            PurpleLogger.current.d(
+                TAG,
+                "initSessions list failed, ${it.message}"
+            )
         }
     }
 

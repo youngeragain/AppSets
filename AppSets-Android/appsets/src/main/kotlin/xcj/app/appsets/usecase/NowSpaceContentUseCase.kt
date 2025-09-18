@@ -9,19 +9,10 @@ import xcj.app.appsets.ui.model.state.NowSpaceObject
 import xcj.app.compose_share.dynamic.IComposeLifecycleAware
 import xcj.app.starter.android.util.PurpleLogger
 
-class NowSpaceContentUseCase private constructor() : IComposeLifecycleAware {
+class NowSpaceContentUseCase() : IComposeLifecycleAware {
 
     companion object {
         private const val TAG = "NowSpaceContentUseCase"
-        private var INSTANCE: NowSpaceContentUseCase? = null
-
-        fun getInstance(): NowSpaceContentUseCase {
-            return INSTANCE ?: run {
-                val useCase = NowSpaceContentUseCase()
-                INSTANCE = useCase
-                useCase
-            }
-        }
     }
 
     private val _content: MutableState<NowSpaceObject> =

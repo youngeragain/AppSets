@@ -1,7 +1,7 @@
 package xcj.app.appsets.server.ssl
 
 import okhttp3.internal.tls.OkHostnameVerifier
-import xcj.app.appsets.settings.AppConfig
+import xcj.app.appsets.settings.ModuleConfig
 import xcj.app.starter.android.util.PurpleLogger
 import javax.net.ssl.HostnameVerifier
 import javax.net.ssl.SSLSession
@@ -13,12 +13,12 @@ class DesignHostnameVerifier : HostnameVerifier {
 
     override fun verify(hostname: String, session: SSLSession): Boolean {
         PurpleLogger.current.d(TAG, "hostnameVerifier:${hostname}")
-        if (AppConfig.appConfiguration.apiUrl.isEmpty()) {
-            if (hostname == AppConfig.appConfiguration.apiHost) {
+        if (ModuleConfig.moduleConfiguration.apiUrl.isEmpty()) {
+            if (hostname == ModuleConfig.moduleConfiguration.apiHost) {
                 return true
             }
         } else {
-            if (hostname == AppConfig.appConfiguration.apiUrl) {
+            if (hostname == ModuleConfig.moduleConfiguration.apiUrl) {
                 return true
             }
         }

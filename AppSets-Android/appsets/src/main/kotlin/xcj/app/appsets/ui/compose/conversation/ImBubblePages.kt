@@ -1,13 +1,11 @@
 package xcj.app.appsets.ui.compose.conversation
 
-import android.annotation.SuppressLint
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import xcj.app.appsets.ui.compose.LocalUseCaseOfConversation
 import xcj.app.appsets.ui.compose.LocalUseCaseOfGroupInfo
@@ -21,7 +19,7 @@ import xcj.app.appsets.ui.compose.LocalUseCaseOfUserInfo
 import xcj.app.appsets.ui.compose.main.ImmerseContentContainer
 import xcj.app.appsets.ui.viewmodel.IMBubbleViewModel
 import xcj.app.compose_share.components.BottomSheetContainer
-import xcj.app.compose_share.components.LocalAnyStateProvider
+import xcj.app.compose_share.components.LocalVisibilityComposeStateProvider
 
 @Composable
 fun ImBubblePages() {
@@ -36,25 +34,18 @@ fun ImBubblePages() {
         LocalUseCaseOfConversation provides viewModel.conversationUseCase,
         LocalUseCaseOfUserInfo provides viewModel.userInfoUseCase,
         LocalUseCaseOfNowSpaceContent provides viewModel.nowSpaceContentUseCase,
-        LocalAnyStateProvider provides viewModel,
+        LocalVisibilityComposeStateProvider provides viewModel,
     ) {
 
         val navController = rememberNavController()
 
         Box(modifier = Modifier.fillMaxSize()) {
-            ImBubbleScaffoldContainer(navController = navController)
+            ImBubbleNaviHostPages(navController = navController)
 
-            ImmerseContentContainer(navController = navController)
+            ImmerseContentContainer()
 
             BottomSheetContainer()
 
         }
     }
-}
-
-
-@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
-@Composable
-fun ImBubbleScaffoldContainer(navController: NavHostController) {
-    ImBubbleNaviHostPages(navController)
 }

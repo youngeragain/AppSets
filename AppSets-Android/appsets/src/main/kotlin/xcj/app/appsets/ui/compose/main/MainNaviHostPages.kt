@@ -161,11 +161,11 @@ import xcj.app.appsets.usecase.SystemUseCase
 import xcj.app.appsets.util.BundleDefaults
 import xcj.app.appsets.util.ktx.toast
 import xcj.app.appsets.util.model.MediaStoreDataUri
-import xcj.app.compose_share.components.AnyStateProvider
-import xcj.app.compose_share.components.LocalAnyStateProvider
-import xcj.app.compose_share.components.ProgressedComposeContainerState
-import xcj.app.compose_share.ui.viewmodel.AnyStateViewModel.Companion.bottomSheetState
-import xcj.app.compose_share.ui.viewmodel.AnyStateViewModel.Companion.immerseContentState
+import xcj.app.compose_share.components.LocalVisibilityComposeStateProvider
+import xcj.app.compose_share.components.ProgressiveVisibilityComposeState
+import xcj.app.compose_share.components.VisibilityComposeStateProvider
+import xcj.app.compose_share.ui.viewmodel.VisibilityComposeStateViewModel.Companion.bottomSheetState
+import xcj.app.compose_share.ui.viewmodel.VisibilityComposeStateViewModel.Companion.immerseContentState
 import xcj.app.io.components.LocalFileIO
 import xcj.app.starter.android.ktx.startWithHttpSchema
 import xcj.app.starter.android.ui.base.DesignComponentActivity
@@ -239,7 +239,7 @@ fun MainNaviHostPages(
                         )
                     val context = LocalContext.current
                     val conversationUseCase = LocalUseCaseOfConversation.current
-                    val anyStateProvider = LocalAnyStateProvider.current
+                    val anyStateProvider = LocalVisibilityComposeStateProvider.current
                     val coroutineScope = rememberCoroutineScope()
                     AppDetailsPage(
                         application = application,
@@ -351,7 +351,7 @@ fun MainNaviHostPages(
 
                     val context = LocalContext.current
                     val appCreationUseCase = LocalUseCaseOfAppCreation.current
-                    val anyStateProvider = LocalAnyStateProvider.current
+                    val anyStateProvider = LocalVisibilityComposeStateProvider.current
                     val coroutineScope = rememberCoroutineScope()
                     LaunchedEffect(key1 = true, block = {
                         appCreationUseCase.inflateApplication(application)
@@ -400,7 +400,7 @@ fun MainNaviHostPages(
                 ) {
                     val context = LocalContext.current
                     val screensUseCase = LocalUseCaseOfScreen.current
-                    val anyStateProvider = LocalAnyStateProvider.current
+                    val anyStateProvider = LocalVisibilityComposeStateProvider.current
                     val coroutineScope = rememberCoroutineScope()
                     OutSidePage(
                         screens = screensUseCase.systemScreensContainer.screens,
@@ -434,7 +434,7 @@ fun MainNaviHostPages(
                 ) {
                     val context = LocalContext.current
                     val screenUseCase = LocalUseCaseOfScreen.current
-                    val anyStateProvider = LocalAnyStateProvider.current
+                    val anyStateProvider = LocalVisibilityComposeStateProvider.current
                     val coroutineScope = rememberCoroutineScope()
                     ScreenDetailsPage(
                         screenInfoForCard = screenUseCase.currentScreenInfoForCard.value,
@@ -492,7 +492,7 @@ fun MainNaviHostPages(
                     val screenUseCase = LocalUseCaseOfScreen.current
                     val screenPostUseCase = LocalUseCaseOfScreenPost.current
                     val systemUseCase = LocalUseCaseOfSystem.current
-                    val anyStateProvider = LocalAnyStateProvider.current
+                    val anyStateProvider = LocalVisibilityComposeStateProvider.current
                     val quickStepContents = BundleCompat.getParcelableArrayList(
                         it.arguments ?: BundleDefaults.empty,
                         Constants.QUICK_STEP_CONTENT,
@@ -588,7 +588,7 @@ fun MainNaviHostPages(
                 ) {
                     val context = LocalContext.current
                     val conversationUseCase = LocalUseCaseOfConversation.current
-                    val anyStateProvider = LocalAnyStateProvider.current
+                    val anyStateProvider = LocalVisibilityComposeStateProvider.current
                     val systemUseCase = LocalUseCaseOfSystem.current
                     val mediaAudioRecorderUseCase = LocalUseCaseOfMediaAudioRecorder.current
                     val mediaRemoteExoUseCase = LocalUseCaseOfMediaRemoteExo.current
@@ -712,7 +712,7 @@ fun MainNaviHostPages(
                 ) {
                     val context = LocalContext.current
                     val conversationUseCase = LocalUseCaseOfConversation.current
-                    val anyStateProvider = LocalAnyStateProvider.current
+                    val anyStateProvider = LocalVisibilityComposeStateProvider.current
                     val mediaAudioRecorderUseCase = LocalUseCaseOfMediaAudioRecorder.current
                     val mediaRemoteExoUseCase = LocalUseCaseOfMediaRemoteExo.current
                     ConversationDetailsPage(
@@ -796,7 +796,7 @@ fun MainNaviHostPages(
                 val context = LocalContext.current
                 val systemUseCase = LocalUseCaseOfSystem.current
                 val qrCodeUseCase = LocalUseCaseOfQRCode.current
-                val anyStateProvider = LocalAnyStateProvider.current
+                val anyStateProvider = LocalVisibilityComposeStateProvider.current
                 val navigationUseCase = LocalUseCaseOfNavigation.current
                 val coroutineScope = rememberCoroutineScope()
                 LaunchedEffect(true) {
@@ -825,12 +825,14 @@ fun MainNaviHostPages(
                         navigateToCameraActivity(context, navController)
                     },
                     onLoginConfirmButtonClick = { account, password ->
-                        systemUseCase.login(
-                            context,
-                            account,
-                            password,
-                            anyStateProvider
-                        )
+                        coroutineScope.launch {
+                            systemUseCase.login(
+                                context,
+                                account,
+                                password,
+                                anyStateProvider
+                            )
+                        }
                     }
                 )
             }
@@ -838,8 +840,8 @@ fun MainNaviHostPages(
             composable(PageRouteNames.SignUpPage) {
                 val context = LocalContext.current
                 val systemUseCase = LocalUseCaseOfSystem.current
-                val anyStateProvider = LocalAnyStateProvider.current
-
+                val anyStateProvider = LocalVisibilityComposeStateProvider.current
+                val coroutineScope = rememberCoroutineScope()
                 LaunchedEffect(true) {
                     systemUseCase.prepareSignUpState()
                 }
@@ -857,9 +859,9 @@ fun MainNaviHostPages(
                         )
                     },
                     onConfirmClick = {
-                        systemUseCase.signUp(
-                            context
-                        )
+                        coroutineScope.launch {
+                            systemUseCase.signUp(context)
+                        }
                     }
                 )
             }
@@ -987,7 +989,7 @@ fun MainNaviHostPages(
                 ) {
                     val context = LocalContext.current
                     val searchUseCase = LocalUseCaseOfSearch.current
-                    val anyStateProvider = LocalAnyStateProvider.current
+                    val anyStateProvider = LocalVisibilityComposeStateProvider.current
                     SearchPage(
                         onBioClick = { bio ->
                             onBioClick(context, navController, bio)
@@ -1051,7 +1053,7 @@ fun MainNaviHostPages(
                 ) {
                     val context = LocalContext.current
                     val systemUseCase = LocalUseCaseOfSystem.current
-                    val anyStateProvider = LocalAnyStateProvider.current
+                    val anyStateProvider = LocalVisibilityComposeStateProvider.current
                     CreateGroupPage(
                         createGroupPageState = systemUseCase.createGroupPageState.value,
                         onBackClick = navController::navigateUp,
@@ -1093,11 +1095,14 @@ fun MainNaviHostPages(
             composable(PageRouteNames.AboutPage) {
                 val context = LocalContext.current
                 val systemUseCase = LocalUseCaseOfSystem.current
+                val coroutineScope = rememberCoroutineScope()
                 AboutPage(
                     updateHistory = systemUseCase.updateHistory,
                     onBackClick = navController::navigateUp,
                     onHistoryExpandStateChanged = {
-                        systemUseCase.getUpdateHistory()
+                        coroutineScope.launch {
+                            systemUseCase.getUpdateHistory()
+                        }
                     },
                     onWebsiteClick = {
                         navigateToExternalWeb(context, AppSetsModuleSettings.WEBSITE_URL.toUri())
@@ -1148,7 +1153,7 @@ fun MainNaviHostPages(
                 ) {
                     val context = LocalContext.current
                     val userInfoUseCase = LocalUseCaseOfUserInfo.current
-                    val anyStateProvider = LocalAnyStateProvider.current
+                    val anyStateProvider = LocalVisibilityComposeStateProvider.current
                     val conversationUseCase = LocalUseCaseOfConversation.current
                     val systemUseCase = LocalUseCaseOfSystem.current
                     val screenUseCase = LocalUseCaseOfScreen.current
@@ -1241,14 +1246,14 @@ fun publishComposeNaviHostFormedEvent(navController: NavHostController, builder:
  */
 @Composable
 fun NaviHostBackHandlerInterceptor(navController: NavHostController) {
-    val anyStateProvider = LocalAnyStateProvider.current
+    val anyStateProvider = LocalVisibilityComposeStateProvider.current
     val immerseContentState = anyStateProvider.immerseContentState()
     PredictiveBackHandler(immerseContentState.isShow) {
         PurpleLogger.current.d(
             TAG,
             "NaviHostBackHandlerInterceptor onBack, make immerseContentState.showState to false"
         )
-        if (immerseContentState is ProgressedComposeContainerState) {
+        if (immerseContentState is ProgressiveVisibilityComposeState) {
             it.collect(immerseContentState)
             immerseContentState.hide()
         }
@@ -1402,12 +1407,12 @@ fun navigateToUserInfoPage(
 }
 
 fun showPictureViewDialog(
-    anyStateProvider: AnyStateProvider,
+    visibilityComposeStateProvider: VisibilityComposeStateProvider,
     context: Context,
     data: Any,
     dataList: List<Any>,
 ) {
-    val immerseContentState = anyStateProvider.immerseContentState()
+    val immerseContentState = visibilityComposeStateProvider.immerseContentState()
     immerseContentState.show {
         Box(
             modifier = Modifier
@@ -1494,7 +1499,7 @@ fun showPictureViewDialog(
 
 fun showContentSelectionDialog(
     context: Context,
-    anyStateProvider: AnyStateProvider,
+    visibilityComposeStateProvider: VisibilityComposeStateProvider,
     navController: NavController,
     contextName: String,
     requestKey: String,
@@ -1512,7 +1517,7 @@ fun showContentSelectionDialog(
         navController.navigate(PageRouteNames.PrivacyPage)
         return
     }
-    val bottomSheetContainerState = anyStateProvider.bottomSheetState()
+    val bottomSheetContainerState = visibilityComposeStateProvider.bottomSheetState()
     val request = ContentSelectionRequest(
         context,
         contextName,
@@ -1531,11 +1536,15 @@ fun showContentSelectionDialog(
     }
 }
 
-fun showWebBrowserDialog(context: Context, anyStateProvider: AnyStateProvider, data: Any) {
+fun showWebBrowserDialog(
+    context: Context,
+    visibilityComposeStateProvider: VisibilityComposeStateProvider,
+    data: Any
+) {
     if (data !is String) {
         return
     }
-    val bottomSheetState = anyStateProvider.bottomSheetState()
+    val bottomSheetState = visibilityComposeStateProvider.bottomSheetState()
     bottomSheetState.show {
         WebSheetContent(null, url = data)
     }
@@ -1688,7 +1697,7 @@ fun handleImMessageContentClick(
     imMessage: ImMessage,
     conversationUseCase: ConversationUseCase,
     mediaRemoteExoUseCase: MediaRemoteExoUseCase,
-    anyStateProvider: AnyStateProvider
+    visibilityComposeStateProvider: VisibilityComposeStateProvider
 ) {
     when (imMessage) {
         is MusicMessage -> {
@@ -1726,7 +1735,7 @@ fun handleImMessageContentClick(
                         imageMessage.requireUri()
                     }
             showPictureViewDialog(
-                anyStateProvider,
+                visibilityComposeStateProvider,
                 context,
                 currentUri,
                 uriList
@@ -1736,7 +1745,7 @@ fun handleImMessageContentClick(
         is HTMLMessage -> {
             showWebBrowserDialog(
                 context,
-                anyStateProvider,
+                visibilityComposeStateProvider,
                 imMessage.metadata.data
             )
         }
@@ -1747,7 +1756,7 @@ fun handleScreenMediaClick(
     context: Context,
     isShowRestrictedContentDialogState: MutableState<Boolean>,
     restrictedContentConfirmCallbackState: MutableState<(() -> Unit)?>,
-    anyStateProvider: AnyStateProvider,
+    visibilityComposeStateProvider: VisibilityComposeStateProvider,
     url: ScreenMediaFileUrl,
     urls: List<ScreenMediaFileUrl>,
 ) {
@@ -1758,7 +1767,7 @@ fun handleScreenMediaClick(
             val currentUri = url.mediaFileUrl
             val uriList = urls.map { fileUrl -> fileUrl.mediaFileUrl }
             showPictureViewDialog(
-                anyStateProvider,
+                visibilityComposeStateProvider,
                 context,
                 currentUri,
                 uriList

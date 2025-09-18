@@ -2,7 +2,7 @@ package xcj.app.appsets.purple_module
 
 import xcj.app.starter.android.util.PurpleLogger
 import xcj.app.starter.foundation.DesignEvent
-import xcj.app.starter.test.AndroidInitEvent
+import xcj.app.starter.test.AndroidEvent
 import xcj.app.starter.test.PurpleContextEventListener
 
 /**
@@ -18,8 +18,8 @@ class AndroidInitEventListener : PurpleContextEventListener {
             TAG,
             "onEvent, event:$event"
         )
-        if (event is AndroidInitEvent) {
-            PurpleModuleMain().initModule()
+        if (event is AndroidEvent) {
+            PurpleModule().onAndroidEvent(event)
         }
     }
 }

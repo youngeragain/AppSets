@@ -1,6 +1,6 @@
 package xcj.app.appsets.settings
 
-data class AppConfiguration(
+data class ModuleConfiguration(
     val canSignUp: Boolean,
     val apiSchema: String,
     val apiHost: String,
@@ -10,17 +10,17 @@ data class AppConfiguration(
     val imBrokerProperties: String
 )
 
-object AppConfig {
+object ModuleConfig {
     private var updateTime: Long = 0
     private var updating = false
 
     var isTest: Boolean = false
 
-    var appConfiguration: AppConfiguration = createAppConfiguration()
+    var moduleConfiguration: ModuleConfiguration = createConfiguration()
 
-    private fun createAppConfiguration(): AppConfiguration {
+    private fun createConfiguration(): ModuleConfiguration {
         return if (isTest) {
-            AppConfiguration(
+            ModuleConfiguration(
                 canSignUp = true,
                 apiSchema = "https",
                 apiHost = "127.0.0.1",
@@ -30,7 +30,7 @@ object AppConfig {
                 imBrokerProperties = ""
             )
         } else {
-            AppConfiguration(
+            ModuleConfiguration(
                 canSignUp = true,
                 apiSchema = "https",
                 apiHost = "8.137.93.144",
@@ -44,11 +44,11 @@ object AppConfig {
     }
 
     fun isNeedUpdateImBrokerProperties(): Boolean {
-        return appConfiguration.imBrokerProperties.isEmpty()
+        return moduleConfiguration.imBrokerProperties.isEmpty()
     }
 
     fun updateImBrokerProperties(properties: String) {
-        appConfiguration = appConfiguration.copy(imBrokerProperties = properties)
+        moduleConfiguration = moduleConfiguration.copy(imBrokerProperties = properties)
     }
 
     fun update() {

@@ -7,7 +7,7 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
-import xcj.app.compose_share.ui.viewmodel.AnyStateViewModel.Companion.bottomSheetState
+import xcj.app.compose_share.ui.viewmodel.VisibilityComposeStateViewModel.Companion.bottomSheetState
 
 private const val TAG = "VarBottomSheetContainer"
 
@@ -15,7 +15,7 @@ private const val TAG = "VarBottomSheetContainer"
 @Composable
 fun BottomSheetContainer() {
     val context = LocalContext.current
-    val anyStateProvider = LocalAnyStateProvider.current
+    val anyStateProvider = LocalVisibilityComposeStateProvider.current
     val state =
         anyStateProvider.bottomSheetState()
     if (state.isShow) {

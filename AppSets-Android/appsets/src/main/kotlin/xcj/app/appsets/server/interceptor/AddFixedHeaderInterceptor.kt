@@ -17,7 +17,7 @@ class AddFixedHeaderInterceptor : okhttp3.Interceptor {
                 .header(ApiDesignKeys.PLATFORM_MD5, "android")
                 .header(
                     ApiDesignKeys.APPSETS_ID_MD5,
-                    xcj.app.appsets.settings.AppConfig.appConfiguration.appsetsAppId
+                    xcj.app.appsets.settings.ModuleConfig.moduleConfiguration.appsetsAppId
                 )
             val token = xcj.app.appsets.account.LocalAccountManager.token
             if (!token.isNullOrEmpty()) {

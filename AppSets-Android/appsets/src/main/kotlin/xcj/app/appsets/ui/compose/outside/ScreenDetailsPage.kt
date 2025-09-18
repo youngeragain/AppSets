@@ -78,9 +78,9 @@ import xcj.app.appsets.ui.compose.custom_component.HideNavBarWhenOnLaunch
 import xcj.app.appsets.ui.model.ScreenInfoForCard
 import xcj.app.compose_share.components.DesignHDivider
 import xcj.app.compose_share.components.DesignTextField
-import xcj.app.compose_share.components.LocalAnyStateProvider
+import xcj.app.compose_share.components.LocalVisibilityComposeStateProvider
 import xcj.app.compose_share.modifier.combinedClickableSingle
-import xcj.app.compose_share.ui.viewmodel.AnyStateViewModel.Companion.bottomSheetState
+import xcj.app.compose_share.ui.viewmodel.VisibilityComposeStateViewModel.Companion.bottomSheetState
 
 @Composable
 fun ScreenDetailsPage(
@@ -344,7 +344,7 @@ fun ScreenDetailsTopBar(
     onCollectClick: (String?) -> Unit,
     onLikesClick: () -> Unit,
 ) {
-    val anyStateProvider = LocalAnyStateProvider.current
+    val anyStateProvider = LocalVisibilityComposeStateProvider.current
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Box(modifier = Modifier.fillMaxWidth()) {
             Row(verticalAlignment = Alignment.CenterVertically) {

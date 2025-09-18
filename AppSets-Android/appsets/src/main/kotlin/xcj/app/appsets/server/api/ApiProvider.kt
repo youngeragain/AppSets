@@ -4,7 +4,7 @@ import xcj.app.appsets.server.interceptor.AddFixedHeaderInterceptor
 import xcj.app.appsets.server.interceptor.BaseUrlInterceptor
 import xcj.app.appsets.server.ssl.DesignHostnameVerifier
 import xcj.app.appsets.server.ssl.DesignX509TrustManager
-import xcj.app.appsets.settings.AppConfig
+import xcj.app.appsets.settings.ModuleConfig
 import xcj.app.starter.server.RetrofitProvider
 import java.security.SecureRandom
 import javax.net.ssl.HostnameVerifier
@@ -27,10 +27,10 @@ object ApiProvider {
     }.build()
 
     private fun <U> makeBaseUrl(apiClazz: Class<U>): String {
-        val url = if (AppConfig.appConfiguration.apiUrl.isEmpty()) {
-            "${AppConfig.appConfiguration.apiSchema}://${AppConfig.appConfiguration.apiHost}:${AppConfig.appConfiguration.apiPort}/"
+        val url = if (ModuleConfig.moduleConfiguration.apiUrl.isEmpty()) {
+            "${ModuleConfig.moduleConfiguration.apiSchema}://${ModuleConfig.moduleConfiguration.apiHost}:${ModuleConfig.moduleConfiguration.apiPort}/"
         } else {
-            "${AppConfig.appConfiguration.apiSchema}://${AppConfig.appConfiguration.apiUrl}"
+            "${ModuleConfig.moduleConfiguration.apiSchema}://${ModuleConfig.moduleConfiguration.apiUrl}"
         }
         return when (apiClazz) {
             UserApi::class.java -> {

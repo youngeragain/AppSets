@@ -7,10 +7,10 @@ import xcj.app.appsets.server.repository.QRCodeRepository
 import xcj.app.appsets.server.repository.UserRepository
 import xcj.app.appsets.ui.model.page_state.LoginSignUpPageState
 import xcj.app.appsets.usecase.QRCodeUseCase
-import xcj.app.compose_share.ui.viewmodel.AnyStateViewModel
+import xcj.app.compose_share.ui.viewmodel.VisibilityComposeStateViewModel
 import xcj.app.starter.android.util.PurpleLogger
 
-class DesignCameraViewModel : AnyStateViewModel() {
+class DesignCameraViewModel : VisibilityComposeStateViewModel() {
 
     companion object {
         private const val TAG = "CameraComposeViewModel"

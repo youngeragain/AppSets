@@ -82,8 +82,8 @@ import xcj.app.appsets.util.model.UriProvider
 import xcj.app.compose_share.components.BackActionTopBar
 import xcj.app.compose_share.components.DesignTextField
 import xcj.app.compose_share.components.DesignVDivider
-import xcj.app.compose_share.components.LocalAnyStateProvider
-import xcj.app.compose_share.ui.viewmodel.AnyStateViewModel.Companion.bottomSheetState
+import xcj.app.compose_share.components.LocalVisibilityComposeStateProvider
+import xcj.app.compose_share.ui.viewmodel.VisibilityComposeStateViewModel.Companion.bottomSheetState
 
 @UnstableApi
 @Preview(showBackground = true)
@@ -112,7 +112,7 @@ fun CreateAppPage(
 ) {
     HideNavBarWhenOnLaunch()
     val appCreationUseCase = LocalUseCaseOfAppCreation.current
-    val anyStateProvider = LocalAnyStateProvider.current
+    val anyStateProvider = LocalVisibilityComposeStateProvider.current
     DisposableEffect(key1 = true) {
         onDispose {
             appCreationUseCase.onComposeDispose("page dispose")
