@@ -5,17 +5,20 @@ import android.content.Context
 import android.os.Build
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.edit
+import xcj.app.appsets.db.room.AppDatabase
 import xcj.app.appsets.notification.NotificationChannels
 import xcj.app.appsets.purple_module.ModuleConstant
 import xcj.app.appsets.purple_module.configCoil
 import xcj.app.starter.android.ModuleHelper
 import xcj.app.starter.foundation.FinalProvider
 import xcj.app.starter.foundation.Identifiable
+import xcj.app.starter.foundation.Provider
 import xcj.app.starter.test.LocalApplication
+import xcj.app.starter.test.LocalPurpleCoroutineScope
 
 interface ModuleSettings {
 
-    fun initConfig()
+    fun init()
 
 }
 
@@ -35,16 +38,36 @@ class AppSetsModuleSettings : ModuleSettings {
 
         fun get(): AppSetsModuleSettings {
             val moduleSettings =
-                ModuleHelper.get<AppSetsModuleSettings>(ModuleConstant.MODULE_NAME + "/settings")
+                ModuleHelper.get<AppSetsModuleSettings>(
+                    Identifiable.fromString(ModuleConstant.MODULE_NAME + "/settings")
+                )
             if (moduleSettings != null) {
                 return moduleSettings
             }
-            val provider = FinalProvider(
+
+            val databaseProvider = object : Provider<String, AppDatabase> {
+                override fun key(): Identifiable<String> {
+                    return Identifiable.fromString(ModuleConstant.MODULE_NAME + "/database")
+                }
+
+                override fun provide(): AppDatabase {
+                    val moduleDatabase = AppDatabase.getRoomDatabase(
+                        ModuleConstant.MODULE_DATABASE_NAME,
+                        LocalApplication.current,
+                        LocalPurpleCoroutineScope.current
+                    )
+                    return moduleDatabase
+                }
+            }
+
+            ModuleHelper.addProvider(databaseProvider)
+
+            val settingsProvider = FinalProvider(
                 Identifiable.fromString(ModuleConstant.MODULE_NAME + "/settings"),
                 AppSetsModuleSettings()
             )
-            ModuleHelper.addProvider(provider)
-            return provider.provide()
+            ModuleHelper.addProvider(settingsProvider)
+            return settingsProvider.provide()
         }
     }
 
@@ -59,7 +82,7 @@ class AppSetsModuleSettings : ModuleSettings {
     var isImMessageDateShowSeconds: Boolean = false
 
 
-    override fun initConfig() {
+    override fun init() {
         prepareSettingsConfig()
         prepareNotificationsChanelConfig()
         prepareCoilConfig()

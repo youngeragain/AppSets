@@ -9,6 +9,7 @@ import xcj.app.appsets.db.room.entity.UserRelation
 import xcj.app.appsets.purple_module.ModuleConstant
 import xcj.app.starter.android.ModuleHelper
 import xcj.app.starter.android.util.PurpleLogger
+import xcj.app.starter.foundation.Identifiable
 
 @Dao
 interface UserRelationDao {
@@ -24,7 +25,8 @@ interface UserRelationDao {
         private const val TAG = "UserRelationDao"
 
         fun getInstance(): UserRelationDao {
-            val dataBase = ModuleHelper.get<AppDatabase>(ModuleConstant.MODULE_NAME + "/database")
+            val dataBase =
+                ModuleHelper.get<AppDatabase>(Identifiable.fromString(ModuleConstant.MODULE_NAME + "/database"))
             PurpleLogger.current.d(TAG, "getInstance, dataBase:${dataBase}")
             if (dataBase == null) {
                 PurpleLogger.current.e(TAG, "getInstance, dataBase is null!")

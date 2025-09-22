@@ -15,6 +15,7 @@ import xcj.app.appsets.util.PictureUrlMapper
 import xcj.app.starter.android.ModuleHelper
 import xcj.app.starter.android.util.LocalMessenger
 import xcj.app.starter.android.util.PurpleLogger
+import xcj.app.starter.foundation.Identifiable
 import xcj.app.starter.server.ApiDesignKeys
 import xcj.app.starter.test.LocalPurpleCoroutineScope
 
@@ -115,7 +116,7 @@ object LocalAccountManager {
         userInfo: UserInfo,
         token: String,
         isTemp: Boolean,
-        isFromLocal: Boolean = false
+        isFromLocal: Boolean = false,
     ) {
         PurpleLogger.current.d(
             TAG,
@@ -143,8 +144,9 @@ object LocalAccountManager {
         accountStatus.value = AccountStatus.NotLogged()
         LocalPurpleCoroutineScope.current.launch(Dispatchers.IO) {
             MySharedPreferences.clear()
-            val database = ModuleHelper.get<AppDatabase>(ModuleConstant.MODULE_NAME + "/database")
-                ?.clearAllTables()
+            val database =
+                ModuleHelper.get<AppDatabase>(Identifiable.fromString(ModuleConstant.MODULE_NAME + "/database"))
+            database?.clearAllTables()
             BrokerTest.close()
             LocalMessenger.post(MESSAGE_KEY_ON_LOGOUT, by, 200)
         }

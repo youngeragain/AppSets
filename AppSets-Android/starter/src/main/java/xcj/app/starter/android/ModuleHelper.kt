@@ -1,6 +1,7 @@
 package xcj.app.starter.android
 
 import xcj.app.starter.android.util.PurpleLogger
+import xcj.app.starter.foundation.Identifiable
 import xcj.app.starter.foundation.Provider
 
 object ModuleHelper {
@@ -10,7 +11,7 @@ object ModuleHelper {
     private val providers: MutableMap<String, Provider<String, *>> = mutableMapOf()
 
     fun moduleInitHooks(
-        iPurpleModule: IPurpleModule
+        iPurpleModule: IPurpleModule,
     ) {
         iPurpleModule.initModule()
     }
@@ -31,16 +32,16 @@ object ModuleHelper {
     }
 
     /**
-     * @param key 模块名
+     * @param identifiable 模块identifiable
      */
-    fun <T> get(key: String): T? {
+    fun <T> get(identifiable: Identifiable<String>): T? {
         PurpleLogger.current.d(
-            TAG, "get, key:$key, providers size:${providers.size}"
+            TAG, "get, identifiable:${identifiable.id}, providers size:${providers.size}"
         )
-        if (!providers.containsKey(key)) {
+        if (!providers.containsKey(identifiable.id)) {
             return null
         }
-        return providers[key]?.provide() as? T
+        return providers[identifiable.id]?.provide() as? T
     }
 
     fun removeProvider(key: String) {
