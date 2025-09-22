@@ -40,6 +40,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -93,6 +94,7 @@ import xcj.app.appsets.server.model.DownloadInfo
 import xcj.app.appsets.server.model.GroupInfo
 import xcj.app.appsets.server.model.ScreenInfo
 import xcj.app.appsets.server.model.ScreenMediaFileUrl
+import xcj.app.appsets.server.model.UpdateCheckResult
 import xcj.app.appsets.server.model.UserInfo
 import xcj.app.appsets.server.model.VersionInfo
 import xcj.app.appsets.settings.AppSetsModuleSettings
@@ -1096,19 +1098,29 @@ fun MainNaviHostPages(
                 val context = LocalContext.current
                 val systemUseCase = LocalUseCaseOfSystem.current
                 val coroutineScope = rememberCoroutineScope()
+
+                /**
+                 * 更新历史
+                 */
+                val updateHistory = remember {
+                    mutableStateListOf<UpdateCheckResult>()
+                }
                 AboutPage(
-                    updateHistory = systemUseCase.updateHistory,
+                    updateHistory = updateHistory,
                     onBackClick = navController::navigateUp,
                     onHistoryExpandStateChanged = {
                         coroutineScope.launch {
-                            systemUseCase.getUpdateHistory()
+                            systemUseCase.getUpdateHistory {
+                                updateHistory.clear()
+                                updateHistory.addAll(it)
+                            }
                         }
                     },
                     onWebsiteClick = {
                         navigateToExternalWeb(context, AppSetsModuleSettings.WEBSITE_URL.toUri())
                     },
                     onDispose = {
-                        systemUseCase.cleanUpdateHistory()
+
                     }
                 )
             }
@@ -1539,7 +1551,7 @@ fun showContentSelectionDialog(
 fun showWebBrowserDialog(
     context: Context,
     visibilityComposeStateProvider: VisibilityComposeStateProvider,
-    data: Any
+    data: Any,
 ) {
     if (data !is String) {
         return
@@ -1697,7 +1709,7 @@ fun handleImMessageContentClick(
     imMessage: ImMessage,
     conversationUseCase: ConversationUseCase,
     mediaRemoteExoUseCase: MediaRemoteExoUseCase,
-    visibilityComposeStateProvider: VisibilityComposeStateProvider
+    visibilityComposeStateProvider: VisibilityComposeStateProvider,
 ) {
     when (imMessage) {
         is MusicMessage -> {

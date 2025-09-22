@@ -5,14 +5,14 @@ import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import xcj.app.appsets.db.room.repository.GroupInfoRepository
 import xcj.app.appsets.db.room.repository.UserInfoRepository
-import xcj.app.starter.server.requestBridge
 import xcj.app.appsets.server.repository.UserRepository
 import xcj.app.appsets.usecase.RelationsUseCase
 import xcj.app.starter.android.util.PurpleLogger
+import xcj.app.starter.server.request
 
 class ServerSyncWorker(
     context: Context,
-    params: WorkerParameters
+    params: WorkerParameters,
 ) : CoroutineWorker(context, params) {
     companion object {
         private const val TAG = "ServerSyncWorker"
@@ -29,11 +29,9 @@ class ServerSyncWorker(
         var hasSingleCondition: Boolean = false
         if (conditions.contains("friends")) {
             hasSingleCondition = true
-            val friends = requestBridge(
-                action = {
-                    UserRepository.getInstance().getFriends()
-                }
-            )
+            val friends = request {
+                UserRepository.getInstance().getFriends()
+            }.getOrNull()
             PurpleLogger.current.d(TAG, "doWork, friends:$friends")
             if (!friends.isNullOrEmpty()) {
                 PurpleLogger.current.d(TAG, "doWork, add friends to local room db")
@@ -45,11 +43,9 @@ class ServerSyncWorker(
 
         if (conditions.contains("groups")) {
             hasSingleCondition = true
-            val groups = requestBridge(
-                {
-                    UserRepository.getInstance().getChatGroups()
-                }
-            )
+            val groups = request {
+                UserRepository.getInstance().getChatGroups()
+            }.getOrNull()
             PurpleLogger.current.d(TAG, "doWork, groups:$groups")
             if (!groups.isNullOrEmpty()) {
                 val groupIdMap = mutableMapOf<String, Set<String>?>()

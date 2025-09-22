@@ -20,7 +20,7 @@ import xcj.app.appsets.server.repository.SearchRepository
 import xcj.app.appsets.ui.model.page_state.SearchPageState
 import xcj.app.appsets.ui.model.state.SearchResult
 import xcj.app.compose_share.dynamic.IComposeLifecycleAware
-import xcj.app.starter.server.requestNotNull
+import xcj.app.starter.server.request
 import kotlin.time.Duration.Companion.milliseconds
 
 class SearchUseCase(
@@ -83,21 +83,17 @@ class SearchUseCase(
 
         this.searchPageState.value = SearchPageState.Searching(keywords)
 
-        requestNotNull(
-            action = {
-                searchRepository.commonSearch(keywords)
-            },
-            onSuccess = {
-                syncAddResult(keywords, it)
-            },
-            onFailed = {
-                this@SearchUseCase.searchPageState.value =
-                    SearchPageState.SearchPageFailed(
-                        keywords,
-                        R.string.something_wrong_when_search
-                    )
-            }
-        )
+        request {
+            searchRepository.commonSearch(keywords)
+        }.onSuccess {
+            syncAddResult(keywords, it)
+        }.onFailure {
+            this@SearchUseCase.searchPageState.value =
+                SearchPageState.SearchPageFailed(
+                    keywords,
+                    R.string.something_wrong_when_search
+                )
+        }
     }
 
     private suspend fun syncAddResult(keywords: String, combineSearchRes: CombineSearchRes) {

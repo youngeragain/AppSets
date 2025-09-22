@@ -163,7 +163,7 @@ fun generateToolList(): List<AppTool> {
             AppTool(
                 xcj.app.compose_share.R.drawable.ic_camera_24,
                 xcj.app.appsets.R.string.camera,
-                xcj.app.appsets.R.string.weather_description,
+                xcj.app.appsets.R.string.camera_description,
                 AppTool.TOOL_TYPE_AppSets_Video,
                 routeType = "activity_on_lib",
                 routeBuilder = { context, controller -> null },

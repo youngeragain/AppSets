@@ -21,13 +21,9 @@ class DesignMessageDeliver : Handler.Callback {
 
     private var deliveryThreadType = DELIVERY_TYPE_OTHER_THREAD
 
-    private val mMainThreadHandler: Handler = Handler(Looper.getMainLooper(), this)
+    private var mMainThreadHandler: Handler? = null
 
-    private var mOtherThreadHandler: Handler = run {
-        val handlerThread = HandlerThread("DesignMessageDeliverThread")
-        handlerThread.start()
-        Handler(handlerThread.looper, this)
-    }
+    private var mOtherThreadHandler: Handler? = null
 
     private val keyedObservers: MutableList<KeyedObserver<Any, Any>> = mutableListOf()
 
@@ -69,11 +65,21 @@ class DesignMessageDeliver : Handler.Callback {
         }
         when (deliveryThreadType) {
             DELIVERY_TYPE_MAIN_THREAD -> {
-                mMainThreadHandler.sendMessageDelayed(msg, delayed)
+                if (mMainThreadHandler == null) {
+                    mMainThreadHandler = Handler(Looper.getMainLooper(), this)
+                }
+                mMainThreadHandler?.sendMessageDelayed(msg, delayed)
             }
 
             DELIVERY_TYPE_OTHER_THREAD -> {
-                mOtherThreadHandler.sendMessageDelayed(msg, delayed)
+                if (mOtherThreadHandler == null) {
+                    mOtherThreadHandler = run {
+                        val handlerThread = HandlerThread("DesignMessageDeliverThread")
+                        handlerThread.start()
+                        Handler(handlerThread.looper, this)
+                    }
+                }
+                mOtherThreadHandler?.sendMessageDelayed(msg, delayed)
             }
         }
     }
@@ -145,7 +151,7 @@ class DesignMessageDeliver : Handler.Callback {
 
 
     private fun removeKeyedObserver(
-        source: LifecycleOwner
+        source: LifecycleOwner,
     ) {
         val iterator = keyedObservers.iterator()
         while (iterator.hasNext()) {
@@ -164,7 +170,7 @@ class DesignMessageDeliver : Handler.Callback {
 data class MessageWrapper<K, V>(
     val key: K,
     val content: V,
-    var used: Boolean = false
+    var used: Boolean = false,
 )
 
 data class KeyedObserver<K, V>(

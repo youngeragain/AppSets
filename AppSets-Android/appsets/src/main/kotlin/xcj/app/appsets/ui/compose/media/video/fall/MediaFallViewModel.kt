@@ -13,13 +13,13 @@ import xcj.app.appsets.server.repository.AppSetsRepository
 import xcj.app.appsets.usecase.MediaLocalExoUseCase
 import xcj.app.starter.android.ui.base.DesignViewModel
 import xcj.app.starter.android.util.PurpleLogger
-import xcj.app.starter.server.requestNotNull
+import xcj.app.starter.server.request
 import java.util.UUID
 
 data class VideoMediaContent(
     val mediaContent: MediaContent,
     var id: String = UUID.randomUUID().toString(),
-    var isViewed: Boolean = false
+    var isViewed: Boolean = false,
 )
 
 class MediaFallViewModel : DesignViewModel() {
@@ -55,34 +55,30 @@ class MediaFallViewModel : DesignViewModel() {
 
     private fun requestData() {
         viewModelScope.launch {
-            requestNotNull(
-                action = {
-                    appSetsRepository.getMediaContent("video", page, pageSize)
-                },
-                onSuccess = {
-                    PurpleLogger.current.d(TAG, "requestData: success, media content:${it}")
-                    if (page == 1) {
-                        if (currentServerVideoMediaContentList.isNotEmpty()) {
-                            currentServerVideoMediaContentList.clear()
-                        }
-                        currentServerVideoMediaContentList.addAll(it.map { mediaContent ->
-                            VideoMediaContent(
-                                mediaContent
-                            )
-                        })
-                    } else if (page > 1) {
-                        currentServerVideoMediaContentList.addAll(it.map { mediaContent ->
-                            VideoMediaContent(
-                                mediaContent
-                            )
-                        })
+            request {
+                appSetsRepository.getMediaContent("video", page, pageSize)
+            }.onSuccess {
+                PurpleLogger.current.d(TAG, "requestData: success, media content:${it}")
+                if (page == 1) {
+                    if (currentServerVideoMediaContentList.isNotEmpty()) {
+                        currentServerVideoMediaContentList.clear()
                     }
-                    lastContentSize = it.size
-                },
-                onFailed = {
-                    PurpleLogger.current.d(TAG, "requestData failed!, e:$it")
+                    currentServerVideoMediaContentList.addAll(it.map { mediaContent ->
+                        VideoMediaContent(
+                            mediaContent
+                        )
+                    })
+                } else if (page > 1) {
+                    currentServerVideoMediaContentList.addAll(it.map { mediaContent ->
+                        VideoMediaContent(
+                            mediaContent
+                        )
+                    })
                 }
-            )
+                lastContentSize = it.size
+            }.onFailure {
+                PurpleLogger.current.d(TAG, "requestData failed!, e:$it")
+            }
         }
     }
 

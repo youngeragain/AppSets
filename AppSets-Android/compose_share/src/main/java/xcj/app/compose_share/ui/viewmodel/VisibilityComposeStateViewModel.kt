@@ -10,7 +10,7 @@ import xcj.app.starter.android.util.PurpleLogger
 abstract class VisibilityComposeStateViewModel : ViewModel(), VisibilityComposeStateProvider {
 
     companion object {
-        private const val TAG = "AnyStateViewModel"
+        private const val TAG = "VisibilityComposeStateViewModel"
         private const val NAME_BOTTOM_SHEET_COMPOSE_STATE = "bottomSheetContainerComposeState"
         private const val NAME_IMMERSE_CONTENT_COMPOSE_STATE = "immerseContentComposeState"
 
@@ -30,7 +30,7 @@ abstract class VisibilityComposeStateViewModel : ViewModel(), VisibilityComposeS
         if (!visibilityComposeStateMap.containsKey(name)) {
             PurpleLogger.current.d(
                 TAG,
-                "provideState, name:$name no state can provide!, new default provided!"
+                "provideState, name:$name no state can provide! new default provided!"
             )
         } else {
             PurpleLogger.current.d(

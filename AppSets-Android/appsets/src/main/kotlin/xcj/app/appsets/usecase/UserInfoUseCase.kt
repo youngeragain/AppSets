@@ -13,8 +13,8 @@ import xcj.app.appsets.ui.model.page_state.UserProfilePageState
 import xcj.app.appsets.util.ktx.toastSuspend
 import xcj.app.appsets.util.model.UriProvider
 import xcj.app.compose_share.dynamic.IComposeLifecycleAware
-import xcj.app.starter.server.requestNotNull
-import xcj.app.starter.server.requestNotNullRaw
+import xcj.app.starter.server.request
+import xcj.app.starter.server.requestRaw
 
 class UserInfoUseCase(
     private val userRepository: UserRepository,
@@ -49,11 +49,10 @@ class UserInfoUseCase(
         if (requestOnlyUserInfo) {
             return
         }
-        requestNotNullRaw(
+        requestRaw(
             action = {
                 if (userInfo.uid != LocalAccountManager.userInfo.uid) {
-                    val myFollowedThisUser =
-                        userRepository.getMyFollowedThisUser(userInfo.uid).data
+                    val myFollowedThisUser = userRepository.getMyFollowedThisUser(userInfo.uid).data
                     loggedUserFollowedState.value = myFollowedThisUser == true
                 } else {
                     loggedUserFollowedState.value = false
@@ -73,38 +72,31 @@ class UserInfoUseCase(
                     followerUsersState.value = emptyList()
                     followedUsersState.value = emptyList()
                 }
-                val applicationsByUser =
-                    appSetsRepository.getApplicationsByUser(userInfo.uid).data
+                val applicationsByUser = appSetsRepository.getApplicationsByUser(userInfo.uid).data
                 if (!applicationsByUser.isNullOrEmpty()) {
                     applicationsState.value = applicationsByUser
                 } else {
                     applicationsState.value = emptyList()
                 }
-            }
-        )
+            })
     }
 
     suspend fun updateCurrentUserInfoByUid(uid: String, requestOnlyUserInfo: Boolean = false) {
-        requestNotNull(
-            action = {
-                userRepository.getUserInfoByUid(uid)
-            },
-            onSuccess = {
-                LocalAccountManager.updateUserInfoIfNeeded(it)
-                fetchUserRelateInformation(it, requestOnlyUserInfo)
-            }
-        )
+        request {
+            userRepository.getUserInfoByUid(uid)
+        }.onSuccess {
+            LocalAccountManager.updateUserInfoIfNeeded(it)
+            fetchUserRelateInformation(it, requestOnlyUserInfo)
+        }
     }
 
     suspend fun updateUserFollowState() {
         val userInfo =
-            (currentUserInfoState.value as? UserProfilePageState.LoadSuccess)?.userInfo
-                ?: return
-        requestNotNullRaw(
+            (currentUserInfoState.value as? UserProfilePageState.LoadSuccess)?.userInfo ?: return
+        requestRaw(
             action = {
                 if (userInfo.uid != LocalAccountManager.userInfo.uid) {
-                    val myFollowedThisUser =
-                        userRepository.getMyFollowedThisUser(userInfo.uid).data
+                    val myFollowedThisUser = userRepository.getMyFollowedThisUser(userInfo.uid).data
                     loggedUserFollowedState.value = myFollowedThisUser == true
                 }
                 val followersByUser =
@@ -119,8 +111,7 @@ class UserInfoUseCase(
                         followedUsersState.value = followed
                     }
                 }
-            }
-        )
+            })
     }
 
     suspend fun modifyUserInfo(
@@ -137,22 +128,16 @@ class UserInfoUseCase(
             return
         }
         val userInfoModification = userInfoForModifyState.value
-        requestNotNull(
-            action = {
-                userRepository.updateUserInfo(
-                    context,
-                    userInfo,
-                    userInfoModification
-                )
-            },
-            onSuccess = {
-                updateCurrentUserInfoByUid(userInfo.uid, true)
-                context.getString(xcj.app.appsets.R.string.information_updated).toastSuspend()
-            },
-            onFailed = {
-                context.getString(xcj.app.appsets.R.string.updated_failed).toastSuspend()
-            }
-        )
+        request {
+            userRepository.updateUserInfo(
+                context, userInfo, userInfoModification
+            )
+        }.onSuccess {
+            updateCurrentUserInfoByUid(userInfo.uid, true)
+            context.getString(xcj.app.appsets.R.string.information_updated).toastSuspend()
+        }.onFailure {
+            context.getString(xcj.app.appsets.R.string.updated_failed).toastSuspend()
+        }
     }
 
     fun updateUserSelectAvatarUri(uriProvider: UriProvider) {

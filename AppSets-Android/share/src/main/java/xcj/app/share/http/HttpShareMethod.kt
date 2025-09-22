@@ -29,7 +29,7 @@ import xcj.app.share.ui.compose.AppSetsShareActivity
 import xcj.app.share.ui.compose.AppSetsShareViewModel
 import xcj.app.share.util.NetworkUtil
 import xcj.app.starter.android.util.PurpleLogger
-import xcj.app.starter.server.requestNotNull
+import xcj.app.starter.server.request
 import xcj.app.starter.server.requestRaw
 import xcj.app.starter.test.LocalPurpleCoroutineScope
 import xcj.app.web.webserver.base.DataProgressInfo
@@ -56,7 +56,7 @@ class HttpShareMethod : ShareMethod(), ContentReceivedListener, ListenersProvide
     data class SendDataRunnableInfo(
         var isAccept: Boolean = false,
         var isCalled: Boolean = false,
-        var isFinished: Boolean = false
+        var isFinished: Boolean = false,
     ) {
         var sendDataRunnable: SuspendRunnable? = null
         var next: SendDataRunnableInfo? = null
@@ -166,7 +166,7 @@ class HttpShareMethod : ShareMethod(), ContentReceivedListener, ListenersProvide
     }
 
     private fun makeBootedInfo(
-        availableLocalInetAddresses: List<Pair<InetAddress, NetworkInterface>>
+        availableLocalInetAddresses: List<Pair<InetAddress, NetworkInterface>>,
     ): ServerBootStateInfo.Booted {
         val allAvailableDeviceIp = mutableListOf<DeviceIP>()
         val allAvailableAddressInfo = mutableListOf<String>()
@@ -279,7 +279,7 @@ class HttpShareMethod : ShareMethod(), ContentReceivedListener, ListenersProvide
 
     fun notifyShareDeviceRemovedOnDiscovery(
         discoveryEndpoint: DiscoveryEndpoint,
-        shareDeviceList: MutableList<HttpShareDevice>
+        shareDeviceList: MutableList<HttpShareDevice>,
     ) {
         PurpleLogger.current.d(
             TAG,
@@ -309,7 +309,7 @@ class HttpShareMethod : ShareMethod(), ContentReceivedListener, ListenersProvide
 
     fun notifyShareDeviceFoundOnDiscovery(
         discoveryEndpoint: DiscoveryEndpoint,
-        shareDeviceList: List<HttpShareDevice>
+        shareDeviceList: List<HttpShareDevice>,
     ) {
         PurpleLogger.current.d(
             TAG,
@@ -361,20 +361,14 @@ class HttpShareMethod : ShareMethod(), ContentReceivedListener, ListenersProvide
 
     private fun getDeviceContentList(
         shareMethod: HttpShareMethod,
-        shareDevice: HttpShareDevice
+        shareDevice: HttpShareDevice,
     ) {
         activity.lifecycleScope.launch {
-            requestNotNull(
-                action = {
-                    shareRepository.getContentList(shareDevice, uri = "/")
-                },
-                onSuccess = {
-                    viewModel.updateDeviceContentList(shareDevice, it.decode())
-                },
-                onFailed = {
-
-                }
-            )
+            request {
+                shareRepository.getContentList(shareDevice, uri = "/")
+            }.onSuccess {
+                viewModel.updateDeviceContentList(shareDevice, it.decode())
+            }
         }
     }
 
@@ -397,7 +391,7 @@ class HttpShareMethod : ShareMethod(), ContentReceivedListener, ListenersProvide
 
     fun prepareSendContentRunnableInfoMap(
         shareDevices: List<ShareDevice>,
-        sendContentList: MutableList<DataContent>
+        sendContentList: MutableList<DataContent>,
     ) {
         shareDevices.filterIsInstance<HttpShareDevice>().forEach { shareDevice ->
             val dataSendContentList = sendContentList.map { dataContent ->
@@ -568,7 +562,7 @@ class HttpShareMethod : ShareMethod(), ContentReceivedListener, ListenersProvide
     fun onServerPrepareSendResponse(
         clientInfo: ClientInfo,
         isAccept: Boolean,
-        preferDownloadSelf: Boolean
+        preferDownloadSelf: Boolean,
     ) {
         PurpleLogger.current.d(
             TAG,
@@ -644,15 +638,12 @@ class HttpShareMethod : ShareMethod(), ContentReceivedListener, ListenersProvide
     private fun handleClientPinRequest(shareDevice: HttpShareDevice, pin: Int) {
         activity.lifecycleScope.launch {
             val shareToken = UUID.randomUUID().toString()
-            requestRaw(
-                action = {
-                    shareRepository.pairResponse(shareDevice, shareToken)
-                },
-                onSuccess = {
-                    shareDevice.pin = pin
-                    shareDevice.token = shareToken
-                }
-            )
+            request {
+                shareRepository.pairResponse(shareDevice, shareToken)
+            }.onSuccess {
+                shareDevice.pin = pin
+                shareDevice.token = shareToken
+            }
         }
     }
 

@@ -22,14 +22,14 @@ import xcj.app.appsets.ui.model.state.QRCodeInfoScannedState
 import xcj.app.compose_share.dynamic.IComposeLifecycleAware
 import xcj.app.starter.android.util.PurpleLogger
 import xcj.app.starter.foundation.http.DesignResponse
-import xcj.app.starter.server.requestNotNull
-import xcj.app.starter.server.requestNotNullRaw
+import xcj.app.starter.server.request
+import xcj.app.starter.server.requestRaw
 import xcj.app.starter.util.QrCodeUtil
 
 class QRCodeUseCase(
     private val loginSignUpPageState: MutableState<LoginSignUpPageState>,
     private val qrCodeRepository: QRCodeRepository,
-    private val userRepository: UserRepository
+    private val userRepository: UserRepository,
 ) : IComposeLifecycleAware {
     companion object {
         private const val TAG = "QRCodeUseCase"
@@ -59,14 +59,12 @@ class QRCodeUseCase(
     suspend fun requestGenerateQRCode() {
         updateQRCodeStateJob?.cancel("request generate new QRCode!")
         generatedQRCodeInfo.value = null
-        requestNotNull(
-            action = {
-                qrCodeRepository.genQRCodeCode(null)
-            },
-            onSuccess = {
-                handleGeneratedQRCode(it)
-            }
-        )
+        request {
+
+            qrCodeRepository.genQRCodeCode(null)
+        }.onSuccess {
+            handleGeneratedQRCode(it)
+        }
     }
 
     suspend fun handleGeneratedQRCode(qrCodeInfoMap: Map<String, String>) {
@@ -103,14 +101,12 @@ class QRCodeUseCase(
         }
         updateQRCodeStateJob?.cancel()
         for (i in 0..13) {
-            requestNotNullRaw(
-                action = {
-                    qrCodeRepository.qrCodeCodeStatus(providerId, code)
-                },
-                onSuccess = {
-                    updateQRCodeStatus(it)
-                }
-            )
+            requestRaw {
+                qrCodeRepository.qrCodeCodeStatus(providerId, code)
+            }.onSuccess {
+                updateQRCodeStatus(it)
+            }
+
             delay(5000)
         }
     }
@@ -155,14 +151,14 @@ class QRCodeUseCase(
 
 
     private suspend fun startQuickLogin(
-        token: String
+        token: String,
     ) {
         val oldLoginSignUpState = loginSignUpPageState.value
         if (oldLoginSignUpState is LoginSignUpPageState.Logging) {
             return
         }
         loginSignUpPageState.value = LoginSignUpPageState.Logging()
-        requestNotNullRaw(
+        requestRaw(
             action = {
                 LocalAccountManager.onUserLogged(UserInfo.default(), token, true)
                 val loginResponse = userRepository.login2()
@@ -170,7 +166,7 @@ class QRCodeUseCase(
                 if (!loginResponse.success || token.isNullOrEmpty()) {
                     PurpleLogger.current.d(TAG, loginResponse.info)
                     loginSignUpPageState.value = LoginSignUpPageState.LoggingFail()
-                    return@requestNotNullRaw
+                    return
                 }
                 LocalAccountManager.onUserLogged(UserInfo.default(), token, true)
                 val userInfoResponse = userRepository.getLoggedUserInfo()
@@ -178,7 +174,7 @@ class QRCodeUseCase(
                 if (userInfo == null) {
                     PurpleLogger.current.d(TAG, "startQuickLogin failed! userInfo is null ")
                     loginSignUpPageState.value = LoginSignUpPageState.LoggingFail()
-                    return@requestNotNullRaw
+                    return
                 }
                 LocalAccountManager.onUserLogged(userInfo, token, false)
                 loginSignUpPageState.value = LoginSignUpPageState.LoggingFinish()
@@ -194,11 +190,9 @@ class QRCodeUseCase(
         val codeInfoWrapper = generatedQRCodeInfo.value ?: return
         val realProviderId = outerProviderId ?: codeInfoWrapper.providerId ?: return
         val realCode = outerCode ?: codeInfoWrapper.code ?: return
-        requestNotNull(
-            action = {
-                qrCodeRepository.confirmQRCode(realProviderId, realCode)
-            }
-        )
+        request {
+            qrCodeRepository.confirmQRCode(realProviderId, realCode)
+        }
     }
 
     fun onScannedBarcode(activity: Activity, barcode: Barcode) {
@@ -274,11 +268,9 @@ class QRCodeUseCase(
         if (qrCodeInfo.usedFor != QR_USED_FOR_LOGIN) {
             return
         }
-        requestNotNull(
-            action = {
-                qrCodeRepository.scanQRCode(qrCodeInfo.providerId ?: "", qrCodeInfo.code ?: "")
-            }
-        )
+        request {
+            qrCodeRepository.scanQRCode(qrCodeInfo.providerId ?: "", qrCodeInfo.code ?: "")
+        }
     }
 
     suspend fun doAfterScanConfirmAction() {
@@ -299,7 +291,7 @@ class QRCodeUseCase(
         context: Context,
         requestCode: Int,
         resultCode: Int,
-        intent: Intent
+        intent: Intent,
     ) {
         if (requestCode != DesignCameraActivity.REQUEST_CODE ||
             resultCode != RESULT_OK

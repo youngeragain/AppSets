@@ -14,11 +14,11 @@ import xcj.app.appsets.util.ktx.toastSuspend
 import xcj.app.compose_share.dynamic.IComposeLifecycleAware
 import xcj.app.starter.android.util.PurpleLogger
 import xcj.app.starter.foundation.http.DesignResponse
-import xcj.app.starter.server.requestNotNull
-import xcj.app.starter.server.requestNotNullRaw
+import xcj.app.starter.server.request
+import xcj.app.starter.server.requestRaw
 
 class ScreenUseCase(
-    private val screenRepository: ScreenRepository
+    private val screenRepository: ScreenRepository,
 ) : IComposeLifecycleAware {
 
     companion object {
@@ -70,38 +70,34 @@ class ScreenUseCase(
         }
 
         container.isRequesting.value = true
-        requestNotNull(
-            action = {
-                val uid = container.uid
-                if (uid.isNullOrEmpty()) {
-                    screenRepository
-                        .getIndexRecommendScreens(container.page, container.pageSize)
+        request {
+            val uid = container.uid
+            if (uid.isNullOrEmpty()) {
+                screenRepository
+                    .getIndexRecommendScreens(container.page, container.pageSize)
+            } else {
+                screenRepository
+                    .getScreensByUid(uid, container.page, container.pageSize)
+            }
+        }.onSuccess { userScreenInfoList ->
+            PurpleLogger.current.d(TAG, "requestScreens, onSuccess")
+            container.lastScreensSize = userScreenInfoList.size
+            if (userScreenInfoList.isNotEmpty()) {
+                if (container.page == 1) {
+                    container.screens.clear()
+                    container.screens.addAll(userScreenInfoList)
                 } else {
-                    screenRepository
-                        .getScreensByUid(uid, container.page, container.pageSize)
+                    container.screens.addAll(userScreenInfoList)
                 }
-            },
-            onSuccess = { userScreenInfoList ->
-                PurpleLogger.current.d(TAG, "requestScreens, onSuccess")
-                container.lastScreensSize = userScreenInfoList.size
-                if (userScreenInfoList.isNotEmpty()) {
-                    if (container.page == 1) {
-                        container.screens.clear()
-                        container.screens.addAll(userScreenInfoList)
-                    } else {
-                        container.screens.addAll(userScreenInfoList)
-                    }
-                } else {
-                    container.page -= 1
-                }
-                container.isRequesting.value = false
-            },
-            onFailed = {
-                PurpleLogger.current.e(TAG, "requestScreens, onFailed:${it}")
-                container.isRequesting.value = false
+            } else {
                 container.page -= 1
             }
-        )
+            container.isRequesting.value = false
+        }.onFailure {
+            PurpleLogger.current.e(TAG, "requestScreens, onFailed:${it}")
+            container.isRequesting.value = false
+            container.page -= 1
+        }
     }
 
     suspend fun loadMore(uid: String? = null, force: Boolean = true) {
@@ -133,7 +129,7 @@ class ScreenUseCase(
 
         val screenId = screenInfo.screenId ?: return
 
-        requestNotNullRaw(
+        requestRaw(
             action = {
                 runCatching {
                     val response = screenRepository.getScreenReviews(screenId)
@@ -188,14 +184,13 @@ class ScreenUseCase(
                         isCollectedByUser = isCollectedByUser
                     )
                 }
-            },
-            onFailed = {
-                PurpleLogger.current.d(
-                    TAG,
-                    "updateCurrentViewScreen, failed:${it}"
-                )
-            }
-        )
+            }).onFailure {
+            PurpleLogger.current.d(
+                TAG,
+                "updateCurrentViewScreen, failed:${it}"
+            )
+        }
+
     }
 
     suspend fun userClickLikeScreen(context: Context) {
@@ -205,18 +200,15 @@ class ScreenUseCase(
         }
         val viewScreenInfo = currentScreenInfoForCard.value
         val screenId: String = viewScreenInfo.screenInfo?.screenId ?: return
-        requestNotNull(
-            action = {
-                screenRepository.screenLikeItByUser(screenId)
-            },
-            onSuccess = {
-                if (it) {
-                    currentScreenInfoForCard.value = viewScreenInfo.copy(
-                        likedCount = viewScreenInfo.likedCount + 1
-                    )
-                }
+        request {
+            screenRepository.screenLikeItByUser(screenId)
+        }.onSuccess {
+            if (it) {
+                currentScreenInfoForCard.value = viewScreenInfo.copy(
+                    likedCount = viewScreenInfo.likedCount + 1
+                )
             }
-        )
+        }
     }
 
 
@@ -227,7 +219,7 @@ class ScreenUseCase(
         }
         val viewScreenInfo = currentScreenInfoForCard.value
         val screenId: String = viewScreenInfo.screenInfo?.screenId ?: return
-        requestNotNullRaw(
+        requestRaw(
             action = {
                 if (viewScreenInfo.isCollectedByUser) {
                     screenRepository.removeCollectedScreen(screenId)
@@ -235,46 +227,42 @@ class ScreenUseCase(
                     screenRepository.screenCollectByUser(screenId, category)
                 }
 
-            },
-            onSuccess = { response ->
-                val isSuccess = response.data == true
-                PurpleLogger.current.d(
-                    TAG,
-                    "userClickCollectScreen, isSuccess:$isSuccess"
-                )
-                if (response.data != true) {
-                    response.info.toastSuspend()
-                    return@requestNotNullRaw
-                }
-                currentScreenInfoForCard.value = viewScreenInfo.copy(
-                    isCollectedByUser = !viewScreenInfo.isCollectedByUser
-                )
             }
-        )
+        ).onSuccess { response ->
+            val isSuccess = response.data == true
+            PurpleLogger.current.d(
+                TAG,
+                "userClickCollectScreen, isSuccess:$isSuccess"
+            )
+            if (response.data != true) {
+                response.info.toastSuspend()
+                return
+            }
+            currentScreenInfoForCard.value = viewScreenInfo.copy(
+                isCollectedByUser = !viewScreenInfo.isCollectedByUser
+            )
+        }
     }
 
     suspend fun changeScreenPublicState(isPublic: Boolean) {
         val viewScreenInfo = currentScreenInfoForCard.value
         val screenId = viewScreenInfo.screenInfo?.screenId ?: return
-        requestNotNull(
-            action = {
-                screenRepository.changeScreenPublicState(screenId, isPublic)
-            },
-            onSuccess = { isChangeSuccess ->
-                PurpleLogger.current.d(
-                    TAG,
-                    "changeScreenPublicState, result:$isChangeSuccess"
-                )
-                viewScreenInfo.screenInfo.isPublic = if (isPublic) {
-                    1
-                } else {
-                    0
-                }
-                currentScreenInfoForCard.value = viewScreenInfo.copy(
-                    screenInfo = viewScreenInfo.screenInfo
-                )
+        request {
+            screenRepository.changeScreenPublicState(screenId, isPublic)
+        }.onSuccess { isChangeSuccess ->
+            PurpleLogger.current.d(
+                TAG,
+                "changeScreenPublicState, result:$isChangeSuccess"
+            )
+            viewScreenInfo.screenInfo.isPublic = if (isPublic) {
+                1
+            } else {
+                0
             }
-        )
+            currentScreenInfoForCard.value = viewScreenInfo.copy(
+                screenInfo = viewScreenInfo.screenInfo
+            )
+        }
     }
 
 
@@ -290,7 +278,7 @@ class ScreenUseCase(
             return
         }
         val screenInfo = viewScreenInfo.screenInfo ?: return
-        requestNotNull(
+        request(
             action = {
                 val response =
                     screenRepository.addScreenReview(
@@ -305,17 +293,15 @@ class ScreenUseCase(
                 } else {
                     screenRepository.getScreenReviews(screenInfo.screenId)
                 }
-            },
-            onSuccess = { screenReviews ->
-                currentScreenInfoForCard.value = viewScreenInfo.copy(
-                    userInputReview = null,
-                    reviews = screenReviews
-                )
-            },
-            onFailed = {
-                context.getString(xcj.app.appsets.R.string.reply_failed).toastSuspend()
             }
-        )
+        ).onSuccess { screenReviews ->
+            currentScreenInfoForCard.value = viewScreenInfo.copy(
+                userInputReview = null,
+                reviews = screenReviews
+            )
+        }.onFailure {
+            context.getString(xcj.app.appsets.R.string.reply_failed).toastSuspend()
+        }
     }
 
     suspend fun onReviewConfirm(context: Context, reviewString: String?) {

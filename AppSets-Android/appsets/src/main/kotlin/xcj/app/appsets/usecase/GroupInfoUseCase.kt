@@ -9,10 +9,10 @@ import xcj.app.appsets.ui.model.page_state.GroupInfoPageState
 import xcj.app.appsets.util.PictureUrlMapper
 import xcj.app.compose_share.dynamic.IComposeLifecycleAware
 import xcj.app.starter.android.util.PurpleLogger
-import xcj.app.starter.server.requestNotNull
+import xcj.app.starter.server.request
 
 class GroupInfoUseCase(
-    private val userRepository: UserRepository
+    private val userRepository: UserRepository,
 ) : IComposeLifecycleAware {
     companion object {
         private const val TAG = "GroupInfoUseCase"
@@ -38,22 +38,18 @@ class GroupInfoUseCase(
             return
         }
         groupInfoPageState.value = GroupInfoPageState.Loading
-        requestNotNull(
-            action = {
-                userRepository.getGroupInfoById(groupId)
-            },
-            onSuccess = { groupInfo ->
-                PictureUrlMapper.mapPictureUrl(groupInfo)
-                groupInfoPageState.value = GroupInfoPageState.LoadSuccess(groupInfo)
-            },
-            onFailed = {
-                groupInfoPageState.value = GroupInfoPageState.NotFound
-                PurpleLogger.current.d(
-                    TAG,
-                    "updateGroupInfoByGroupId failed:${it.e?.message}"
-                )
-            }
-        )
+        request {
+            userRepository.getGroupInfoById(groupId)
+        }.onSuccess { groupInfo ->
+            PictureUrlMapper.mapPictureUrl(groupInfo)
+            groupInfoPageState.value = GroupInfoPageState.LoadSuccess(groupInfo)
+        }.onFailure {
+            groupInfoPageState.value = GroupInfoPageState.NotFound
+            PurpleLogger.current.d(
+                TAG,
+                "updateGroupInfoByGroupId failed:${it.message}"
+            )
+        }
     }
 
     override fun onComposeDispose(by: String?) {

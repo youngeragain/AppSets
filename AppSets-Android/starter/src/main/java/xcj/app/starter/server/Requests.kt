@@ -7,103 +7,40 @@ data class RequestFail(
     var info: String,
     var e: Throwable? = null,
     var url: String? = null,
-    var methodName: String? = null
-)
-
-suspend inline fun <T> requestBridge(
-    action: suspend () -> DesignResponse<T>,
-): T? {
-    runCatching {
-        action.invoke()
-    }.onSuccess {
-        if (it.success && it.data != null) {
-            return it.data
-        } else {
-            return null
-        }
-    }.onFailure {
-        return null
-    }
-    return null
-}
+    var methodName: String? = null,
+) : Exception()
 
 suspend inline fun <T> request(
     action: suspend () -> DesignResponse<T>,
-    noinline onSuccess: (suspend (T?) -> Unit)? = null,
-    noinline onFailed: (suspend (RequestFail) -> Unit)? = null,
-) {
-    runCatching {
-        action.invoke()
-    }.onSuccess {
-        if (it.success) {
-            onSuccess?.invoke(it.data)
-        } else {
-            val failInfo =
-                RequestFail(it.code, it.info ?: "", null, "unknown url")
-            onFailed?.invoke(failInfo)
-        }
-    }.onFailure {
-        onFailed?.invoke(
-            RequestFail(-99, it.message ?: "network layer error", it)
-        )
-    }
-}
+): Result<T> {
 
-suspend inline fun <T> requestNotNull(
-    action: suspend () -> DesignResponse<T>,
-    noinline onSuccess: (suspend (T) -> Unit)? = null,
-    noinline onFailed: (suspend (RequestFail) -> Unit)? = null,
-) {
-    runCatching {
+    val designResponse = runCatching {
         action.invoke()
-    }.onSuccess {
-        val data = it.data
-        if (it.success && data != null) {
-            onSuccess?.invoke(data)
-        } else {
-            val failInfo =
-                RequestFail(it.code, it.info ?: "", null, "unknown url")
-            onFailed?.invoke(failInfo)
-        }
-    }.onFailure {
-        onFailed?.invoke(
-            RequestFail(-1, it.message ?: "network layer error", it)
-        )
+    }.getOrNull()
+    if (designResponse == null) {
+        val failInfo =
+            RequestFail(-1, "", null, "response is null")
+        return Result.failure(failInfo)
+    }
+    if (designResponse.success && designResponse.data != null) {
+        return Result.success(designResponse.data)
+    } else {
+        val failInfo =
+            RequestFail(-2, "", null, "response is not valid")
+        return Result.failure(failInfo)
     }
 }
 
 suspend inline fun <T> requestRaw(
-    action: suspend () -> T?,
-    noinline onSuccess: (suspend (T?) -> Unit)? = null,
-    noinline onFailed: (suspend (RequestFail) -> Unit)? = null,
-) {
-    var methodStackName: String? = null
-    runCatching {
-        methodStackName = Thread.currentThread().stackTrace.getOrNull(1)?.methodName
-        action()
-    }.onSuccess {
-        onSuccess?.invoke(it)
-    }.onFailure {
-        onFailed?.invoke(
-            RequestFail(-1, it.message ?: "network layer error", it, methodName = methodStackName)
-        )
-    }
-}
-
-suspend inline fun <T> requestNotNullRaw(
     action: suspend () -> T,
-    noinline onSuccess: (suspend ((T) -> Unit))? = null,
-    noinline onFailed: (suspend (RequestFail) -> Unit)? = null,
-) {
-    var methodStackName: String? = null
-    runCatching {
-        methodStackName = Thread.currentThread().stackTrace.getOrNull(1)?.methodName
+): Result<T> {
+    val result = runCatching {
         action()
-    }.onSuccess {
-        onSuccess?.invoke(it)
-    }.onFailure {
-        onFailed?.invoke(
-            RequestFail(-1, it.message ?: "network layer error", it, methodName = methodStackName)
-        )
+    }.getOrNull()
+    if (result == null) {
+        val failInfo =
+            RequestFail(-1, "", null, "response is null")
+        return Result.failure(failInfo)
     }
+    return Result.success(result)
 }

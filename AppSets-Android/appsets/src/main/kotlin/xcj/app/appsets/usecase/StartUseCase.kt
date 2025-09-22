@@ -17,7 +17,7 @@ import xcj.app.starter.android.AppDefinition
 import xcj.app.starter.android.ItemDefinition
 import xcj.app.starter.android.util.PackageUtil
 import xcj.app.starter.android.util.PurpleLogger
-import xcj.app.starter.server.requestNotNullRaw
+import xcj.app.starter.server.requestRaw
 import xcj.app.starter.test.LocalApplication
 
 class StartUseCase(
@@ -68,7 +68,7 @@ class StartUseCase(
 
     private fun updateRecommendItems(
         context: Context,
-        recommendItems: MutableState<SpotLight.RecommendedItem>
+        recommendItems: MutableState<SpotLight.RecommendedItem>,
     ) {
         val appDefinitionMutableList = allApps
         val forYouText = context.getString(xcj.app.appsets.R.string.for_you)
@@ -95,7 +95,7 @@ class StartUseCase(
     private fun updatePinnedApps(
         allApps: MutableList<AppDefinition>,
         pinnedAppPackageNames: List<String>?,
-        pinnedApp: MutableState<SpotLight.PinnedApp>
+        pinnedApp: MutableState<SpotLight.PinnedApp>,
     ) {
         val pinnedAppDefinitionList = mutableListOf<AppDefinition>()
         for (app in allApps) {
@@ -127,7 +127,7 @@ class StartUseCase(
     fun onSnapShotPageStateClick(
         spotLight: SpotLight,
         context: Context,
-        payload: Any?
+        payload: Any?,
     ) {
         when (spotLight) {
             is SpotLight.PinnedApp -> {
@@ -171,11 +171,11 @@ class StartUseCase(
             return
         }
         coroutineScope.launch {
-            requestNotNullRaw(
+            requestRaw(
                 action = {
                     val response =
                         appSetsRepository.getSpotLight()
-                    val spotLight = response.data ?: return@requestNotNullRaw
+                    val spotLight = response.data ?: return@requestRaw
 
                     spotLight.microsoftBingWallpaperList?.let {
                         val bingWallpaper =
@@ -207,11 +207,10 @@ class StartUseCase(
 
                     spotLightsState.add(popularSearch)
 
-                },
-                onFailed = {
-                    PurpleLogger.current.d(TAG, "loadSpotLight, failed! ${it.info}")
                 }
-            )
+            ).onFailure {
+                PurpleLogger.current.d(TAG, "loadSpotLight, failed!")
+            }
         }
     }
 

@@ -462,4 +462,5 @@
     <string name="save_to_file">Save to file</string>
     <string name="save">Save</string>
     <string name="new_file">New File</string>
+    <string name="camera_description">Camera usecase</string>
 </resources>

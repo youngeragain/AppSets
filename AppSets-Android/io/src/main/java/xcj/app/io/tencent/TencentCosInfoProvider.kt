@@ -1,6 +1,6 @@
 package xcj.app.io.tencent
 
 interface TencentCosInfoProvider {
-    fun getTencentCosSTS(): TencentCosSTS?
-    fun getTencentCosRegionBucket(): TencentCosRegionBucket?
+    suspend fun getTencentCosSTS(): TencentCosSTS?
+    suspend fun getTencentCosRegionBucket(): TencentCosRegionBucket?
 }

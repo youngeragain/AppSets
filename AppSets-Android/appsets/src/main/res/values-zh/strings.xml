@@ -462,5 +462,6 @@
     <string name="save_to_file">保存到文件</string>
     <string name="save">保存</string>
     <string name="new_file">新文件</string>
+    <string name="camera_description">基于相机的用例</string>
 
 </resources>

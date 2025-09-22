@@ -30,6 +30,7 @@ import xcj.app.starter.android.util.PurpleLogger
 import xcj.app.starter.foundation.lazyStaticProvider
 import xcj.app.starter.test.LocalAndroidContextFileDir
 import xcj.app.starter.test.LocalApplication
+import xcj.app.starter.test.LocalPurpleCoroutineScope
 import java.io.File
 
 class SimpleFileIO : FileIO {
@@ -68,21 +69,22 @@ class SimpleFileIO : FileIO {
         LocalMessenger.post(MESSAGE_KEY_ON_COMPONENTS_INITIALED, true)
     }
 
-    private fun ensureCosXmlServiceIfNeeded() {
+    private suspend fun ensureCosXmlServiceIfNeeded() {
         val tencentCosInfoProvider = tencentCosInfoProvider
         if (tencentCosInfoProvider == null) {
             return
         }
-        val cosRegionBucket = tencentCosInfoProvider.getTencentCosRegionBucket()
-        if (cosRegionBucket == null) {
+        val tencentCosRegionBucket = tencentCosInfoProvider.getTencentCosRegionBucket()
+        if (tencentCosRegionBucket == null) {
             return
         }
-        val tencentCosRegionBucket = cosRegionBucket
-        val region = tencentCosRegionBucket.region
         val myCredentialProvider: QCloudCredentialProvider =
-            STSCredentialProvider(tencentCosInfoProvider)
+            STSCredentialProvider(
+                LocalPurpleCoroutineScope.current,
+                tencentCosInfoProvider
+            )
         val serviceConfig = CosXmlServiceConfig.Builder()
-            .setRegion(region)
+            .setRegion(tencentCosRegionBucket.region)
             .isHttps(true)
             .builder()
         cosXmlService =
@@ -114,7 +116,7 @@ class SimpleFileIO : FileIO {
             override fun onFail(
                 request: CosXmlRequest,
                 clientException: CosXmlClientException?,
-                serviceException: CosXmlServiceException?
+                serviceException: CosXmlServiceException?,
             ) {
                 val resultObserver = uploadResultObserver
                 if (resultObserver != null && resultObserver.id() == urlEndpoint) {
@@ -148,7 +150,7 @@ class SimpleFileIO : FileIO {
         context: Context,
         file: File,
         urlEndpoint: String,
-        uploadOptions: ObjectUploadOptions?
+        uploadOptions: ObjectUploadOptions?,
     ) {
         finalUploadPreCheck(context, file, urlEndpoint, uploadOptions)
     }
@@ -158,7 +160,7 @@ class SimpleFileIO : FileIO {
         context: Context,
         file: File,
         urlEndpoint: String,
-        uploadOptions: ObjectUploadOptions?
+        uploadOptions: ObjectUploadOptions?,
     ) {
         if (!shouldActive) {
             return
@@ -206,7 +208,7 @@ class SimpleFileIO : FileIO {
     private suspend fun compressedFileIfNeeded(
         context: Context,
         file: File,
-        uploadOptions: ObjectUploadOptions?
+        uploadOptions: ObjectUploadOptions?,
     ): File {
         return CompressorHelper().compress(context, file, uploadOptions?.compressOptions())
     }
@@ -216,7 +218,7 @@ class SimpleFileIO : FileIO {
         transferManager: TransferManager,
         file: File,
         urlEndpoint: String,
-        uploadOptions: ObjectUploadOptions?
+        uploadOptions: ObjectUploadOptions?,
     ) {
         PurpleLogger.current.d(TAG, "finalUpload")
         val bucket = tencentCosRegionBucket.bucketName
@@ -255,7 +257,7 @@ class SimpleFileIO : FileIO {
         context: Context,
         files: List<File>,
         urlEndpoints: List<String>,
-        uploadOptions: ObjectUploadOptions?
+        uploadOptions: ObjectUploadOptions?,
     ) {
 
     }
@@ -264,7 +266,7 @@ class SimpleFileIO : FileIO {
         context: Context,
         uris: List<Uri>,
         urlEndpoints: List<String>,
-        uploadOptions: ObjectUploadOptions?
+        uploadOptions: ObjectUploadOptions?,
     ) {
         PurpleLogger.current.d(TAG, "uploadWithMultiUri")
         uris.forEachIndexed { index, uri ->
@@ -274,7 +276,7 @@ class SimpleFileIO : FileIO {
 
     suspend fun generatePreSign(
         urlEndpoint: String?,
-        objectPathOptions: ObjectUploadOptions? = null
+        objectPathOptions: ObjectUploadOptions? = null,
     ): String? = withContext(Dispatchers.IO) {
         if (!shouldActive) {
             return@withContext "http://localhost/"
@@ -370,11 +372,11 @@ class SimpleFileIO : FileIO {
             return null
         }
         val cosXmlService = cosXmlService ?: return null
-        val getTencentCosRegionBucket =
+        val tencentCosRegionBucket =
             tencentCosInfoProvider?.getTencentCosRegionBucket() ?: return null
         val tempFilesCacheDir = LocalAndroidContextFileDir.current.tempFilesCacheDir
         val objectRequest = GetObjectRequest(
-            getTencentCosRegionBucket.bucketName,
+            tencentCosRegionBucket.bucketName,
             path,
             tempFilesCacheDir.toString()
         )

@@ -18,10 +18,10 @@ import xcj.app.appsets.util.model.UriProvider
 import xcj.app.compose_share.dynamic.IComposeLifecycleAware
 import xcj.app.starter.android.ktx.startWithHttpSchema
 import xcj.app.starter.android.util.PurpleLogger
-import xcj.app.starter.server.requestNotNullRaw
+import xcj.app.starter.server.requestRaw
 
 class AppCreationUseCase(
-    private val appSetsRepository: AppSetsRepository
+    private val appSetsRepository: AppSetsRepository,
 ) : IComposeLifecycleAware {
     companion object {
         private const val TAG = "AppCreationUseCase"
@@ -65,7 +65,7 @@ class AppCreationUseCase(
         }
         this@AppCreationUseCase.createApplicationPageState.value =
             CreateApplicationPageState.Creating(applicationForCreate)
-        requestNotNullRaw(
+        requestRaw(
             action = {
                 val createApplicationPreCheckRes =
                     appSetsRepository
@@ -79,7 +79,7 @@ class AppCreationUseCase(
                     delay(2000)
                     this@AppCreationUseCase.createApplicationPageState.value =
                         CreateApplicationPageState.NewApplicationPage(applicationForCreate)
-                    return@requestNotNullRaw
+                    return
                 }
                 val createApplicationRes =
                     appSetsRepository.createApplication(context, applicationForCreate)
@@ -92,31 +92,30 @@ class AppCreationUseCase(
                     delay(2000)
                     this@AppCreationUseCase.createApplicationPageState.value =
                         CreateApplicationPageState.NewApplicationPage(applicationForCreate)
-                    return@requestNotNullRaw
+                    return
                 }
                 this@AppCreationUseCase.createApplicationPageState.value =
                     CreateApplicationPageState.CreateSuccessPage(applicationForCreate)
-            },
-            onFailed = {
-                PurpleLogger.current.d(
-                    "CreateApplicationUseCase",
-                    "finishCreateApp failed:${it}"
-                )
-                this@AppCreationUseCase.createApplicationPageState.value =
-                    CreateApplicationPageState.CreateFailedPage(
-                        applicationForCreate,
-                        R.string.create_application_failed
-                    )
-                delay(2000)
-                this@AppCreationUseCase.createApplicationPageState.value =
-                    CreateApplicationPageState.NewApplicationPage(applicationForCreate)
             }
-        )
+        ).onFailure {
+            PurpleLogger.current.d(
+                "CreateApplicationUseCase",
+                "finishCreateApp failed:${it}"
+            )
+            this@AppCreationUseCase.createApplicationPageState.value =
+                CreateApplicationPageState.CreateFailedPage(
+                    applicationForCreate,
+                    R.string.create_application_failed
+                )
+            delay(2000)
+            this@AppCreationUseCase.createApplicationPageState.value =
+                CreateApplicationPageState.NewApplicationPage(applicationForCreate)
+        }
     }
 
     private fun checkAppIntegrity(
         context: Context,
-        applicationForCreate: ApplicationForCreate
+        applicationForCreate: ApplicationForCreate,
     ): Boolean {
         val tempApp = applicationForCreate
         if (tempApp.iconUriHolder == null) {
@@ -203,7 +202,7 @@ class AppCreationUseCase(
 
     fun setChooseContentTempValues(
         any: Any,
-        filedName: String
+        filedName: String,
     ) {
         chooseContentTempAny = any
         chooseContentTempFiledName = filedName
@@ -230,7 +229,7 @@ class AppCreationUseCase(
 
     private fun copyPlatformForCreate(
         any: PlatformForCreate,
-        platformForCreate: PlatformForCreate
+        platformForCreate: PlatformForCreate,
     ) {
         val newApplicationState =
             (createApplicationPageState.value as? CreateApplicationPageState.NewApplicationPage)
@@ -262,7 +261,7 @@ class AppCreationUseCase(
 
     private fun copyVersionInfoForCreate(
         any: VersionInfoForCreate,
-        versionInfoForCreate: VersionInfoForCreate
+        versionInfoForCreate: VersionInfoForCreate,
     ) {
         val newApplicationState =
             (createApplicationPageState.value as? CreateApplicationPageState.NewApplicationPage)
@@ -310,7 +309,7 @@ class AppCreationUseCase(
 
     private fun copyScreenshotInfoForCreate(
         any: ScreenshotInfoForCreate,
-        screenshotInfoForCreate: ScreenshotInfoForCreate
+        screenshotInfoForCreate: ScreenshotInfoForCreate,
     ) {
         val newApplicationState =
             (createApplicationPageState.value as? CreateApplicationPageState.NewApplicationPage)
@@ -374,7 +373,7 @@ class AppCreationUseCase(
 
     private fun copyDownloadInfoForCreate(
         any: DownloadInfoForCreate,
-        downloadInfoForCreate: DownloadInfoForCreate
+        downloadInfoForCreate: DownloadInfoForCreate,
     ) {
         val newApplicationState =
             (createApplicationPageState.value as? CreateApplicationPageState.NewApplicationPage)
@@ -586,7 +585,7 @@ class AppCreationUseCase(
 
     fun deleteVersionInPlatform(
         platformForCreate: PlatformForCreate,
-        versionInfoForCreate: VersionInfoForCreate
+        versionInfoForCreate: VersionInfoForCreate,
     ) {
 
         val newApplicationState =
@@ -620,7 +619,7 @@ class AppCreationUseCase(
     fun deleteDownloadInfoInVersion(
         platformForCreate: PlatformForCreate,
         versionInfoForCreate: VersionInfoForCreate,
-        downloadInfoForCreate: DownloadInfoForCreate
+        downloadInfoForCreate: DownloadInfoForCreate,
     ) {
         val newApplicationState =
             (createApplicationPageState.value as? CreateApplicationPageState.NewApplicationPage)
@@ -666,7 +665,7 @@ class AppCreationUseCase(
     fun deleteScreenInfoInVersion(
         platformForCreate: PlatformForCreate,
         versionInfoForCreate: VersionInfoForCreate,
-        screenshotInfoForCreate: ScreenshotInfoForCreate
+        screenshotInfoForCreate: ScreenshotInfoForCreate,
     ) {
         val newApplicationState =
             (createApplicationPageState.value as? CreateApplicationPageState.NewApplicationPage)
@@ -788,7 +787,7 @@ class AppCreationUseCase(
 
     fun getVersionInfoForCreateById(
         platformForCreate: PlatformForCreate,
-        versionInfoId: String
+        versionInfoId: String,
     ): VersionInfoForCreate? {
         val newApplicationState =
             (createApplicationPageState.value as? CreateApplicationPageState.NewApplicationPage)
@@ -829,7 +828,7 @@ class AppCreationUseCase(
 
     fun addScreenshotForCreate(
         platformForCreate: PlatformForCreate,
-        versionInfoForCreate: VersionInfoForCreate
+        versionInfoForCreate: VersionInfoForCreate,
     ): ScreenshotInfoForCreate {
         val newApplicationState =
             (createApplicationPageState.value as? CreateApplicationPageState.NewApplicationPage)
@@ -876,7 +875,7 @@ class AppCreationUseCase(
 
     fun addDownloadInfoForCreate(
         platformForCreate: PlatformForCreate,
-        versionInfoForCreate: VersionInfoForCreate
+        versionInfoForCreate: VersionInfoForCreate,
     ): DownloadInfoForCreate {
 
         val newApplicationState =

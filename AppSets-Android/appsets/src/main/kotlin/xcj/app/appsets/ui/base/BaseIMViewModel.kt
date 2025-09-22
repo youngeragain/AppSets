@@ -131,6 +131,9 @@ abstract class BaseIMViewModel : VisibilityComposeStateViewModel() {
     @CallStep(3)
     open fun doActionsOnCreated() {
         PurpleLogger.current.d(TAG, "doActionsOnCreated")
+        viewModelScope.launch {
+            systemUseCase.initAppToken()
+        }
     }
 
     @CallStep(4)

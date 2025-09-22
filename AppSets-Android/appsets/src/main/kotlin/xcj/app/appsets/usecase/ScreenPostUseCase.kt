@@ -17,12 +17,12 @@ import xcj.app.appsets.ui.model.page_state.PostScreenPageState
 import xcj.app.appsets.util.ktx.toastSuspend
 import xcj.app.appsets.util.model.UriProvider
 import xcj.app.compose_share.dynamic.IComposeLifecycleAware
-import xcj.app.starter.server.requestNotNull
+import xcj.app.starter.server.request
 import xcj.app.starter.util.ContentType
 
 class ScreenPostUseCase(
     private val screenRepository: ScreenRepository,
-    private val generationAIRepository: GenerationAIRepository
+    private val generationAIRepository: GenerationAIRepository,
 ) : IComposeLifecycleAware {
 
     companion object {
@@ -70,14 +70,13 @@ class ScreenPostUseCase(
         }
         val postScreen = postScreenState.screenInfoForCreate
         this.postScreenPageState.value = PostScreenPageState.Posting(postScreen)
-        requestNotNull(
-            action = {
-                screenRepository.addScreen(
-                    context,
-                    postScreenState.screenInfoForCreate
-                )
-            },
-            onSuccess = { isAddSuccess ->
+        request {
+            screenRepository.addScreen(
+                context,
+                postScreenState.screenInfoForCreate
+            )
+        }
+            .onSuccess { isAddSuccess ->
                 if (isAddSuccess) {
                     delay(1200)
                     context.getString(xcj.app.appsets.R.string.create_success).toastSuspend()
@@ -88,13 +87,11 @@ class ScreenPostUseCase(
                     this@ScreenPostUseCase.postScreenPageState.value =
                         PostScreenPageState.PostFailedPage(postScreen)
                 }
-            },
-            onFailed = {
+            }.onFailure {
                 context.getString(xcj.app.appsets.R.string.create_failed).toastSuspend()
                 this@ScreenPostUseCase.postScreenPageState.value =
                     PostScreenPageState.PostFailedPage(postScreen)
             }
-        )
     }
 
     suspend fun generateContent(context: Context) {
@@ -102,30 +99,27 @@ class ScreenPostUseCase(
         if (postScreenState !is PostScreenPageState.NewPostScreenPage) {
             return
         }
-        requestNotNull(
-            action = {
-                generationAIRepository.getGenerateContentWithNoneContext()
-            },
-            onSuccess = {
+        request {
+            generationAIRepository.getGenerateContentWithNoneContext()
+        }.onSuccess {
+            ScreenInfoForCreate.updateStateContent(
+                this@ScreenPostUseCase.postScreenPageState,
+                ""
+            )
+            flow {
+                it.toCharArray().forEach {
+                    emit(it)
+                    delay(10)
+                }
+            }.collectLatest {
+                val oldPostScreen =
+                    (this@ScreenPostUseCase.postScreenPageState.value as? PostScreenPageState.NewPostScreenPage)?.screenInfoForCreate
                 ScreenInfoForCreate.updateStateContent(
                     this@ScreenPostUseCase.postScreenPageState,
-                    ""
+                    (oldPostScreen?.content ?: "") + it
                 )
-                flow {
-                    it.toCharArray().forEach {
-                        emit(it)
-                        delay(10)
-                    }
-                }.collectLatest {
-                    val oldPostScreen =
-                        (this@ScreenPostUseCase.postScreenPageState.value as? PostScreenPageState.NewPostScreenPage)?.screenInfoForCreate
-                    ScreenInfoForCreate.updateStateContent(
-                        this@ScreenPostUseCase.postScreenPageState,
-                        (oldPostScreen?.content ?: "") + it
-                    )
-                }
             }
-        )
+        }
     }
 
     fun onRemoveMediaContent(type: String, uriProvider: UriProvider) {

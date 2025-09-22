@@ -11,7 +11,7 @@ import xcj.app.compose_share.dynamic.IComposeLifecycleAware
 import xcj.app.io.components.ObjectUploadOptions
 import xcj.app.io.compress.ICompressor
 import xcj.app.starter.android.util.PurpleLogger
-import xcj.app.starter.server.requestNotNull
+import xcj.app.starter.server.request
 import kotlin.math.abs
 
 class AppsUseCase(
@@ -58,42 +58,39 @@ class AppsUseCase(
         if (appCenterPageState.value is AppCenterPageState.LoadSuccess) {
             return
         }
-        requestNotNull(
-            action = {
-                appSetsRepository.getIndexApplications()
-            },
-            onSuccess = {
-                val loadingState = appCenterPageState.value as AppCenterPageState.Loading
-                val appsWithCategories = loadingState.apps
-                val mockLoadingApplicationsCount =
-                    appsWithCategories.sumOf { it.applications.size }
-                val realApplicationsCount = it.sumOf { it.applications.size }
-                val diff =
-                    mockLoadingApplicationsCount - realApplicationsCount
-                if (abs(diff) != 0) {
-                    repeat(abs(diff)) { i ->
-                        if (diff < 0) {
-                            this@AppsUseCase.appCenterPageState.value =
-                                AppCenterPageState.Loading(
-                                    createMockApplications(
-                                        mockLoadingApplicationsCount + i + 1
-                                    )
+        request {
+            appSetsRepository.getIndexApplications()
+        }.onSuccess {
+            val loadingState = appCenterPageState.value as AppCenterPageState.Loading
+            val appsWithCategories = loadingState.apps
+            val mockLoadingApplicationsCount =
+                appsWithCategories.sumOf { it.applications.size }
+            val realApplicationsCount = it.sumOf { it.applications.size }
+            val diff =
+                mockLoadingApplicationsCount - realApplicationsCount
+            if (abs(diff) != 0) {
+                repeat(abs(diff)) { i ->
+                    if (diff < 0) {
+                        this@AppsUseCase.appCenterPageState.value =
+                            AppCenterPageState.Loading(
+                                createMockApplications(
+                                    mockLoadingApplicationsCount + i + 1
                                 )
-                        } else {
-                            this@AppsUseCase.appCenterPageState.value =
-                                AppCenterPageState.Loading(
-                                    createMockApplications(
-                                        mockLoadingApplicationsCount - (i + 1)
-                                    )
+                            )
+                    } else {
+                        this@AppsUseCase.appCenterPageState.value =
+                            AppCenterPageState.Loading(
+                                createMockApplications(
+                                    mockLoadingApplicationsCount - (i + 1)
                                 )
-                        }
-                        delay(10)
+                            )
                     }
+                    delay(10)
                 }
-                this@AppsUseCase.appCenterPageState.value =
-                    AppCenterPageState.LoadSuccess(it)
             }
-        )
+            this@AppsUseCase.appCenterPageState.value =
+                AppCenterPageState.LoadSuccess(it)
+        }
     }
 
     fun findApplicationByBioId(application: Application): Application? {
