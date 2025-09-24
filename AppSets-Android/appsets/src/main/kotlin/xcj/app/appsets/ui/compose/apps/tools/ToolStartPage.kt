@@ -20,7 +20,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import xcj.app.appsets.ui.compose.PageRouteNames
-import xcj.app.appsets.ui.compose.custom_component.HideNavBarWhenOnLaunch
+import xcj.app.appsets.ui.compose.custom_component.HideNavBar
 import xcj.app.appsets.ui.compose.main.navigateToAppSetsLauncherActivity
 import xcj.app.appsets.ui.compose.main.navigateToAppSetsShareActivity
 import xcj.app.appsets.ui.compose.main.navigateToAppSetsVpnActivity
@@ -178,7 +178,7 @@ fun ToolStartPage(
     onBackClick: () -> Unit,
     onToolClick: (AppTool) -> Unit
 ) {
-    HideNavBarWhenOnLaunch()
+    HideNavBar()
     Column {
         BackActionTopBar(
             onBackClick = onBackClick,

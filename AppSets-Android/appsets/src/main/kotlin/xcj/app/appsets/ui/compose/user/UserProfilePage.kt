@@ -38,7 +38,7 @@ import xcj.app.appsets.server.model.UserInfo
 import xcj.app.appsets.ui.compose.LocalUseCaseOfUserInfo
 import xcj.app.appsets.ui.compose.custom_component.DesignBackButton
 import xcj.app.appsets.ui.compose.custom_component.DesignDropDownButton
-import xcj.app.appsets.ui.compose.custom_component.HideNavBarWhenOnLaunch
+import xcj.app.appsets.ui.compose.custom_component.HideNavBar
 import xcj.app.appsets.ui.model.page_state.UserProfilePageState
 import xcj.app.compose_share.components.BackActionTopBar
 
@@ -68,7 +68,7 @@ fun UserProfilePage(
     onSelectUserAvatarClick: (String) -> Unit,
     onModifyProfileConfirmClick: () -> Unit,
 ) {
-    HideNavBarWhenOnLaunch()
+    HideNavBar()
 
     val userInfoUseCase = LocalUseCaseOfUserInfo.current
     DisposableEffect(Unit) {

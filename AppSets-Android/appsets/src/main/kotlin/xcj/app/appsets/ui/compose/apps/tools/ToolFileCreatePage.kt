@@ -30,7 +30,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import xcj.app.appsets.ui.compose.custom_component.DesignBackButton
-import xcj.app.appsets.ui.compose.custom_component.HideNavBarWhenOnLaunch
+import xcj.app.appsets.ui.compose.custom_component.HideNavBar
 import xcj.app.appsets.ui.compose.quickstep.QuickStepContent
 import xcj.app.appsets.ui.compose.quickstep.TextQuickStepContent
 import xcj.app.compose_share.components.DesignTextField
@@ -41,7 +41,7 @@ fun ToolFileCreatePage(
     uri: Uri?,
     onBackClick: () -> Unit
 ) {
-    HideNavBarWhenOnLaunch()
+    HideNavBar()
     var content by remember {
         mutableStateOf("")
     }

@@ -47,7 +47,7 @@ import kotlinx.coroutines.launch
 import xcj.app.appsets.im.Bio
 import xcj.app.appsets.server.model.Application
 import xcj.app.appsets.ui.compose.custom_component.AnyImage
-import xcj.app.appsets.ui.compose.custom_component.ShowNavBarWhenOnLaunch
+import xcj.app.appsets.ui.compose.custom_component.ShowNavBar
 import xcj.app.appsets.ui.compose.theme.extShapes
 import xcj.app.appsets.ui.model.page_state.AppCenterPageState
 
@@ -58,7 +58,7 @@ fun AppsCenterPage(
     onBioClick: (Bio) -> Unit,
     onApplicationLongPress: (Application) -> Unit
 ) {
-    ShowNavBarWhenOnLaunch()
+    ShowNavBar()
     val hapticFeedback = LocalHapticFeedback.current
     val coroutineScope = rememberCoroutineScope()
 
@@ -104,11 +104,11 @@ fun AppsCenterPage(
         )
     ) {
         itemsIndexed(items = allApplications) { index, application ->
+            val animateFraction by iconAnimationStates[index]
             Column(
                 modifier = Modifier
                     .padding(horizontal = 12.dp, vertical = 8.dp)
                     .graphicsLayer {
-                        val animateFraction = iconAnimationStates[index].value
                         scaleX = animateFraction
                         scaleY = animateFraction
                         alpha = animateFraction

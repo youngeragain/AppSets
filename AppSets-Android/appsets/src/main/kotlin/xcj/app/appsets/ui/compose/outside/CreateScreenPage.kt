@@ -60,7 +60,7 @@ import androidx.compose.ui.unit.sp
 import xcj.app.appsets.ui.compose.LocalUseCaseOfScreenPost
 import xcj.app.appsets.ui.compose.content_selection.ContentSelectionTypes
 import xcj.app.appsets.ui.compose.custom_component.AnyImage
-import xcj.app.appsets.ui.compose.custom_component.HideNavBarWhenOnLaunch
+import xcj.app.appsets.ui.compose.custom_component.HideNavBar
 import xcj.app.appsets.ui.compose.quickstep.QuickStepContent
 import xcj.app.appsets.ui.model.ScreenInfoForCreate
 import xcj.app.appsets.ui.model.page_state.PostScreenPageState
@@ -88,7 +88,7 @@ fun CreateScreenPage(
     onVideoPlayClick: (UriProvider) -> Unit,
 ) {
 
-    HideNavBarWhenOnLaunch()
+    HideNavBar()
     val screenPostUseCase = LocalUseCaseOfScreenPost.current
     LaunchedEffect(Unit) {
         screenPostUseCase.updateWithQuickStepContentIfNeeded(quickStepContents)

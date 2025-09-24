@@ -1,6 +1,7 @@
 package xcj.app.starter.android.util
 
 import android.util.Log
+import xcj.app.starter.foundation.Identifiable
 import xcj.app.starter.foundation.purple_composer.IPurpleLogger
 import xcj.app.starter.foundation.purple_composer.LoggingState
 import xcj.app.starter.test.Purple
@@ -9,32 +10,33 @@ class PurpleLoggerForAndroid : IPurpleLogger {
 
     override var enable: Boolean = true
 
-    override fun addPurpleTagPrefix(): Boolean {
-        return true
+    override fun tagPrefix(): String? {
+        return Purple.TAG
     }
 
-    override fun withTag(tag: String): LoggingState {
-        val loggingState = if (addPurpleTagPrefix()) {
-            LoggingState("${Purple.TAG}|$tag")
-        } else {
-            LoggingState(tag)
-        }
+    private fun withTag(tag: String): LoggingState {
+        val loggingState = LoggingState(tag, tagPrefix())
         return loggingState
     }
 
-    override fun withMessage(message: Any?, loggingState: LoggingState) {
+    private fun withMessage(loggingState: LoggingState, message: Any?) {
         loggingState.messages.add(message)
     }
 
-    override fun withThrowable(throwable: Throwable, loggingState: LoggingState) {
+    private fun withThrowable(loggingState: LoggingState, throwable: Throwable?) {
         loggingState.throwable = throwable
     }
 
-    override fun logLevel(level: String, loggingState: LoggingState) {
+    private fun withModule(loggingState: LoggingState, moduleId: Identifiable<String>?) {
+        loggingState.moduleId = moduleId
+    }
+
+    override fun logWithLevel(level: String, loggingState: LoggingState) {
+        val tagOverride = loggingState.tagOverride
         when (level) {
             IPurpleLogger.LEVEL_DEBUG -> {
                 Log.d(
-                    loggingState.tag,
+                    tagOverride,
                     loggingState.messages.joinToString(", "),
                     loggingState.throwable
                 )
@@ -42,7 +44,7 @@ class PurpleLoggerForAndroid : IPurpleLogger {
 
             IPurpleLogger.LEVEL_ERROR -> {
                 Log.e(
-                    loggingState.tag,
+                    tagOverride,
                     loggingState.messages.joinToString(", "),
                     loggingState.throwable
                 )
@@ -50,7 +52,7 @@ class PurpleLoggerForAndroid : IPurpleLogger {
 
             IPurpleLogger.LEVEL_WARN -> {
                 Log.w(
-                    loggingState.tag,
+                    tagOverride,
                     loggingState.messages.joinToString(", "),
                     loggingState.throwable
                 )
@@ -58,7 +60,7 @@ class PurpleLoggerForAndroid : IPurpleLogger {
 
             IPurpleLogger.LEVEL_INFO -> {
                 Log.i(
-                    loggingState.tag,
+                    tagOverride,
                     loggingState.messages.joinToString(", "),
                     loggingState.throwable
                 )
@@ -66,7 +68,7 @@ class PurpleLoggerForAndroid : IPurpleLogger {
 
             IPurpleLogger.LEVEL_VERBOSE -> {
                 Log.v(
-                    loggingState.tag,
+                    tagOverride,
                     loggingState.messages.joinToString(", "),
                     loggingState.throwable
                 )
@@ -74,51 +76,79 @@ class PurpleLoggerForAndroid : IPurpleLogger {
         }
     }
 
-    fun d(tag: String, message: Any?, tr: Throwable? = null) {
+    fun d(
+        tag: String,
+        message: Any?,
+        tr: Throwable? = null,
+        logModuleInfoProvider: LogModuleInfoProvider? = null
+    ) {
         if (!enable) {
             return
         }
-        val loggingState = withTag(tag)
-        withMessage(message, loggingState)
-        tr?.let {
-            withThrowable(it, loggingState)
+        if (logModuleInfoProvider != null && !logModuleInfoProvider.enable) {
+            return
         }
-        logLevel(IPurpleLogger.LEVEL_DEBUG, loggingState)
+        val loggingState = withTag(tag)
+        withModule(loggingState, logModuleInfoProvider?.key())
+        withMessage(loggingState, message)
+        withThrowable(loggingState, tr)
+        logWithLevel(IPurpleLogger.LEVEL_DEBUG, loggingState)
     }
 
-    fun i(tag: String, message: Any?, tr: Throwable? = null) {
+    fun i(
+        tag: String,
+        message: Any?,
+        tr: Throwable? = null,
+        logModuleInfoProvider: LogModuleInfoProvider? = null
+    ) {
         if (!enable) {
             return
         }
-        val loggingState = withTag(tag)
-        withMessage(message, loggingState)
-        tr?.let {
-            withThrowable(it, loggingState)
+        if (logModuleInfoProvider != null && !logModuleInfoProvider.enable) {
+            return
         }
-        logLevel(IPurpleLogger.LEVEL_INFO, loggingState)
+        val loggingState = withTag(tag)
+        withModule(loggingState, logModuleInfoProvider?.key())
+        withMessage(loggingState, message)
+        withThrowable(loggingState, tr)
+        logWithLevel(IPurpleLogger.LEVEL_INFO, loggingState)
     }
 
-    fun e(tag: String, message: Any?, tr: Throwable? = null) {
+    fun e(
+        tag: String,
+        message: Any?,
+        tr: Throwable? = null,
+        logModuleInfoProvider: LogModuleInfoProvider? = null
+    ) {
         if (!enable) {
             return
         }
-        val loggingState = withTag(tag)
-        withMessage(message, loggingState)
-        tr?.let {
-            withThrowable(it, loggingState)
+        if (logModuleInfoProvider != null && !logModuleInfoProvider.enable) {
+            return
         }
-        logLevel(IPurpleLogger.LEVEL_ERROR, loggingState)
+        val loggingState = withTag(tag)
+        withModule(loggingState, logModuleInfoProvider?.key())
+        withMessage(loggingState, message)
+        withThrowable(loggingState, tr)
+        logWithLevel(IPurpleLogger.LEVEL_ERROR, loggingState)
     }
 
-    fun w(tag: String, message: Any?, tr: Throwable? = null) {
+    fun w(
+        tag: String,
+        message: Any?,
+        tr: Throwable? = null,
+        logModuleInfoProvider: LogModuleInfoProvider? = null
+    ) {
         if (!enable) {
             return
         }
-        val loggingState = withTag(tag)
-        withMessage(message, loggingState)
-        tr?.let {
-            withThrowable(it, loggingState)
+        if (logModuleInfoProvider != null && !logModuleInfoProvider.enable) {
+            return
         }
-        logLevel(IPurpleLogger.LEVEL_WARN, loggingState)
+        val loggingState = withTag(tag)
+        withModule(loggingState, logModuleInfoProvider?.key())
+        withMessage(loggingState, message)
+        withThrowable(loggingState, tr)
+        logWithLevel(IPurpleLogger.LEVEL_WARN, loggingState)
     }
 }

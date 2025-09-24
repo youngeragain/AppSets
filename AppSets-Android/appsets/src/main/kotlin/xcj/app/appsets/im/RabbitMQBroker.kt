@@ -132,12 +132,12 @@ class RabbitMQBroker : MessageBroker<RabbitMQBrokerConfig>,
 
     override fun handleRecovery(recoverable: Recoverable?) {
         PurpleLogger.current.d(TAG, "handleRecovery")
-        BrokerTest.onlineState.value = true
+        BrokerTest.imOnLineState.value = IMOnlineState.Online
     }
 
     override fun handleRecoveryStarted(recoverable: Recoverable?) {
         PurpleLogger.current.d(TAG, "handleRecoveryStarted")
-        BrokerTest.onlineState.value = false
+        BrokerTest.imOnLineState.value = IMOnlineState.Offline
     }
 
     private fun basicConnect() {
@@ -170,7 +170,7 @@ class RabbitMQBroker : MessageBroker<RabbitMQBrokerConfig>,
             connection = autoRecoveringConnection
             channel = autoRecoveringConnection.createChannel()
         }.onSuccess {
-            BrokerTest.onlineState.value = true
+            BrokerTest.imOnLineState.value = IMOnlineState.Online
             PurpleLogger.current.d(
                 TAG,
                 "basicConnect, final connection connected!"
@@ -342,7 +342,10 @@ class RabbitMQBroker : MessageBroker<RabbitMQBrokerConfig>,
     @OptIn(ExperimentalEncodingApi::class)
     override suspend fun sendMessage(imObj: ImObj, imMessage: ImMessage) {
         if (!checkConnection()) {
-            PurpleLogger.current.d(TAG, "sendMessage, broker connection not ready! return")
+            PurpleLogger.current.d(
+                TAG,
+                "sendMessage, broker connection not ready! return"
+            )
             imMessage.updateSending(
                 MessageSendInfo(
                     isSent = false,

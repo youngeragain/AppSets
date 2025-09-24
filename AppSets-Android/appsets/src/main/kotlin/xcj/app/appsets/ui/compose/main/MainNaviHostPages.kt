@@ -210,8 +210,9 @@ fun MainNaviHostPages(
                 val context = LocalContext.current
                 val appsUseCase = LocalUseCaseOfApps.current
                 val conversationUseCase = LocalUseCaseOfConversation.current
+                val appCenterPageState by appsUseCase.appCenterPageState
                 AppsCenterPage(
-                    appCenterPageState = appsUseCase.appCenterPageState.value,
+                    appCenterPageState = appCenterPageState,
                     onBioClick = { bio ->
                         onBioClick(context, navController, bio)
                     },
@@ -355,6 +356,8 @@ fun MainNaviHostPages(
                     val appCreationUseCase = LocalUseCaseOfAppCreation.current
                     val anyStateProvider = LocalVisibilityComposeStateProvider.current
                     val coroutineScope = rememberCoroutineScope()
+                    val createApplicationPageState by appCreationUseCase.createApplicationPageState
+
                     LaunchedEffect(key1 = true, block = {
                         appCreationUseCase.inflateApplication(application)
                     })
@@ -363,7 +366,7 @@ fun MainNaviHostPages(
                         createStep = createStep,
                         platform = platform,
                         versionInfo = versionInfo,
-                        createApplicationPageState = appCreationUseCase.createApplicationPageState.value,
+                        createApplicationPageState = createApplicationPageState,
                         onBackClick = navController::navigateUp,
                         onApplicationForCreateFiledChanged = appCreationUseCase::onApplicationForCreateFiledChanged,
                         onChoosePictureClick = { any, filedName, uriHolder ->
@@ -438,8 +441,9 @@ fun MainNaviHostPages(
                     val screenUseCase = LocalUseCaseOfScreen.current
                     val anyStateProvider = LocalVisibilityComposeStateProvider.current
                     val coroutineScope = rememberCoroutineScope()
+                    val screenInfoForCard by screenUseCase.currentScreenInfoForCard
                     ScreenDetailsPage(
-                        screenInfoForCard = screenUseCase.currentScreenInfoForCard.value,
+                        screenInfoForCard = screenInfoForCard,
                         onBackClick = navController::navigateUp,
                         onBioClick = { bio ->
                             onBioClick(context, navController, bio)
@@ -566,8 +570,9 @@ fun MainNaviHostPages(
                 ) {
                     val screenUseCase = LocalUseCaseOfScreen.current
                     val coroutineScope = rememberCoroutineScope()
+                    val screenInfoForCard by screenUseCase.currentScreenInfoForCard
                     ScreenEditPage(
-                        screenInfo = screenUseCase.currentScreenInfoForCard.value.screenInfo,
+                        screenInfo = screenInfoForCard.screenInfo,
                         onBackClick = navController::navigateUp,
                         onPublicStateChanged = { newIsPublic ->
                             coroutineScope.launch {
@@ -594,11 +599,13 @@ fun MainNaviHostPages(
                     val systemUseCase = LocalUseCaseOfSystem.current
                     val mediaAudioRecorderUseCase = LocalUseCaseOfMediaAudioRecorder.current
                     val mediaRemoteExoUseCase = LocalUseCaseOfMediaRemoteExo.current
-                    val recorderState = mediaAudioRecorderUseCase.recorderState
+                    val currentSessionState by conversationUseCase.currentSessionState
+                    val recorderState by mediaAudioRecorderUseCase.recorderState
+                    val isShowActions by conversationUseCase.isShowActions
                     ConversationOverviewPage(
-                        sessionState = conversationUseCase.currentSessionState.value,
-                        isShowActions = conversationUseCase.isShowActions.value,
-                        recorderState = recorderState.value,
+                        sessionState = currentSessionState,
+                        isShowActions = isShowActions,
+                        recorderState = recorderState,
                         onBioClick = { bio ->
                             onBioClick(context, navController, bio)
                         },
@@ -717,9 +724,11 @@ fun MainNaviHostPages(
                     val anyStateProvider = LocalVisibilityComposeStateProvider.current
                     val mediaAudioRecorderUseCase = LocalUseCaseOfMediaAudioRecorder.current
                     val mediaRemoteExoUseCase = LocalUseCaseOfMediaRemoteExo.current
+                    val sessionState by conversationUseCase.currentSessionState
+                    val recorderState by mediaAudioRecorderUseCase.recorderState
                     ConversationDetailsPage(
-                        sessionState = conversationUseCase.currentSessionState.value,
-                        recorderState = mediaAudioRecorderUseCase.recorderState.value,
+                        sessionState = sessionState,
+                        recorderState = recorderState,
                         onBackClick = navController::navigateUp,
                         onBioClick = { bio ->
                             onBioClick(context, navController, bio)
@@ -801,12 +810,15 @@ fun MainNaviHostPages(
                 val anyStateProvider = LocalVisibilityComposeStateProvider.current
                 val navigationUseCase = LocalUseCaseOfNavigation.current
                 val coroutineScope = rememberCoroutineScope()
+                val loginSignUpPageState by systemUseCase.loginSignUpPageState
+                val generatedQRCodeInfo by qrCodeUseCase.generatedQRCodeInfo
+
                 LaunchedEffect(true) {
                     systemUseCase.prepareLoginState()
                 }
                 LoginPage(
-                    loginSignUpPageState = systemUseCase.loginSignUpPageState.value,
-                    qrCodeInfo = qrCodeUseCase.generatedQRCodeInfo.value,
+                    loginSignUpPageState = loginSignUpPageState,
+                    generatedQRCodeInfo = generatedQRCodeInfo,
                     onBackClick = navController::navigateUp,
                     onLoggingFinish = {
                         val lastNavDestination = navigationUseCase.lastNavDestination
@@ -844,11 +856,12 @@ fun MainNaviHostPages(
                 val systemUseCase = LocalUseCaseOfSystem.current
                 val anyStateProvider = LocalVisibilityComposeStateProvider.current
                 val coroutineScope = rememberCoroutineScope()
+                val loginSignUpPageState by systemUseCase.loginSignUpPageState
                 LaunchedEffect(true) {
                     systemUseCase.prepareSignUpState()
                 }
                 SignUpPage(
-                    loginState = systemUseCase.loginSignUpPageState.value,
+                    loginState = loginSignUpPageState,
                     onBackClick = navController::navigateUp,
                     onSelectUserAvatarClick = { requestKey ->
                         showContentSelectionDialog(
@@ -1020,7 +1033,7 @@ fun MainNaviHostPages(
                     val groupInfoUseCase = LocalUseCaseOfGroupInfo.current
                     val conversationUseCase = LocalUseCaseOfConversation.current
                     val systemUseCase = LocalUseCaseOfSystem.current
-                    val groupInfoState = groupInfoUseCase.groupInfoPageState.value
+                    val groupInfoState by groupInfoUseCase.groupInfoPageState
                     GroupInfoPage(
                         groupInfoPageState = groupInfoState,
                         onBackClick = navController::navigateUp,
@@ -1056,8 +1069,9 @@ fun MainNaviHostPages(
                     val context = LocalContext.current
                     val systemUseCase = LocalUseCaseOfSystem.current
                     val anyStateProvider = LocalVisibilityComposeStateProvider.current
+                    val createGroupPageState by systemUseCase.createGroupPageState
                     CreateGroupPage(
-                        createGroupPageState = systemUseCase.createGroupPageState.value,
+                        createGroupPageState = createGroupPageState,
                         onBackClick = navController::navigateUp,
                         onConfirmAction = {
                             systemUseCase.createGroup(context)
@@ -1170,13 +1184,19 @@ fun MainNaviHostPages(
                     val systemUseCase = LocalUseCaseOfSystem.current
                     val screenUseCase = LocalUseCaseOfScreen.current
                     val coroutineScope = rememberCoroutineScope()
+                    val userProfilePageState by userInfoUseCase.currentUserInfoState
+                    val userApplications by userInfoUseCase.applicationsState
+                    val userFollowers by userInfoUseCase.followerUsersState
+                    val userFollowed by userInfoUseCase.followedUsersState
+                    val isLoginUserFollowedThisUser by userInfoUseCase.loggedUserFollowedState
+                    val userScreens = screenUseCase.userScreensContainer.screens
                     UserProfilePage(
-                        userProfilePageState = userInfoUseCase.currentUserInfoState.value,
-                        userApplications = userInfoUseCase.applicationsState.value,
-                        userFollowers = userInfoUseCase.followerUsersState.value,
-                        userFollowed = userInfoUseCase.followedUsersState.value,
-                        isLoginUserFollowedThisUser = userInfoUseCase.loggedUserFollowedState.value,
-                        userScreens = screenUseCase.userScreensContainer.screens,
+                        userProfilePageState = userProfilePageState,
+                        userApplications = userApplications,
+                        userFollowers = userFollowers,
+                        userFollowed = userFollowed,
+                        isLoginUserFollowedThisUser = isLoginUserFollowedThisUser,
+                        userScreens = userScreens,
                         onBackClick = navController::navigateUp,
                         onAddFriendClick = { userInfo ->
                             systemUseCase.requestAddFriend(
@@ -1434,7 +1454,7 @@ fun showPictureViewDialog(
             val rotation = remember {
                 mutableFloatStateOf(90f)
             }
-            val rotationAnimate = animateFloatAsState(
+            val rotationState by animateFloatAsState(
                 targetValue = rotation.floatValue,
                 label = "degree_animate",
                 animationSpec = tween()
@@ -1492,7 +1512,7 @@ fun showPictureViewDialog(
                         .clickable {
                             immerseContentState.hide()
                         }
-                        .rotate(rotationAnimate.value)
+                        .rotate(rotationState)
                         .padding(12.dp),
                     painter = painterResource(id = xcj.app.compose_share.R.drawable.ic_round_close_24),
                     contentDescription = "close",

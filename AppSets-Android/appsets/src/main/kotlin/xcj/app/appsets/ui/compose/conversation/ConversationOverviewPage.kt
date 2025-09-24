@@ -76,7 +76,7 @@ import xcj.app.appsets.server.model.GroupInfo
 import xcj.app.appsets.server.model.UserInfo
 import xcj.app.appsets.ui.compose.LocalUseCaseOfConversation
 import xcj.app.appsets.ui.compose.custom_component.AnyImage
-import xcj.app.appsets.ui.compose.custom_component.ShowNavBarWhenOnLaunch
+import xcj.app.appsets.ui.compose.custom_component.ShowNavBar
 import xcj.app.appsets.usecase.ConversationUseCase
 import xcj.app.appsets.usecase.SessionState
 import xcj.app.appsets.util.DesignRecorder
@@ -107,7 +107,7 @@ fun ConversationOverviewPage(
     onMoreClick: ((ImObj) -> Unit),
     onLandscapeModeEndBackClick: () -> Unit,
 ) {
-    ShowNavBarWhenOnLaunch()
+    ShowNavBar()
     if (LocalConfiguration.current.orientation == Configuration.ORIENTATION_PORTRAIT) {
         ConversationOverviewPortrait(
             isShowActions = isShowActions,

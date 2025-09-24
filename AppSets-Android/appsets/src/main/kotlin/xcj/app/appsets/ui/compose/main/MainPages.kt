@@ -29,7 +29,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -46,6 +45,7 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
@@ -57,7 +57,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.net.toUri
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavDirections
@@ -97,9 +96,10 @@ import xcj.app.appsets.ui.compose.quickstep.QuickStepContentHandlerRegistry
 import xcj.app.appsets.ui.compose.settings.LiteSettingsSheetContent
 import xcj.app.appsets.ui.model.TabAction
 import xcj.app.appsets.ui.model.TabItem
-import xcj.app.appsets.ui.model.state.NowSpaceObject
-import xcj.app.appsets.ui.model.state.NowSpaceObject.NewImMessage
+import xcj.app.appsets.ui.model.state.NowSpaceContent
+import xcj.app.appsets.ui.model.state.NowSpaceContent.NewImMessage
 import xcj.app.appsets.ui.viewmodel.MainViewModel
+import xcj.app.appsets.usecase.AppUpdateState
 import xcj.app.appsets.usecase.ConversationUseCase
 import xcj.app.appsets.usecase.ScreenUseCase
 import xcj.app.appsets.usecase.SessionState
@@ -111,7 +111,6 @@ import xcj.app.compose_share.components.ProgressiveVisibilityComposeState
 import xcj.app.compose_share.components.VisibilityComposeState
 import xcj.app.compose_share.ui.viewmodel.VisibilityComposeStateViewModel.Companion.bottomSheetState
 import xcj.app.compose_share.ui.viewmodel.VisibilityComposeStateViewModel.Companion.immerseContentState
-import xcj.app.starter.android.ktx.startWithHttpSchema
 import xcj.app.starter.android.util.PurpleLogger
 
 private const val TAG = "MainPages"
@@ -181,63 +180,34 @@ fun MainPages() {
 
 @Composable
 fun MainBox(navController: NavHostController) {
-    val context = LocalContext.current
-    val systemUseCase = LocalUseCaseOfSystem.current
-    val updateCheckResult by systemUseCase.newVersionState
     val hazeState = rememberHazeState()
-    val screenUseCase = LocalUseCaseOfScreen.current
-    val conversationUseCase = LocalUseCaseOfConversation.current
-    val coroutineScope = rememberCoroutineScope()
     Box(
-        modifier = Modifier
-            .mainScaffoldHandle(),
+        modifier = Modifier.fillMaxSize()
     ) {
-        Column(
-            modifier = Modifier.fillMaxSize()
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .mainScaffoldHandle(),
         ) {
-            NewVersionSpace(
-                updateCheckResult = updateCheckResult,
-                onDismissClick = {
-                    systemUseCase.dismissNewVersionTips()
-                },
-                onDownloadClick = {
-                    if (!updateCheckResult?.downloadUrl.startWithHttpSchema()) {
-                        return@NewVersionSpace
-                    }
-                    val uri =
-                        updateCheckResult?.downloadUrl?.toUri()
-                    if (uri == null) {
-                        return@NewVersionSpace
-                    }
-                    navigateToExternalWeb(context, uri)
-                }
-            )
-            NowSpace(navController)
+
             MainNaviHostPages(
                 navController = navController,
                 startPageRoute = PageRouteNames.AppsCenterPage,
                 hazeState = hazeState
             )
-        }
 
-        NavigationBarContainer(
-            modifier = Modifier
-                .fillMaxWidth()
-                .align(Alignment.BottomCenter),
-            navController = navController,
-            hazeState = hazeState,
-            onTabClick = { tab, tabAction ->
-                handleTabClick(
-                    context,
-                    coroutineScope,
-                    tab,
-                    tabAction,
-                    navController,
-                    screenUseCase,
-                    conversationUseCase
-                )
-            },
-        )
+            NavigationBarContainer(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .align(Alignment.BottomCenter),
+                navController = navController,
+                hazeState = hazeState
+            )
+
+            NowSpace(navController)
+
+            NewVersionSpace()
+        }
 
         ImmerseContentContainer()
 
@@ -277,13 +247,16 @@ fun OnScaffoldLaunch(navController: NavController) {
     val navigationUseCase = LocalUseCaseOfNavigation.current
     val anyStateProvider = LocalVisibilityComposeStateProvider.current
     val localQuickStepContentHandlerRegistry = LocalQuickStepContentHandlerRegistry.current
-
+    val appUpdateState by systemUseCase.appUpdateState
     LaunchedEffect(Unit) {
         anyStateProvider.bottomSheetState().markComposeAvailableState(true)
     }
-    LaunchedEffect(key1 = systemUseCase.newVersionState, block = {
-        if (systemUseCase.newVersionState.value?.forceUpdate == true) {
-            navigationUseCase.barVisible.value = false
+    LaunchedEffect(key1 = appUpdateState, block = {
+        val updateState = appUpdateState
+        if (updateState is AppUpdateState.Checked) {
+            if (updateState.updateCheckResult.forceUpdate == true) {
+                navigationUseCase.barVisible.value = false
+            }
         }
     })
 
@@ -380,26 +353,48 @@ fun handleTabClick(
 fun NavigationBarContainer(
     modifier: Modifier = Modifier,
     navController: NavHostController,
-    hazeState: HazeState,
-    onTabClick: (TabItem, TabAction?) -> Unit,
+    hazeState: HazeState
 ) {
     val context = LocalContext.current
     val navigationUseCase = LocalUseCaseOfNavigation.current
     val qrCodeUseCase = LocalUseCaseOfQRCode.current
     val systemUseCase = LocalUseCaseOfSystem.current
     val anyStateProvider = LocalVisibilityComposeStateProvider.current
-    val enable = systemUseCase.newVersionState.value?.forceUpdate != true
-    val inSearchModel = navController.currentDestination?.route == PageRouteNames.SearchPage
     val searchUseCase = LocalUseCaseOfSearch.current
+    val screenUseCase = LocalUseCaseOfScreen.current
+    val conversationUseCase = LocalUseCaseOfConversation.current
+    val appUpdateState by systemUseCase.appUpdateState
     val coroutineScope = rememberCoroutineScope()
+    val inSearchModel by rememberUpdatedState(
+        navController.currentDestination?.route == PageRouteNames.SearchPage
+    )
+    val isBarEnable by remember {
+        derivedStateOf {
+            (appUpdateState as? AppUpdateState.Checked)
+                ?.updateCheckResult
+                ?.forceUpdate != true
+        }
+    }
+    val isBarVisible by navigationUseCase.barVisible
+    val tabItems by navigationUseCase.tabItems
     NavigationBar(
         modifier = modifier,
         hazeState = hazeState,
-        visible = navigationUseCase.barVisible.value,
-        enable = enable,
+        hostVisible = isBarVisible,
+        enable = isBarEnable,
         inSearchModel = inSearchModel,
-        tabItems = navigationUseCase.tabItems.value,
-        onTabClick = onTabClick,
+        tabItems = tabItems,
+        onTabClick = { tab, tabAction ->
+            handleTabClick(
+                context,
+                coroutineScope,
+                tab,
+                tabAction,
+                navController,
+                screenUseCase,
+                conversationUseCase
+            )
+        },
         onSearchBarClick = {
             navController.navigate(PageRouteNames.SearchPage)
         },
@@ -411,8 +406,9 @@ fun NavigationBarContainer(
         },
         onBioClick = {
             anyStateProvider.bottomSheetState().show {
+                val generatedQRCodeInfo by qrCodeUseCase.generatedQRCodeInfo
                 LiteSettingsSheetContent(
-                    qrCodeInfo = qrCodeUseCase.generatedQRCodeInfo.value,
+                    qrCodeInfo = generatedQRCodeInfo,
                     onBioClick = {
                         val bio = LocalAccountManager.userInfo
                         onBioClick(context, navController, bio)
@@ -446,58 +442,52 @@ fun NavigationBarContainer(
 fun NowSpace(navController: NavController) {
     val nowSpaceContentUseCase = LocalUseCaseOfNowSpaceContent.current
     val conversationUseCase = LocalUseCaseOfConversation.current
-    val content = nowSpaceContentUseCase.content.value
-
+    val nowSpaceContent by nowSpaceContentUseCase.content
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .animateContentSize()
     ) {
-
-        when (content) {
-            is NewImMessage -> {
-
-                val messageColorBarVisibility by remember {
-                    derivedStateOf {
-                        val currentSession =
-                            (conversationUseCase.currentSessionState.value as? SessionState.Normal)?.session
-                        (navController.currentDestination?.route != PageRouteNames.ConversationDetailsPage ||
-                                currentSession?.id != content.session.id)
-                    }
+        if (nowSpaceContent is NowSpaceContent.NewImMessage) {
+            val content = nowSpaceContent as NowSpaceContent.NewImMessage
+            val currentSessionState by conversationUseCase.currentSessionState
+            val messageColorBarVisible by remember {
+                derivedStateOf {
+                    val currentSession =
+                        (currentSessionState as? SessionState.Normal)?.session
+                    (navController.currentDestination?.route != PageRouteNames.ConversationDetailsPage ||
+                            currentSession?.id != content.session.id)
                 }
-                if (messageColorBarVisibility) {
-                    MessageQuickAccessBar(
-                        modifier = Modifier.clickable {
-                            nowSpaceContentUseCase.removeContent()
-                            when (content.imMessage) {
-                                is SystemMessage -> {
-                                    conversationUseCase.updateCurrentTab(ConversationUseCase.SYSTEM)
-                                    navController.navigate(PageRouteNames.ConversationOverviewPage) {
-                                        popUpTo(PageRouteNames.ConversationOverviewPage) {
-                                            inclusive = true
-                                        }
-                                    }
-                                }
-
-                                else -> {
-                                    conversationUseCase.updateCurrentSessionBySession(content.session)
-                                    navController.navigate(PageRouteNames.ConversationDetailsPage) {
-                                        popUpTo(PageRouteNames.ConversationDetailsPage) {
-                                            inclusive = true
-                                        }
+            }
+            if (messageColorBarVisible) {
+                MessageQuickAccessBar(
+                    modifier = Modifier.clickable {
+                        nowSpaceContentUseCase.removeContent()
+                        when (content.imMessage) {
+                            is SystemMessage -> {
+                                conversationUseCase.updateCurrentTab(ConversationUseCase.SYSTEM)
+                                navController.navigate(PageRouteNames.ConversationOverviewPage) {
+                                    popUpTo(PageRouteNames.ConversationOverviewPage) {
+                                        inclusive = true
                                     }
                                 }
                             }
-                        },
-                        content
-                    )
-                }
-            }
 
-            NowSpaceObject.NULL -> {
-                Spacer(modifier = Modifier.height(0.dp))
+                            else -> {
+                                conversationUseCase.updateCurrentSessionBySession(content.session)
+                                navController.navigate(PageRouteNames.ConversationDetailsPage) {
+                                    popUpTo(PageRouteNames.ConversationDetailsPage) {
+                                        inclusive = true
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    newImMessage = content
+                )
             }
         }
+
     }
 }
 

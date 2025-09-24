@@ -5,7 +5,10 @@ interface Provider<K, T> {
     fun provide(): T
 }
 
-class FinalProvider<K, T>(private val key: Identifiable<K>, private val t: T) : Provider<K, T> {
+class FinalProvider<K, T>(
+    private val key: Identifiable<K>,
+    private val t: T
+) : Provider<K, T> {
     override fun key(): Identifiable<K> {
         return key
     }

@@ -20,7 +20,7 @@ import xcj.app.appsets.account.LocalAccountManager
 import xcj.app.appsets.ui.compose.LocalPageRouteNameNeedLoggedProvider
 import xcj.app.appsets.ui.compose.PageRouteNames
 import xcj.app.appsets.ui.compose.custom_component.DesignBackButton
-import xcj.app.appsets.ui.compose.custom_component.HideNavBarWhenOnLaunch
+import xcj.app.appsets.ui.compose.custom_component.HideNavBar
 
 @Composable
 fun LoginInterceptorPage(
@@ -33,7 +33,7 @@ fun LoginInterceptorPage(
             navBackStackEntry.destination.route
         )
     ) {
-        HideNavBarWhenOnLaunch()
+        HideNavBar()
         Box(modifier = Modifier.fillMaxSize()) {
             val annotatedString = AnnotatedString(
                 stringResource(xcj.app.appsets.R.string.requires_login_to_appsets)

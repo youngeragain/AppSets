@@ -72,7 +72,7 @@ import xcj.app.appsets.server.model.ScreenshotInfo
 import xcj.app.appsets.server.model.VersionInfo
 import xcj.app.appsets.ui.compose.custom_component.AnyImage
 import xcj.app.appsets.ui.compose.custom_component.DesignBackButton
-import xcj.app.appsets.ui.compose.custom_component.HideNavBarWhenOnLaunch
+import xcj.app.appsets.ui.compose.custom_component.HideNavBar
 import xcj.app.appsets.ui.compose.theme.ExtraLarge2
 import xcj.app.compose_share.components.BackActionTopBar
 import xcj.app.compose_share.components.DesignHDivider
@@ -92,7 +92,7 @@ fun AppDetailsPage(
     onJoinToChatClick: (Application) -> Unit,
 ) {
 
-    HideNavBarWhenOnLaunch()
+    HideNavBar()
     if (application == null) {
         Box(modifier = Modifier.fillMaxSize()) {
             Text(

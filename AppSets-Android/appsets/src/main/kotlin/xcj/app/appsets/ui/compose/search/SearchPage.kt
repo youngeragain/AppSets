@@ -4,6 +4,7 @@ package xcj.app.appsets.ui.compose.search
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -19,8 +20,6 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
@@ -81,12 +80,8 @@ import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import xcj.app.appsets.im.Bio
-import xcj.app.appsets.server.model.Application
 import xcj.app.appsets.server.model.GroupInfo
 import xcj.app.appsets.server.model.ScreenInfo
 import xcj.app.appsets.server.model.ScreenMediaFileUrl
@@ -94,7 +89,7 @@ import xcj.app.appsets.server.model.UserInfo
 import xcj.app.appsets.ui.compose.LocalUseCaseOfSearch
 import xcj.app.appsets.ui.compose.PageRouteNames
 import xcj.app.appsets.ui.compose.custom_component.AnyImage
-import xcj.app.appsets.ui.compose.custom_component.ShowNavBarWhenOnLaunch
+import xcj.app.appsets.ui.compose.custom_component.ShowNavBar
 import xcj.app.appsets.ui.compose.outside.ScreenComponent
 import xcj.app.appsets.ui.compose.theme.extShapes
 import xcj.app.appsets.ui.model.page_state.SearchPageState
@@ -107,7 +102,7 @@ fun SearchPage(
     onScreenMediaClick: (ScreenMediaFileUrl, List<ScreenMediaFileUrl>) -> Unit,
 ) {
 
-    ShowNavBarWhenOnLaunch()
+    ShowNavBar()
     val coroutineScope = rememberCoroutineScope()
     val searchUseCase = LocalUseCaseOfSearch.current
     val searchState by searchUseCase.searchPageState
@@ -141,7 +136,6 @@ fun SearchInputBar(
     val requester = remember {
         FocusRequester()
     }
-    val coroutineScope = rememberCoroutineScope()
 
     LaunchedEffect(key1 = true, block = {
         val searchKeywords = searchPageState.keywords
@@ -149,57 +143,40 @@ fun SearchInputBar(
             inputContent = inputContent.copy(searchKeywords, TextRange(searchKeywords.length))
         }
         if (searchKeywords.isNullOrEmpty()) {
-            coroutineScope.launch(Dispatchers.IO) {
-                delay(450)
-                withContext(Dispatchers.Main) {
-                    requester.requestFocus()
-                }
-            }
+            requester.requestFocus()
         }
     })
 
-    val corner = sizeOfSearchBar.height
-        .div(2)
-        .toFloat()
+    val corner = sizeOfSearchBar.height.div(2).toFloat()
     val cornerShape by rememberUpdatedState(
         RoundedCornerShape(
-            topStart = corner,
-            topEnd = corner,
-            bottomStart = corner,
-            bottomEnd = corner
+            topStart = corner, topEnd = corner, bottomStart = corner, bottomEnd = corner
         )
     )
     DesignTextField(
-        value = inputContent.text,
-        onValueChange = {
+        value = inputContent.text, onValueChange = {
             inputContent = TextFieldValue(it)
             onInputContent(it)
-        },
-        modifier = Modifier
+        }, modifier = Modifier
             .fillMaxWidth()
             .focusRequester(requester)
             .border(
-                border = searchBorderStroke(searchPageState),
-                shape = cornerShape
+                border = searchBorderStroke(searchPageState), shape = cornerShape
             )
-            .onSizeChanged(onSearchBarSizeChanged),
-        leadingIcon = {
+            .clip(cornerShape)
+            .onSizeChanged(onSearchBarSizeChanged), leadingIcon = {
             Icon(
                 modifier = Modifier
                     .clip(CircleShape)
                     .clickable(onClick = {
-                        coroutineScope.launch {
-                            keyboardController?.hide()
-                            delay(350)
-                            onBackClick()
-                        }
+                        keyboardController?.hide()
+                        onBackClick()
                     })
                     .padding(4.dp),
                 painter = painterResource(id = xcj.app.compose_share.R.drawable.ic_arrow_back_24),
                 contentDescription = stringResource(id = xcj.app.appsets.R.string.return_)
             )
-        },
-        trailingIcon = {
+        }, trailingIcon = {
             Icon(
                 modifier = Modifier
                     .clip(CircleShape)
@@ -208,20 +185,13 @@ fun SearchInputBar(
                     }
                     .padding(4.dp),
                 painter = painterResource(id = xcj.app.compose_share.R.drawable.ic_round_search_24),
-                contentDescription = stringResource(xcj.app.appsets.R.string.search)
-            )
-        },
-        placeholder = {
+                contentDescription = stringResource(xcj.app.appsets.R.string.search))
+        }, placeholder = {
             Text(text = stringResource(xcj.app.appsets.R.string.search))
-        },
-        maxLines = 1,
-        shape = cornerShape,
-        colors = TextFieldDefaults.colors(
-            unfocusedContainerColor = Color.Transparent,
-            focusedContainerColor = Color.Transparent,
+        }, maxLines = 1, shape = cornerShape, colors = TextFieldDefaults.colors(
             unfocusedIndicatorColor = Color.Transparent,
             focusedIndicatorColor = Color.Transparent,
-            focusedPlaceholderColor = Color.Companion.Transparent,
+            focusedPlaceholderColor = Color.Transparent,
             unfocusedPlaceholderColor = Color.Transparent
         )
     )
@@ -266,61 +236,90 @@ fun SearchPageResults(
     onScreenMediaClick: (ScreenMediaFileUrl, List<ScreenMediaFileUrl>) -> Unit,
 ) {
     AnimatedContent(
-        targetState = searchPageState,
-        contentAlignment = Alignment.TopCenter,
-        transitionSpec = {
-            (fadeIn(animationSpec = tween(450)) +
-                    scaleIn(initialScale = 0.92f, animationSpec = tween(450)))
-                .togetherWith(
-                    fadeOut(animationSpec = tween(120)) + scaleOut(
-                        targetScale = 1.12f,
-                        animationSpec = tween(
-                            120
-                        )
+        targetState = searchPageState, contentAlignment = Alignment.TopCenter, transitionSpec = {
+            if (searchPageState is SearchPageState.None) {
+                fadeIn(
+                    animationSpec = snap()
+                ).togetherWith(
+                    fadeOut(
+                        animationSpec = snap()
                     )
                 )
-        }
-    ) { targetSearchState ->
+            } else {
+                (fadeIn(
+                    animationSpec = tween(450)
+                ) + scaleIn(
+                    initialScale = 0.92f,
+                    animationSpec = tween(450)
+                )).togetherWith(
+                    (fadeOut(
+                        animationSpec = tween(120)
+                    ) + scaleOut(
+                        targetScale = 1.12f,
+                        animationSpec = tween(120)
+                    ))
+                )
+            }
+
+        }) { targetSearchState ->
         Box(
-            modifier = Modifier
-                .fillMaxSize()
+            modifier = Modifier.fillMaxSize()
         ) {
             when (targetSearchState) {
                 is SearchPageState.None -> {
-                    Text(
-                        text = stringResource(xcj.app.appsets.R.string.no_content),
-                        modifier = Modifier.align(Alignment.Center)
-                    )
+
                 }
 
                 is SearchPageState.Searching -> {
                     Column(
-                        modifier = Modifier.align(Alignment.Center),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                        modifier = Modifier.align(Alignment.Center)
                     ) {
-                        targetSearchState.tipsIntRes?.let {
-                            Text(text = stringResource(id = it))
+                        Text(
+                            text = stringResource(id = targetSearchState.tipsIntRes)
+                        )
+                        targetSearchState.subTipsIntRes?.let {
+                            Text(
+                                text = stringResource(id = it),
+                                fontSize = 12.sp
+                            )
                         }
-
                     }
                 }
 
                 is SearchPageState.SearchPageFailed -> {
                     targetSearchState.tipsIntRes?.let {
-                        Text(
-                            text = stringResource(id = it),
+                        Column(
                             modifier = Modifier.align(Alignment.Center)
-                        )
+                        ) {
+                            Text(
+                                text = stringResource(id = targetSearchState.tipsIntRes)
+                            )
+                            targetSearchState.subTipsIntRes?.let {
+                                Text(
+                                    text = stringResource(id = it),
+                                    fontSize = 12.sp
+                                )
+                            }
+                        }
                     }
                 }
 
                 is SearchPageState.SearchPageSuccess -> {
                     if (targetSearchState.results.isEmpty()) {
-                        targetSearchState.tipsIntRes?.let {
-                            Text(
-                                text = stringResource(id = it),
-                                modifier = Modifier.align(Alignment.Center)
-                            )
+                        Column(
+                            modifier = Modifier.align(Alignment.Center)
+                        ) {
+                            targetSearchState.tipsIntRes?.let {
+                                Text(
+                                    text = stringResource(id = it)
+                                )
+                            }
+                            targetSearchState.subTipsIntRes?.let {
+                                Text(
+                                    text = stringResource(id = it),
+                                    fontSize = 12.sp
+                                )
+                            }
                         }
                     } else {
                         SearchSuccessPages(
@@ -353,29 +352,25 @@ fun SearchSuccessPages(
 
     Box {
         HorizontalPager(
-            state = pagerState,
-            verticalAlignment = Alignment.Top
+            state = pagerState, verticalAlignment = Alignment.Top
         ) { index ->
             val searchResult = searchSuccess.results[index]
             when (searchResult) {
                 is SearchResult.SearchedApplications -> {
                     SearchedApplicationsPage(
-                        searchedApplications = searchResult,
-                        onBioClick = onBioClick
+                        searchedApplications = searchResult, onBioClick = onBioClick
                     )
                 }
 
                 is SearchResult.SearchedUsers -> {
                     SearchedUsersPage(
-                        searchedUsers = searchResult,
-                        onBioClick = onBioClick
+                        searchedUsers = searchResult, onBioClick = onBioClick
                     )
                 }
 
                 is SearchResult.SearchedGroups -> {
                     SearchedGroupsPage(
-                        searchedGroups = searchResult,
-                        onBioClick = onBioClick
+                        searchedGroups = searchResult, onBioClick = onBioClick
                     )
                 }
 
@@ -409,13 +404,10 @@ fun SearchSuccessPages(
                 .height(WindowInsets.systemBars.asPaddingValues().calculateTopPadding() + 52.dp)
                 .background(
                     brush = Brush.verticalGradient(
-                        colors = gradientColors,
-                        startY = 0f,
-                        endY = Float.POSITIVE_INFINITY
+                        colors = gradientColors, startY = 0f, endY = Float.POSITIVE_INFINITY
                     )
                 ),
-        ) {
-        }
+        ) {}
         SingleChoiceSegmentedButtonRow(
             modifier = Modifier
                 .align(Alignment.TopCenter)
@@ -426,10 +418,9 @@ fun SearchSuccessPages(
 
             searchSuccess.results.forEachIndexed { index, selectionType ->
                 SegmentedButton(
-                    modifier = Modifier
-                        .onSizeChanged {
-                            buttonSize = it
-                        },
+                    modifier = Modifier.onSizeChanged {
+                        buttonSize = it
+                    },
                     colors = SegmentedButtonDefaults.colors()
                         .copy(inactiveContainerColor = MaterialTheme.colorScheme.surface),
                     selected = index == pagerState.currentPage,
@@ -439,11 +430,9 @@ fun SearchSuccessPages(
                         }
                     },
                     shape = SegmentedButtonDefaults.itemShape(
-                        index = index,
-                        count = searchSuccess.results.size
+                        index = index, count = searchSuccess.results.size
                     ),
-                    icon = {}
-                ) {
+                    icon = {}) {
                     val text = when (selectionType) {
                         is SearchResult.SearchedApplications -> {
                             stringResource(xcj.app.appsets.R.string.application)
@@ -475,8 +464,7 @@ fun SearchSuccessPages(
 @Composable
 fun SearchedGoodsListPage(searchedGoodsList: SearchResult.SearchedGoods) {
     LazyColumn(
-        modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(
+        modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(
             top = 52.dp + WindowInsets.systemBars.asPaddingValues().calculateTopPadding(),
             bottom = 68.dp
         )
@@ -494,8 +482,7 @@ fun SearchedScreensPage(
     onScreenMediaClick: (ScreenMediaFileUrl, List<ScreenMediaFileUrl>) -> Unit,
 ) {
     LazyColumn(
-        modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(
+        modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(
             top = 52.dp + WindowInsets.systemBars.asPaddingValues().calculateTopPadding(),
             bottom = 68.dp
         )
@@ -514,8 +501,7 @@ fun SearchedScreensPage(
 @Composable
 fun SearchedGroupsPage(searchedGroups: SearchResult.SearchedGroups, onBioClick: (Bio) -> Unit) {
     LazyColumn(
-        modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(
+        modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(
             top = 52.dp + WindowInsets.systemBars.asPaddingValues().calculateTopPadding(),
             bottom = 68.dp
         )
@@ -524,8 +510,7 @@ fun SearchedGroupsPage(searchedGroups: SearchResult.SearchedGroups, onBioClick: 
             SearchedGroupComponent(
                 modifier = Modifier.clickable {
                     onBioClick.invoke(groupInfo)
-                },
-                groupInfo = groupInfo
+                }, groupInfo = groupInfo
             )
         }
     }
@@ -537,8 +522,7 @@ fun SearchedUsersPage(
     onBioClick: (Bio) -> Unit,
 ) {
     LazyColumn(
-        modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(
+        modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(
             top = 52.dp + WindowInsets.systemBars.asPaddingValues().calculateTopPadding(),
             bottom = 68.dp
         )
@@ -547,8 +531,7 @@ fun SearchedUsersPage(
             SearchedUserComponent(
                 modifier = Modifier.clickable {
                     onBioClick.invoke(userInfo)
-                },
-                userInfo = userInfo
+                }, userInfo = userInfo
             )
         }
     }
@@ -570,8 +553,7 @@ fun SearchedApplicationsPage(
     ) {
         itemsIndexed(items = searchedApplications.applications) { index, application ->
             Column(
-                modifier = Modifier
-                    .padding(horizontal = 12.dp, vertical = 8.dp),
+                modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
@@ -580,8 +562,7 @@ fun SearchedApplicationsPage(
                         .size(68.dp)
                         .clip(MaterialTheme.shapes.extShapes.large)
                         .background(
-                            MaterialTheme.colorScheme.outline,
-                            MaterialTheme.shapes.extShapes.large
+                            MaterialTheme.colorScheme.outline, MaterialTheme.shapes.extShapes.large
                         )
                         .border(
                             1.dp,
@@ -591,9 +572,7 @@ fun SearchedApplicationsPage(
                         .clickable(
                             onClick = {
                                 onBioClick(application)
-                            }
-                        ),
-                    model = application.bioUrl
+                            }), model = application.bioUrl
                 )
                 Text(
                     text = application.name ?: "",
@@ -601,8 +580,7 @@ fun SearchedApplicationsPage(
                     overflow = TextOverflow.Ellipsis,
                     textAlign = TextAlign.Center,
                     fontSize = 12.sp,
-                    modifier = Modifier
-                        .widthIn(max = 82.dp)
+                    modifier = Modifier.widthIn(max = 82.dp)
                 )
             }
         }
@@ -622,11 +600,9 @@ fun SearchedUserComponent(modifier: Modifier, userInfo: UserInfo) {
             modifier = Modifier
                 .size(48.dp)
                 .background(
-                    color = MaterialTheme.colorScheme.outline,
-                    shape = MaterialTheme.shapes.large
+                    color = MaterialTheme.colorScheme.outline, shape = MaterialTheme.shapes.large
                 )
-                .clip(MaterialTheme.shapes.large),
-            model = userInfo.bioUrl
+                .clip(MaterialTheme.shapes.large), model = userInfo.bioUrl
         )
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(text = userInfo.name ?: "")
@@ -647,11 +623,9 @@ fun SearchedGroupComponent(modifier: Modifier, groupInfo: GroupInfo) {
             modifier = Modifier
                 .size(48.dp)
                 .background(
-                    color = MaterialTheme.colorScheme.outline,
-                    shape = MaterialTheme.shapes.large
+                    color = MaterialTheme.colorScheme.outline, shape = MaterialTheme.shapes.large
                 )
-                .clip(MaterialTheme.shapes.large),
-            model = groupInfo.bioUrl
+                .clip(MaterialTheme.shapes.large), model = groupInfo.bioUrl
         )
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(text = groupInfo.name ?: "")
@@ -673,8 +647,7 @@ fun SearchedScreenComponent(
             .clickable {
                 onBioClick(screenInfo)
             }
-            .padding(12.dp)
-    ) {
+            .padding(12.dp)) {
         ScreenComponent(
             currentDestinationRoute = PageRouteNames.SearchPage,
             screenInfo = screenInfo,
@@ -683,51 +656,4 @@ fun SearchedScreenComponent(
             pictureInteractionFlowCollector = { a, b -> },
         )
     }
-}
-
-@OptIn(ExperimentalLayoutApi::class)
-@Composable
-fun SearchedApplicationComponent(
-    modifier: Modifier,
-    applications: List<Application>,
-    onBioClick: (Bio) -> Unit,
-) {
-    FlowRow(horizontalArrangement = Arrangement.spacedBy(24.dp)) {
-        applications.forEach { application ->
-            Column(
-                modifier = modifier.padding(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                AnyImage(
-                    modifier = Modifier
-                        .size(68.dp)
-                        .clip(MaterialTheme.shapes.extShapes.large)
-                        .background(
-                            MaterialTheme.colorScheme.outline,
-                            MaterialTheme.shapes.extShapes.large
-                        )
-                        .border(
-                            1.dp,
-                            MaterialTheme.colorScheme.outline,
-                            MaterialTheme.shapes.extShapes.large
-                        )
-                        .clickable {
-                            onBioClick(application)
-                        },
-                    model = application.bioUrl
-                )
-                Text(
-                    text = application.name ?: "",
-                    fontSize = 12.sp,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier
-                        .widthIn(max = 68.dp)
-                        .align(Alignment.CenterHorizontally)
-                )
-            }
-        }
-
-    }
-
 }

@@ -1,7 +1,6 @@
 package xcj.app.appsets.ui.model
-import androidx.compose.material3.MaterialTheme
+
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.graphics.Color
 import xcj.app.appsets.ui.compose.LocalUseCaseOfMediaRemoteExo
 import xcj.app.appsets.ui.model.state.SpotLight
 import java.util.UUID
@@ -9,9 +8,14 @@ import java.util.UUID
 sealed interface TabAction {
     val action: String?
     val icon: Int
-    val isVisible: Boolean
     val actionId: UUID
     val route: String?
+    val isVisible: Boolean
+
+    @Composable
+    fun isShow(): Boolean {
+        return isVisible
+    }
 
     data class SampleTabAction(
         override val action: String? = null,
@@ -37,28 +41,14 @@ sealed interface TabItem {
     val name: Int?
     val description: String?
     val isSelect: Boolean
-    val actions: MutableList<TabAction>?
     val tabId: UUID
+    val actions: MutableList<TabAction>?
+    var isVisible: Boolean
 
-    val isVisible: Boolean
-        @Composable get
-
-    val transFormTextColor: Color
-        @Composable get() {
-            return if (isSelect) {
-                MaterialTheme.colorScheme.primary
-            } else {
-                MaterialTheme.colorScheme.outlineVariant
-            }
-        }
-    val transFormIconTintColor: Color
-        @Composable get() {
-            return if (isSelect) {
-                MaterialTheme.colorScheme.primary
-            } else {
-                MaterialTheme.colorScheme.outlineVariant
-            }
-        }
+    @Composable
+    fun isShow(): Boolean {
+        return isVisible
+    }
 
     data class SampleTabItem(
         override val routeName: String,
@@ -68,11 +58,9 @@ sealed interface TabItem {
         override val description: String? = null,
         override val isSelect: Boolean = false,
         override val actions: MutableList<TabAction>? = null,
-        override val tabId: UUID = UUID.randomUUID()
-    ) : TabItem {
-        override val isVisible: Boolean
-            @Composable get() = true
-    }
+        override val tabId: UUID = UUID.randomUUID(),
+        override var isVisible: Boolean = true
+    ) : TabItem
 
     data class PlaybackTabItem(
         override val routeName: String,
@@ -83,12 +71,13 @@ sealed interface TabItem {
         override val isSelect: Boolean = false,
         override val actions: MutableList<TabAction>? = null,
         override val tabId: UUID = UUID.randomUUID(),
-        val playbackItem: SpotLight.AudioPlayer? = null
+        override var isVisible: Boolean = true,
+        val playbackItem: SpotLight.AudioPlayer? = null,
     ) : TabItem {
-
-        override val isVisible: Boolean
-            @Composable get() {
-                return LocalUseCaseOfMediaRemoteExo.current.isPlaying
-            }
+        @Composable
+        override fun isShow(): Boolean {
+            return isVisible &&
+                    LocalUseCaseOfMediaRemoteExo.current.isPlaying
+        }
     }
 }

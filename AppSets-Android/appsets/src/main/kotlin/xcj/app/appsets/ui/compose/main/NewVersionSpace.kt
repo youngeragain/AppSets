@@ -17,6 +17,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -26,25 +27,33 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import xcj.app.appsets.server.model.UpdateCheckResult
+import androidx.core.net.toUri
+import xcj.app.appsets.ui.compose.LocalUseCaseOfSystem
+import xcj.app.appsets.usecase.AppUpdateState
+import xcj.app.starter.android.ktx.startWithHttpSchema
 
 @Composable
 fun NewVersionSpace(
-    modifier: Modifier = Modifier,
-    updateCheckResult: UpdateCheckResult?,
-    onDismissClick: () -> Unit,
-    onDownloadClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
+    val systemUseCase = LocalUseCaseOfSystem.current
+    val appUpdateState by systemUseCase.appUpdateState
+
     Box(
         Modifier
             .fillMaxWidth()
             .animateContentSize()
     ) {
-        if (updateCheckResult != null) {
+        if (appUpdateState is AppUpdateState.Checked) {
+            val updateCheckResult = (appUpdateState as AppUpdateState.Checked).updateCheckResult
             Column(
                 modifier = modifier.padding(
                     start = 12.dp,
-                    top = WindowInsets.systemBars.asPaddingValues().calculateTopPadding(),
+                    top = WindowInsets
+                        .systemBars
+                        .asPaddingValues()
+                        .calculateTopPadding(),
                     end = 12.dp,
                     bottom = 12.dp
                 )
@@ -58,6 +67,7 @@ fun NewVersionSpace(
                         )
                         .padding(12.dp)
                 ) {
+
                     if (updateCheckResult.forceUpdate != true) {
                         Icon(
                             modifier = Modifier
@@ -67,7 +77,9 @@ fun NewVersionSpace(
                                     CircleShape
                                 )
                                 .clip(CircleShape)
-                                .clickable(onClick = onDismissClick)
+                                .clickable(onClick = {
+                                    systemUseCase.dismissNewVersionTips()
+                                })
                                 .padding(12.dp),
                             painter = painterResource(id = xcj.app.compose_share.R.drawable.ic_round_close_24),
                             contentDescription = "close",
@@ -94,7 +106,17 @@ fun NewVersionSpace(
                         )
                         Box(Modifier.fillMaxWidth()) {
                             FilledTonalButton(
-                                onClick = onDownloadClick,
+                                onClick = {
+                                    if (!updateCheckResult.downloadUrl.startWithHttpSchema()) {
+                                        return@FilledTonalButton
+                                    }
+                                    val uri =
+                                        updateCheckResult.downloadUrl?.toUri()
+                                    if (uri == null) {
+                                        return@FilledTonalButton
+                                    }
+                                    navigateToExternalWeb(context, uri)
+                                },
                                 modifier = Modifier.align(Alignment.CenterEnd)
                             ) {
                                 Text(text = stringResource(xcj.app.appsets.R.string.download_updates))

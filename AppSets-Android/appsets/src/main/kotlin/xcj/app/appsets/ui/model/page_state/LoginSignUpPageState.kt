@@ -5,40 +5,48 @@ import xcj.app.appsets.ui.model.UserInfoForCreate
 
 sealed interface LoginSignUpPageState : TipsProvider {
 
-    data object Nothing : LoginSignUpPageState {
+    data object LoginDefault : LoginSignUpPageState {
         override val tipsIntRes: Int? = null
+        override val subTipsIntRes: Int? = null
     }
 
     data class Logging(
-        override val tipsIntRes: Int? = null
+        override val tipsIntRes: Int? = null,
+        override val subTipsIntRes: Int? = null
     ) : LoginSignUpPageState
 
     data class LoggingFinish(
-        override val tipsIntRes: Int? = null
+        override val tipsIntRes: Int? = null,
+        override val subTipsIntRes: Int? = null
     ) : LoginSignUpPageState
 
     data class LoggingFail(
-        override val tipsIntRes: Int? = null
+        override val tipsIntRes: Int? = null,
+        override val subTipsIntRes: Int? = null
     ) : LoginSignUpPageState
 
-    data class SignUpPage(
+    data class SignUpDefault(
         val userInfoForCreate: UserInfoForCreate,
-        override val tipsIntRes: Int? = null
+        override val tipsIntRes: Int? = null,
+        override val subTipsIntRes: Int? = null
     ) : LoginSignUpPageState
 
-    data class SignUpingPage(
+    data class SignUpping(
         val userInfoForCreate: UserInfoForCreate,
-        override val tipsIntRes: Int? = null
+        override val tipsIntRes: Int? = null,
+        override val subTipsIntRes: Int? = null
     ) : LoginSignUpPageState
 
-    data class SignUpPageFinish(
+    data class SignUpFinish(
         val userInfoForCreate: UserInfoForCreate,
-        override val tipsIntRes: Int? = null
+        override val tipsIntRes: Int? = null,
+        override val subTipsIntRes: Int? = null
     ) : LoginSignUpPageState
 
     class SignUpPageFail(
         val userInfoForCreate: UserInfoForCreate,
-        override val tipsIntRes: Int? = null
+        override val tipsIntRes: Int? = null,
+        override val subTipsIntRes: Int? = null
     ) : LoginSignUpPageState
 
 }

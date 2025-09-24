@@ -8,15 +8,18 @@ sealed interface GroupInfoPageState : TipsProvider {
 
     data class LoadSuccess(
         val groupInfo: GroupInfo,
-        override val tipsIntRes: Int? = null
+        override val tipsIntRes: Int? = null,
+        override val subTipsIntRes: Int? = null
     ) : GroupInfoPageState
 
     data object Loading : GroupInfoPageState {
         override val tipsIntRes: Int? = R.string.loading
+        override val subTipsIntRes: Int? = null
     }
 
     data object NotFound : GroupInfoPageState {
         override val tipsIntRes: Int? = R.string.not_found
+        override val subTipsIntRes: Int? = null
     }
 
 }

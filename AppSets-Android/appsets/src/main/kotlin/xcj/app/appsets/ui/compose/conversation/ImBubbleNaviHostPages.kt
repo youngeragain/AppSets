@@ -79,9 +79,11 @@ fun ImBubbleNaviHostPages(navController: NavHostController) {
                 val anyStateProvider = LocalVisibilityComposeStateProvider.current
                 val mediaAudioRecorderUseCase = LocalUseCaseOfMediaAudioRecorder.current
                 val mediaRemoteExoUseCase = LocalUseCaseOfMediaRemoteExo.current
+                val sessionState by conversationUseCase.currentSessionState
+                val recorderState by mediaAudioRecorderUseCase.recorderState
                 ConversationDetailsPage(
-                    sessionState = conversationUseCase.currentSessionState.value,
-                    recorderState = mediaAudioRecorderUseCase.recorderState.value,
+                    sessionState = sessionState,
+                    recorderState = recorderState,
                     onBackClick = {
                         navController.navigate(PageRouteNames.ConversationOverviewPage) {
                             popUpTo(PageRouteNames.ConversationOverviewPage) {
@@ -160,11 +162,13 @@ fun ImBubbleNaviHostPages(navController: NavHostController) {
                 val systemUseCase = LocalUseCaseOfSystem.current
                 val mediaAudioRecorderUseCase = LocalUseCaseOfMediaAudioRecorder.current
                 val mediaRemoteExoUseCase = LocalUseCaseOfMediaRemoteExo.current
-                val recorderState = mediaAudioRecorderUseCase.recorderState
+                val recorderState by mediaAudioRecorderUseCase.recorderState
+                val isShowActions by conversationUseCase.isShowActions
+                val sessionState by conversationUseCase.currentSessionState
                 ConversationOverviewPage(
-                    sessionState = conversationUseCase.currentSessionState.value,
-                    isShowActions = conversationUseCase.isShowActions.value,
-                    recorderState = recorderState.value,
+                    sessionState = sessionState,
+                    isShowActions = isShowActions,
+                    recorderState = recorderState,
                     onBioClick = { bio ->
                         onBioClick(context, navController, bio)
                     },
@@ -273,8 +277,9 @@ fun ImBubbleNaviHostPages(navController: NavHostController) {
                 val screenUseCase = LocalUseCaseOfScreen.current
                 val anyStateProvider = LocalVisibilityComposeStateProvider.current
                 val coroutineScope = rememberCoroutineScope()
+                val screenInfoForCard by screenUseCase.currentScreenInfoForCard
                 ScreenDetailsPage(
-                    screenInfoForCard = screenUseCase.currentScreenInfoForCard.value,
+                    screenInfoForCard = screenInfoForCard,
                     onBackClick = navController::navigateUp,
                     onBioClick = { bio ->
                         onBioClick(context, navController, bio)
@@ -326,14 +331,20 @@ fun ImBubbleNaviHostPages(navController: NavHostController) {
                 val systemUseCase = LocalUseCaseOfSystem.current
                 val screenUseCase = LocalUseCaseOfScreen.current
                 val coroutineScope = rememberCoroutineScope()
+                val userProfilePageState by userInfoUseCase.currentUserInfoState
+                val userApplications by userInfoUseCase.applicationsState
+                val userFollowers by userInfoUseCase.followerUsersState
+                val userFollowed by userInfoUseCase.followedUsersState
+                val isLoginUserFollowedThisUser by userInfoUseCase.loggedUserFollowedState
+                val userScreens = screenUseCase.userScreensContainer.screens
                 UserProfilePage(
                     onBackClick = navController::navigateUp,
-                    userProfilePageState = userInfoUseCase.currentUserInfoState.value,
-                    userApplications = userInfoUseCase.applicationsState.value,
-                    userFollowers = userInfoUseCase.followerUsersState.value,
-                    userFollowed = userInfoUseCase.followedUsersState.value,
-                    isLoginUserFollowedThisUser = userInfoUseCase.loggedUserFollowedState.value,
-                    userScreens = screenUseCase.userScreensContainer.screens,
+                    userProfilePageState = userProfilePageState,
+                    userApplications = userApplications,
+                    userFollowers = userFollowers,
+                    userFollowed = userFollowed,
+                    isLoginUserFollowedThisUser = isLoginUserFollowedThisUser,
+                    userScreens = userScreens,
                     onAddFriendClick = { userInfo ->
                         systemUseCase.requestAddFriend(
                             context,
@@ -394,7 +405,7 @@ fun ImBubbleNaviHostPages(navController: NavHostController) {
                 val groupInfoUseCase = LocalUseCaseOfGroupInfo.current
                 val conversationUseCase = LocalUseCaseOfConversation.current
                 val systemUseCase = LocalUseCaseOfSystem.current
-                val groupInfoState = groupInfoUseCase.groupInfoPageState.value
+                val groupInfoState by groupInfoUseCase.groupInfoPageState
                 GroupInfoPage(
                     groupInfoPageState = groupInfoState,
                     onBackClick = navController::navigateUp,
@@ -515,8 +526,9 @@ fun ImBubbleNaviHostPages(navController: NavHostController) {
             composable(PageRouteNames.ScreenEditPage) {
                 val screenUseCase = LocalUseCaseOfScreen.current
                 val coroutineScope = rememberCoroutineScope()
+                val currentScreenInfoForCard by screenUseCase.currentScreenInfoForCard
                 ScreenEditPage(
-                    screenInfo = screenUseCase.currentScreenInfoForCard.value.screenInfo,
+                    screenInfo = currentScreenInfoForCard.screenInfo,
                     onBackClick = navController::navigateUp,
                     onPublicStateChanged = { newIsPublic ->
                         coroutineScope.launch {

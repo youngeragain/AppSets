@@ -4,15 +4,9 @@ import xcj.app.starter.foundation.DesignLogger
 
 interface IPurpleLogger : DesignLogger {
 
-    fun addPurpleTagPrefix(): Boolean = true
+    fun tagPrefix(): String?
 
-    fun withTag(tag: String): LoggingState
-
-    fun withMessage(message: Any?, loggingState: LoggingState)
-
-    fun withThrowable(throwable: Throwable, loggingState: LoggingState)
-
-    fun logLevel(level: String, loggingState: LoggingState)
+    fun logWithLevel(level: String, loggingState: LoggingState)
 
     companion object {
         const val LEVEL_VERBOSE = "VERBOSE"

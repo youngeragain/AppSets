@@ -34,7 +34,7 @@ import xcj.app.appsets.server.model.UserInfo
 import xcj.app.appsets.server.model.UserRole
 import xcj.app.appsets.ui.compose.PageRouteNames
 import xcj.app.appsets.ui.compose.conversation.GenerativeAISession
-import xcj.app.appsets.ui.model.state.NowSpaceObject
+import xcj.app.appsets.ui.model.state.NowSpaceContent
 import xcj.app.compose_share.dynamic.IComposeLifecycleAware
 import xcj.app.starter.android.util.LocalMessenger
 import xcj.app.starter.android.util.PurpleLogger
@@ -217,7 +217,7 @@ class ConversationUseCase private constructor() : IComposeLifecycleAware {
             currentSessionState.value = SessionState.None
         } else {
             nowSpaceContentUseCase?.removeContentIf { topSpaceObjectState ->
-                topSpaceObjectState is NowSpaceObject.NewImMessage && topSpaceObjectState.session.id == session.id
+                topSpaceObjectState is NowSpaceContent.NewImMessage && topSpaceObjectState.session.id == session.id
             }
             currentSessionState.value = SessionState.Normal(session)
         }

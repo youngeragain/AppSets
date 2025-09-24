@@ -56,7 +56,7 @@ import androidx.compose.ui.unit.sp
 import xcj.app.appsets.ui.compose.LocalUseCaseOfQRCode
 import xcj.app.appsets.ui.compose.custom_component.AnyImage
 import xcj.app.appsets.ui.compose.custom_component.DesignBackButton
-import xcj.app.appsets.ui.compose.custom_component.HideNavBarWhenOnLaunch
+import xcj.app.appsets.ui.compose.custom_component.HideNavBar
 import xcj.app.appsets.ui.model.page_state.LoginSignUpPageState
 import xcj.app.appsets.ui.model.state.QRCodeInfoScannedState
 import xcj.app.appsets.usecase.QRCodeUseCase
@@ -67,7 +67,7 @@ private const val TAG = "LoginPage"
 @Composable
 fun LoginPage(
     loginSignUpPageState: LoginSignUpPageState,
-    qrCodeInfo: QRCodeInfoScannedState.AppSetsQRCodeInfo?,
+    generatedQRCodeInfo: QRCodeInfoScannedState.AppSetsQRCodeInfo?,
     onBackClick: () -> Unit,
     onLoggingFinish: () -> Unit,
     onSignUpButtonClick: () -> Unit,
@@ -75,7 +75,7 @@ fun LoginPage(
     onScanQRCodeButtonClick: () -> Unit,
     onLoginConfirmButtonClick: (String, String) -> Unit,
 ) {
-    HideNavBarWhenOnLaunch()
+    HideNavBar()
     LaunchedEffect(loginSignUpPageState) {
         if (loginSignUpPageState is LoginSignUpPageState.LoggingFinish) {
             onLoggingFinish()
@@ -94,7 +94,7 @@ fun LoginPage(
         if (configuration.orientation == Configuration.ORIENTATION_PORTRAIT) {
             LoginComponent1(
                 modifier = Modifier,
-                qrCodeInfo = qrCodeInfo,
+                generatedQRCodeInfo = generatedQRCodeInfo,
                 onSignUpButtonClick = onSignUpButtonClick,
                 onQRCodeLoginButtonClick = onQRCodeLoginButtonClick,
                 onScanQRCodeButtonClick = onScanQRCodeButtonClick
@@ -114,7 +114,7 @@ fun LoginPage(
                 ) {
                     LoginComponent1(
                         modifier = Modifier,
-                        qrCodeInfo = qrCodeInfo,
+                        generatedQRCodeInfo = generatedQRCodeInfo,
                         onSignUpButtonClick = onSignUpButtonClick,
                         onQRCodeLoginButtonClick = onQRCodeLoginButtonClick,
                         onScanQRCodeButtonClick = onScanQRCodeButtonClick
@@ -190,7 +190,7 @@ fun LoginComponent2(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(TextFieldDefaults.MinHeight),
-                enabled = loginSignUpPageState is LoginSignUpPageState.Nothing,
+                enabled = loginSignUpPageState is LoginSignUpPageState.LoginDefault,
                 onClick = {
                     hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
                     onLoginConfirmButtonClick(accountText, passwordText)
@@ -210,7 +210,7 @@ fun LoginComponent2(
 @Composable
 fun LoginComponent1(
     modifier: Modifier,
-    qrCodeInfo: QRCodeInfoScannedState.AppSetsQRCodeInfo?,
+    generatedQRCodeInfo: QRCodeInfoScannedState.AppSetsQRCodeInfo?,
     onSignUpButtonClick: () -> Unit,
     onQRCodeLoginButtonClick: () -> Unit,
     onScanQRCodeButtonClick: () -> Unit,
@@ -242,7 +242,7 @@ fun LoginComponent1(
             text = stringResource(id = xcj.app.appsets.R.string.login),
             fontSize = 138.sp
         )
-        val qrcodeState = qrCodeInfo?.state
+        val qrcodeState = generatedQRCodeInfo?.state
         if (!qrcodeState.isNullOrEmpty()) {
             Box(
                 contentAlignment = Alignment.Center,
@@ -253,7 +253,7 @@ fun LoginComponent1(
             ) {
                 when (qrcodeState) {
                     QRCodeUseCase.QR_STATE_NEW -> {
-                        val qrCodeBitmap = qrCodeInfo.bitmap?.asImageBitmap()
+                        val qrCodeBitmap = generatedQRCodeInfo.bitmap?.asImageBitmap()
                         if (qrCodeBitmap != null) {
                             AnyImage(
                                 modifier = Modifier

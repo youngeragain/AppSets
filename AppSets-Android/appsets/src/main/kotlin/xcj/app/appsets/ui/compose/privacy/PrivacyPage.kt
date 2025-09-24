@@ -35,7 +35,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import xcj.app.appsets.ui.compose.apps.tools.PageIndicator
 import xcj.app.appsets.ui.compose.custom_component.DesignBackButton
-import xcj.app.appsets.ui.compose.custom_component.HideNavBarWhenOnLaunch
+import xcj.app.appsets.ui.compose.custom_component.HideNavBar
 import xcj.app.starter.android.ui.model.PlatformPermissionsUsage
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -46,7 +46,7 @@ fun PrivacyPage(
     onBackClick: () -> Unit,
     onRequest: (PlatformPermissionsUsage, Int) -> Unit,
 ) {
-    HideNavBarWhenOnLaunch()
+    HideNavBar()
     val pagerState = rememberPagerState { 2 }
     Box(modifier = Modifier.fillMaxSize()) {
         PageIndicator(

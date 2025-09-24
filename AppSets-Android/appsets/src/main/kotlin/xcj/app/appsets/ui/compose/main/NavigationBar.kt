@@ -76,7 +76,7 @@ fun NavigationBarPreview() {
 fun NavigationBar(
     modifier: Modifier = Modifier,
     hazeState: HazeState,
-    visible: Boolean,
+    hostVisible: Boolean,
     enable: Boolean,
     inSearchModel: Boolean,
     tabItems: List<TabItem>,
@@ -88,14 +88,14 @@ fun NavigationBar(
 ) {
     AnimatedVisibility(
         modifier = modifier,
-        visible = visible,
+        visible = hostVisible,
         enter = fadeIn() + slideInVertically(initialOffsetY = { it + it / 20 }),
         exit = fadeOut() + slideOutVertically(targetOffsetY = { it + it / 20 }),
     ) {
         StandardNavigationBar(
             hazeState = hazeState,
             enable = enable,
-            visible = visible,
+            hostVisible = hostVisible,
             inSearchModel = inSearchModel,
             tabItems = tabItems,
             onBackClick = onBackClick,
@@ -112,7 +112,7 @@ fun StandardNavigationBar(
     modifier: Modifier = Modifier,
     hazeState: HazeState,
     enable: Boolean,
-    visible: Boolean,
+    hostVisible: Boolean,
     inSearchModel: Boolean,
     tabItems: List<TabItem>,
     onTabClick: (TabItem, TabAction?) -> Unit,
@@ -121,16 +121,23 @@ fun StandardNavigationBar(
     onSearchBarClick: () -> Unit,
     onBioClick: () -> Unit,
 ) {
-
-    Column(
-        modifier = modifier
+    val modifierOverride = if (!inSearchModel) {
+        modifier
             .hazeEffect(
                 hazeState,
                 HazeMaterials.thin()
             )
             .fillMaxWidth()
             .navigationBarsPadding()
-            .imePadding(),
+            .imePadding()
+    } else {
+        modifier
+            .fillMaxWidth()
+            .navigationBarsPadding()
+            .imePadding()
+    }
+    Column(
+        modifier = modifierOverride
     ) {
         if (!inSearchModel) {
             DesignHDivider()
@@ -141,22 +148,23 @@ fun StandardNavigationBar(
             modifier = Modifier
                 .align(Alignment.CenterHorizontally)
                 .heightIn(min = 48.dp)
-                .horizontalScroll(state = scrollState)
-                .animateContentSize(),
+                .horizontalScroll(state = scrollState),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            if (
+            AnimatedVisibility(
                 !inSearchModel
             ) {
-                tabItems.forEach { tab ->
-                    TabItem(
-                        modifier = Modifier,
-                        hostVisible = visible,
-                        naviTabItem = tab,
-                        onTabClick = onTabClick
-                    )
+                Row {
+                    tabItems.forEach { tab ->
+                        TabItem(
+                            modifier = Modifier,
+                            hostVisible = hostVisible,
+                            naviTabItem = tab,
+                            onTabClick = onTabClick
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
                 }
-                Spacer(modifier = Modifier.width(8.dp))
             }
 
             NavigationSearchBar(
@@ -179,12 +187,14 @@ fun TabItem(
     naviTabItem: TabItem,
     onTabClick: (TabItem, TabAction?) -> Unit,
 ) {
+    //todo bug
+    val itemIsSelectOverride = naviTabItem.isSelect
     Row(
         modifier = modifier.animateContentSize(),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Spacer(modifier = Modifier.width(8.dp))
-        if (naviTabItem.isVisible) {
+        if (naviTabItem.isShow()) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 TabItemMainComponent(naviTabItem, onTabClick)
                 if (!naviTabItem.isSelect) {
@@ -203,21 +213,16 @@ fun TabItem(
                 }
             }
         }
-        //todo bug
-        val itemIsSelectOverride = if (hostVisible) {
-            naviTabItem.isSelect
-        } else {
-            true
-        }
 
         if (itemIsSelectOverride) {
             Spacer(modifier = Modifier.width(8.dp))
             Column {
                 Row(
+                    modifier = Modifier.animateContentSize(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     naviTabItem.actions?.forEach {
-                        if (it.isVisible) {
+                        if (it.isShow()) {
                             TabItemActionComponent(
                                 naviTabItem = naviTabItem,
                                 tabAction = it,

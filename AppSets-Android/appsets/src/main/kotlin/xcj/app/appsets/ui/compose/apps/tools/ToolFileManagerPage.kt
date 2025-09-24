@@ -69,7 +69,7 @@ import xcj.app.appsets.ui.compose.apps.tools.file_manager.AbstractFile
 import xcj.app.appsets.ui.compose.apps.tools.file_manager.AbstractFileContext
 import xcj.app.appsets.ui.compose.apps.tools.file_manager.DefaultFile
 import xcj.app.appsets.ui.compose.custom_component.AnyImage
-import xcj.app.appsets.ui.compose.custom_component.HideNavBarWhenOnLaunch
+import xcj.app.appsets.ui.compose.custom_component.HideNavBar
 import xcj.app.appsets.ui.compose.quickstep.QuickStepContent
 import xcj.app.appsets.util.ktx.asComponentActivityOrNull
 import xcj.app.compose_share.components.BackActionTopBar
@@ -84,7 +84,7 @@ fun ToolFileManagerPage(
     onBackClick: () -> Unit,
     onCreateFileClick: (AbstractFile<*>) -> Unit,
 ) {
-    HideNavBarWhenOnLaunch()
+    HideNavBar()
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     val lifecycle = lifecycleOwner.lifecycle

@@ -21,7 +21,7 @@ import xcj.app.appsets.server.model.ScreenInfo
 import xcj.app.appsets.server.model.ScreenMediaFileUrl
 import xcj.app.appsets.ui.compose.PageRouteNames
 import xcj.app.appsets.ui.compose.custom_component.LoadMoreHandler
-import xcj.app.appsets.ui.compose.custom_component.ShowNavBarWhenOnLaunch
+import xcj.app.appsets.ui.compose.custom_component.ShowNavBar
 
 @Composable
 fun OutSidePage(
@@ -30,7 +30,7 @@ fun OutSidePage(
     onLoadMore: () -> Unit,
     onScreenMediaClick: (ScreenMediaFileUrl, List<ScreenMediaFileUrl>) -> Unit,
 ) {
-    ShowNavBarWhenOnLaunch()
+    ShowNavBar()
     var boxSizeFloat by remember {
         mutableStateOf(IntSize.Zero)
     }

@@ -74,7 +74,7 @@ import xcj.app.appsets.server.model.ScreenReview
 import xcj.app.appsets.ui.compose.PageRouteNames
 import xcj.app.appsets.ui.compose.custom_component.AnyImage
 import xcj.app.appsets.ui.compose.custom_component.DesignBackButton
-import xcj.app.appsets.ui.compose.custom_component.HideNavBarWhenOnLaunch
+import xcj.app.appsets.ui.compose.custom_component.HideNavBar
 import xcj.app.appsets.ui.model.ScreenInfoForCard
 import xcj.app.compose_share.components.DesignHDivider
 import xcj.app.compose_share.components.DesignTextField
@@ -95,7 +95,7 @@ fun ScreenDetailsPage(
     onPageShowPrevious: () -> Unit,
     onPageShowNext: () -> Unit
 ) {
-    HideNavBarWhenOnLaunch()
+    HideNavBar()
     if (screenInfoForCard.screenInfo == null) {
         Box(modifier = Modifier.fillMaxSize()) {
             Text(

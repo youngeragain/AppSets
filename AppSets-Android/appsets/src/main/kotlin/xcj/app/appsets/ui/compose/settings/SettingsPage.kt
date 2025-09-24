@@ -23,10 +23,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import xcj.app.compose_share.components.DesignHDivider
-import xcj.app.appsets.ui.compose.custom_component.HideNavBarWhenOnLaunch
 import xcj.app.appsets.settings.AppSetsModuleSettings
+import xcj.app.appsets.ui.compose.custom_component.HideNavBar
 import xcj.app.compose_share.components.BackActionTopBar
+import xcj.app.compose_share.components.DesignHDivider
 
 
 @Preview(showBackground = true)
@@ -41,7 +41,7 @@ fun SettingsPage(
     onAboutClick: () -> Unit,
     onPrivacyAndPermissionClick: () -> Unit
 ) {
-    HideNavBarWhenOnLaunch()
+    HideNavBar()
     Column {
         BackActionTopBar(
             backButtonRightText = stringResource(xcj.app.appsets.R.string.settings),

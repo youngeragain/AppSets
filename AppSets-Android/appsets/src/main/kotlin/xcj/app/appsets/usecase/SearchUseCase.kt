@@ -13,7 +13,6 @@ import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
-import xcj.app.appsets.R
 import xcj.app.appsets.account.LocalAccountManager
 import xcj.app.appsets.server.model.CombineSearchRes
 import xcj.app.appsets.server.repository.SearchRepository
@@ -31,7 +30,6 @@ class SearchUseCase(
         private const val TAG = "SearchUseCase"
     }
 
-    //保存上一次搜索内容
     val searchPageState: MutableState<SearchPageState> = mutableStateOf(SearchPageState.None())
 
     private val searchInputFlow: MutableStateFlow<String> = MutableStateFlow("")
@@ -56,32 +54,37 @@ class SearchUseCase(
     }
 
     private suspend fun search(keywords: String) {
+        val searchState = searchPageState.value
         if (!LocalAccountManager.isLogged()) {
+            if (searchState is SearchPageState.SearchPageFailed) {
+                return
+            }
             searchPageState.value =
-                SearchPageState.SearchPageFailed(keywords, R.string.login_to_search)
+                SearchPageState.SearchPageFailed(
+                    keywords,
+                    xcj.app.appsets.R.string.login_to_search
+                )
             return
         }
-
+        if (searchState is SearchPageState.SearchPageSuccess &&
+            searchState.keywords == keywords
+        ) {
+            return
+        }
         if (keywords.isEmpty()) {
             searchPageState.value =
                 SearchPageState.SearchPageSuccess(
                     keywords,
-                    R.string.no_content,
+                    xcj.app.appsets.R.string.no_content,
+                    xcj.app.appsets.R.string.text_something,
                     emptyList(),
                 )
             return
         }
 
-        val searchState = searchPageState.value
 
-        if (searchState is SearchPageState.SearchPageSuccess && searchState.keywords == keywords) {
-            return
-        }
-        if (searchState is SearchPageState.Searching && searchState.keywords == keywords) {
-            return
-        }
-
-        this.searchPageState.value = SearchPageState.Searching(keywords)
+        this.searchPageState.value =
+            SearchPageState.Searching(keywords)
 
         request {
             searchRepository.commonSearch(keywords)
@@ -91,7 +94,7 @@ class SearchUseCase(
             this@SearchUseCase.searchPageState.value =
                 SearchPageState.SearchPageFailed(
                     keywords,
-                    R.string.something_wrong_when_search
+                    xcj.app.appsets.R.string.something_wrong_when_search
                 )
         }
     }
@@ -101,7 +104,8 @@ class SearchUseCase(
             val searchSuccess =
                 SearchPageState.SearchPageSuccess(
                     keywords,
-                    R.string.no_content,
+                    xcj.app.appsets.R.string.no_content,
+                    xcj.app.appsets.R.string.text_something,
                     emptyList(),
                 )
             searchPageState.value = searchSuccess
@@ -109,7 +113,12 @@ class SearchUseCase(
         }
 
         val searchResults = mutableListOf<SearchResult>()
-        val searchSuccess = SearchPageState.SearchPageSuccess(keywords, null, searchResults)
+        val searchSuccess = SearchPageState.SearchPageSuccess(
+            keywords,
+            null,
+            null,
+            searchResults
+        )
         if (!combineSearchRes.applications.isNullOrEmpty()) {
             searchResults.add(SearchResult.SearchedApplications(combineSearchRes.applications))
         }

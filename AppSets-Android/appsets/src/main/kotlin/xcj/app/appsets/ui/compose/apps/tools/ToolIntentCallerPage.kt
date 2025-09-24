@@ -41,7 +41,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import xcj.app.appsets.ui.compose.custom_component.HideNavBarWhenOnLaunch
+import xcj.app.appsets.ui.compose.custom_component.HideNavBar
 import xcj.app.appsets.ui.compose.quickstep.QuickStepContent
 import xcj.app.appsets.ui.compose.quickstep.TextQuickStepContent
 import xcj.app.compose_share.components.BackActionTopBar
@@ -130,7 +130,7 @@ fun ToolIntentCallerPage(
     quickStepContents: List<QuickStepContent>?,
     onBackClick: () -> Unit
 ) {
-    HideNavBarWhenOnLaunch()
+    HideNavBar()
     val dateFormater = remember {
         SimpleDateFormat.getDateInstance()
     }

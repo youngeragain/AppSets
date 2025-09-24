@@ -43,7 +43,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import xcj.app.appsets.ui.compose.LocalUseCaseOfSystem
 import xcj.app.appsets.ui.compose.custom_component.AnyImage
-import xcj.app.appsets.ui.compose.custom_component.HideNavBarWhenOnLaunch
+import xcj.app.appsets.ui.compose.custom_component.HideNavBar
 import xcj.app.appsets.ui.model.GroupInfoForCreate
 import xcj.app.appsets.ui.model.page_state.CreateGroupPageState
 import xcj.app.compose_share.components.BackActionTopBar
@@ -58,7 +58,7 @@ fun CreateGroupPage(
     onConfirmAction: () -> Unit,
     onSelectGroupIconClick: (String) -> Unit
 ) {
-    HideNavBarWhenOnLaunch()
+    HideNavBar()
     val systemUseCase = LocalUseCaseOfSystem.current
     DisposableEffect(Unit) {
         onDispose {

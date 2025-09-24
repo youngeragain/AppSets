@@ -11,13 +11,19 @@ import xcj.app.starter.android.util.PurpleLogger
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
 
+sealed interface IMOnlineState {
+    data object Offline : IMOnlineState
+
+    data object Online : IMOnlineState
+}
+
 object BrokerTest {
 
     private const val TAG = "BrokerTest"
 
     private val broker = RabbitMQBroker()
 
-    val onlineState: MutableState<Boolean> = mutableStateOf(false)
+    val imOnLineState: MutableState<IMOnlineState> = mutableStateOf(IMOnlineState.Offline)
 
     @OptIn(ExperimentalEncodingApi::class)
     suspend fun start() {

@@ -9,22 +9,26 @@ sealed interface CreateApplicationPageState : TipsProvider {
 
     data class NewApplicationPage(
         override val applicationForCreate: ApplicationForCreate = ApplicationForCreate(),
-        override val tipsIntRes: Int? = null
+        override val tipsIntRes: Int? = null,
+        override val subTipsIntRes: Int? = null
     ) : CreateApplicationPageState
 
     data class Creating(
         override val applicationForCreate: ApplicationForCreate,
-        override val tipsIntRes: Int = R.string.creating
+        override val tipsIntRes: Int = R.string.creating,
+        override val subTipsIntRes: Int? = null
     ) : CreateApplicationPageState
 
     data class CreateSuccessPage(
         override val applicationForCreate: ApplicationForCreate,
-        override val tipsIntRes: Int = R.string.create_application_success
+        override val tipsIntRes: Int = R.string.create_application_success,
+        override val subTipsIntRes: Int? = null
     ) : CreateApplicationPageState
 
     data class CreateFailedPage(
         override val applicationForCreate: ApplicationForCreate,
-        override val tipsIntRes: Int? = null
+        override val tipsIntRes: Int? = null,
+        override val subTipsIntRes: Int? = null
     ) : CreateApplicationPageState
 
 }

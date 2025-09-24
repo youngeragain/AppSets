@@ -46,6 +46,15 @@ import xcj.app.starter.test.LocalApplication
 import xcj.app.starter.test.LocalPurpleCoroutineScope
 import java.util.Calendar
 
+sealed interface AppUpdateState {
+    data object None : AppUpdateState
+
+    data object Checking : AppUpdateState
+    data class Checked(
+        val updateCheckResult: UpdateCheckResult
+    ) : AppUpdateState
+}
+
 class SystemUseCase(
     private val userRepository: UserRepository,
     private val appSetsRepository: AppSetsRepository,
@@ -55,10 +64,10 @@ class SystemUseCase(
 
     private val requestIdMap: MutableMap<String, String> = mutableMapOf()
 
-    val newVersionState: MutableState<UpdateCheckResult?> = mutableStateOf(null)
+    val appUpdateState: MutableState<AppUpdateState> = mutableStateOf(AppUpdateState.None)
 
     val loginSignUpPageState: MutableState<LoginSignUpPageState> =
-        mutableStateOf(LoginSignUpPageState.Nothing)
+        mutableStateOf(LoginSignUpPageState.LoginDefault)
 
     val createGroupPageState: MutableState<CreateGroupPageState> = mutableStateOf(
         CreateGroupPageState.NewGroupPage(
@@ -68,17 +77,17 @@ class SystemUseCase(
 
 
     fun dismissNewVersionTips() {
-        val updateCheckResult = newVersionState.value ?: return
-        if (updateCheckResult.forceUpdate == true) {
+        val appUpdateState = appUpdateState.value
+        if (appUpdateState !is AppUpdateState.Checked) {
             return
         }
-        newVersionState.value = null
+        if (appUpdateState.updateCheckResult.forceUpdate == true) {
+            return
+        }
         PurpleLogger.current.d(TAG, "dismissNewVersionTips")
+        this.appUpdateState.value = AppUpdateState.None
     }
 
-    /**
-     * 部分数据可以直接公开，不过也需要有访问权限
-     */
     suspend fun initAppToken() {
         PurpleLogger.current.d(TAG, "initAppToken")
         request(
@@ -120,12 +129,12 @@ class SystemUseCase(
             if (!it.canUpdate) {
                 return
             }
-            delay(4000)
+            delay(1000 * 3)
             it.versionFromTo = "${packageInfo.versionName} → ${it.newestVersion}"
-            newVersionState.value = it
+            appUpdateState.value = AppUpdateState.Checked(it)
             if (it.forceUpdate != true) {
                 delay(1000 * 300)
-                newVersionState.value = null
+                appUpdateState.value = AppUpdateState.None
             }
         }
     }
@@ -383,7 +392,7 @@ class SystemUseCase(
             delay(500)
             bottomSheetContainerState.show(provider)
             delay(2000)
-            loginSignUpPageState.value = LoginSignUpPageState.Nothing
+            loginSignUpPageState.value = LoginSignUpPageState.LoginDefault
         }).onFailure {
             PurpleLogger.current.d(TAG, "login failed")
             logout()
@@ -418,7 +427,7 @@ class SystemUseCase(
             return
         }
         val oldLoginSignUpState = loginSignUpPageState.value
-        if (oldLoginSignUpState !is LoginSignUpPageState.SignUpPage) {
+        if (oldLoginSignUpState !is LoginSignUpPageState.SignUpDefault) {
             return
         }
         val signUpUserInfo = oldLoginSignUpState.userInfoForCreate
@@ -440,14 +449,14 @@ class SystemUseCase(
             return
         }
         PurpleLogger.current.d(TAG, "signUp")
-        loginSignUpPageState.value = LoginSignUpPageState.SignUpingPage(signUpUserInfo)
+        loginSignUpPageState.value = LoginSignUpPageState.SignUpping(signUpUserInfo)
         requestRaw(action = {
             val accountEncode =
                 MessageDigestUtil.transformWithMD5(signUpUserInfo.account)?.outContent
             val passwordEncode =
                 MessageDigestUtil.transformWithMD5(signUpUserInfo.password)?.outContent
             if (accountEncode.isNullOrEmpty() || passwordEncode.isNullOrEmpty()) {
-                loginSignUpPageState.value = LoginSignUpPageState.SignUpPage(signUpUserInfo)
+                loginSignUpPageState.value = LoginSignUpPageState.SignUpDefault(signUpUserInfo)
                 return
             }
             val preSignUpRes = userRepository.preSignUp(accountEncode)
@@ -458,7 +467,7 @@ class SystemUseCase(
                 )
                 delay(1000)
                 context.getString(xcj.app.appsets.R.string.register_failed).toastSuspend()
-                loginSignUpPageState.value = LoginSignUpPageState.Nothing
+                loginSignUpPageState.value = LoginSignUpPageState.LoginDefault
                 return
             } else if (!canSignUp) {
                 loginSignUpPageState.value = LoginSignUpPageState.SignUpPageFail(
@@ -467,7 +476,7 @@ class SystemUseCase(
                 context.getString(xcj.app.appsets.R.string.a_account_exist_please_retry)
                     .toastSuspend()
                 delay(1000)
-                loginSignUpPageState.value = LoginSignUpPageState.SignUpPage(signUpUserInfo)
+                loginSignUpPageState.value = LoginSignUpPageState.SignUpDefault(signUpUserInfo)
                 return
             }
             val signUpRes = userRepository.signUp(
@@ -480,10 +489,10 @@ class SystemUseCase(
                 )
                 context.getString(xcj.app.appsets.R.string.register_failed).toastSuspend()
                 delay(1000)
-                loginSignUpPageState.value = LoginSignUpPageState.SignUpPage(signUpUserInfo)
+                loginSignUpPageState.value = LoginSignUpPageState.SignUpDefault(signUpUserInfo)
                 return
             }
-            loginSignUpPageState.value = LoginSignUpPageState.SignUpPageFinish(signUpUserInfo)
+            loginSignUpPageState.value = LoginSignUpPageState.SignUpFinish(signUpUserInfo)
             context.getString(xcj.app.appsets.R.string.register_appsets_success).toastSuspend()
         }).onFailure {
             loginSignUpPageState.value = LoginSignUpPageState.SignUpPageFail(
@@ -491,7 +500,7 @@ class SystemUseCase(
             )
             context.getString(xcj.app.appsets.R.string.register_failed).toastSuspend()
             delay(1000)
-            loginSignUpPageState.value = LoginSignUpPageState.SignUpPage(signUpUserInfo)
+            loginSignUpPageState.value = LoginSignUpPageState.SignUpDefault(signUpUserInfo)
 
             (it as? RequestFail)?.info?.toastSuspend()
         }
@@ -549,7 +558,7 @@ class SystemUseCase(
 
     override fun onComposeDispose(by: String?) {
         createGroupPageState.value = CreateGroupPageState.NewGroupPage(GroupInfoForCreate())
-        loginSignUpPageState.value = LoginSignUpPageState.Nothing
+        loginSignUpPageState.value = LoginSignUpPageState.LoginDefault
     }
 
     suspend fun getWeatherInfo(
@@ -569,11 +578,11 @@ class SystemUseCase(
 
 
     fun prepareSignUpState() {
-        loginSignUpPageState.value = LoginSignUpPageState.SignUpPage(UserInfoForCreate())
+        loginSignUpPageState.value = LoginSignUpPageState.SignUpDefault(UserInfoForCreate())
     }
 
     fun prepareLoginState() {
-        loginSignUpPageState.value = LoginSignUpPageState.Nothing
+        loginSignUpPageState.value = LoginSignUpPageState.LoginDefault
     }
 
     companion object {

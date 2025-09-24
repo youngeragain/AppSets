@@ -138,7 +138,7 @@ import xcj.app.appsets.ui.compose.LocalUseCaseOfConversation
 import xcj.app.appsets.ui.compose.LocalUseCaseOfMediaRemoteExo
 import xcj.app.appsets.ui.compose.custom_component.AnyImage
 import xcj.app.appsets.ui.compose.custom_component.BackPressHandler
-import xcj.app.appsets.ui.compose.custom_component.HideNavBarWhenOnLaunch
+import xcj.app.appsets.ui.compose.custom_component.HideNavBar
 import xcj.app.appsets.ui.compose.custom_component.third_part.waveslider.WaveSlider
 import xcj.app.appsets.ui.compose.custom_component.third_part.waveslider.WaveSliderDefaults
 import xcj.app.appsets.usecase.SessionState
@@ -220,7 +220,7 @@ fun SessionObjectNormal(
     onVoiceResumeClick: () -> Unit,
     onMoreClick: ((ImObj) -> Unit),
 ) {
-    HideNavBarWhenOnLaunch()
+    HideNavBar()
     val conversationUseCase = LocalUseCaseOfConversation.current
 
     DisposableEffect(Unit) {

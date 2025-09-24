@@ -21,7 +21,7 @@ class DesignCameraViewModel : VisibilityComposeStateViewModel() {
     }
 
     val qrCodeUseCase: QRCodeUseCase = QRCodeUseCase(
-        mutableStateOf(LoginSignUpPageState.Nothing),
+        mutableStateOf(LoginSignUpPageState.LoginDefault),
         QRCodeRepository.getInstance(),
         UserRepository.getInstance()
     )

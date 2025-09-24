@@ -85,7 +85,7 @@ public class DexClassScanner {
      */
     public static @Nullable List<Class<?>> getAllClassByAnnotation(Class<? extends Annotation> annotationClass, String packageName) {
         if (!annotationClass.isAnnotation()) {
-            PurpleLogger.getCurrent().e(TAG, "annotationClass must be a Annotation!", null);
+            PurpleLogger.getCurrent().e(TAG, "annotationClass must be a Annotation!", null, null);
             return null;
         }
         List<Class<?>> returnClassList = new ArrayList<>();
@@ -109,7 +109,7 @@ public class DexClassScanner {
 
     public static <C> @Nullable List<Class<C>> getAllClassByInterface(Class<C> interfaceClass, String packageName) {
         if (!interfaceClass.isInterface()) {
-            PurpleLogger.getCurrent().e(TAG, "interfaceClass must be a Interface!", null);
+            PurpleLogger.getCurrent().e(TAG, "interfaceClass must be a Interface!", null, null);
             return null;
         }
         List<Class<C>> returnClassList = new ArrayList<>();
@@ -143,7 +143,7 @@ public class DexClassScanner {
                 }
                 classes.add(aClass);
             } catch (ClassNotFoundException e) {
-                PurpleLogger.getCurrent().d(TAG, "getClasses, exception:" + e.getMessage(), null);
+                PurpleLogger.getCurrent().d(TAG, "getClasses, exception:" + e.getMessage(), null, null);
             }
         }
         return classes;
@@ -208,11 +208,11 @@ public class DexClassScanner {
                         }
                     }
                 } catch (IllegalAccessException | InvocationTargetException e) {
-                    PurpleLogger.getCurrent().d(TAG, "getAllClassesName, exception:" + e.getMessage(), null);
+                    PurpleLogger.getCurrent().d(TAG, "getAllClassesName, exception:" + e.getMessage(), null, null);
                 }
             }
         } catch (ClassNotFoundException e) {
-            PurpleLogger.getCurrent().d(TAG, "getAllClassesName, exception:" + e.getMessage(), null);
+            PurpleLogger.getCurrent().d(TAG, "getAllClassesName, exception:" + e.getMessage(), null, null);
         }
         mAllClassNamesBuffer = new SoftReference<>(classNames);
         return classNames;
@@ -222,7 +222,7 @@ public class DexClassScanner {
         try {
             return Class.getDeclaredField(field);
         } catch (Throwable e) {
-            PurpleLogger.getCurrent().d(TAG, "getField, exception:" + e.getMessage(), null);
+            PurpleLogger.getCurrent().d(TAG, "getField, exception:" + e.getMessage(), null, null);
         }
         return null;
     }
@@ -233,7 +233,7 @@ public class DexClassScanner {
             res.setAccessible(true);
             return res;
         } catch (Throwable e) {
-            PurpleLogger.getCurrent().d(TAG, "getMethod, exception:" + e.getMessage(), null);
+            PurpleLogger.getCurrent().d(TAG, "getMethod, exception:" + e.getMessage(), null, null);
         }
         return null;
     }
@@ -247,7 +247,7 @@ public class DexClassScanner {
             field.setAccessible(true);
             return field.get(arg);
         } catch (Throwable e) {
-            PurpleLogger.getCurrent().d(TAG, "getObjectFromField, exception:" + e.getMessage(), null);
+            PurpleLogger.getCurrent().d(TAG, "getObjectFromField, exception:" + e.getMessage(), null, null);
         }
         return null;
     }

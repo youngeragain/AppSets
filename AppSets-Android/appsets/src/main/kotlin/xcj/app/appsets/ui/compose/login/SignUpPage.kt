@@ -57,7 +57,7 @@ fun SignUpPage(
 ) {
 
     LaunchedEffect(key1 = loginState, block = {
-        if (loginState is LoginSignUpPageState.SignUpPageFinish) {
+        if (loginState is LoginSignUpPageState.SignUpFinish) {
             onBackClick()
         }
     })
@@ -85,9 +85,9 @@ fun SignUpPage(
                     .verticalScroll(rememberScrollState())
             ) {
                 val signUpUserInfo = when (loginState) {
-                    is LoginSignUpPageState.SignUpPage -> loginState.userInfoForCreate
-                    is LoginSignUpPageState.SignUpingPage -> loginState.userInfoForCreate
-                    is LoginSignUpPageState.SignUpPageFinish -> loginState.userInfoForCreate
+                    is LoginSignUpPageState.SignUpDefault -> loginState.userInfoForCreate
+                    is LoginSignUpPageState.SignUpping -> loginState.userInfoForCreate
+                    is LoginSignUpPageState.SignUpFinish -> loginState.userInfoForCreate
                     is LoginSignUpPageState.SignUpPageFail -> loginState.userInfoForCreate
                     else -> null
                 }
@@ -449,7 +449,7 @@ fun SignUpPage(
 @Composable
 fun SignUpIndicator(loginSignUpPageState: LoginSignUpPageState) {
     val isShow: Boolean =
-        loginSignUpPageState is LoginSignUpPageState.SignUpingPage || loginSignUpPageState is LoginSignUpPageState.SignUpPageFail
+        loginSignUpPageState is LoginSignUpPageState.SignUpping || loginSignUpPageState is LoginSignUpPageState.SignUpPageFail
     AnimatedVisibility(
         visible = isShow,
         enter = fadeIn(tween()) + scaleIn(

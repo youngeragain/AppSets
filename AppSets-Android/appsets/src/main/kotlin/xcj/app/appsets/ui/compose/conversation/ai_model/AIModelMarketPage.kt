@@ -48,7 +48,7 @@ import xcj.app.appsets.ui.compose.apps.tools.PageIndicator
 import xcj.app.appsets.ui.compose.conversation.GenerativeAISession
 import xcj.app.appsets.ui.compose.custom_component.AnyImage
 import xcj.app.appsets.ui.compose.custom_component.DesignBackButton
-import xcj.app.appsets.ui.compose.custom_component.HideNavBarWhenOnLaunch
+import xcj.app.appsets.ui.compose.custom_component.HideNavBar
 
 data class AIGCSessionTemplate(
     val session: Session,
@@ -65,7 +65,7 @@ data class AIGCSessionTemplate(
 fun AIGCMarketPage(
     onBackClick: () -> Unit,
 ) {
-    HideNavBarWhenOnLaunch()
+    HideNavBar()
     val pagerState = rememberPagerState { 3 }
     Box(modifier = Modifier.fillMaxSize()) {
         PageIndicator(

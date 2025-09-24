@@ -44,7 +44,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import xcj.app.appsets.server.model.WeatherInfo
 import xcj.app.appsets.ui.compose.LocalUseCaseOfSystem
-import xcj.app.appsets.ui.compose.custom_component.HideNavBarWhenOnLaunch
+import xcj.app.appsets.ui.compose.custom_component.HideNavBar
 import xcj.app.appsets.ui.compose.quickstep.QuickStepContent
 import xcj.app.compose_share.components.BackActionTopBar
 import xcj.app.compose_share.components.DesignTextField
@@ -55,7 +55,7 @@ fun ToolWeatherPage(
     quickStepContents: List<QuickStepContent>?,
     onBackClick: () -> Unit,
 ) {
-    HideNavBarWhenOnLaunch()
+    HideNavBar()
     val configuration = LocalConfiguration.current
     Column {
         BackActionTopBar(

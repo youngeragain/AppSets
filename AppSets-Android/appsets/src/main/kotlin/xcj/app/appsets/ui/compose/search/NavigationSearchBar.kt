@@ -1,5 +1,6 @@
 package xcj.app.appsets.ui.compose.search
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -34,6 +35,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import xcj.app.appsets.account.LocalAccountManager
 import xcj.app.appsets.im.BrokerTest
+import xcj.app.appsets.im.IMOnlineState
 import xcj.app.appsets.ui.compose.LocalUseCaseOfSearch
 import xcj.app.appsets.ui.compose.custom_component.ImageButtonComponent
 import xcj.app.appsets.ui.model.state.AccountStatus
@@ -56,30 +58,35 @@ fun NavigationSearchBar(
         mutableStateOf(IntSize.Zero)
     }
     Column {
-        if (
-            inSearchModel
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Spacer(modifier = Modifier.height(4.dp))
-            SearchInputBar(
-                searchPageState = searchState,
-                sizeOfSearchBar = sizeOfSearchBar,
-                onBackClick = onBackClick,
-                onInputContent = onInputContent,
-                onSearchBarSizeChanged = {
-                    sizeOfSearchBar = it
+            AnimatedContent(
+                targetState = inSearchModel,
+                contentAlignment = Alignment.CenterStart
+            ) { targetIsSearchMode ->
+                if (targetIsSearchMode) {
+                    Column {
+                        Spacer(modifier = Modifier.height(4.dp))
+                        SearchInputBar(
+                            searchPageState = searchState,
+                            sizeOfSearchBar = sizeOfSearchBar,
+                            onBackClick = onBackClick,
+                            onInputContent = onInputContent,
+                            onSearchBarSizeChanged = {
+                                sizeOfSearchBar = it
+                            }
+                        )
+                    }
+                } else {
+                    SearchClickableBar(
+                        enable = enable,
+                        onSearchBarClick = onSearchBarClick
+                    )
                 }
-            )
-        } else {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                SearchClickableBar(
-                    enable = enable,
-                    onSearchBarClick = onSearchBarClick
-                )
-                LocalAccountUserAvatar(onClick = onBioClick)
             }
+            LocalAccountUserAvatar(onClick = onBioClick)
         }
         Spacer(modifier = Modifier.height(4.dp))
     }
@@ -95,11 +102,11 @@ fun SearchClickableBar(
         modifier = Modifier
             .background(
                 MaterialTheme.colorScheme.outline,
-                MaterialTheme.shapes.extraLarge
+                CircleShape
             )
             .widthIn(min = 100.dp, max = 150.dp)
             .height(42.dp)
-            .clip(MaterialTheme.shapes.extraLarge)
+            .clip(CircleShape)
             .clickable {
                 if (!enable) {
                     context
@@ -125,9 +132,12 @@ fun SearchClickableBar(
 @Composable
 fun LocalAccountUserAvatar(onClick: (() -> Unit)? = null) {
     val loginState by LocalAccountManager.accountStatus
+    val imOnlineState by BrokerTest.imOnLineState
     val targetBorderColor = remember {
         derivedStateOf {
-            if (loginState is AccountStatus.Logged && BrokerTest.onlineState.value) {
+            if (loginState is AccountStatus.Logged &&
+                imOnlineState is IMOnlineState.Online
+            ) {
                 Color.Green
             } else {
                 Color.Red

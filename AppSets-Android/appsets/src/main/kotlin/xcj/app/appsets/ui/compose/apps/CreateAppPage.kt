@@ -70,7 +70,7 @@ import xcj.app.appsets.server.model.AppPlatform
 import xcj.app.appsets.server.model.VersionInfo
 import xcj.app.appsets.ui.compose.LocalUseCaseOfAppCreation
 import xcj.app.appsets.ui.compose.custom_component.AnyImage
-import xcj.app.appsets.ui.compose.custom_component.HideNavBarWhenOnLaunch
+import xcj.app.appsets.ui.compose.custom_component.HideNavBar
 import xcj.app.appsets.ui.model.ApplicationForCreate
 import xcj.app.appsets.ui.model.DownloadInfoForCreate
 import xcj.app.appsets.ui.model.PlatformForCreate
@@ -110,7 +110,7 @@ fun CreateAppPage(
     onChoosePictureClick: (Any, String, UriProvider?) -> Unit,
     onConfirmClick: () -> Unit,
 ) {
-    HideNavBarWhenOnLaunch()
+    HideNavBar()
     val appCreationUseCase = LocalUseCaseOfAppCreation.current
     val anyStateProvider = LocalVisibilityComposeStateProvider.current
     DisposableEffect(key1 = true) {
