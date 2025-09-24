@@ -3,20 +3,17 @@ package xcj.app.appsets.ui.compose.main
 import android.annotation.SuppressLint
 import android.content.BroadcastReceiver
 import android.content.Intent
-import android.content.IntentFilter
 import android.os.Bundle
 import android.view.MotionEvent
 import android.window.OnBackInvokedDispatcher
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.material3.Surface
-import androidx.core.content.ContextCompat
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import xcj.app.appsets.notification.NotificationPusher
 import xcj.app.appsets.ui.compose.theme.AppSetsTheme
 import xcj.app.appsets.ui.viewmodel.MainViewModel
 import xcj.app.appsets.util.SplashScreenHelper
@@ -58,12 +55,10 @@ class MainActivity : DesignComponentActivity() {
         viewModel.onActivityCreated(this@MainActivity)
         viewModel.handleIntent(intent)
         handleExternalShareContentIfNeeded(this@MainActivity, intent)
-        listenBroadcast()
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        unListenBroadcast()
     }
 
     override fun onNewIntent(intent: Intent) {
@@ -79,27 +74,6 @@ class MainActivity : DesignComponentActivity() {
             composedReceiver = null
         }
     }
-
-    @SuppressLint("UnspecifiedRegisterReceiverFlag")
-    private fun listenBroadcast() {
-        PurpleLogger.current.d(TAG, "listenBroadcast")
-        if (composedReceiver == null) {
-            composedReceiver = CallbackBroadcastReceiver { context, intent ->
-                PurpleLogger.current.d(TAG, "BroadcastReceiver, onReceive")
-                viewModel.conversationUseCase.handleSystemNotificationForReplyImMessage(
-                    this@MainActivity,
-                    intent
-                )
-            }
-            ContextCompat.registerReceiver(
-                this,
-                composedReceiver,
-                IntentFilter(NotificationPusher.ACTION_RECEIVER_IM_SESSION_REPLY),
-                ContextCompat.RECEIVER_NOT_EXPORTED
-            )
-        }
-    }
-
 
     override fun getOnBackInvokedDispatcher(): OnBackInvokedDispatcher {
         val onBackInvokedDispatcher = super.getOnBackInvokedDispatcher()

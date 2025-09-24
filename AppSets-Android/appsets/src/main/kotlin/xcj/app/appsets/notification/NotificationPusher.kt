@@ -11,7 +11,6 @@ import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.app.Person
-import androidx.core.app.RemoteInput
 import androidx.core.content.pm.ShortcutInfoCompat
 import androidx.core.content.pm.ShortcutManagerCompat
 import androidx.core.graphics.drawable.IconCompat
@@ -323,51 +322,6 @@ class NotificationPusher() {
                 .setGroupSummary(true)
                 .setAutoCancel(true)
 
-        val isReplyNotification = false
-
-        if (isReplyNotification) {
-            val replyText = context.getString(xcj.app.appsets.R.string.reply)
-            // Key for the string that's delivered in the action's intent.
-            val remoteInput: RemoteInput =
-                RemoteInput.Builder(REMOTE_BUILDER_KEY_IM_INPUT)
-                    .setLabel(replyText)
-                    .build()
-            // Build a PendingIntent for the reply action to trigger.
-            val replayIntent = Intent().apply {
-                action = ACTION_RECEIVER_IM_SESSION_REPLY
-                putExtra(ImMessage.KEY_IM_MESSAGE_NOTIFICATION_ID, notificationId)
-                putExtra(ImMessage.KEY_IM_MESSAGE_ID, imMessage.id)
-                putExtra(ImMessage.KEY_SESSION_ID, session.id)
-            }
-            val replyPendingIntent: PendingIntent? =
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-                    PendingIntent.getBroadcast(
-                        context,
-                        0,
-                        replayIntent,
-                        PendingIntent.FLAG_MUTABLE or PendingIntent.FLAG_ALLOW_UNSAFE_IMPLICIT_INTENT
-                    )
-                } else {
-                    PendingIntent.getBroadcast(
-                        context,
-                        0,
-                        replayIntent,
-                        PendingIntent.FLAG_MUTABLE
-                    )
-                }
-
-            val replyAction: NotificationCompat.Action =
-                NotificationCompat.Action
-                    .Builder(
-                        xcj.app.compose_share.R.drawable.ic_round_reply_24,
-                        replyText,
-                        replyPendingIntent
-                    )
-                    .addRemoteInput(remoteInput)
-                    .setAllowGeneratedReplies(true)
-                    .build()
-            notificationBuilder.addAction(replyAction)
-        }
         if (sessionIconBitmap != null) {
             notificationBuilder.setLargeIcon(sessionIconBitmap)
         }
