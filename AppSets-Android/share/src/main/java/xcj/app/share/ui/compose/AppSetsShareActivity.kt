@@ -13,9 +13,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.core.content.FileProvider
 import androidx.core.content.IntentCompat
-import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.withCreated
-import kotlinx.coroutines.launch
 import xcj.app.share.base.DataContent
 import xcj.app.share.base.ShareDevice
 import xcj.app.share.base.ShareMethod
@@ -82,21 +79,14 @@ class AppSetsShareActivity : DesignComponentActivity() {
                 )
             }
         }
-        lifecycleScope.launch {
-            lifecycle.withCreated {
-                updateShareMethod(HttpShareMethod::class.java)
-                lifecycleScope.launch {
-                    handleExternalShareContentIfNeeded(intent)
-                }
-            }
-        }
+        makeActivityResultLauncher()
+        updateShareMethod(HttpShareMethod::class.java)
+        handleExternalShareContentIfNeeded(intent)
     }
 
     override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
-        lifecycleScope.launch {
-            handleExternalShareContentIfNeeded(intent)
-        }
+        handleExternalShareContentIfNeeded(intent)
     }
 
     private fun onScanClick() {
@@ -162,7 +152,7 @@ class AppSetsShareActivity : DesignComponentActivity() {
         }
     }
 
-    override fun makeActivityResultLauncher() {
+    private fun makeActivityResultLauncher() {
         val contract = ActivityResultContracts.StartActivityForResult()
         val activityResultCallback = ActivityResultCallback<ActivityResult> { result ->
             if (result.resultCode != RESULT_OK) {

@@ -5,6 +5,9 @@ import android.content.res.Configuration
 import android.os.Build
 import androidx.activity.ComponentActivity
 import androidx.activity.enableEdgeToEdge
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
+import xcj.app.starter.android.ActivityThemeInterface
 
 object ThemeUtil {
 
@@ -13,34 +16,22 @@ object ThemeUtil {
     @JvmStatic
     fun onCreate(
         activity: ComponentActivity,
-        hideStatusBar: Boolean,
-        hideNavigationBar: Boolean,
-        fitSystemWindow: Boolean,
-        overrideSystemBarLightModel: Boolean? = null
+        activityThemeInterface: ActivityThemeInterface,
     ) {
         setUpSystemBars(
             activity,
-            hideStatusBar,
-            hideNavigationBar,
-            fitSystemWindow,
-            overrideSystemBarLightModel
+            activityThemeInterface
         )
     }
 
     @JvmStatic
     fun onResume(
         activity: ComponentActivity,
-        hideStatusBar: Boolean,
-        hideNavigationBar: Boolean,
-        fitSystemWindow: Boolean,
-        overrideSystemBarLightModel: Boolean? = null
+        activityThemeInterface: ActivityThemeInterface
     ) {
         setUpSystemBars(
             activity,
-            hideStatusBar,
-            hideNavigationBar,
-            fitSystemWindow,
-            overrideSystemBarLightModel
+            activityThemeInterface
         )
     }
 
@@ -48,14 +39,19 @@ object ThemeUtil {
     @JvmStatic
     fun setUpSystemBars(
         activity: ComponentActivity,
-        hideStatusBar: Boolean,
-        hideNavigationBar: Boolean,
-        fitSystemWindow: Boolean,
-        overrideSystemBarLightModel: Boolean? = null
+        activityThemeInterface: ActivityThemeInterface,
     ) {
         activity.enableEdgeToEdge()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             activity.window.isNavigationBarContrastEnforced = false
+        }
+        val windowInsetsControllerCompat =
+            WindowInsetsControllerCompat(activity.window, activity.window.decorView)
+        if (activityThemeInterface.isHideStatusBar()) {
+            windowInsetsControllerCompat.hide(WindowInsetsCompat.Type.statusBars())
+        }
+        if (activityThemeInterface.isHideNavigationBar()) {
+            windowInsetsControllerCompat.hide(WindowInsetsCompat.Type.navigationBars())
         }
     }
 

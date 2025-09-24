@@ -12,7 +12,6 @@ import kotlinx.coroutines.launch
 import xcj.app.appsets.ui.compose.theme.AppSetsTheme
 import xcj.app.starter.android.ui.base.DesignComponentActivity
 import xcj.app.starter.android.util.PurpleLogger
-import kotlin.getValue
 
 class MediaPlaybackActivity : DesignComponentActivity() {
 
@@ -36,6 +35,14 @@ class MediaPlaybackActivity : DesignComponentActivity() {
     }
 
     override fun isKeepScreenOn(): Boolean {
+        return true
+    }
+
+    override fun isHideNavigationBar(): Boolean {
+        return true
+    }
+
+    override fun isHideStatusBar(): Boolean {
         return true
     }
 

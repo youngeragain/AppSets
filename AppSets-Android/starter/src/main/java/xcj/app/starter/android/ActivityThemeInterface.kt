@@ -10,10 +10,6 @@ interface ActivityThemeInterface {
         requestPrams:Any?,
     ): ActivityResultLauncher<I>? = null
 
-    fun makeActivityResultLauncher() {
-
-    }
-
     fun requireViewModel(): ViewModel? = null
 
     fun isFitSystemWindow(): Boolean {

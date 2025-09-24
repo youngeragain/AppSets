@@ -27,10 +27,7 @@ abstract class DesignFragmentActivity :
         super.onCreate(savedInstanceState)
         ThemeUtil.onCreate(
             this,
-            isHideStatusBar(),
-            isHideNavigationBar(),
-            isFitSystemWindow(),
-            isOverrideSystemBarLightModel()
+            this
         )
 
         if (isKeepScreenOn()) {
@@ -49,17 +46,12 @@ abstract class DesignFragmentActivity :
                 window.attributes = params
             }
         }
-
-        makeActivityResultLauncher()
     }
 
     override fun onResume() {
         ThemeUtil.onResume(
             this,
-            isHideStatusBar(),
-            isHideNavigationBar(),
-            isFitSystemWindow(),
-            isOverrideSystemBarLightModel()
+            this
         )
         super.onResume()
     }
@@ -73,10 +65,7 @@ abstract class DesignFragmentActivity :
     override fun setupSystemBars(isLight: Boolean) {
         ThemeUtil.setUpSystemBars(
             this,
-            isHideStatusBar(),
-            isHideNavigationBar(),
-            isFitSystemWindow(),
-            isLight
+            this
         )
     }
 
@@ -85,9 +74,5 @@ abstract class DesignFragmentActivity :
         requestPrams: Any?
     ): ActivityResultLauncher<I>? {
         return null
-    }
-
-    override fun makeActivityResultLauncher() {
-
     }
 }

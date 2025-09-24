@@ -10,7 +10,6 @@ import androidx.lifecycle.withCreated
 import kotlinx.coroutines.launch
 import xcj.app.appsets.ui.compose.theme.AppSetsTheme
 import xcj.app.starter.android.ui.base.DesignFragmentActivity
-import kotlin.getValue
 
 class MediaFallActivity : DesignFragmentActivity() {
 
@@ -29,6 +28,14 @@ class MediaFallActivity : DesignFragmentActivity() {
     }
 
     override fun isKeepScreenOn(): Boolean {
+        return true
+    }
+
+    override fun isHideNavigationBar(): Boolean {
+        return true
+    }
+
+    override fun isHideStatusBar(): Boolean {
         return true
     }
 
