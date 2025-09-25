@@ -5,6 +5,7 @@ import android.app.Service
 import android.content.Intent
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
 import androidx.work.OneTimeWorkRequest
 import androidx.work.WorkManager
 import xcj.app.appsets.worker.LastSyncWorker
@@ -12,17 +13,54 @@ import xcj.app.appsets.worker.LocalSyncWorker
 import xcj.app.appsets.worker.ServerSyncWorker
 import xcj.app.starter.android.util.PurpleLogger
 
-class MainService : Service() {
+class DataSyncService : Service() {
     companion object {
-        private const val TAG = "MainService"
+        private const val TAG = "DataSyncService"
         const val CHANNEL_ID = TAG
+        const val FOREGROUND_NOTIFICATION_ID = 1
         const val KEY_WHAT_TO_DO = "what_to_do"
         const val DO_TO_SYNC_USER_FRIENDS_FROM_SERVER = "to_sync_user_friends_from_server"
         const val DO_TO_SYNC_USER_GROUPS_FROM_SERVER = "to_sync_user_groups_from_server"
         const val DO_TO_SYNC_USER_DATA_FROM_SERVER = "to_sync_user_data_from_server"
         const val DO_TO_SYNC_USER_FRIENDS_FROM_LOCAL = "to_sync_user_friends_from_local"
         const val DO_TO_SYNC_USER_GROUPS_FROM_LOCAL = "to_sync_user_groups_from_local"
+
         const val DO_TO_SYNC_USER_DATA_FROM_LOCAL = "to_sync_user_data_from_local"
+    }
+
+    private fun isForegroundNotificationIsShowing(): Boolean {
+        val notificationManagerCompat = NotificationManagerCompat.from(this)
+        val activeNotifications = notificationManagerCompat.activeNotifications
+        for (notification in activeNotifications) {
+            if (notification.id == IMService.Companion.FOREGROUND_NOTIFICATION_ID) {
+                return true
+            }
+        }
+        return false
+    }
+
+    private fun startForeground(by: String? = null) {
+        PurpleLogger.current.d(TAG, "startForeground, by:$by")
+        val notification = NotificationCompat.Builder(this, CHANNEL_ID)
+            .setContentTitle(getString(xcj.app.appsets.R.string.app_notification_channel_data_sync))
+            .setContentText(getString(xcj.app.appsets.R.string.app_notification_channel_data_sync_description))
+            .setSmallIcon(xcj.app.compose_share.R.drawable.ic_appsets_44)
+            .setSound(null)
+            .setSilent(true)
+            .build()
+
+        startForeground(FOREGROUND_NOTIFICATION_ID, notification)
+    }
+
+    private fun stopForeground(by: String? = null) {
+        val isForegroundNotificationIsShowing = isForegroundNotificationIsShowing()
+        PurpleLogger.current.d(
+            TAG,
+            "stopForeground, isForegroundNotificationIsShowing:$isForegroundNotificationIsShowing, by:$by"
+        )
+        if (isForegroundNotificationIsShowing) {
+            stopForeground(STOP_FOREGROUND_REMOVE)
+        }
     }
 
     override fun onCreate() {
@@ -31,41 +69,32 @@ class MainService : Service() {
 
     override fun onDestroy() {
         PurpleLogger.current.d(TAG, "onDestroy")
-        stopForeground(STOP_FOREGROUND_REMOVE)
+        stopForeground("onDestroy")
     }
 
     override fun onTaskRemoved(rootIntent: Intent?) {
         super.onTaskRemoved(rootIntent)
-        stopForeground(STOP_FOREGROUND_REMOVE)
+        stopForeground("onTaskRemoved")
     }
 
-    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+    override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
         PurpleLogger.current.d(TAG, "onStartCommand")
-        intent?.getStringExtra(KEY_WHAT_TO_DO)?.let {
-            PurpleLogger.current.d(TAG, "onStartCommand, what_to_do:${it}")
-            startForeground()
-            when (it) {
-                DO_TO_SYNC_USER_DATA_FROM_SERVER -> toSyncUserDataFromServer("friends,groups")
-                DO_TO_SYNC_USER_FRIENDS_FROM_SERVER -> toSyncUserDataFromServer("friends")
-                DO_TO_SYNC_USER_GROUPS_FROM_SERVER -> toSyncUserDataFromServer("groups")
-                DO_TO_SYNC_USER_DATA_FROM_LOCAL -> toSyncUserDataFromLocal("friends,groups")
-                DO_TO_SYNC_USER_FRIENDS_FROM_LOCAL -> toSyncUserDataFromLocal("friends")
-                DO_TO_SYNC_USER_GROUPS_FROM_LOCAL -> toSyncUserDataFromLocal("groups")
+        if (intent.hasExtra(KEY_WHAT_TO_DO)) {
+            val whatToDo = intent.getStringExtra(KEY_WHAT_TO_DO)
+            PurpleLogger.current.d(TAG, "onStartCommand, what_to_do:${whatToDo}")
+            if (whatToDo != null) {
+                startForeground()
+                when (whatToDo) {
+                    DO_TO_SYNC_USER_DATA_FROM_SERVER -> toSyncUserDataFromServer("friends,groups")
+                    DO_TO_SYNC_USER_FRIENDS_FROM_SERVER -> toSyncUserDataFromServer("friends")
+                    DO_TO_SYNC_USER_GROUPS_FROM_SERVER -> toSyncUserDataFromServer("groups")
+                    DO_TO_SYNC_USER_DATA_FROM_LOCAL -> toSyncUserDataFromLocal("friends,groups")
+                    DO_TO_SYNC_USER_FRIENDS_FROM_LOCAL -> toSyncUserDataFromLocal("friends")
+                    DO_TO_SYNC_USER_GROUPS_FROM_LOCAL -> toSyncUserDataFromLocal("groups")
+                }
             }
         }
         return super.onStartCommand(intent, flags, startId)
-    }
-
-    private fun startForeground() {
-        val notification = NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle(getString(xcj.app.appsets.R.string.foreground_service))
-            .setContentText(getString(xcj.app.appsets.R.string.service_running))
-            .setSmallIcon(xcj.app.compose_share.R.drawable.ic_appsets_44)
-            .setSound(null)
-            .setSilent(true)
-            .build()
-
-        startForeground(1, notification) // 启动前台服务
     }
 
     @SuppressLint("RestrictedApi")

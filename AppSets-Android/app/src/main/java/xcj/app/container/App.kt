@@ -10,7 +10,8 @@ class App : DesignApplication() {
     }
 
     override fun purpleBootstrap(isTest: Boolean) {
-        super.purpleBootstrap(ModuleConfig.isTest)
+        val isTestOverride = ModuleConfig.isTest
+        super.purpleBootstrap(isTestOverride)
     }
 }
 

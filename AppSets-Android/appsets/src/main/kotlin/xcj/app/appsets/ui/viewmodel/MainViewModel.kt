@@ -55,11 +55,16 @@ class MainViewModel : BaseIMViewModel() {
 
     init {
         PurpleLogger.current.d(TAG, "init hash:${hashCode()}")
-        conversationUseCase.setNavigationUseCase(navigationUseCase)
     }
 
     override fun onCleared() {
         PurpleLogger.current.d(TAG, "onCleared")
+    }
+
+    override fun doActionsOnCreated() {
+        super.doActionsOnCreated()
+        PurpleLogger.current.d(TAG, "doActionsOnCreated")
+        systemUseCase.cleanCaches()
     }
 
     override suspend fun doActionWhenFileIOInitialed() {
@@ -68,12 +73,6 @@ class MainViewModel : BaseIMViewModel() {
         appsUseCase.loadHomeApplications()
         screensUseCase.loadOutSideScreens()
         systemUseCase.checkUpdate()
-    }
-
-    override fun doActionsOnCreated() {
-        super.doActionsOnCreated()
-        PurpleLogger.current.d(TAG, "doActionsOnCreated")
-        systemUseCase.cleanCaches()
     }
 
     override fun observeSomeThingsOnCreated(activity: ComponentActivity) {

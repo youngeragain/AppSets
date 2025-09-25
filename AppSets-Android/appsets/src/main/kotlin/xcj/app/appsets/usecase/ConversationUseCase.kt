@@ -49,7 +49,7 @@ class ConversationUseCase private constructor() : IComposeLifecycleAware {
 
     companion object {
         private const val TAG = "ConversationUseCase"
-        const val KEY_SESSIONS_INIT_RESULT = "sessions_init_result"
+        const val MESSAGE_KEY_SESSIONS_INIT_RESULT = "sessions_init_result"
         const val USER = "user"
         const val GROUP = "group"
         const val SYSTEM = "system"
@@ -78,9 +78,7 @@ class ConversationUseCase private constructor() : IComposeLifecycleAware {
     val currentSessionState: MutableState<SessionState> = mutableStateOf(SessionState.None)
     val complexContentSendingState: MutableState<Boolean> = mutableStateOf(false)
 
-    private var navigationUseCase: NavigationUseCase? = null
-    private val nowSpaceContentUseCase: NowSpaceContentUseCase? = null
-
+    private var nowSpaceContentUseCase: NowSpaceContentUseCase? = null
 
     init {
         sessionsMap[SYSTEM] = mutableStateListOf()
@@ -89,8 +87,8 @@ class ConversationUseCase private constructor() : IComposeLifecycleAware {
         sessionsMap[AI] = mutableStateListOf()
     }
 
-    fun setNavigationUseCase(navigationUseCase: NavigationUseCase) {
-        this.navigationUseCase = navigationUseCase
+    fun setNowSpaceContentUseCase(nowSpaceContentUseCase: NowSpaceContentUseCase) {
+        this.nowSpaceContentUseCase = nowSpaceContentUseCase
     }
 
     /**
@@ -385,19 +383,9 @@ class ConversationUseCase private constructor() : IComposeLifecycleAware {
     ) {
         val sessionState = currentSessionState.value
         if (sessionState !is SessionState.Normal) {
-            return
+
         }
-        if (sessionState.session.id == session.id) {
-            val navigationUseCase = navigationUseCase
-            if (navigationUseCase == null) {
-                return
-            }
-            if (navigationUseCase.currentRoute != PageRouteNames.ConversationDetailsPage) {
-                nowSpaceContentUseCase?.onNewImMessage(session, imMessage)
-            }
-        } else {
-            nowSpaceContentUseCase?.onNewImMessage(session, imMessage)
-        }
+        nowSpaceContentUseCase?.onNewImMessage(session, imMessage)
     }
 
     private fun getNotificationPusher(): NotificationPusher {
@@ -483,9 +471,6 @@ class ConversationUseCase private constructor() : IComposeLifecycleAware {
         }
     }
 
-    /**
-     * 登录成功以及本地状态为已经登录即触发初始化会话列表
-     */
     private suspend fun initSessions() {
         PurpleLogger.current.d(TAG, "initSessions")
         runCatching {
@@ -548,14 +533,14 @@ class ConversationUseCase private constructor() : IComposeLifecycleAware {
                 fillImMessageToSessions(groupSessions, applications)
             }
         }.onSuccess {
-            PurpleLogger.current.d(TAG, "initSessions list successful!")
+            PurpleLogger.current.d(TAG, "initSessions successful!")
             sessionsInitTimes += 1
-            LocalMessenger.post(KEY_SESSIONS_INIT_RESULT, true)
+            LocalMessenger.post(MESSAGE_KEY_SESSIONS_INIT_RESULT, true)
         }.onFailure {
-            LocalMessenger.post(KEY_SESSIONS_INIT_RESULT, false)
+            LocalMessenger.post(MESSAGE_KEY_SESSIONS_INIT_RESULT, false)
             PurpleLogger.current.d(
                 TAG,
-                "initSessions list failed, ${it.message}"
+                "initSessions failed, ${it.message}"
             )
         }
     }
@@ -618,8 +603,9 @@ class ConversationUseCase private constructor() : IComposeLifecycleAware {
     }
 
     fun getAllSimpleSessionsCount(): Int {
-        return (sessionsMap[AI]?.size ?: 0) + (sessionsMap[GROUP]?.size
-            ?: 0) + (sessionsMap[GROUP]?.size ?: 0)
+        return (sessionsMap[AI]?.size ?: 0) +
+                (sessionsMap[GROUP]?.size ?: 0) +
+                (sessionsMap[GROUP]?.size ?: 0)
     }
 
     fun getAllSimpleSessionsByKeywords(keywords: String? = null): List<Session> {
@@ -658,32 +644,22 @@ class ConversationUseCase private constructor() : IComposeLifecycleAware {
         val sessionId = intent.getStringExtra(ImMessage.KEY_SESSION_ID)
         val imMessageNotificationId =
             intent.getIntExtra(ImMessage.KEY_IM_MESSAGE_NOTIFICATION_ID, -1)
+        PurpleLogger.current.d(
+            TAG,
+            "handleSystemNotificationForReplyImMessage, " +
+                    "imMessageId:$imMessageId, " +
+                    "sessionId:$sessionId, " +
+                    "imMessageNotificationId:$imMessageNotificationId"
+        )
         if (imMessageId.isNullOrEmpty()) {
-            PurpleLogger.current.d(
-                TAG,
-                "handleSystemNotificationForReplyImMessage, imMessageId is null or empty, return!"
-            )
             return
         }
         if (sessionId.isNullOrEmpty()) {
-            PurpleLogger.current.d(
-                TAG,
-                "handleSystemNotificationForReplyImMessage, sessionId is null or empty, return!"
-            )
             return
         }
         if (imMessageNotificationId == -1) {
-            PurpleLogger.current.d(
-                TAG,
-                "handleSystemNotificationForReplyImMessage, imMessageNotificationId is null or empty, return!"
-            )
             return
         }
-        PurpleLogger.current.d(
-            TAG,
-            "handleSystemNotificationForReplyImMessage, (imMessageId:${imMessageId}, sessionId:$sessionId," +
-                    " imMessageNotificationId:$imMessageNotificationId)"
-        )
         val session: Session? = getSessionBySessionId(sessionId)
         if (session == null) {
             PurpleLogger.current.d(

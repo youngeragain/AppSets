@@ -6,13 +6,14 @@ import android.content.Context
 import android.os.Bundle
 import android.os.Environment
 import androidx.lifecycle.Lifecycle
+import xcj.app.starter.android.util.LocalMessenger
 import xcj.app.starter.android.util.PurpleLogger
 import java.io.File
-import kotlin.collections.set
 
 class AndroidContexts(application: Application) {
     companion object {
         private const val TAG = "AndroidContexts"
+        const val MESSAGE_KEY_ON_APP_GO_BACKGROUND = "on_app_go_background"
     }
 
     private val activities: LinkedHashMap<Activity, Lifecycle.State> = linkedMapOf()
@@ -120,6 +121,20 @@ class AndroidContexts(application: Application) {
 
         override fun onActivityDestroyed(activity: Activity) {
             activities.remove(activity)
+        }
+
+        override fun onActivityPostResumed(activity: Activity) {
+            LocalMessenger.post(
+                MESSAGE_KEY_ON_APP_GO_BACKGROUND,
+                isApplicationInBackground()
+            )
+        }
+
+        override fun onActivityPostStopped(activity: Activity) {
+            LocalMessenger.post(
+                MESSAGE_KEY_ON_APP_GO_BACKGROUND,
+                isApplicationInBackground()
+            )
         }
 
         override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) {

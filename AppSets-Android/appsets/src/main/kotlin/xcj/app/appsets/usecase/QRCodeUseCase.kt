@@ -165,7 +165,7 @@ class QRCodeUseCase(
                 val token = loginResponse.data
                 if (!loginResponse.success || token.isNullOrEmpty()) {
                     PurpleLogger.current.d(TAG, loginResponse.info)
-                    loginSignUpPageState.value = LoginSignUpPageState.LoggingFail()
+                    loginSignUpPageState.value = LoginSignUpPageState.LoggingFailed()
                     return
                 }
                 LocalAccountManager.onUserLogged(UserInfo.default(), token, true)
@@ -173,7 +173,7 @@ class QRCodeUseCase(
                 val userInfo = userInfoResponse.data
                 if (userInfo == null) {
                     PurpleLogger.current.d(TAG, "startQuickLogin failed! userInfo is null ")
-                    loginSignUpPageState.value = LoginSignUpPageState.LoggingFail()
+                    loginSignUpPageState.value = LoginSignUpPageState.LoggingFailed()
                     return
                 }
                 LocalAccountManager.onUserLogged(userInfo, token, false)

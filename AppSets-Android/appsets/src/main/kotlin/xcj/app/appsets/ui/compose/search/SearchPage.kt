@@ -10,6 +10,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
+import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -238,9 +239,9 @@ fun SearchPageResults(
     AnimatedContent(
         targetState = searchPageState, contentAlignment = Alignment.TopCenter, transitionSpec = {
             if (searchPageState is SearchPageState.None) {
-                fadeIn(
+                (fadeIn(
                     animationSpec = snap()
-                ).togetherWith(
+                ) + slideInVertically()).togetherWith(
                     fadeOut(
                         animationSpec = snap()
                     )
@@ -272,7 +273,8 @@ fun SearchPageResults(
 
                 is SearchPageState.Searching -> {
                     Column(
-                        modifier = Modifier.align(Alignment.Center)
+                        modifier = Modifier.align(Alignment.Center),
+                        horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Text(
                             text = stringResource(id = targetSearchState.tipsIntRes)
@@ -287,27 +289,30 @@ fun SearchPageResults(
                 }
 
                 is SearchPageState.SearchPageFailed -> {
-                    targetSearchState.tipsIntRes?.let {
-                        Column(
-                            modifier = Modifier.align(Alignment.Center)
-                        ) {
+                    Column(
+                        modifier = Modifier.align(Alignment.Center),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        targetSearchState.tipsIntRes?.let {
                             Text(
-                                text = stringResource(id = targetSearchState.tipsIntRes)
+                                text = stringResource(id = it)
                             )
-                            targetSearchState.subTipsIntRes?.let {
-                                Text(
-                                    text = stringResource(id = it),
-                                    fontSize = 12.sp
-                                )
-                            }
+                        }
+                        targetSearchState.subTipsIntRes?.let {
+                            Text(
+                                text = stringResource(id = it),
+                                fontSize = 12.sp
+                            )
                         }
                     }
+
                 }
 
                 is SearchPageState.SearchPageSuccess -> {
                     if (targetSearchState.results.isEmpty()) {
                         Column(
-                            modifier = Modifier.align(Alignment.Center)
+                            modifier = Modifier.align(Alignment.Center),
+                            horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             targetSearchState.tipsIntRes?.let {
                                 Text(

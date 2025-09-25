@@ -22,9 +22,10 @@
     <string name="title_activity_camera_compose">CameraComposeActivity</string>
     <string name="next">下一个</string>
     <string name="previous">上一个</string>
-    <string name="app_media_player_name">AppSets Player</string>
+    <string name="app_media_player_name">AppSets 播放器</string>
     <string name="app_media_player_notification_channel_description">Notification channel for AppSets Player</string>
-    <string name="notification_channel_name_for_playback"> notification</string>
+    <string name="notification_channel_media_playback">媒体播放</string>
+    <string name="notification_channel_media_playback_description">各种媒体播放</string>
     <string name="notification_content_title">Playback cannot be resumed</string>
     <string name="notification_content_text">Press on the play button on the media notification if it\n is still present, otherwise please open the app to start the playback and re-connect the session\n    to the controller</string>
     <string name="select_a_display_content">选择一项展示内容</string>
@@ -375,6 +376,8 @@
     <string name="continue_1">继续</string>
     <string name="app_notification_channel_data_sync">数据同步</string>
     <string name="app_notification_channel_data_sync_description">从服务器同步数据</string>
+    <string name="app_notification_channel_im_service">消息服务</string>
+    <string name="app_notification_channel_im_service_description">增加消息可达性</string>
     <string name="can_not_found_session_object">无法找到会话对象</string>
     <string name="please_choose_avatar">请选择一个图片作为头像!</string>
     <string name="slide_to_enable_camera_preview">滑动开启相机预览</string>

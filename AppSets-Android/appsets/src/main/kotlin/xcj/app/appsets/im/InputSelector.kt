@@ -12,6 +12,7 @@ object InputSelector {
     const val AD = 4
 
     const val IMAGE = 5
+
     const val VIDEO = 6
     const val MUSIC = 7
     const val VOICE = 8

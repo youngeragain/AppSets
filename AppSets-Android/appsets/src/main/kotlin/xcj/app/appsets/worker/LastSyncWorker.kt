@@ -4,7 +4,7 @@ import android.content.Context
 import android.content.Intent
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
-import xcj.app.appsets.service.MainService
+import xcj.app.appsets.service.DataSyncService
 import xcj.app.starter.android.util.LocalMessenger
 import xcj.app.starter.android.util.PurpleLogger
 
@@ -21,7 +21,7 @@ class LastSyncWorker(
     override suspend fun doWork(): Result {
         PurpleLogger.current.d(TAG, "doWork")
         LocalMessenger.post(MESSAGE_KEY_DATA_SYNC_FINISH, true)
-        applicationContext.stopService(Intent(applicationContext, MainService::class.java))
+        applicationContext.stopService(Intent(applicationContext, DataSyncService::class.java))
         return Result.success()
     }
 }

@@ -60,7 +60,7 @@ class IMBubbleViewModel : BaseIMViewModel() {
         PurpleLogger.current.d(TAG, "observeSomeThings")
         LocalMessenger.observe<String, Boolean>(
             activity,
-            ConversationUseCase.KEY_SESSIONS_INIT_RESULT
+            ConversationUseCase.MESSAGE_KEY_SESSIONS_INIT_RESULT
         ) { initSuccess ->
             if (!initSuccess) {
                 return@observe

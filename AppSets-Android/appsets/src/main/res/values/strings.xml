@@ -24,7 +24,8 @@
     <string name="previous">Previous</string>
     <string name="app_media_player_name">AppSets Player</string>
     <string name="app_media_player_notification_channel_description">Notification channel for AppSets Player</string>
-    <string name="notification_channel_name_for_playback">Playback notification</string>
+    <string name="notification_channel_media_playback">Media Playback</string>
+    <string name="notification_channel_media_playback_description">Every Media Playback</string>
     <string name="notification_content_title">Playback cannot be resumed</string>
     <string name="notification_content_text">Press on the play button on the media notification if it\n is still present, otherwise please open the app to start the playback and re-connect the session\n    to the controller</string>
     <string name="select_a_display_content">Choose a display</string>
@@ -375,6 +376,8 @@
     <string name="continue_1">Continue</string>
     <string name="app_notification_channel_data_sync">Data Sync</string>
     <string name="app_notification_channel_data_sync_description">To sync data from server</string>
+    <string name="app_notification_channel_im_service">Message Service</string>
+    <string name="app_notification_channel_im_service_description">Increase message accessibility</string>
     <string name="can_not_found_session_object">Unable to find session object</string>
     <string name="please_choose_avatar">Please choose a picture as your AppSets account\'s avatar!</string>
     <string name="slide_to_enable_camera_preview">Slide to enable camera\'s preview</string>

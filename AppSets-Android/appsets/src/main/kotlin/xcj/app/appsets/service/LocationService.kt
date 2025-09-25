@@ -9,25 +9,18 @@ import android.location.LocationListener
 import android.location.LocationManager
 import android.os.Binder
 import android.os.IBinder
-import androidx.lifecycle.MutableLiveData
+import kotlinx.coroutines.flow.MutableStateFlow
 import java.util.concurrent.ExecutorService
-import java.util.concurrent.Executors
 
 class LocationService : Service() {
-    private lateinit var binder: PBinder
+    private var binder: LocationBinder? = null
 
     private var locationManager: LocationManager? = null
 
-    private var lastLocation: Location? = null
 
-    private val executors: ExecutorService by lazy { Executors.newSingleThreadExecutor() }
+    private var executors: ExecutorService? = null
 
-    private val locationUpdateListener: LocationListener by lazy {
-        LocationListener {
-            lastLocation = it
-            binder.geoPair.postValue(Pair(it.latitude.toFloat(), it.longitude.toFloat()))
-        }
-    }
+    private var locationUpdateListener: LocationListener? = null
 
     @SuppressLint("MissingPermission")
     fun getLastLocation() {
@@ -38,7 +31,7 @@ class LocationService : Service() {
         criteria.isBearingRequired = false//不要求方位
         criteria.isCostAllowed = true//允许有花费
         criteria.powerRequirement = Criteria.POWER_LOW//低功耗
-        var provider =
+        val provider =
             locationManager.getBestProvider(criteria, true) ?: LocationManager.GPS_PROVIDER
         var location: Location? = null
         var times = 0
@@ -51,10 +44,11 @@ class LocationService : Service() {
             times++
         } while (location == null)
 
-
-        lastLocation = location
-
         if (location == null) {
+            val locationUpdateListener = LocationListener {
+                binder?.geoLocation?.value = it
+            }
+            this.locationUpdateListener = locationUpdateListener
             locationManager.requestLocationUpdates(
                 LocationManager.NETWORK_PROVIDER,
                 1000L,
@@ -62,43 +56,18 @@ class LocationService : Service() {
                 locationUpdateListener
             )
         } else {
-            binder.geoPair.postValue(
-                Pair(
-                    location.latitude.toFloat(),
-                    location.longitude.toFloat()
-                )
-            )
+            binder?.geoLocation?.value = location
         }
     }
 
     override fun onBind(intent: Intent?): IBinder? {
-        if (locationManager?.isProviderEnabled(LocationManager.GPS_PROVIDER) != true) {
-            binder.geoPair.value = Pair(0.0f, 0.0f)
-        } else {
-            //getLastLocation and if null, register a new LocationUpdateListener to LocationManager
-            executors.execute(::getLastLocation)
+        val locationManager = locationManager
+        if (locationManager != null) {
+            if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+                executors?.execute(::getLastLocation)
+            }
         }
         return binder
-    }
-
-    fun createObserve() {
-        /*contentResolver.registerContentObserver(
-            Settings.Secure.getUriFor(
-                Settings.Secure.LOCATION_PROVIDERS_ALLOWED),
-            false,
-            object : ContentObserver(null) {
-                override fun onChange(selfChange: Boolean) {
-                    super.onChange(selfChange)
-                    val enabled: Boolean = locationManager?.isProviderEnabled(LocationManager.GPS_PROVIDER)?:false
-                    if(enabled){
-                        Logger.e("", "gps on")
-                        executors.execute(runnable)
-                    }else{
-                        Logger.e("", "gps off")
-                    }
-                }
-            }
-        )*/
     }
 
     override fun onUnbind(intent: Intent?): Boolean {
@@ -112,13 +81,15 @@ class LocationService : Service() {
     @SuppressLint("MissingPermission")
     override fun onCreate() {
         super.onCreate()
-        binder = PBinder(this)
-        createObserve()
+        binder = LocationBinder(this)
         initLocationManager()
     }
 
     fun removeLocationUpdateListener() {
-        locationManager?.removeUpdates(locationUpdateListener)
+        val locationUpdateListener = locationUpdateListener
+        if (locationUpdateListener != null) {
+            locationManager?.removeUpdates(locationUpdateListener)
+        }
     }
 
     @SuppressLint("MissingPermission")
@@ -130,14 +101,13 @@ class LocationService : Service() {
         return super.onStartCommand(intent, flags, startId)
     }
 
-
     override fun onDestroy() {
         super.onDestroy()
     }
 
-    class PBinder(
-        val locationService: LocationService?
+    class LocationBinder(
+        private val locationService: LocationService
     ) : Binder() {
-        val geoPair: MutableLiveData<Pair<Float, Float>> by lazy { MutableLiveData() }
+        val geoLocation: MutableStateFlow<Location?> = MutableStateFlow(null)
     }
 }

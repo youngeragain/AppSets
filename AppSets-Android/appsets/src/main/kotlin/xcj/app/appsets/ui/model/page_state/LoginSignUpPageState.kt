@@ -5,7 +5,7 @@ import xcj.app.appsets.ui.model.UserInfoForCreate
 
 sealed interface LoginSignUpPageState : TipsProvider {
 
-    data object LoginDefault : LoginSignUpPageState {
+    data object LoginStart : LoginSignUpPageState {
         override val tipsIntRes: Int? = null
         override val subTipsIntRes: Int? = null
     }
@@ -20,12 +20,12 @@ sealed interface LoginSignUpPageState : TipsProvider {
         override val subTipsIntRes: Int? = null
     ) : LoginSignUpPageState
 
-    data class LoggingFail(
+    data class LoggingFailed(
         override val tipsIntRes: Int? = null,
         override val subTipsIntRes: Int? = null
     ) : LoginSignUpPageState
 
-    data class SignUpDefault(
+    data class SignUpStart(
         val userInfoForCreate: UserInfoForCreate,
         override val tipsIntRes: Int? = null,
         override val subTipsIntRes: Int? = null
@@ -43,7 +43,7 @@ sealed interface LoginSignUpPageState : TipsProvider {
         override val subTipsIntRes: Int? = null
     ) : LoginSignUpPageState
 
-    class SignUpPageFail(
+    class SignUpPageFailed(
         val userInfoForCreate: UserInfoForCreate,
         override val tipsIntRes: Int? = null,
         override val subTipsIntRes: Int? = null

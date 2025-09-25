@@ -1,9 +1,6 @@
 package xcj.app.appsets.settings
 
-import android.app.NotificationChannel
 import android.content.Context
-import android.os.Build
-import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.edit
 import xcj.app.appsets.db.room.AppDatabase
 import xcj.app.appsets.notification.NotificationChannels
@@ -28,12 +25,18 @@ class AppSetsModuleSettings : ModuleSettings {
 
         const val WEBSITE_URL = "http://162.14.70.230/?route=download"
 
+        const val KEY_im_bubble_alignment = "im_bubble_alignment"
         const val IM_BUBBLE_ALIGNMENT_ALL_START = "all_start"
         const val IM_BUBBLE_ALIGNMENT_ALL_END = "all_end"
         const val IM_BUBBLE_ALIGNMENT_START_END = "start_end"
 
+        const val KEY_im_message_delivery_type = "im_message_delivery_type"
         const val IM_MESSAGE_DELIVERY_TYPE_DI = "send_directly"
         const val IM_MESSAGE_DELIVERY_TYPE_RT = "relay_transmission"
+
+        const val KEY_is_im_message_show_date = "is_im_message_show_date"
+
+        const val KEY_is_im_message_date_show_seconds = "is_im_message_date_show_seconds"
 
 
         fun get(): AppSetsModuleSettings {
@@ -81,6 +84,7 @@ class AppSetsModuleSettings : ModuleSettings {
     var isImMessageShowDate: Boolean = true
     var isImMessageDateShowSeconds: Boolean = false
 
+    var isBackgroundIMEnable: Boolean = true
 
     override fun init() {
         prepareSettingsConfig()
@@ -91,75 +95,62 @@ class AppSetsModuleSettings : ModuleSettings {
     private fun prepareSettingsConfig() {
         imMessageDeliveryType =
             appSettingSharedPreferences.getString(
-                "im_message_delivery_type",
+                KEY_im_message_delivery_type,
                 IM_MESSAGE_DELIVERY_TYPE_RT
             ) ?: IM_MESSAGE_DELIVERY_TYPE_RT
         imBubbleAlignment =
             appSettingSharedPreferences.getString(
-                "im_bubble_alignment",
+                KEY_im_bubble_alignment,
                 IM_BUBBLE_ALIGNMENT_START_END
             ) ?: IM_BUBBLE_ALIGNMENT_START_END
 
         isImMessageShowDate =
             appSettingSharedPreferences.getBoolean(
-                "is_im_message_show_date",
+                KEY_is_im_message_show_date,
                 true
             )
         isImMessageDateShowSeconds =
             appSettingSharedPreferences.getBoolean(
-                "is_im_message_date_show_seconds",
+                KEY_is_im_message_date_show_seconds,
                 false
             )
     }
 
     private fun prepareNotificationsChanelConfig() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val context = LocalApplication.current
-            // Register the channel with the system
-            val notificationManager: NotificationManagerCompat =
-                NotificationManagerCompat.from(context)
-            NotificationChannels.provide(context).forEach { appsetsNotificationChannel ->
-                val channel =
-                    NotificationChannel(
-                        appsetsNotificationChannel.id,
-                        context.getString(appsetsNotificationChannel.name),
-                        appsetsNotificationChannel.importance
-                    )
-                channel.description = context.getString(appsetsNotificationChannel.description)
-                notificationManager.createNotificationChannel(channel)
-            }
-        }
+        val context = LocalApplication.current
+        NotificationChannels.prepareToSystem(context)
     }
 
     private fun prepareCoilConfig() {
-        configCoil(LocalApplication.current)
+        val context = LocalApplication.current
+        configCoil(context)
     }
 
     fun onIMBubbleAlignmentChanged(alignment: String) {
         imBubbleAlignment = alignment
         appSettingSharedPreferences.edit {
-            putString("im_bubble_alignment", alignment)
+            putString(KEY_im_bubble_alignment, alignment)
         }
     }
 
     fun onIMMessageDeliveryTypeChanged(deliveryType: String) {
         imMessageDeliveryType = deliveryType
         appSettingSharedPreferences.edit {
-            putString("im_message_delivery_type", deliveryType)
+            putString(KEY_im_message_delivery_type, deliveryType)
         }
     }
 
     fun onIsIMMessageShowDateChanged(show: Boolean) {
         isImMessageShowDate = show
         appSettingSharedPreferences.edit {
-            putBoolean("is_im_message_show_date", show)
+            putBoolean(KEY_is_im_message_show_date, show)
         }
     }
 
     fun onIsIMMessageDateShowSecondsChanged(show: Boolean) {
         isImMessageDateShowSeconds = show
         appSettingSharedPreferences.edit {
-            putBoolean("is_im_message_date_show_seconds", show)
+            putBoolean(KEY_is_im_message_date_show_seconds, show)
         }
     }
 }

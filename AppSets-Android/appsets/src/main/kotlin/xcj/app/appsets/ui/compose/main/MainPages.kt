@@ -7,7 +7,6 @@ import android.os.Bundle
 import androidx.activity.BackEventCompat
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.AnimationState
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
@@ -25,15 +24,12 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBars
-import androidx.compose.foundation.layout.windowInsetsTopHeight
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -104,7 +100,6 @@ import xcj.app.appsets.usecase.ConversationUseCase
 import xcj.app.appsets.usecase.ScreenUseCase
 import xcj.app.appsets.usecase.SessionState
 import xcj.app.compose_share.components.BottomSheetContainer
-import xcj.app.compose_share.components.DesignHDivider
 import xcj.app.compose_share.components.LocalUseCaseOfComposeDynamic
 import xcj.app.compose_share.components.LocalVisibilityComposeStateProvider
 import xcj.app.compose_share.components.ProgressiveVisibilityComposeState
@@ -443,26 +438,35 @@ fun NowSpace(navController: NavController) {
     val nowSpaceContentUseCase = LocalUseCaseOfNowSpaceContent.current
     val conversationUseCase = LocalUseCaseOfConversation.current
     val nowSpaceContent by nowSpaceContentUseCase.content
+    val currentSessionState by conversationUseCase.currentSessionState
+
+    val messageColorBarVisible by remember {
+        derivedStateOf {
+            val newImMessage = nowSpaceContent as? NowSpaceContent.NewImMessage
+            if (newImMessage == null) {
+                false
+            } else {
+                val currentSession =
+                    (currentSessionState as? SessionState.Normal)?.session
+                currentSession?.id != newImMessage.session.id ||
+                        navController.currentDestination?.route != PageRouteNames.ConversationDetailsPage
+            }
+        }
+    }
     Box(
         modifier = Modifier
-            .fillMaxWidth()
-            .animateContentSize()
     ) {
-        if (nowSpaceContent is NowSpaceContent.NewImMessage) {
-            val content = nowSpaceContent as NowSpaceContent.NewImMessage
-            val currentSessionState by conversationUseCase.currentSessionState
-            val messageColorBarVisible by remember {
-                derivedStateOf {
-                    val currentSession =
-                        (currentSessionState as? SessionState.Normal)?.session
-                    (navController.currentDestination?.route != PageRouteNames.ConversationDetailsPage ||
-                            currentSession?.id != content.session.id)
-                }
-            }
-            if (messageColorBarVisible) {
+        AnimatedVisibility(
+            visible = messageColorBarVisible,
+            enter = fadeIn() + scaleIn(),
+            exit = fadeOut() + scaleOut()
+        ) {
+            if (nowSpaceContent is NowSpaceContent.NewImMessage) {
+                val content = nowSpaceContent as NowSpaceContent.NewImMessage
                 MessageQuickAccessBar(
-                    modifier = Modifier.clickable {
-                        nowSpaceContentUseCase.removeContent()
+                    modifier = Modifier,
+                    newImMessage = content,
+                    onMessageClick = {
                         when (content.imMessage) {
                             is SystemMessage -> {
                                 conversationUseCase.updateCurrentTab(ConversationUseCase.SYSTEM)
@@ -471,6 +475,7 @@ fun NowSpace(navController: NavController) {
                                         inclusive = true
                                     }
                                 }
+                                nowSpaceContentUseCase.removeContent()
                             }
 
                             else -> {
@@ -480,14 +485,14 @@ fun NowSpace(navController: NavController) {
                                         inclusive = true
                                     }
                                 }
+                                nowSpaceContentUseCase.removeContent()
                             }
                         }
-                    },
-                    newImMessage = content
+                    }
                 )
             }
-        }
 
+        }
     }
 }
 
@@ -495,30 +500,43 @@ fun NowSpace(navController: NavController) {
 fun MessageQuickAccessBar(
     modifier: Modifier,
     newImMessage: NewImMessage,
+    onMessageClick: () -> Unit,
 ) {
+    val context = LocalContext.current
+    val theNewImMessage by rememberUpdatedState(newImMessage)
     Column(
         modifier = modifier
-            .background(
-                MaterialTheme.colorScheme.surface
-            )
-            .fillMaxWidth(),
+            .fillMaxWidth()
+            .statusBarsPadding()
+            .padding(horizontal = 12.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Spacer(modifier = Modifier.windowInsetsTopHeight(WindowInsets.statusBars))
-        AnimatedContent(
-            targetState = newImMessage,
-            transitionSpec = {
-                fadeIn(tween()) togetherWith fadeOut(tween())
-            },
-            contentAlignment = Alignment.Center,
-            label = "message_quick_access_bar_animate",
-        ) { targetNewImMessage ->
-            Column(
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(
+                    MaterialTheme.colorScheme.surface,
+                    MaterialTheme.shapes.large
+                )
+                .border(
+                    1.dp,
+                    MaterialTheme.colorScheme.outline,
+                    MaterialTheme.shapes.large
+                )
+                .clip(MaterialTheme.shapes.large)
+                .clickable(onClick = onMessageClick)
+                .padding(12.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            AnimatedContent(
+                targetState = theNewImMessage,
+                label = "message_quick_access_bar_animate_0",
+                transitionSpec = {
+                    fadeIn().togetherWith(fadeOut())
+                }
+            ) { targetNewImMessage ->
                 Row(
-                    modifier = Modifier.padding(horizontal = 12.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
@@ -535,11 +553,16 @@ fun MessageQuickAccessBar(
                     )
                     Text(text = targetNewImMessage.session.imObj.name)
                 }
-                val context = LocalContext.current
-                Column(
-                    modifier = Modifier.padding(12.dp),
-                    verticalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
+            }
+
+            AnimatedContent(
+                targetState = theNewImMessage,
+                label = "message_quick_access_bar_animate_1",
+                transitionSpec = {
+                    fadeIn().togetherWith(fadeOut())
+                }
+            ) { targetNewImMessage ->
+                Column {
                     if (targetNewImMessage.imMessage is SystemMessage) {
                         val systemContentInterface =
                             targetNewImMessage.imMessage.systemContentInterface
@@ -599,7 +622,6 @@ fun MessageQuickAccessBar(
                 }
             }
         }
-        DesignHDivider()
     }
 }
 

@@ -223,11 +223,6 @@ fun SessionObjectNormal(
     HideNavBar()
     val conversationUseCase = LocalUseCaseOfConversation.current
 
-    DisposableEffect(Unit) {
-        onDispose {
-            conversationUseCase.onComposeDispose("page dispose")
-        }
-    }
     val context = LocalContext.current
 
     var searchKeywords by remember {
@@ -246,11 +241,7 @@ fun SessionObjectNormal(
 
     val hapticFeedback = LocalHapticFeedback.current
 
-    LaunchedEffect(complexContentSending) {
-        if (complexContentSending) {
-            hapticFeedback.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-        }
-    }
+
     val isShowJumpToLatestButton by remember {
         derivedStateOf {
             scrollState.firstVisibleItemIndex != 0 ||
@@ -266,12 +257,6 @@ fun SessionObjectNormal(
 
     val textFieldAdviser = remember {
         TextFieldAdviser()
-    }
-
-    LaunchedEffect(inputTextFiledValue, receivedContents.size) {
-        coroutineScope.launch {
-            textFieldAdviser.makeAdviser(inputTextFiledValue, receivedContents)
-        }
     }
 
     // Remember the ReceiveContentListener object as it is created inside a Composable scope
@@ -294,10 +279,34 @@ fun SessionObjectNormal(
         }
     }
 
+    val appSetsModuleSettings = remember {
+        AppSetsModuleSettings.get()
+    }
+
+
+    DisposableEffect(Unit) {
+        onDispose {
+            conversationUseCase.onComposeDispose("page dispose")
+        }
+    }
+
+    LaunchedEffect(complexContentSending) {
+        if (complexContentSending) {
+            hapticFeedback.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+        }
+    }
+
+    LaunchedEffect(inputTextFiledValue, receivedContents.size) {
+        coroutineScope.launch {
+            textFieldAdviser.makeAdviser(inputTextFiledValue, receivedContents)
+        }
+    }
+
     Box {
         ImMessageListComponent(
             modifier = Modifier
                 .imePadding(),
+            appSetsModuleSettings = appSetsModuleSettings,
             session = session,
             messages = conversationState.messages,
             scrollState = scrollState,
@@ -631,6 +640,7 @@ private fun UserAvatar2Component(modifier: Modifier, imObj: ImObj?) {
 @Composable
 private fun ImMessageListComponent(
     modifier: Modifier = Modifier,
+    appSetsModuleSettings: AppSetsModuleSettings,
     session: Session,
     messages: List<ImMessage>,
     hazeState: HazeState,
@@ -661,6 +671,7 @@ private fun ImMessageListComponent(
             ) { _, imMessage ->
                 ImMessageItemWrapperComponent(
                     modifier = Modifier.animateItem(),
+                    appSetsModuleSettings = appSetsModuleSettings,
                     session = session,
                     imMessage = imMessage,
                     onBioClick = onBioClick,
@@ -674,6 +685,7 @@ private fun ImMessageListComponent(
 @Composable
 private fun ImMessageItemWrapperComponent(
     modifier: Modifier,
+    appSetsModuleSettings: AppSetsModuleSettings,
     session: Session,
     imMessage: ImMessage,
     onBioClick: (Bio) -> Unit,
@@ -683,17 +695,20 @@ private fun ImMessageItemWrapperComponent(
         modifier = modifier
             .fillMaxWidth()
     ) {
-        Row(modifier = messageBubbleBoxModifier(imMessage)) {
-            ImMessageItemStartComponent(session, imMessage, onBioClick)
-            ImMessageItemCenterComponent(imMessage, onImMessageContentClick)
-            ImMessageItemEndComponent(session, imMessage, onBioClick)
+        Row(modifier = messageBubbleBoxModifier(appSetsModuleSettings, imMessage)) {
+            ImMessageItemStartComponent(appSetsModuleSettings, session, imMessage, onBioClick)
+            ImMessageItemCenterComponent(appSetsModuleSettings, imMessage, onImMessageContentClick)
+            ImMessageItemEndComponent(appSetsModuleSettings, session, imMessage, onBioClick)
         }
     }
 }
 
 @Composable
-private fun BoxScope.messageBubbleBoxModifier(imMessage: ImMessage): Modifier {
-    val appSetsModuleSettings = AppSetsModuleSettings.get()
+private fun BoxScope.messageBubbleBoxModifier(
+    appSetsModuleSettings: AppSetsModuleSettings,
+    imMessage: ImMessage
+): Modifier {
+
     return when (appSetsModuleSettings.imBubbleAlignment) {
         AppSetsModuleSettings.IM_BUBBLE_ALIGNMENT_ALL_START -> {
             Modifier.align(Alignment.CenterStart)
@@ -715,11 +730,11 @@ private fun BoxScope.messageBubbleBoxModifier(imMessage: ImMessage): Modifier {
 
 @Composable
 private fun ImMessageItemCenterComponent(
+    appSetsModuleSettings: AppSetsModuleSettings,
     imMessage: ImMessage,
     onImMessageContentClick: (ImMessage) -> Unit,
 ) {
     val messageSendInfo = imMessage.messageSending?.sendInfoState?.value
-    val appSetsModuleSettings = AppSetsModuleSettings.get()
     val horizontalAlignment = when (appSetsModuleSettings.imBubbleAlignment) {
         AppSetsModuleSettings.IM_BUBBLE_ALIGNMENT_ALL_START -> {
             Alignment.Start
@@ -741,7 +756,6 @@ private fun ImMessageItemCenterComponent(
         verticalArrangement = Arrangement.spacedBy(4.dp),
         horizontalAlignment = horizontalAlignment
     ) {
-        val appSetsModuleSettings = AppSetsModuleSettings.get()
         if (appSetsModuleSettings.isImMessageShowDate) {
             Text(
                 text = imMessage.readableDate,
@@ -753,7 +767,11 @@ private fun ImMessageItemCenterComponent(
         when (imMessage) {
             is TextMessage -> {
                 SelectionContainer {
-                    ImMessageItemTextComponent(imMessage, onImMessageContentClick)
+                    ImMessageItemTextComponent(
+                        appSetsModuleSettings,
+                        imMessage,
+                        onImMessageContentClick
+                    )
                 }
             }
 
@@ -808,12 +826,12 @@ private fun ImMessageItemCenterComponent(
 
 @Composable
 private fun ImMessageItemEndComponent(
+    appSetsModuleSettings: AppSetsModuleSettings,
     session: Session,
     imMessage: ImMessage,
     onBioClick: (Bio) -> Unit,
 ) {
     Row(modifier = Modifier.padding(12.dp)) {
-        val appSetsModuleSettings = AppSetsModuleSettings.get()
         when (appSetsModuleSettings.imBubbleAlignment) {
             AppSetsModuleSettings.IM_BUBBLE_ALIGNMENT_ALL_END -> {
                 UserAvatarComponent(
@@ -1203,12 +1221,14 @@ private fun ImMessageItemImageComponent(
 
 @Composable
 private fun ImMessageItemTextComponent(
+    appSetsModuleSettings: AppSetsModuleSettings,
     imMessage: TextMessage,
     onImMessageContentClick: (ImMessage) -> Unit,
 ) {
     Text(
         modifier = Modifier
             .imMessageBackgroundTextModifier(
+                appSetsModuleSettings = appSetsModuleSettings,
                 imMessage = imMessage
             ),
         text = imMessage.metadata.data.toString()
@@ -1217,12 +1237,12 @@ private fun ImMessageItemTextComponent(
 
 @Composable
 private fun ImMessageItemStartComponent(
+    appSetsModuleSettings: AppSetsModuleSettings,
     session: Session,
     imMessage: ImMessage,
     onBioClick: (Bio) -> Unit,
 ) {
     Row(modifier = Modifier.padding(12.dp)) {
-        val appSetsModuleSettings = AppSetsModuleSettings.get()
         when (appSetsModuleSettings.imBubbleAlignment) {
             AppSetsModuleSettings.IM_BUBBLE_ALIGNMENT_ALL_START -> {
                 UserAvatarComponent(
@@ -1797,8 +1817,10 @@ private fun getUserInputHeight(activity: ComponentActivity, expand: Boolean): Dp
     }
 }
 
-private fun Modifier.imMessageBackgroundTextModifier(imMessage: ImMessage): Modifier = composed {
-    val appSetsModuleSettings = AppSetsModuleSettings.get()
+private fun Modifier.imMessageBackgroundTextModifier(
+    appSetsModuleSettings: AppSetsModuleSettings,
+    imMessage: ImMessage
+): Modifier = composed {
     when (appSetsModuleSettings.imBubbleAlignment) {
         AppSetsModuleSettings.IM_BUBBLE_ALIGNMENT_ALL_START -> {
             this

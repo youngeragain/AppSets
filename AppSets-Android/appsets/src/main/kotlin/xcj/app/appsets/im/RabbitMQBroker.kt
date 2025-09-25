@@ -116,6 +116,7 @@ class RabbitMQBroker : MessageBroker<RabbitMQBrokerConfig>,
             queueName = null
             uid = null
         }.onSuccess {
+            BrokerTest.imOnLineState.value = IMOnlineState.Offline
             PurpleLogger.current.d(TAG, "closeConnection, success")
         }.onFailure {
             PurpleLogger.current.d(TAG, "closeConnection, failed")
@@ -132,7 +133,7 @@ class RabbitMQBroker : MessageBroker<RabbitMQBrokerConfig>,
 
     override fun handleRecovery(recoverable: Recoverable?) {
         PurpleLogger.current.d(TAG, "handleRecovery")
-        BrokerTest.imOnLineState.value = IMOnlineState.Online
+        BrokerTest.imOnLineState.value = IMOnlineState.Online()
     }
 
     override fun handleRecoveryStarted(recoverable: Recoverable?) {
@@ -170,7 +171,7 @@ class RabbitMQBroker : MessageBroker<RabbitMQBrokerConfig>,
             connection = autoRecoveringConnection
             channel = autoRecoveringConnection.createChannel()
         }.onSuccess {
-            BrokerTest.imOnLineState.value = IMOnlineState.Online
+            BrokerTest.imOnLineState.value = IMOnlineState.Online()
             PurpleLogger.current.d(
                 TAG,
                 "basicConnect, final connection connected!"

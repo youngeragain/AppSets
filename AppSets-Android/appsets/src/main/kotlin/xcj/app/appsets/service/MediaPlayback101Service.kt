@@ -1,12 +1,9 @@
 package xcj.app.appsets.service
 
 import android.annotation.SuppressLint
-import android.app.NotificationChannel
-import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.TaskStackBuilder
 import android.content.Intent
-import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
@@ -69,12 +66,10 @@ class MediaPlayback101Service : MediaLibraryService() {
                 session.setCustomLayout(ImmutableList.of(customCommands[0]))
             }else */if (customCommand.customAction == "set_playback_item") {
                 PurpleLogger.current.d(TAG, "onCommand, set_playback_item")
-                player.apply {
-                    val itemUrl = customCommand.customExtras.getString("url")
-                    PurpleLogger.current.d(TAG, "url:${itemUrl}")
-                    itemUrl?.let { MediaItem.fromUri(it) }?.let { setMediaItem(it) }
-                    prepare()
-                }
+                val itemUrl = customCommand.customExtras.getString("url")
+                PurpleLogger.current.d(TAG, "url:${itemUrl}")
+                itemUrl?.let { MediaItem.fromUri(it) }?.let { player.setMediaItem(it) }
+                player.prepare()
             }
             return Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS))
         }
@@ -188,18 +183,18 @@ class MediaPlayback101Service : MediaLibraryService() {
          */
         @SuppressLint("MissingPermission") // TODO: b/280766358 - Request this permission at runtime.
         override fun onForegroundServiceStartNotAllowedException() {
-            val notificationManagerCompat =
-                NotificationManagerCompat.from(this@MediaPlayback101Service)
-            ensureNotificationChannel(notificationManagerCompat)
             val pendingIntent =
                 TaskStackBuilder.create(this@MediaPlayback101Service).run {
                     addNextIntent(Intent(this@MediaPlayback101Service, MainActivity::class.java))
-                    getPendingIntent(0, immutableFlag or PendingIntent.FLAG_UPDATE_CURRENT)
+                    getPendingIntent(
+                        0,
+                        PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+                    )
                 }
             val builder =
                 NotificationCompat.Builder(this@MediaPlayback101Service, CHANNEL_ID)
                     .setContentIntent(pendingIntent)
-                    .setSmallIcon(xcj.app.compose_share.R.drawable.ic_launcher_foreground)
+                    .setSmallIcon(xcj.app.compose_share.R.drawable.ic_appsets_44)
                     .setContentTitle(getString(xcj.app.appsets.R.string.notification_content_title))
                     .setStyle(
                         NotificationCompat.BigTextStyle()
@@ -207,21 +202,24 @@ class MediaPlayback101Service : MediaLibraryService() {
                     )
                     .setPriority(NotificationCompat.PRIORITY_DEFAULT)
                     .setAutoCancel(true)
-            notificationManagerCompat.notify(NOTIFICATION_ID, builder.build())
+            val notificationManagerCompat =
+                NotificationManagerCompat.from(this@MediaPlayback101Service)
+            notificationManagerCompat.notify(FOREGROUND_NOTIFICATION_ID, builder.build())
         }
     }
 
     companion object {
         private const val TAG = "MediaPlayback101Service"
+
+        const val CHANNEL_ID = "TAG"
+        const val FOREGROUND_NOTIFICATION_ID = 3
+
         private const val SEARCH_QUERY_PREFIX_COMPAT = "androidx://media3-session/playFromSearch"
         private const val SEARCH_QUERY_PREFIX = "androidx://media3-session/setMediaUri"
         private const val CUSTOM_COMMAND_TOGGLE_SHUFFLE_MODE_ON =
             "android.media3.session.demo.SHUFFLE_ON"
         private const val CUSTOM_COMMAND_TOGGLE_SHUFFLE_MODE_OFF =
             "android.media3.session.demo.SHUFFLE_OFF"
-        private const val NOTIFICATION_ID = 123
-        private const val CHANNEL_ID = "demo_session_notification_channel_id"
-        private const val immutableFlag = PendingIntent.FLAG_IMMUTABLE
     }
 
     private val librarySessionCallback = CustomMediaLibrarySessionCallback()
@@ -290,14 +288,14 @@ class MediaPlayback101Service : MediaLibraryService() {
             this,
             0,
             Intent(this, MainActivity::class.java),
-            immutableFlag or PendingIntent.FLAG_UPDATE_CURRENT
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
     }
 
     private fun getBackStackedActivity(): PendingIntent {
         return TaskStackBuilder.create(this).run {
             addNextIntent(Intent(this@MediaPlayback101Service, MainActivity::class.java))
-            getPendingIntent(0, immutableFlag or PendingIntent.FLAG_UPDATE_CURRENT)
+            getPendingIntent(0, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
         }
     }
 
@@ -334,22 +332,6 @@ class MediaPlayback101Service : MediaLibraryService() {
         player.release()
         clearListener()
         super.onDestroy()
-    }
-
-    private fun ensureNotificationChannel(notificationManagerCompat: NotificationManagerCompat) {
-
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O ||
-            notificationManagerCompat.getNotificationChannel(CHANNEL_ID) != null) {
-            return
-        }
-
-        val channel =
-            NotificationChannel(
-                CHANNEL_ID,
-                getString(xcj.app.appsets.R.string.notification_channel_name_for_playback),
-                NotificationManager.IMPORTANCE_DEFAULT
-            )
-        notificationManagerCompat.createNotificationChannel(channel)
     }
 
 }

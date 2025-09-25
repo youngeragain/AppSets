@@ -1560,9 +1560,12 @@ fun showContentSelectionDialog(
     bottomSheetContainerState.show {
         ContentSelectSheetContent(
             request = request,
-            onContentSelected = {
+            onContentSelected = { contentSelectionResult ->
                 bottomSheetContainerState.hide()
-                LocalMessenger.post(ModuleConstant.MESSAGE_KEY_ON_CONTENT_SELECT_RESULT, it)
+                LocalMessenger.post(
+                    ModuleConstant.MESSAGE_KEY_ON_CONTENT_SELECT_RESULT,
+                    contentSelectionResult
+                )
             }
         )
     }

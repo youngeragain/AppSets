@@ -76,12 +76,12 @@ fun LoginPage(
     onLoginConfirmButtonClick: (String, String) -> Unit,
 ) {
     HideNavBar()
+    val qrCodeUseCase = LocalUseCaseOfQRCode.current
     LaunchedEffect(loginSignUpPageState) {
         if (loginSignUpPageState is LoginSignUpPageState.LoggingFinish) {
             onLoggingFinish()
         }
     }
-    val qrCodeUseCase = LocalUseCaseOfQRCode.current
     DisposableEffect(Unit) {
         onDispose {
             qrCodeUseCase.onComposeDispose("page dispose")
@@ -190,7 +190,7 @@ fun LoginComponent2(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(TextFieldDefaults.MinHeight),
-                enabled = loginSignUpPageState is LoginSignUpPageState.LoginDefault,
+                enabled = loginSignUpPageState is LoginSignUpPageState.LoginStart,
                 onClick = {
                     hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
                     onLoginConfirmButtonClick(accountText, passwordText)

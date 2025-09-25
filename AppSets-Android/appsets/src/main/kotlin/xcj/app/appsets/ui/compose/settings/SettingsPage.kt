@@ -114,6 +114,37 @@ fun PermissionAndPrivacyComponent(onPrivacyAndPermissionClick: () -> Unit) {
 
 @Composable
 fun SessionSettingsComponent() {
+    val appSetsModuleSettings = remember {
+        AppSetsModuleSettings.get()
+    }
+    var imBubbleAlignment by remember {
+        mutableStateOf(appSetsModuleSettings.imBubbleAlignment)
+    }
+    val bubbleAlignmentChoices = remember {
+        listOf(
+            AppSetsModuleSettings.IM_BUBBLE_ALIGNMENT_START_END to xcj.app.appsets.R.string.alignment_to_start_end,
+            AppSetsModuleSettings.IM_BUBBLE_ALIGNMENT_ALL_START to xcj.app.appsets.R.string.alignment_all_to_start,
+            AppSetsModuleSettings.IM_BUBBLE_ALIGNMENT_ALL_END to xcj.app.appsets.R.string.alignment_all_to_end
+        )
+    }
+    var imMessageShowDate by remember {
+        mutableStateOf(appSetsModuleSettings.isImMessageShowDate)
+    }
+    val showDateChoices = remember {
+        listOf(
+            true to xcj.app.appsets.R.string.show,
+            false to xcj.app.appsets.R.string.hide
+        )
+    }
+    var imMessageSendType by remember {
+        mutableStateOf(appSetsModuleSettings.imMessageDeliveryType)
+    }
+    val sendTypeChoices = remember {
+        listOf(
+            AppSetsModuleSettings.IM_MESSAGE_DELIVERY_TYPE_RT to xcj.app.appsets.R.string.relay_delivery,
+            AppSetsModuleSettings.IM_MESSAGE_DELIVERY_TYPE_DI to xcj.app.appsets.R.string.send_directly
+        )
+    }
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Text(
             text = stringResource(xcj.app.appsets.R.string.session_settings),
@@ -122,60 +153,35 @@ fun SessionSettingsComponent() {
             fontSize = 16.sp
         )
 
-        var imBubbleAlignment by remember {
-            mutableStateOf(AppSetsModuleSettings.get().imBubbleAlignment)
-        }
-        val bubbleAlignmentChoices = remember {
-            listOf(
-                AppSetsModuleSettings.IM_BUBBLE_ALIGNMENT_START_END to xcj.app.appsets.R.string.alignment_to_start_end,
-                AppSetsModuleSettings.IM_BUBBLE_ALIGNMENT_ALL_START to xcj.app.appsets.R.string.alignment_all_to_start,
-                AppSetsModuleSettings.IM_BUBBLE_ALIGNMENT_ALL_END to xcj.app.appsets.R.string.alignment_all_to_end
-            )
-        }
+
         SingleChoiceInRowComponent(
             choiceTitle = xcj.app.appsets.R.string.chat_bubble_direction,
             currentChoice = imBubbleAlignment,
             choices = bubbleAlignmentChoices,
             onChoiceClick = {
-                AppSetsModuleSettings.get().onIMBubbleAlignmentChanged(it)
+                appSetsModuleSettings.onIMBubbleAlignmentChanged(it)
                 imBubbleAlignment = it
             }
         )
 
-        var imMessageShowDate by remember {
-            mutableStateOf(AppSetsModuleSettings.get().isImMessageShowDate)
-        }
-        val showDateChoices = remember {
-            listOf(
-                true to xcj.app.appsets.R.string.show,
-                false to xcj.app.appsets.R.string.hide
-            )
-        }
+
         SingleChoiceInRowComponent(
             choiceTitle = xcj.app.appsets.R.string.show_time,
             currentChoice = imMessageShowDate,
             choices = showDateChoices,
             onChoiceClick = {
-                AppSetsModuleSettings.get().onIsIMMessageShowDateChanged(it)
+                appSetsModuleSettings.onIsIMMessageShowDateChanged(it)
                 imMessageShowDate = it
             }
         )
 
-        var imMessageSendType by remember {
-            mutableStateOf(AppSetsModuleSettings.get().imMessageDeliveryType)
-        }
-        val sendTypeChoices = remember {
-            listOf(
-                AppSetsModuleSettings.IM_MESSAGE_DELIVERY_TYPE_RT to xcj.app.appsets.R.string.relay_delivery,
-                AppSetsModuleSettings.IM_MESSAGE_DELIVERY_TYPE_DI to xcj.app.appsets.R.string.send_directly
-            )
-        }
+
         SingleChoiceInRowComponent(
             choiceTitle = xcj.app.appsets.R.string.data_sending_method,
             currentChoice = imMessageSendType,
             choices = sendTypeChoices,
             onChoiceClick = {
-                AppSetsModuleSettings.get().onIMMessageDeliveryTypeChanged(it)
+                appSetsModuleSettings.onIMMessageDeliveryTypeChanged(it)
                 imMessageSendType = it
             }
         )

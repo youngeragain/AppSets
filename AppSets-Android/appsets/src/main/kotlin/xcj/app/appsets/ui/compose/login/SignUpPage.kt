@@ -85,10 +85,10 @@ fun SignUpPage(
                     .verticalScroll(rememberScrollState())
             ) {
                 val signUpUserInfo = when (loginState) {
-                    is LoginSignUpPageState.SignUpDefault -> loginState.userInfoForCreate
+                    is LoginSignUpPageState.SignUpStart -> loginState.userInfoForCreate
                     is LoginSignUpPageState.SignUpping -> loginState.userInfoForCreate
                     is LoginSignUpPageState.SignUpFinish -> loginState.userInfoForCreate
-                    is LoginSignUpPageState.SignUpPageFail -> loginState.userInfoForCreate
+                    is LoginSignUpPageState.SignUpPageFailed -> loginState.userInfoForCreate
                     else -> null
                 }
                 if (signUpUserInfo != null) {
@@ -449,7 +449,7 @@ fun SignUpPage(
 @Composable
 fun SignUpIndicator(loginSignUpPageState: LoginSignUpPageState) {
     val isShow: Boolean =
-        loginSignUpPageState is LoginSignUpPageState.SignUpping || loginSignUpPageState is LoginSignUpPageState.SignUpPageFail
+        loginSignUpPageState is LoginSignUpPageState.SignUpping || loginSignUpPageState is LoginSignUpPageState.SignUpPageFailed
     AnimatedVisibility(
         visible = isShow,
         enter = fadeIn(tween()) + scaleIn(

@@ -40,7 +40,7 @@ class UserRepository(private val userApi: UserApi) {
         oldUserInfo: UserInfo,
         userInfoForModify: UserInfoForModify,
     ): DesignResponse<Boolean> = withContext(Dispatchers.IO) {
-        PurpleLogger.current.d(TAG, "updateUserInfo, thread:${Thread.currentThread()}")
+        PurpleLogger.current.d(TAG, "updateUserInfo")
         var avatarUrlEndpoint: String? = null
         val avatarImageUri = userInfoForModify.userAvatarUri?.provideUri()
         if (avatarImageUri != null) {
@@ -84,14 +84,14 @@ class UserRepository(private val userApi: UserApi) {
     }
 
     suspend fun getFriends(): DesignResponse<List<UserInfo>> = withContext(Dispatchers.IO) {
-        PurpleLogger.current.d(TAG, "getFriends, thread:${Thread.currentThread()}")
+        PurpleLogger.current.d(TAG, "getFriends")
         val designResponse = userApi.getFriends()
         PictureUrlMapper.mapPictureUrl(designResponse.data)
         return@withContext designResponse
     }
 
     suspend fun getChatGroups(): DesignResponse<List<GroupInfo>> = withContext(Dispatchers.IO) {
-        PurpleLogger.current.d(TAG, "getChatGroups, thread:${Thread.currentThread()}")
+        PurpleLogger.current.d(TAG, "getChatGroups")
         val designResponse = userApi.getChatGroupInfoList()
         PictureUrlMapper.mapPictureUrl(designResponse.data)
         return@withContext designResponse
@@ -101,7 +101,7 @@ class UserRepository(private val userApi: UserApi) {
         context: Context,
         groupInfoForCreate: GroupInfoForCreate
     ): DesignResponse<Boolean> = withContext(Dispatchers.IO) {
-        PurpleLogger.current.d(TAG, "createChatGroup, thread:${Thread.currentThread()}")
+        PurpleLogger.current.d(TAG, "createChatGroup")
         var iconUrlEndpoint: String? = null
         val uri = groupInfoForCreate.icon?.provideUri()
         if (uri != null) {
@@ -121,7 +121,7 @@ class UserRepository(private val userApi: UserApi) {
 
     suspend fun getGroupInfoById(groupId: String): DesignResponse<GroupInfo> =
         withContext(Dispatchers.IO) {
-            PurpleLogger.current.d(TAG, "getGroupInfoById, thread:${Thread.currentThread()}")
+            PurpleLogger.current.d(TAG, "getGroupInfoById")
             return@withContext userApi.getGroupInfoById(groupId)
         }
 
@@ -130,7 +130,7 @@ class UserRepository(private val userApi: UserApi) {
         hello: String,
         reason: String?,
     ): DesignResponse<String> = withContext(Dispatchers.IO) {
-        PurpleLogger.current.d(TAG, "requestAddFriend, thread:${Thread.currentThread()}")
+        PurpleLogger.current.d(TAG, "requestAddFriend")
         val body = hashMapOf<String, Any?>(
             "uid" to uid,
             "hello" to hello,
@@ -150,7 +150,7 @@ class UserRepository(private val userApi: UserApi) {
     ): DesignResponse<Boolean> = withContext(Dispatchers.IO) {
         PurpleLogger.current.d(
             TAG,
-            "sendAddRequestFriendFeedback, thread:${Thread.currentThread()}"
+            "sendAddRequestFriendFeedback"
         )
         val body = hashMapOf<String, Any?>(
             "requestId" to requestId,
@@ -169,7 +169,7 @@ class UserRepository(private val userApi: UserApi) {
         hello: String,
         reason: String?,
     ): DesignResponse<String> = withContext(Dispatchers.IO) {
-        PurpleLogger.current.d(TAG, "requestJoinGroup, thread:${Thread.currentThread()}")
+        PurpleLogger.current.d(TAG, "requestJoinGroup")
         val body = hashMapOf<String, Any?>(
             "groupId" to groupId,
             "hello" to hello,
@@ -190,7 +190,7 @@ class UserRepository(private val userApi: UserApi) {
     ): DesignResponse<Boolean> = withContext(Dispatchers.IO) {
         PurpleLogger.current.d(
             TAG,
-            "sendRequestJoinGroupFeedback, thread:${Thread.currentThread()}"
+            "sendRequestJoinGroupFeedback"
         )
         val body = hashMapOf<String, Any?>(
             "requestId" to requestId,
@@ -208,13 +208,13 @@ class UserRepository(private val userApi: UserApi) {
 
     suspend fun flipFollowToUserState(uid: String): DesignResponse<Boolean> =
         withContext(Dispatchers.IO) {
-            PurpleLogger.current.d(TAG, "flipFollowToUserState, thread:${Thread.currentThread()}")
+            PurpleLogger.current.d(TAG, "flipFollowToUserState")
             return@withContext userApi.flipFollowToUserState(uid)
         }
 
     suspend fun createChatGroupPreCheck(groupName: String): DesignResponse<Boolean> =
         withContext(Dispatchers.IO) {
-            PurpleLogger.current.d(TAG, "createChatGroupPreCheck, thread:${Thread.currentThread()}")
+            PurpleLogger.current.d(TAG, "createChatGroupPreCheck")
             return@withContext userApi.createChatGroupPreCheck(groupName)
         }
 
@@ -222,7 +222,7 @@ class UserRepository(private val userApi: UserApi) {
         withContext(Dispatchers.IO) {
             PurpleLogger.current.d(
                 TAG,
-                "getFollowersAndFollowedByUser, thread:${Thread.currentThread()}"
+                "getFollowersAndFollowedByUser"
             )
             val designResponse = userApi.getFollowersByUser(uid)
             designResponse.data?.flatMap { it.value ?: emptyList() }?.let { userInfoList ->
@@ -233,13 +233,13 @@ class UserRepository(private val userApi: UserApi) {
 
     suspend fun getMyFollowedThisUser(uid: String): DesignResponse<Boolean> =
         withContext(Dispatchers.IO) {
-            PurpleLogger.current.d(TAG, "getMyFollowedThisUser, thread:${Thread.currentThread()}")
+            PurpleLogger.current.d(TAG, "getMyFollowedThisUser")
             return@withContext userApi.getMyFollowedThisUser(uid)
         }
 
     suspend fun login(account: String, password: String): DesignResponse<String> =
         withContext(Dispatchers.IO) {
-            PurpleLogger.current.d(TAG, "login, thread:${Thread.currentThread()}")
+            PurpleLogger.current.d(TAG, "login")
             return@withContext userApi.login(
                 hashMapOf(
                     "account" to account,
@@ -251,7 +251,7 @@ class UserRepository(private val userApi: UserApi) {
         }
 
     suspend fun login2(): DesignResponse<String> = withContext(Dispatchers.IO) {
-        PurpleLogger.current.d(TAG, "login2, thread:${Thread.currentThread()}")
+        PurpleLogger.current.d(TAG, "login2")
         return@withContext userApi.login2(
             hashMapOf(
                 "account" to "account",
@@ -264,7 +264,7 @@ class UserRepository(private val userApi: UserApi) {
 
     suspend fun loginCall(account: String, password: String): DesignResponse<String> =
         withContext(Dispatchers.IO) {
-            PurpleLogger.current.d(TAG, "loginCall, thread:${Thread.currentThread()}")
+            PurpleLogger.current.d(TAG, "loginCall")
             val loginCall =
                 userApi.loginCall(hashMapOf("account" to account, "password" to password))
             val awaitResponse = loginCall.awaitResponse().body()
@@ -277,7 +277,7 @@ class UserRepository(private val userApi: UserApi) {
         password: String,
         userInfoForCreate: UserInfoForCreate
     ): DesignResponse<Boolean> = withContext(Dispatchers.IO) {
-        PurpleLogger.current.d(TAG, "signUp, thread:${Thread.currentThread()}")
+        PurpleLogger.current.d(TAG, "signUp")
         var avatarUrlEndpoint: String? = null
         val avatarImageUri = userInfoForCreate.userAvatar?.provideUri()
         if (avatarImageUri != null) {
@@ -328,12 +328,12 @@ class UserRepository(private val userApi: UserApi) {
     }
 
     suspend fun signOut(): DesignResponse<Boolean> = withContext(Dispatchers.IO) {
-        PurpleLogger.current.d(TAG, "signOut, thread:${Thread.currentThread()}")
+        PurpleLogger.current.d(TAG, "signOut")
         return@withContext userApi.signOut()
     }
 
     suspend fun preSignUp(account: String): DesignResponse<Boolean> = withContext(Dispatchers.IO) {
-        PurpleLogger.current.d(TAG, "preSignUp, thread:${Thread.currentThread()}")
+        PurpleLogger.current.d(TAG, "preSignUp")
         return@withContext userApi.preSignUp(account)
     }
 

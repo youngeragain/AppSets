@@ -32,6 +32,7 @@ import xcj.app.compose_share.ui.viewmodel.VisibilityComposeStateViewModel
 import xcj.app.io.components.SimpleFileIO
 import xcj.app.starter.android.util.LocalMessenger
 import xcj.app.starter.android.util.PurpleLogger
+import xcj.app.starter.test.AndroidContexts
 
 abstract class BaseIMViewModel : VisibilityComposeStateViewModel() {
 
@@ -59,6 +60,10 @@ abstract class BaseIMViewModel : VisibilityComposeStateViewModel() {
         AppSetsRepository.getInstance()
     )
     val mediaAudioRecorderUseCase: MediaAudioRecorderUseCase = MediaAudioRecorderUseCase()
+
+    init {
+        conversationUseCase.setNowSpaceContentUseCase(nowSpaceContentUseCase)
+    }
 
     @CallStep(1)
     open fun onActivityCreated(activity: ComponentActivity) {
@@ -95,6 +100,14 @@ abstract class BaseIMViewModel : VisibilityComposeStateViewModel() {
             LocalAccountManager.MESSAGE_KEY_ON_APP_TOKEN_GOT
         ) {
             doActionsWhenAppTokenGot()
+        }
+
+        LocalMessenger.observe<String, Boolean>(
+            activity,
+            AndroidContexts.MESSAGE_KEY_ON_APP_GO_BACKGROUND
+        ) { isAppInBackground ->
+            PurpleLogger.current.d(TAG, "isAppInBackground:$isAppInBackground")
+            SystemUseCase.startIMServiceIfNeeded(activity, isAppInBackground)
         }
 
         LocalMessenger.observe<String, Boolean>(

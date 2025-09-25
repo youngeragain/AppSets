@@ -131,7 +131,7 @@ object LocalAccountManager {
         accountStatus.value = AccountStatus.Logged(userInfo, token, isFromLocal)
 
         if (isFromLocal) {
-            LocalMessenger.post(MESSAGE_KEY_ON_LOGIN, LOGIN_BY_RESTORE, 600)
+            LocalMessenger.post(MESSAGE_KEY_ON_LOGIN, LOGIN_BY_RESTORE, 200)
         } else {
             saveToken(token)
             saveUserInfo(userInfo, "onUserLogged")

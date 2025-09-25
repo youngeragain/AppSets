@@ -6,6 +6,7 @@ import android.content.pm.PackageManager
 import android.os.Build
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
+import androidx.core.content.ContextCompat
 import androidx.navigation.NavController
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -21,7 +22,9 @@ import xcj.app.appsets.server.model.UserInfo
 import xcj.app.appsets.server.model.WeatherInfo
 import xcj.app.appsets.server.repository.AppSetsRepository
 import xcj.app.appsets.server.repository.UserRepository
-import xcj.app.appsets.service.MainService
+import xcj.app.appsets.service.DataSyncService
+import xcj.app.appsets.service.IMService
+import xcj.app.appsets.settings.AppSetsModuleSettings
 import xcj.app.appsets.settings.ModuleConfig
 import xcj.app.appsets.ui.compose.PageRouteNames
 import xcj.app.appsets.ui.compose.login.UserAgreementComposeViewProvider
@@ -67,7 +70,7 @@ class SystemUseCase(
     val appUpdateState: MutableState<AppUpdateState> = mutableStateOf(AppUpdateState.None)
 
     val loginSignUpPageState: MutableState<LoginSignUpPageState> =
-        mutableStateOf(LoginSignUpPageState.LoginDefault)
+        mutableStateOf(LoginSignUpPageState.LoginStart)
 
     val createGroupPageState: MutableState<CreateGroupPageState> = mutableStateOf(
         CreateGroupPageState.NewGroupPage(
@@ -361,7 +364,7 @@ class SystemUseCase(
 
             if (!loginResponse.success || token.isNullOrEmpty()) {
                 PurpleLogger.current.d(TAG, "login, failed, token get failed!")
-                loginSignUpPageState.value = LoginSignUpPageState.LoggingFail()
+                loginSignUpPageState.value = LoginSignUpPageState.LoggingFailed()
                 loginResponse.info.toastSuspend()
                 return
             }
@@ -374,7 +377,7 @@ class SystemUseCase(
                 PurpleLogger.current.d(
                     TAG, "login, failed, userInfo isNullOrEmpty!"
                 )
-                loginSignUpPageState.value = LoginSignUpPageState.LoggingFail()
+                loginSignUpPageState.value = LoginSignUpPageState.LoggingFailed()
                 return
             }
 
@@ -389,14 +392,11 @@ class SystemUseCase(
                 LocalAccountManager.onUserLogged(userInfo, token, false)
                 loginSignUpPageState.value = LoginSignUpPageState.LoggingFinish()
             })
-            delay(500)
             bottomSheetContainerState.show(provider)
-            delay(2000)
-            loginSignUpPageState.value = LoginSignUpPageState.LoginDefault
         }).onFailure {
             PurpleLogger.current.d(TAG, "login failed")
             logout()
-            loginSignUpPageState.value = LoginSignUpPageState.LoggingFail()
+            loginSignUpPageState.value = LoginSignUpPageState.LoggingFailed()
         }
     }
 
@@ -427,7 +427,7 @@ class SystemUseCase(
             return
         }
         val oldLoginSignUpState = loginSignUpPageState.value
-        if (oldLoginSignUpState !is LoginSignUpPageState.SignUpDefault) {
+        if (oldLoginSignUpState !is LoginSignUpPageState.SignUpStart) {
             return
         }
         val signUpUserInfo = oldLoginSignUpState.userInfoForCreate
@@ -456,27 +456,27 @@ class SystemUseCase(
             val passwordEncode =
                 MessageDigestUtil.transformWithMD5(signUpUserInfo.password)?.outContent
             if (accountEncode.isNullOrEmpty() || passwordEncode.isNullOrEmpty()) {
-                loginSignUpPageState.value = LoginSignUpPageState.SignUpDefault(signUpUserInfo)
+                loginSignUpPageState.value = LoginSignUpPageState.SignUpStart(signUpUserInfo)
                 return
             }
             val preSignUpRes = userRepository.preSignUp(accountEncode)
             val canSignUp = preSignUpRes.data
             if (canSignUp == null) {
-                loginSignUpPageState.value = LoginSignUpPageState.SignUpPageFail(
+                loginSignUpPageState.value = LoginSignUpPageState.SignUpPageFailed(
                     signUpUserInfo, R.string.register_failed
                 )
                 delay(1000)
                 context.getString(xcj.app.appsets.R.string.register_failed).toastSuspend()
-                loginSignUpPageState.value = LoginSignUpPageState.LoginDefault
+                loginSignUpPageState.value = LoginSignUpPageState.LoginStart
                 return
             } else if (!canSignUp) {
-                loginSignUpPageState.value = LoginSignUpPageState.SignUpPageFail(
+                loginSignUpPageState.value = LoginSignUpPageState.SignUpPageFailed(
                     signUpUserInfo, R.string.a_account_exist_please_retry
                 )
                 context.getString(xcj.app.appsets.R.string.a_account_exist_please_retry)
                     .toastSuspend()
                 delay(1000)
-                loginSignUpPageState.value = LoginSignUpPageState.SignUpDefault(signUpUserInfo)
+                loginSignUpPageState.value = LoginSignUpPageState.SignUpStart(signUpUserInfo)
                 return
             }
             val signUpRes = userRepository.signUp(
@@ -484,23 +484,23 @@ class SystemUseCase(
             )
             val signUpSuccess = signUpRes.data
             if (signUpSuccess != true) {
-                loginSignUpPageState.value = LoginSignUpPageState.SignUpPageFail(
+                loginSignUpPageState.value = LoginSignUpPageState.SignUpPageFailed(
                     signUpUserInfo, R.string.register_failed
                 )
                 context.getString(xcj.app.appsets.R.string.register_failed).toastSuspend()
                 delay(1000)
-                loginSignUpPageState.value = LoginSignUpPageState.SignUpDefault(signUpUserInfo)
+                loginSignUpPageState.value = LoginSignUpPageState.SignUpStart(signUpUserInfo)
                 return
             }
             loginSignUpPageState.value = LoginSignUpPageState.SignUpFinish(signUpUserInfo)
             context.getString(xcj.app.appsets.R.string.register_appsets_success).toastSuspend()
         }).onFailure {
-            loginSignUpPageState.value = LoginSignUpPageState.SignUpPageFail(
+            loginSignUpPageState.value = LoginSignUpPageState.SignUpPageFailed(
                 signUpUserInfo, R.string.register_failed
             )
             context.getString(xcj.app.appsets.R.string.register_failed).toastSuspend()
             delay(1000)
-            loginSignUpPageState.value = LoginSignUpPageState.SignUpDefault(signUpUserInfo)
+            loginSignUpPageState.value = LoginSignUpPageState.SignUpStart(signUpUserInfo)
 
             (it as? RequestFail)?.info?.toastSuspend()
         }
@@ -558,7 +558,7 @@ class SystemUseCase(
 
     override fun onComposeDispose(by: String?) {
         createGroupPageState.value = CreateGroupPageState.NewGroupPage(GroupInfoForCreate())
-        loginSignUpPageState.value = LoginSignUpPageState.LoginDefault
+        loginSignUpPageState.value = LoginSignUpPageState.LoginStart
     }
 
     suspend fun getWeatherInfo(
@@ -578,11 +578,11 @@ class SystemUseCase(
 
 
     fun prepareSignUpState() {
-        loginSignUpPageState.value = LoginSignUpPageState.SignUpDefault(UserInfoForCreate())
+        loginSignUpPageState.value = LoginSignUpPageState.SignUpStart(UserInfoForCreate())
     }
 
     fun prepareLoginState() {
-        loginSignUpPageState.value = LoginSignUpPageState.LoginDefault
+        loginSignUpPageState.value = LoginSignUpPageState.LoginStart
     }
 
     companion object {
@@ -603,73 +603,57 @@ class SystemUseCase(
 
 
         fun startServiceToSyncFriendsFromServer(context: Context) {
-            val intent = Intent(context, MainService::class.java)
+            val intent = Intent(context, DataSyncService::class.java)
             intent.putExtra(
-                MainService.KEY_WHAT_TO_DO, MainService.DO_TO_SYNC_USER_FRIENDS_FROM_SERVER
+                DataSyncService.KEY_WHAT_TO_DO,
+                DataSyncService.DO_TO_SYNC_USER_FRIENDS_FROM_SERVER
             )
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                context.startForegroundService(intent)
-            } else {
-                context.startService(intent)
-            }
+            ContextCompat.startForegroundService(context, intent)
         }
 
         fun startServiceToSyncGroupsFromServer(context: Context) {
-            val intent = Intent(context, MainService::class.java)
+            val intent = Intent(context, DataSyncService::class.java)
             intent.putExtra(
-                MainService.KEY_WHAT_TO_DO, MainService.DO_TO_SYNC_USER_GROUPS_FROM_SERVER
+                DataSyncService.KEY_WHAT_TO_DO,
+                DataSyncService.DO_TO_SYNC_USER_GROUPS_FROM_SERVER
             )
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                context.startForegroundService(intent)
-            } else {
-                context.startService(intent)
-            }
+            ContextCompat.startForegroundService(context, intent)
         }
 
         fun startServiceToSyncAllFromServer(context: Context) {
-            val intent = Intent(context, MainService::class.java)
+            val intent = Intent(context, DataSyncService::class.java)
             intent.putExtra(
-                MainService.KEY_WHAT_TO_DO, MainService.DO_TO_SYNC_USER_DATA_FROM_SERVER
+                DataSyncService.KEY_WHAT_TO_DO,
+                DataSyncService.DO_TO_SYNC_USER_DATA_FROM_SERVER
             )
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                context.startForegroundService(intent)
-            } else {
-                context.startService(intent)
-            }
+            ContextCompat.startForegroundService(context, intent)
         }
 
         fun startServiceToSyncFriendsFromLocal(context: Context) {
-            val intent = Intent(context, MainService::class.java)
+            val intent = Intent(context, DataSyncService::class.java)
             intent.putExtra(
-                MainService.KEY_WHAT_TO_DO, MainService.DO_TO_SYNC_USER_FRIENDS_FROM_LOCAL
+                DataSyncService.KEY_WHAT_TO_DO,
+                DataSyncService.DO_TO_SYNC_USER_FRIENDS_FROM_LOCAL
             )
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                context.startForegroundService(intent)
-            } else {
-                context.startService(intent)
-            }
+            ContextCompat.startForegroundService(context, intent)
         }
 
         fun startServiceToSyncGroupsFromLocal(context: Context) {
-            val intent = Intent(context, MainService::class.java)
+            val intent = Intent(context, DataSyncService::class.java)
             intent.putExtra(
-                MainService.KEY_WHAT_TO_DO, MainService.DO_TO_SYNC_USER_GROUPS_FROM_LOCAL
+                DataSyncService.KEY_WHAT_TO_DO,
+                DataSyncService.DO_TO_SYNC_USER_GROUPS_FROM_LOCAL
             )
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                context.startForegroundService(intent)
-            } else {
-                context.startService(intent)
-            }
+            ContextCompat.startForegroundService(context, intent)
         }
 
         fun startServiceToSyncAllFromLocal(context: Context) {
-            val intent = Intent(context, MainService::class.java)
-            intent.putExtra(MainService.KEY_WHAT_TO_DO, MainService.DO_TO_SYNC_USER_DATA_FROM_LOCAL)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                context.startForegroundService(intent)
-            } else {
-                context.startService(intent)
-            }
+            val intent = Intent(context, DataSyncService::class.java)
+            intent.putExtra(
+                DataSyncService.KEY_WHAT_TO_DO,
+                DataSyncService.DO_TO_SYNC_USER_DATA_FROM_LOCAL
+            )
+            ContextCompat.startForegroundService(context, intent)
         }
 
         fun getAppSetsPackageVersionName(context: Context): String? {
@@ -685,6 +669,20 @@ class SystemUseCase(
 
         fun providePrivacy(context: Context): String {
             return context.getString(xcj.app.appsets.R.string.user_agreement)
+        }
+
+        fun startIMServiceIfNeeded(context: Context, isAppInBackground: Boolean) {
+            if (!LocalAccountManager.isLogged()) {
+                return
+            }
+            if (AppSetsModuleSettings.get().isBackgroundIMEnable) {
+                val intent = Intent(context, IMService::class.java)
+                intent.putExtra(
+                    IMService.KEY_IS_APP_IN_BACKGROUND,
+                    isAppInBackground
+                )
+                ContextCompat.startForegroundService(context, intent)
+            }
         }
     }
 }
