@@ -18,25 +18,25 @@ class DefinitionsInstantiator {
                 runCatching {
                     val customKClassConstructor = it.getConstructor()
                     customKClassConstructor.newInstance()
-                }.onSuccess {
-                    purpleContext.definitionInstanceList.add(it)
-                    when (it) {
+                }.onSuccess { obj ->
+                    purpleContext.definitionInstanceList.add(obj)
+                    when (obj) {
                         is PurpleContextListener -> {
-                            purpleContext.definitionContextListenerInstanceList.add(it)
+                            purpleContext.definitionContextListenerInstanceList.add(obj)
                         }
 
                         is Aware -> {
-                            purpleContext.definitionAwareInstanceList.add(it)
+                            purpleContext.definitionAwareInstanceList.add(obj)
                         }
 
                         else -> {
-                            purpleContext.definitionAnyInstanceList.add(it)
+                            purpleContext.definitionAnyInstanceList.add(obj)
                         }
                     }
-                }.onFailure {
+                }.onFailure { throwable ->
                     PurpleLogger.current.d(
                         TAG,
-                        "doInitDefinitions, onFailure, message:${it.message}"
+                        "doInitDefinitions, onFailure:${throwable.message}"
                     )
                 }
             }

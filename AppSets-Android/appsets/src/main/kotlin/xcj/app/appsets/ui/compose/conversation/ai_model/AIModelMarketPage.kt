@@ -42,10 +42,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import xcj.app.appsets.im.GenerativeAISessions
 import xcj.app.appsets.im.Session
 import xcj.app.appsets.ui.compose.LocalUseCaseOfConversation
 import xcj.app.appsets.ui.compose.apps.tools.PageIndicator
-import xcj.app.appsets.ui.compose.conversation.GenerativeAISession
 import xcj.app.appsets.ui.compose.custom_component.AnyImage
 import xcj.app.appsets.ui.compose.custom_component.DesignBackButton
 import xcj.app.appsets.ui.compose.custom_component.HideNavBar
@@ -103,7 +103,7 @@ fun AIGCMarketPage(
 fun MixedAIModelsPage() {
     val sessionsTemplates = remember {
         val sessions = mutableStateListOf<AIGCSessionTemplate>()
-        val aiSessionTemplates = GenerativeAISession.mixedSessions.map {
+        val aiSessionTemplates = GenerativeAISessions.mixedSessions.map {
             AIGCSessionTemplate(it)
         }
         sessions.addAll(aiSessionTemplates)
@@ -167,7 +167,7 @@ fun MixedAIModelsPage() {
                                 fontSize = 14.sp
                             )
                             val bio = sessionTemplate.session.imObj.bio
-                            if (bio is GenerativeAISession.AIBio) {
+                            if (bio is GenerativeAISessions.AIBio) {
                                 Text(
                                     text = bio.description ?: "",
                                     fontSize = 12.sp
@@ -216,7 +216,7 @@ fun MixedAIModelsPage() {
 fun DeviceLocalAIModelsPage() {
     val sessionsTemplates = remember {
         val sessions = mutableStateListOf<AIGCSessionTemplate>()
-        val aiSessionTemplates = GenerativeAISession.onDeviceSessions.map {
+        val aiSessionTemplates = GenerativeAISessions.onDeviceSessions.map {
             AIGCSessionTemplate(it)
         }
         sessions.addAll(aiSessionTemplates)
@@ -280,7 +280,7 @@ fun DeviceLocalAIModelsPage() {
                                 fontSize = 14.sp
                             )
                             val bio = sessionTemplate.session.imObj.bio
-                            if (bio is GenerativeAISession.AIBio) {
+                            if (bio is GenerativeAISessions.AIBio) {
                                 Text(
                                     text = bio.description ?: "",
                                     fontSize = 12.sp
@@ -329,7 +329,7 @@ fun DeviceLocalAIModelsPage() {
 fun OnlineAIModelsPage() {
     val sessionsTemplates = remember {
         val sessions = mutableStateListOf<AIGCSessionTemplate>()
-        val aiSessionTemplates = GenerativeAISession.onlineSessions.map {
+        val aiSessionTemplates = GenerativeAISessions.onlineSessions.map {
             AIGCSessionTemplate(it)
         }
         sessions.addAll(aiSessionTemplates)
@@ -392,7 +392,7 @@ fun OnlineAIModelsPage() {
                                 fontSize = 14.sp
                             )
                             val bio = sessionTemplate.session.imObj.bio
-                            if (bio is GenerativeAISession.AIBio) {
+                            if (bio is GenerativeAISessions.AIBio) {
                                 Text(
                                     text = bio.description ?: "",
                                     fontSize = 12.sp

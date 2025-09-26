@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.core.content.ContextCompat
 import xcj.app.appsets.account.LocalAccountManager
 import xcj.app.appsets.server.model.ScreenInfo
 import xcj.app.appsets.server.repository.ScreenRepository
@@ -195,7 +196,7 @@ class ScreenUseCase(
 
     suspend fun userClickLikeScreen(context: Context) {
         if (!LocalAccountManager.isLogged()) {
-            context.getString(xcj.app.appsets.R.string.login_required).toast()
+            ContextCompat.getString(context, xcj.app.appsets.R.string.login_required).toast()
             return
         }
         val viewScreenInfo = currentScreenInfoForCard.value
@@ -214,7 +215,7 @@ class ScreenUseCase(
 
     suspend fun userClickCollectScreen(context: Context, category: String?) {
         if (!LocalAccountManager.isLogged()) {
-            context.getString(xcj.app.appsets.R.string.login_required).toast()
+            ContextCompat.getString(context, xcj.app.appsets.R.string.login_required).toast()
             return
         }
         val viewScreenInfo = currentScreenInfoForCard.value
@@ -268,13 +269,13 @@ class ScreenUseCase(
 
     private suspend fun addScreenReview(context: Context, reviewString: String?) {
         if (!LocalAccountManager.isLogged()) {
-            context.getString(xcj.app.appsets.R.string.login_required).toast()
+            ContextCompat.getString(context, xcj.app.appsets.R.string.login_required).toast()
             return
         }
         val viewScreenInfo = currentScreenInfoForCard.value
         val reviewString = reviewString
         if (reviewString.isNullOrEmpty()) {
-            context.getString(xcj.app.appsets.R.string.reply_is_empty).toast()
+            ContextCompat.getString(context, xcj.app.appsets.R.string.reply_is_empty).toast()
             return
         }
         val screenInfo = viewScreenInfo.screenInfo ?: return
@@ -288,7 +289,8 @@ class ScreenUseCase(
                         null
                     )
                 if (response.data != true) {
-                    context.getString(xcj.app.appsets.R.string.reply_failed).toastSuspend()
+                    ContextCompat.getString(context, xcj.app.appsets.R.string.reply_failed)
+                        .toastSuspend()
                     DesignResponse()
                 } else {
                     screenRepository.getScreenReviews(screenInfo.screenId)
@@ -300,7 +302,7 @@ class ScreenUseCase(
                 reviews = screenReviews
             )
         }.onFailure {
-            context.getString(xcj.app.appsets.R.string.reply_failed).toastSuspend()
+            ContextCompat.getString(context, xcj.app.appsets.R.string.reply_failed).toastSuspend()
         }
     }
 

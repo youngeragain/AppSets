@@ -23,6 +23,10 @@ open class VisibilityComposeState {
         _showState.value = false
     }
 
+    fun animateToHide() {
+        _showState.value = false
+    }
+
     fun hideAndRemove() {
         hide()
         composeHolder = null

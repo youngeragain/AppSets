@@ -20,6 +20,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import xcj.app.appsets.im.Bio
+import xcj.app.appsets.im.GenerativeAISessions
 import xcj.app.appsets.im.ImObj
 import xcj.app.appsets.usecase.RelationsUseCase
 
@@ -45,7 +46,7 @@ fun ConversationDetailsMoreInfoSheetContent(
             .verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        if (imObj.bio is GenerativeAISession.AIBio) {
+        if (imObj.bio is GenerativeAISessions.AIBio) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -69,7 +70,7 @@ fun ConversationDetailsMoreInfoSheetContent(
                     .padding(12.dp)) {
                 Text(text = stringResource(xcj.app.appsets.R.string.check_the_details))
             }
-            if (imObj.bio !is GenerativeAISession.AIBio) {
+            if (imObj.bio !is GenerativeAISessions.AIBio) {
                 Row(modifier = Modifier
                     .fillMaxWidth()
                     .clip(MaterialTheme.shapes.extraLarge)

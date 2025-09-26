@@ -48,6 +48,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
@@ -285,6 +286,7 @@ fun ConversationOverviewPortrait(
         )
     }
     val conversationUseCase = LocalUseCaseOfConversation.current
+    val currentTab by conversationUseCase.currentTab
     val pagerState =
         rememberPagerState(tabs.indexOf(conversationUseCase.currentTab.value)) { tabs.size }
     val coroutineScope = rememberCoroutineScope()
@@ -292,6 +294,7 @@ fun ConversationOverviewPortrait(
     LaunchedEffect(pagerState.currentPage) {
         conversationUseCase.updateCurrentTab(tabs[pagerState.currentPage])
     }
+
 
     Column(
         modifier = modifier
@@ -316,10 +319,12 @@ fun ConversationOverviewPortrait(
             state = pagerState,
             verticalAlignment = Alignment.Top
         ) { index ->
-            val currentTab = tabs[index]
+            val sessions = conversationUseCase.currentTabSessions()
             when (currentTab) {
                 ConversationUseCase.AI -> {
                     ConversationOverviewSessionsOfAI(
+                        tab = currentTab,
+                        sessions = sessions,
                         onEmptyTipsClick = onAddAIModelClick,
                         onConversionSessionClick = onConversionSessionClick
                     )
@@ -327,6 +332,8 @@ fun ConversationOverviewPortrait(
 
                 ConversationUseCase.USER -> {
                     ConversationOverviewSessionsOfUser(
+                        tab = currentTab,
+                        sessions = sessions,
                         onEmptyTipsClick = onAddFriendClick,
                         onConversionSessionClick = onConversionSessionClick
                     )
@@ -334,6 +341,8 @@ fun ConversationOverviewPortrait(
 
                 ConversationUseCase.GROUP -> {
                     ConversationOverviewSessionsOfGroup(
+                        tab = currentTab,
+                        sessions = sessions,
                         onEmptyTipsClick = onAddGroupClick,
                         onConversionSessionClick = onConversionSessionClick
                     )
@@ -341,6 +350,8 @@ fun ConversationOverviewPortrait(
 
                 ConversationUseCase.SYSTEM -> {
                     ConversationOverviewSessionsOfSystem(
+                        tab = currentTab,
+                        sessions = sessions,
                         onSystemImMessageClick = onSystemImMessageClick,
                         onBioClick = onBioClick,
                         onUserRequestClick = onUserRequestClick
@@ -353,19 +364,18 @@ fun ConversationOverviewPortrait(
 
 @Composable
 fun ConversationOverviewSessionsOfSystem(
+    tab: String,
+    sessions: List<Session>,
     onSystemImMessageClick: (Session, ImMessage) -> Unit,
     onBioClick: (Bio) -> Unit,
     onUserRequestClick: (Boolean, Session, SystemMessage) -> Unit,
 ) {
+    val hasMessages =
+        sessions.firstOrNull { it.conversationState.messages.isNotEmpty() } != null
     Box(Modifier.fillMaxSize()) {
-        val conversationUseCase = LocalUseCaseOfConversation.current
-        val sessions = conversationUseCase.currentTabSessions()
-        val currentTab = conversationUseCase.currentTab.value
-        val hasMessages =
-            sessions.firstOrNull { it.conversationState.messages.isNotEmpty() } != null
         if (!hasMessages) {
             Text(
-                text = stringResource(getEmptyPromptTextFor(currentTab)),
+                text = stringResource(getEmptyPromptTextFor(tab)),
                 fontSize = 12.sp,
                 modifier = Modifier.align(Alignment.Center)
             )
@@ -389,13 +399,12 @@ fun ConversationOverviewSessionsOfSystem(
 
 @Composable
 fun ConversationOverviewSessionsOfGroup(
+    tab: String,
+    sessions: List<Session>,
     onEmptyTipsClick: () -> Unit,
     onConversionSessionClick: (Session) -> Unit,
 ) {
     Box(Modifier.fillMaxSize()) {
-        val conversationUseCase = LocalUseCaseOfConversation.current
-        val sessions = conversationUseCase.currentTabSessions()
-        val currentTab = conversationUseCase.currentTab.value
         if (sessions.isEmpty()) {
             Column(
                 modifier = Modifier.align(Alignment.Center),
@@ -403,7 +412,7 @@ fun ConversationOverviewSessionsOfGroup(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    text = stringResource(getEmptyPromptTextFor(currentTab)),
+                    text = stringResource(getEmptyPromptTextFor(tab)),
                     fontSize = 12.sp,
                 )
 
@@ -424,7 +433,7 @@ fun ConversationOverviewSessionsOfGroup(
                 itemsIndexed(sessions) { index, session ->
                     ConversationOverviewSimpleItemComponent(
                         modifier = Modifier.animateItem(),
-                        currentTab = currentTab,
+                        currentTab = tab,
                         session = session,
                         onConversionSessionClick = onConversionSessionClick
                     )
@@ -436,13 +445,12 @@ fun ConversationOverviewSessionsOfGroup(
 
 @Composable
 fun ConversationOverviewSessionsOfUser(
+    tab: String,
+    sessions: List<Session>,
     onEmptyTipsClick: () -> Unit,
     onConversionSessionClick: (Session) -> Unit,
 ) {
     Box(Modifier.fillMaxSize()) {
-        val conversationUseCase = LocalUseCaseOfConversation.current
-        val sessions = conversationUseCase.currentTabSessions()
-        val currentTab = conversationUseCase.currentTab.value
         if (sessions.isEmpty()) {
             Column(
                 modifier = Modifier.align(Alignment.Center),
@@ -450,7 +458,7 @@ fun ConversationOverviewSessionsOfUser(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    text = stringResource(getEmptyPromptTextFor(currentTab)),
+                    text = stringResource(getEmptyPromptTextFor(tab)),
                     fontSize = 12.sp,
                 )
 
@@ -470,7 +478,7 @@ fun ConversationOverviewSessionsOfUser(
                 itemsIndexed(sessions) { index, session ->
                     ConversationOverviewSimpleItemComponent(
                         modifier = Modifier.animateItem(),
-                        currentTab = currentTab,
+                        currentTab = tab,
                         session = session,
                         onConversionSessionClick = onConversionSessionClick
                     )
@@ -482,13 +490,13 @@ fun ConversationOverviewSessionsOfUser(
 
 @Composable
 fun ConversationOverviewSessionsOfAI(
+    tab: String,
+    sessions: List<Session>,
     onEmptyTipsClick: () -> Unit,
     onConversionSessionClick: (Session) -> Unit,
 ) {
     Box(Modifier.fillMaxSize()) {
-        val conversationUseCase = LocalUseCaseOfConversation.current
-        val sessions = conversationUseCase.currentTabSessions()
-        val currentTab = conversationUseCase.currentTab.value
+
         if (sessions.isEmpty()) {
             Column(
                 modifier = Modifier.align(Alignment.Center),
@@ -496,7 +504,7 @@ fun ConversationOverviewSessionsOfAI(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    text = stringResource(getEmptyPromptTextFor(currentTab)),
+                    text = stringResource(getEmptyPromptTextFor(tab)),
                     fontSize = 12.sp,
                 )
 
@@ -516,7 +524,7 @@ fun ConversationOverviewSessionsOfAI(
                 itemsIndexed(sessions) { index, session ->
                     ConversationOverviewSimpleItemComponent(
                         modifier = Modifier.animateItem(),
-                        currentTab = currentTab,
+                        currentTab = tab,
                         session = session,
                         onConversionSessionClick = onConversionSessionClick
                     )

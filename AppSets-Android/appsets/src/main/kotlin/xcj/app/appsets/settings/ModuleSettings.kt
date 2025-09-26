@@ -38,6 +38,8 @@ class AppSetsModuleSettings : ModuleSettings {
 
         const val KEY_is_im_message_date_show_seconds = "is_im_message_date_show_seconds"
 
+        const val KEY_is_im_message_reliability = "is_im_message_reliability"
+
 
         fun get(): AppSetsModuleSettings {
             val moduleSettings =
@@ -93,6 +95,11 @@ class AppSetsModuleSettings : ModuleSettings {
     }
 
     private fun prepareSettingsConfig() {
+        isBackgroundIMEnable =
+            appSettingSharedPreferences.getBoolean(
+                KEY_is_im_message_reliability,
+                false
+            )
         imMessageDeliveryType =
             appSettingSharedPreferences.getString(
                 KEY_im_message_delivery_type,
@@ -151,6 +158,13 @@ class AppSetsModuleSettings : ModuleSettings {
         isImMessageDateShowSeconds = show
         appSettingSharedPreferences.edit {
             putBoolean(KEY_is_im_message_date_show_seconds, show)
+        }
+    }
+
+    fun onIsIMMessageReliabilityChanged(show: Boolean) {
+        isBackgroundIMEnable = show
+        appSettingSharedPreferences.edit {
+            putBoolean(KEY_is_im_message_reliability, show)
         }
     }
 }

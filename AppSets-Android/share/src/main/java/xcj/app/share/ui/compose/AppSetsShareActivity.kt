@@ -92,7 +92,7 @@ class AppSetsShareActivity : DesignComponentActivity() {
     private fun onScanClick() {
         val platformPermissionsUsageOfCamera =
             PlatformUseCase.providePlatformPermissions(this).firstOrNull {
-                it.name == getString(xcj.app.starter.R.string.camera)
+                it.name == xcj.app.starter.R.string.camera
             }
         if (platformPermissionsUsageOfCamera == null) {
             return
@@ -193,7 +193,7 @@ class AppSetsShareActivity : DesignComponentActivity() {
     private fun onAddFileContentClick() {
         val platformPermissionsUsageOfFile =
             PlatformUseCase.providePlatformPermissions(this).firstOrNull {
-                it.name == this.getString(xcj.app.starter.R.string.file)
+                it.name == xcj.app.starter.R.string.file
             }
         if (platformPermissionsUsageOfFile == null) {
             return

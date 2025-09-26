@@ -1,9 +1,11 @@
-package xcj.app.starter.test
+package xcj.app.share.util
 
 import xcj.app.starter.android.util.PurpleLogger
+import xcj.app.starter.test.LocalAndroidContextFileDir
+import xcj.app.web.webserver.interfaces.FileCreator
 import java.io.File
 
-object ShareSystem {
+object ShareSystem : FileCreator {
 
     private const val TAG = "ShareSystem"
     const val SHARE_SYSTEM_CLOSE = "appsets/share/system/close"
@@ -14,9 +16,9 @@ object ShareSystem {
         return path
     }
 
-    fun makeFileIfNeeded(fileName: String, createFile: Boolean = true): File? {
+    override fun makeFileIfNeeded(name: String, createFile: Boolean): File? {
         val pathPrefix = getShareDirPath()
-        val filePath = pathPrefix + fileName
+        val filePath = pathPrefix + name
         var file = File(filePath)
         val firstNameWithoutExtension = file.nameWithoutExtension
         var count = 0

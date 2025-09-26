@@ -3,6 +3,7 @@ package xcj.app.appsets.usecase
 import android.content.Context
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
+import androidx.core.content.ContextCompat
 import xcj.app.appsets.account.LocalAccountManager
 import xcj.app.appsets.server.model.Application
 import xcj.app.appsets.server.model.UserInfo
@@ -134,9 +135,10 @@ class UserInfoUseCase(
             )
         }.onSuccess {
             updateCurrentUserInfoByUid(userInfo.uid, true)
-            context.getString(xcj.app.appsets.R.string.information_updated).toastSuspend()
+            ContextCompat.getString(context, xcj.app.appsets.R.string.information_updated)
+                .toastSuspend()
         }.onFailure {
-            context.getString(xcj.app.appsets.R.string.updated_failed).toastSuspend()
+            ContextCompat.getString(context, xcj.app.appsets.R.string.updated_failed).toastSuspend()
         }
     }
 

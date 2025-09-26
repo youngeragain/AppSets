@@ -106,6 +106,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
 import coil3.compose.rememberAsyncImagePainter
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.hazeEffect
@@ -358,7 +359,7 @@ fun SessionObjectNormal(
             },
             onSendClick = { inputSelector ->
                 if (!inputTextFiledValue.text.isEmpty() && !inputTextFiledValue.text.isBlank()) {
-                    conversationUseCase.onSendMessage(
+                    conversationUseCase.sendMessage(
                         context,
                         inputSelector,
                         inputTextFiledValue.text
@@ -1611,7 +1612,8 @@ private fun UserInputText(
         modifier = Modifier
             .fillMaxWidth()
             .semantics {
-                contentDescription = context.getString(xcj.app.appsets.R.string.input_something)
+                contentDescription =
+                    ContextCompat.getString(context, xcj.app.appsets.R.string.input_something)
                 keyboardShownProperty = keyboardShown
                 //spk.setValue(keyboardShown)
             }

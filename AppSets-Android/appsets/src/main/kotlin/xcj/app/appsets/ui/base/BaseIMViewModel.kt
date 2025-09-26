@@ -187,7 +187,7 @@ abstract class BaseIMViewModel : VisibilityComposeStateViewModel() {
                         //todo multi
                         val imageUri = contentUriList.firstOrNull()
                         if (imageUri != null) {
-                            conversationUseCase.onSendMessage(
+                            conversationUseCase.sendMessage(
                                 context,
                                 InputSelector.IMAGE,
                                 imageUri
@@ -227,7 +227,7 @@ abstract class BaseIMViewModel : VisibilityComposeStateViewModel() {
                         //todo multi
                         val audioUri = contentSelectionResult.selectItems.firstOrNull()
                         if (audioUri != null) {
-                            conversationUseCase.onSendMessage(
+                            conversationUseCase.sendMessage(
                                 context,
                                 InputSelector.VIDEO,
                                 audioUri
@@ -246,7 +246,7 @@ abstract class BaseIMViewModel : VisibilityComposeStateViewModel() {
                         //todo multi
                         val audioUri = contentSelectionResult.selectItems.firstOrNull()
                         if (audioUri != null) {
-                            conversationUseCase.onSendMessage(
+                            conversationUseCase.sendMessage(
                                 context,
                                 InputSelector.MUSIC,
                                 audioUri
@@ -265,7 +265,7 @@ abstract class BaseIMViewModel : VisibilityComposeStateViewModel() {
                         //todo multi
                         val audioUri = contentSelectionResult.selectItems.firstOrNull()
                         if (audioUri != null) {
-                            conversationUseCase.onSendMessage(
+                            conversationUseCase.sendMessage(
                                 context,
                                 InputSelector.FILE,
                                 audioUri
@@ -282,7 +282,7 @@ abstract class BaseIMViewModel : VisibilityComposeStateViewModel() {
                 when (contentSelectionResult.request.contextName) {
                     PageRouteNames.ConversationDetailsPage -> {
                         val locationInfo = contentSelectionResult.locationInfo
-                        conversationUseCase.onSendMessage(
+                        conversationUseCase.sendMessage(
                             context,
                             InputSelector.LOCATION,
                             locationInfo

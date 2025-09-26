@@ -54,6 +54,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import androidx.core.os.BundleCompat
 import androidx.core.os.bundleOf
@@ -74,6 +75,7 @@ import me.saket.telephoto.zoomable.rememberZoomableState
 import me.saket.telephoto.zoomable.zoomable
 import xcj.app.appsets.constants.Constants
 import xcj.app.appsets.im.Bio
+import xcj.app.appsets.im.ImMessageDesignType
 import xcj.app.appsets.im.InputSelector
 import xcj.app.appsets.im.MessageFromInfo
 import xcj.app.appsets.im.MessageToInfo
@@ -385,7 +387,10 @@ fun MainNaviHostPages(
                         },
                         onConfirmClick = {
                             if (createStep != ApplicationForCreate.CREATE_STEP_APPLICATION) {
-                                context.getString(xcj.app.appsets.R.string.currently_cannot_be_modified)
+                                ContextCompat.getString(
+                                    context,
+                                    xcj.app.appsets.R.string.currently_cannot_be_modified
+                                )
                                     .toast()
                                 return@CreateAppPage
                             }
@@ -678,7 +683,7 @@ fun MainNaviHostPages(
                             if (uriProvider == null) {
                                 return@ConversationOverviewPage
                             }
-                            conversationUseCase.onSendMessage(
+                            conversationUseCase.sendMessage(
                                 context,
                                 InputSelector.VOICE,
                                 uriProvider
@@ -771,7 +776,7 @@ fun MainNaviHostPages(
                             if (uriProvider == null) {
                                 return@ConversationDetailsPage
                             }
-                            conversationUseCase.onSendMessage(
+                            conversationUseCase.sendMessage(
                                 context,
                                 InputSelector.VOICE,
                                 uriProvider
@@ -1052,8 +1057,11 @@ fun MainNaviHostPages(
                             systemUseCase.requestJoinGroup(
                                 context,
                                 groupInfo.groupId,
-                                context.getString(xcj.app.appsets.R.string.this_group_looks_interesting_can_i_join),
-                                context.getString(xcj.app.appsets.R.string.nothing)
+                                ContextCompat.getString(
+                                    context,
+                                    xcj.app.appsets.R.string.this_group_looks_interesting_can_i_join
+                                ),
+                                ContextCompat.getString(context, xcj.app.appsets.R.string.nothing)
                             )
                         }
                     )
@@ -1202,8 +1210,11 @@ fun MainNaviHostPages(
                             systemUseCase.requestAddFriend(
                                 context,
                                 userInfo.uid,
-                                context.getString(xcj.app.appsets.R.string.hello_i_want_to_make_friends_with_you),
-                                context.getString(xcj.app.appsets.R.string.nothing)
+                                ContextCompat.getString(
+                                    context,
+                                    xcj.app.appsets.R.string.hello_i_want_to_make_friends_with_you
+                                ),
+                                ContextCompat.getString(context, xcj.app.appsets.R.string.nothing)
                             )
                         },
                         onFlipFollowClick = { userInfo ->
@@ -1540,7 +1551,7 @@ fun showContentSelectionDialog(
 ) {
     val platformPermissionsUsageOfFile =
         PlatformUseCase.providePlatformPermissions(context).firstOrNull {
-            it.name == context.getString(xcj.app.appsets.R.string.file)
+            it.name == xcj.app.appsets.R.string.file
         }
     if (platformPermissionsUsageOfFile == null) {
         return
@@ -1629,7 +1640,7 @@ fun navigateToCameraActivity(context: Context, navController: NavController) {
     }
     val platformPermissionsUsageOfFile =
         PlatformUseCase.providePlatformPermissions(context).firstOrNull {
-            it.name == context.getString(xcj.app.appsets.R.string.camera)
+            it.name == xcj.app.appsets.R.string.camera
         }
     if (platformPermissionsUsageOfFile == null) {
         return
@@ -1765,10 +1776,11 @@ fun handleImMessageContentClick(
             val currentUri = imMessage.requireUri()
                 ?: return
             val uriList =
-                conversationUseCase.findCurrentSessionAllImMessageOfImage()
-                    .mapNotNull { imageMessage ->
-                        imageMessage.requireUri()
-                    }
+                conversationUseCase.findCurrentSessionByMessageType<ImageMessage>(
+                    ImMessageDesignType.TYPE_IMAGE
+                ).mapNotNull { imageMessage ->
+                    imageMessage.requireUri()
+                }
             showPictureViewDialog(
                 visibilityComposeStateProvider,
                 context,

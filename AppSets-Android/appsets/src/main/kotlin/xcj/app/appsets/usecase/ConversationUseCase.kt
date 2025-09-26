@@ -16,12 +16,12 @@ import xcj.app.appsets.db.room.repository.UserInfoRepository
 import xcj.app.appsets.im.Bio
 import xcj.app.appsets.im.BrokerTest
 import xcj.app.appsets.im.ConversationState
+import xcj.app.appsets.im.GenerativeAISessions
 import xcj.app.appsets.im.ImMessageGenerator
 import xcj.app.appsets.im.ImObj
 import xcj.app.appsets.im.InputSelector
 import xcj.app.appsets.im.Session
 import xcj.app.appsets.im.message.ImMessage
-import xcj.app.appsets.im.message.ImageMessage
 import xcj.app.appsets.im.message.SystemMessage
 import xcj.app.appsets.im.message.parseFromImObj
 import xcj.app.appsets.im.message.parseToImObj
@@ -32,8 +32,6 @@ import xcj.app.appsets.server.model.Application
 import xcj.app.appsets.server.model.GroupInfo
 import xcj.app.appsets.server.model.UserInfo
 import xcj.app.appsets.server.model.UserRole
-import xcj.app.appsets.ui.compose.PageRouteNames
-import xcj.app.appsets.ui.compose.conversation.GenerativeAISession
 import xcj.app.appsets.ui.model.state.NowSpaceContent
 import xcj.app.compose_share.dynamic.IComposeLifecycleAware
 import xcj.app.starter.android.util.LocalMessenger
@@ -50,10 +48,10 @@ class ConversationUseCase private constructor() : IComposeLifecycleAware {
     companion object {
         private const val TAG = "ConversationUseCase"
         const val MESSAGE_KEY_SESSIONS_INIT_RESULT = "sessions_init_result"
+        const val AI = "ai"
         const val USER = "user"
         const val GROUP = "group"
         const val SYSTEM = "system"
-        const val AI = "ai"
 
         private var INSTANCE: ConversationUseCase? = null
 
@@ -221,7 +219,7 @@ class ConversationUseCase private constructor() : IComposeLifecycleAware {
         }
     }
 
-    fun getSessionBySessionId(sessionId: String): Session? {
+    private fun getSessionBySessionId(sessionId: String): Session? {
         return sessionsMap.values.flatten().firstOrNull { it.id == sessionId }
     }
 
@@ -237,9 +235,9 @@ class ConversationUseCase private constructor() : IComposeLifecycleAware {
         if (isLocal) {
             val session = (currentSessionState as? SessionState.Normal)?.session ?: return
             val sessionImObj = session.imObj
-            if (sessionImObj.bio is GenerativeAISession.AIBio) {
+            if (sessionImObj.bio is GenerativeAISessions.AIBio) {
                 //todo
-                GenerativeAISession.handleSessionNewMessage(session, imMessage)
+                GenerativeAISessions.handleSessionNewMessage(session, imMessage)
             } else {
                 BrokerTest.sendMessage(sessionImObj, imMessage)
                 addMessageToSession(context, session, imMessage)
@@ -407,17 +405,18 @@ class ConversationUseCase private constructor() : IComposeLifecycleAware {
         }
     }
 
-    fun onSendMessage(context: Context, inputSelector: Int, content: Any) {
+    fun sendMessage(context: Context, inputSelector: Int, content: Any, session: Session? = null) {
         if (!LocalAccountManager.isLogged()) {
-            PurpleLogger.current.d(TAG, "onSendMessage, user not logged! return")
+            PurpleLogger.current.d(TAG, "sendMessage, user not logged! return")
             return
         }
         val currentSessionState = currentSessionState.value
-        if (currentSessionState is SessionState.None) {
-            PurpleLogger.current.d(TAG, "onSendMessage, current session object is null! return")
+        val currentSession = (currentSessionState as? SessionState.Normal)?.session
+        val sessionOverride = session ?: currentSession
+        if (sessionOverride == null) {
+            PurpleLogger.current.d(TAG, "sendMessage, session object is null! return")
             return
         }
-        val session = (currentSessionState as? SessionState.Normal)?.session ?: return
         LocalPurpleCoroutineScope.current.launch {
             if (InputSelector.isComplex(inputSelector)) {
                 complexContentSendingState.value = true
@@ -427,12 +426,12 @@ class ConversationUseCase private constructor() : IComposeLifecycleAware {
                 runCatching {
                     ImMessageGenerator.generateBySend(
                         context,
-                        session,
+                        sessionOverride,
                         inputSelector,
                         content
                     )
                 }.onFailure {
-                    PurpleLogger.current.d(TAG, "onSendMessage, ImMessageGenerator generate error!")
+                    PurpleLogger.current.d(TAG, "sendMessage, ImMessageGenerator generate error!")
                     it.printStackTrace()
                 }.getOrNull()
 
@@ -449,7 +448,7 @@ class ConversationUseCase private constructor() : IComposeLifecycleAware {
     }
 
     fun currentTabSessions(): MutableList<Session> {
-        return sessionsMap[currentTab.value]!!
+        return sessionsMap[currentTab.value] ?: mutableListOf<Session>()
     }
 
     fun updateCurrentTab(tab: String) {
@@ -604,7 +603,7 @@ class ConversationUseCase private constructor() : IComposeLifecycleAware {
 
     fun getAllSimpleSessionsCount(): Int {
         return (sessionsMap[AI]?.size ?: 0) +
-                (sessionsMap[GROUP]?.size ?: 0) +
+                (sessionsMap[USER]?.size ?: 0) +
                 (sessionsMap[GROUP]?.size ?: 0)
     }
 
@@ -638,7 +637,7 @@ class ConversationUseCase private constructor() : IComposeLifecycleAware {
     }
 
     @SuppressLint("MissingPermission")
-    fun handleSystemNotificationForReplyImMessage(context: Context, intent: Intent) {
+    private fun handleSystemNotificationForReplyImMessage(context: Context, intent: Intent) {
         PurpleLogger.current.d(TAG, "handleSystemNotificationForReplyImMessage")
         val imMessageId = intent.getStringExtra(ImMessage.KEY_IM_MESSAGE_ID)
         val sessionId = intent.getStringExtra(ImMessage.KEY_SESSION_ID)
@@ -684,10 +683,10 @@ class ConversationUseCase private constructor() : IComposeLifecycleAware {
             return
         }
         getNotificationPusher().cancelNotification(context, imMessageNotificationId)
-        onSendMessage(context, InputSelector.TEXT, userInputContent)
+        sendMessage(context, InputSelector.TEXT, userInputContent)
     }
 
-    suspend fun pushNotificationIfNeeded(
+    private suspend fun pushNotificationIfNeeded(
         context: Context,
         notificationPusher: NotificationPusher,
         session: Session,
@@ -697,11 +696,17 @@ class ConversationUseCase private constructor() : IComposeLifecycleAware {
         notificationPusher.pushConversionNotification(context, session, imMessage)
     }
 
-    fun findCurrentSessionAllImMessageOfImage(): List<ImageMessage> {
+    fun <T : ImMessage> findCurrentSessionByMessageType(type: String): List<T> {
         val currentSessionState = currentSessionState.value
         if (currentSessionState is SessionState.Normal) {
             val session = currentSessionState.session
-            return session.conversationState.messages.mapNotNull { it as? ImageMessage }
+            return session.conversationState.messages.mapNotNull { imMessage ->
+                if (imMessage.messageType == type) {
+                    imMessage as? T
+                } else {
+                    null
+                }
+            }
         }
         return emptyList()
     }
@@ -718,4 +723,19 @@ class ConversationUseCase private constructor() : IComposeLifecycleAware {
         aiSessions.add(0, session)
     }
 
+    fun getRecentSessions(limit: Int = 4): List<Session> {
+        val sessions = getAllSessions().sortedByDescending {
+            it.latestImMessage?.timestamp?.time ?: 0
+        }
+        return if (sessions.size <= limit) {
+            sessions
+        } else {
+            sessions.subList(0, limit)
+        }
+    }
+
+    fun getAllSessions(): List<Session> {
+        val sessions = sessionsMap.values.flatten()
+        return sessions
+    }
 }

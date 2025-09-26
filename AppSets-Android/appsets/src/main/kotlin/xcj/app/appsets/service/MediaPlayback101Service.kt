@@ -19,6 +19,7 @@ import androidx.media3.session.LibraryResult
 import androidx.media3.session.MediaLibraryService
 import androidx.media3.session.MediaSession
 import androidx.media3.session.SessionCommand
+import androidx.media3.session.SessionError
 import androidx.media3.session.SessionResult
 import com.google.common.collect.ImmutableList
 import com.google.common.util.concurrent.Futures
@@ -31,6 +32,25 @@ class MediaPlayback101Service : MediaLibraryService() {
     private inner class CustomMediaLibrarySessionCallback : MediaLibrarySession.Callback {
         private val TAG = "CustomMediaLibrarySessionCallback"
 
+        private var customCommands: List<CommandButton>
+
+        init {
+            val playbackItemCommand = CommandButton
+                .Builder(CommandButton.ICON_UNDEFINED)
+                .setSessionCommand(SessionCommand("set_playback_item", Bundle.EMPTY))
+                .build()
+            customCommands =
+                listOf(
+                    playbackItemCommand
+                    /*   getShuffleCommandButton(
+                           SessionCommand(CUSTOM_COMMAND_TOGGLE_SHUFFLE_MODE_ON, Bundle.EMPTY)
+                       ),
+                       getShuffleCommandButton(
+                           SessionCommand(CUSTOM_COMMAND_TOGGLE_SHUFFLE_MODE_OFF, Bundle.EMPTY)
+                       )*/
+                )
+        }
+
         override fun onConnect(
             session: MediaSession,
             controller: MediaSession.ControllerInfo,
@@ -38,9 +58,9 @@ class MediaPlayback101Service : MediaLibraryService() {
             PurpleLogger.current.d(TAG, "onConnect")
             val availableSessionCommands =
                 MediaSession.ConnectionResult.DEFAULT_SESSION_AND_LIBRARY_COMMANDS.buildUpon()
-            for (commandButton in customCommands) {
+            customCommands.forEach { commandButton ->
                 // Add custom command to available session commands.
-                commandButton.sessionCommand?.let { availableSessionCommands.add(it) }
+                commandButton.sessionCommand?.let(availableSessionCommands::add)
             }
             return MediaSession.ConnectionResult.AcceptedResultBuilder(session)
                 .setAvailableSessionCommands(availableSessionCommands.build())
@@ -53,7 +73,7 @@ class MediaPlayback101Service : MediaLibraryService() {
             customCommand: SessionCommand,
             args: Bundle,
         ): ListenableFuture<SessionResult> {
-            PurpleLogger.current.d(TAG, "onCustomCommand")
+            PurpleLogger.current.d(TAG, "onCustomCommand, ${customCommand.customAction}")
             /*if (CUSTOM_COMMAND_TOGGLE_SHUFFLE_MODE_ON == customCommand.customAction) {
                 // Enable shuffling.
                 player.shuffleModeEnabled = true
@@ -64,14 +84,18 @@ class MediaPlayback101Service : MediaLibraryService() {
                 player.shuffleModeEnabled = false
                 // Change the custom layout to contain the `Enable shuffling` command.
                 session.setCustomLayout(ImmutableList.of(customCommands[0]))
-            }else */if (customCommand.customAction == "set_playback_item") {
-                PurpleLogger.current.d(TAG, "onCommand, set_playback_item")
+            }else */
+            if (customCommand.customAction == "set_playback_item") {
                 val itemUrl = customCommand.customExtras.getString("url")
                 PurpleLogger.current.d(TAG, "url:${itemUrl}")
-                itemUrl?.let { MediaItem.fromUri(it) }?.let { player.setMediaItem(it) }
-                player.prepare()
+                itemUrl?.let {
+                    val mediaItem = MediaItem.fromUri(it)
+                    player.setMediaItem(mediaItem)
+                    player.prepare()
+                }
+                return Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS))
             }
-            return Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS))
+            return Futures.immediateFuture(SessionResult(SessionError.ERROR_NOT_SUPPORTED))
         }
 
         override fun onGetLibraryRoot(
@@ -222,13 +246,10 @@ class MediaPlayback101Service : MediaLibraryService() {
             "android.media3.session.demo.SHUFFLE_OFF"
     }
 
-    private val librarySessionCallback = CustomMediaLibrarySessionCallback()
-
     private lateinit var player: ExoPlayer
 
     private lateinit var mediaLibrarySession: MediaLibrarySession
 
-    private lateinit var customCommands: List<CommandButton>
 
     override fun onBind(intent: Intent?): IBinder? {
         val onBind = super.onBind(intent)
@@ -244,25 +265,13 @@ class MediaPlayback101Service : MediaLibraryService() {
 
     override fun onCreate() {
         super.onCreate()
-        val setPlaybackItemCommand = CommandButton.Builder(CommandButton.ICON_UNDEFINED)
-            .setSessionCommand(SessionCommand("set_playback_item", Bundle.EMPTY))
-            .build()
-        customCommands =
-            listOf(
-                setPlaybackItemCommand
-                /*   getShuffleCommandButton(
-                       SessionCommand(CUSTOM_COMMAND_TOGGLE_SHUFFLE_MODE_ON, Bundle.EMPTY)
-                   ),
-                   getShuffleCommandButton(
-                       SessionCommand(CUSTOM_COMMAND_TOGGLE_SHUFFLE_MODE_OFF, Bundle.EMPTY)
-                   )*/
-            )
-        initializeSessionAndPlayer()
-        setListener(MediaSessionServiceListener())
+        createPlayer()
+        val sessionServiceListener = MediaSessionServiceListener()
+        setListener(sessionServiceListener)
     }
 
-    private fun initializeSessionAndPlayer() {
-        PurpleLogger.current.d(TAG, "initializeSessionAndPlayer")
+    private fun createPlayer() {
+        PurpleLogger.current.d(TAG, "createPlayer")
         player =
             ExoPlayer.Builder(this).build().apply {
                 playWhenReady = true
@@ -274,13 +283,6 @@ class MediaPlayback101Service : MediaLibraryService() {
                 setHandleAudioBecomingNoisy(true)
             }
         //MediaItemTree.initialize(assets)
-
-        mediaLibrarySession =
-            MediaLibrarySession.Builder(this, player, librarySessionCallback)
-                .setSessionActivity(getSingleTopActivity())
-                //.setCustomLayout(ImmutableList.of(customCommands[0]))
-                .setBitmapLoader(CacheBitmapLoader(DataSourceBitmapLoader(/* context= */ this)))
-                .build()
     }
 
     private fun getSingleTopActivity(): PendingIntent {
@@ -322,6 +324,15 @@ class MediaPlayback101Service : MediaLibraryService() {
 
     override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaLibrarySession? {
         PurpleLogger.current.d(TAG, "onGetSession")
+        if (!::mediaLibrarySession.isInitialized) {
+            val librarySessionCallback = CustomMediaLibrarySessionCallback()
+            mediaLibrarySession =
+                MediaLibrarySession.Builder(this, player, librarySessionCallback)
+                    .setSessionActivity(getSingleTopActivity())
+                    //.setCustomLayout(ImmutableList.of(customCommands[0]))
+                    .setBitmapLoader(CacheBitmapLoader(DataSourceBitmapLoader(/* context= */ this)))
+                    .build()
+        }
         return mediaLibrarySession
     }
 

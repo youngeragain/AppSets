@@ -26,6 +26,7 @@ import xcj.app.appsets.constants.Constants
 import xcj.app.appsets.ui.compose.LocalNavHostController
 import xcj.app.appsets.ui.compose.PageRouteNames
 import xcj.app.appsets.ui.compose.main.navigateWithBundle
+import xcj.app.appsets.ui.compose.quickstep.HandlerClickParams
 import xcj.app.appsets.ui.compose.quickstep.QuickStepContent
 import xcj.app.appsets.ui.compose.quickstep.QuickStepContentHandler
 import xcj.app.appsets.ui.compose.quickstep.QuickStepContentHolder
@@ -33,7 +34,7 @@ import xcj.app.appsets.ui.compose.quickstep.TextQuickStepContent
 import xcj.app.appsets.ui.compose.quickstep.UriQuickStepContent
 import xcj.app.starter.util.ContentType
 
-class OutSideQuickStepHandler : QuickStepContentHandler {
+class OutSideQuickStepHandler : QuickStepContentHandler() {
 
     private var mQuickStepContentHolder: QuickStepContentHolder? = null
 
@@ -43,7 +44,7 @@ class OutSideQuickStepHandler : QuickStepContentHandler {
 
     override val category: Int = xcj.app.appsets.R.string.social
 
-    override fun accept(quickStepContentHolder: QuickStepContentHolder): Boolean {
+    override fun canAccept(quickStepContentHolder: QuickStepContentHolder): Boolean {
         var accept = false
         for (content in quickStepContentHolder.quickStepContents) {
             if (content is TextQuickStepContent) {
@@ -66,13 +67,14 @@ class OutSideQuickStepHandler : QuickStepContentHandler {
         return accept
     }
 
-    override fun getContent(onClick: () -> Unit): @Composable (() -> Unit) {
+    override fun getContent(onClick: (HandlerClickParams) -> Unit): @Composable (() -> Unit) {
         val contentCompose = @Composable {
             val navController = LocalNavHostController.current
             OutSideQuickStepHandlerContent(
                 name = stringResource(name),
                 description = stringResource(description),
                 onClick = {
+                    onClick(HandlerClickParams.SimpleClick)
                     val quickStepContents = mQuickStepContentHolder?.quickStepContents?.let {
                         arrayListOf<QuickStepContent>().apply {
                             addAll(it)

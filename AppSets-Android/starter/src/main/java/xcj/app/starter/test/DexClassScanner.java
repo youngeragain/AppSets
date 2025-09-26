@@ -173,7 +173,6 @@ public class DexClassScanner {
                 return classNames;
             }
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
-                //DexFile在API26版本被弃用
                 for (Object o : list) {
                     DexFile d = (DexFile) getObjectFromField(f_dexFile, o);
                     if (d != null) {

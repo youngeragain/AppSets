@@ -23,11 +23,12 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import xcj.app.appsets.ui.compose.main.navigateToAppSetsShareActivity
+import xcj.app.appsets.ui.compose.quickstep.HandlerClickParams
 import xcj.app.appsets.ui.compose.quickstep.QuickStepContent
 import xcj.app.appsets.ui.compose.quickstep.QuickStepContentHandler
 import xcj.app.appsets.ui.compose.quickstep.QuickStepContentHolder
 
-class ToolAppSetsShareQuickStepHandler : QuickStepContentHandler {
+class ToolAppSetsShareQuickStepHandler : QuickStepContentHandler() {
 
     private var mQuickStepContentHolder: QuickStepContentHolder? = null
 
@@ -37,19 +38,20 @@ class ToolAppSetsShareQuickStepHandler : QuickStepContentHandler {
 
     override val category: Int = xcj.app.appsets.R.string.tools
 
-    override fun accept(quickStepContentHolder: QuickStepContentHolder): Boolean {
+    override fun canAccept(quickStepContentHolder: QuickStepContentHolder): Boolean {
         mQuickStepContentHolder = quickStepContentHolder
         return true
     }
 
 
-    override fun getContent(onClick: () -> Unit): @Composable (() -> Unit) {
+    override fun getContent(onClick: (HandlerClickParams) -> Unit): @Composable (() -> Unit) {
         val contentCompose = @Composable {
             val context = LocalContext.current
             ToolAppSetsShareQuickStepHandlerContent(
                 name = stringResource(name),
                 description = stringResource(description),
                 onClick = {
+                    onClick(HandlerClickParams.SimpleClick)
                     val quickStepContents = mQuickStepContentHolder?.quickStepContents?.let {
                         arrayListOf<QuickStepContent>().apply {
                             addAll(it)

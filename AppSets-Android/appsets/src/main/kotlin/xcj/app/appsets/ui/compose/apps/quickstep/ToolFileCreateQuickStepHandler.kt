@@ -27,12 +27,13 @@ import xcj.app.appsets.ui.compose.LocalNavHostController
 import xcj.app.appsets.ui.compose.PageRouteNames
 import xcj.app.appsets.ui.compose.apps.tools.AppTool
 import xcj.app.appsets.ui.compose.main.navigateWithBundle
+import xcj.app.appsets.ui.compose.quickstep.HandlerClickParams
 import xcj.app.appsets.ui.compose.quickstep.QuickStepContent
 import xcj.app.appsets.ui.compose.quickstep.QuickStepContentHandler
 import xcj.app.appsets.ui.compose.quickstep.QuickStepContentHolder
 import xcj.app.appsets.ui.compose.quickstep.TextQuickStepContent
 
-class ToolFileCreateQuickStepHandler : QuickStepContentHandler {
+class ToolFileCreateQuickStepHandler : QuickStepContentHandler() {
 
     private var mQuickStepContentHolder: QuickStepContentHolder? = null
 
@@ -42,7 +43,7 @@ class ToolFileCreateQuickStepHandler : QuickStepContentHandler {
 
     override val category: Int = xcj.app.appsets.R.string.tools
 
-    override fun accept(quickStepContentHolder: QuickStepContentHolder): Boolean {
+    override fun canAccept(quickStepContentHolder: QuickStepContentHolder): Boolean {
         val firstTextQuickStepContent =
             quickStepContentHolder.quickStepContents.firstOrNull { it is TextQuickStepContent }
         val accept = firstTextQuickStepContent != null
@@ -53,13 +54,14 @@ class ToolFileCreateQuickStepHandler : QuickStepContentHandler {
     }
 
 
-    override fun getContent(onClick: () -> Unit): @Composable (() -> Unit) {
+    override fun getContent(onClick: (HandlerClickParams) -> Unit): @Composable (() -> Unit) {
         val contentCompose = @Composable {
             val navController = LocalNavHostController.current
             ToolFileCreateQuickStepHandlerContent(
                 name = stringResource(name),
                 description = stringResource(description),
                 onClick = {
+                    onClick(HandlerClickParams.SimpleClick)
                     val quickStepContents = mQuickStepContentHolder?.quickStepContents?.let {
                         arrayListOf<QuickStepContent>().apply {
                             addAll(it)

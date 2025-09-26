@@ -2,6 +2,8 @@ package xcj.app.starter.test
 
 import xcj.app.starter.foundation.DesignEvent
 
+interface ComposeEventParams
+
 class ComposeEvent(
     val eventType: Int,
     val eventParams: ComposeEventParams
@@ -10,8 +12,6 @@ class ComposeEvent(
         const val EVENT_NAVI_HOST_FORMED = 0
     }
 }
-
-interface ComposeEventParams
 
 /**
  * @param navController

@@ -2,20 +2,19 @@ package xcj.app.starter.android.ui.model
 
 import android.Manifest
 import android.content.Context
-import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
+import androidx.annotation.StringRes
 import xcj.app.starter.android.usecase.PlatformUseCase
-import xcj.app.starter.android.util.PurpleLogger
 
 data class PlatformPermissionsUsage(
-    val name: String,
+    @field:StringRes val name: Int,
+    @field:StringRes val description: Int,
+    @field:StringRes val usage: Int,
+    val usageUri: Uri?,
     val androidDefinitionNames: List<String>,
     val relativeAndroidDefinitionNames: List<String>?,
-    val description: String,
-    val usage: String,
-    val usageUri: Uri?,
-    val granted: Boolean = false
+    val granted: Boolean = false,
 ) {
 
     companion object {
@@ -24,12 +23,12 @@ data class PlatformPermissionsUsage(
 
         private fun withCheck(
             context: Context,
-            name: String,
+            @StringRes name: Int,
+            @StringRes description: Int,
+            @StringRes usage: Int,
+            usageUri: Uri?,
             androidDefinitionNames: List<String>,
             relativeAndroidDefinitionNames: List<String>?,
-            description: String,
-            usage: String,
-            usageUri: Uri?,
             checker: (context: Context, permissions: List<String>) -> Boolean = PlatformUseCase::hasPlatformPermissions
         ): PlatformPermissionsUsage {
             val hasPlatformPermissions = checker(
@@ -38,11 +37,11 @@ data class PlatformPermissionsUsage(
             )
             return PlatformPermissionsUsage(
                 name,
-                androidDefinitionNames,
-                relativeAndroidDefinitionNames,
                 description,
                 usage,
                 usageUri,
+                androidDefinitionNames,
+                relativeAndroidDefinitionNames,
                 hasPlatformPermissions
             )
 
@@ -50,33 +49,32 @@ data class PlatformPermissionsUsage(
 
         fun provideAll(
             context: Context
-        ): MutableList<PlatformPermissionsUsage> {
+        ): List<PlatformPermissionsUsage> {
             return mutableListOf<PlatformPermissionsUsage>().apply {
-                add(
-                    withCheck(
-                        context,
-                        context.getString(xcj.app.starter.R.string.camera),
-                        listOf(Manifest.permission.CAMERA),
-                        null,
-                        context.getString(xcj.app.starter.R.string.camera_permission_tips),
-                        context.getString(xcj.app.starter.R.string.camera_app_usage_des),
-                        null
-                    )
+                val cameraPermission = withCheck(
+                    context,
+                    xcj.app.starter.R.string.camera,
+                    xcj.app.starter.R.string.camera_app_usage_des,
+                    xcj.app.starter.R.string.camera_permission_tips,
+                    null,
+                    listOf(Manifest.permission.CAMERA),
+                    null
                 )
-                add(
-                    withCheck(
-                        context,
-                        context.getString(xcj.app.starter.R.string.location),
-                        listOf(
-                            Manifest.permission.ACCESS_FINE_LOCATION,
-                            Manifest.permission.ACCESS_COARSE_LOCATION
-                        ),
-                        null,
-                        context.getString(xcj.app.starter.R.string.location_permission_tips),
-                        context.getString(xcj.app.starter.R.string.location_app_usage_des),
-                        null
-                    )
+                add(cameraPermission)
+                val locationPermission = withCheck(
+                    context,
+                    xcj.app.starter.R.string.location,
+                    xcj.app.starter.R.string.location_app_usage_des,
+                    xcj.app.starter.R.string.location_permission_tips,
+                    null,
+                    listOf(
+                        Manifest.permission.ACCESS_FINE_LOCATION,
+                        Manifest.permission.ACCESS_COARSE_LOCATION
+                    ),
+
+                    null
                 )
+                add(locationPermission)
                 val filesAndroidPermissions =
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                         listOf(
@@ -90,48 +88,49 @@ data class PlatformPermissionsUsage(
                             Manifest.permission.WRITE_EXTERNAL_STORAGE,
                         )
                     }
-                add(
-                    withCheck(
-                        context,
-                        context.getString(xcj.app.starter.R.string.file),
-                        filesAndroidPermissions,
-                        null,
-                        context.getString(xcj.app.starter.R.string.file_permission_tips),
-                        context.getString(xcj.app.starter.R.string.file_permission_app_usage_des),
-                        null
-                    )
+                val filePermission = withCheck(
+                    context,
+                    xcj.app.starter.R.string.file,
+                    xcj.app.starter.R.string.file_permission_app_usage_des,
+                    xcj.app.starter.R.string.file_permission_tips,
+                    null,
+                    filesAndroidPermissions,
+                    null
+
                 )
-                add(
-                    withCheck(
-                        context,
-                        context.getString(xcj.app.starter.R.string.record_audio),
-                        listOf(Manifest.permission.RECORD_AUDIO),
+                add(filePermission)
+                val recordPermission = withCheck(
+                    context,
+                    xcj.app.starter.R.string.record_audio,
+                    xcj.app.starter.R.string.record_audio_permission_app_usage_des,
+                    xcj.app.starter.R.string.record_audio_permission_tips,
+                    null,
+                    listOf(Manifest.permission.RECORD_AUDIO),
+                    listOf(
+                        Manifest.permission.READ_EXTERNAL_STORAGE,
+                        Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                    )
+
+                )
+                add(recordPermission)
+                val installPackageRelatePermissions =
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                         listOf(
-                            Manifest.permission.READ_EXTERNAL_STORAGE,
-                            Manifest.permission.WRITE_EXTERNAL_STORAGE,
-                        ),
-                        context.getString(xcj.app.starter.R.string.record_audio_permission_tips),
-                        context.getString(xcj.app.starter.R.string.record_audio_permission_app_usage_des),
+                            Manifest.permission.QUERY_ALL_PACKAGES
+                        )
+                    } else {
                         null
-                    )
+                    }
+                val installPackagePermission = withCheck(
+                    context,
+                    xcj.app.starter.R.string.install_package,
+                    xcj.app.starter.R.string.install_package_permission_app_usage_des,
+                    xcj.app.starter.R.string.install_package_permission_tips,
+                    null,
+                    listOf(Manifest.permission.INSTALL_PACKAGES),
+                    installPackageRelatePermissions
                 )
-                add(
-                    withCheck(
-                        context,
-                        context.getString(xcj.app.starter.R.string.install_package),
-                        listOf(Manifest.permission.INSTALL_PACKAGES),
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                            listOf(
-                                Manifest.permission.QUERY_ALL_PACKAGES
-                            )
-                        } else {
-                            null
-                        },
-                        context.getString(xcj.app.starter.R.string.install_package_permission_tips),
-                        context.getString(xcj.app.starter.R.string.install_package_permission_app_usage_des),
-                        null
-                    )
-                )
+                add(installPackagePermission)
                 val internetPermissions = listOf(Manifest.permission.INTERNET)
                 val internetRelatePermissions = mutableListOf(
                     Manifest.permission.ACCESS_WIFI_STATE,
@@ -140,45 +139,42 @@ data class PlatformPermissionsUsage(
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                     internetRelatePermissions.add(Manifest.permission.NEARBY_WIFI_DEVICES)
                 }
-                add(
-                    withCheck(
-                        context,
-                        context.getString(xcj.app.starter.R.string.internet),
-                        internetPermissions,
-                        internetRelatePermissions,
-                        context.getString(xcj.app.starter.R.string.internet_permission_tips),
-                        context.getString(xcj.app.starter.R.string.internet_permission_app_usage_des),
-                        null
-                    )
+                val internetPermission = withCheck(
+                    context,
+                    xcj.app.starter.R.string.internet,
+                    xcj.app.starter.R.string.internet_permission_app_usage_des,
+                    xcj.app.starter.R.string.internet_permission_tips,
+                    null,
+                    internetPermissions,
+                    internetRelatePermissions
                 )
+                add(internetPermission)
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                    add(
-                        withCheck(
-                            context,
-                            context.getString(xcj.app.starter.R.string.notification),
-                            listOf(Manifest.permission.POST_NOTIFICATIONS),
-                            listOf(
-                                Manifest.permission.BIND_NOTIFICATION_LISTENER_SERVICE
-                            ),
-                            context.getString(xcj.app.starter.R.string.notification_permission_tips),
-                            context.getString(xcj.app.starter.R.string.notification_permission_app_usage_des),
-                            null
+                    val postNotificationPermission = withCheck(
+                        context,
+                        xcj.app.starter.R.string.notification,
+                        xcj.app.starter.R.string.notification_permission_app_usage_des,
+                        xcj.app.starter.R.string.notification_permission_tips,
+                        null,
+                        listOf(Manifest.permission.POST_NOTIFICATIONS),
+                        listOf(
+                            Manifest.permission.BIND_NOTIFICATION_LISTENER_SERVICE
                         )
                     )
+                    add(postNotificationPermission)
                 }
 
-                add(
-                    withCheck(
-                        context,
-                        context.getString(xcj.app.starter.R.string.ignore_battery_optimizations),
-                        listOf(Manifest.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS),
-                        null,
-                        context.getString(xcj.app.starter.R.string.ignore_battery_optimizations_permission_tips),
-                        context.getString(xcj.app.starter.R.string.ignore_battery_optimizations_app_usage_des),
-                        null,
-                        checker = PlatformUseCase::isIgnoringBatteryOptimizations
-                    )
+                val ignoreBatteryUsagePermission = withCheck(
+                    context,
+                    xcj.app.starter.R.string.ignore_battery_optimizations,
+                    xcj.app.starter.R.string.ignore_battery_optimizations_app_usage_des,
+                    xcj.app.starter.R.string.ignore_battery_optimizations_permission_tips,
+                    null,
+                    listOf(Manifest.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS),
+                    null,
+                    checker = PlatformUseCase::isIgnoringBatteryOptimizations
                 )
+                add(ignoreBatteryUsagePermission)
             }
         }
     }

@@ -23,14 +23,15 @@ import io.netty.handler.codec.http.QueryStringDecoder
 import io.netty.handler.codec.http.multipart.DefaultHttpDataFactory
 import io.netty.handler.codec.http.multipart.HttpPostRequestDecoder
 import xcj.app.starter.android.util.PurpleLogger
-import xcj.app.starter.test.ShareSystem
 import xcj.app.starter.util.ContentType
 import xcj.app.web.webserver.base.ContentUploadN
+import xcj.app.web.webserver.interfaces.ComponentsProvider
 import xcj.app.web.webserver.interfaces.ListenersProvider
 
 class ComposedApiWebHandler(
     private val port: Int,
     private val handlerMappingCache: List<HandlerMapping>,
+    private val componentsProvider: ComponentsProvider?,
     private val listenersProvider: ListenersProvider?
 ) : SimpleChannelInboundHandler<HttpObject>() {
 
@@ -149,7 +150,13 @@ class ComposedApiWebHandler(
         }
 
         try {
-            handlerMapping.handle(ctx, httpRequestWrapper, httpResponseWrapper, listenersProvider)
+            handlerMapping.handle(
+                ctx,
+                httpRequestWrapper,
+                httpResponseWrapper,
+                componentsProvider,
+                listenersProvider
+            )
         } catch (e: Exception) {
             e.printStackTrace()
             PurpleLogger.current.e(TAG, "handleFullHttpRequest, exception:${e}")
@@ -226,7 +233,13 @@ class ComposedApiWebHandler(
         }
         httpRequestWrapper.httpContent = content
         try {
-            handlerMapping.handle(ctx, httpRequestWrapper, httpResponseWrapper, listenersProvider)
+            handlerMapping.handle(
+                ctx,
+                httpRequestWrapper,
+                httpResponseWrapper,
+                componentsProvider,
+                listenersProvider
+            )
         } catch (e: Exception) {
             e.printStackTrace()
             PurpleLogger.current.e(TAG, "handleHttpContent, exception:${e.message}")
@@ -273,7 +286,7 @@ class ComposedApiWebHandler(
             val decoder = HttpPostRequestDecoder(defaultHttpDataFactory, httpRequest)
             httpRequestWrapper.httpPostRequestDecoder = decoder
             if (decoder.isMultipart) {
-                val shareDirPath = ShareSystem.getShareDirPath()
+                val shareDirPath = componentsProvider?.provideShareDirPath()
                 defaultHttpDataFactory.setBaseDir(shareDirPath)
 
                 val contentUploadN = ContentUploadN()

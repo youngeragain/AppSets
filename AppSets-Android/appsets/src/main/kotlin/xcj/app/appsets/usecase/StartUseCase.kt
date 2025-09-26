@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.LiveData
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -71,7 +72,7 @@ class StartUseCase(
         recommendItems: MutableState<SpotLight.RecommendedItem>,
     ) {
         val appDefinitionMutableList = allApps
-        val forYouText = context.getString(xcj.app.appsets.R.string.for_you)
+        val forYouText = ContextCompat.getString(context, xcj.app.appsets.R.string.for_you)
         val mutableListOf = mutableListOf<ItemDefinition>().apply {
             val recommendItemsCount = (4..7).random()
             if (appDefinitionMutableList.size > recommendItemsCount) {
@@ -193,7 +194,7 @@ class StartUseCase(
 
                     val popularSearch = SpotLight.PopularSearch(
                         R.drawable.ic_call_missed_outgoing_24,
-                        context.getString(xcj.app.appsets.R.string.hotspot),
+                        ContextCompat.getString(context, xcj.app.appsets.R.string.hotspot),
                         words
                     )
 

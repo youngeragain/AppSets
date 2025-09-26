@@ -2,6 +2,7 @@ package xcj.app.appsets.ui.compose.conversation.quickstep
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -21,16 +22,13 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.os.bundleOf
-import xcj.app.appsets.constants.Constants
 import xcj.app.appsets.ui.compose.LocalNavHostController
-import xcj.app.appsets.ui.compose.PageRouteNames
-import xcj.app.appsets.ui.compose.main.navigateWithBundle
+import xcj.app.appsets.ui.compose.quickstep.HandlerClickParams
 import xcj.app.appsets.ui.compose.quickstep.QuickStepContent
 import xcj.app.appsets.ui.compose.quickstep.QuickStepContentHandler
 import xcj.app.appsets.ui.compose.quickstep.QuickStepContentHolder
 
-class ConversationQuickStepHandler : QuickStepContentHandler {
+class ConversationQuickStepHandler : QuickStepContentHandler() {
 
     private var mQuickStepContentHolder: QuickStepContentHolder? = null
 
@@ -40,18 +38,19 @@ class ConversationQuickStepHandler : QuickStepContentHandler {
 
     override val category: Int = xcj.app.appsets.R.string.social
 
-    override fun accept(quickStepContentHolder: QuickStepContentHolder): Boolean {
+    override fun canAccept(quickStepContentHolder: QuickStepContentHolder): Boolean {
         mQuickStepContentHolder = quickStepContentHolder
         return true
     }
 
-    override fun getContent(onClick: () -> Unit): @Composable (() -> Unit) {
+    override fun getContent(onClick: (HandlerClickParams) -> Unit): @Composable (() -> Unit) {
         val contentCompose = @Composable {
             val navController = LocalNavHostController.current
             ConversationQuickStepHandlerContent(
                 name = stringResource(name),
                 description = stringResource(description),
                 onClick = {
+
                     val quickStepContents = mQuickStepContentHolder?.quickStepContents?.let {
                         arrayListOf<QuickStepContent>().apply {
                             addAll(it)
@@ -60,7 +59,7 @@ class ConversationQuickStepHandler : QuickStepContentHandler {
                     if (quickStepContents == null) {
                         return@ConversationQuickStepHandlerContent
                     }
-                    navController.navigateWithBundle(
+                    /*navController.navigateWithBundle(
                         PageRouteNames.ConversationOverviewPage,
                         bundleCreator = {
                             bundleOf().apply {
@@ -70,9 +69,27 @@ class ConversationQuickStepHandler : QuickStepContentHandler {
                                 )
                             }
                         }
+                    )*/
+                    val requestReplaceHostContent = HandlerClickParams.RequestReplaceHostContent(
+                        "quick_send_content",
+                        quickStepContents
                     )
+                    onClick(requestReplaceHostContent)
                 }
             )
+        }
+        return contentCompose
+    }
+
+    override fun getHostReplaceContent(requestReplaceHostContent: HandlerClickParams.RequestReplaceHostContent): @Composable (() -> Unit) {
+        val contentCompose = @Composable {
+            Box {
+                if (requestReplaceHostContent.replaceRequest == "quick_send_content") {
+                    val quickStepContents =
+                        requestReplaceHostContent.payload as? List<QuickStepContent>
+                    ConversationQuickStepBottomSheet(quickStepContents)
+                }
+            }
         }
         return contentCompose
     }

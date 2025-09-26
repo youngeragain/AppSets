@@ -8,8 +8,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import xcj.app.starter.android.util.PurpleLogger
 import xcj.app.web.webserver.base.DefaultControllerCollector
+import xcj.app.web.webserver.interfaces.ComponentsProvider
 import xcj.app.web.webserver.interfaces.ListenersProvider
-import xcj.app.web.webserver.netty.ServerBootStrap.ActionLister
 
 class ServerBootStrap() {
 
@@ -53,6 +53,7 @@ class ServerBootStrap() {
         application: Application,
         apiPort: Int,
         fileApiPort: Int,
+        componentsProvider: ComponentsProvider?,
         listenersProvider: ListenersProvider?,
         actionLister: ActionLister?
     ) {
@@ -68,11 +69,21 @@ class ServerBootStrap() {
             }
 
             val apiChannelChannelInitializer =
-                ApiChannelChannelInitializer(apiPort, handlerMappings, listenersProvider)
+                ApiChannelChannelInitializer(
+                    apiPort,
+                    handlerMappings,
+                    componentsProvider,
+                    listenersProvider
+                )
             apiServerBootStrap = ApiServerBootStrap()
 
             val fileApiChannelChannelInitializer =
-                FileApiChannelChannelInitializer(fileApiPort, handlerMappings, listenersProvider)
+                FileApiChannelChannelInitializer(
+                    fileApiPort,
+                    handlerMappings,
+                    componentsProvider,
+                    listenersProvider
+                )
             fileApiServerBootStrap =
                 ApiServerBootStrap()
 

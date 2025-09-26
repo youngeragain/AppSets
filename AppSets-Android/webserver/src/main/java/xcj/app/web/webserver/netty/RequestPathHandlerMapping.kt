@@ -1,20 +1,15 @@
 package xcj.app.web.webserver.netty
 
-import io.netty.buffer.ByteBuf
 import io.netty.buffer.ByteBufAllocator
 import io.netty.buffer.EmptyByteBuf
 import io.netty.buffer.Unpooled
 import io.netty.channel.ChannelFutureListener
 import io.netty.channel.ChannelHandlerContext
-import io.netty.channel.ChannelProgressiveFuture
-import io.netty.channel.ChannelProgressiveFutureListener
 import io.netty.channel.DefaultFileRegion
 import io.netty.handler.codec.http.DefaultFullHttpRequest
 import io.netty.handler.codec.http.DefaultFullHttpResponse
 import io.netty.handler.codec.http.DefaultHttpResponse
 import io.netty.handler.codec.http.EmptyHttpHeaders
-import io.netty.handler.codec.http.HttpChunkedInput
-import io.netty.handler.codec.http.HttpContent
 import io.netty.handler.codec.http.HttpHeaderNames
 import io.netty.handler.codec.http.HttpHeaderValues
 import io.netty.handler.codec.http.HttpRequest
@@ -23,17 +18,14 @@ import io.netty.handler.codec.http.HttpResponseStatus
 import io.netty.handler.codec.http.HttpUtil
 import io.netty.handler.codec.http.HttpVersion
 import io.netty.handler.codec.http.LastHttpContent
-import io.netty.handler.stream.ChunkedInput
 import io.netty.handler.stream.ChunkedStream
 import xcj.app.starter.android.util.PurpleLogger
 import xcj.app.starter.foundation.http.DesignResponse
 import xcj.app.starter.util.ContentType
 import xcj.app.web.webserver.base.ContentDownloadN
-import xcj.app.web.webserver.base.DataProgressInfoPool
 import xcj.app.web.webserver.base.InputStreamReadableData
-import xcj.app.web.webserver.interfaces.ProgressListener
+import xcj.app.web.webserver.interfaces.ComponentsProvider
 import xcj.app.web.webserver.interfaces.ListenersProvider
-import java.io.Closeable
 import java.io.File
 import java.lang.reflect.ParameterizedType
 import java.util.UUID
@@ -50,6 +42,7 @@ class RequestPathHandlerMapping(
         ctx: ChannelHandlerContext,
         httpRequestWrapper: HttpRequestWrapper,
         httpResponseWrapper: HttpResponseWrapper,
+        componentsProvider: ComponentsProvider?,
         listenersProvider: ListenersProvider?
     ) {
         val handlerMethod = getHandlerMethod(httpRequestWrapper)
@@ -67,6 +60,7 @@ class RequestPathHandlerMapping(
             httpRequestWrapper,
             httpResponseWrapper,
             handlerMethod,
+            componentsProvider,
             listenersProvider
         )
     }
@@ -76,6 +70,7 @@ class RequestPathHandlerMapping(
         httpRequestWrapper: HttpRequestWrapper,
         httpResponseWrapper: HttpResponseWrapper,
         handlerMethod: HandlerMethod,
+        componentsProvider: ComponentsProvider?,
         listenersProvider: ListenersProvider?
     ) {
         val httpContent = httpRequestWrapper.httpContent
@@ -85,6 +80,7 @@ class RequestPathHandlerMapping(
                 httpRequestWrapper,
                 httpResponseWrapper,
                 handlerMethod,
+                componentsProvider,
                 listenersProvider
             )
         } else {
@@ -103,9 +99,15 @@ class RequestPathHandlerMapping(
         httpRequestWrapper: HttpRequestWrapper,
         httpResponseWrapper: HttpResponseWrapper,
         handlerMethod: HandlerMethod,
+        componentsProvider: ComponentsProvider?,
         listenersProvider: ListenersProvider?
     ) {
-        HttpFileUploadHelper.handleHttpContent(ctx, httpRequestWrapper, listenersProvider)
+        HttpFileUploadHelper.handleHttpContent(
+            ctx,
+            httpRequestWrapper,
+            componentsProvider,
+            listenersProvider
+        )
         val httpContent = httpRequestWrapper.httpContent
         if (httpContent == null) {
             return
@@ -403,7 +405,7 @@ class RequestPathHandlerMapping(
                     contentDownloadN.name,
                     length,
                     relatedCloseable,
-                    listenersProvider?.getSendProgressListener()
+                    listenersProvider?.provideSendProgressListener()
                 )
                 sendFileChannelFuture.addListener(progressiveFutureListener)
                 val lastContentFuture = ctx.writeAndFlush(LastHttpContent.EMPTY_LAST_CONTENT)
@@ -447,7 +449,7 @@ class RequestPathHandlerMapping(
             file.name,
             length,
             null,
-            listenersProvider?.getSendProgressListener()
+            listenersProvider?.provideSendProgressListener()
         )
         sendFileChannelFuture.addListener(progressiveFutureListener)
         val lastContentFuture = ctx.writeAndFlush(LastHttpContent.EMPTY_LAST_CONTENT)

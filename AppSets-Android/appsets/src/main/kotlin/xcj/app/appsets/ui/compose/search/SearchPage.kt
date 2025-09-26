@@ -32,7 +32,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.systemBars
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -75,8 +74,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -89,10 +86,10 @@ import xcj.app.appsets.server.model.ScreenMediaFileUrl
 import xcj.app.appsets.server.model.UserInfo
 import xcj.app.appsets.ui.compose.LocalUseCaseOfSearch
 import xcj.app.appsets.ui.compose.PageRouteNames
+import xcj.app.appsets.ui.compose.apps.SingleApplicationComponent
 import xcj.app.appsets.ui.compose.custom_component.AnyImage
 import xcj.app.appsets.ui.compose.custom_component.ShowNavBar
 import xcj.app.appsets.ui.compose.outside.ScreenComponent
-import xcj.app.appsets.ui.compose.theme.extShapes
 import xcj.app.appsets.ui.model.page_state.SearchPageState
 import xcj.app.appsets.ui.model.state.SearchResult
 import xcj.app.compose_share.components.DesignTextField
@@ -237,7 +234,9 @@ fun SearchPageResults(
     onScreenMediaClick: (ScreenMediaFileUrl, List<ScreenMediaFileUrl>) -> Unit,
 ) {
     AnimatedContent(
-        targetState = searchPageState, contentAlignment = Alignment.TopCenter, transitionSpec = {
+        targetState = searchPageState,
+        contentAlignment = Alignment.TopCenter,
+        transitionSpec = {
             if (searchPageState is SearchPageState.None) {
                 (fadeIn(
                     animationSpec = snap()
@@ -262,7 +261,8 @@ fun SearchPageResults(
                 )
             }
 
-        }) { targetSearchState ->
+        }
+    ) { targetSearchState ->
         Box(
             modifier = Modifier.fillMaxSize()
         ) {
@@ -277,9 +277,9 @@ fun SearchPageResults(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Text(
-                            text = stringResource(id = targetSearchState.tipsIntRes)
+                            text = stringResource(id = targetSearchState.tips)
                         )
-                        targetSearchState.subTipsIntRes?.let {
+                        targetSearchState.subTips?.let {
                             Text(
                                 text = stringResource(id = it),
                                 fontSize = 12.sp
@@ -293,12 +293,12 @@ fun SearchPageResults(
                         modifier = Modifier.align(Alignment.Center),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        targetSearchState.tipsIntRes?.let {
+                        targetSearchState.tips?.let {
                             Text(
                                 text = stringResource(id = it)
                             )
                         }
-                        targetSearchState.subTipsIntRes?.let {
+                        targetSearchState.subTips?.let {
                             Text(
                                 text = stringResource(id = it),
                                 fontSize = 12.sp
@@ -314,12 +314,12 @@ fun SearchPageResults(
                             modifier = Modifier.align(Alignment.Center),
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            targetSearchState.tipsIntRes?.let {
+                            targetSearchState.tips?.let {
                                 Text(
                                     text = stringResource(id = it)
                                 )
                             }
-                            targetSearchState.subTipsIntRes?.let {
+                            targetSearchState.subTips?.let {
                                 Text(
                                     text = stringResource(id = it),
                                     fontSize = 12.sp
@@ -557,37 +557,16 @@ fun SearchedApplicationsPage(
         )
     ) {
         itemsIndexed(items = searchedApplications.applications) { index, application ->
-            Column(
+            SingleApplicationComponent(
                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                AnyImage(
-                    modifier = Modifier
-                        .size(68.dp)
-                        .clip(MaterialTheme.shapes.extShapes.large)
-                        .background(
-                            MaterialTheme.colorScheme.outline, MaterialTheme.shapes.extShapes.large
-                        )
-                        .border(
-                            1.dp,
-                            MaterialTheme.colorScheme.outline,
-                            MaterialTheme.shapes.extShapes.large
-                        )
-                        .clickable(
-                            onClick = {
-                                onBioClick(application)
-                            }), model = application.bioUrl
-                )
-                Text(
-                    text = application.name ?: "",
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    textAlign = TextAlign.Center,
-                    fontSize = 12.sp,
-                    modifier = Modifier.widthIn(max = 82.dp)
-                )
-            }
+                application = application,
+                onApplicationClick = {
+                    onBioClick(application)
+                },
+                onApplicationLongClick = {
+                    onBioClick(application)
+                }
+            )
         }
     }
 }

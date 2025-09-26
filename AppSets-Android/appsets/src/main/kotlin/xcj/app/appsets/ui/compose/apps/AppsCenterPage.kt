@@ -105,7 +105,7 @@ fun AppsCenterPage(
     ) {
         itemsIndexed(items = allApplications) { index, application ->
             val animateFraction by iconAnimationStates[index]
-            Column(
+            SingleApplicationComponent(
                 modifier = Modifier
                     .padding(horizontal = 12.dp, vertical = 8.dp)
                     .graphicsLayer {
@@ -114,50 +114,65 @@ fun AppsCenterPage(
                         alpha = animateFraction
                     }
                     .animateItem(),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                AnyImage(
-                    modifier = Modifier
-                        .size(68.dp)
-                        .clip(MaterialTheme.shapes.extShapes.large)
-                        .background(
-                            MaterialTheme.colorScheme.outline,
-                            MaterialTheme.shapes.extShapes.large
-                        )
-                        .border(
-                            1.dp,
-                            MaterialTheme.colorScheme.outline,
-                            MaterialTheme.shapes.extShapes.large
-                        )
-                        .combinedClickable(
-                            enabled = true,
-                            onClick = {
-                                if (appCenterPageState !is AppCenterPageState.LoadSuccess) {
-                                    return@combinedClickable
-                                }
-                                onBioClick(application)
-                            },
-                            onLongClick = {
-                                if (appCenterPageState !is AppCenterPageState.LoadSuccess) {
-                                    return@combinedClickable
-                                }
-                                hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
-                                onApplicationLongPress(application)
-                            }
-                        ),
-                    model = application.bioUrl
-                )
-                Text(
-                    text = application.name ?: "",
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    textAlign = TextAlign.Center,
-                    fontSize = 12.sp,
-                    modifier = Modifier
-                        .widthIn(max = 82.dp)
-                )
-            }
+                application = application,
+                onApplicationClick = {
+                    if (appCenterPageState !is AppCenterPageState.LoadSuccess) {
+                        return@SingleApplicationComponent
+                    }
+                    onBioClick(application)
+                },
+                onApplicationLongClick = {
+                    if (appCenterPageState !is AppCenterPageState.LoadSuccess) {
+                        return@SingleApplicationComponent
+                    }
+                    hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onApplicationLongPress(application)
+                }
+            )
         }
+    }
+}
+
+@Composable
+fun SingleApplicationComponent(
+    modifier: Modifier = Modifier,
+    application: Application,
+    onApplicationClick: () -> Unit,
+    onApplicationLongClick: () -> Unit,
+) {
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        AnyImage(
+            modifier = Modifier
+                .size(68.dp)
+                .clip(MaterialTheme.shapes.extShapes.large)
+                .background(
+                    MaterialTheme.colorScheme.outline,
+                    MaterialTheme.shapes.extShapes.large
+                )
+                .border(
+                    1.dp,
+                    MaterialTheme.colorScheme.outline,
+                    MaterialTheme.shapes.extShapes.large
+                )
+                .combinedClickable(
+                    enabled = true,
+                    onClick = onApplicationClick,
+                    onLongClick = onApplicationLongClick
+                ),
+            model = application.bioUrl
+        )
+        Text(
+            text = application.name ?: "",
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            textAlign = TextAlign.Center,
+            fontSize = 12.sp,
+            modifier = Modifier
+                .widthIn(max = 82.dp)
+        )
     }
 }

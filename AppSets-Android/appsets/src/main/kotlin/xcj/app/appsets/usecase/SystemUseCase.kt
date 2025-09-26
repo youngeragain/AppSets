@@ -10,7 +10,6 @@ import androidx.core.content.ContextCompat
 import androidx.navigation.NavController
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import xcj.app.appsets.R
 import xcj.app.appsets.account.LocalAccountManager
 import xcj.app.appsets.im.Session
 import xcj.app.appsets.im.message.SystemMessage
@@ -194,7 +193,8 @@ class SystemUseCase(
         requestJson: FriendRequestJson,
     ) {
         if (RelationsUseCase.getInstance().hasUserRelated(requestJson.uid)) {
-            context.getString(xcj.app.appsets.R.string.you_are_already_friends).toast()
+            ContextCompat.getString(context, xcj.app.appsets.R.string.you_are_already_friends)
+                .toast()
             return
         }
         PurpleLogger.current.d(TAG, "userFeedbackFriendsRequest")
@@ -226,7 +226,8 @@ class SystemUseCase(
 
     fun requestAddFriend(context: Context, uid: String, hello: String, reason: String?) {
         if (RelationsUseCase.getInstance().hasUserRelated(uid)) {
-            context.getString(xcj.app.appsets.R.string.you_are_already_friends).toast()
+            ContextCompat.getString(context, xcj.app.appsets.R.string.you_are_already_friends)
+                .toast()
             return
         }
         PurpleLogger.current.d(TAG, "requestAddFriend")
@@ -244,7 +245,10 @@ class SystemUseCase(
                     return@onSuccess
                 }
 
-                context.getString(xcj.app.appsets.R.string.friend_request_is_send_please_waiting)
+                ContextCompat.getString(
+                    context,
+                    xcj.app.appsets.R.string.friend_request_is_send_please_waiting
+                )
                     .toastSuspend()
                 requestIdMap[uid] = requestId
             }
@@ -253,7 +257,8 @@ class SystemUseCase(
 
     fun requestJoinGroup(context: Context, groupId: String, hello: String, reason: String?) {
         if (RelationsUseCase.getInstance().hasGroupRelated(groupId)) {
-            context.getString(xcj.app.appsets.R.string.you_are_already_in_the_group).toast()
+            ContextCompat.getString(context, xcj.app.appsets.R.string.you_are_already_in_the_group)
+                .toast()
             return
         }
         PurpleLogger.current.d(TAG, "requestJoinGroup")
@@ -270,7 +275,10 @@ class SystemUseCase(
                     it.info.toastSuspend()
                     return@onSuccess
                 }
-                context.getString(xcj.app.appsets.R.string.group_request_is_send_please_waiting)
+                ContextCompat.getString(
+                    context,
+                    xcj.app.appsets.R.string.group_request_is_send_please_waiting
+                )
                     .toastSuspend()
                 requestIdMap.put(groupId, requestId)
             }
@@ -342,11 +350,11 @@ class SystemUseCase(
             return
         }
         if (account.isEmpty()) {
-            context.getString(xcj.app.appsets.R.string.please_input_account).toast()
+            ContextCompat.getString(context, xcj.app.appsets.R.string.please_input_account).toast()
             return
         }
         if (password.isEmpty()) {
-            context.getString(xcj.app.appsets.R.string.please_input_password).toast()
+            ContextCompat.getString(context, xcj.app.appsets.R.string.please_input_password).toast()
             return
         }
         loginSignUpPageState.value = LoginSignUpPageState.Logging()
@@ -423,7 +431,10 @@ class SystemUseCase(
         context: Context,
     ) {
         if (!ModuleConfig.moduleConfiguration.canSignUp) {
-            context.getString(xcj.app.appsets.R.string.current_version_cannot_be_registered).toast()
+            ContextCompat.getString(
+                context,
+                xcj.app.appsets.R.string.current_version_cannot_be_registered
+            ).toast()
             return
         }
         val oldLoginSignUpState = loginSignUpPageState.value
@@ -432,20 +443,20 @@ class SystemUseCase(
         }
         val signUpUserInfo = oldLoginSignUpState.userInfoForCreate
         if (signUpUserInfo.account.isEmpty()) {
-            context.getString(xcj.app.appsets.R.string.please_input_account).toast()
+            ContextCompat.getString(context, xcj.app.appsets.R.string.please_input_account).toast()
             return
         }
         if (signUpUserInfo.password.isEmpty()) {
-            context.getString(xcj.app.appsets.R.string.please_input_password).toast()
+            ContextCompat.getString(context, xcj.app.appsets.R.string.please_input_password).toast()
             return
         }
         val avatarImageUri = signUpUserInfo.userAvatar?.provideUri()
         if (avatarImageUri == null) {
-            context.getString(xcj.app.appsets.R.string.please_choose_avatar).toast()
+            ContextCompat.getString(context, xcj.app.appsets.R.string.please_choose_avatar).toast()
             return
         }
         if (signUpUserInfo.userName.isEmpty()) {
-            context.getString(xcj.app.appsets.R.string.please_input_name).toast()
+            ContextCompat.getString(context, xcj.app.appsets.R.string.please_input_name).toast()
             return
         }
         PurpleLogger.current.d(TAG, "signUp")
@@ -463,17 +474,21 @@ class SystemUseCase(
             val canSignUp = preSignUpRes.data
             if (canSignUp == null) {
                 loginSignUpPageState.value = LoginSignUpPageState.SignUpPageFailed(
-                    signUpUserInfo, R.string.register_failed
+                    signUpUserInfo, xcj.app.appsets.R.string.register_failed
                 )
                 delay(1000)
-                context.getString(xcj.app.appsets.R.string.register_failed).toastSuspend()
+                ContextCompat.getString(context, xcj.app.appsets.R.string.register_failed)
+                    .toastSuspend()
                 loginSignUpPageState.value = LoginSignUpPageState.LoginStart
                 return
             } else if (!canSignUp) {
                 loginSignUpPageState.value = LoginSignUpPageState.SignUpPageFailed(
-                    signUpUserInfo, R.string.a_account_exist_please_retry
+                    signUpUserInfo, xcj.app.appsets.R.string.a_account_exist_please_retry
                 )
-                context.getString(xcj.app.appsets.R.string.a_account_exist_please_retry)
+                ContextCompat.getString(
+                    context,
+                    xcj.app.appsets.R.string.a_account_exist_please_retry
+                )
                     .toastSuspend()
                 delay(1000)
                 loginSignUpPageState.value = LoginSignUpPageState.SignUpStart(signUpUserInfo)
@@ -485,20 +500,23 @@ class SystemUseCase(
             val signUpSuccess = signUpRes.data
             if (signUpSuccess != true) {
                 loginSignUpPageState.value = LoginSignUpPageState.SignUpPageFailed(
-                    signUpUserInfo, R.string.register_failed
+                    signUpUserInfo, xcj.app.appsets.R.string.register_failed
                 )
-                context.getString(xcj.app.appsets.R.string.register_failed).toastSuspend()
+                ContextCompat.getString(context, xcj.app.appsets.R.string.register_failed)
+                    .toastSuspend()
                 delay(1000)
                 loginSignUpPageState.value = LoginSignUpPageState.SignUpStart(signUpUserInfo)
                 return
             }
             loginSignUpPageState.value = LoginSignUpPageState.SignUpFinish(signUpUserInfo)
-            context.getString(xcj.app.appsets.R.string.register_appsets_success).toastSuspend()
+            ContextCompat.getString(context, xcj.app.appsets.R.string.register_appsets_success)
+                .toastSuspend()
         }).onFailure {
             loginSignUpPageState.value = LoginSignUpPageState.SignUpPageFailed(
-                signUpUserInfo, R.string.register_failed
+                signUpUserInfo, xcj.app.appsets.R.string.register_failed
             )
-            context.getString(xcj.app.appsets.R.string.register_failed).toastSuspend()
+            ContextCompat.getString(context, xcj.app.appsets.R.string.register_failed)
+                .toastSuspend()
             delay(1000)
             loginSignUpPageState.value = LoginSignUpPageState.SignUpStart(signUpUserInfo)
 
@@ -515,7 +533,8 @@ class SystemUseCase(
         }
         val groupCreateInfo = groupCreateState.groupInfoForCreate
         if (groupCreateInfo.name.isEmpty()) {
-            context.getString(xcj.app.appsets.R.string.group_name_can_not_be_empty).toast()
+            ContextCompat.getString(context, xcj.app.appsets.R.string.group_name_can_not_be_empty)
+                .toast()
             return
         }
         PurpleLogger.current.d(TAG, "createGroup")
@@ -524,7 +543,10 @@ class SystemUseCase(
             requestRaw(action = {
                 val preCheckRes = userRepository.createChatGroupPreCheck(groupCreateInfo.name)
                 if (preCheckRes.data != true) {
-                    context.getString(xcj.app.appsets.R.string.a_group_name_existed_please_retry)
+                    ContextCompat.getString(
+                        context,
+                        xcj.app.appsets.R.string.a_group_name_existed_please_retry
+                    )
                         .toastSuspend()
                     createGroupPageState.value = CreateGroupPageState.NewGroupPage(groupCreateInfo)
                     return@requestRaw
@@ -534,21 +556,24 @@ class SystemUseCase(
                     context, groupCreateInfo
                 )
                 if (createChatGroupRes.data == true) {
-                    context.getString(xcj.app.appsets.R.string.create_success).toastSuspend()
+                    ContextCompat.getString(context, xcj.app.appsets.R.string.create_success)
+                        .toastSuspend()
                     startServiceToSyncGroupsFromServer(context)
                     createGroupPageState.value =
                         CreateGroupPageState.CreateFinishPage(groupCreateInfo)
                     delay(300)
                     createGroupPageState.value = CreateGroupPageState.NewGroupPage(groupCreateInfo)
                 } else {
-                    context.getString(xcj.app.appsets.R.string.create_failed).toastSuspend()
+                    ContextCompat.getString(context, xcj.app.appsets.R.string.create_failed)
+                        .toastSuspend()
                     createGroupPageState.value =
                         CreateGroupPageState.CreateFailedPage(groupCreateInfo)
                     delay(300)
                     createGroupPageState.value = CreateGroupPageState.NewGroupPage(groupCreateInfo)
                 }
             }).onFailure {
-                context.getString(xcj.app.appsets.R.string.create_failed).toastSuspend()
+                ContextCompat.getString(context, xcj.app.appsets.R.string.create_failed)
+                    .toastSuspend()
                 createGroupPageState.value = CreateGroupPageState.CreateFailedPage(groupCreateInfo)
                 delay(300)
                 createGroupPageState.value = CreateGroupPageState.NewGroupPage(groupCreateInfo)
@@ -668,7 +693,7 @@ class SystemUseCase(
         }
 
         fun providePrivacy(context: Context): String {
-            return context.getString(xcj.app.appsets.R.string.user_agreement)
+            return ContextCompat.getString(context, xcj.app.appsets.R.string.user_agreement)
         }
 
         fun startIMServiceIfNeeded(context: Context, isAppInBackground: Boolean) {

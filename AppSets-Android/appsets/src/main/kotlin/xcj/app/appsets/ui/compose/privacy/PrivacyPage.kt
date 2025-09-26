@@ -145,7 +145,7 @@ fun PermissionCard(
             text = String.format(
                 "%s: %s",
                 stringResource(id = xcj.app.appsets.R.string.name),
-                platformPermissionsUsage.name
+                stringResource(id = platformPermissionsUsage.name)
             ), fontSize = 16.sp
         )
         platformPermissionsUsage.androidDefinitionNames.forEach {
@@ -153,11 +153,11 @@ fun PermissionCard(
         }
         Spacer(modifier = Modifier.height(2.dp))
         Text(text = stringResource(xcj.app.appsets.R.string.explanation), fontSize = 16.sp)
-        Text(text = platformPermissionsUsage.description, fontSize = 12.sp)
+        Text(text = stringResource(platformPermissionsUsage.description), fontSize = 12.sp)
         Spacer(modifier = Modifier.height(8.dp))
         Text(text = stringResource(xcj.app.appsets.R.string.intent), fontSize = 16.sp)
         Spacer(modifier = Modifier.height(2.dp))
-        Text(text = platformPermissionsUsage.usage, fontSize = 12.sp)
+        Text(text = stringResource(platformPermissionsUsage.usage), fontSize = 12.sp)
         Text(text = stringResource(xcj.app.appsets.R.string.link), fontSize = 16.sp)
         if (platformPermissionsUsage.usageUri == null) {
             Text(text = stringResource(xcj.app.appsets.R.string.not_provide), fontSize = 12.sp)

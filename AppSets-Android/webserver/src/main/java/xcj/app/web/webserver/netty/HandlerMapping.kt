@@ -1,6 +1,7 @@
 package xcj.app.web.webserver.netty
 
 import io.netty.channel.ChannelHandlerContext
+import xcj.app.web.webserver.interfaces.ComponentsProvider
 import xcj.app.web.webserver.interfaces.ListenersProvider
 
 interface HandlerMapping {
@@ -9,6 +10,7 @@ interface HandlerMapping {
         ctx: ChannelHandlerContext,
         httpRequestWrapper: HttpRequestWrapper,
         httpResponseWrapper: HttpResponseWrapper,
+        componentsProvider: ComponentsProvider?,
         listenersProvider: ListenersProvider?
     )
 

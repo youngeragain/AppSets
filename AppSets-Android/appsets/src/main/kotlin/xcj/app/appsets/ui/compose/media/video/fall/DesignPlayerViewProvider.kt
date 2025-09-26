@@ -6,10 +6,10 @@ import android.view.ViewGroup
 import androidx.core.content.res.ResourcesCompat
 import androidx.media3.ui.AspectRatioFrameLayout
 import androidx.media3.ui.PlayerView
+import xcj.app.appsets.ui.compose.media.video.DesignBufferView
 import xcj.app.appsets.util.ktx.proxyBufferView
 import xcj.app.appsets.util.ktx.removeControllerViewFor
 import xcj.app.appsets.util.ktx.setControllerDrawableFor
-import xcj.app.appsets.ui.compose.media.video.DesignBufferView
 import xcj.app.starter.android.util.PurpleLogger
 
 @SuppressLint("UnsafeOptInUsageError")
@@ -22,7 +22,7 @@ object DesignPlayerViewProvider {
         val playerView = PlayerView(context).apply {
             useController = true
             //resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
-            //setCustomErrorMessage(context.getString(R.string.can_not_play))
+            //setCustomErrorMessage(ContextCompat.getString(context, R.string.can_not_play))
             artworkDisplayMode = PlayerView.ARTWORK_DISPLAY_MODE_FILL
             imageDisplayMode = PlayerView.IMAGE_DISPLAY_MODE_FILL
             setKeepContentOnPlayerReset(true)

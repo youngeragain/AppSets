@@ -97,7 +97,7 @@ fun GroupInfoPage(
 
             is GroupInfoPageState.NotFound -> {
                 Box(modifier = Modifier.fillMaxSize()) {
-                    groupInfoPageState.tipsIntRes?.let {
+                    groupInfoPageState.tips?.let {
                         Text(
                             text = stringResource(id = it),
                             modifier = Modifier.align(Alignment.Center)

@@ -3,6 +3,7 @@ package xcj.app.appsets.usecase
 import android.content.Context
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
+import androidx.core.content.ContextCompat
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.flow
@@ -79,16 +80,19 @@ class ScreenPostUseCase(
             .onSuccess { isAddSuccess ->
                 if (isAddSuccess) {
                     delay(1200)
-                    context.getString(xcj.app.appsets.R.string.create_success).toastSuspend()
+                    ContextCompat.getString(context, xcj.app.appsets.R.string.create_success)
+                        .toastSuspend()
                     this@ScreenPostUseCase.postScreenPageState.value =
                         PostScreenPageState.PostSuccessPage(postScreen)
                 } else {
-                    context.getString(xcj.app.appsets.R.string.create_failed).toastSuspend()
+                    ContextCompat.getString(context, xcj.app.appsets.R.string.create_failed)
+                        .toastSuspend()
                     this@ScreenPostUseCase.postScreenPageState.value =
                         PostScreenPageState.PostFailedPage(postScreen)
                 }
             }.onFailure {
-                context.getString(xcj.app.appsets.R.string.create_failed).toastSuspend()
+                ContextCompat.getString(context, xcj.app.appsets.R.string.create_failed)
+                    .toastSuspend()
                 this@ScreenPostUseCase.postScreenPageState.value =
                     PostScreenPageState.PostFailedPage(postScreen)
             }

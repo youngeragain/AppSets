@@ -2,12 +2,20 @@
 
 package xcj.app.appsets.ui.compose.quickstep
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -24,6 +32,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
@@ -38,6 +47,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import xcj.app.appsets.ui.compose.LocalQuickStepContentHandlerRegistry
 import xcj.app.appsets.ui.compose.custom_component.AnyImage
+import xcj.app.appsets.ui.compose.custom_component.DesignBackButton
 import xcj.app.compose_share.components.DesignTextField
 import xcj.app.starter.util.ContentType
 
@@ -46,13 +56,13 @@ fun QuickStepSheet(
     quickStepContentHolder: QuickStepContentHolder
 ) {
     val context = LocalContext.current
+    val quickStepContentHandlerRegistry = LocalQuickStepContentHandlerRegistry.current
     val focusRequester = remember {
         FocusRequester()
     }
     var searchContent by remember {
         mutableStateOf(TextFieldValue())
     }
-    val quickStepContentHandlerRegistry = LocalQuickStepContentHandlerRegistry.current
     val filteredContentHandlersMap by remember {
         derivedStateOf {
             quickStepContentHandlerRegistry.findHandlers(
@@ -63,70 +73,111 @@ fun QuickStepSheet(
         }
     }
     val filteredContentHandlerCategories = filteredContentHandlersMap.keys.toList()
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 12.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-
-        LazyRow(
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            items(quickStepContentHolder.quickStepContents) { quickStepContent ->
-                QuickStepContentComponent(quickStepContent)
-            }
-        }
-        DesignTextField(
-            value = searchContent.text,
-            onValueChange = {
-                searchContent = TextFieldValue(it)
-
-            },
-            placeholder = {
-                Text(
-                    text = stringResource(xcj.app.appsets.R.string.search_quick_step),
-                    fontSize = 12.sp
-                )
-            },
+    var replaceSheetContentCompose: (@Composable () -> Unit)? by remember {
+        mutableStateOf(null)
+    }
+    Box {
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .focusRequester(focusRequester)
-                .border(1.dp, MaterialTheme.colorScheme.outline, MaterialTheme.shapes.extraLarge),
-            maxLines = 1
-        )
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f),
+                .padding(horizontal = 12.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            items(filteredContentHandlerCategories) { contentHandlerCategory ->
-                val contentHandlers = filteredContentHandlersMap[contentHandlerCategory]
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .animateItem(),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
+        )
+        {
+            LazyRow(
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                items(quickStepContentHolder.quickStepContents) { quickStepContent ->
+                    QuickStepContentComponent(quickStepContent)
+                }
+            }
+            DesignTextField(
+                value = searchContent.text,
+                onValueChange = {
+                    searchContent = TextFieldValue(it)
+
+                },
+                placeholder = {
                     Text(
-                        text = stringResource(contentHandlerCategory),
-                        fontWeight = FontWeight.Bold
+                        text = stringResource(xcj.app.appsets.R.string.search_quick_step),
+                        fontSize = 12.sp
                     )
-                    FlowRow(
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .focusRequester(focusRequester)
+                    .border(
+                        1.dp,
+                        MaterialTheme.colorScheme.outline,
+                        MaterialTheme.shapes.extraLarge
+                    ),
+                maxLines = 1
+            )
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                items(filteredContentHandlerCategories) { contentHandlerCategory ->
+                    val contentHandlers = filteredContentHandlersMap[contentHandlerCategory]
+                    Column(
                         modifier = Modifier
-                            .fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            .fillMaxWidth()
+                            .animateItem(),
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
+                        Text(
+                            text = stringResource(contentHandlerCategory),
+                            fontWeight = FontWeight.Bold
+                        )
+                        FlowRow(
+                            modifier = Modifier
+                                .fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
 
-                        contentHandlers?.forEach { contentHandler ->
-                            contentHandler.getContent(
-                                onClick = {}
-                            ).invoke()
+                            contentHandlers?.forEach { contentHandler ->
+                                contentHandler.getContent(
+                                    onClick = { handlerClickParams ->
+                                        when (handlerClickParams) {
+                                            is HandlerClickParams.SimpleClick -> {
+
+                                            }
+
+                                            is HandlerClickParams.RequestReplaceHostContent -> {
+                                                replaceSheetContentCompose =
+                                                    contentHandler.getHostReplaceContent(
+                                                        handlerClickParams
+                                                    )
+                                            }
+                                        }
+                                    }
+                                ).invoke()
+                            }
                         }
                     }
                 }
+            }
+        }
+        AnimatedVisibility(
+            visible = replaceSheetContentCompose != null,
+            enter = fadeIn() + slideInVertically(initialOffsetY = { it / 10 }),
+            exit = fadeOut() + slideOutVertically(targetOffsetY = { it / 10 }),
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.surface)
+            ) {
+                replaceSheetContentCompose?.invoke()
+                DesignBackButton(
+                    modifier = Modifier.align(Alignment.BottomCenter),
+                    onClick = {
+                        replaceSheetContentCompose = null
+                    }
+                )
             }
         }
     }

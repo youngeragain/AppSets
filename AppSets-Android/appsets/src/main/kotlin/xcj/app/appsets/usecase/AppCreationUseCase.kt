@@ -3,8 +3,8 @@ package xcj.app.appsets.usecase
 import android.content.Context
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
+import androidx.core.content.ContextCompat
 import kotlinx.coroutines.delay
-import xcj.app.appsets.R
 import xcj.app.appsets.server.model.Application
 import xcj.app.appsets.server.repository.AppSetsRepository
 import xcj.app.appsets.ui.model.ApplicationForCreate
@@ -53,7 +53,10 @@ class AppCreationUseCase(
     suspend fun finishCreateApp(context: Context) {
         val createApplicationState = this@AppCreationUseCase.createApplicationPageState.value
         if (createApplicationState is CreateApplicationPageState.Creating) {
-            context.getString(xcj.app.appsets.R.string.creating_application_please_wait).toast()
+            ContextCompat.getString(
+                context,
+                xcj.app.appsets.R.string.creating_application_please_wait
+            ).toast()
             return
         }
         val newApplicationState =
@@ -74,7 +77,7 @@ class AppCreationUseCase(
                     this@AppCreationUseCase.createApplicationPageState.value =
                         CreateApplicationPageState.CreateFailedPage(
                             applicationForCreate,
-                            R.string.please_use_another_application_name
+                            xcj.app.appsets.R.string.please_use_another_application_name
                         )
                     delay(2000)
                     this@AppCreationUseCase.createApplicationPageState.value =
@@ -87,7 +90,7 @@ class AppCreationUseCase(
                     this@AppCreationUseCase.createApplicationPageState.value =
                         CreateApplicationPageState.CreateFailedPage(
                             applicationForCreate,
-                            R.string.create_application_failed
+                            xcj.app.appsets.R.string.create_application_failed
                         )
                     delay(2000)
                     this@AppCreationUseCase.createApplicationPageState.value =
@@ -105,7 +108,7 @@ class AppCreationUseCase(
             this@AppCreationUseCase.createApplicationPageState.value =
                 CreateApplicationPageState.CreateFailedPage(
                     applicationForCreate,
-                    R.string.create_application_failed
+                    xcj.app.appsets.R.string.create_application_failed
                 )
             delay(2000)
             this@AppCreationUseCase.createApplicationPageState.value =
@@ -120,37 +123,40 @@ class AppCreationUseCase(
         val tempApp = applicationForCreate
         if (tempApp.iconUriHolder == null) {
             String.format(
-                context.getString(xcj.app.appsets.R.string.please_input_a_template),
-                context.getString(xcj.app.appsets.R.string.icon)
+                ContextCompat.getString(context, xcj.app.appsets.R.string.please_input_a_template),
+                ContextCompat.getString(context, xcj.app.appsets.R.string.icon)
             ).toast()
             return false
         }
         if (tempApp.bannerUriHolder == null) {
             String.format(
-                context.getString(xcj.app.appsets.R.string.please_choose_a_template),
+                ContextCompat.getString(context, xcj.app.appsets.R.string.please_choose_a_template),
                 "Banner"
             ).toast()
             return false
         }
         if (tempApp.name.isEmpty()) {
             String.format(
-                context.getString(xcj.app.appsets.R.string.please_input_a_template),
-                context.getString(xcj.app.appsets.R.string.app_name)
+                ContextCompat.getString(context, xcj.app.appsets.R.string.please_input_a_template),
+                ContextCompat.getString(context, xcj.app.appsets.R.string.app_name)
             ).toast()
             return false
         }
         if (tempApp.category.isEmpty()) {
             String.format(
-                context.getString(xcj.app.appsets.R.string.please_input_a_template),
-                context.getString(xcj.app.appsets.R.string.app_types)
+                ContextCompat.getString(context, xcj.app.appsets.R.string.please_input_a_template),
+                ContextCompat.getString(context, xcj.app.appsets.R.string.app_types)
             ).toast()
             return false
         }
         if (tempApp.website.isNotEmpty()) {
             if (!tempApp.website.startWithHttpSchema()) {
                 String.format(
-                    context.getString(xcj.app.appsets.R.string.please_input_a_template),
-                    context.getString(xcj.app.appsets.R.string.website)
+                    ContextCompat.getString(
+                        context,
+                        xcj.app.appsets.R.string.please_input_a_template
+                    ),
+                    ContextCompat.getString(context, xcj.app.appsets.R.string.website)
                 ).toast()
                 return false
             }

@@ -7,7 +7,9 @@ import android.os.Parcelable
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,7 +19,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -45,6 +46,7 @@ import xcj.app.appsets.ui.compose.quickstep.QuickStepContentHolder
 import xcj.app.appsets.ui.compose.quickstep.QuickStepSheet
 import xcj.app.appsets.ui.compose.quickstep.TextQuickStepContent
 import xcj.app.appsets.ui.compose.quickstep.UriQuickStepContent
+import xcj.app.appsets.ui.compose.theme.extShapes
 import xcj.app.starter.android.AppDefinition
 import xcj.app.starter.android.util.FileUtil
 import xcj.app.starter.util.ContentType
@@ -146,7 +148,8 @@ fun ExternalContentTipsSheet(
         }
 
         Row(
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Icon(
                 modifier = Modifier
@@ -154,11 +157,18 @@ fun ExternalContentTipsSheet(
                 painter = painterResource(xcj.app.compose_share.R.drawable.ic_web_stories_24),
                 contentDescription = null
             )
-            Text(
-                text = stringResource(xcj.app.appsets.R.string.external_content),
-                fontSize = 22.sp,
-                fontWeight = FontWeight.Bold
-            )
+            Column {
+                Text(
+                    text = stringResource(xcj.app.appsets.R.string.external_content),
+                    fontSize = 22.sp,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = stringResource(xcj.app.appsets.R.string.how_to),
+                    fontSize = 22.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
         }
 
         if (fromAppDefinition != null) {
@@ -179,31 +189,32 @@ fun ExternalContentTipsSheet(
             }
         }
 
-        Text(
-            text = stringResource(xcj.app.appsets.R.string.how_to), fontSize = 16.sp,
-            fontWeight = FontWeight.Bold
-        )
-
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(24.dp)
+        Column(
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Column(
-                verticalArrangement = Arrangement.spacedBy(4.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                FilledTonalIconButton(
-                    onClick = {
-                        onConfirmClick(MainActivity.EXTERNAL_CONTENT_HANDLE_BY_APPSETS)
-                    }
-                ) {
-                    Image(
-                        modifier = Modifier,
-                        painter = painterResource(xcj.app.compose_share.R.drawable.ic_launcher_foreground),
-                        contentDescription = null
+            Image(
+                modifier = Modifier
+                    .size(68.dp)
+                    .clip(MaterialTheme.shapes.extShapes.large)
+                    .background(
+                        MaterialTheme.colorScheme.outline,
+                        MaterialTheme.shapes.extShapes.large
                     )
-                }
-                Text(text = stringResource(xcj.app.appsets.R.string.app_name), fontSize = 12.sp)
-            }
+                    .border(
+                        1.dp,
+                        MaterialTheme.colorScheme.outline,
+                        MaterialTheme.shapes.extShapes.large
+                    )
+                    .clickable(
+                        onClick = {
+                            onConfirmClick(MainActivity.EXTERNAL_CONTENT_HANDLE_BY_APPSETS)
+                        }
+                    ),
+                painter = painterResource(xcj.app.compose_share.R.drawable.ic_launcher_foreground),
+                contentDescription = null
+            )
+            Text(text = stringResource(xcj.app.appsets.R.string.app_name), fontSize = 12.sp)
         }
     }
 }

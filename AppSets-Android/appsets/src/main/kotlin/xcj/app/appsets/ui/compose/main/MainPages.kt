@@ -8,14 +8,18 @@ import androidx.activity.BackEventCompat
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.AnimationState
+import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.animateTo
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -24,13 +28,16 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -48,8 +55,10 @@ import androidx.compose.ui.composed
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.BlurEffect
+import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -458,40 +467,72 @@ fun NowSpace(navController: NavController) {
     ) {
         AnimatedVisibility(
             visible = messageColorBarVisible,
-            enter = fadeIn() + scaleIn(),
-            exit = fadeOut() + scaleOut()
+            enter = fadeIn() +
+                    scaleIn(
+                        transformOrigin = TransformOrigin.Center.copy(1f, 0.5f),
+                        animationSpec = spring(
+                            dampingRatio = Spring.DampingRatioLowBouncy,
+                            stiffness = Spring.StiffnessLow
+                        )
+                    ) +
+                    slideInHorizontally(
+                        initialOffsetX = { it / 10 },
+                        animationSpec = spring(
+                            dampingRatio = Spring.DampingRatioLowBouncy,
+                            stiffness = Spring.StiffnessLow
+                        )
+                    ),
+            exit = fadeOut() +
+                    scaleOut(
+                        transformOrigin = TransformOrigin.Center.copy(1f, 0.5f),
+                        animationSpec = spring(
+                            dampingRatio = Spring.DampingRatioLowBouncy,
+                            stiffness = Spring.StiffnessLow
+                        )
+                    ) +
+                    slideOutHorizontally(
+                        targetOffsetX = { it / 10 },
+                        animationSpec = spring(
+                            dampingRatio = Spring.DampingRatioLowBouncy,
+                            stiffness = Spring.StiffnessLow
+                        )
+                    )
         ) {
-            if (nowSpaceContent is NowSpaceContent.NewImMessage) {
-                val content = nowSpaceContent as NowSpaceContent.NewImMessage
-                MessageQuickAccessBar(
-                    modifier = Modifier,
-                    newImMessage = content,
-                    onMessageClick = {
-                        when (content.imMessage) {
-                            is SystemMessage -> {
-                                conversationUseCase.updateCurrentTab(ConversationUseCase.SYSTEM)
-                                navController.navigate(PageRouteNames.ConversationOverviewPage) {
-                                    popUpTo(PageRouteNames.ConversationOverviewPage) {
-                                        inclusive = true
-                                    }
+            val newImMessage = nowSpaceContent as? NowSpaceContent.NewImMessage
+            MessageQuickAccessBar(
+                modifier = Modifier,
+                newImMessage = newImMessage,
+                onMessageClick = {
+                    if (newImMessage == null) {
+                        return@MessageQuickAccessBar
+                    }
+                    when (newImMessage.imMessage) {
+                        is SystemMessage -> {
+                            nowSpaceContentUseCase.removeContent()
+                            conversationUseCase.updateCurrentTab(ConversationUseCase.SYSTEM)
+                            navController.navigate(PageRouteNames.ConversationOverviewPage) {
+                                popUpTo(PageRouteNames.ConversationOverviewPage) {
+                                    inclusive = true
                                 }
-                                nowSpaceContentUseCase.removeContent()
                             }
 
-                            else -> {
-                                conversationUseCase.updateCurrentSessionBySession(content.session)
-                                navController.navigate(PageRouteNames.ConversationDetailsPage) {
-                                    popUpTo(PageRouteNames.ConversationDetailsPage) {
-                                        inclusive = true
-                                    }
+                        }
+
+                        else -> {
+                            nowSpaceContentUseCase.removeContent()
+                            conversationUseCase.updateCurrentSessionBySession(newImMessage.session)
+                            navController.navigate(PageRouteNames.ConversationDetailsPage) {
+                                popUpTo(PageRouteNames.ConversationDetailsPage) {
+                                    inclusive = true
                                 }
-                                nowSpaceContentUseCase.removeContent()
                             }
                         }
                     }
-                )
-            }
-
+                },
+                onMessageDismissClick = {
+                    nowSpaceContentUseCase.removeContent()
+                }
+            )
         }
     }
 }
@@ -499,35 +540,34 @@ fun NowSpace(navController: NavController) {
 @Composable
 fun MessageQuickAccessBar(
     modifier: Modifier,
-    newImMessage: NewImMessage,
+    newImMessage: NewImMessage?,
     onMessageClick: () -> Unit,
+    onMessageDismissClick: () -> Unit
 ) {
     val context = LocalContext.current
     val theNewImMessage by rememberUpdatedState(newImMessage)
-    Column(
+    Box(
         modifier = modifier
             .fillMaxWidth()
             .statusBarsPadding()
-            .padding(horizontal = 12.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+            .padding(horizontal = 12.dp)
     ) {
-        Column(
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(
                     MaterialTheme.colorScheme.surface,
-                    MaterialTheme.shapes.large
+                    MaterialTheme.shapes.extraLarge
                 )
                 .border(
                     1.dp,
                     MaterialTheme.colorScheme.outline,
-                    MaterialTheme.shapes.large
+                    MaterialTheme.shapes.extraLarge
                 )
-                .clip(MaterialTheme.shapes.large)
+                .clip(MaterialTheme.shapes.extraLarge)
                 .clickable(onClick = onMessageClick)
                 .padding(12.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             AnimatedContent(
                 targetState = theNewImMessage,
@@ -536,91 +576,120 @@ fun MessageQuickAccessBar(
                     fadeIn().togetherWith(fadeOut())
                 }
             ) { targetNewImMessage ->
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    AnyImage(
-                        modifier = Modifier
-                            .size(36.dp)
-                            .clip(MaterialTheme.shapes.extraLarge)
-                            .border(
-                                1.dp,
-                                MaterialTheme.colorScheme.outline,
-                                MaterialTheme.shapes.extraLarge
-                            ),
-                        model = targetNewImMessage.session.imObj.avatarUrl
-                    )
-                    Text(text = targetNewImMessage.session.imObj.name)
-                }
+                AnyImage(
+                    modifier = Modifier
+                        .size(36.dp)
+                        .clip(MaterialTheme.shapes.extraLarge)
+                        .border(
+                            1.dp,
+                            MaterialTheme.colorScheme.outline,
+                            MaterialTheme.shapes.extraLarge
+                        ),
+                    model = targetNewImMessage?.session?.imObj?.avatarUrl
+                )
             }
-
-            AnimatedContent(
-                targetState = theNewImMessage,
-                label = "message_quick_access_bar_animate_1",
-                transitionSpec = {
-                    fadeIn().togetherWith(fadeOut())
-                }
-            ) { targetNewImMessage ->
-                Column {
-                    if (targetNewImMessage.imMessage is SystemMessage) {
-                        val systemContentInterface =
-                            targetNewImMessage.imMessage.systemContentInterface
-                        when (systemContentInterface) {
-                            is FriendRequestJson -> {
-                                Row(
-                                    modifier = Modifier.padding(horizontal = 12.dp),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                ) {
-                                    AnyImage(
-                                        modifier = Modifier
-                                            .size(32.dp)
-                                            .clip(MaterialTheme.shapes.extraLarge)
-                                            .border(
-                                                1.dp,
-                                                MaterialTheme.colorScheme.outline,
-                                                MaterialTheme.shapes.extraLarge
-                                            ),
-                                        model = systemContentInterface.avatarUrl
-                                    )
-                                    Text(text = systemContentInterface.name ?: "", fontSize = 12.sp)
-                                }
-                            }
-
-                            is GroupRequestJson -> {
-                                Row(
-                                    modifier = Modifier.padding(horizontal = 12.dp),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                ) {
-                                    AnyImage(
-                                        modifier = Modifier
-                                            .size(32.dp)
-                                            .clip(MaterialTheme.shapes.extraLarge)
-                                            .border(
-                                                1.dp,
-                                                MaterialTheme.colorScheme.outline,
-                                                MaterialTheme.shapes.extraLarge
-                                            ),
-                                        model = systemContentInterface.avatarUrl
-                                    )
-                                    Text(text = systemContentInterface.name ?: "", fontSize = 12.sp)
-                                }
-                            }
-
-                            else -> Unit
-                        }
+            Column {
+                AnimatedContent(
+                    targetState = theNewImMessage,
+                    label = "message_quick_access_bar_animate_0",
+                    transitionSpec = {
+                        fadeIn().togetherWith(fadeOut())
                     }
-                    Text(
-                        text = ImMessage.readableContent(context, targetNewImMessage.imMessage)
-                            ?: "",
-                        maxLines = 3,
-                        overflow = TextOverflow.Ellipsis,
-                        fontSize = 12.sp
-                    )
+                ) { targetNewImMessage ->
+                    Text(text = targetNewImMessage?.session?.imObj?.name ?: "")
+                }
+                AnimatedContent(
+                    targetState = theNewImMessage,
+                    label = "message_quick_access_bar_animate_1",
+                    transitionSpec = {
+                        fadeIn().togetherWith(fadeOut())
+                    }
+                ) { targetNewImMessage ->
+                    Column {
+                        if (targetNewImMessage?.imMessage is SystemMessage) {
+                            val systemContentInterface =
+                                targetNewImMessage.imMessage.systemContentInterface
+                            when (systemContentInterface) {
+                                is FriendRequestJson -> {
+                                    Row(
+                                        modifier = Modifier.padding(horizontal = 12.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        AnyImage(
+                                            modifier = Modifier
+                                                .size(32.dp)
+                                                .clip(MaterialTheme.shapes.extraLarge)
+                                                .border(
+                                                    1.dp,
+                                                    MaterialTheme.colorScheme.outline,
+                                                    MaterialTheme.shapes.extraLarge
+                                                ),
+                                            model = systemContentInterface.avatarUrl
+                                        )
+                                        Text(
+                                            text = systemContentInterface.name ?: "",
+                                            fontSize = 12.sp
+                                        )
+                                    }
+                                }
+
+                                is GroupRequestJson -> {
+                                    Row(
+                                        modifier = Modifier.padding(horizontal = 12.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        AnyImage(
+                                            modifier = Modifier
+                                                .size(32.dp)
+                                                .clip(MaterialTheme.shapes.extraLarge)
+                                                .border(
+                                                    1.dp,
+                                                    MaterialTheme.colorScheme.outline,
+                                                    MaterialTheme.shapes.extraLarge
+                                                ),
+                                            model = systemContentInterface.avatarUrl
+                                        )
+                                        Text(
+                                            text = systemContentInterface.name ?: "",
+                                            fontSize = 12.sp
+                                        )
+                                    }
+                                }
+
+                                else -> Unit
+                            }
+                        }
+                        Text(
+                            text = ImMessage.readableContent(
+                                context,
+                                targetNewImMessage?.imMessage
+                            )
+                                ?: "",
+                            maxLines = 3,
+                            overflow = TextOverflow.Ellipsis,
+                            fontSize = 12.sp
+                        )
+                    }
                 }
             }
+            Spacer(modifier = Modifier.weight(1f))
+            Icon(
+                modifier = Modifier
+                    .background(
+                        MaterialTheme.colorScheme.outlineVariant,
+                        CircleShape
+                    )
+                    .clip(CircleShape)
+                    .clickable(
+                        onClick = onMessageDismissClick
+                    )
+                    .padding(12.dp),
+                painter = painterResource(id = xcj.app.compose_share.R.drawable.ic_round_close_24),
+                contentDescription = "close",
+                tint = MaterialTheme.colorScheme.onSecondaryContainer
+            )
         }
     }
 }

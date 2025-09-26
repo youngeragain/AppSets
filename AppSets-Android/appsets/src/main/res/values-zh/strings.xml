@@ -466,5 +466,11 @@
     <string name="save">保存</string>
     <string name="new_file">新文件</string>
     <string name="camera_description">基于相机的用例</string>
+    <string name="recently">最近</string>
+    <string name="all">全部</string>
+    <string name="others">其他</string>
+    <string name="message_reliablity">消息可靠性</string>
+    <string name="no">不</string>
+    <string name="message_reliablity_tips">应用处于后台时提高实时消息的质量</string>
 
 </resources>

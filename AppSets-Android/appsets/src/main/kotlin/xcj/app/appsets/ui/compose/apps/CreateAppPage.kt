@@ -64,6 +64,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
 import androidx.media3.common.util.UnstableApi
 import xcj.app.appsets.constants.Constants
 import xcj.app.appsets.server.model.AppPlatform
@@ -556,7 +557,10 @@ fun CustomPlatformAddSheetContent(
                         return@FilledTonalButton
                     }
                     if (platformNames.contains(customPlatform)) {
-                        context.getString(xcj.app.appsets.R.string.platform_already_exists).toast()
+                        ContextCompat.getString(
+                            context,
+                            xcj.app.appsets.R.string.platform_already_exists
+                        ).toast()
                         return@FilledTonalButton
                     }
                     platformNames.add(customPlatform)

@@ -1,16 +1,14 @@
 package xcj.app.share.wlanp2p.common
 
 import android.content.Context
-import xcj.app.web.webserver.interfaces.ContentReceivedListener
 import xcj.app.share.base.DataSendContent
 import xcj.app.share.base.DeviceAddress
 import xcj.app.share.base.DeviceIP
 import xcj.app.share.base.DeviceName
 import xcj.app.share.base.DeviceNameAddress
 import xcj.app.share.base.DeviceNameExchangeListener
-import xcj.app.web.webserver.interfaces.ProgressListener
 import xcj.app.share.base.ShareDevice
-import xcj.app.starter.test.ShareSystem
+import xcj.app.share.util.ShareSystem
 import xcj.app.share.wlanp2p.base.DataHandleExceptionListener
 import xcj.app.share.wlanp2p.base.ISocketExceptionListener
 import xcj.app.share.wlanp2p.base.IThreadWriter
@@ -19,6 +17,8 @@ import xcj.app.share.wlanp2p.base.P2pShareDevice
 import xcj.app.share.wlanp2p.base.WlanP2pContent
 import xcj.app.starter.android.util.PurpleLogger
 import xcj.app.starter.util.ContentType
+import xcj.app.web.webserver.interfaces.ContentReceivedListener
+import xcj.app.web.webserver.interfaces.ProgressListener
 import java.io.Closeable
 import java.io.IOException
 import java.net.InetSocketAddress

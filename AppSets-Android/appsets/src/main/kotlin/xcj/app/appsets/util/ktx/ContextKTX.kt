@@ -183,7 +183,7 @@ suspend fun Context.getSystemFileUris(
     return@withContext null
 }
 
-fun createUri(id: Long, mimeType: String? = null): Uri? {
+private fun createUri(id: Long, mimeType: String? = null): Uri? {
     val contentUri: Uri
 
     if (mimeType?.startsWith("image") == true) {

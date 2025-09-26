@@ -117,6 +117,16 @@ fun SessionSettingsComponent() {
     val appSetsModuleSettings = remember {
         AppSetsModuleSettings.get()
     }
+    var imMessageReliability by remember {
+        mutableStateOf(appSetsModuleSettings.isBackgroundIMEnable)
+    }
+    val imMessageReliabilityChoices = remember {
+        listOf(
+            false to xcj.app.appsets.R.string.no,
+            true to xcj.app.appsets.R.string.yes
+        )
+    }
+
     var imBubbleAlignment by remember {
         mutableStateOf(appSetsModuleSettings.imBubbleAlignment)
     }
@@ -145,22 +155,33 @@ fun SessionSettingsComponent() {
             AppSetsModuleSettings.IM_MESSAGE_DELIVERY_TYPE_DI to xcj.app.appsets.R.string.send_directly
         )
     }
-    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+    Column(
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
         Text(
             text = stringResource(xcj.app.appsets.R.string.session_settings),
             fontWeight = FontWeight.Bold,
             modifier = Modifier.padding(top = 12.dp),
             fontSize = 16.sp
         )
-
+        SingleChoiceInRowComponent(
+            choiceTitle = xcj.app.appsets.R.string.message_reliablity,
+            choiceSubTitle = xcj.app.appsets.R.string.message_reliablity_tips,
+            currentChoice = imMessageReliability,
+            choices = imMessageReliabilityChoices,
+            onChoiceClick = {
+                imMessageReliability = it
+                appSetsModuleSettings.onIsIMMessageReliabilityChanged(it)
+            }
+        )
 
         SingleChoiceInRowComponent(
             choiceTitle = xcj.app.appsets.R.string.chat_bubble_direction,
             currentChoice = imBubbleAlignment,
             choices = bubbleAlignmentChoices,
             onChoiceClick = {
-                appSetsModuleSettings.onIMBubbleAlignmentChanged(it)
                 imBubbleAlignment = it
+                appSetsModuleSettings.onIMBubbleAlignmentChanged(it)
             }
         )
 
@@ -170,8 +191,8 @@ fun SessionSettingsComponent() {
             currentChoice = imMessageShowDate,
             choices = showDateChoices,
             onChoiceClick = {
-                appSetsModuleSettings.onIsIMMessageShowDateChanged(it)
                 imMessageShowDate = it
+                appSetsModuleSettings.onIsIMMessageShowDateChanged(it)
             }
         )
 
@@ -181,8 +202,8 @@ fun SessionSettingsComponent() {
             currentChoice = imMessageSendType,
             choices = sendTypeChoices,
             onChoiceClick = {
-                appSetsModuleSettings.onIMMessageDeliveryTypeChanged(it)
                 imMessageSendType = it
+                appSetsModuleSettings.onIMMessageDeliveryTypeChanged(it)
             }
         )
     }
@@ -192,16 +213,25 @@ fun SessionSettingsComponent() {
 @Composable
 fun <C> SingleChoiceInRowComponent(
     choiceTitle: Int,
+    choiceSubTitle: Int? = null,
     currentChoice: C,
     choices: List<Pair<C, Int>>,
     onChoiceClick: (C) -> Unit
 ) {
-    Column {
+    Column(
+        verticalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
         Text(
             text = stringResource(choiceTitle),
             fontSize = 12.sp,
-            modifier = Modifier.padding(vertical = 4.dp)
         )
+        if (choiceSubTitle != null) {
+            Text(
+                text = stringResource(choiceSubTitle),
+                fontSize = 10.sp,
+            )
+        }
+
         val widthDp = 120.dp * choices.size
         SingleChoiceSegmentedButtonRow(modifier = Modifier.width(widthDp)) {
             choices.forEachIndexed { index, choice ->

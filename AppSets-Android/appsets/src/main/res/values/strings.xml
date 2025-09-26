@@ -466,4 +466,10 @@
     <string name="save">Save</string>
     <string name="new_file">New File</string>
     <string name="camera_description">Camera usecase</string>
+    <string name="recently">Recently</string>
+    <string name="all">All</string>
+    <string name="others">Others</string>
+    <string name="message_reliablity">Message Reliablity</string>
+    <string name="no">No</string>
+    <string name="message_reliablity_tips">Improve message quality when the application is in the background</string>
 </resources>

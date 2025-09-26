@@ -28,12 +28,15 @@ import xcj.app.share.http.repository.ShareRepository
 import xcj.app.share.ui.compose.AppSetsShareActivity
 import xcj.app.share.ui.compose.AppSetsShareViewModel
 import xcj.app.share.util.NetworkUtil
+import xcj.app.share.util.ShareSystem
 import xcj.app.starter.android.util.PurpleLogger
 import xcj.app.starter.server.request
 import xcj.app.starter.server.requestRaw
 import xcj.app.starter.test.LocalPurpleCoroutineScope
 import xcj.app.web.webserver.base.DataProgressInfo
+import xcj.app.web.webserver.interfaces.ComponentsProvider
 import xcj.app.web.webserver.interfaces.ContentReceivedListener
+import xcj.app.web.webserver.interfaces.FileCreator
 import xcj.app.web.webserver.interfaces.ListenersProvider
 import xcj.app.web.webserver.interfaces.ProgressListener
 import xcj.app.web.webserver.netty.ServerBootStrap
@@ -45,7 +48,10 @@ import java.util.concurrent.ConcurrentHashMap
 
 typealias SuspendRunnable = suspend () -> Unit
 
-class HttpShareMethod : ShareMethod(), ContentReceivedListener, ListenersProvider {
+class HttpShareMethod : ShareMethod(),
+    ContentReceivedListener,
+    ComponentsProvider,
+    ListenersProvider {
     companion object {
         private const val TAG = "HttpShareMethod"
         const val NAME = "HTTP"
@@ -97,15 +103,15 @@ class HttpShareMethod : ShareMethod(), ContentReceivedListener, ListenersProvide
     val sendContentRunnableInfoMap: ConcurrentHashMap<HttpShareDevice, SendDataRunnableInfo?> =
         ConcurrentHashMap()
 
-    override fun getContentReceivedListener(): ContentReceivedListener? {
+    override fun provideContentReceivedListener(): ContentReceivedListener? {
         return this
     }
 
-    override fun getReceiveProgressListener(): ProgressListener? {
+    override fun provideReceiveProgressListener(): ProgressListener? {
         return dataReceivedProgressListener
     }
 
-    override fun getSendProgressListener(): ProgressListener? {
+    override fun provideSendProgressListener(): ProgressListener? {
         return dataSendProgressListener
     }
 
@@ -159,6 +165,7 @@ class HttpShareMethod : ShareMethod(), ContentReceivedListener, ListenersProvide
                 activity.application,
                 SHARE_SERVER_API_PORT,
                 SHARE_SERVER_FILE_API_PORT,
+                this@HttpShareMethod,
                 this@HttpShareMethod,
                 actionLister
             )
@@ -721,5 +728,13 @@ class HttpShareMethod : ShareMethod(), ContentReceivedListener, ListenersProvide
     fun getCurrentShareDevice(): HttpShareDevice? {
         val mShareDevice = viewModel.mShareDeviceState.value
         return mShareDevice as? HttpShareDevice
+    }
+
+    override fun provideFileCreator(): FileCreator {
+        return ShareSystem
+    }
+
+    override fun provideShareDirPath(): String {
+        return ShareSystem.getShareDirPath()
     }
 }
