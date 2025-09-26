@@ -27,10 +27,10 @@ import xcj.app.share.http.common.ResponseProgressInterceptor
 import xcj.app.share.http.common.asProgressRequestBody
 import xcj.app.share.http.model.ContentInfo
 import xcj.app.share.http.model.ContentInfoList
+import xcj.app.share.util.ShareSystem
 import xcj.app.starter.android.util.PurpleLogger
 import xcj.app.starter.foundation.http.DesignResponse
 import xcj.app.starter.server.RetrofitProvider
-import xcj.app.starter.test.ShareSystem
 import xcj.app.starter.util.ContentType
 import xcj.app.web.webserver.base.DataProgressInfoPool
 import java.io.File

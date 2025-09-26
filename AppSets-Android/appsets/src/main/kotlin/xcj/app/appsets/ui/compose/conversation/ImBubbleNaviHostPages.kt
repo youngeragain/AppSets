@@ -10,6 +10,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
+import androidx.core.content.ContextCompat
 import androidx.core.os.BundleCompat
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.currentStateAsState
@@ -349,8 +350,11 @@ fun ImBubbleNaviHostPages(navController: NavHostController) {
                         systemUseCase.requestAddFriend(
                             context,
                             userInfo.uid,
-                            context.getString(xcj.app.appsets.R.string.hello_i_want_to_make_friends_with_you),
-                            context.getString(xcj.app.appsets.R.string.nothing)
+                            ContextCompat.getString(
+                                context,
+                                xcj.app.appsets.R.string.hello_i_want_to_make_friends_with_you
+                            ),
+                            ContextCompat.getString(context, xcj.app.appsets.R.string.nothing)
                         )
                     },
                     onFlipFollowClick = { userInfo ->
@@ -424,8 +428,11 @@ fun ImBubbleNaviHostPages(navController: NavHostController) {
                         systemUseCase.requestJoinGroup(
                             context,
                             groupInfo.groupId,
-                            context.getString(xcj.app.appsets.R.string.this_group_looks_interesting_can_i_join),
-                            context.getString(xcj.app.appsets.R.string.nothing)
+                            ContextCompat.getString(
+                                context,
+                                xcj.app.appsets.R.string.this_group_looks_interesting_can_i_join
+                            ),
+                            ContextCompat.getString(context, xcj.app.appsets.R.string.nothing)
                         )
                     }
                 )

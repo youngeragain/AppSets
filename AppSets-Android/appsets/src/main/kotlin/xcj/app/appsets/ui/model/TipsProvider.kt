@@ -1,6 +1,11 @@
 package xcj.app.appsets.ui.model
 
+import androidx.annotation.StringRes
+
 interface TipsProvider {
-    val tipsIntRes: Int?
-    val subTipsIntRes: Int?
+    @get:StringRes
+    val tips: Int?
+
+    @get:StringRes
+    val subTips: Int?
 }

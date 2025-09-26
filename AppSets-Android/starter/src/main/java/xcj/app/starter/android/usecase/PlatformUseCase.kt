@@ -12,6 +12,7 @@ import android.provider.DocumentsContract
 import android.provider.Settings
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
+import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import xcj.app.starter.android.ActivityThemeInterface
 import xcj.app.starter.android.ui.model.PlatformPermissionsUsage
@@ -25,7 +26,8 @@ class PlatformUseCase {
 
         fun hasPlatformPermissions(context: Context, permissions: List<String>): Boolean {
             permissions.forEach { permission ->
-                val checkSelfPermissionResult = context.checkSelfPermission(permission)
+                val checkSelfPermissionResult =
+                    ContextCompat.checkSelfPermission(context, permission)
                 PurpleLogger.current.d(
                     TAG,
                     "hasPlatformPermissions, permission:$permission, granted:${
@@ -40,7 +42,8 @@ class PlatformUseCase {
         }
 
         fun providePlatformPermissions(context: Context): List<PlatformPermissionsUsage> {
-            val platformPermissionsUsages = PlatformPermissionsUsage.provideAll(context)
+            val platformPermissionsUsages =
+                PlatformPermissionsUsage.provideAll(context).toMutableList()
             platformPermissionsUsages.sortByDescending {
                 if (it.granted) {
                     -1
@@ -69,7 +72,10 @@ class PlatformUseCase {
             }
             if (shouldShowRequestPermissionRationale) {
                 val text =
-                    context.getString(xcj.app.starter.R.string.please_grant_permission_in_system_application_settings)
+                    ContextCompat.getString(
+                        context,
+                        xcj.app.starter.R.string.please_grant_permission_in_system_application_settings
+                    )
                 Toast.makeText(context, text, Toast.LENGTH_SHORT).show()
                 navigateToExternalSystemAppDetails(context)
                 return

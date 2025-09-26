@@ -277,9 +277,9 @@ fun SearchPageResults(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Text(
-                            text = stringResource(id = targetSearchState.tipsIntRes)
+                            text = stringResource(id = targetSearchState.tips)
                         )
-                        targetSearchState.subTipsIntRes?.let {
+                        targetSearchState.subTips?.let {
                             Text(
                                 text = stringResource(id = it),
                                 fontSize = 12.sp
@@ -293,12 +293,12 @@ fun SearchPageResults(
                         modifier = Modifier.align(Alignment.Center),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        targetSearchState.tipsIntRes?.let {
+                        targetSearchState.tips?.let {
                             Text(
                                 text = stringResource(id = it)
                             )
                         }
-                        targetSearchState.subTipsIntRes?.let {
+                        targetSearchState.subTips?.let {
                             Text(
                                 text = stringResource(id = it),
                                 fontSize = 12.sp
@@ -314,12 +314,12 @@ fun SearchPageResults(
                             modifier = Modifier.align(Alignment.Center),
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            targetSearchState.tipsIntRes?.let {
+                            targetSearchState.tips?.let {
                                 Text(
                                     text = stringResource(id = it)
                                 )
                             }
-                            targetSearchState.subTipsIntRes?.let {
+                            targetSearchState.subTips?.let {
                                 Text(
                                     text = stringResource(id = it),
                                     fontSize = 12.sp

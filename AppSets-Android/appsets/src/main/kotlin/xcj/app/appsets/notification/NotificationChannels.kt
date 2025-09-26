@@ -5,6 +5,7 @@ import android.app.NotificationManager
 import android.content.Context
 import android.os.Build
 import androidx.core.app.NotificationManagerCompat
+import androidx.core.content.ContextCompat
 import xcj.app.appsets.service.DataSyncService
 import xcj.app.appsets.service.IMService
 import xcj.app.appsets.service.MediaPlayback101Service
@@ -55,10 +56,11 @@ object NotificationChannels {
                 val platformSystemChannel =
                     NotificationChannel(
                         designedChannel.id,
-                        context.getString(designedChannel.name),
+                        ContextCompat.getString(context, designedChannel.name),
                         designedChannel.importance
                     )
-                platformSystemChannel.description = context.getString(designedChannel.description)
+                platformSystemChannel.description =
+                    ContextCompat.getString(context, designedChannel.description)
                 notificationManager.createNotificationChannel(platformSystemChannel)
             }
         }

@@ -5,6 +5,7 @@ import android.graphics.Bitmap
 import android.icu.text.SimpleDateFormat
 import android.media.MediaMetadataRetriever
 import android.net.Uri
+import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -143,7 +144,10 @@ class ScreenRepository(
         val video = video as? MediaStoreDataUri
         if (video != null) {
             if (video.size > 104_857_600) {
-                context.getString(xcj.app.appsets.R.string.max_upload_video_size_tips)
+                ContextCompat.getString(
+                    context,
+                    xcj.app.appsets.R.string.max_upload_video_size_tips
+                )
                     .toastSuspend()
             } else {
                 val videoUri = video.provideUri()

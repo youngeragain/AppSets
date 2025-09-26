@@ -5,7 +5,7 @@ import io.netty.handler.codec.http.multipart.FileUpload
 import io.netty.handler.codec.http.multipart.HttpPostRequestDecoder
 import io.netty.handler.codec.http.multipart.InterfaceHttpData
 import xcj.app.starter.android.util.PurpleLogger
-import xcj.app.starter.test.ShareSystem
+import xcj.app.web.webserver.interfaces.ComponentsProvider
 import xcj.app.web.webserver.interfaces.ListenersProvider
 import java.io.Closeable
 import java.io.File
@@ -17,6 +17,7 @@ class ContentUploadN(
     companion object {
         private const val TAG = "FileUploadN"
     }
+
     var current: Long = 0L
     var total: Long = 0L
 
@@ -25,6 +26,7 @@ class ContentUploadN(
     fun addHttpContent(
         httpContent: HttpContent,
         httpPostRequestDecoder: HttpPostRequestDecoder,
+        componentsProvider: ComponentsProvider?,
         listenersProvider: ListenersProvider?
     ) {
         val currentPartialHttpData = httpPostRequestDecoder.currentPartialHttpData()
@@ -32,7 +34,7 @@ class ContentUploadN(
         if (currentPartialHttpData is FileUpload) {
             val currentFileUpload = currentPartialHttpData
             current = currentFileUpload.length()
-            val receiveProgressListener = listenersProvider?.getReceiveProgressListener()
+            val receiveProgressListener = listenersProvider?.provideReceiveProgressListener()
             if (receiveProgressListener != null) {
                 val dataProgressInfo = DataProgressInfoPool.obtainById(id)
                 dataProgressInfo.name = currentFileUpload.filename
@@ -52,11 +54,14 @@ class ContentUploadN(
                 }
                 val fileUpload = interfaceHttpData
                 if (interfaceHttpData.isCompleted) {
-                    val fileToSave =
-                        ShareSystem.makeFileIfNeeded(fileUpload.filename, createFile = false)
-                    if (fileToSave != null) {
-                        fileUpload.renameTo(fileToSave)
-                        files.add(fileToSave)
+                    val fileCreator = componentsProvider?.provideFileCreator()
+                    if (fileCreator != null) {
+                        val fileToSave =
+                            fileCreator.makeFileIfNeeded(fileUpload.filename, createFile = false)
+                        if (fileToSave != null) {
+                            fileUpload.renameTo(fileToSave)
+                            files.add(fileToSave)
+                        }
                     }
                     PurpleLogger.current.d(TAG, "addHttpContent, release fileUpload")
                     //fileUpload.release()

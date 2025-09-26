@@ -11,6 +11,7 @@ import android.view.animation.AccelerateDecelerateInterpolator
 import androidx.annotation.RequiresApi
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.platform.ComposeView
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.findViewTreeLifecycleOwner
 import androidx.lifecycle.setViewTreeLifecycleOwner
 import androidx.savedstate.SavedStateRegistryOwner
@@ -18,27 +19,26 @@ import androidx.savedstate.findViewTreeSavedStateRegistryOwner
 import androidx.savedstate.setViewTreeSavedStateRegistryOwner
 import xcj.app.starter.android.util.PurpleLogger
 
-class FloatWindowHome(private val savedStateRegistryOwner: SavedStateRegistryOwner) :
+class FloatWindowHome(
+    private val savedStateRegistryOwner: SavedStateRegistryOwner
+) :
     FloatWindowInterface {
     companion object {
         private const val TAG = "FloatWindowHome"
     }
 
-    private lateinit var floatWindowHomeViewState: FloatWindowHomeViewState
-    private lateinit var windowManager: WindowManager
-    private lateinit var mWindowView: ComposeView
+    private var mWindowViewState: FloatWindowHomeViewState? = null
+    private var mWindowManager: WindowManager? = null
+    private var mWindowView: ComposeView? = null
 
     @RequiresApi(Build.VERSION_CODES.R)
     override fun initWindow(context: Context) {
-        if (!::windowManager.isInitialized) {
-            windowManager = context.getSystemService(WindowManager::class.java)
+        if (mWindowManager == null) {
+            mWindowManager = ContextCompat.getSystemService(context, WindowManager::class.java)
             PurpleLogger.current.d(
                 TAG,
-                "WindowMetrics:${windowManager.maximumWindowMetrics.bounds}"
+                "WindowMetrics:${mWindowManager?.maximumWindowMetrics?.bounds}"
             )
-        }
-        if (!::floatWindowHomeViewState.isInitialized) {
-            floatWindowHomeViewState = FloatWindowHomeViewState()
         }
         initWindowView(context)
         observeFloatWindowState()
@@ -47,36 +47,56 @@ class FloatWindowHome(private val savedStateRegistryOwner: SavedStateRegistryOwn
     @RequiresApi(Build.VERSION_CODES.R)
     private fun observeFloatWindowState() {
         PurpleLogger.current.d(TAG, "observeFloatWindowState")
+        val floatWindowHomeViewState = mWindowViewState
+        if (floatWindowHomeViewState == null) {
+            return
+        }
         floatWindowHomeViewState.isShowingState.observe(savedStateRegistryOwner) { isShow ->
             PurpleLogger.current.d(
                 TAG,
                 "observeFloatWindowState:isShowingState, isShow:$isShow"
             )
+            val windowManager = mWindowManager
+            if (windowManager == null) {
+                return@observe
+            }
+            val windowView = mWindowView
+            if (windowView == null) {
+                return@observe
+            }
             if (isShow && !floatWindowHomeViewState.isViewAdded) {
                 if (floatWindowHomeViewState.isAnimate) {
-                    mWindowView.scaleX = 0f
-                    mWindowView.scaleY = 0f
-                    mWindowView.alpha = 0f
+                    windowView.scaleX = 0f
+                    windowView.scaleY = 0f
+                    windowView.alpha = 0f
                 }
-                windowManager.addView(mWindowView, mWindowView.layoutParams)
+                windowManager.addView(windowView, windowView.layoutParams)
             } else if (!isShow && floatWindowHomeViewState.isViewAdded) {
                 if (floatWindowHomeViewState.isAnimate) {
-                    mWindowView.animate().alpha(0f).scaleX(0f).scaleY(0f)
+                    windowView.animate().alpha(0f).scaleX(0f).scaleY(0f)
                         .setInterpolator(AccelerateDecelerateInterpolator()).setDuration(350)
                         .withEndAction {
-                            windowManager.removeViewImmediate(mWindowView)
+                            windowManager.removeViewImmediate(windowView)
                         }.start()
                 } else {
-                    windowManager.removeViewImmediate(mWindowView)
+                    windowManager.removeViewImmediate(windowView)
                 }
             }
         }
         floatWindowHomeViewState.windowOffset.observe(savedStateRegistryOwner) { offset ->
+            val windowManager = mWindowManager
+            if (windowManager == null) {
+                return@observe
+            }
+            val windowView = mWindowView
+            if (windowView == null) {
+                return@observe
+            }
             if (offset == null || !floatWindowHomeViewState.isShowing) {
                 return@observe
             }
             PurpleLogger.current.d(TAG, "observeFloatWindowState:offset:$offset")
-            val layoutParams = mWindowView.layoutParams as WindowManager.LayoutParams
+            val layoutParams = windowView.layoutParams as WindowManager.LayoutParams
             var update = false
             val tempTargetOffsetX = layoutParams.x + offset.x
             if (tempTargetOffsetX <= 0 || tempTargetOffsetX <= windowManager.maximumWindowMetrics.bounds.width()) {
@@ -93,7 +113,7 @@ class FloatWindowHome(private val savedStateRegistryOwner: SavedStateRegistryOwn
                 PurpleLogger.current.d(TAG, "Vertical edge reached!")
             }
             if (update) {
-                windowManager.updateViewLayout(mWindowView, layoutParams)
+                windowManager.updateViewLayout(windowView, layoutParams)
             }
         }
     }
@@ -101,7 +121,9 @@ class FloatWindowHome(private val savedStateRegistryOwner: SavedStateRegistryOwn
     private fun invalidateCompose(composeView: ComposeView) {
         composeView.setContent {
             FlotWindowCompose(
-                onDragGesture = floatWindowHomeViewState::updateWindowOffset
+                onDragGesture = {
+                    mWindowViewState?.updateWindowOffset(it)
+                }
             )
         }
     }
@@ -111,22 +133,22 @@ class FloatWindowHome(private val savedStateRegistryOwner: SavedStateRegistryOwn
         if (!preCheckCondition()) {
             return
         }
-        floatWindowHomeViewState.show(withAnimation)
+        mWindowViewState?.show(withAnimation)
     }
 
     private fun preCheckCondition(): Boolean {
-        if (!::windowManager.isInitialized) {
+        if (mWindowManager == null) {
             PurpleLogger.current.d(
                 TAG,
                 "preCheckCondition, windowManager is null!"
             )
             return false
         }
-        if (!::mWindowView.isInitialized) {
+        if (mWindowView == null) {
             PurpleLogger.current.d(TAG, "preCheckCondition, windowView is null!")
             return false
         }
-        if (!::floatWindowHomeViewState.isInitialized) {
+        if (mWindowViewState == null) {
             PurpleLogger.current.d(
                 TAG,
                 "preCheckCondition, floatWindowViewState is null!"
@@ -142,12 +164,20 @@ class FloatWindowHome(private val savedStateRegistryOwner: SavedStateRegistryOwn
         if (!preCheckCondition()) {
             return
         }
-        floatWindowHomeViewState.hide(withAnimation)
+        mWindowViewState?.hide(withAnimation)
     }
 
     @RequiresApi(Build.VERSION_CODES.R)
     private fun initWindowView(context: Context) {
-        if (!::mWindowView.isInitialized) {
+        val windowManager = mWindowManager
+        if (windowManager == null) {
+            return
+        }
+        if (mWindowViewState == null) {
+            mWindowViewState = FloatWindowHomeViewState()
+        }
+
+        if (mWindowView == null) {
             mWindowView = ComposeView(context).apply {
                 val windowType = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                     WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
@@ -169,37 +199,47 @@ class FloatWindowHome(private val savedStateRegistryOwner: SavedStateRegistryOwn
                     gravity = Gravity.START or Gravity.TOP
                     x = ((windowManager.maximumWindowMetrics.bounds.width() - dp350InPixel) / 2)
                     y = ((windowManager.maximumWindowMetrics.bounds.height() - dp350InPixel) / 2)
-                    floatWindowHomeViewState.updateWindowOffset(Offset(x.toFloat(), y.toFloat()))
                 }
                 PurpleLogger.current.d(TAG, "layoutParams:$layoutParams")
                 addOnAttachStateChangeListener(object : OnAttachStateChangeListener {
                     override fun onViewAttachedToWindow(view: View) {
-                        if (floatWindowHomeViewState.isAnimate) {
+                        val windowViewState = mWindowViewState
+                        if (windowViewState == null) {
+                            return
+                        }
+                        if (windowViewState.isAnimate) {
                             view.animate().alpha(1f).scaleX(1f).scaleY(1f)
                                 .setInterpolator(AccelerateDecelerateInterpolator())
                                 .setDuration(350)
                                 .withEndAction {
-                                    floatWindowHomeViewState.isViewAdded = true
+                                    windowViewState.isViewAdded = true
                                     invalidateCompose(view as ComposeView)
                                 }.start()
                         } else {
-                            floatWindowHomeViewState.isViewAdded = true
+                            windowViewState.isViewAdded = true
                             invalidateCompose(view as ComposeView)
                         }
                     }
 
                     override fun onViewDetachedFromWindow(v: View) {
-                        floatWindowHomeViewState.isViewAdded = false
+                        val windowViewState = mWindowViewState
+                        if (windowViewState == null) {
+                            return
+                        }
+                        windowViewState.isViewAdded = false
                     }
                 })
             }
         }
-        val decorView = mWindowView
-        if (decorView.findViewTreeLifecycleOwner() == null) {
-            decorView.setViewTreeLifecycleOwner(savedStateRegistryOwner)
-        }
-        if (decorView.findViewTreeSavedStateRegistryOwner() == null) {
-            decorView.setViewTreeSavedStateRegistryOwner(savedStateRegistryOwner)
+        val windowView = mWindowView
+        if (windowView != null) {
+            if (windowView.findViewTreeLifecycleOwner() == null) {
+                windowView.setViewTreeLifecycleOwner(savedStateRegistryOwner)
+            }
+            if (windowView.findViewTreeSavedStateRegistryOwner() == null) {
+                windowView.setViewTreeSavedStateRegistryOwner(savedStateRegistryOwner)
+            }
+            mWindowViewState?.updateWindowOffset(Offset(windowView.x, windowView.y))
         }
     }
 }

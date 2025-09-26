@@ -3,6 +3,7 @@ package xcj.app.appsets.im.message
 import android.content.Context
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
+import androidx.core.content.ContextCompat
 import xcj.app.appsets.im.ImMessageDesignType
 import xcj.app.appsets.im.ImMessageGenerator
 import xcj.app.appsets.im.ImObj
@@ -70,35 +71,50 @@ abstract class ImMessage {
                 }
 
                 is HTMLMessage -> {
-                    return "(${context.getString(xcj.app.appsets.R.string.web_content)})"
+                    return "(${
+                        ContextCompat.getString(
+                            context,
+                            xcj.app.appsets.R.string.web_content
+                        )
+                    })"
                 }
 
                 is AdMessage -> {
-                    return "(${context.getString(xcj.app.appsets.R.string.advertisement)})"
+                    return "(${
+                        ContextCompat.getString(
+                            context,
+                            xcj.app.appsets.R.string.advertisement
+                        )
+                    })"
                 }
 
                 is LocationMessage -> {
-                    return "(${context.getString(xcj.app.appsets.R.string.location)})"
+                    return "(${
+                        ContextCompat.getString(
+                            context,
+                            xcj.app.appsets.R.string.location
+                        )
+                    })"
                 }
 
                 is MusicMessage -> {
-                    return "(${context.getString(xcj.app.appsets.R.string.music)})"
+                    return "(${ContextCompat.getString(context, xcj.app.appsets.R.string.music)})"
                 }
 
                 is VideoMessage -> {
-                    return "(${context.getString(xcj.app.appsets.R.string.video)})"
+                    return "(${ContextCompat.getString(context, xcj.app.appsets.R.string.video)})"
                 }
 
                 is VoiceMessage -> {
-                    return "(${context.getString(xcj.app.appsets.R.string.voice)})"
+                    return "(${ContextCompat.getString(context, xcj.app.appsets.R.string.voice)})"
                 }
 
                 is FileMessage -> {
-                    return "(${context.getString(xcj.app.appsets.R.string.file)})"
+                    return "(${ContextCompat.getString(context, xcj.app.appsets.R.string.file)})"
                 }
 
                 is ImageMessage -> {
-                    return "(${context.getString(xcj.app.appsets.R.string.image)})"
+                    return "(${ContextCompat.getString(context, xcj.app.appsets.R.string.image)})"
                 }
 
                 is SystemMessage -> {
@@ -114,9 +130,15 @@ abstract class ImMessage {
 
                         is RequestFeedbackJson -> {
                             return if (systemContentInterface.isAccept) {
-                                context.getString(xcj.app.appsets.R.string.your_request_has_passed)
+                                ContextCompat.getString(
+                                    context,
+                                    xcj.app.appsets.R.string.your_request_has_passed
+                                )
                             } else {
-                                context.getString(xcj.app.appsets.R.string.your_request_has_not_passed)
+                                ContextCompat.getString(
+                                    context,
+                                    xcj.app.appsets.R.string.your_request_has_not_passed
+                                )
                             }
                         }
 

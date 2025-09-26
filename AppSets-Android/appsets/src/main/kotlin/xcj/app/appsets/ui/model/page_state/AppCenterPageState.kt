@@ -8,13 +8,13 @@ sealed interface AppCenterPageState : TipsProvider {
 
     data class Loading(
         override val apps: MutableList<AppsWithCategory>,
-        override val tipsIntRes: Int? = null,
-        override val subTipsIntRes: Int? = null
+        override val tips: Int? = null,
+        override val subTips: Int? = null
     ) : AppCenterPageState
 
     data class LoadSuccess(
         override val apps: List<AppsWithCategory>,
-        override val tipsIntRes: Int? = null,
-        override val subTipsIntRes: Int? = null
+        override val tips: Int? = null,
+        override val subTips: Int? = null
     ) : AppCenterPageState
 }

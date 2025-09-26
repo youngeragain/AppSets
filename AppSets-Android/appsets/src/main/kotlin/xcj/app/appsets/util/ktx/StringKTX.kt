@@ -6,7 +6,7 @@ import kotlinx.coroutines.withContext
 import xcj.app.starter.test.LocalApplication
 
 suspend fun String?.toastSuspend(duration: Int = Toast.LENGTH_SHORT) {
-    if (this.isNullOrEmpty()) {
+    if (this.isNullOrEmpty() || this.isBlank()) {
         return
     }
     withContext(Dispatchers.Main) {
@@ -15,7 +15,7 @@ suspend fun String?.toastSuspend(duration: Int = Toast.LENGTH_SHORT) {
 }
 
 fun String?.toast(duration: Int = Toast.LENGTH_SHORT) {
-    if (this.isNullOrEmpty()) {
+    if (this.isNullOrEmpty() || this.isBlank()) {
         return
     }
     Toast.makeText(LocalApplication.current, this, duration).show()

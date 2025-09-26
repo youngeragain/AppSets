@@ -3,6 +3,7 @@ package xcj.app.appsets.usecase
 import android.content.Context
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
+import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import androidx.lifecycle.LifecycleOwner
 import androidx.navigation.NavController
@@ -31,7 +32,7 @@ class MediaAudioRecorderUseCase() : IComposeLifecycleAware {
         val platformPermissions = PlatformUseCase.providePlatformPermissions(context)
         val platformPermissionsUsageOfFile =
             platformPermissions.firstOrNull {
-                it.name == context.getString(xcj.app.appsets.R.string.file)
+                it.name == xcj.app.appsets.R.string.file
             }
         if (platformPermissionsUsageOfFile == null) {
             return
@@ -42,7 +43,7 @@ class MediaAudioRecorderUseCase() : IComposeLifecycleAware {
         }
         val platformPermissionsUsageOfRecordAudio =
             platformPermissions.firstOrNull {
-                it.name == context.getString(xcj.app.appsets.R.string.record_audio)
+                it.name == xcj.app.appsets.R.string.record_audio
             }
         if (platformPermissionsUsageOfRecordAudio == null) {
             return
@@ -56,7 +57,8 @@ class MediaAudioRecorderUseCase() : IComposeLifecycleAware {
         }.onFailure {
             recorderState.value =
                 recorderState.value.copy(isStarted = false)
-            context.getString(xcj.app.appsets.R.string.audio_record_exception).toast()
+            ContextCompat.getString(context, xcj.app.appsets.R.string.audio_record_exception)
+                .toast()
             PurpleLogger.current.d(TAG, "startRecord failed! ${it.message}")
             stopRecord("start exception")
         }

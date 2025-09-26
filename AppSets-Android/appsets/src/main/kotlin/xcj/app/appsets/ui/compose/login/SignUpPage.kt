@@ -488,7 +488,7 @@ fun SignUpIndicator(loginSignUpPageState: LoginSignUpPageState) {
                         contentDescription = null
                     )
                     val tipsIntRes =
-                        loginSignUpPageState.tipsIntRes ?: xcj.app.appsets.R.string.processing
+                        loginSignUpPageState.tips ?: xcj.app.appsets.R.string.processing
                     val text = stringResource(tipsIntRes)
                     Text(text, fontSize = 12.sp)
                 }

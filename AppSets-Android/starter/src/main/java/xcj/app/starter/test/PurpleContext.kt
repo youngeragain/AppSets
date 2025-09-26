@@ -1,13 +1,22 @@
 package xcj.app.starter.test
 
+import android.content.res.Configuration
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import xcj.app.starter.android.util.PurpleLogger
 import xcj.app.starter.foundation.Aware
 import xcj.app.starter.foundation.DesignEvent
 import xcj.app.starter.foundation.PurpleLifecycle
 import kotlin.coroutines.EmptyCoroutineContext
 
-abstract class PurpleContext : PurpleLifecycle, PurpleEventPublisher, PurpleEventSubscriber {
+abstract class PurpleContext :
+    PurpleLifecycle,
+    PurpleEventPublisher,
+    PurpleEventSubscriber,
+    ApplicationCallback {
+    companion object {
+        private const val TAG = "PurpleContext"
+    }
     val definitionAnythingComponents: MutableList<String> = mutableListOf()
     val definitionClassMap: MutableMap<Class<*>, Set<Class<*>>> = mutableMapOf()
     val definitionInstanceList: MutableList<Any> = mutableListOf()
@@ -16,19 +25,19 @@ abstract class PurpleContext : PurpleLifecycle, PurpleEventPublisher, PurpleEven
     val definitionAnyInstanceList: MutableList<Any> = mutableListOf()
     val eventHandlerList: MutableList<EventHandler> = mutableListOf()
 
-    //key 实例对象, value 对象的beanDefinition
     val definitionInstanceMap: MutableMap<Any, PurpleBeanDefinition> = mutableMapOf()
 
     init {
         val exceptionHandler =
             DesignExceptionHandler()
         Thread.currentThread().uncaughtExceptionHandler = exceptionHandler
-        val coroutineScope: CoroutineScope =
+        val coroutineScope =
             CoroutineScope(Dispatchers.Main + EmptyCoroutineContext + exceptionHandler.coExceptionHandler)
         LocalPurpleCoroutineScope.provide(coroutineScope)
     }
 
     override fun onInit() {
+        LocalPurpleEventPublisher.provide(this)
         DefinitionsCollector().collectDefinitions(this)
         DefinitionsInstantiator().doInitDefinitions(this)
         AnythingComponentLoader().loadComponents(this)
@@ -97,8 +106,20 @@ abstract class PurpleContext : PurpleLifecycle, PurpleEventPublisher, PurpleEven
 
     }
 
-    fun getEventHandlers(): List<EventHandler> {
+    private fun getEventHandlers(): List<EventHandler> {
         return eventHandlerList
+    }
+
+    override fun onTrimMemory(level: Int) {
+        PurpleLogger.current.d(TAG, "onTrimMemory, level:$level")
+    }
+
+    override fun onLowMemory() {
+        PurpleLogger.current.d(TAG, "onLowMemory")
+    }
+
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        PurpleLogger.current.d(TAG, "onConfigurationChanged, newConfig:$newConfig")
     }
 }
 

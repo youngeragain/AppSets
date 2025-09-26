@@ -60,6 +60,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.hazeEffect
 import dev.chrisbanes.haze.hazeSource
@@ -228,10 +229,12 @@ fun ApplicationContentComponent(
                         }
                     ) {
                         val getButtonText = if (application.price.isNullOrEmpty()) {
-                            context.getString(xcj.app.appsets.R.string.get)
+                            ContextCompat.getString(context, xcj.app.appsets.R.string.get)
                         } else {
-                            context.getString(
-                                xcj.app.appsets.R.string.get_x,
+                            ContextCompat.getString(
+                                context,
+                                xcj.app.appsets.R.string.get_x
+                            ).format(
                                 application.price,
                                 application.priceUnit
                             )

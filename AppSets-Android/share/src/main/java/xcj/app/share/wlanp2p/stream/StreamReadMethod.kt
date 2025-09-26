@@ -3,12 +3,9 @@ package xcj.app.share.wlanp2p.stream
 import com.google.gson.GsonBuilder
 import xcj.app.share.base.ClientInfo
 import xcj.app.share.base.ContentCombiner
-import xcj.app.web.webserver.interfaces.ContentReceivedListener
 import xcj.app.share.base.DataContent
-import xcj.app.web.webserver.base.DataProgressInfoPool
 import xcj.app.share.base.DeviceNameAddress
-import xcj.app.web.webserver.interfaces.ProgressListener
-import xcj.app.starter.test.ShareSystem
+import xcj.app.share.util.ShareSystem
 import xcj.app.share.wlanp2p.base.DataHandleExceptionListener
 import xcj.app.share.wlanp2p.base.ReadMethod
 import xcj.app.share.wlanp2p.common.P2pOneThread
@@ -19,16 +16,18 @@ import xcj.app.share.wlanp2p.common.ReadThread.Companion.HEADER_CONTENT_LENGTH
 import xcj.app.share.wlanp2p.common.ReadThread.Companion.HEADER_CONTENT_TYPE
 import xcj.app.share.wlanp2p.common.ReadThread.Companion.HEADER_FILE_NAME
 import xcj.app.share.wlanp2p.common.ReadThread.Companion.HEADER_UUID
-import xcj.app.share.wlanp2p.common.ReadThread.Companion.WRITE_BUFFER_SIZE
 import xcj.app.share.wlanp2p.common.ReadThread.Companion.SYSTEM_CONTENT_TYPES
+import xcj.app.share.wlanp2p.common.ReadThread.Companion.WRITE_BUFFER_SIZE
 import xcj.app.starter.android.util.PurpleLogger
 import xcj.app.starter.util.ByteUtil
 import xcj.app.starter.util.ContentType
+import xcj.app.web.webserver.base.DataProgressInfoPool
+import xcj.app.web.webserver.interfaces.ContentReceivedListener
+import xcj.app.web.webserver.interfaces.ProgressListener
 import java.io.BufferedInputStream
 import java.io.BufferedOutputStream
 import java.net.InetSocketAddress
 import java.net.Socket
-import kotlin.io.outputStream
 
 class StreamReadMethod(
     socket: Socket,
