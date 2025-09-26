@@ -14,8 +14,8 @@ class NavigationUseCase : IComposeLifecycleAware {
         private const val TAG = "NavigationUseCase"
     }
 
-    var currentRoute: String? = null
-    var lastNavDestination: String? = null
+    var currentRouteState: MutableState<String?> = mutableStateOf(null)
+    var lastRoute: String? = null
 
     val barVisible: MutableState<Boolean> = mutableStateOf(true)
     val tabItems: MutableState<List<TabItem>> = mutableStateOf(emptyList())
@@ -89,11 +89,11 @@ class NavigationUseCase : IComposeLifecycleAware {
     ) {
         PurpleLogger.current.d(
             TAG,
-            "invalidateTabItemsOnRouteChanged, lastRoute:${this.lastNavDestination}," +
+            "invalidateTabItemsOnRouteChanged, lastRoute:${this.lastRoute}," +
                     " currentRoute:${currentRoute}, by:$by"
         )
-        this.lastNavDestination = this.currentRoute
-        this.currentRoute = currentRoute
+        this.lastRoute = this.currentRouteState.value
+        this.currentRouteState.value = currentRoute
 
         val newTabs = tabItems.value.map {
             when (it) {

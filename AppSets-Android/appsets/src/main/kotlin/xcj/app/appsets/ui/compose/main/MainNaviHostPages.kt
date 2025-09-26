@@ -826,7 +826,7 @@ fun MainNaviHostPages(
                     generatedQRCodeInfo = generatedQRCodeInfo,
                     onBackClick = navController::navigateUp,
                     onLoggingFinish = {
-                        val lastNavDestination = navigationUseCase.lastNavDestination
+                        val lastNavDestination = navigationUseCase.lastRoute
                         if (lastNavDestination.isNullOrEmpty()) {
                             return@LoginPage
                         }

@@ -367,10 +367,13 @@ fun NavigationBarContainer(
     val screenUseCase = LocalUseCaseOfScreen.current
     val conversationUseCase = LocalUseCaseOfConversation.current
     val appUpdateState by systemUseCase.appUpdateState
+    val currentRoute by navigationUseCase.currentRouteState
     val coroutineScope = rememberCoroutineScope()
-    val inSearchModel by rememberUpdatedState(
-        navController.currentDestination?.route == PageRouteNames.SearchPage
-    )
+    val inSearchModel by remember {
+        derivedStateOf {
+            currentRoute == PageRouteNames.SearchPage
+        }
+    }
     val isBarEnable by remember {
         derivedStateOf {
             (appUpdateState as? AppUpdateState.Checked)
