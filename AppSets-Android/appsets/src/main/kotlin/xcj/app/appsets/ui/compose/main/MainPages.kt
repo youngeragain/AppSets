@@ -28,7 +28,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
@@ -588,7 +587,9 @@ fun MessageQuickAccessBar(
                     model = targetNewImMessage?.session?.imObj?.avatarUrl
                 )
             }
-            Column {
+            Column(
+                modifier = Modifier.weight(1f)
+            ) {
                 AnimatedContent(
                     targetState = theNewImMessage,
                     label = "message_quick_access_bar_animate_0",
@@ -674,7 +675,6 @@ fun MessageQuickAccessBar(
                     }
                 }
             }
-            Spacer(modifier = Modifier.weight(1f))
             Icon(
                 modifier = Modifier
                     .background(
