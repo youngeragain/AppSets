@@ -21,23 +21,6 @@ import xcj.app.starter.android.ui.base.DesignComponentActivity
 class MainActivity : DesignComponentActivity() {
     private lateinit var mediaProjectionManager: MediaProjectionManager
 
-    private val mediaProjectionLauncher = registerForActivityResult(
-        ActivityResultContracts.StartActivityForResult()
-    ) { result ->
-        if (result.resultCode == RESULT_OK) {
-            // 用户已授权，启动屏幕录制服务
-            val data = result.data
-            if (data != null) {
-                startScreenCaptureService(data)
-            } else {
-                Toast.makeText(this, "MediaProjection data is null.", Toast.LENGTH_SHORT).show()
-            }
-        } else {
-            // 用户拒绝授权
-            Toast.makeText(this, "屏幕录制权限被拒绝。", Toast.LENGTH_SHORT).show()
-        }
-    }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -65,6 +48,22 @@ class MainActivity : DesignComponentActivity() {
                 getSystemService(MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
         }
         val captureIntent = mediaProjectionManager.createScreenCaptureIntent()
+        val mediaProjectionLauncher = registerForActivityResult(
+            ActivityResultContracts.StartActivityForResult()
+        ) { result ->
+            if (result.resultCode == RESULT_OK) {
+                // 用户已授权，启动屏幕录制服务
+                val data = result.data
+                if (data != null) {
+                    startScreenCaptureService(data)
+                } else {
+                    Toast.makeText(this, "MediaProjection data is null.", Toast.LENGTH_SHORT).show()
+                }
+            } else {
+                // 用户拒绝授权
+                Toast.makeText(this, "屏幕录制权限被拒绝。", Toast.LENGTH_SHORT).show()
+            }
+        }
         mediaProjectionLauncher.launch(captureIntent) // 使用 Launcher
     }
 

@@ -37,7 +37,7 @@ import xcj.app.appsets.util.ktx.toastSuspend
 import xcj.app.appsets.util.message_digest.MessageDigestUtil
 import xcj.app.appsets.util.model.UriProvider
 import xcj.app.compose_share.components.VisibilityComposeStateProvider
-import xcj.app.compose_share.dynamic.IComposeLifecycleAware
+import xcj.app.compose_share.dynamic.ComposeLifecycleAware
 import xcj.app.compose_share.ui.viewmodel.VisibilityComposeStateViewModel.Companion.bottomSheetState
 import xcj.app.starter.android.util.PurpleLogger
 import xcj.app.starter.server.RequestFail
@@ -60,7 +60,7 @@ sealed interface AppUpdateState {
 class SystemUseCase(
     private val userRepository: UserRepository,
     private val appSetsRepository: AppSetsRepository,
-) : IComposeLifecycleAware {
+) : ComposeLifecycleAware {
 
     val selectedContentsStateHolder: SelectedContentsStateHolder = SelectedContentsStateHolder()
 
@@ -411,8 +411,8 @@ class SystemUseCase(
     private fun logout() {
         PurpleLogger.current.d(TAG, "logout")
 
-        LocalAccountManager.onUserLogout(LocalAccountManager.LOGOUT_BY_MANUALLY)
         LocalPurpleCoroutineScope.current.launch {
+            LocalAccountManager.onUserLogout(LocalAccountManager.LOGOUT_BY_MANUALLY)
             request(
                 action = userRepository::signOut
             )

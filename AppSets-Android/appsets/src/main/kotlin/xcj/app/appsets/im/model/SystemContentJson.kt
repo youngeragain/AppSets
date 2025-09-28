@@ -1,7 +1,7 @@
 package xcj.app.appsets.im.model
 
 import com.google.gson.Gson
-import xcj.app.appsets.im.ImMessageGenerator
+import xcj.app.appsets.im.IMMessageGenerator
 
 /**
  * 业务数据为type指定
@@ -41,7 +41,7 @@ data class SystemContentJson(val type: String, val content: String) {
 
             SystemContentInterface.Companion.JOIN_GROUP_REQUEST_FEEDBACK -> {
                 runCatching {
-                    return ImMessageGenerator.gson.fromJson(
+                    return IMMessageGenerator.gson.fromJson(
                         content,
                         GroupJoinRequestFeedbackJson::class.java
                     )

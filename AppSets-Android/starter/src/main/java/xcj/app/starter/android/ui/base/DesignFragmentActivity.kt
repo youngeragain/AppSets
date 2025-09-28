@@ -5,14 +5,26 @@ import android.os.Bundle
 import android.view.MotionEvent
 import android.view.WindowManager
 import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContract
 import androidx.fragment.app.FragmentActivity
 import xcj.app.starter.android.ActivityThemeInterface
+import xcj.app.starter.android.SystemContentSelectionCallback
 import xcj.app.starter.android.util.ThemeUtil
 
 abstract class DesignFragmentActivity :
     FragmentActivity(), ActivityThemeInterface {
     companion object {
         private const val TAG = "BaseFragmentActivity"
+    }
+
+    private var systemContentSelectionCallback: SystemContentSelectionCallback? = null
+
+    override fun setSystemContentSelectionCallback(callback: SystemContentSelectionCallback?) {
+        this.systemContentSelectionCallback = callback
+    }
+
+    override fun getSystemContentSelectionCallback(): SystemContentSelectionCallback? {
+        return systemContentSelectionCallback
     }
 
     override fun dispatchTouchEvent(ev: MotionEvent?): Boolean {
@@ -69,8 +81,8 @@ abstract class DesignFragmentActivity :
         )
     }
 
-    override fun <I> getActivityResultLauncher(
-        inputClazz: Class<I>,
+    override fun <I, C : ActivityResultContract<I, *>> getActivityResultLauncher(
+        contractClass: Class<C>,
         requestPrams: Any?
     ): ActivityResultLauncher<I>? {
         return null

@@ -1,19 +1,20 @@
 package xcj.app.appsets.ui.compose.main
 
 import android.annotation.SuppressLint
-import android.content.BroadcastReceiver
 import android.content.Intent
 import android.os.Bundle
 import android.view.MotionEvent
 import android.window.OnBackInvokedDispatcher
 import androidx.activity.compose.setContent
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContract
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
-import androidx.compose.material3.Surface
 import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.lifecycleScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import xcj.app.appsets.ui.compose.theme.AppSetsTheme
 import xcj.app.appsets.ui.viewmodel.MainViewModel
 import xcj.app.appsets.util.SplashScreenHelper
@@ -26,17 +27,45 @@ import xcj.app.starter.android.util.PurpleLogger
 class MainActivity : DesignComponentActivity() {
 
     companion object {
-        private const val TAG = "MainActivity"
+        const val TAG = "MainActivity"
         const val EXTERNAL_CONTENT_HANDLE_BY_APPSETS = 0
         const val EXTERNAL_CONTENT_HANDLE_BY_LOCAL_SHARE = 1
     }
 
-    private var composedReceiver: BroadcastReceiver? = null
-
+    private var pickVisualMediaLauncher: ActivityResultLauncher<PickVisualMediaRequest>? = null
+    private var pickMultipleVisualMediaLauncher: ActivityResultLauncher<PickVisualMediaRequest>? =
+        null
     private val viewModel by viewModels<MainViewModel>()
 
-    override fun requireViewModel(): MainViewModel {
-        return viewModel
+    override fun <V : ViewModel> requireViewModel(): V? {
+        return viewModel as? V
+    }
+
+    private fun makeActivityResultLauncher() {
+        pickVisualMediaLauncher = registerForActivityResult(
+            contract = ActivityResultContracts.PickVisualMedia(),
+            callback = { uri ->
+                getSystemContentSelectionCallback()?.onSystemContentSelected(uri)
+            }
+        )
+        pickMultipleVisualMediaLauncher = registerForActivityResult(
+            contract = ActivityResultContracts.PickMultipleVisualMedia(),
+            callback = { uris ->
+                getSystemContentSelectionCallback()?.onSystemContentSelected(uris)
+            }
+        )
+    }
+
+    override fun <I, C : ActivityResultContract<I, *>> getActivityResultLauncher(
+        contractClass: Class<C>,
+        requestPrams: Any?
+    ): ActivityResultLauncher<I>? {
+        if (contractClass == ActivityResultContracts.PickVisualMedia::class.java) {
+            return pickVisualMediaLauncher as? ActivityResultLauncher<I>
+        } else if (contractClass == ActivityResultContracts.PickMultipleVisualMedia::class.java) {
+            return pickMultipleVisualMediaLauncher as? ActivityResultLauncher<I>
+        }
+        return null
     }
 
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
@@ -46,15 +75,15 @@ class MainActivity : DesignComponentActivity() {
         setContent {
             AppSetsTheme {
                 // A surface container using the 'background' color from the theme
-                Surface {
-                    MainPages()
-                }
+                MainPage()
             }
         }
 
         viewModel.onActivityCreated(this@MainActivity)
         viewModel.handleIntent(intent)
+        makeActivityResultLauncher()
         handleExternalShareContentIfNeeded(this@MainActivity, intent)
+
     }
 
     override fun onDestroy() {
@@ -65,14 +94,6 @@ class MainActivity : DesignComponentActivity() {
         super.onNewIntent(intent)
         viewModel.handleIntent(intent)
         handleExternalShareContentIfNeeded(this, intent)
-    }
-
-    private fun unListenBroadcast() {
-        PurpleLogger.current.d(TAG, "unListenBroadcast")
-        if (composedReceiver != null) {
-            unregisterReceiver(composedReceiver)
-            composedReceiver = null
-        }
     }
 
     override fun getOnBackInvokedDispatcher(): OnBackInvokedDispatcher {
@@ -125,33 +146,31 @@ class MainActivity : DesignComponentActivity() {
         }
         intent.putExtra("external_content_handled", true)
         //wait compose first frame draw finish
-        lifecycleScope.launch(Dispatchers.IO) {
-            val composeContainerState = viewModel.bottomSheetState()
+        val composeContainerState = viewModel.bottomSheetState()
+        lifecycleScope.launch {
             composeContainerState.composableStateAvailableFlow.collect { composableAvailable ->
                 if (!composableAvailable) {
                     return@collect
                 }
-                withContext(Dispatchers.Main) {
-                    composeContainerState.setShouldBackgroundSink(true)
-                    val fromAppDefinition = getCallActivityAppDefinition()
-                    composeContainerState.show {
-                        ExternalContentSheetContent(
-                            intent = intent,
-                            fromAppDefinition = fromAppDefinition,
-                            onConfirmClick = { handleType ->
-                                when (handleType) {
-                                    EXTERNAL_CONTENT_HANDLE_BY_LOCAL_SHARE -> {
-                                        composeContainerState.hide()
-                                        handleExternalDataByAppSetsShare(intent)
+                composeContainerState.setShouldBackgroundSink(true)
+                val fromAppDefinition = getCallActivityAppDefinition()
+                composeContainerState.show {
+                    ExternalContentSheetContent(
+                        intent = intent,
+                        fromAppDefinition = fromAppDefinition,
+                        onConfirmClick = { handleType ->
+                            when (handleType) {
+                                EXTERNAL_CONTENT_HANDLE_BY_LOCAL_SHARE -> {
+                                    composeContainerState.hide()
+                                    handleExternalDataByAppSetsShare(intent)
 
-                                    }
+                                }
 
-                                    EXTERNAL_CONTENT_HANDLE_BY_APPSETS -> {
-                                    }
+                                EXTERNAL_CONTENT_HANDLE_BY_APPSETS -> {
                                 }
                             }
-                        )
-                    }
+                        }
+                    )
                 }
             }
         }

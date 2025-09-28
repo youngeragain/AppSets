@@ -556,7 +556,7 @@ fun ScreenReviews(
                     }
                     Column(horizontalAlignment = Alignment.Start) {
                         Text(
-                            text = "${review.userInfo?.name ?: ""} | ${review.reviewTime}",
+                            text = "${review.userInfo?.bioName ?: ""} | ${review.reviewTime}",
                             fontSize = 10.sp,
                             maxLines = 1
                         )

@@ -187,10 +187,10 @@ fun GroupInfoPage(
                                                 MaterialTheme.colorScheme.outline,
                                                 MaterialTheme.shapes.extraLarge
                                             ),
-                                        error = userInfo.name
+                                        error = userInfo.bioName
                                     )
                                     Text(
-                                        text = userInfo.name ?: "",
+                                        text = userInfo.bioName ?: "",
                                         fontSize = 12.sp,
                                         maxLines = 1,
                                         overflow = TextOverflow.Ellipsis,
@@ -282,7 +282,7 @@ fun GroupInfoPage(
                                         ExtraLarge2
                                     ),
                                 model = groupInfoPageState.groupInfo.bioUrl,
-                                error = groupInfoPageState.groupInfo.name
+                                error = groupInfoPageState.groupInfo.bioName
                             )
                             Column(
                                 modifier = Modifier
@@ -297,7 +297,7 @@ fun GroupInfoPage(
                                 horizontalAlignment = Alignment.CenterHorizontally,
                                 verticalArrangement = Arrangement.spacedBy(6.dp)
                             ) {
-                                Text(text = "${(groupInfoPageState.groupInfo.name ?: "")}(${userInfoList?.size ?: 0})")
+                                Text(text = "${(groupInfoPageState.groupInfo.bioName ?: "")}(${userInfoList?.size ?: 0})")
                                 Text(
                                     text = groupInfoPageState.groupInfo.introduction
                                         ?: stringResource(xcj.app.appsets.R.string.no_introduction),

@@ -3,11 +3,14 @@
 package xcj.app.appsets.ui.compose.content_selection
 
 import android.Manifest
-import android.content.Context
 import android.graphics.Color
+import android.net.Uri
 import android.provider.MediaStore
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.view.PreviewView
 import androidx.camera.view.PreviewView.ImplementationMode
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.AnimationState
@@ -19,6 +22,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -88,6 +92,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpSize
@@ -98,19 +103,22 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import xcj.app.appsets.ui.compose.LocalUseCaseOfNowSpaceContent
 import xcj.app.appsets.ui.compose.camera.CameraComponents
 import xcj.app.appsets.ui.compose.content_selection.ContentSelectionRequest.SelectionTypeParam
 import xcj.app.appsets.ui.compose.custom_component.AnyImage
+import xcj.app.appsets.ui.compose.custom_component.DragValue
 import xcj.app.appsets.ui.compose.custom_component.LoadMoreHandler
 import xcj.app.appsets.ui.compose.custom_component.SwipeContainer
+import xcj.app.appsets.ui.compose.theme.extShapes
+import xcj.app.appsets.util.ktx.asComponentActivityOrNull
 import xcj.app.appsets.util.model.MediaStoreDataUri
 import xcj.app.appsets.util.model.UriProvider
 import xcj.app.compose_share.components.DesignTextField
 import xcj.app.compose_share.components.DesignVDivider
+import xcj.app.starter.android.ActivityThemeInterface
 import xcj.app.starter.android.usecase.PlatformUseCase
 import java.io.File
-
-enum class DragValue { Start, Center, End }
 
 
 typealias CountProvider = (String) -> Int
@@ -158,57 +166,172 @@ fun defaultAllSelectionTypeParam(countProvider: CountProvider = defaultMaxCountP
 
 data class ContentSelectionTab(
     val selectionType: String,
-    val nameStringResource: Int,
+    val name: Int,
 )
 
-/**
- * @param selectionTypeParams key is type value is type's max count
- */
-data class ContentSelectionRequest(
-    val context: Context,
-    val contextName: String,
-    val requestKey: String,
-    val selectionTypeParams: List<SelectionTypeParam>,
-    val defaultSelectionType: String
+@Composable
+fun ContentSelectSheetContentPrompt(
+    request: ContentSelectionRequest,
+    onContentSelected: (ContentSelectionResult) -> Unit,
+    onDismiss: () -> Unit,
 ) {
-    fun selectionTypeMaxCount(selectionType: String): Int {
-        return selectionTypeParams.firstOrNull { it.selectionType == selectionType }
-            ?.maxCount(selectionType)
-            ?: 0
+    val context = LocalContext.current
+    val nowSpaceContentUseCase = LocalUseCaseOfNowSpaceContent.current
+    val coroutineScope = rememberCoroutineScope()
+    var isUseAppImplementationClicked by remember {
+        mutableStateOf(false)
     }
+    Box {
+        AnimatedContent(
+            targetState = isUseAppImplementationClicked
+        ) { targetIsUseAppImplementationClicked ->
+            if (targetIsUseAppImplementationClicked) {
+                ContentSelectSheetContent(
+                    request = request,
+                    onContentSelected = onContentSelected
+                )
+            } else {
+                ContentSelectSheetContentPromptContent(
+                    onUseSystemClick = {
+                        val activity = context.asComponentActivityOrNull()
+                        if (activity == null) {
+                            return@ContentSelectSheetContentPromptContent
+                        }
+                        if (activity !is ActivityThemeInterface) {
+                            return@ContentSelectSheetContentPromptContent
+                        }
+                        activity.setSystemContentSelectionCallback { t ->
+                            if (t is Uri) {
+                                val uri = t
+                                val uriProvider = UriProvider.fromUri(uri)
+                                val selectedContents = listOf(uriProvider)
+                                val results =
+                                    ContentSelectionResult.RichMediaContentSelectionResult(
+                                        context,
+                                        request,
+                                        request.defaultSelectionType,
+                                        selectedContents
+                                    )
+                                onContentSelected(results)
+                            }
+                        }
+                        onDismiss()
+                        val activityResultLauncher =
+                            activity.getActivityResultLauncher(
+                                ActivityResultContracts.PickVisualMedia::class.java,
+                                null
+                            )
+                        val singleMimeType =
+                            ActivityResultContracts.PickVisualMedia.SingleMimeType(request.defaultSelectionType)
+                        val pickVisualMediaRequest =
+                            PickVisualMediaRequest.Builder().setMediaType(singleMimeType).build()
+                        activityResultLauncher?.launch(pickVisualMediaRequest)
 
-    data class SelectionTypeParam(val selectionType: String, val maxCount: CountProvider)
-}
-
-sealed interface ContentSelectionResult {
-    val context: Context
-    val request: ContentSelectionRequest
-    val selectType: String
-
-    data class RichMediaContentSelectionResult(
-        override val context: Context,
-        override val request: ContentSelectionRequest,
-        override val selectType: String,
-        val selectItems: List<UriProvider>,
-    ) : ContentSelectionResult
-
-    data class LocationInfo(
-        val coordinate: String,
-        val info: String? = null,
-        val extras: String? = null,
-    )
-
-    data class LocationContentSelectionResult(
-        override val context: Context,
-        override val request: ContentSelectionRequest,
-        override val selectType: String,
-        val locationInfo: LocationInfo,
-    ) : ContentSelectionResult
+                    },
+                    onUseAppClick = {
+                        val platformPermissionsUsageOfFile =
+                            PlatformUseCase.providePlatformPermissions(context).firstOrNull {
+                                it.name == xcj.app.appsets.R.string.file
+                            }
+                        if (platformPermissionsUsageOfFile == null) {
+                            return@ContentSelectSheetContentPromptContent
+                        }
+                        if (!platformPermissionsUsageOfFile.granted) {
+                            onDismiss()
+                            coroutineScope.launch {
+                                nowSpaceContentUseCase.showPlatformPermissionUsageTipsIfNeeded(
+                                    directToShow = true
+                                )
+                            }
+                            return@ContentSelectSheetContentPromptContent
+                        }
+                        isUseAppImplementationClicked = true
+                    }
+                )
+            }
+        }
+    }
 }
 
 
 @Composable
-fun ContentSelectSheetContent(
+private fun ContentSelectSheetContentPromptContent(
+    modifier: Modifier = Modifier,
+    onUseSystemClick: () -> Unit,
+    onUseAppClick: () -> Unit,
+) {
+    Column(
+        modifier = modifier.padding(start = 12.dp, end = 12.dp, bottom = 24.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Text(
+            text = stringResource(xcj.app.appsets.R.string.choose_implementation),
+            fontSize = 22.sp,
+            fontWeight = FontWeight.Bold
+        )
+        Row(
+            modifier = Modifier
+                .clickable(onClick = onUseSystemClick)
+                .padding(6.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(68.dp)
+                    .clip(MaterialTheme.shapes.extShapes.large)
+                    .border(
+                        1.dp,
+                        MaterialTheme.colorScheme.outline,
+                        MaterialTheme.shapes.extShapes.large
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    painter = painterResource(xcj.app.compose_share.R.drawable.ic_settings_24),
+                    contentDescription = stringResource(xcj.app.appsets.R.string.system)
+                )
+            }
+            Column {
+                Text(text = stringResource(xcj.app.appsets.R.string.system_content_selection))
+                Text(
+                    text = stringResource(xcj.app.appsets.R.string.system_content_selection_des),
+                    fontSize = 12.sp
+                )
+            }
+        }
+        Row(
+            modifier = Modifier
+                .clickable(onClick = onUseAppClick)
+                .padding(6.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Image(
+                modifier = Modifier
+                    .size(68.dp)
+                    .clip(MaterialTheme.shapes.extShapes.large)
+                    .border(
+                        1.dp,
+                        MaterialTheme.colorScheme.outline,
+                        MaterialTheme.shapes.extShapes.large
+                    ),
+                painter = painterResource(xcj.app.compose_share.R.drawable.ic_launcher_foreground),
+                contentDescription = stringResource(xcj.app.appsets.R.string.system)
+            )
+            Column {
+                Text(text = stringResource(xcj.app.appsets.R.string.app_custom_content_selection))
+                Text(
+                    text = stringResource(xcj.app.appsets.R.string.app_custom_content_selection_des),
+                    fontSize = 12.sp
+                )
+            }
+        }
+
+    }
+}
+
+@Composable
+private fun ContentSelectSheetContent(
+    modifier: Modifier = Modifier,
     request: ContentSelectionRequest,
     onContentSelected: (ContentSelectionResult) -> Unit,
 ) {
@@ -241,7 +364,7 @@ fun ContentSelectSheetContent(
 
     val coroutineScope = rememberCoroutineScope()
 
-    Column(modifier = Modifier.fillMaxSize()) {
+    Column(modifier = modifier) {
         HorizontalPager(
             modifier = Modifier.weight(1f),
             state = pagerState,
@@ -324,7 +447,7 @@ fun ContentSelectSheetContent(
                         ),
                         icon = {}
                     ) {
-                        Text(stringResource(selectionType.nameStringResource))
+                        Text(stringResource(selectionType.name))
                     }
                 }
                 Spacer(modifier = Modifier.width(12.dp))
@@ -335,7 +458,7 @@ fun ContentSelectSheetContent(
 
 
 @Composable
-fun CameraContentSelection(
+private fun CameraContentSelection(
     request: ContentSelectionRequest,
     onContentSelected: (ContentSelectionResult) -> Unit,
 ) {
@@ -354,7 +477,7 @@ fun CameraContentSelection(
         mutableStateOf(false)
     }
     var swipeableState by remember {
-        mutableStateOf(DragValue.Start)
+        mutableStateOf<DragValue>(DragValue.Start)
     }
     val alphaAnimation = remember {
         AnimationState(1f)
@@ -470,7 +593,11 @@ fun CameraContentSelection(
                                     MaterialTheme.shapes.extraLarge
                                 )
                                 .clickable {
-                                    val uriProvider = UriProvider.fromFile(capturedPictureFile)
+                                    val pictureFile = capturedPictureFile
+                                    if (pictureFile == null) {
+                                        return@clickable
+                                    }
+                                    val uriProvider = UriProvider.fromFile(pictureFile)
                                     if (uriProvider == null) {
                                         return@clickable
                                     }
@@ -548,14 +675,14 @@ fun CameraContentSelection(
 }
 
 @Composable
-fun LocationContentSelection(
+private fun LocationContentSelection(
     request: ContentSelectionRequest,
     onContentSelected: (ContentSelectionResult) -> Unit,
 ) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     var swipeableState by remember {
-        mutableStateOf(DragValue.Start)
+        mutableStateOf<DragValue>(DragValue.Start)
     }
     val alphaAnimation = remember {
         AnimationState(1f)
@@ -651,10 +778,11 @@ fun LocationContentSelection(
                             if (swipeableState != DragValue.End) {
                                 return@IconButton
                             }
-                            val locationInfo = ContentSelectionResult.LocationInfo(
-                                coordinate = "104.066284,30.572938",
-                                info = "四川省成都市武侯区锦悦西路2"
-                            )
+                            val locationInfo =
+                                ContentSelectionResult.LocationContentSelectionResult.LocationInfo(
+                                    coordinate = "104.066284,30.572938",
+                                    info = "四川省成都市武侯区锦悦西路2"
+                                )
                             val results = ContentSelectionResult.LocationContentSelectionResult(
                                 context,
                                 request,
@@ -677,7 +805,7 @@ fun LocationContentSelection(
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun PictureContentSelection(
+private fun PictureContentSelection(
     request: ContentSelectionRequest,
     onContentSelected: (ContentSelectionResult) -> Unit,
 ) {
@@ -845,7 +973,7 @@ fun PictureContentSelection(
 }
 
 @Composable
-fun calculateItemClipShape(
+private fun calculateItemClipShape(
     itemHeightDp: Dp,
     selectedContents: List<UriProvider>,
     contentUriProvider: UriProvider
@@ -883,7 +1011,7 @@ fun calculateItemClipShape(
 }
 
 @Composable
-fun VideoContentSelection(
+private fun VideoContentSelection(
     request: ContentSelectionRequest,
     onContentSelected: (ContentSelectionResult) -> Unit,
 ) {
@@ -1040,7 +1168,7 @@ fun VideoContentSelection(
 }
 
 @Composable
-fun AudioContentSelection(
+private fun AudioContentSelection(
     request: ContentSelectionRequest,
     onContentSelected: (ContentSelectionResult) -> Unit,
 ) {
@@ -1187,7 +1315,7 @@ fun AudioContentSelection(
 }
 
 @Composable
-fun FileContentSelection(
+private fun FileContentSelection(
     request: ContentSelectionRequest,
     onContentSelected: (ContentSelectionResult) -> Unit,
 ) {
@@ -1333,7 +1461,7 @@ fun FileContentSelection(
 }
 
 @Composable
-fun BottomActions(
+private fun BottomActions(
     modifier: Modifier,
     request: ContentSelectionRequest,
     contentSelectionType: String,

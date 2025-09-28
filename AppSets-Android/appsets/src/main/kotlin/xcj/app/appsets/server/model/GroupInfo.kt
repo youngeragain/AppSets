@@ -5,8 +5,6 @@ import androidx.room.Entity
 import androidx.room.Ignore
 import androidx.room.PrimaryKey
 import xcj.app.appsets.im.Bio
-import xcj.app.appsets.im.ImSessionHolder
-import xcj.app.appsets.im.Session
 
 @Entity("GroupInfo")
 data class GroupInfo(
@@ -16,7 +14,7 @@ data class GroupInfo(
     @PrimaryKey
     @ColumnInfo("group_id")
     var groupId: String,
-    override var name: String? = null,
+    var name: String? = null,
     @ColumnInfo("current_owner_uid")
     var currentOwnerUid: String? = null,
     var type: Int? = null,
@@ -28,20 +26,27 @@ data class GroupInfo(
     var maxMembers: Int? = null,
     @Ignore
     var userInfoList: MutableList<UserInfo>? = null,
-) : Bio, ImSessionHolder {
+) : Bio {
 
-    override val id: String
+    override val bioId: String
         get() = groupId
+
+    override val bioName: String?
+        get() = name
 
     @Ignore
     override var bioUrl: Any? = null
 
-    @Ignore
-    override var imSession: Session? = null
-
     constructor() : this(
-        "G0", Int.MIN_VALUE.toString(),
-        null, null, null, null, null, null, null
+        "",
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
     )
 
     companion object {

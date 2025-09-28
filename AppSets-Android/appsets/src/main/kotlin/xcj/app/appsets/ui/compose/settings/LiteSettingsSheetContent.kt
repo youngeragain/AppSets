@@ -36,8 +36,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import xcj.app.appsets.account.LocalAccountManager
-import xcj.app.appsets.ui.compose.content_selection.DragValue
 import xcj.app.appsets.ui.compose.custom_component.AnyImage
+import xcj.app.appsets.ui.compose.custom_component.DragValue
 import xcj.app.appsets.ui.compose.custom_component.ImageButtonComponent
 import xcj.app.appsets.ui.compose.custom_component.SwipeContainer
 import xcj.app.appsets.ui.compose.search.LocalAccountUserAvatar
@@ -148,7 +148,8 @@ fun LiteSettingsSheetContent(
             ) {
                 LocalAccountUserAvatar()
                 val name = if (loginStatusState is AccountStatus.Logged) {
-                    loginStatusState.userInfo.name ?: stringResource(xcj.app.appsets.R.string.jkx)
+                    loginStatusState.userInfo.bioName
+                        ?: stringResource(xcj.app.appsets.R.string.jkx)
                 } else {
                     stringResource(xcj.app.appsets.R.string.login_to_appsets)
                 }

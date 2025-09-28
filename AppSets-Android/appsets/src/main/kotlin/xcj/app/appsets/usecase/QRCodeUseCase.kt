@@ -19,7 +19,7 @@ import xcj.app.appsets.server.repository.UserRepository
 import xcj.app.appsets.ui.compose.camera.DesignCameraActivity
 import xcj.app.appsets.ui.model.page_state.LoginSignUpPageState
 import xcj.app.appsets.ui.model.state.QRCodeInfoScannedState
-import xcj.app.compose_share.dynamic.IComposeLifecycleAware
+import xcj.app.compose_share.dynamic.ComposeLifecycleAware
 import xcj.app.starter.android.util.PurpleLogger
 import xcj.app.starter.foundation.http.DesignResponse
 import xcj.app.starter.server.request
@@ -30,7 +30,7 @@ class QRCodeUseCase(
     private val loginSignUpPageState: MutableState<LoginSignUpPageState>,
     private val qrCodeRepository: QRCodeRepository,
     private val userRepository: UserRepository,
-) : IComposeLifecycleAware {
+) : ComposeLifecycleAware {
     companion object {
         private const val TAG = "QRCodeUseCase"
         const val APPSETS_DESIGN_URI_QRCODE_PREFIX = "asqr"

@@ -24,7 +24,7 @@ import coil3.request.transformations
 import coil3.toBitmap
 import coil3.transform.CircleCropTransformation
 import xcj.app.appsets.im.Session
-import xcj.app.appsets.im.message.ImMessage
+import xcj.app.appsets.im.message.IMMessage
 import xcj.app.appsets.ui.compose.conversation.IMBubbleActivity
 import xcj.app.appsets.ui.compose.main.MainActivity
 import xcj.app.starter.android.util.PurpleLogger
@@ -61,10 +61,10 @@ class NotificationPusher() {
     private suspend fun requestImSessionIcon(
         context: Context,
         session: Session,
-        imMessage: ImMessage
+        imMessage: IMMessage
     ): Bitmap? {
         PurpleLogger.current.d(TAG, "requestSessionIcon")
-        val iconUrl = if (imMessage.toInfo.toType == ImMessage.TYPE_O2M) {
+        val iconUrl = if (imMessage.toInfo.toType == IMMessage.TYPE_O2M) {
             imMessage.toInfo.bioUrl
         } else {
             imMessage.fromInfo.bioUrl
@@ -107,7 +107,7 @@ class NotificationPusher() {
     suspend fun pushConversionNotification(
         context: Context,
         session: Session,
-        imMessage: ImMessage
+        imMessage: IMMessage
     ) {
 
         if (ContextCompat.checkSelfPermission(
@@ -170,7 +170,7 @@ class NotificationPusher() {
     private fun makeBubbleForNotificationIfNeeded(
         context: Context,
         session: Session,
-        imMessage: ImMessage,
+        imMessage: IMMessage,
         notificationBuilder: NotificationCompat.Builder,
         notificationId: Int,
         isExistPerson: Boolean,
@@ -185,15 +185,15 @@ class NotificationPusher() {
             return
         }
         PurpleLogger.current.d(TAG, "makeBubbleForNotificationIfNeeded, person:$person!")
-        val contentText = if (imMessage.toInfo.toType == ImMessage.TYPE_O2M) {
-            "${imMessage.fromInfo.name}\n${
-                ImMessage.readableContent(
+        val contentText = if (imMessage.toInfo.toType == IMMessage.TYPE_O2M) {
+            "${imMessage.fromInfo.bioName}\n${
+                IMMessage.readableContent(
                     context,
                     imMessage
                 ) ?: ""
             }"
         } else {
-            ImMessage.readableContent(context, imMessage) ?: ""
+            IMMessage.readableContent(context, imMessage) ?: ""
         }
         val message =
             NotificationCompat.MessagingStyle.Message(
@@ -209,9 +209,9 @@ class NotificationPusher() {
             .setShortcutId(session.id)
 
         val bubbleIntent = Intent(context, IMBubbleActivity::class.java).apply {
-            putExtra(ImMessage.KEY_IM_MESSAGE_NOTIFICATION_ID, notificationId)
-            putExtra(ImMessage.KEY_IM_MESSAGE_ID, imMessage.id)
-            putExtra(ImMessage.KEY_SESSION_ID, session.id)
+            putExtra(IMMessage.KEY_IM_MESSAGE_NOTIFICATION_ID, notificationId)
+            putExtra(IMMessage.KEY_IM_MESSAGE_ID, imMessage.id)
+            putExtra(IMMessage.KEY_SESSION_ID, session.id)
         }
         val bubblePendingIntent =
             PendingIntent.getActivity(
@@ -233,7 +233,7 @@ class NotificationPusher() {
     private fun makeSessionShortcutInfo(
         context: Context,
         session: Session,
-        imMessage: ImMessage,
+        imMessage: IMMessage,
         iconBitmap: Bitmap?,
         isExistPerson: Boolean
     ) {
@@ -260,9 +260,9 @@ class NotificationPusher() {
         if (!shortcutInfoMap.contains(session.id)) {
             val shortcutInfoIntent = Intent(context, IMBubbleActivity::class.java).apply {
                 action = ACTION_SHORTCUT_IM_SESSION
-                putExtra(ImMessage.KEY_IM_MESSAGE_NOTIFICATION_ID, notificationId)
-                putExtra(ImMessage.KEY_IM_MESSAGE_ID, imMessage.id)
-                putExtra(ImMessage.KEY_SESSION_ID, session.id)
+                putExtra(IMMessage.KEY_IM_MESSAGE_NOTIFICATION_ID, notificationId)
+                putExtra(IMMessage.KEY_IM_MESSAGE_ID, imMessage.id)
+                putExtra(IMMessage.KEY_SESSION_ID, session.id)
             }
 
             val shortcutInfo = ShortcutInfoCompat.Builder(context, session.id)
@@ -284,7 +284,7 @@ class NotificationPusher() {
     private fun makeNotificationBuilderForImSession(
         context: Context,
         session: Session,
-        imMessage: ImMessage,
+        imMessage: IMMessage,
         notificationId: Int,
         sessionIconBitmap: Bitmap?
     ): NotificationCompat.Builder {
@@ -294,9 +294,9 @@ class NotificationPusher() {
                     " imMessageNotificationId:$notificationId)"
         )
         val notificationIntent = Intent(context, MainActivity::class.java).apply {
-            putExtra(ImMessage.KEY_IM_MESSAGE_NOTIFICATION_ID, notificationId)
-            putExtra(ImMessage.KEY_IM_MESSAGE_ID, imMessage.id)
-            putExtra(ImMessage.KEY_SESSION_ID, session.id)
+            putExtra(IMMessage.KEY_IM_MESSAGE_NOTIFICATION_ID, notificationId)
+            putExtra(IMMessage.KEY_IM_MESSAGE_ID, imMessage.id)
+            putExtra(IMMessage.KEY_SESSION_ID, session.id)
         }
         val notificationPendingIntent: PendingIntent = PendingIntent.getActivity(
             context,
@@ -305,15 +305,15 @@ class NotificationPusher() {
             PendingIntent.FLAG_IMMUTABLE
         )
 
-        val contentTitle = if (imMessage.toInfo.toType == ImMessage.TYPE_O2M) {
-            "${imMessage.toInfo.name}"
+        val contentTitle = if (imMessage.toInfo.toType == IMMessage.TYPE_O2M) {
+            "${imMessage.toInfo.bioName}"
         } else {
-            imMessage.fromInfo.name
+            imMessage.fromInfo.bioName
         }
-        val contentText = if (imMessage.toInfo.toType == ImMessage.TYPE_O2M) {
-            "${imMessage.fromInfo.name}\n${ImMessage.readableContent(context, imMessage) ?: ""}"
+        val contentText = if (imMessage.toInfo.toType == IMMessage.TYPE_O2M) {
+            "${imMessage.fromInfo.bioName}\n${IMMessage.readableContent(context, imMessage) ?: ""}"
         } else {
-            ImMessage.readableContent(context, imMessage) ?: ""
+            IMMessage.readableContent(context, imMessage) ?: ""
         }
         val notificationBuilder =
             NotificationCompat

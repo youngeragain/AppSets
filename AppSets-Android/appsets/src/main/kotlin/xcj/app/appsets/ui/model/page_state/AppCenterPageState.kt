@@ -7,7 +7,7 @@ sealed interface AppCenterPageState : TipsProvider {
     val apps: List<AppsWithCategory>
 
     data class Loading(
-        override val apps: MutableList<AppsWithCategory>,
+        override val apps: List<AppsWithCategory>,
         override val tips: Int? = null,
         override val subTips: Int? = null
     ) : AppCenterPageState

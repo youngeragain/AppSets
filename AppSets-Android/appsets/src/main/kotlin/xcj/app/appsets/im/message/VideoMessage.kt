@@ -2,7 +2,7 @@ package xcj.app.appsets.im.message
 
 import android.net.Uri
 import androidx.core.net.toUri
-import xcj.app.appsets.im.ImMessageDesignType
+import xcj.app.appsets.im.IMMessageDesignType
 import xcj.app.appsets.im.MessageFromInfo
 import xcj.app.appsets.im.MessageToInfo
 import xcj.app.appsets.util.model.UriProvider
@@ -16,8 +16,8 @@ data class VideoMessage(
     override val toInfo: MessageToInfo,
     override val messageGroupTag: String?,
     override val metadata: MessageMetadata<*>,
-    override val messageType: String = ImMessageDesignType.TYPE_VIDEO
-) : ImMessage()
+    override val messageType: String = IMMessageDesignType.TYPE_VIDEO
+) : IMMessage()
 
 fun VideoMessage.requireUri(): Pair<Uri?, Uri?>? {
     val videoMessageMetadata = metadata as VideoMessageMetadata

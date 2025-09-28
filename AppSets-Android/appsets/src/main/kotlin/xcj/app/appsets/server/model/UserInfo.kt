@@ -5,8 +5,6 @@ import androidx.room.Entity
 import androidx.room.Ignore
 import androidx.room.PrimaryKey
 import xcj.app.appsets.im.Bio
-import xcj.app.appsets.im.ImSessionHolder
-import xcj.app.appsets.im.Session
 
 @Entity(tableName = "UserInfo")
 data class UserInfo(
@@ -15,7 +13,7 @@ data class UserInfo(
      */
     @PrimaryKey
     var uid: String,
-    override var name: String? = null,
+    var name: String? = null,
     var age: Int? = null,
     var sex: String? = null,
     var email: String? = null,
@@ -30,16 +28,16 @@ data class UserInfo(
     var roles: String? = null,
     @Ignore
     var agreeToTheAgreement: Int? = null,
-) : Bio, ImSessionHolder {
+) : Bio {
 
-    override val id: String
+    override val bioId: String
         get() = uid
+
+    override val bioName: String?
+        get() = name
 
     @Ignore
     override var bioUrl: Any? = null
-
-    @Ignore
-    override var imSession: Session? = null
 
     constructor() : this(
         "",
@@ -58,7 +56,7 @@ data class UserInfo(
     )
 
     fun isDefault(): Boolean {
-        return this == user0
+        return this.uid == user0.bioId
     }
 
     companion object {
@@ -101,12 +99,5 @@ data class UserInfo(
                     a.profession == other.profession &&
                     a.website == other.website
         }
-    }
-}
-
-class UserRole {
-    companion object {
-        const val ROLE_ADMIN = "admin"
-        const val ROLE_UNDEFINED = "undefined"
     }
 }

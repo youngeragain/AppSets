@@ -137,12 +137,12 @@ fun UserInfoHeader(
                         shape = ExtraLarge2
                     ),
                 model = userInfo.bioUrl,
-                error = userInfo.name
+                error = userInfo.bioName
             )
 
             Text(
                 modifier = Modifier.padding(horizontal = 12.dp),
-                text = userInfo.name ?: "",
+                text = userInfo.bioName ?: "",
                 fontSize = 22.sp,
                 fontWeight = FontWeight.Bold
             )
@@ -191,7 +191,7 @@ fun UserInfoHeader(
                     model = userInfo.bioUrl
                 )
                 Text(
-                    text = userInfo.name ?: "",
+                    text = userInfo.bioName ?: "",
                     fontSize = 22.sp,
                     fontWeight = FontWeight.Bold
                 )

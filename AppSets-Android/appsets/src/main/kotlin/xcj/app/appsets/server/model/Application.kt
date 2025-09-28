@@ -2,10 +2,7 @@ package xcj.app.appsets.server.model
 
 import android.os.Parcel
 import android.os.Parcelable
-import xcj.app.appsets.constants.Constants
 import xcj.app.appsets.im.Bio
-import xcj.app.appsets.im.ImSessionHolder
-import xcj.app.appsets.im.Session
 import java.util.UUID
 
 data class Application(
@@ -20,15 +17,16 @@ data class Application(
     var bannerUrl: String? = null,
     val createUid: String? = null,
     val updateUid: String? = null,
-    override val name: String? = null,
+    val name: String? = null,
     val category: String? = null,
     val platforms: List<AppPlatform>? = null,
-) : Bio, ImSessionHolder, Parcelable {
+) : Bio, Parcelable {
 
-    override var imSession: Session? = null
-
-    override val id: String
+    override val bioId: String
         get() = "$BIO_ID_PREFIX${appId ?: UUID.randomUUID().toString()}"
+
+    override val bioName: String?
+        get() = name
 
     override var bioUrl: Any? = null
 
@@ -61,7 +59,7 @@ data class Application(
         parcel.writeString(bannerUrl)
         parcel.writeString(createUid)
         parcel.writeString(updateUid)
-        parcel.writeString(name)
+        parcel.writeString(bioName)
         parcel.writeString(category)
         parcel.writeString(appId)
         parcel.writeTypedList(platforms)

@@ -2,12 +2,11 @@ package xcj.app.appsets.db.room.entity
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import xcj.app.appsets.im.ImMessageDesignType
-import xcj.app.appsets.im.ImMessageGenerator
-import xcj.app.appsets.im.message.ImMessage
+import xcj.app.appsets.im.IMMessageDesignType
+import xcj.app.appsets.im.IMMessageGenerator
+import xcj.app.appsets.im.message.IMMessage
 import xcj.app.starter.android.util.PurpleLogger
 import java.util.Date
-import java.util.UUID
 
 /**
  * @param content 文字类型为字面值，如果是文件，图片等，此值为url
@@ -27,18 +26,23 @@ data class FlatImMessage(
     var messageType: String
 ) {
     constructor() : this(
-        UUID.randomUUID().toString(),
-        "", "", null, Date(),
-        null, null, null,
-        ImMessageDesignType.TYPE_TEXT
+        "",
+        "",
+        "",
+        null,
+        Date(),
+        null,
+        null,
+        null,
+        IMMessageDesignType.TYPE_TEXT
     )
 
     companion object {
 
         private const val TAG = "FlatImMessage"
 
-        fun parseFromImMessage(imMessage: ImMessage): FlatImMessage {
-            val content = ImMessageGenerator.makeMessageMetadataAsJsonString(imMessage)
+        fun parseFromImMessage(imMessage: IMMessage): FlatImMessage {
+            val content = IMMessageGenerator.makeMessageMetadataAsJsonString(imMessage)
             PurpleLogger.current.d(TAG, "parseFromImMessage, content:$content")
             return FlatImMessage(
                 id = imMessage.id,
@@ -46,10 +50,10 @@ data class FlatImMessage(
                 uid = imMessage.fromInfo.uid,
                 roles = imMessage.fromInfo.roles,
                 timestamp = imMessage.timestamp,
-                toId = imMessage.toInfo.id,
+                toId = imMessage.toInfo.bioId,
                 toType = imMessage.toInfo.toType,
                 messageGroupTag = imMessage.messageGroupTag,
-                messageType = ImMessageDesignType.getType(imMessage)
+                messageType = IMMessageDesignType.getType(imMessage)
             )
         }
     }

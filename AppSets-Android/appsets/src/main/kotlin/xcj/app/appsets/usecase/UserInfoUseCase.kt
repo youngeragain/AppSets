@@ -13,14 +13,14 @@ import xcj.app.appsets.ui.model.UserInfoForModify
 import xcj.app.appsets.ui.model.page_state.UserProfilePageState
 import xcj.app.appsets.util.ktx.toastSuspend
 import xcj.app.appsets.util.model.UriProvider
-import xcj.app.compose_share.dynamic.IComposeLifecycleAware
+import xcj.app.compose_share.dynamic.ComposeLifecycleAware
 import xcj.app.starter.server.request
 import xcj.app.starter.server.requestRaw
 
 class UserInfoUseCase(
     private val userRepository: UserRepository,
     private val appSetsRepository: AppSetsRepository,
-) : IComposeLifecycleAware {
+) : ComposeLifecycleAware {
 
     val currentUserInfoState: MutableState<UserProfilePageState> = mutableStateOf(
         UserProfilePageState.Loading

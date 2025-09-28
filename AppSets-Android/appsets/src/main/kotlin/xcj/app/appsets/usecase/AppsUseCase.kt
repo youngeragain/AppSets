@@ -7,7 +7,7 @@ import xcj.app.appsets.server.model.Application
 import xcj.app.appsets.server.model.AppsWithCategory
 import xcj.app.appsets.server.repository.AppSetsRepository
 import xcj.app.appsets.ui.model.page_state.AppCenterPageState
-import xcj.app.compose_share.dynamic.IComposeLifecycleAware
+import xcj.app.compose_share.dynamic.ComposeLifecycleAware
 import xcj.app.io.components.ObjectUploadOptions
 import xcj.app.io.compress.ICompressor
 import xcj.app.starter.android.util.PurpleLogger
@@ -16,28 +16,26 @@ import kotlin.math.abs
 
 class AppsUseCase(
     private val appSetsRepository: AppSetsRepository,
-) : IComposeLifecycleAware {
+) : ComposeLifecycleAware {
 
     companion object {
         private const val TAG = "AppsUseCase"
         val appsContentObjectUploadOptions: ObjectUploadOptions
             get() = object : ObjectUploadOptions {
-                private val compressOptions = object : ICompressor.CompressOptions {
-                    override fun imageCompressQuality(): Int {
-                        return 55
-                    }
-                }
-
                 override fun getInfixPath(): String {
                     return "apps/"
                 }
 
                 override fun compressOptions(): ICompressor.CompressOptions {
-                    return compressOptions
+                    return object : ICompressor.CompressOptions {
+                        override fun imageCompressQuality(): Int {
+                            return 55
+                        }
+                    }
                 }
             }
 
-        fun createMockApplications(count: Int): MutableList<AppsWithCategory> {
+        fun createMockApplications(count: Int): List<AppsWithCategory> {
             val result = mutableListOf<AppsWithCategory>()
             val applications = mutableListOf<Application>()
             repeat(count) {
@@ -55,53 +53,52 @@ class AppsUseCase(
 
     suspend fun loadHomeApplications() {
         PurpleLogger.current.d(TAG, "loadHomeApplications")
-        if (appCenterPageState.value is AppCenterPageState.LoadSuccess) {
+        val centerPageState = appCenterPageState.value
+        if (centerPageState is AppCenterPageState.LoadSuccess) {
             return
         }
         request {
             appSetsRepository.getIndexApplications()
-        }.onSuccess {
-            val loadingState = appCenterPageState.value as AppCenterPageState.Loading
-            val appsWithCategories = loadingState.apps
-            val mockLoadingApplicationsCount =
-                appsWithCategories.sumOf { it.applications.size }
-            val realApplicationsCount = it.sumOf { it.applications.size }
+        }.onSuccess { loadedCategoryApps ->
+            val loadingState = centerPageState as AppCenterPageState.Loading
+            val loadingCategoryApps = loadingState.apps
+            val loadingAppsCount =
+                loadingCategoryApps.sumOf { apps ->
+                    apps.applications.size
+                }
+            val loadedAppsCount = loadedCategoryApps.sumOf { apps ->
+                apps.applications.size
+            }
             val diff =
-                mockLoadingApplicationsCount - realApplicationsCount
+                loadingAppsCount - loadedAppsCount
             if (abs(diff) != 0) {
                 repeat(abs(diff)) { i ->
                     if (diff < 0) {
+                        val mockApplications = createMockApplications(loadingAppsCount + i + 1)
                         this@AppsUseCase.appCenterPageState.value =
-                            AppCenterPageState.Loading(
-                                createMockApplications(
-                                    mockLoadingApplicationsCount + i + 1
-                                )
-                            )
+                            AppCenterPageState.Loading(mockApplications)
                     } else {
+                        val mockApplications = createMockApplications(loadingAppsCount - (i + 1))
                         this@AppsUseCase.appCenterPageState.value =
-                            AppCenterPageState.Loading(
-                                createMockApplications(
-                                    mockLoadingApplicationsCount - (i + 1)
-                                )
-                            )
+                            AppCenterPageState.Loading(mockApplications)
                     }
                     delay(10)
                 }
             }
             this@AppsUseCase.appCenterPageState.value =
-                AppCenterPageState.LoadSuccess(it)
+                AppCenterPageState.LoadSuccess(loadedCategoryApps)
         }
     }
 
     fun findApplicationByBioId(application: Application): Application? {
-        PurpleLogger.current.d(TAG, "findApplicationByBioId, bioId:${application.id}")
+        PurpleLogger.current.d(TAG, "findApplicationByBioId, bioId:${application.bioId}")
         val centerState = appCenterPageState.value
         if (centerState !is AppCenterPageState.LoadSuccess) {
             return null
         }
         centerState.apps.forEach {
             for (app in it.applications) {
-                if (app.id == application.id) {
+                if (app.bioId == application.bioId) {
                     PurpleLogger.current.d(TAG, "findApplicationByBioId, found:$application")
                     return application
                 }

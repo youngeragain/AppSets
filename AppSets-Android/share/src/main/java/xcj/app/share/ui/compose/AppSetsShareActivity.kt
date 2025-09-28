@@ -9,10 +9,12 @@ import androidx.activity.compose.setContent
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.ActivityResultCallback
 import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContract
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.core.content.FileProvider
 import androidx.core.content.IntentCompat
+import androidx.lifecycle.ViewModel
 import xcj.app.share.base.DataContent
 import xcj.app.share.base.ShareDevice
 import xcj.app.share.base.ShareMethod
@@ -38,25 +40,59 @@ class AppSetsShareActivity : DesignComponentActivity() {
     }
 
     private val viewModel: AppSetsShareViewModel by viewModels<AppSetsShareViewModel>()
-    private var intentResultLauncher: ActivityResultLauncher<Intent>? = null
+    private var startActivityForResultLauncher: ActivityResultLauncher<Intent>? = null
     private var shareMethod: ShareMethod = MockShareMethod()
 
-    override fun <I> getActivityResultLauncher(
-        inputClazz: Class<I>,
+    private fun makeActivityResultLauncher() {
+        val activityResultCallback = ActivityResultCallback<ActivityResult> { result ->
+            if (result.resultCode != RESULT_OK) {
+                return@ActivityResultCallback
+            }
+            val returnIntent: Intent? = result.data
+            if (returnIntent == null) {
+                return@ActivityResultCallback
+            }
+            val hasShareDeviceAddress = returnIntent.hasExtra("APPSETS_SHARE_DEVICE_ADDRESSES")
+            if (hasShareDeviceAddress) {
+                val shareDeviceAddresses =
+                    returnIntent.getStringArrayExtra("APPSETS_SHARE_DEVICE_ADDRESSES")
+                getShareMethod().onScanShareDeviceAddress(shareDeviceAddresses)
+            } else {
+                val clipData = returnIntent.clipData
+                if (clipData != null) {
+                    for (i in 0 until clipData.itemCount) {
+                        val uri: Uri = clipData.getItemAt(i).uri
+                        handleFileUri(uri)
+                    }
+                } else if (returnIntent.data != null) {
+                    val uri: Uri = returnIntent.data!!
+                    handleFileUri(uri)
+                }
+            }
+        }
+        startActivityForResultLauncher = registerForActivityResult(
+            ActivityResultContracts.StartActivityForResult(),
+            activityResultCallback
+        )
+
+    }
+
+    override fun <I, C : ActivityResultContract<I, *>> getActivityResultLauncher(
+        contractClass: Class<C>,
         requestPrams: Any?
     ): ActivityResultLauncher<I>? {
-        if (inputClazz == Intent::class.java) {
-            return intentResultLauncher as? ActivityResultLauncher<I>
+        if (contractClass == ActivityResultContracts.StartActivityForResult::class.java) {
+            return startActivityForResultLauncher as? ActivityResultLauncher<I>
         }
         return null
     }
 
-    override fun isKeepScreenOn(): Boolean {
-        return true
+    override fun <V : ViewModel> requireViewModel(): V? {
+        return viewModel as? V
     }
 
-    override fun requireViewModel(): AppSetsShareViewModel {
-        return viewModel
+    override fun isKeepScreenOn(): Boolean {
+        return true
     }
 
     fun getShareMethod(): ShareMethod {
@@ -115,10 +151,10 @@ class AppSetsShareActivity : DesignComponentActivity() {
         )
         intent.setComponent(componentName)
         runCatching {
-            val activityResultLauncher = getActivityResultLauncher<Intent>(
-                Intent::class.java,
+            val activityResultLauncher = getActivityResultLauncher(
+                ActivityResultContracts.StartActivityForResult::class.java,
                 null
-            ) as? ActivityResultLauncher<Intent>
+            )
             activityResultLauncher?.launch(intent)
         }.onFailure {
             it.printStackTrace()
@@ -150,40 +186,6 @@ class AppSetsShareActivity : DesignComponentActivity() {
 
             else -> Unit
         }
-    }
-
-    private fun makeActivityResultLauncher() {
-        val contract = ActivityResultContracts.StartActivityForResult()
-        val activityResultCallback = ActivityResultCallback<ActivityResult> { result ->
-            if (result.resultCode != RESULT_OK) {
-                return@ActivityResultCallback
-            }
-            val returnIntent: Intent? = result.data
-            if (returnIntent == null) {
-                return@ActivityResultCallback
-            }
-            val hasShareDeviceAddress = returnIntent.hasExtra("APPSETS_SHARE_DEVICE_ADDRESSES")
-            if (hasShareDeviceAddress) {
-                val shareDeviceAddresses =
-                    returnIntent.getStringArrayExtra("APPSETS_SHARE_DEVICE_ADDRESSES")
-                getShareMethod().onScanShareDeviceAddress(shareDeviceAddresses)
-            } else {
-                // 处理选择的多个文件
-                val clipData = returnIntent.clipData
-                if (clipData != null) {
-                    for (i in 0 until clipData.itemCount) {
-                        val uri: Uri = clipData.getItemAt(i).uri
-                        // 使用 URI 处理文件，例如获取文件路径、读取文件内容等
-                        handleFileUri(uri)
-                    }
-                } else if (returnIntent.data != null) {
-                    val uri: Uri = returnIntent.data!!
-                    handleFileUri(uri)
-                }
-            }
-        }
-        intentResultLauncher = registerForActivityResult(contract, activityResultCallback)
-
     }
 
     private fun onCloseEstablishCLick() {

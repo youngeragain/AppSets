@@ -1,21 +1,21 @@
 package xcj.app.appsets.im
 
 import androidx.compose.runtime.mutableStateListOf
-import xcj.app.appsets.im.message.ImMessage
+import xcj.app.appsets.im.message.IMMessage
 
 class ConversationState(
-    initialMessages: List<ImMessage> = emptyList<ImMessage>()
+    initialMessages: List<IMMessage> = emptyList<IMMessage>()
 ) {
-    private val _messages: MutableList<ImMessage> =
+    private val _messages: MutableList<IMMessage> =
         mutableStateListOf(*initialMessages.toTypedArray())
 
-    val messages: List<ImMessage> = _messages
+    val messages: List<IMMessage> = _messages
 
-    fun addMessage(message: ImMessage) {
+    fun addMessage(message: IMMessage) {
         addOrUpdateMessage(message)
     }
 
-    private fun addOrUpdateMessage(message: ImMessage) {
+    private fun addOrUpdateMessage(message: IMMessage) {
         val existMessage = _messages.firstOrNull { it.id == message.id }
         if (existMessage != null) {
             val index = _messages.indexOf(existMessage)
@@ -26,13 +26,13 @@ class ConversationState(
         }
     }
 
-    fun addMessages(messages: List<ImMessage>) {
+    fun addMessages(messages: List<IMMessage>) {
         messages.forEach {
             addOrUpdateMessage(it)
         }
     }
 
-    fun removeMessage(message: ImMessage) {
+    fun removeMessage(message: IMMessage) {
         _messages.removeIf { it.id == message.id }
     }
 }

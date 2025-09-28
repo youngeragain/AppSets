@@ -10,10 +10,7 @@ interface UriProvider {
     fun isLocalUri(): Boolean = true
 
     companion object {
-        fun fromUri(uri: Uri?): UriProvider? {
-            if (uri == null) {
-                return null
-            }
+        fun fromUri(uri: Uri): UriProvider {
             return object : UriProvider {
                 override fun provideUri(): Uri {
                     return uri
@@ -21,10 +18,7 @@ interface UriProvider {
             }
         }
 
-        fun fromFile(file: File?): UriProvider? {
-            if (file == null) {
-                return null
-            }
+        fun fromFile(file: File): UriProvider? {
             if (!file.exists()) {
                 return null
             }

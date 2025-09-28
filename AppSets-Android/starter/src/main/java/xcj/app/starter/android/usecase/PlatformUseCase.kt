@@ -11,7 +11,7 @@ import android.os.PowerManager
 import android.provider.DocumentsContract
 import android.provider.Settings
 import android.widget.Toast
-import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import xcj.app.starter.android.ActivityThemeInterface
@@ -161,12 +161,12 @@ class PlatformUseCase {
                 return
             }
             val intent = makeFileSelectionIntent(mimeType, multiSelect)
-            val activityResultLauncher =
-                context.getActivityResultLauncher<Intent>(
-                    Intent::class.java,
-                    null
-                ) as? ActivityResultLauncher<Intent>
             runCatching {
+                val activityResultLauncher =
+                    context.getActivityResultLauncher(
+                        ActivityResultContracts.StartActivityForResult::class.java,
+                        null
+                    )
                 activityResultLauncher?.launch(intent)
             }
         }
@@ -179,12 +179,12 @@ class PlatformUseCase {
                 return
             }
             val intent = makeOpenDirectoryIntent(pickerInitialUri)
-            val activityResultLauncher =
-                context.getActivityResultLauncher<Intent>(
-                    Intent::class.java,
-                    null
-                ) as? ActivityResultLauncher<Intent>
             runCatching {
+                val activityResultLauncher =
+                    context.getActivityResultLauncher(
+                        ActivityResultContracts.StartActivityForResult::class.java,
+                        null
+                    )
                 activityResultLauncher?.launch(intent)
             }
         }

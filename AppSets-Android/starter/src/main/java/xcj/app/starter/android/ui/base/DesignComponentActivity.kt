@@ -6,7 +6,9 @@ import android.view.MotionEvent
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContract
 import xcj.app.starter.android.ActivityThemeInterface
+import xcj.app.starter.android.SystemContentSelectionCallback
 import xcj.app.starter.android.util.ThemeUtil
 
 abstract class DesignComponentActivity :
@@ -15,6 +17,16 @@ abstract class DesignComponentActivity :
         private const val TAG = "BaseActivity"
         const val CREATE_BY_DEFAULT = "DEFAULT"
         const val CREATE_BY_REFLECTION = "REFLECTION"
+    }
+
+    private var systemContentSelectionCallback: SystemContentSelectionCallback? = null
+
+    override fun setSystemContentSelectionCallback(callback: SystemContentSelectionCallback?) {
+        this.systemContentSelectionCallback = callback
+    }
+
+    override fun getSystemContentSelectionCallback(): SystemContentSelectionCallback? {
+        return systemContentSelectionCallback
     }
 
     override fun dispatchTouchEvent(ev: MotionEvent?): Boolean {
@@ -70,8 +82,8 @@ abstract class DesignComponentActivity :
         )
     }
 
-    override fun <I> getActivityResultLauncher(
-        inputClazz: Class<I>,
+    override fun <I, C : ActivityResultContract<I, *>> getActivityResultLauncher(
+        contractClass: Class<C>,
         requestPrams: Any?
     ): ActivityResultLauncher<I>? {
         return null

@@ -1,6 +1,7 @@
 package xcj.app.compose_share.components
 
 import android.content.Context
+import androidx.activity.BackEventCompat
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
@@ -90,4 +91,9 @@ open class VisibilityComposeState {
     fun markComposeAvailableState(available: Boolean) {
         composableStateAvailableFlow.value = available
     }
+}
+
+fun VisibilityComposeState.asBackEventState(): BackEventCompat {
+    val ps = this as ProgressiveVisibilityComposeState
+    return ps.progressState.value as BackEventCompat
 }

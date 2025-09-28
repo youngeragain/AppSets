@@ -1,7 +1,7 @@
 package xcj.app.appsets.im
 
 interface Bio {
-    val id: String
-    val name: String?
+    val bioId: String
+    val bioName: String?
     val bioUrl: Any?
 }

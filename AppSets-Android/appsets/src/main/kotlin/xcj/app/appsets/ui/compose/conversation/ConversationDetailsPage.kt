@@ -119,13 +119,13 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import xcj.app.appsets.account.LocalAccountManager
 import xcj.app.appsets.im.Bio
-import xcj.app.appsets.im.ImObj
+import xcj.app.appsets.im.IMObj
 import xcj.app.appsets.im.InputSelector
 import xcj.app.appsets.im.Session
 import xcj.app.appsets.im.message.AdMessage
 import xcj.app.appsets.im.message.FileMessage
 import xcj.app.appsets.im.message.HTMLMessage
-import xcj.app.appsets.im.message.ImMessage
+import xcj.app.appsets.im.message.IMMessage
 import xcj.app.appsets.im.message.ImageMessage
 import xcj.app.appsets.im.message.LocationMessage
 import xcj.app.appsets.im.message.LocationMessageMetadata
@@ -162,13 +162,13 @@ fun ConversationDetailsPage(
     recorderState: DesignRecorder.AudioRecorderState,
     onBackClick: () -> Unit,
     onBioClick: (Bio) -> Unit,
-    onImMessageContentClick: (ImMessage) -> Unit,
+    onImMessageContentClick: (IMMessage) -> Unit,
     onInputMoreAction: (String) -> Unit,
     onVoiceAction: () -> Unit,
     onVoiceStopClick: (Boolean) -> Unit,
     onVoicePauseClick: () -> Unit,
     onVoiceResumeClick: () -> Unit,
-    onMoreClick: ((ImObj) -> Unit),
+    onMoreClick: ((IMObj) -> Unit),
 ) {
     AnimatedContent(
         targetState = sessionState,
@@ -213,13 +213,13 @@ fun SessionObjectNormal(
     recorderState: DesignRecorder.AudioRecorderState,
     onBackClick: () -> Unit,
     onBioClick: (Bio) -> Unit,
-    onImMessageContentClick: (ImMessage) -> Unit,
+    onImMessageContentClick: (IMMessage) -> Unit,
     onInputMoreAction: (String) -> Unit,
     onVoiceAction: () -> Unit,
     onVoiceStopClick: (Boolean) -> Unit,
     onVoicePauseClick: () -> Unit,
     onVoiceResumeClick: () -> Unit,
-    onMoreClick: ((ImObj) -> Unit),
+    onMoreClick: ((IMObj) -> Unit),
 ) {
     HideNavBar()
     val conversationUseCase = LocalUseCaseOfConversation.current
@@ -620,16 +620,16 @@ fun TopToolBar(
 
 
 @Composable
-private fun UserAvatarComponent(modifier: Modifier, imMessage: ImMessage) {
+private fun UserAvatarComponent(modifier: Modifier, imMessage: IMMessage) {
     AnyImage(
         modifier = modifier,
         model = imMessage.fromInfo.bioUrl,
-        error = imMessage.fromInfo.name
+        error = imMessage.fromInfo.bioName
     )
 }
 
 @Composable
-private fun UserAvatar2Component(modifier: Modifier, imObj: ImObj?) {
+private fun UserAvatar2Component(modifier: Modifier, imObj: IMObj?) {
     AnyImage(
         modifier = modifier,
         model = imObj?.avatarUrl,
@@ -643,11 +643,11 @@ private fun ImMessageListComponent(
     modifier: Modifier = Modifier,
     appSetsModuleSettings: AppSetsModuleSettings,
     session: Session,
-    messages: List<ImMessage>,
+    messages: List<IMMessage>,
     hazeState: HazeState,
     scrollState: LazyListState,
     onBioClick: (Bio) -> Unit,
-    onImMessageContentClick: (ImMessage) -> Unit,
+    onImMessageContentClick: (IMMessage) -> Unit,
 ) {
     Box(modifier = modifier) {
         LazyColumn(
@@ -688,9 +688,9 @@ private fun ImMessageItemWrapperComponent(
     modifier: Modifier,
     appSetsModuleSettings: AppSetsModuleSettings,
     session: Session,
-    imMessage: ImMessage,
+    imMessage: IMMessage,
     onBioClick: (Bio) -> Unit,
-    onImMessageContentClick: (ImMessage) -> Unit,
+    onImMessageContentClick: (IMMessage) -> Unit,
 ) {
     Box(
         modifier = modifier
@@ -707,7 +707,7 @@ private fun ImMessageItemWrapperComponent(
 @Composable
 private fun BoxScope.messageBubbleBoxModifier(
     appSetsModuleSettings: AppSetsModuleSettings,
-    imMessage: ImMessage
+    imMessage: IMMessage
 ): Modifier {
 
     return when (appSetsModuleSettings.imBubbleAlignment) {
@@ -732,8 +732,8 @@ private fun BoxScope.messageBubbleBoxModifier(
 @Composable
 private fun ImMessageItemCenterComponent(
     appSetsModuleSettings: AppSetsModuleSettings,
-    imMessage: ImMessage,
-    onImMessageContentClick: (ImMessage) -> Unit,
+    imMessage: IMMessage,
+    onImMessageContentClick: (IMMessage) -> Unit,
 ) {
     val messageSendInfo = imMessage.messageSending?.sendInfoState?.value
     val horizontalAlignment = when (appSetsModuleSettings.imBubbleAlignment) {
@@ -829,7 +829,7 @@ private fun ImMessageItemCenterComponent(
 private fun ImMessageItemEndComponent(
     appSetsModuleSettings: AppSetsModuleSettings,
     session: Session,
-    imMessage: ImMessage,
+    imMessage: IMMessage,
     onBioClick: (Bio) -> Unit,
 ) {
     Row(modifier = Modifier.padding(12.dp)) {
@@ -868,7 +868,7 @@ private fun ImMessageItemEndComponent(
 @Composable
 private fun ImMessageItemLocationComponent(
     imMessage: LocationMessage,
-    onImMessageContentClick: (ImMessage) -> Unit,
+    onImMessageContentClick: (IMMessage) -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -915,7 +915,7 @@ private fun ImMessageItemLocationComponent(
 @Composable
 fun ImMessageItemFileComponent(
     imMessage: FileMessage,
-    onImMessageContentClick: (ImMessage) -> Unit,
+    onImMessageContentClick: (IMMessage) -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -945,7 +945,7 @@ fun ImMessageItemFileComponent(
 @Composable
 private fun ImMessageItemADComponent(
     imMessage: AdMessage,
-    onImMessageContentClick: (ImMessage) -> Unit,
+    onImMessageContentClick: (IMMessage) -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -977,7 +977,7 @@ private fun ImMessageItemADComponent(
 @Composable
 private fun ImMessageItemMusicComponent(
     imMessage: MusicMessage,
-    onImMessageContentClick: (ImMessage) -> Unit,
+    onImMessageContentClick: (IMMessage) -> Unit,
 ) {
     val mediaRemoteExoUseCase = LocalUseCaseOfMediaRemoteExo.current
     var waveValue by remember {
@@ -1055,7 +1055,7 @@ private fun ImMessageItemMusicComponent(
 @Composable
 private fun ImMessageItemVideoComponent(
     imMessage: VideoMessage,
-    onImMessageContentClick: (ImMessage) -> Unit,
+    onImMessageContentClick: (IMMessage) -> Unit,
 ) {
     val videoMessageMetadata = imMessage.metadata as VideoMessageMetadata
     val videoLocalData = videoMessageMetadata.localData as? Pair<UriProvider, UriProvider>
@@ -1099,7 +1099,7 @@ private fun ImMessageItemVideoComponent(
 @Composable
 private fun ImMessageItemVoiceComponent(
     imMessage: VoiceMessage,
-    onImMessageContentClick: (ImMessage) -> Unit,
+    onImMessageContentClick: (IMMessage) -> Unit,
 ) {
     val mediaRemoteExoUseCase = LocalUseCaseOfMediaRemoteExo.current
     var waveValue by remember {
@@ -1165,7 +1165,7 @@ private fun ImMessageItemVoiceComponent(
 @Composable
 private fun ImMessageItemHTMLComponent(
     imMessage: HTMLMessage,
-    onImMessageContentClick: (ImMessage) -> Unit,
+    onImMessageContentClick: (IMMessage) -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -1195,7 +1195,7 @@ private fun ImMessageItemHTMLComponent(
 @Composable
 private fun ImMessageItemImageComponent(
     imMessage: ImageMessage,
-    onImMessageContentClick: (ImMessage) -> Unit,
+    onImMessageContentClick: (IMMessage) -> Unit,
 ) {
     val localUri = (imMessage.metadata.localData as? UriProvider)?.provideUri()
     Box(
@@ -1224,7 +1224,7 @@ private fun ImMessageItemImageComponent(
 private fun ImMessageItemTextComponent(
     appSetsModuleSettings: AppSetsModuleSettings,
     imMessage: TextMessage,
-    onImMessageContentClick: (ImMessage) -> Unit,
+    onImMessageContentClick: (IMMessage) -> Unit,
 ) {
     Text(
         modifier = Modifier
@@ -1240,7 +1240,7 @@ private fun ImMessageItemTextComponent(
 private fun ImMessageItemStartComponent(
     appSetsModuleSettings: AppSetsModuleSettings,
     session: Session,
-    imMessage: ImMessage,
+    imMessage: IMMessage,
     onBioClick: (Bio) -> Unit,
 ) {
     Row(modifier = Modifier.padding(12.dp)) {
@@ -1821,7 +1821,7 @@ private fun getUserInputHeight(activity: ComponentActivity, expand: Boolean): Dp
 
 private fun Modifier.imMessageBackgroundTextModifier(
     appSetsModuleSettings: AppSetsModuleSettings,
-    imMessage: ImMessage
+    imMessage: IMMessage
 ): Modifier = composed {
     when (appSetsModuleSettings.imBubbleAlignment) {
         AppSetsModuleSettings.IM_BUBBLE_ALIGNMENT_ALL_START -> {
@@ -1886,7 +1886,7 @@ private fun Modifier.imMessageBackgroundTextModifier(
     }
 }
 
-private fun Modifier.imMessageBackgroundADModifier(imMessage: ImMessage): Modifier = composed {
+private fun Modifier.imMessageBackgroundADModifier(imMessage: IMMessage): Modifier = composed {
     if (LocalAccountManager.isLoggedUser(imMessage.fromInfo.uid)) {
         background(
             MaterialTheme.colorScheme.tertiaryContainer,
@@ -1904,7 +1904,7 @@ private fun Modifier.imMessageBackgroundADModifier(imMessage: ImMessage): Modifi
     }
 }
 
-private fun Modifier.imMessageBackgroundLocationModifier(imMessage: ImMessage): Modifier =
+private fun Modifier.imMessageBackgroundLocationModifier(imMessage: IMMessage): Modifier =
     composed {
         if (LocalAccountManager.isLoggedUser(imMessage.fromInfo.uid)) {
             background(
@@ -1923,7 +1923,7 @@ private fun Modifier.imMessageBackgroundLocationModifier(imMessage: ImMessage): 
         }
     }
 
-private fun Modifier.imMessageBackgroundFileModifier(imMessage: ImMessage): Modifier = composed {
+private fun Modifier.imMessageBackgroundFileModifier(imMessage: IMMessage): Modifier = composed {
     if (LocalAccountManager.isLoggedUser(imMessage.fromInfo.uid)) {
         background(
             MaterialTheme.colorScheme.tertiaryContainer,
@@ -1941,7 +1941,7 @@ private fun Modifier.imMessageBackgroundFileModifier(imMessage: ImMessage): Modi
     }
 }
 
-private fun Modifier.imMessageBackgroundHTMLModifier(imMessage: ImMessage): Modifier = composed {
+private fun Modifier.imMessageBackgroundHTMLModifier(imMessage: IMMessage): Modifier = composed {
     if (LocalAccountManager.isLoggedUser(imMessage.fromInfo.uid)) {
         background(
             MaterialTheme.colorScheme.tertiaryContainer,
@@ -1959,7 +1959,7 @@ private fun Modifier.imMessageBackgroundHTMLModifier(imMessage: ImMessage): Modi
     }
 }
 
-private fun Modifier.imMessageBackgroundImageModifier(imMessage: ImMessage): Modifier = composed {
+private fun Modifier.imMessageBackgroundImageModifier(imMessage: IMMessage): Modifier = composed {
     if (LocalAccountManager.isLoggedUser(imMessage.fromInfo.uid)) {
         background(
             MaterialTheme.colorScheme.tertiaryContainer,
@@ -1977,7 +1977,7 @@ private fun Modifier.imMessageBackgroundImageModifier(imMessage: ImMessage): Mod
     }
 }
 
-private fun Modifier.imMessageBackgroundVideoModifier(imMessage: ImMessage): Modifier = composed {
+private fun Modifier.imMessageBackgroundVideoModifier(imMessage: IMMessage): Modifier = composed {
     if (LocalAccountManager.isLoggedUser(imMessage.fromInfo.uid)) {
         background(
             MaterialTheme.colorScheme.tertiaryContainer,
@@ -1995,7 +1995,7 @@ private fun Modifier.imMessageBackgroundVideoModifier(imMessage: ImMessage): Mod
     }
 }
 
-private fun Modifier.imMessageBackgroundVoiceModifier(imMessage: ImMessage): Modifier = composed {
+private fun Modifier.imMessageBackgroundVoiceModifier(imMessage: IMMessage): Modifier = composed {
     if (LocalAccountManager.isLoggedUser(imMessage.fromInfo.uid)) {
         background(
             MaterialTheme.colorScheme.tertiaryContainer,
@@ -2013,7 +2013,7 @@ private fun Modifier.imMessageBackgroundVoiceModifier(imMessage: ImMessage): Mod
     }
 }
 
-private fun Modifier.imMessageBackgroundMusicModifier(imMessage: ImMessage): Modifier = composed {
+private fun Modifier.imMessageBackgroundMusicModifier(imMessage: IMMessage): Modifier = composed {
     if (LocalAccountManager.isLoggedUser(imMessage.fromInfo.uid)) {
         background(
             MaterialTheme.colorScheme.tertiaryContainer,

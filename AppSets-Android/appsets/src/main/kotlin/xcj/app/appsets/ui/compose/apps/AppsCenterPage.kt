@@ -166,7 +166,7 @@ fun SingleApplicationComponent(
             model = application.bioUrl
         )
         Text(
-            text = application.name ?: "",
+            text = application.bioName ?: "",
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             textAlign = TextAlign.Center,

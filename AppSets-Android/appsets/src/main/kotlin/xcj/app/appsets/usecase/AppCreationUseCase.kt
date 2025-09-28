@@ -15,14 +15,14 @@ import xcj.app.appsets.ui.model.VersionInfoForCreate
 import xcj.app.appsets.ui.model.page_state.CreateApplicationPageState
 import xcj.app.appsets.util.ktx.toast
 import xcj.app.appsets.util.model.UriProvider
-import xcj.app.compose_share.dynamic.IComposeLifecycleAware
+import xcj.app.compose_share.dynamic.ComposeLifecycleAware
 import xcj.app.starter.android.ktx.startWithHttpSchema
 import xcj.app.starter.android.util.PurpleLogger
 import xcj.app.starter.server.requestRaw
 
 class AppCreationUseCase(
     private val appSetsRepository: AppSetsRepository,
-) : IComposeLifecycleAware {
+) : ComposeLifecycleAware {
     companion object {
         private const val TAG = "AppCreationUseCase"
     }

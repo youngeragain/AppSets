@@ -5,7 +5,7 @@ import androidx.compose.runtime.mutableStateOf
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import xcj.app.appsets.account.LocalAccountManager
-import xcj.app.appsets.im.message.ImMessage
+import xcj.app.appsets.im.message.IMMessage
 import xcj.app.appsets.settings.ModuleConfig
 import xcj.app.starter.android.util.PurpleLogger
 import kotlin.io.encoding.Base64
@@ -95,7 +95,7 @@ object BrokerTest {
         }
     }
 
-    suspend fun sendMessage(imObj: ImObj, imMessage: ImMessage) {
+    suspend fun sendMessage(imObj: IMObj, imMessage: IMMessage) {
         PurpleLogger.current.d(TAG, "sendMessage")
         broker.sendMessage(imObj, imMessage)
     }

@@ -16,6 +16,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -23,6 +24,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.launch
 import xcj.app.appsets.settings.AppSetsModuleSettings
 import xcj.app.appsets.ui.compose.custom_component.HideNavBar
 import xcj.app.compose_share.components.BackActionTopBar
@@ -114,6 +116,7 @@ fun PermissionAndPrivacyComponent(onPrivacyAndPermissionClick: () -> Unit) {
 
 @Composable
 fun SessionSettingsComponent() {
+    val coroutineScope = rememberCoroutineScope()
     val appSetsModuleSettings = remember {
         AppSetsModuleSettings.get()
     }
@@ -171,7 +174,9 @@ fun SessionSettingsComponent() {
             choices = imMessageReliabilityChoices,
             onChoiceClick = {
                 imMessageReliability = it
-                appSetsModuleSettings.onIsIMMessageReliabilityChanged(it)
+                coroutineScope.launch {
+                    appSetsModuleSettings.onIsIMMessageReliabilityChanged(it)
+                }
             }
         )
 
@@ -181,7 +186,9 @@ fun SessionSettingsComponent() {
             choices = bubbleAlignmentChoices,
             onChoiceClick = {
                 imBubbleAlignment = it
-                appSetsModuleSettings.onIMBubbleAlignmentChanged(it)
+                coroutineScope.launch {
+                    appSetsModuleSettings.onIMBubbleAlignmentChanged(it)
+                }
             }
         )
 
@@ -192,7 +199,9 @@ fun SessionSettingsComponent() {
             choices = showDateChoices,
             onChoiceClick = {
                 imMessageShowDate = it
-                appSetsModuleSettings.onIsIMMessageShowDateChanged(it)
+                coroutineScope.launch {
+                    appSetsModuleSettings.onIsIMMessageShowDateChanged(it)
+                }
             }
         )
 
@@ -203,7 +212,9 @@ fun SessionSettingsComponent() {
             choices = sendTypeChoices,
             onChoiceClick = {
                 imMessageSendType = it
-                appSetsModuleSettings.onIMMessageDeliveryTypeChanged(it)
+                coroutineScope.launch {
+                    appSetsModuleSettings.onIMMessageDeliveryTypeChanged(it)
+                }
             }
         )
     }

@@ -161,7 +161,7 @@ fun LandscapeScreenList(
         item {
             headerContent?.invoke()
         }
-        itemsIndexed(screens, { index, screenInfo -> screenInfo.id }) { _, screenInfo ->
+        itemsIndexed(screens, { index, screenInfo -> screenInfo.bioId }) { _, screenInfo ->
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -225,7 +225,7 @@ fun PortraitScreenList(
         itemsIndexed(
             items = screens,
             key = { index, screenInfo ->
-                screenInfo.id
+                screenInfo.bioId
             }
         ) { _, screenInfo ->
             Column(
@@ -617,7 +617,7 @@ fun ScreenSectionOfUserPart(
             )
             {
                 Text(
-                    text = screenInfo.userInfo?.name ?: "",
+                    text = screenInfo.userInfo?.bioName ?: "",
                     fontSize = 12.sp
                 )
                 AnyImage(
@@ -625,7 +625,7 @@ fun ScreenSectionOfUserPart(
                     modifier = Modifier
                         .size(24.dp)
                         .clip(CircleShape),
-                    error = screenInfo.userInfo?.name
+                    error = screenInfo.userInfo?.bioName
                 )
             }
         }

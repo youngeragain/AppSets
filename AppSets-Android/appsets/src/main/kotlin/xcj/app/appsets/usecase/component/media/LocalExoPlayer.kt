@@ -147,12 +147,12 @@ class LocalExoPlayer(
             return
         }
         val spotLightStateVideoPlayer = videoPlayerState.value
-        if (videoUriJson.id == spotLightStateVideoPlayer.playId
+        if (videoUriJson.bioId == spotLightStateVideoPlayer.playId
             && (exoPlayer.isPlaying || exoPlayer.isLoading)
         ) {
             return
         }
-        videoPlayerState.value = spotLightStateVideoPlayer.copy(playId = videoUriJson.id)
+        videoPlayerState.value = spotLightStateVideoPlayer.copy(playId = videoUriJson.bioId)
 
         val mediaItem = MediaItem.fromUri(videoUriJson.uri)
 

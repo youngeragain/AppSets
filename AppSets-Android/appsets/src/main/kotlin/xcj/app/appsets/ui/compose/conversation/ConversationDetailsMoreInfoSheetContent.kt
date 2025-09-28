@@ -21,7 +21,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import xcj.app.appsets.im.Bio
 import xcj.app.appsets.im.GenerativeAISessions
-import xcj.app.appsets.im.ImObj
+import xcj.app.appsets.im.IMObj
 import xcj.app.appsets.usecase.RelationsUseCase
 
 @Preview(showBackground = true)
@@ -32,7 +32,7 @@ fun ConversationDetailsMoreInfoSheetContentPreView() {
 
 @Composable
 fun ConversationDetailsMoreInfoSheetContent(
-    imObj: ImObj,
+    imObj: IMObj,
     onBioClick: (Bio) -> Unit,
     onRequestAddFriend: (String) -> Unit,
     onRequestDeleteFriend: (String) -> Unit,
@@ -59,7 +59,7 @@ fun ConversationDetailsMoreInfoSheetContent(
                 )
             }
         }
-        if (imObj is ImObj.ImSingle) {
+        if (imObj is IMObj.IMSingle) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -92,7 +92,7 @@ fun ConversationDetailsMoreInfoSheetContent(
                 }
             }
 
-        } else if (imObj is ImObj.ImGroup) {
+        } else if (imObj is IMObj.IMGroup) {
             Row(modifier = Modifier
                 .fillMaxWidth()
                 .clip(MaterialTheme.shapes.extraLarge)

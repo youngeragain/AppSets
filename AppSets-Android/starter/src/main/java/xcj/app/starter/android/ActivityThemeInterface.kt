@@ -1,16 +1,25 @@
 package xcj.app.starter.android
 
 import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContract
 import androidx.lifecycle.ViewModel
+
+fun interface SystemContentSelectionCallback {
+    fun onSystemContentSelected(t: Any?)
+}
 
 interface ActivityThemeInterface {
 
-    fun <I> getActivityResultLauncher(
-        inputClazz: Class<I>,
+    fun getSystemContentSelectionCallback(): SystemContentSelectionCallback?
+
+    fun setSystemContentSelectionCallback(callback: SystemContentSelectionCallback?)
+
+    fun <I, C : ActivityResultContract<I, *>> getActivityResultLauncher(
+        contractClass: Class<C>,
         requestPrams:Any?,
     ): ActivityResultLauncher<I>? = null
 
-    fun requireViewModel(): ViewModel? = null
+    fun <V : ViewModel> requireViewModel(): V? = null
 
     fun isFitSystemWindow(): Boolean {
         return false

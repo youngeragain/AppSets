@@ -6,6 +6,7 @@ import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.annotation.RequiresApi
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.withCreated
 import kotlinx.coroutines.launch
@@ -22,8 +23,8 @@ class MediaPlaybackActivity : DesignComponentActivity() {
 
     private val viewModel: MediaPlaybackViewModel by viewModels<MediaPlaybackViewModel>()
 
-    override fun requireViewModel(): MediaPlaybackViewModel? {
-        return viewModel
+    override fun <V : ViewModel> requireViewModel(): V? {
+        return viewModel as? V
     }
 
     override fun isOverrideSystemBarLightModel(): Boolean? {

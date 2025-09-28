@@ -6,19 +6,17 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import androidx.lifecycle.LifecycleOwner
-import androidx.navigation.NavController
-import xcj.app.appsets.ui.compose.PageRouteNames
 import xcj.app.appsets.util.DesignRecorder
 import xcj.app.appsets.util.ktx.toast
 import xcj.app.appsets.util.model.UriProvider
-import xcj.app.compose_share.dynamic.IComposeLifecycleAware
+import xcj.app.compose_share.dynamic.ComposeLifecycleAware
 import xcj.app.starter.android.ktx.asFileOrNull
 import xcj.app.starter.android.usecase.PlatformUseCase
 import xcj.app.starter.android.util.PurpleLogger
 import xcj.app.starter.test.LocalAndroidContextFileDir
 import java.io.File
 
-class MediaAudioRecorderUseCase() : IComposeLifecycleAware {
+class MediaAudioRecorderUseCase() : ComposeLifecycleAware {
     companion object {
         private const val TAG = "MediaAudioRecorderUseCase"
     }
@@ -28,7 +26,10 @@ class MediaAudioRecorderUseCase() : IComposeLifecycleAware {
     val recorderState: MutableState<DesignRecorder.AudioRecorderState> =
         mutableStateOf(DesignRecorder.AudioRecorderState())
 
-    fun startRecord(context: Context, navController: NavController?) {
+    suspend fun startRecord(
+        context: Context,
+        nowSpaceContentUseCase: NowSpaceContentUseCase
+    ) {
         val platformPermissions = PlatformUseCase.providePlatformPermissions(context)
         val platformPermissionsUsageOfFile =
             platformPermissions.firstOrNull {
@@ -38,7 +39,7 @@ class MediaAudioRecorderUseCase() : IComposeLifecycleAware {
             return
         }
         if (!platformPermissionsUsageOfFile.granted) {
-            navController?.navigate(PageRouteNames.PrivacyPage)
+            nowSpaceContentUseCase.showPlatformPermissionUsageTipsIfNeeded(true)
             return
         }
         val platformPermissionsUsageOfRecordAudio =
@@ -49,7 +50,7 @@ class MediaAudioRecorderUseCase() : IComposeLifecycleAware {
             return
         }
         if (!platformPermissionsUsageOfRecordAudio.granted) {
-            navController?.navigate(PageRouteNames.PrivacyPage)
+            nowSpaceContentUseCase.showPlatformPermissionUsageTipsIfNeeded(true)
             return
         }
         runCatching {
@@ -116,11 +117,9 @@ class MediaAudioRecorderUseCase() : IComposeLifecycleAware {
         }
         fileOrNull.setReadable(true)
         val uri = fileOrNull.toUri()
+
         val uriProvider = UriProvider.fromUri(uri)
-        if (uriProvider != null) {
-            return uriProvider
-        }
-        return null
+        return uriProvider
     }
 
     override fun onComposeDispose(by: String?) {

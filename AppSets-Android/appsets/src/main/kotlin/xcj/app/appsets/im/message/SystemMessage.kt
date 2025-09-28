@@ -2,8 +2,8 @@ package xcj.app.appsets.im.message
 
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
-import xcj.app.appsets.im.ImMessageDesignType
-import xcj.app.appsets.im.ImMessageGenerator
+import xcj.app.appsets.im.IMMessageDesignType
+import xcj.app.appsets.im.IMMessageGenerator
 import xcj.app.appsets.im.MessageFromInfo
 import xcj.app.appsets.im.MessageToInfo
 import xcj.app.appsets.im.model.SystemContentInterface
@@ -18,8 +18,8 @@ data class SystemMessage(
     override val toInfo: MessageToInfo,
     override val messageGroupTag: String?,
     override val metadata: StringMessageMetadata,
-    override val messageType: String = ImMessageDesignType.TYPE_SYSTEM
-) : ImMessage() {
+    override val messageType: String = IMMessageDesignType.TYPE_SYSTEM
+) : IMMessage() {
 
     private var systemContentInterfaceCached: SystemContentInterface? = null
 
@@ -29,12 +29,12 @@ data class SystemMessage(
                 return systemContentInterfaceCached
             }
             runCatching {
-                val systemContentJson = ImMessageGenerator.gson.fromJson<SystemContentJson>(
+                val systemContentJson = IMMessageGenerator.gson.fromJson<SystemContentJson>(
                     metadata.data,
                     SystemContentJson::class.java
                 )
                 val contentInterface =
-                    systemContentJson.getContentObject(ImMessageGenerator.gson)
+                    systemContentJson.getContentObject(IMMessageGenerator.gson)
                 systemContentInterfaceCached = contentInterface
                 return contentInterface
             }

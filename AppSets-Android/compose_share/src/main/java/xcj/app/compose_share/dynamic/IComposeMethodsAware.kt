@@ -8,7 +8,7 @@ import androidx.compose.ui.platform.ComposeView
  * @see ComposeDynamicLoader
  * @see ComposeView
  */
-interface IComposeMethodsAware : IComposeLifecycleAware {
+interface IComposeMethodsAware : ComposeLifecycleAware {
 
     fun setAARName(aarName: String?)
 

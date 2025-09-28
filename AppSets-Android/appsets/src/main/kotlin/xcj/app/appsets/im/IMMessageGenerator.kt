@@ -14,7 +14,7 @@ import xcj.app.appsets.db.room.entity.FlatImMessage
 import xcj.app.appsets.im.message.AdMessage
 import xcj.app.appsets.im.message.FileMessage
 import xcj.app.appsets.im.message.HTMLMessage
-import xcj.app.appsets.im.message.ImMessage
+import xcj.app.appsets.im.message.IMMessage
 import xcj.app.appsets.im.message.ImageMessage
 import xcj.app.appsets.im.message.LocationMessage
 import xcj.app.appsets.im.message.LocationMessageMetadata
@@ -47,7 +47,7 @@ import java.util.UUID
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
 
-object ImMessageGenerator {
+object IMMessageGenerator {
 
     private const val TAG = "ImMessageGenerator"
 
@@ -62,18 +62,17 @@ object ImMessageGenerator {
 
     val imContentObjectUploadOptions: ObjectUploadOptions
         get() = object : ObjectUploadOptions {
-            private val compressOptions = object : ICompressor.CompressOptions {
-                override fun imageCompressQuality(): Int {
-                    return 55
-                }
-            }
 
             override fun getInfixPath(): String {
                 return "im/"
             }
 
             override fun compressOptions(): ICompressor.CompressOptions {
-                return compressOptions
+                return object : ICompressor.CompressOptions {
+                    override fun imageCompressQuality(): Int {
+                        return 55
+                    }
+                }
             }
         }
 
@@ -320,7 +319,8 @@ object ImMessageGenerator {
         inputSelector: Int,
         content: Any
     ): LocationMessageMetadata {
-        val locationInfo = content as ContentSelectionResult.LocationInfo
+        val locationInfo =
+            content as ContentSelectionResult.LocationContentSelectionResult.LocationInfo
         val description = getContentName(context, content)
         val messageMetadata = LocationMessageMetadata(
             description,
@@ -398,13 +398,13 @@ object ImMessageGenerator {
         session: Session,
         inputSelector: Int,
         content: Any
-    ): ImMessage {
+    ): IMMessage {
         PurpleLogger.current.d(TAG, "generateBySend, start")
         val messageId = UUID.randomUUID().toString()
         val timestamp = Calendar.getInstance().time
         val fromUserInfo = LocalAccountManager.userInfo
         val messageFromInfo =
-            MessageFromInfo(fromUserInfo.uid, fromUserInfo.name, fromUserInfo.avatarUrl)
+            MessageFromInfo(fromUserInfo.uid, fromUserInfo.bioName, fromUserInfo.avatarUrl)
         val messageToInfo = MessageToInfo.Companion.fromImObj(session.imObj)
         val messageSending = MessageSending()
         val imMessage = when (inputSelector) {
@@ -510,61 +510,61 @@ object ImMessageGenerator {
         return imMessage
     }
 
-    suspend fun generateByReceived(message: Delivery): ImMessage? {
+    suspend fun generateByReceived(message: Delivery): IMMessage? {
         PurpleLogger.current.d(TAG, "generateByReceived, start")
         val headers = message.properties.headers
-        val fromUid = if (headers.containsKey(ImMessage.HEADER_MESSAGE_UID)) {
-            (headers[ImMessage.HEADER_MESSAGE_UID] as? LongString).toString()
+        val fromUid = if (headers.containsKey(IMMessage.HEADER_MESSAGE_UID)) {
+            (headers[IMMessage.HEADER_MESSAGE_UID] as? LongString).toString()
         } else {
             return null
         }
-        val messageId = if (headers.containsKey(ImMessage.HEADER_MESSAGE_ID)) {
-            (headers[ImMessage.HEADER_MESSAGE_ID] as? LongString).toString()
+        val messageId = if (headers.containsKey(IMMessage.HEADER_MESSAGE_ID)) {
+            (headers[IMMessage.HEADER_MESSAGE_ID] as? LongString).toString()
         } else {
             return null
         }
-        val fromName = if (headers.containsKey(ImMessage.HEADER_MESSAGE_NAME)) {
-            (headers[ImMessage.HEADER_MESSAGE_NAME] as? LongString).toString()
+        val fromName = if (headers.containsKey(IMMessage.HEADER_MESSAGE_NAME)) {
+            (headers[IMMessage.HEADER_MESSAGE_NAME] as? LongString).toString()
         } else {
             null
         }
-        val fromAvatarUrl = if (headers.containsKey(ImMessage.HEADER_MESSAGE_AVATAR_URL)) {
-            (headers[ImMessage.HEADER_MESSAGE_AVATAR_URL] as? LongString).toString()
+        val fromAvatarUrl = if (headers.containsKey(IMMessage.HEADER_MESSAGE_AVATAR_URL)) {
+            (headers[IMMessage.HEADER_MESSAGE_AVATAR_URL] as? LongString).toString()
         } else {
             null
         }
-        val fromRoles = if (headers.containsKey(ImMessage.HEADER_MESSAGE_ROLES)) {
-            (headers[ImMessage.HEADER_MESSAGE_ROLES] as? LongString).toString()
+        val fromRoles = if (headers.containsKey(IMMessage.HEADER_MESSAGE_ROLES)) {
+            (headers[IMMessage.HEADER_MESSAGE_ROLES] as? LongString).toString()
         } else {
             null
         }
-        val messageGroupTag = if (headers.containsKey(ImMessage.HEADER_MESSAGE_MESSAGE_GROUP_TAG)) {
-            (headers[ImMessage.HEADER_MESSAGE_MESSAGE_GROUP_TAG] as? LongString).toString()
+        val messageGroupTag = if (headers.containsKey(IMMessage.HEADER_MESSAGE_MESSAGE_GROUP_TAG)) {
+            (headers[IMMessage.HEADER_MESSAGE_MESSAGE_GROUP_TAG] as? LongString).toString()
         } else {
             null
         }
-        val toType = if (headers.containsKey(ImMessage.HEADER_MESSAGE_TO_TYPE)) {
-            (headers[ImMessage.HEADER_MESSAGE_TO_TYPE] as? LongString).toString()
+        val toType = if (headers.containsKey(IMMessage.HEADER_MESSAGE_TO_TYPE)) {
+            (headers[IMMessage.HEADER_MESSAGE_TO_TYPE] as? LongString).toString()
         } else {
             return null
         }
-        val toId = if (headers.containsKey(ImMessage.HEADER_MESSAGE_TO_ID)) {
-            (headers[ImMessage.HEADER_MESSAGE_TO_ID] as? LongString).toString()
+        val toId = if (headers.containsKey(IMMessage.HEADER_MESSAGE_TO_ID)) {
+            (headers[IMMessage.HEADER_MESSAGE_TO_ID] as? LongString).toString()
         } else {
             return null
         }
-        val toName = if (headers.containsKey(ImMessage.HEADER_MESSAGE_TO_NAME)) {
-            (headers[ImMessage.HEADER_MESSAGE_TO_NAME] as? LongString).toString()
+        val toName = if (headers.containsKey(IMMessage.HEADER_MESSAGE_TO_NAME)) {
+            (headers[IMMessage.HEADER_MESSAGE_TO_NAME] as? LongString).toString()
         } else {
             return null
         }
-        val toRoles = if (headers.containsKey(ImMessage.HEADER_MESSAGE_TO_ROLES)) {
-            (headers[ImMessage.HEADER_MESSAGE_TO_ROLES] as? LongString).toString()
+        val toRoles = if (headers.containsKey(IMMessage.HEADER_MESSAGE_TO_ROLES)) {
+            (headers[IMMessage.HEADER_MESSAGE_TO_ROLES] as? LongString).toString()
         } else {
             null
         }
-        val toIconUrl = if (headers.containsKey(ImMessage.HEADER_MESSAGE_TO_ICON_URL)) {
-            (headers[ImMessage.HEADER_MESSAGE_TO_ICON_URL] as? LongString).toString()
+        val toIconUrl = if (headers.containsKey(IMMessage.HEADER_MESSAGE_TO_ICON_URL)) {
+            (headers[IMMessage.HEADER_MESSAGE_TO_ICON_URL] as? LongString).toString()
         } else {
             null
         }
@@ -572,7 +572,7 @@ object ImMessageGenerator {
         val messageFromInfo = MessageFromInfo(fromUid, fromName, fromAvatarUrl, fromRoles)
         PictureUrlMapper.mapPictureUrl(messageFromInfo)
 
-        val messageToInfo = MessageToInfo(toType, toId, toName, toIconUrl, toRoles)
+        val messageToInfo = MessageToInfo(toType, toIconUrl, toRoles, toId, toName)
         PictureUrlMapper.mapPictureUrl(messageToInfo)
 
         val messageMetadataString = String(message.body)
@@ -599,7 +599,7 @@ object ImMessageGenerator {
         flatImMessage: FlatImMessage,
         messageFromInfo: MessageFromInfo,
         messageToInfo: MessageToInfo,
-    ): ImMessage? {
+    ): IMMessage? {
         PurpleLogger.current.d(TAG, "generateByLocalDb, start")
         val messageMetadataString = flatImMessage.content
         val messageType = flatImMessage.messageType
@@ -627,9 +627,9 @@ object ImMessageGenerator {
         messageFromInfo: MessageFromInfo,
         messageToInfo: MessageToInfo,
         messageGroupTag: String?
-    ): ImMessage? {
+    ): IMMessage? {
         return when (messageType) {
-            ImMessageDesignType.TYPE_TEXT -> {
+            IMMessageDesignType.TYPE_TEXT -> {
                 val messageMetadata = gson.fromJson<StringMessageMetadata>(
                     messageMetadataString,
                     StringMessageMetadata::class.java
@@ -641,7 +641,7 @@ object ImMessageGenerator {
                 )
             }
 
-            ImMessageDesignType.TYPE_IMAGE -> {
+            IMMessageDesignType.TYPE_IMAGE -> {
                 val messageMetadata = gson.fromJson<StringMessageMetadata>(
                     messageMetadataString,
                     StringMessageMetadata::class.java
@@ -654,7 +654,7 @@ object ImMessageGenerator {
             }
 
 
-            ImMessageDesignType.TYPE_VOICE -> {
+            IMMessageDesignType.TYPE_VOICE -> {
                 val messageMetadata = gson.fromJson<StringMessageMetadata>(
                     messageMetadataString,
                     StringMessageMetadata::class.java
@@ -666,7 +666,7 @@ object ImMessageGenerator {
                 )
             }
 
-            ImMessageDesignType.TYPE_LOCATION -> {
+            IMMessageDesignType.TYPE_LOCATION -> {
                 val messageMetadata = gson.fromJson<LocationMessageMetadata>(
                     messageMetadataString,
                     LocationMessageMetadata::class.java
@@ -678,7 +678,7 @@ object ImMessageGenerator {
                 )
             }
 
-            ImMessageDesignType.TYPE_VIDEO -> {
+            IMMessageDesignType.TYPE_VIDEO -> {
                 val messageMetadata = gson.fromJson<VideoMessageMetadata>(
                     messageMetadataString,
                     VideoMessageMetadata::class.java
@@ -690,7 +690,7 @@ object ImMessageGenerator {
                 )
             }
 
-            ImMessageDesignType.TYPE_AD -> {
+            IMMessageDesignType.TYPE_AD -> {
                 val messageMetadata = gson.fromJson<StringMessageMetadata>(
                     messageMetadataString,
                     StringMessageMetadata::class.java
@@ -703,7 +703,7 @@ object ImMessageGenerator {
             }
 
 
-            ImMessageDesignType.TYPE_MUSIC -> {
+            IMMessageDesignType.TYPE_MUSIC -> {
                 val messageMetadata = gson.fromJson<StringMessageMetadata>(
                     messageMetadataString,
                     StringMessageMetadata::class.java
@@ -715,7 +715,7 @@ object ImMessageGenerator {
                 )
             }
 
-            ImMessageDesignType.TYPE_FILE -> {
+            IMMessageDesignType.TYPE_FILE -> {
                 val messageMetadata = gson.fromJson<StringMessageMetadata>(
                     messageMetadataString,
                     StringMessageMetadata::class.java
@@ -727,7 +727,7 @@ object ImMessageGenerator {
                 )
             }
 
-            ImMessageDesignType.TYPE_HTML -> {
+            IMMessageDesignType.TYPE_HTML -> {
                 val messageMetadata = gson.fromJson<StringMessageMetadata>(
                     messageMetadataString,
                     StringMessageMetadata::class.java
@@ -740,7 +740,7 @@ object ImMessageGenerator {
             }
 
 
-            ImMessageDesignType.TYPE_SYSTEM -> {
+            IMMessageDesignType.TYPE_SYSTEM -> {
                 val messageMetadata = gson.fromJson<StringMessageMetadata>(
                     messageMetadataString,
                     StringMessageMetadata::class.java
@@ -756,7 +756,7 @@ object ImMessageGenerator {
         }
     }
 
-    fun makeMessageMetadataAsJsonString(message: ImMessage): String {
+    fun makeMessageMetadataAsJsonString(message: IMMessage): String {
         PurpleLogger.current.d(TAG, "makeMessageMetadataAsJsonString, for messageId:${message.id}")
         return gson.toJson(message.metadata)
     }

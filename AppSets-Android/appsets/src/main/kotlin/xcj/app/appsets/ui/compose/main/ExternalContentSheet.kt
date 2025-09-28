@@ -3,11 +3,9 @@ package xcj.app.appsets.ui.compose.main
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import android.os.Parcelable
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -38,6 +36,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.IntentCompat
 import coil3.compose.AsyncImage
 import kotlinx.coroutines.launch
 import xcj.app.appsets.ui.compose.quickstep.QuickStepContent
@@ -51,43 +50,9 @@ import xcj.app.starter.android.AppDefinition
 import xcj.app.starter.android.util.FileUtil
 import xcj.app.starter.util.ContentType
 
-private suspend fun makeQuickStepContentHolder(
-    context: Context,
-    intent: Intent,
-): QuickStepContentHolder {
-    val quickStepContentList = mutableListOf<QuickStepContent>()
-    if (intent.type == ContentType.TEXT_PLAIN) {
-        intent.getStringExtra(Intent.EXTRA_TEXT)?.let { text ->
-            val textQuickStepContent = TextQuickStepContent(text)
-            quickStepContentList.add(textQuickStepContent)
-        }
-        return QuickStepContentHolder(intent, quickStepContentList)
-    }
-    val isMulti = intent.action == Intent.ACTION_SEND_MULTIPLE
-    if (!isMulti) {
-        (intent.getParcelableExtra<Parcelable>(Intent.EXTRA_STREAM) as? Uri)?.let { uri ->
-            val contentType = context.contentResolver.getType(uri) ?: ContentType.ALL
-            val androidUriFile = FileUtil.parseUriToAndroidUriFile(context, uri)
-            val uriQuickStepContent = UriQuickStepContent(uri, androidUriFile, contentType)
-            quickStepContentList.add(uriQuickStepContent)
-        }
-    } else {
-        intent.getParcelableArrayListExtra<Parcelable>(Intent.EXTRA_STREAM)
-            ?.mapNotNull {
-                it as? Uri
-            }?.forEach { uri ->
-                val contentType = context.contentResolver.getType(uri) ?: ContentType.ALL
-                val androidUriFile = FileUtil.parseUriToAndroidUriFile(context, uri)
-                val uriQuickStepContent =
-                    UriQuickStepContent(uri, androidUriFile, contentType)
-                quickStepContentList.add(uriQuickStepContent)
-            }
-    }
-    return QuickStepContentHolder(intent, quickStepContentList)
-}
-
 @Composable
 fun ExternalContentSheetContent(
+    modifier: Modifier = Modifier,
     intent: Intent,
     fromAppDefinition: AppDefinition?,
     onConfirmClick: (Int) -> Unit,
@@ -105,10 +70,14 @@ fun ExternalContentSheetContent(
             quickStepContentHolder = makeQuickStepContentHolder(context, intent)
         }
     }
-    Box(modifier = Modifier.animateContentSize()) {
+    Box(
+        modifier = modifier.animateContentSize()
+    ) {
         AnimatedContent(isHandleByAppSets) { targetIsHandleByAppSets ->
             if (targetIsHandleByAppSets) {
-                QuickStepSheet(quickStepContentHolder)
+                QuickStepSheet(
+                    quickStepContentHolder = quickStepContentHolder
+                )
             } else {
                 ExternalContentTipsSheet(
                     quickStepContentHolder = quickStepContentHolder,
@@ -127,12 +96,13 @@ fun ExternalContentSheetContent(
 
 @Composable
 fun ExternalContentTipsSheet(
+    modifier: Modifier = Modifier,
     quickStepContentHolder: QuickStepContentHolder,
     fromAppDefinition: AppDefinition?,
     onConfirmClick: (Int) -> Unit,
 ) {
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .padding(start = 12.dp, end = 12.dp, bottom = 12.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
@@ -197,10 +167,6 @@ fun ExternalContentTipsSheet(
                 modifier = Modifier
                     .size(68.dp)
                     .clip(MaterialTheme.shapes.extShapes.large)
-                    .background(
-                        MaterialTheme.colorScheme.outline,
-                        MaterialTheme.shapes.extShapes.large
-                    )
                     .border(
                         1.dp,
                         MaterialTheme.colorScheme.outline,
@@ -217,4 +183,44 @@ fun ExternalContentTipsSheet(
             Text(text = stringResource(xcj.app.appsets.R.string.app_name), fontSize = 12.sp)
         }
     }
+}
+
+private suspend fun makeQuickStepContentHolder(
+    context: Context,
+    intent: Intent,
+): QuickStepContentHolder {
+    val quickStepContentList = mutableListOf<QuickStepContent>()
+    if (intent.type == ContentType.TEXT_PLAIN) {
+        intent.getStringExtra(Intent.EXTRA_TEXT)?.let { text ->
+            val textQuickStepContent = TextQuickStepContent(text)
+            quickStepContentList.add(textQuickStepContent)
+        }
+        return QuickStepContentHolder(intent, quickStepContentList)
+    }
+    val isMulti = intent.action == Intent.ACTION_SEND_MULTIPLE
+    if (!isMulti) {
+        IntentCompat.getParcelableExtra(
+            intent,
+            Intent.EXTRA_STREAM,
+            Uri::class.java
+        )?.let { uri ->
+            val contentType = context.contentResolver.getType(uri) ?: ContentType.ALL
+            val androidUriFile = FileUtil.parseUriToAndroidUriFile(context, uri)
+            val uriQuickStepContent = UriQuickStepContent(uri, androidUriFile, contentType)
+            quickStepContentList.add(uriQuickStepContent)
+        }
+    } else {
+        IntentCompat.getParcelableArrayListExtra(
+            intent,
+            Intent.EXTRA_STREAM,
+            Uri::class.java
+        )?.forEach { uri ->
+            val contentType = context.contentResolver.getType(uri) ?: ContentType.ALL
+            val androidUriFile = FileUtil.parseUriToAndroidUriFile(context, uri)
+            val uriQuickStepContent =
+                UriQuickStepContent(uri, androidUriFile, contentType)
+            quickStepContentList.add(uriQuickStepContent)
+        }
+    }
+    return QuickStepContentHolder(intent, quickStepContentList)
 }

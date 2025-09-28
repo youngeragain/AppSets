@@ -198,7 +198,7 @@ fun UserProfilePage(
                             } else {
                                 stringResource(
                                     xcj.app.appsets.R.string.a_of_b,
-                                    userProfilePageState.userInfo.name ?: "",
+                                    userProfilePageState.userInfo.bioName ?: "",
                                     currentShowContent
                                 )
                             }

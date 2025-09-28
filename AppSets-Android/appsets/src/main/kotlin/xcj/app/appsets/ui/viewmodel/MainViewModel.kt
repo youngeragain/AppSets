@@ -73,6 +73,7 @@ class MainViewModel : BaseIMViewModel() {
         appsUseCase.loadHomeApplications()
         screensUseCase.loadOutSideScreens()
         systemUseCase.checkUpdate()
+        nowSpaceContentUseCase.showPlatformPermissionUsageTipsIfNeeded()
     }
 
     override fun observeSomeThingsOnCreated(activity: ComponentActivity) {
@@ -81,9 +82,9 @@ class MainViewModel : BaseIMViewModel() {
         LocalMessenger.observe<String, String>(
             activity,
             LocalAccountManager.MESSAGE_KEY_ON_LOGOUT
-        ) {
-            nowSpaceContentUseCase.onUserLogout()
-            conversationUseCase.onUserLogout()
+        ) { by ->
+            nowSpaceContentUseCase.onUserLogout(by)
+            conversationUseCase.onUserLogout(by)
         }
     }
 

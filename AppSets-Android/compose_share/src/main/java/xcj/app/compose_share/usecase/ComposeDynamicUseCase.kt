@@ -5,9 +5,9 @@ import android.content.Context
 import android.content.Intent
 import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.LifecycleObserver
+import xcj.app.compose_share.dynamic.ComposeLifecycleAware
 import xcj.app.compose_share.dynamic.ComposeMethodsAware
 import xcj.app.compose_share.dynamic.ComposeMethodsWrapper
-import xcj.app.compose_share.dynamic.IComposeLifecycleAware
 import xcj.app.compose_share.dynamic.PluginsRegistry
 import xcj.app.starter.android.usecase.PlatformUseCase
 import xcj.app.starter.android.util.FileUtil
@@ -15,7 +15,7 @@ import xcj.app.starter.android.util.PurpleLogger
 import xcj.app.starter.test.LocalAndroidContextFileDir
 import xcj.app.starter.util.ContentType
 
-class ComposeDynamicUseCase() : ComposeMethodsAware, IComposeLifecycleAware, LifecycleObserver {
+class ComposeDynamicUseCase() : ComposeMethodsAware, ComposeLifecycleAware, LifecycleObserver {
 
     val composeMethodsState: MutableList<ComposeMethodsWrapper> =
         mutableStateListOf()

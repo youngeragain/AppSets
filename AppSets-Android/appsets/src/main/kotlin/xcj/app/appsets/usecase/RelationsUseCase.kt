@@ -154,10 +154,10 @@ class RelationsUseCase private constructor(
         if (bio is UserInfo) {
             return false
         }
-        if (hasGroupRelated(bio.id)) {
+        if (hasGroupRelated(bio.bioId)) {
             return false
         }
-        addUnRelatedGroupId(bio.id)
+        addUnRelatedGroupId(bio.bioId)
         return true
     }
 

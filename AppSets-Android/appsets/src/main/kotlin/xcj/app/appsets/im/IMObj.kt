@@ -6,26 +6,26 @@ import xcj.app.appsets.server.model.UserInfo
 import xcj.app.appsets.usecase.RelationsUseCase
 import xcj.app.starter.android.util.PurpleLogger
 
-sealed class ImObj(
+sealed class IMObj(
     val bio: Bio,
     var isRelated: Boolean = false
 ) {
     val id: String
-        get() = bio.id
+        get() = bio.bioId
     val name: String
-        get() = bio.name ?: id
+        get() = bio.bioName ?: id
     val avatarUrl: Any?
         get() = bio.bioUrl
 
-    class ImSingle(
+    class IMSingle(
         bio: Bio,
         val userRoles: String? = null
-    ) : ImObj(bio, RelationsUseCase.getInstance().hasUserRelated(bio.id))
+    ) : IMObj(bio, RelationsUseCase.getInstance().hasUserRelated(bio.bioId))
 
-    class ImGroup(
+    class IMGroup(
         bio: Bio,
         val bios: List<Bio>? = null
-    ) : ImObj(bio, RelationsUseCase.getInstance().hasGroupRelated(bio.id)) {
+    ) : IMObj(bio, RelationsUseCase.getInstance().hasGroupRelated(bio.bioId)) {
 
     }
 
@@ -33,23 +33,23 @@ sealed class ImObj(
 
         private const val TAG = "ImObj"
 
-        fun fromBio(bio: Bio): ImObj {
+        fun fromBio(bio: Bio): IMObj {
             val imObj = when (bio) {
                 is UserInfo -> {
-                    ImSingle(bio)
+                    IMSingle(bio)
                 }
 
                 is GroupInfo -> {
-                    ImGroup(bio, bio.userInfoList)
+                    IMGroup(bio, bio.userInfoList)
                 }
 
                 is Application -> {
-                    ImGroup(bio)
+                    IMGroup(bio)
                 }
 
-                else -> ImSingle(bio)
+                else -> IMSingle(bio)
             }
-            PurpleLogger.current.d(TAG, "fromBio, bio:$bio, imgObj:${ImObj}")
+            PurpleLogger.current.d(TAG, "fromBio, bio:$bio, imgObj:${IMObj}")
             return imObj
         }
     }

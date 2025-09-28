@@ -66,7 +66,6 @@ import androidx.navigation.NavDirections
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
 import com.google.gson.Gson
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.hazeSource
@@ -75,13 +74,13 @@ import me.saket.telephoto.zoomable.rememberZoomableState
 import me.saket.telephoto.zoomable.zoomable
 import xcj.app.appsets.constants.Constants
 import xcj.app.appsets.im.Bio
-import xcj.app.appsets.im.ImMessageDesignType
+import xcj.app.appsets.im.IMMessageDesignType
 import xcj.app.appsets.im.InputSelector
 import xcj.app.appsets.im.MessageFromInfo
 import xcj.app.appsets.im.MessageToInfo
 import xcj.app.appsets.im.Session
 import xcj.app.appsets.im.message.HTMLMessage
-import xcj.app.appsets.im.message.ImMessage
+import xcj.app.appsets.im.message.IMMessage
 import xcj.app.appsets.im.message.ImageMessage
 import xcj.app.appsets.im.message.MusicMessage
 import xcj.app.appsets.im.message.SystemMessage
@@ -108,6 +107,7 @@ import xcj.app.appsets.ui.compose.LocalUseCaseOfGroupInfo
 import xcj.app.appsets.ui.compose.LocalUseCaseOfMediaAudioRecorder
 import xcj.app.appsets.ui.compose.LocalUseCaseOfMediaRemoteExo
 import xcj.app.appsets.ui.compose.LocalUseCaseOfNavigation
+import xcj.app.appsets.ui.compose.LocalUseCaseOfNowSpaceContent
 import xcj.app.appsets.ui.compose.LocalUseCaseOfQRCode
 import xcj.app.appsets.ui.compose.LocalUseCaseOfScreen
 import xcj.app.appsets.ui.compose.LocalUseCaseOfScreenPost
@@ -128,7 +128,8 @@ import xcj.app.appsets.ui.compose.apps.tools.ToolIntentCallerPage
 import xcj.app.appsets.ui.compose.apps.tools.ToolStartPage
 import xcj.app.appsets.ui.compose.apps.tools.ToolWeatherPage
 import xcj.app.appsets.ui.compose.camera.DesignCameraActivity
-import xcj.app.appsets.ui.compose.content_selection.ContentSelectSheetContent
+import xcj.app.appsets.ui.compose.compose_extensions.composableIf
+import xcj.app.appsets.ui.compose.content_selection.ContentSelectSheetContentPrompt
 import xcj.app.appsets.ui.compose.content_selection.ContentSelectionRequest
 import xcj.app.appsets.ui.compose.content_selection.ContentSelectionTypes
 import xcj.app.appsets.ui.compose.content_selection.defaultAllSelectionTypeParam
@@ -136,6 +137,7 @@ import xcj.app.appsets.ui.compose.content_selection.defaultImageSelectionTypePar
 import xcj.app.appsets.ui.compose.conversation.ConversationDetailsMoreInfoSheetContent
 import xcj.app.appsets.ui.compose.conversation.ConversationDetailsPage
 import xcj.app.appsets.ui.compose.conversation.ConversationOverviewPage
+import xcj.app.appsets.ui.compose.conversation.IMBubbleActivity
 import xcj.app.appsets.ui.compose.conversation.ai_model.AIGCMarketPage
 import xcj.app.appsets.ui.compose.custom_component.AnyImage
 import xcj.app.appsets.ui.compose.group.CreateGroupPage
@@ -183,10 +185,12 @@ import xcj.app.starter.test.NaviHostParams
 private const val TAG = "MainNaviHostPages"
 
 @Composable
-fun MainNaviHostPages(
+fun MainNaviHostPagesContainer(
+    modifier: Modifier = Modifier,
     navController: NavHostController,
     startPageRoute: String,
     hazeState: HazeState,
+    hostContextName: String = MainActivity.TAG
 ) {
 
     val isShowRestrictedContentDialogState = remember {
@@ -199,7 +203,7 @@ fun MainNaviHostPages(
     var isShowRestrictedContentDialog by isShowRestrictedContentDialogState
     val restrictedContentConfirmCallback by restrictedContentConfirmCallbackState
 
-    Box {
+    Box(modifier = modifier) {
         DesignNaviHost(
             modifier = Modifier.hazeSource(hazeState),
             navController = navController,
@@ -208,15 +212,23 @@ fun MainNaviHostPages(
 
             publishComposeNaviHostFormedEvent(navController, this)
 
-            composable(PageRouteNames.AppsCenterPage) {
+            composableIf(
+                test = {
+                    hostContextName == MainActivity.TAG
+                },
+                route = PageRouteNames.AppsCenterPage
+            ) {
                 val context = LocalContext.current
                 val appsUseCase = LocalUseCaseOfApps.current
                 val conversationUseCase = LocalUseCaseOfConversation.current
                 val appCenterPageState by appsUseCase.appCenterPageState
+                val coroutineScope = rememberCoroutineScope()
                 AppsCenterPage(
                     appCenterPageState = appCenterPageState,
                     onBioClick = { bio ->
-                        onBioClick(context, navController, bio)
+                        coroutineScope.launch {
+                            onBioClick(context, navController, bio)
+                        }
                     },
                     onApplicationLongPress = { application ->
                         conversationUseCase.updateCurrentSessionByBio(application)
@@ -229,7 +241,12 @@ fun MainNaviHostPages(
                 )
             }
 
-            composable(PageRouteNames.AppDetailsPage) {
+            composableIf(
+                test = {
+                    hostContextName == MainActivity.TAG || hostContextName == IMBubbleActivity.TAG
+                },
+                route = PageRouteNames.AppDetailsPage
+            ) {
                 LoginInterceptorPage(
                     navController = navController,
                     navBackStackEntry = it,
@@ -268,7 +285,13 @@ fun MainNaviHostPages(
                                 }
                         },
                         onShowApplicationCreatorClick = { application ->
-                            navigateToUserInfoPage(context, navController, application.createUid)
+                            coroutineScope.launch {
+                                navigateToUserInfoPage(
+                                    context,
+                                    navController,
+                                    application.createUid
+                                )
+                            }
                         },
                         onAddPlatformInfoClick = { platform ->
                             navigateToCreateAppPage(
@@ -328,7 +351,12 @@ fun MainNaviHostPages(
                 }
             }
 
-            composable(PageRouteNames.CreateAppPage) {
+            composableIf(
+                test = {
+                    hostContextName == MainActivity.TAG
+                },
+                route = PageRouteNames.CreateAppPage
+            ) {
                 LoginInterceptorPage(
                     navController = navController,
                     navBackStackEntry = it,
@@ -376,14 +404,16 @@ fun MainNaviHostPages(
                             appCreationUseCase.setChooseContentTempValues(
                                 any, filedName
                             )
-                            showContentSelectionDialog(
-                                context,
-                                anyStateProvider,
-                                navController,
-                                PageRouteNames.CreateAppPage,
-                                requestKey,
-                                requestSelectionTypeParams = defaultImageSelectionTypeParam()
-                            )
+                            coroutineScope.launch {
+                                showContentSelectionDialog(
+                                    context,
+                                    anyStateProvider,
+                                    navController,
+                                    PageRouteNames.CreateAppPage,
+                                    requestKey,
+                                    requestSelectionTypeParams = defaultImageSelectionTypeParam()
+                                )
+                            }
                         },
                         onConfirmClick = {
                             if (createStep != ApplicationForCreate.CREATE_STEP_APPLICATION) {
@@ -402,7 +432,12 @@ fun MainNaviHostPages(
                 }
             }
 
-            composable(PageRouteNames.OutSidePage) {
+            composableIf(
+                test = {
+                    hostContextName == MainActivity.TAG
+                },
+                route = PageRouteNames.OutSidePage
+            ) {
                 LoginInterceptorPage(
                     navController = navController,
                     navBackStackEntry = it,
@@ -415,7 +450,9 @@ fun MainNaviHostPages(
                     OutSidePage(
                         screens = screensUseCase.systemScreensContainer.screens,
                         onBioClick = { bio ->
-                            onBioClick(context, navController, bio)
+                            coroutineScope.launch {
+                                onBioClick(context, navController, bio)
+                            }
                         },
                         onLoadMore = {
                             coroutineScope.launch {
@@ -436,7 +473,12 @@ fun MainNaviHostPages(
                 }
             }
 
-            composable(PageRouteNames.ScreenDetailsPage) {
+            composableIf(
+                test = {
+                    hostContextName == MainActivity.TAG
+                },
+                route = PageRouteNames.ScreenDetailsPage
+            ) {
                 LoginInterceptorPage(
                     navController = navController,
                     navBackStackEntry = it,
@@ -451,7 +493,9 @@ fun MainNaviHostPages(
                         screenInfoForCard = screenInfoForCard,
                         onBackClick = navController::navigateUp,
                         onBioClick = { bio ->
-                            onBioClick(context, navController, bio)
+                            coroutineScope.launch {
+                                onBioClick(context, navController, bio)
+                            }
                         },
                         onEditClick = {
                             navController.navigate(PageRouteNames.ScreenEditPage)
@@ -493,7 +537,12 @@ fun MainNaviHostPages(
                 }
             }
 
-            composable(PageRouteNames.CreateScreenPage) {
+            composableIf(
+                test = {
+                    hostContextName == MainActivity.TAG
+                },
+                route = PageRouteNames.CreateScreenPage
+            ) {
                 LoginInterceptorPage(
                     navController = navController,
                     navBackStackEntry = it,
@@ -537,22 +586,25 @@ fun MainNaviHostPages(
                         onAddMediaFallClick = screenPostUseCase::onAddMediaFallClick,
 
                         onAddMediaContentClick = { requestKey, requestType, requestTypeMaxCount ->
-                            showContentSelectionDialog(
-                                context,
-                                anyStateProvider,
-                                navController,
-                                PageRouteNames.CreateScreenPage,
-                                requestKey,
-                                requestSelectionTypeParams = listOf(
-                                    ContentSelectionRequest.SelectionTypeParam(
-                                        selectionType = requestType,
-                                        maxCount = { selectionType ->
-                                            requestTypeMaxCount
-                                        }
-                                    )
-                                ),
-                                defaultSelectionType = requestType
-                            )
+                            coroutineScope.launch {
+                                showContentSelectionDialog(
+                                    context,
+                                    anyStateProvider,
+                                    navController,
+                                    PageRouteNames.CreateScreenPage,
+                                    requestKey,
+                                    requestSelectionTypeParams = listOf(
+                                        ContentSelectionRequest.SelectionTypeParam(
+                                            selectionType = requestType,
+                                            maxCount = { selectionType ->
+                                                requestTypeMaxCount
+                                            }
+                                        )
+                                    ),
+                                    defaultSelectionType = requestType
+                                )
+                            }
+
                         },
                         onRemoveMediaContent = { type, scalableItemState ->
                             screenPostUseCase.onRemoveMediaContent(
@@ -567,7 +619,12 @@ fun MainNaviHostPages(
                 }
             }
 
-            composable(PageRouteNames.ScreenEditPage) {
+            composableIf(
+                test = {
+                    hostContextName == MainActivity.TAG || hostContextName == IMBubbleActivity.TAG
+                },
+                route = PageRouteNames.ScreenEditPage
+            ) {
                 LoginInterceptorPage(
                     navController = navController,
                     navBackStackEntry = it,
@@ -587,12 +644,22 @@ fun MainNaviHostPages(
                     )
                 }
             }
-            composable(PageRouteNames.ConversationAIGCMarketPage) {
+            composableIf(
+                test = {
+                    hostContextName == MainActivity.TAG
+                },
+                route = PageRouteNames.ConversationAIGCMarketPage
+            ) {
                 AIGCMarketPage(
                     onBackClick = navController::navigateUp
                 )
             }
-            composable(PageRouteNames.ConversationOverviewPage) {
+            composableIf(
+                test = {
+                    hostContextName == MainActivity.TAG
+                },
+                route = PageRouteNames.ConversationOverviewPage
+            ) {
                 LoginInterceptorPage(
                     navController = navController,
                     navBackStackEntry = it,
@@ -604,15 +671,19 @@ fun MainNaviHostPages(
                     val systemUseCase = LocalUseCaseOfSystem.current
                     val mediaAudioRecorderUseCase = LocalUseCaseOfMediaAudioRecorder.current
                     val mediaRemoteExoUseCase = LocalUseCaseOfMediaRemoteExo.current
+                    val nowSpaceContentUseCase = LocalUseCaseOfNowSpaceContent.current
                     val currentSessionState by conversationUseCase.currentSessionState
                     val recorderState by mediaAudioRecorderUseCase.recorderState
                     val isShowActions by conversationUseCase.isShowActions
+                    val coroutineScope = rememberCoroutineScope()
                     ConversationOverviewPage(
                         sessionState = currentSessionState,
                         isShowActions = isShowActions,
                         recorderState = recorderState,
                         onBioClick = { bio ->
-                            onBioClick(context, navController, bio)
+                            coroutineScope.launch {
+                                onBioClick(context, navController, bio)
+                            }
                         },
                         onImMessageContentClick = { imMessage ->
                             handleImMessageContentClick(
@@ -654,23 +725,30 @@ fun MainNaviHostPages(
                             )
                         },
                         onInputMoreAction = { requestKey ->
-                            showContentSelectionDialog(
-                                context,
-                                anyStateProvider,
-                                navController,
-                                PageRouteNames.ConversationDetailsPage,
-                                requestKey,
-                                requestSelectionTypeParams = defaultAllSelectionTypeParam { selectionType ->
-                                    if (selectionType == ContentSelectionTypes.IMAGE) {
-                                        100
-                                    } else {
-                                        1
+                            coroutineScope.launch {
+                                showContentSelectionDialog(
+                                    context,
+                                    anyStateProvider,
+                                    navController,
+                                    PageRouteNames.ConversationDetailsPage,
+                                    requestKey,
+                                    requestSelectionTypeParams = defaultAllSelectionTypeParam { selectionType ->
+                                        if (selectionType == ContentSelectionTypes.IMAGE) {
+                                            100
+                                        } else {
+                                            1
+                                        }
                                     }
-                                }
-                            )
+                                )
+                            }
                         },
                         onVoiceAction = {
-                            mediaAudioRecorderUseCase.startRecord(context, navController)
+                            coroutineScope.launch {
+                                mediaAudioRecorderUseCase.startRecord(
+                                    context,
+                                    nowSpaceContentUseCase
+                                )
+                            }
                         },
                         onVoiceStopClick = { showSend ->
                             mediaAudioRecorderUseCase.stopRecord("UI click")
@@ -701,7 +779,9 @@ fun MainNaviHostPages(
                                     ConversationDetailsMoreInfoSheetContent(
                                         imObj = imObj,
                                         onBioClick = { bio ->
-                                            onBioClick(context, navController, bio)
+                                            coroutineScope.launch {
+                                                onBioClick(context, navController, bio)
+                                            }
                                         },
                                         onRequestAddFriend = {},
                                         onRequestDeleteFriend = {},
@@ -718,7 +798,12 @@ fun MainNaviHostPages(
                 }
             }
 
-            composable(PageRouteNames.ConversationDetailsPage) {
+            composableIf(
+                test = {
+                    hostContextName == MainActivity.TAG || hostContextName == IMBubbleActivity.TAG
+                },
+                route = PageRouteNames.ConversationDetailsPage
+            ) {
                 LoginInterceptorPage(
                     navController = navController,
                     navBackStackEntry = it,
@@ -729,14 +814,18 @@ fun MainNaviHostPages(
                     val anyStateProvider = LocalVisibilityComposeStateProvider.current
                     val mediaAudioRecorderUseCase = LocalUseCaseOfMediaAudioRecorder.current
                     val mediaRemoteExoUseCase = LocalUseCaseOfMediaRemoteExo.current
+                    val nowSpaceContentUseCase = LocalUseCaseOfNowSpaceContent.current
                     val sessionState by conversationUseCase.currentSessionState
                     val recorderState by mediaAudioRecorderUseCase.recorderState
+                    val coroutineScope = rememberCoroutineScope()
                     ConversationDetailsPage(
                         sessionState = sessionState,
                         recorderState = recorderState,
                         onBackClick = navController::navigateUp,
                         onBioClick = { bio ->
-                            onBioClick(context, navController, bio)
+                            coroutineScope.launch {
+                                onBioClick(context, navController, bio)
+                            }
                         },
                         onImMessageContentClick = { imMessage ->
                             handleImMessageContentClick(
@@ -748,23 +837,30 @@ fun MainNaviHostPages(
                             )
                         },
                         onInputMoreAction = { requestType ->
-                            showContentSelectionDialog(
-                                context,
-                                anyStateProvider,
-                                navController,
-                                PageRouteNames.ConversationDetailsPage,
-                                requestType,
-                                requestSelectionTypeParams = defaultAllSelectionTypeParam { selectionType ->
-                                    if (selectionType == ContentSelectionTypes.IMAGE) {
-                                        100
-                                    } else {
-                                        1
+                            coroutineScope.launch {
+                                showContentSelectionDialog(
+                                    context,
+                                    anyStateProvider,
+                                    navController,
+                                    PageRouteNames.ConversationDetailsPage,
+                                    requestType,
+                                    requestSelectionTypeParams = defaultAllSelectionTypeParam { selectionType ->
+                                        if (selectionType == ContentSelectionTypes.IMAGE) {
+                                            100
+                                        } else {
+                                            1
+                                        }
                                     }
-                                }
-                            )
+                                )
+                            }
                         },
                         onVoiceAction = {
-                            mediaAudioRecorderUseCase.startRecord(context, navController)
+                            coroutineScope.launch {
+                                mediaAudioRecorderUseCase.startRecord(
+                                    context,
+                                    nowSpaceContentUseCase
+                                )
+                            }
                         },
                         onVoiceStopClick = { showSend ->
                             mediaAudioRecorderUseCase.stopRecord("UI click")
@@ -794,7 +890,9 @@ fun MainNaviHostPages(
                                     ConversationDetailsMoreInfoSheetContent(
                                         imObj = imObj,
                                         onBioClick = { bio ->
-                                            onBioClick(context, navController, bio)
+                                            coroutineScope.launch {
+                                                onBioClick(context, navController, bio)
+                                            }
                                         },
                                         onRequestAddFriend = {},
                                         onRequestDeleteFriend = {},
@@ -808,7 +906,12 @@ fun MainNaviHostPages(
                 }
             }
 
-            composable(PageRouteNames.LoginPage) {
+            composableIf(
+                test = {
+                    hostContextName == MainActivity.TAG
+                },
+                route = PageRouteNames.LoginPage
+            ) {
                 val context = LocalContext.current
                 val systemUseCase = LocalUseCaseOfSystem.current
                 val qrCodeUseCase = LocalUseCaseOfQRCode.current
@@ -856,7 +959,12 @@ fun MainNaviHostPages(
                 )
             }
 
-            composable(PageRouteNames.SignUpPage) {
+            composableIf(
+                test = {
+                    hostContextName == MainActivity.TAG
+                },
+                route = PageRouteNames.SignUpPage
+            ) {
                 val context = LocalContext.current
                 val systemUseCase = LocalUseCaseOfSystem.current
                 val anyStateProvider = LocalVisibilityComposeStateProvider.current
@@ -869,14 +977,16 @@ fun MainNaviHostPages(
                     loginState = loginSignUpPageState,
                     onBackClick = navController::navigateUp,
                     onSelectUserAvatarClick = { requestKey ->
-                        showContentSelectionDialog(
-                            context,
-                            anyStateProvider,
-                            navController,
-                            PageRouteNames.SignUpPage,
-                            requestKey,
-                            requestSelectionTypeParams = defaultImageSelectionTypeParam()
-                        )
+                        coroutineScope.launch {
+                            showContentSelectionDialog(
+                                context,
+                                anyStateProvider,
+                                navController,
+                                PageRouteNames.SignUpPage,
+                                requestKey,
+                                requestSelectionTypeParams = defaultImageSelectionTypeParam()
+                            )
+                        }
                     },
                     onConfirmClick = {
                         coroutineScope.launch {
@@ -886,7 +996,12 @@ fun MainNaviHostPages(
                 )
             }
 
-            composable(PageRouteNames.ToolsStartPage) {
+            composableIf(
+                test = {
+                    hostContextName == MainActivity.TAG
+                },
+                route = PageRouteNames.ToolsStartPage
+            ) {
                 val context = LocalContext.current
                 ToolStartPage(
                     onBackClick = navController::navigateUp,
@@ -896,7 +1011,12 @@ fun MainNaviHostPages(
                 )
             }
 
-            composable(PageRouteNames.ToolsDetailsPage + AppTool.TOOL_TYPE_AppSets_Transform) {
+            composableIf(
+                test = {
+                    hostContextName == MainActivity.TAG
+                },
+                route = PageRouteNames.ToolsDetailsPage + AppTool.TOOL_TYPE_AppSets_Transform
+            ) {
                 val quickStepContents =
                     BundleCompat.getParcelableArrayList(
                         it.arguments ?: BundleDefaults.empty,
@@ -910,7 +1030,12 @@ fun MainNaviHostPages(
                 )
             }
 
-            composable(PageRouteNames.ToolsDetailsPage + AppTool.TOOL_TYPE_AppSets_Weather) {
+            composableIf(
+                test = {
+                    hostContextName == MainActivity.TAG
+                },
+                route = PageRouteNames.ToolsDetailsPage + AppTool.TOOL_TYPE_AppSets_Weather
+            ) {
                 val quickStepContents =
                     BundleCompat.getParcelableArrayList(
                         it.arguments ?: BundleDefaults.empty,
@@ -924,7 +1049,12 @@ fun MainNaviHostPages(
                 )
             }
 
-            composable(PageRouteNames.ToolsDetailsPage + AppTool.TOOL_TYPE_AppSets_Intent_Caller) {
+            composableIf(
+                test = {
+                    hostContextName == MainActivity.TAG
+                },
+                route = PageRouteNames.ToolsDetailsPage + AppTool.TOOL_TYPE_AppSets_Intent_Caller
+            ) {
                 val quickStepContents =
                     BundleCompat.getParcelableArrayList(
                         it.arguments ?: BundleDefaults.empty,
@@ -938,7 +1068,12 @@ fun MainNaviHostPages(
                 )
             }
 
-            composable(PageRouteNames.ToolsDetailsPage + AppTool.TOOL_TYPE_AppSets_File_Manager) {
+            composableIf(
+                test = {
+                    hostContextName == MainActivity.TAG
+                },
+                route = PageRouteNames.ToolsDetailsPage + AppTool.TOOL_TYPE_AppSets_File_Manager
+            ) {
                 val quickStepContents =
                     BundleCompat.getParcelableArrayList(
                         it.arguments ?: BundleDefaults.empty,
@@ -959,7 +1094,12 @@ fun MainNaviHostPages(
                 )
             }
 
-            composable(PageRouteNames.ToolsDetailsPage + AppTool.TOOL_TYPE_AppSets_File_Creator) {
+            composableIf(
+                test = {
+                    hostContextName == MainActivity.TAG
+                },
+                route = PageRouteNames.ToolsDetailsPage + AppTool.TOOL_TYPE_AppSets_File_Creator
+            ) {
                 val quickStepContents =
                     BundleCompat.getParcelableArrayList(
                         it.arguments ?: BundleDefaults.empty,
@@ -979,7 +1119,12 @@ fun MainNaviHostPages(
                 )
             }
 
-            composable(PageRouteNames.ToolsDetailsPage + AppTool.TOOL_TYPE_AppSets_Graphic) {
+            composableIf(
+                test = {
+                    hostContextName == MainActivity.TAG
+                },
+                route = PageRouteNames.ToolsDetailsPage + AppTool.TOOL_TYPE_AppSets_Graphic
+            ) {
                 val quickStepContents =
                     BundleCompat.getParcelableArrayList(
                         it.arguments ?: BundleDefaults.empty,
@@ -993,7 +1138,12 @@ fun MainNaviHostPages(
                 )
             }
 
-            composable(PageRouteNames.MediaPage) {
+            composableIf(
+                test = {
+                    hostContextName == MainActivity.TAG
+                },
+                route = PageRouteNames.MediaPage
+            ) {
                 /* MusicMediaPage(
                      onSnapShotStateClick = { any, payload ->
 
@@ -1001,7 +1151,12 @@ fun MainNaviHostPages(
                  )*/
             }
 
-            composable(PageRouteNames.SearchPage) {
+            composableIf(
+                test = {
+                    hostContextName == MainActivity.TAG || hostContextName == IMBubbleActivity.TAG
+                },
+                route = PageRouteNames.SearchPage
+            ) {
                 LoginInterceptorPage(
                     navController = navController,
                     navBackStackEntry = it,
@@ -1010,9 +1165,12 @@ fun MainNaviHostPages(
                     val context = LocalContext.current
                     val searchUseCase = LocalUseCaseOfSearch.current
                     val anyStateProvider = LocalVisibilityComposeStateProvider.current
+                    val coroutineScope = rememberCoroutineScope()
                     SearchPage(
                         onBioClick = { bio ->
-                            onBioClick(context, navController, bio)
+                            coroutineScope.launch {
+                                onBioClick(context, navController, bio)
+                            }
                         },
                         onScreenMediaClick = { url, urls ->
                             handleScreenMediaClick(
@@ -1028,7 +1186,12 @@ fun MainNaviHostPages(
                 }
             }
 
-            composable(PageRouteNames.GroupInfoPage) {
+            composableIf(
+                test = {
+                    hostContextName == MainActivity.TAG || hostContextName == IMBubbleActivity.TAG
+                },
+                route = PageRouteNames.GroupInfoPage
+            ) {
                 LoginInterceptorPage(
                     navController = navController,
                     navBackStackEntry = it,
@@ -1039,11 +1202,14 @@ fun MainNaviHostPages(
                     val conversationUseCase = LocalUseCaseOfConversation.current
                     val systemUseCase = LocalUseCaseOfSystem.current
                     val groupInfoState by groupInfoUseCase.groupInfoPageState
+                    val coroutineScope = rememberCoroutineScope()
                     GroupInfoPage(
                         groupInfoPageState = groupInfoState,
                         onBackClick = navController::navigateUp,
                         onBioClick = { bio ->
-                            onBioClick(context, navController, bio)
+                            coroutineScope.launch {
+                                onBioClick(context, navController, bio)
+                            }
                         },
                         onChatClick = { groupInfo ->
                             conversationUseCase.updateCurrentSessionByBio(groupInfo)
@@ -1068,7 +1234,12 @@ fun MainNaviHostPages(
                 }
             }
 
-            composable(PageRouteNames.CreateGroupPage) {
+            composableIf(
+                test = {
+                    hostContextName == MainActivity.TAG || hostContextName == IMBubbleActivity.TAG
+                },
+                route = PageRouteNames.CreateGroupPage
+            ) {
                 LoginInterceptorPage(
                     navController = navController,
                     navBackStackEntry = it,
@@ -1078,6 +1249,7 @@ fun MainNaviHostPages(
                     val systemUseCase = LocalUseCaseOfSystem.current
                     val anyStateProvider = LocalVisibilityComposeStateProvider.current
                     val createGroupPageState by systemUseCase.createGroupPageState
+                    val coroutineScope = rememberCoroutineScope()
                     CreateGroupPage(
                         createGroupPageState = createGroupPageState,
                         onBackClick = navController::navigateUp,
@@ -1085,20 +1257,27 @@ fun MainNaviHostPages(
                             systemUseCase.createGroup(context)
                         },
                         onSelectGroupIconClick = { requestKey ->
-                            showContentSelectionDialog(
-                                context,
-                                anyStateProvider,
-                                navController,
-                                PageRouteNames.CreateGroupPage,
-                                requestKey,
-                                requestSelectionTypeParams = defaultImageSelectionTypeParam()
-                            )
+                            coroutineScope.launch {
+                                showContentSelectionDialog(
+                                    context,
+                                    anyStateProvider,
+                                    navController,
+                                    PageRouteNames.CreateGroupPage,
+                                    requestKey,
+                                    requestSelectionTypeParams = defaultImageSelectionTypeParam()
+                                )
+                            }
                         }
                     )
                 }
             }
 
-            composable(PageRouteNames.SettingsPage) {
+            composableIf(
+                test = {
+                    hostContextName == MainActivity.TAG
+                },
+                route = PageRouteNames.SettingsPage
+            ) {
                 LoginInterceptorPage(
                     navController = navController,
                     navBackStackEntry = it,
@@ -1116,7 +1295,12 @@ fun MainNaviHostPages(
                 }
             }
 
-            composable(PageRouteNames.AboutPage) {
+            composableIf(
+                test = {
+                    hostContextName == MainActivity.TAG
+                },
+                route = PageRouteNames.AboutPage
+            ) {
                 val context = LocalContext.current
                 val systemUseCase = LocalUseCaseOfSystem.current
                 val coroutineScope = rememberCoroutineScope()
@@ -1147,7 +1331,12 @@ fun MainNaviHostPages(
                 )
             }
 
-            composable(PageRouteNames.PrivacyPage) {
+            composableIf(
+                test = {
+                    hostContextName == MainActivity.TAG || hostContextName == IMBubbleActivity.TAG
+                },
+                route = PageRouteNames.PrivacyPage
+            ) {
                 val context = LocalContext.current
                 val lifecycleOwner = LocalLifecycleOwner.current
                 val lifecycle = lifecycleOwner.lifecycle
@@ -1179,7 +1368,12 @@ fun MainNaviHostPages(
                 )
             }
 
-            composable(PageRouteNames.UserProfilePage) {
+            composableIf(
+                test = {
+                    hostContextName == MainActivity.TAG || hostContextName == IMBubbleActivity.TAG
+                },
+                route = PageRouteNames.UserProfilePage
+            ) {
                 LoginInterceptorPage(
                     navController = navController,
                     navBackStackEntry = it,
@@ -1229,7 +1423,9 @@ fun MainNaviHostPages(
                             }
                         },
                         onBioClick = { bio ->
-                            onBioClick(context, navController, bio)
+                            coroutineScope.launch {
+                                onBioClick(context, navController, bio)
+                            }
                         },
                         onScreenMediaClick = { url, urls ->
                             handleScreenMediaClick(
@@ -1247,14 +1443,16 @@ fun MainNaviHostPages(
                             }
                         },
                         onSelectUserAvatarClick = { requestKey ->
-                            showContentSelectionDialog(
-                                context,
-                                anyStateProvider,
-                                navController,
-                                PageRouteNames.UserProfilePage,
-                                requestKey,
-                                requestSelectionTypeParams = defaultImageSelectionTypeParam()
-                            )
+                            coroutineScope.launch {
+                                showContentSelectionDialog(
+                                    context,
+                                    anyStateProvider,
+                                    navController,
+                                    PageRouteNames.UserProfilePage,
+                                    requestKey,
+                                    requestSelectionTypeParams = defaultImageSelectionTypeParam()
+                                )
+                            }
                         },
                         onModifyProfileConfirmClick = {
                             coroutineScope.launch {
@@ -1326,7 +1524,7 @@ fun DesignNaviHost(
     NaviHostBackHandlerInterceptor(navController)
 }
 
-fun onBioClick(
+suspend fun onBioClick(
     context: Context,
     navController: NavHostController,
     bio: Bio,
@@ -1334,11 +1532,8 @@ fun onBioClick(
     if (context !is DesignComponentActivity) {
         return
     }
-    val baseViewModel = context.requireViewModel()
+    val baseViewModel = context.requireViewModel<BaseIMViewModel>()
     if (baseViewModel == null) {
-        return
-    }
-    if (baseViewModel !is BaseIMViewModel) {
         return
     }
     when (bio) {
@@ -1346,7 +1541,7 @@ fun onBioClick(
         is MessageToInfo,
         is MessageFromInfo,
             -> {
-            navigateToUserInfoPage(context, navController, bio.id)
+            navigateToUserInfoPage(context, navController, bio.bioId)
         }
 
         is GroupInfo -> {
@@ -1425,7 +1620,7 @@ fun navigateToCreateAppPage(
     return true
 }
 
-fun navigateToUserInfoPage(
+suspend fun navigateToUserInfoPage(
     context: Context,
     navController: NavController,
     uid: String?,
@@ -1436,16 +1631,11 @@ fun navigateToUserInfoPage(
     if (context !is DesignComponentActivity) {
         return
     }
-    val baseViewModel = context.requireViewModel()
+    val baseViewModel = context.requireViewModel<BaseIMViewModel>()
     if (baseViewModel == null) {
         return
     }
-    if (baseViewModel !is BaseIMViewModel) {
-        return
-    }
-    baseViewModel.viewModelScope.launch {
-        baseViewModel.userInfoUseCase.updateCurrentUserInfoByUid(uid)
-    }
+    baseViewModel.userInfoUseCase.updateCurrentUserInfoByUid(uid)
     navController.navigate(PageRouteNames.UserProfilePage)
 }
 
@@ -1540,7 +1730,7 @@ fun showPictureViewDialog(
     }
 }
 
-fun showContentSelectionDialog(
+suspend fun showContentSelectionDialog(
     context: Context,
     visibilityComposeStateProvider: VisibilityComposeStateProvider,
     navController: NavController,
@@ -1549,17 +1739,6 @@ fun showContentSelectionDialog(
     requestSelectionTypeParams: List<ContentSelectionRequest.SelectionTypeParam> = defaultAllSelectionTypeParam(),
     defaultSelectionType: String = requestSelectionTypeParams.first().selectionType,
 ) {
-    val platformPermissionsUsageOfFile =
-        PlatformUseCase.providePlatformPermissions(context).firstOrNull {
-            it.name == xcj.app.appsets.R.string.file
-        }
-    if (platformPermissionsUsageOfFile == null) {
-        return
-    }
-    if (!platformPermissionsUsageOfFile.granted) {
-        navController.navigate(PageRouteNames.PrivacyPage)
-        return
-    }
     val bottomSheetContainerState = visibilityComposeStateProvider.bottomSheetState()
     val request = ContentSelectionRequest(
         context,
@@ -1569,7 +1748,7 @@ fun showContentSelectionDialog(
         defaultSelectionType
     )
     bottomSheetContainerState.show {
-        ContentSelectSheetContent(
+        ContentSelectSheetContentPrompt(
             request = request,
             onContentSelected = { contentSelectionResult ->
                 bottomSheetContainerState.hide()
@@ -1577,6 +1756,9 @@ fun showContentSelectionDialog(
                     ModuleConstant.MESSAGE_KEY_ON_CONTENT_SELECT_RESULT,
                     contentSelectionResult
                 )
+            },
+            onDismiss = {
+                bottomSheetContainerState.hide()
             }
         )
     }
@@ -1740,7 +1922,7 @@ suspend fun handleApplicationDownload(
 
 fun handleImMessageContentClick(
     context: Context,
-    imMessage: ImMessage,
+    imMessage: IMMessage,
     conversationUseCase: ConversationUseCase,
     mediaRemoteExoUseCase: MediaRemoteExoUseCase,
     visibilityComposeStateProvider: VisibilityComposeStateProvider,
@@ -1777,7 +1959,7 @@ fun handleImMessageContentClick(
                 ?: return
             val uriList =
                 conversationUseCase.findCurrentSessionByMessageType<ImageMessage>(
-                    ImMessageDesignType.TYPE_IMAGE
+                    IMMessageDesignType.TYPE_IMAGE
                 ).mapNotNull { imageMessage ->
                     imageMessage.requireUri()
                 }

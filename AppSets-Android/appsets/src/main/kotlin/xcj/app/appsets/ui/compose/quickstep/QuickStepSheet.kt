@@ -53,6 +53,7 @@ import xcj.app.starter.util.ContentType
 
 @Composable
 fun QuickStepSheet(
+    modifier: Modifier = Modifier,
     quickStepContentHolder: QuickStepContentHolder
 ) {
     val context = LocalContext.current
@@ -78,7 +79,7 @@ fun QuickStepSheet(
     }
     Box {
         Column(
-            modifier = Modifier
+            modifier = modifier
                 .fillMaxWidth()
                 .padding(horizontal = 12.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)

@@ -1,6 +1,6 @@
 package xcj.app.appsets.im.message
 
-import xcj.app.appsets.im.ImMessageGenerator
+import xcj.app.appsets.im.IMMessageGenerator
 
 abstract class MessageMetadata<D>(
     open val description: String,
@@ -16,6 +16,6 @@ abstract class MessageMetadata<D>(
     var localData: Any? = null
 
     override fun toString(): String {
-        return ImMessageGenerator.gson.toJson(this)
+        return IMMessageGenerator.gson.toJson(this)
     }
 }

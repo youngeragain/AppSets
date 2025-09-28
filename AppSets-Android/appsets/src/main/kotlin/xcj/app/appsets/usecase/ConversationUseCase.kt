@@ -10,6 +10,7 @@ import androidx.core.app.RemoteInput
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import xcj.app.appsets.account.LocalAccountManager
+import xcj.app.appsets.account.UserAccountStateAware
 import xcj.app.appsets.db.room.repository.FlatImMessageRepository
 import xcj.app.appsets.db.room.repository.GroupInfoRepository
 import xcj.app.appsets.db.room.repository.UserInfoRepository
@@ -17,11 +18,11 @@ import xcj.app.appsets.im.Bio
 import xcj.app.appsets.im.BrokerTest
 import xcj.app.appsets.im.ConversationState
 import xcj.app.appsets.im.GenerativeAISessions
-import xcj.app.appsets.im.ImMessageGenerator
-import xcj.app.appsets.im.ImObj
+import xcj.app.appsets.im.IMMessageGenerator
+import xcj.app.appsets.im.IMObj
 import xcj.app.appsets.im.InputSelector
 import xcj.app.appsets.im.Session
-import xcj.app.appsets.im.message.ImMessage
+import xcj.app.appsets.im.message.IMMessage
 import xcj.app.appsets.im.message.SystemMessage
 import xcj.app.appsets.im.message.parseFromImObj
 import xcj.app.appsets.im.message.parseToImObj
@@ -33,17 +34,20 @@ import xcj.app.appsets.server.model.GroupInfo
 import xcj.app.appsets.server.model.UserInfo
 import xcj.app.appsets.server.model.UserRole
 import xcj.app.appsets.ui.model.state.NowSpaceContent
-import xcj.app.compose_share.dynamic.IComposeLifecycleAware
+import xcj.app.compose_share.dynamic.ComposeLifecycleAware
 import xcj.app.starter.android.util.LocalMessenger
 import xcj.app.starter.android.util.PurpleLogger
 import xcj.app.starter.test.LocalPurpleCoroutineScope
 
 sealed interface SessionState {
     object None : SessionState
-    data class Normal(val session: Session) : SessionState
+    data class Normal(
+        val session: Session
+    ) : SessionState
 }
 
-class ConversationUseCase private constructor() : IComposeLifecycleAware {
+class ConversationUseCase
+private constructor() : ComposeLifecycleAware, UserAccountStateAware {
 
     companion object {
         private const val TAG = "ConversationUseCase"
@@ -92,7 +96,7 @@ class ConversationUseCase private constructor() : IComposeLifecycleAware {
     /**
      * @param imObj 用户或群组imObj,没有找到对应的session，则创建一个session
      */
-    private fun findSessionByImObj(imObj: ImObj? = null): Session? {
+    private fun findSessionByImObj(imObj: IMObj? = null): Session? {
         PurpleLogger.current.d(
             TAG,
             "findSessionByImObj, imObj:${imObj}"
@@ -109,7 +113,7 @@ class ConversationUseCase private constructor() : IComposeLifecycleAware {
         }
 
         when (imObj) {
-            is ImObj.ImSingle -> {
+            is IMObj.IMSingle -> {
                 val userRoles = imObj.userRoles
                 if (userRoles != null) {
                     if (userRoles.contains(UserRole.ROLE_ADMIN)) {
@@ -120,7 +124,7 @@ class ConversationUseCase private constructor() : IComposeLifecycleAware {
                 return getOrCreateSession(sessionsMap, USER, imObj)
             }
 
-            is ImObj.ImGroup -> {
+            is IMObj.IMGroup -> {
                 return getOrCreateSession(sessionsMap, GROUP, imObj)
             }
         }
@@ -129,7 +133,7 @@ class ConversationUseCase private constructor() : IComposeLifecycleAware {
     private fun getOrCreateSession(
         container: Map<String, MutableList<Session>>,
         type: String,
-        imObj: ImObj,
+        imObj: IMObj,
     ): Session? {
         if (!container.containsKey(type)) {
             return null
@@ -187,7 +191,7 @@ class ConversationUseCase private constructor() : IComposeLifecycleAware {
             TAG,
             "updateCurrentSessionByBio, bio:${bio}"
         )
-        val session = findSessionByImObj(ImObj.fromBio(bio))
+        val session = findSessionByImObj(IMObj.fromBio(bio))
         if (session == null) {
             PurpleLogger.current.d(
                 TAG,
@@ -213,7 +217,7 @@ class ConversationUseCase private constructor() : IComposeLifecycleAware {
             currentSessionState.value = SessionState.None
         } else {
             nowSpaceContentUseCase?.removeContentIf { topSpaceObjectState ->
-                topSpaceObjectState is NowSpaceContent.NewImMessage && topSpaceObjectState.session.id == session.id
+                topSpaceObjectState is NowSpaceContent.IMMessage && topSpaceObjectState.session.id == session.id
             }
             currentSessionState.value = SessionState.Normal(session)
         }
@@ -226,7 +230,7 @@ class ConversationUseCase private constructor() : IComposeLifecycleAware {
     /**
      * @param isLocal msg是从本机发送
      */
-    suspend fun onMessage(context: Context, imMessage: ImMessage, isLocal: Boolean) {
+    suspend fun onMessage(context: Context, imMessage: IMMessage, isLocal: Boolean) {
         val currentSessionState = currentSessionState.value
         PurpleLogger.current.d(
             TAG,
@@ -250,7 +254,7 @@ class ConversationUseCase private constructor() : IComposeLifecycleAware {
         }
     }
 
-    private fun findSessionByImMessage(context: Context, imMessage: ImMessage): Session? {
+    private fun findSessionByImMessage(context: Context, imMessage: IMMessage): Session? {
         PurpleLogger.current.d(
             TAG,
             "findSessionByImMessage, imMessage:${imMessage}"
@@ -264,7 +268,7 @@ class ConversationUseCase private constructor() : IComposeLifecycleAware {
             return null
         }
         when (fromImObj) {
-            is ImObj.ImSingle -> {
+            is IMObj.IMSingle -> {
                 if (fromImObj.id == LocalAccountManager.userInfo.uid) {
                     //自己的其他设备发送的单聊消息,需要解析toImObj信息对应到相应的Session
                     val toImObj = imMessage.parseToImObj()
@@ -299,7 +303,7 @@ class ConversationUseCase private constructor() : IComposeLifecycleAware {
                 }
             }
 
-            is ImObj.ImGroup -> {
+            is IMObj.IMGroup -> {
                 //群组消息直接添加
                 val session = findSessionByImObj(fromImObj)//获取消息From信息对应的Session
                 if (session == null) {
@@ -318,7 +322,7 @@ class ConversationUseCase private constructor() : IComposeLifecycleAware {
     private fun addMessageToSession(
         context: Context,
         session: Session,
-        imMessage: ImMessage,
+        imMessage: IMMessage,
     ) {
         session.conversationState.addMessage(imMessage)
     }
@@ -359,7 +363,7 @@ class ConversationUseCase private constructor() : IComposeLifecycleAware {
     private suspend fun showNotificationForImMessages(
         context: Context,
         session: Session,
-        imMessage: ImMessage,
+        imMessage: IMMessage,
     ) {
         PurpleLogger.current.d(TAG, "showNotificationForImMessages")
         if (imMessage.fromInfo.uid == LocalAccountManager.userInfo.uid) {
@@ -377,13 +381,18 @@ class ConversationUseCase private constructor() : IComposeLifecycleAware {
     private fun addMessageToNowSpaceIfNeeded(
         context: Context,
         session: Session,
-        imMessage: ImMessage,
+        imMessage: IMMessage,
     ) {
+        val nowSpaceContentUseCase = nowSpaceContentUseCase
+        if (nowSpaceContentUseCase == null) {
+            return
+        }
         val sessionState = currentSessionState.value
         if (sessionState !is SessionState.Normal) {
 
         }
-        nowSpaceContentUseCase?.onNewImMessage(session, imMessage)
+        val nowSpaceIMMessage = NowSpaceContent.IMMessage(session, imMessage)
+        nowSpaceContentUseCase.addNowSpaceContent(nowSpaceIMMessage)
     }
 
     private fun getNotificationPusher(): NotificationPusher {
@@ -393,7 +402,7 @@ class ConversationUseCase private constructor() : IComposeLifecycleAware {
         return mNotificationPusher!!
     }
 
-    private suspend fun saveMessageToLocalDB(imMessage: ImMessage) {
+    private suspend fun saveMessageToLocalDB(imMessage: IMMessage) {
         if (imMessage.fromInfo.roles?.contains(UserRole.ROLE_ADMIN) == true) {
             return
         }
@@ -424,7 +433,7 @@ class ConversationUseCase private constructor() : IComposeLifecycleAware {
 
             val imMessage =
                 runCatching {
-                    ImMessageGenerator.generateBySend(
+                    IMMessageGenerator.generateBySend(
                         context,
                         sessionOverride,
                         inputSelector,
@@ -455,7 +464,7 @@ class ConversationUseCase private constructor() : IComposeLifecycleAware {
         currentTab.value = tab
     }
 
-    fun onUserLogout() {
+    override fun onUserLogout(by: String?) {
         LocalPurpleCoroutineScope.current.launch {
             currentSessionState.value = SessionState.None
             sessionsMap.values.forEach(MutableCollection<*>::clear)
@@ -506,7 +515,7 @@ class ConversationUseCase private constructor() : IComposeLifecycleAware {
             val unRelatedGroupList =
                 groupsRoomRepository.getUnRelatedGroupList()
             val predicate: (GroupInfo) -> Boolean =
-                { it.id.startsWith(Application.BIO_ID_PREFIX) }
+                { it.bioId.startsWith(Application.BIO_ID_PREFIX) }
 
             unRelatedGroupList.filterNot(predicate).let { filteredGroups ->
                 PurpleLogger.current.d(
@@ -524,8 +533,8 @@ class ConversationUseCase private constructor() : IComposeLifecycleAware {
                 )
                 val applications = filteredGroups.map { group ->
                     Application.basic(
-                        group.id.substringAfter(Application.BIO_ID_PREFIX),
-                        group.name,
+                        group.bioId.substringAfter(Application.BIO_ID_PREFIX),
+                        group.bioName,
                         group.iconUrl
                     )
                 }
@@ -556,7 +565,7 @@ class ConversationUseCase private constructor() : IComposeLifecycleAware {
             return
         }
         bioList.mapTo(sessionList) { bio ->
-            val imObj = ImObj.fromBio(bio)
+            val imObj = IMObj.fromBio(bio)
             val session = Session(imObj, ConversationState())
             fillPagedImMessageToSession(bio, session, page = 1, pageSize = 100)
             session
@@ -639,24 +648,24 @@ class ConversationUseCase private constructor() : IComposeLifecycleAware {
     @SuppressLint("MissingPermission")
     private fun handleSystemNotificationForReplyImMessage(context: Context, intent: Intent) {
         PurpleLogger.current.d(TAG, "handleSystemNotificationForReplyImMessage")
-        val imMessageId = intent.getStringExtra(ImMessage.KEY_IM_MESSAGE_ID)
-        val sessionId = intent.getStringExtra(ImMessage.KEY_SESSION_ID)
-        val imMessageNotificationId =
-            intent.getIntExtra(ImMessage.KEY_IM_MESSAGE_NOTIFICATION_ID, -1)
+        val IMMessageId = intent.getStringExtra(IMMessage.KEY_IM_MESSAGE_ID)
+        val sessionId = intent.getStringExtra(IMMessage.KEY_SESSION_ID)
+        val IMMessageNotificationId =
+            intent.getIntExtra(IMMessage.KEY_IM_MESSAGE_NOTIFICATION_ID, -1)
         PurpleLogger.current.d(
             TAG,
             "handleSystemNotificationForReplyImMessage, " +
-                    "imMessageId:$imMessageId, " +
+                    "imMessageId:$IMMessageId, " +
                     "sessionId:$sessionId, " +
-                    "imMessageNotificationId:$imMessageNotificationId"
+                    "imMessageNotificationId:$IMMessageNotificationId"
         )
-        if (imMessageId.isNullOrEmpty()) {
+        if (IMMessageId.isNullOrEmpty()) {
             return
         }
         if (sessionId.isNullOrEmpty()) {
             return
         }
-        if (imMessageNotificationId == -1) {
+        if (IMMessageNotificationId == -1) {
             return
         }
         val session: Session? = getSessionBySessionId(sessionId)
@@ -682,7 +691,7 @@ class ConversationUseCase private constructor() : IComposeLifecycleAware {
             )
             return
         }
-        getNotificationPusher().cancelNotification(context, imMessageNotificationId)
+        getNotificationPusher().cancelNotification(context, IMMessageNotificationId)
         sendMessage(context, InputSelector.TEXT, userInputContent)
     }
 
@@ -690,13 +699,13 @@ class ConversationUseCase private constructor() : IComposeLifecycleAware {
         context: Context,
         notificationPusher: NotificationPusher,
         session: Session,
-        imMessage: ImMessage,
+        imMessage: IMMessage,
     ) {
         PurpleLogger.current.d(TAG, "pushNotificationIfNeeded")
         notificationPusher.pushConversionNotification(context, session, imMessage)
     }
 
-    fun <T : ImMessage> findCurrentSessionByMessageType(type: String): List<T> {
+    fun <T : IMMessage> findCurrentSessionByMessageType(type: String): List<T> {
         val currentSessionState = currentSessionState.value
         if (currentSessionState is SessionState.Normal) {
             val session = currentSessionState.session
@@ -725,7 +734,7 @@ class ConversationUseCase private constructor() : IComposeLifecycleAware {
 
     fun getRecentSessions(limit: Int = 4): List<Session> {
         val sessions = getAllSessions().sortedByDescending {
-            it.latestImMessage?.timestamp?.time ?: 0
+            it.latestIMMessage?.timestamp?.time ?: 0
         }
         return if (sessions.size <= limit) {
             sessions

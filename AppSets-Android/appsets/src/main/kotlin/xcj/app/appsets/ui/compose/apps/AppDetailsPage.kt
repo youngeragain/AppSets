@@ -144,7 +144,7 @@ fun AppDetailsPage(
                         backActionBarSize = it
                     }
                     .hazeEffect(hazeState, HazeMaterials.thin()),
-                centerText = application.name ?: "",
+                centerText = application.bioName ?: "",
                 onBackClick = onBackClick
             )
         }
@@ -276,7 +276,10 @@ fun ApplicationContentComponent(
                 )
                 .padding(12.dp),
         ) {
-            Text(text = stringResource(xcj.app.appsets.R.string.type), fontWeight = FontWeight.Bold)
+            Text(
+                text = stringResource(xcj.app.appsets.R.string.category),
+                fontWeight = FontWeight.Bold
+            )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = application.category
@@ -407,7 +410,7 @@ fun DownloadBottomSheetContent(
                     model = application.bioUrl
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                Text(text = application.name ?: "")
+                Text(text = application.bioName ?: "")
             }
         }
         Spacer(modifier = Modifier.height(24.dp))

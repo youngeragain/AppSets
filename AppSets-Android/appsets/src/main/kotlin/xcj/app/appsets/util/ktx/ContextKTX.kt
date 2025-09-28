@@ -219,8 +219,6 @@ fun Context.asComponentActivityOrNull(): ComponentActivity? {
             context = context.baseContext
         }
     } while (true)
-
-    return null
 }
 
 suspend fun Context.queryUriFileName(uri: Uri): String? = withContext(Dispatchers.IO) {

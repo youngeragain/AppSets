@@ -80,7 +80,7 @@ class ScreenRepository(
                     screenInfo.userInfo?.name = textMine
                 } else {
                     screenInfo.userInfo?.name =
-                        screenInfo.userInfo.name ?: screenInfo.userInfo.uid
+                        screenInfo.userInfo.bioName ?: screenInfo.userInfo.uid
                 }
                 PictureUrlMapper.mapPictureUrl(screenInfo, simpleFileIO)
             }

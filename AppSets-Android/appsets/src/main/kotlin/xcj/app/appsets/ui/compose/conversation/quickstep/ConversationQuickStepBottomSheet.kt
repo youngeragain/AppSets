@@ -65,7 +65,7 @@ fun ConversationQuickStepBottomSheet(
     val recentSessions by remember {
         derivedStateOf {
             val sessions = allSessions.sortedByDescending {
-                it.latestImMessage?.timestamp?.time ?: 0
+                it.latestIMMessage?.timestamp?.time ?: 0
             }
             if (sessions.size <= RECENT_SESSIONS_SHOW_COUNT_LIMIT) {
                 sessions
@@ -192,7 +192,7 @@ fun SingleRecentSessionComponent(
             model = session.imObj.bio.bioUrl
         )
         Text(
-            text = session.imObj.bio.name ?: "",
+            text = session.imObj.bio.bioName ?: "",
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             textAlign = TextAlign.Center,
@@ -233,7 +233,7 @@ fun SingleAllSessionComponent(
             model = session.imObj.bio.bioUrl
         )
         Text(
-            text = session.imObj.bio.name ?: "",
+            text = session.imObj.bio.bioName ?: "",
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             textAlign = TextAlign.Center,

@@ -1,6 +1,6 @@
 package xcj.app.appsets.im
 
-import xcj.app.appsets.im.message.ImMessage
+import xcj.app.appsets.im.message.IMMessage
 
 interface MessageBroker<C : MessageBrokerConfig> {
 
@@ -10,6 +10,6 @@ interface MessageBroker<C : MessageBrokerConfig> {
 
     suspend fun close()
 
-    suspend fun sendMessage(imObj: ImObj, imMessage: ImMessage)
+    suspend fun sendMessage(imObj: IMObj, imMessage: IMMessage)
 
 }

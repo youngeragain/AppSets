@@ -17,14 +17,14 @@ import xcj.app.appsets.ui.model.ScreenInfoForCreate
 import xcj.app.appsets.ui.model.page_state.PostScreenPageState
 import xcj.app.appsets.util.ktx.toastSuspend
 import xcj.app.appsets.util.model.UriProvider
-import xcj.app.compose_share.dynamic.IComposeLifecycleAware
+import xcj.app.compose_share.dynamic.ComposeLifecycleAware
 import xcj.app.starter.server.request
 import xcj.app.starter.util.ContentType
 
 class ScreenPostUseCase(
     private val screenRepository: ScreenRepository,
     private val generationAIRepository: GenerationAIRepository,
-) : IComposeLifecycleAware {
+) : ComposeLifecycleAware {
 
     companion object {
         private const val TAG = "ScreenPostUseCase"
@@ -160,11 +160,11 @@ class ScreenPostUseCase(
         val uriQuickStepContents = quickStepContents.filterIsInstance<UriQuickStepContent>()
         uriQuickStepContents.forEach { quickStepContent ->
             if (ContentType.isImage(quickStepContent.uriContentType)) {
-                val uriProvider = UriProvider.fromUri(quickStepContent.uri)!!
+                val uriProvider = UriProvider.fromUri(quickStepContent.uri)
                 val uriProviderList = listOf(uriProvider)
                 updateSelectPictures(uriProviderList)
             } else if (ContentType.isVideo(quickStepContent.uriContentType)) {
-                val uriProvider = UriProvider.fromUri(quickStepContent.uri)!!
+                val uriProvider = UriProvider.fromUri(quickStepContent.uri)
                 val uriProviderList = listOf(uriProvider)
                 updateSelectVideo(uriProviderList)
             }

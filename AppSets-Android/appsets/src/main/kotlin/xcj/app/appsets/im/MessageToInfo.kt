@@ -1,6 +1,6 @@
 package xcj.app.appsets.im
 
-import xcj.app.appsets.im.message.ImMessage
+import xcj.app.appsets.im.message.IMMessage
 import xcj.app.appsets.server.model.Application
 import xcj.app.appsets.server.model.GroupInfo
 import xcj.app.appsets.server.model.UserInfo
@@ -8,18 +8,22 @@ import xcj.app.starter.android.util.PurpleLogger
 
 data class MessageToInfo(
     val toType: String,
-    override val id: String,
-    override val name: String?,
     val iconUrl: String?,
-    val roles: String?
+    val roles: String?,
+    val id: String,
+    val name: String?
 ) : Bio {
+    override val bioId: String
+        get() = id
+    override val bioName: String?
+        get() = name ?: id
     override var bioUrl: Any? = null
 
     companion object {
 
         private const val TAG = "MessageToInfo"
 
-        fun fromImObj(imObj: ImObj): MessageToInfo {
+        fun fromImObj(imObj: IMObj): MessageToInfo {
             val iconUrl = when (imObj.bio) {
                 is UserInfo -> imObj.bio.avatarUrl
                 is GroupInfo -> imObj.bio.iconUrl
@@ -27,23 +31,23 @@ data class MessageToInfo(
                 else -> imObj.bio.bioUrl
             }
             val messageToInfo = when (imObj) {
-                is ImObj.ImSingle -> {
+                is IMObj.IMSingle -> {
                     MessageToInfo(
-                        toType = ImMessage.TYPE_O2O,
-                        id = imObj.bio.id,
-                        name = imObj.bio.name,
+                        toType = IMMessage.TYPE_O2O,
                         iconUrl = iconUrl?.toString(),
-                        roles = imObj.userRoles
+                        roles = imObj.userRoles,
+                        id = imObj.bio.bioId,
+                        name = imObj.bio.bioName,
                     )
                 }
 
-                is ImObj.ImGroup -> {
+                is IMObj.IMGroup -> {
                     MessageToInfo(
-                        toType = ImMessage.TYPE_O2M,
-                        id = imObj.bio.id,
-                        name = imObj.bio.name,
+                        toType = IMMessage.TYPE_O2M,
                         iconUrl = iconUrl?.toString(),
-                        roles = null
+                        roles = null,
+                        id = imObj.bio.bioId,
+                        name = imObj.bio.bioName,
                     )
                 }
             }

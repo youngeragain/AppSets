@@ -153,7 +153,7 @@ fun UserAvatarNameIntroductionComponent(
             )
             Spacer(modifier = Modifier.width(10.dp))
             Column {
-                Text(text = userInfo.name ?: "")
+                Text(text = userInfo.bioName ?: "")
                 Spacer(modifier = Modifier.height(2.dp))
                 Text(
                     text = userInfo.introduction

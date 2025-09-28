@@ -26,8 +26,14 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
-import xcj.app.appsets.ui.compose.content_selection.DragValue
 import kotlin.math.roundToInt
+
+sealed interface DragValue {
+    object Start : DragValue
+
+    object Center : DragValue
+    object End : DragValue
+}
 
 @Composable
 fun SwipeContainer(

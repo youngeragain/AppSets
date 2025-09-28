@@ -163,7 +163,8 @@
     <string name="buy">Purchasing</string>
     <string name="get">Get</string>
     <string name="get_x">Get | %1$s %2$s</string>
-    <string name="type">Category</string>
+    <string name="type">Type</string>
+    <string name="category">Category</string>
     <string name="uncategorized">Uncategorized</string>
     <string name="creator_information">Creator</string>
     <string name="x_platform_information">%1$s platform information</string>
@@ -472,4 +473,11 @@
     <string name="message_reliablity">Message Reliablity</string>
     <string name="no">No</string>
     <string name="message_reliablity_tips">Improve message quality when the application is in the background</string>
+    <string name="app_platform_permissions_useage_tips">System platform permission usage request</string>
+    <string name="app_platform_permissions_useage_tips_des">Some permissions will be used in the future, and setting them now can improve convenience</string>
+    <string name="system_content_selection">System Implementation</string>
+    <string name="system_content_selection_des">Best practices to maximize privacy requirements, no file permission required</string>
+    <string name="app_custom_content_selection">App Implementation</string>
+    <string name="app_custom_content_selection_des">Maximizing custom requirements, file permission required</string>
+    <string name="choose_implementation">Choose Implementation</string>
 </resources>

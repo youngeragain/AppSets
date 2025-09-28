@@ -210,14 +210,14 @@ class RemoteExoPlayer(
         }
         val oldState = audioPlayerState.value
 
-        if (oldState.id == mediaJson.id) {
+        if (oldState.id == mediaJson.bioId) {
             //same audio
             mediaController.play()
             return
         }
         //new audio to play
         val mediaMetadata = MediaMetadata.Builder()
-            .setTitle(mediaJson.name)
+            .setTitle(mediaJson.bioName)
             .setExtras(Bundle().apply {
                 putString(
                     android.media.MediaMetadata.METADATA_KEY_MEDIA_ID,
@@ -226,7 +226,7 @@ class RemoteExoPlayer(
             })
             .build()
         audioPlayerState.value = oldState.copy(
-            id = mediaJson.id,
+            id = mediaJson.bioId,
             mediaMetadata = mediaMetadata
         )
         val commandBundle = Bundle().apply {
@@ -240,7 +240,7 @@ class RemoteExoPlayer(
 
     fun playOrPauseAudio(context: Context, musicURLJson: CommonURIJson) {
         val oldState = audioPlayerState.value
-        if (oldState.id == musicURLJson.id) {
+        if (oldState.id == musicURLJson.bioId) {
             if (isPlaying()) {
                 pause()
             } else {

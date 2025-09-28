@@ -6,14 +6,17 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import xcj.app.compose_share.ui.viewmodel.VisibilityComposeStateViewModel.Companion.bottomSheetState
 
-private const val TAG = "VarBottomSheetContainer"
+private const val TAG = "BottomSheetContainer"
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun BottomSheetContainer() {
+fun BottomSheetContainer(
+    modifier: Modifier = Modifier
+) {
     val context = LocalContext.current
     val anyStateProvider = LocalVisibilityComposeStateProvider.current
     val state =

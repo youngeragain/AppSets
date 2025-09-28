@@ -3,7 +3,7 @@ package xcj.app.appsets.im
 import kotlinx.coroutines.delay
 import xcj.app.appsets.R
 import xcj.app.appsets.account.LocalAccountManager
-import xcj.app.appsets.im.message.ImMessage
+import xcj.app.appsets.im.message.IMMessage
 import xcj.app.appsets.im.message.TextMessage
 import java.util.Date
 import java.util.UUID
@@ -31,9 +31,9 @@ object GenerativeAISessions {
         }
     }
 
-    fun createResponseTemplateMessage(session: Session, userPrompt: TextMessage): ImMessage {
+    fun createResponseTemplateMessage(session: Session, userPrompt: TextMessage): IMMessage {
         val toUserInfo = LocalAccountManager.userInfo
-        val toImObj = ImObj.fromBio(toUserInfo)
+        val toIMObj = IMObj.fromBio(toUserInfo)
         val messageFromInfo = MessageFromInfo(
             session.imObj.id,
             session.imObj.name,
@@ -41,7 +41,7 @@ object GenerativeAISessions {
         ).apply {
             bioUrl = session.imObj.bio.bioUrl
         }
-        val messageToInfo = MessageToInfo.fromImObj(toImObj).apply {
+        val messageToInfo = MessageToInfo.fromImObj(toIMObj).apply {
             bioUrl = session.imObj.bio.bioUrl
         }
         return TextMessage(
@@ -50,18 +50,18 @@ object GenerativeAISessions {
             fromInfo = messageFromInfo,
             toInfo = messageToInfo,
             messageGroupTag = null,
-            metadata = ImMessage.Companion.textImMessageMetadata("\uD83D\uDC31, Sorry, temporarily unavailable!"),
+            metadata = IMMessage.Companion.textImMessageMetadata("\uD83D\uDC31, Sorry, temporarily unavailable!"),
         )
     }
 
 
-    fun createStartMessage(bio: Bio): ImMessage {
+    fun createStartMessage(bio: Bio): IMMessage {
         val toUserInfo = LocalAccountManager.userInfo
-        val toImObj = ImObj.fromBio(toUserInfo)
-        val messageToInfo = MessageToInfo.fromImObj(toImObj).apply {
+        val toIMObj = IMObj.fromBio(toUserInfo)
+        val messageToInfo = MessageToInfo.fromImObj(toIMObj).apply {
             bioUrl = bio.bioUrl
         }
-        val messageFromInfo = MessageFromInfo(bio.id, bio.name, null).apply {
+        val messageFromInfo = MessageFromInfo(bio.bioId, bio.bioName, null).apply {
             bioUrl = bio.bioUrl
         }
         return TextMessage(
@@ -70,7 +70,7 @@ object GenerativeAISessions {
             fromInfo = messageFromInfo,
             toInfo = messageToInfo,
             messageGroupTag = null,
-            metadata = ImMessage.Companion.textImMessageMetadata("Ask me anything!")
+            metadata = IMMessage.Companion.textImMessageMetadata("Ask me anything!")
         )
     }
 
@@ -93,8 +93,8 @@ object GenerativeAISessions {
     val geminiSession: Session
         get() {
             val bio = object : AIBio {
-                override val id: String = UUID.randomUUID().toString()
-                override val name: String = "Gemini"
+                override val bioId: String = UUID.randomUUID().toString()
+                override val bioName: String = "Gemini"
                 override val bioUrl: Any? = R.drawable.ai_model_logo_google_gemini
                 override val description: String? = "Gemini is Google's AI Model"
                 override val models: List<AIModel> = emptyList()
@@ -102,15 +102,15 @@ object GenerativeAISessions {
             }
 
             return Session(
-                imObj = ImObj.fromBio(bio),
+                imObj = IMObj.fromBio(bio),
                 conversationState = ConversationState()
             )
         }
     val claudeSession: Session
         get() {
             val bio = object : AIBio {
-                override val id: String = UUID.randomUUID().toString()
-                override val name: String = "Claude"
+                override val bioId: String = UUID.randomUUID().toString()
+                override val bioName: String = "Claude"
                 override val bioUrl: Any? = R.drawable.ai_model_logo_claude
                 override val description: String? = "Claude is Anthropic's AI Model"
                 override val models: List<AIModel> = emptyList()
@@ -118,15 +118,15 @@ object GenerativeAISessions {
             }
 
             return Session(
-                imObj = ImObj.fromBio(bio),
+                imObj = IMObj.fromBio(bio),
                 conversationState = ConversationState()
             )
         }
     val openAiChatGPTSession: Session
         get() {
             val bio = object : AIBio {
-                override val id: String = UUID.randomUUID().toString()
-                override val name: String = "OpenAI ChatGPT"
+                override val bioId: String = UUID.randomUUID().toString()
+                override val bioName: String = "OpenAI ChatGPT"
                 override val bioUrl: Any? = R.drawable.ai_model_logo_openai
                 override val description: String? = "OpenAI ChatGPT is OpenAI's AI Model"
                 override val models: List<AIModel> = emptyList()
@@ -134,15 +134,15 @@ object GenerativeAISessions {
             }
 
             return Session(
-                imObj = ImObj.fromBio(bio),
+                imObj = IMObj.fromBio(bio),
                 conversationState = ConversationState()
             )
         }
     val microsoftCopilotSession: Session
         get() {
             val bio = object : AIBio {
-                override val id: String = UUID.randomUUID().toString()
-                override val name: String = "Microsoft Copilot"
+                override val bioId: String = UUID.randomUUID().toString()
+                override val bioName: String = "Microsoft Copilot"
                 override val bioUrl: Any? =
                     R.drawable.ai_model_logo_microsoft_copilot
                 override val description: String? = "Microsoft Copilot is Microsoft's AI Model"
@@ -151,15 +151,15 @@ object GenerativeAISessions {
             }
 
             return Session(
-                imObj = ImObj.fromBio(bio),
+                imObj = IMObj.fromBio(bio),
                 conversationState = ConversationState()
             )
         }
     val deepSeekSession: Session
         get() {
             val bio = object : AIBio {
-                override val id: String = UUID.randomUUID().toString()
-                override val name: String = "DeepSeek"
+                override val bioId: String = UUID.randomUUID().toString()
+                override val bioName: String = "DeepSeek"
                 override val bioUrl: Any? = R.drawable.ai_model_logo_deepseek
                 override val description: String? = "DeepSeek is 深度求索's AI Model"
                 override val models: List<AIModel> = emptyList()
@@ -167,15 +167,15 @@ object GenerativeAISessions {
             }
 
             return Session(
-                imObj = ImObj.fromBio(bio),
+                imObj = IMObj.fromBio(bio),
                 conversationState = ConversationState()
             )
         }
     val xunfeiSparkSession: Session
         get() {
             val bio = object : AIBio {
-                override val id: String = UUID.randomUUID().toString()
-                override val name: String = "星火"
+                override val bioId: String = UUID.randomUUID().toString()
+                override val bioName: String = "星火"
                 override val bioUrl: Any? = R.drawable.ai_model_logo_xunfei_spark
                 override val description: String? = "星火 is 讯飞's AI Model"
                 override val models: List<AIModel> = emptyList()
@@ -183,7 +183,7 @@ object GenerativeAISessions {
             }
 
             return Session(
-                imObj = ImObj.fromBio(bio),
+                imObj = IMObj.fromBio(bio),
                 conversationState = ConversationState()
             )
         }
@@ -191,8 +191,8 @@ object GenerativeAISessions {
     val wenxinyiyanSession: Session
         get() {
             val bio = object : AIBio {
-                override val id: String = UUID.randomUUID().toString()
-                override val name: String = "文心一言"
+                override val bioId: String = UUID.randomUUID().toString()
+                override val bioName: String = "文心一言"
                 override val bioUrl: Any? = R.drawable.ai_model_logo_baidu_wenxin
                 override val description: String? = "文心一言 is Baidu's AI Model"
                 override val models: List<AIModel> = emptyList()
@@ -200,7 +200,7 @@ object GenerativeAISessions {
             }
 
             return Session(
-                imObj = ImObj.fromBio(bio),
+                imObj = IMObj.fromBio(bio),
                 conversationState = ConversationState()
             )
         }
@@ -208,8 +208,8 @@ object GenerativeAISessions {
     val doubaoSession: Session
         get() {
             val bio = object : AIBio {
-                override val id: String = UUID.randomUUID().toString()
-                override val name: String = "豆包"
+                override val bioId: String = UUID.randomUUID().toString()
+                override val bioName: String = "豆包"
                 override val bioUrl: Any? = R.drawable.ai_model_logo_doubao
                 override val description: String? = "豆包 is ByteDance's AI Model"
                 override val models: List<AIModel> = emptyList()
@@ -217,7 +217,7 @@ object GenerativeAISessions {
             }
 
             return Session(
-                imObj = ImObj.fromBio(bio),
+                imObj = IMObj.fromBio(bio),
                 conversationState = ConversationState()
             )
         }
@@ -225,8 +225,8 @@ object GenerativeAISessions {
     val qwenSession: Session
         get() {
             val bio = object : AIBio {
-                override val id: String = UUID.randomUUID().toString()
-                override val name: String = "通义千问"
+                override val bioId: String = UUID.randomUUID().toString()
+                override val bioName: String = "通义千问"
                 override val bioUrl: Any? = R.drawable.ai_model_logo_alibaba_qwen
                 override val description: String? = "通义千问 is Alibaba's AI Model"
                 override val models: List<AIModel> = emptyList()
@@ -234,15 +234,15 @@ object GenerativeAISessions {
             }
 
             return Session(
-                imObj = ImObj.fromBio(bio),
+                imObj = IMObj.fromBio(bio),
                 conversationState = ConversationState()
             )
         }
     val yuanbaoSession: Session
         get() {
             val bio = object : AIBio {
-                override val id: String = UUID.randomUUID().toString()
-                override val name: String = "元宝"
+                override val bioId: String = UUID.randomUUID().toString()
+                override val bioName: String = "元宝"
                 override val bioUrl: Any? = R.drawable.ai_model_logo_tencent_yuanbao
                 override val description: String? = "元宝 is Tencent's AI Model"
                 override val models: List<AIModel> = emptyList()
@@ -250,7 +250,7 @@ object GenerativeAISessions {
             }
 
             return Session(
-                imObj = ImObj.fromBio(bio),
+                imObj = IMObj.fromBio(bio),
                 conversationState = ConversationState()
             )
         }
@@ -270,8 +270,8 @@ object GenerativeAISessions {
     val geminiNanoSession: Session
         get() {
             val bio = object : AIBio {
-                override val id: String = UUID.randomUUID().toString()
-                override val name: String = "Gemini Nano"
+                override val bioId: String = UUID.randomUUID().toString()
+                override val bioName: String = "Gemini Nano"
                 override val bioUrl: Any? = R.drawable.ai_model_logo_google_gemini
                 override val description: String? = "Gemini Nano is On-device AI Model"
                 override val models: List<AIModel> = emptyList()
@@ -279,7 +279,7 @@ object GenerativeAISessions {
             }
 
             return Session(
-                imObj = ImObj.fromBio(bio),
+                imObj = IMObj.fromBio(bio),
                 conversationState = ConversationState()
             )
         }
@@ -287,8 +287,8 @@ object GenerativeAISessions {
     val gemmaSession: Session
         get() {
             val bio = object : AIBio {
-                override val id: String = UUID.randomUUID().toString()
-                override val name: String = "Gemma"
+                override val bioId: String = UUID.randomUUID().toString()
+                override val bioName: String = "Gemma"
                 override val bioUrl: Any? = R.drawable.ai_model_logo_google_gemini
                 override val description: String? = "Gemma is On-device AI Model"
                 override val models: List<AIModel> =
@@ -297,7 +297,7 @@ object GenerativeAISessions {
             }
 
             return Session(
-                imObj = ImObj.fromBio(bio),
+                imObj = IMObj.fromBio(bio),
                 conversationState = ConversationState()
             )
         }
@@ -305,8 +305,8 @@ object GenerativeAISessions {
     val mistralSession: Session
         get() {
             val bio = object : AIBio {
-                override val id: String = UUID.randomUUID().toString()
-                override val name: String = "Mistral"
+                override val bioId: String = UUID.randomUUID().toString()
+                override val bioName: String = "Mistral"
                 override val bioUrl: Any? = R.drawable.ai_model_logo_google_gemini
                 override val description: String? = "Mistral is On-device AI Model"
                 override val models: List<AIModel> = listOf(AIModel("Mistral-Lite 7B"))
@@ -314,15 +314,15 @@ object GenerativeAISessions {
             }
 
             return Session(
-                imObj = ImObj.fromBio(bio),
+                imObj = IMObj.fromBio(bio),
                 conversationState = ConversationState()
             )
         }
     val phi_2Session: Session
         get() {
             val bio = object : AIBio {
-                override val id: String = UUID.randomUUID().toString()
-                override val name: String = "Phi-2"
+                override val bioId: String = UUID.randomUUID().toString()
+                override val bioName: String = "Phi-2"
                 override val bioUrl: Any? = R.drawable.ai_model_logo_google_gemini
                 override val description: String? = "Phi-2 is On-device AI Model"
                 override val models: List<AIModel> = emptyList()
@@ -330,7 +330,7 @@ object GenerativeAISessions {
             }
 
             return Session(
-                imObj = ImObj.fromBio(bio),
+                imObj = IMObj.fromBio(bio),
                 conversationState = ConversationState()
             )
         }
@@ -338,8 +338,8 @@ object GenerativeAISessions {
     val tinyLlamaSession: Session
         get() {
             val bio = object : AIBio {
-                override val id: String = UUID.randomUUID().toString()
-                override val name: String = "TinyLlama"
+                override val bioId: String = UUID.randomUUID().toString()
+                override val bioName: String = "TinyLlama"
                 override val bioUrl: Any? = R.drawable.ai_model_logo_google_gemini
                 override val description: String? = "TinyLlama is On-device AI Model"
                 override val models: List<AIModel> = emptyList()
@@ -347,7 +347,7 @@ object GenerativeAISessions {
             }
 
             return Session(
-                imObj = ImObj.fromBio(bio),
+                imObj = IMObj.fromBio(bio),
                 conversationState = ConversationState()
             )
         }
@@ -355,8 +355,8 @@ object GenerativeAISessions {
     val zephyrSession: Session
         get() {
             val bio = object : AIBio {
-                override val id: String = UUID.randomUUID().toString()
-                override val name: String = "Zephyr"
+                override val bioId: String = UUID.randomUUID().toString()
+                override val bioName: String = "Zephyr"
                 override val bioUrl: Any? = R.drawable.ai_model_logo_google_gemini
                 override val description: String? = "Zephyr is On-device AI Model"
                 override val models: List<AIModel> = emptyList()
@@ -364,7 +364,7 @@ object GenerativeAISessions {
             }
 
             return Session(
-                imObj = ImObj.fromBio(bio),
+                imObj = IMObj.fromBio(bio),
                 conversationState = ConversationState()
             )
         }

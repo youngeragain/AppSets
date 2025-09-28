@@ -8,7 +8,7 @@ class LocationMessageMetadata(
     compressed: Boolean,
     encode: String,
     contentType: String,
-    data: ContentSelectionResult.LocationInfo,
-) : MessageMetadata<ContentSelectionResult.LocationInfo>(
+    data: ContentSelectionResult.LocationContentSelectionResult.LocationInfo,
+) : MessageMetadata<ContentSelectionResult.LocationContentSelectionResult.LocationInfo>(
     description, size, compressed, encode, data, contentType
 )

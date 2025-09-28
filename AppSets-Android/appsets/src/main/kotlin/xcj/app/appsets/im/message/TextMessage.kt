@@ -1,6 +1,6 @@
 package xcj.app.appsets.im.message
 
-import xcj.app.appsets.im.ImMessageDesignType
+import xcj.app.appsets.im.IMMessageDesignType
 import xcj.app.appsets.im.MessageFromInfo
 import xcj.app.appsets.im.MessageToInfo
 import java.util.Date
@@ -13,5 +13,5 @@ data class TextMessage(
     override val toInfo: MessageToInfo,
     override val messageGroupTag: String?,
     override val metadata: StringMessageMetadata,
-    override val messageType: String = ImMessageDesignType.TYPE_TEXT
-) : ImMessage()
+    override val messageType: String = IMMessageDesignType.TYPE_TEXT
+) : IMMessage()

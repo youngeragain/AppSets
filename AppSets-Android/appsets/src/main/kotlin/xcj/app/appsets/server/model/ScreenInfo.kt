@@ -20,11 +20,11 @@ data class ScreenInfo(
     val userInfo: UserInfo?
 ) : Bio {
 
-    override val id: String
+    override val bioId: String
         get() = "SCREEN_${screenId ?: UUID.randomUUID()}"
 
-    override val name: String?
-        get() = "${userInfo?.name}-${screenContent ?: id}"
+    override val bioName: String?
+        get() = "${userInfo?.bioName}-${bioId}"
 
     override val bioUrl: Any?
         get() = userInfo?.bioUrl

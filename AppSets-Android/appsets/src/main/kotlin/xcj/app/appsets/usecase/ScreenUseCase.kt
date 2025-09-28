@@ -12,7 +12,7 @@ import xcj.app.appsets.ui.compose.PageRouteNames
 import xcj.app.appsets.ui.model.ScreenInfoForCard
 import xcj.app.appsets.util.ktx.toast
 import xcj.app.appsets.util.ktx.toastSuspend
-import xcj.app.compose_share.dynamic.IComposeLifecycleAware
+import xcj.app.compose_share.dynamic.ComposeLifecycleAware
 import xcj.app.starter.android.util.PurpleLogger
 import xcj.app.starter.foundation.http.DesignResponse
 import xcj.app.starter.server.request
@@ -20,7 +20,7 @@ import xcj.app.starter.server.requestRaw
 
 class ScreenUseCase(
     private val screenRepository: ScreenRepository,
-) : IComposeLifecycleAware {
+) : ComposeLifecycleAware {
 
     companion object {
         private const val TAG = "ScreenUseCase"

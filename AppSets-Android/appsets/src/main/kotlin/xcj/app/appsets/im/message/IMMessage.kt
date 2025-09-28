@@ -4,9 +4,9 @@ import android.content.Context
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.core.content.ContextCompat
-import xcj.app.appsets.im.ImMessageDesignType
-import xcj.app.appsets.im.ImMessageGenerator
-import xcj.app.appsets.im.ImObj
+import xcj.app.appsets.im.IMMessageDesignType
+import xcj.app.appsets.im.IMMessageGenerator
+import xcj.app.appsets.im.IMObj
 import xcj.app.appsets.im.MessageFromInfo
 import xcj.app.appsets.im.MessageToInfo
 import xcj.app.appsets.im.model.FriendRequestJson
@@ -30,7 +30,7 @@ class MessageSending {
 }
 
 
-abstract class ImMessage {
+abstract class IMMessage {
 
     companion object {
 
@@ -57,7 +57,7 @@ abstract class ImMessage {
         const val HEADER_MESSAGE_TO_ROLES = "a14"
 
         @JvmStatic
-        fun readableContent(context: Context, imMessage: ImMessage?): String? {
+        fun readableContent(context: Context, imMessage: IMMessage?): String? {
             if (imMessage == null) {
                 return null
             }
@@ -173,7 +173,7 @@ abstract class ImMessage {
     abstract val metadata: MessageMetadata<*>
 
     /**
-     * @see ImMessageDesignType
+     * @see IMMessageDesignType
      */
     abstract val messageType: String
 
@@ -191,23 +191,23 @@ abstract class ImMessage {
 
     val readableDate: String
         get() {
-            return ImMessageGenerator.sdf.format(timestamp)
+            return IMMessageGenerator.sdf.format(timestamp)
         }
 
     override fun toString(): String {
-        return ImMessageGenerator.gson.toJson(this)
+        return IMMessageGenerator.gson.toJson(this)
     }
 }
 
 /**
  * 解析消息To信息
  */
-fun ImMessage.parseToImObj(): ImObj? {
-    if (toInfo.toType == ImMessage.TYPE_O2M) {
-        return ImObj.ImGroup(toInfo)
+fun IMMessage.parseToImObj(): IMObj? {
+    if (toInfo.toType == IMMessage.TYPE_O2M) {
+        return IMObj.IMGroup(toInfo)
     }
-    if (toInfo.toType == ImMessage.TYPE_O2O) {
-        return ImObj.ImSingle(toInfo, toInfo.roles)
+    if (toInfo.toType == IMMessage.TYPE_O2O) {
+        return IMObj.IMSingle(toInfo, toInfo.roles)
     }
     return null
 }
@@ -216,12 +216,12 @@ fun ImMessage.parseToImObj(): ImObj? {
 /**
  * 解析消息from信息
  */
-fun ImMessage.parseFromImObj(): ImObj? {
-    if (toInfo.toType == ImMessage.TYPE_O2M) {
-        return ImObj.ImGroup(toInfo)
+fun IMMessage.parseFromImObj(): IMObj? {
+    if (toInfo.toType == IMMessage.TYPE_O2M) {
+        return IMObj.IMGroup(toInfo)
     }
-    if (toInfo.toType == ImMessage.TYPE_O2O) {
-        return ImObj.ImSingle(fromInfo, fromInfo.roles)
+    if (toInfo.toType == IMMessage.TYPE_O2O) {
+        return IMObj.IMSingle(fromInfo, fromInfo.roles)
     }
     return null
 }

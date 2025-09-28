@@ -3,7 +3,6 @@ package xcj.app.appsets.account
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import com.google.gson.Gson
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import xcj.app.appsets.db.room.AppDatabase
 import xcj.app.appsets.im.BrokerTest
@@ -31,10 +30,8 @@ object LocalAccountManager {
     const val LOGOUT_BY_MANUALLY = "by_manually"
     const val LOGOUT_BY_TOKEN_EXPIRE = "by_token_expire"
 
-    //当用户登录后
     const val MESSAGE_KEY_ON_LOGIN = "on_login"
 
-    //当用户退出登录后
     const val MESSAGE_KEY_ON_LOGOUT = "on_logout"
 
     val accountStatus: MutableState<AccountStatus> =
@@ -131,29 +128,28 @@ object LocalAccountManager {
         accountStatus.value = AccountStatus.Logged(userInfo, token, isFromLocal)
 
         if (isFromLocal) {
-            LocalMessenger.post(MESSAGE_KEY_ON_LOGIN, LOGIN_BY_RESTORE, 200)
+            LocalMessenger.post(MESSAGE_KEY_ON_LOGIN, LOGIN_BY_RESTORE)
         } else {
             saveToken(token)
             saveUserInfo(userInfo, "onUserLogged")
-            LocalMessenger.post(MESSAGE_KEY_ON_LOGIN, LOGIN_BY_NEW, 200)
+            LocalMessenger.post(MESSAGE_KEY_ON_LOGIN, LOGIN_BY_NEW)
         }
     }
 
-    fun onUserLogout(by: String = LOGOUT_BY_MANUALLY) {
+    suspend fun onUserLogout(by: String = LOGOUT_BY_MANUALLY) {
         PurpleLogger.current.d(TAG, "onUserLogout, by:$by")
+        MySharedPreferences.clear()
+        val database =
+            ModuleHelper.get<AppDatabase>(Identifiable.fromString(ModuleConstant.MODULE_NAME + "/database"))
+        database?.clearAllTables()
+        BrokerTest.close()
+
         accountStatus.value = AccountStatus.NotLogged()
-        LocalPurpleCoroutineScope.current.launch(Dispatchers.IO) {
-            MySharedPreferences.clear()
-            val database =
-                ModuleHelper.get<AppDatabase>(Identifiable.fromString(ModuleConstant.MODULE_NAME + "/database"))
-            database?.clearAllTables()
-            BrokerTest.close()
-            LocalMessenger.post(MESSAGE_KEY_ON_LOGOUT, by, 200)
-        }
+        LocalMessenger.post(MESSAGE_KEY_ON_LOGOUT, by)
     }
 
     fun isLoggedUser(uid: String?): Boolean {
-        return uid == (accountStatus.value as? AccountStatus.Logged)?.userInfo?.uid
+        return uid == userInfo.uid
     }
 
     fun produceTokenError() {
@@ -161,7 +157,9 @@ object LocalAccountManager {
             return
         }
         accountStatus.value = AccountStatus.Expired()
-        onUserLogout(LOGOUT_BY_TOKEN_EXPIRE)
+        LocalPurpleCoroutineScope.current.launch {
+            onUserLogout(LOGOUT_BY_TOKEN_EXPIRE)
+        }
     }
 
     fun updateUserInfoIfNeeded(userInfo: UserInfo) {

@@ -1,11 +1,11 @@
 package xcj.app.appsets.util
 
-import xcj.app.appsets.im.ImMessageGenerator
+import xcj.app.appsets.im.IMMessageGenerator
 import xcj.app.appsets.im.MessageFromInfo
 import xcj.app.appsets.im.MessageToInfo
 import xcj.app.appsets.im.message.AdMessage
 import xcj.app.appsets.im.message.HTMLMessage
-import xcj.app.appsets.im.message.ImMessage
+import xcj.app.appsets.im.message.IMMessage
 import xcj.app.appsets.im.message.LocationMessage
 import xcj.app.appsets.im.message.SystemMessage
 import xcj.app.appsets.im.message.TextMessage
@@ -95,7 +95,7 @@ object PictureUrlMapper {
                 mapForCommonURLJson(any, simpleFileIO)
             }
 
-            is ImMessage -> {
+            is IMMessage -> {
                 mapForImMessage(any, simpleFileIO)
             }
         }
@@ -111,7 +111,7 @@ object PictureUrlMapper {
     }
 
     private suspend fun mapForImMessage(
-        imMessage: ImMessage,
+        imMessage: IMMessage,
         fileIO: SimpleFileIO
     ) {
         when (imMessage) {
@@ -138,7 +138,7 @@ object PictureUrlMapper {
                 val urlEndpoint = imMessage.metadata.data.toString()
                 val signedUrl = fileIO.generatePreSign(
                     urlEndpoint,
-                    ImMessageGenerator.imContentObjectUploadOptions
+                    IMMessageGenerator.imContentObjectUploadOptions
                 )
                 imMessage.metadata.url = signedUrl
                 if (imMessage is VideoMessage) {
@@ -146,7 +146,7 @@ object PictureUrlMapper {
                     val urlEndpoint = (videoMessageMetadata).companionData
                     val signedUrl = fileIO.generatePreSign(
                         urlEndpoint,
-                        ImMessageGenerator.imContentObjectUploadOptions
+                        IMMessageGenerator.imContentObjectUploadOptions
                     )
                     videoMessageMetadata.companionUrl = signedUrl
                 }

@@ -33,6 +33,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
@@ -42,6 +43,7 @@ import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.hazeEffect
 import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
 import dev.chrisbanes.haze.materials.HazeMaterials
+import dev.chrisbanes.haze.rememberHazeState
 import xcj.app.appsets.ui.compose.LocalUseCaseOfConversation
 import xcj.app.appsets.ui.compose.LocalUseCaseOfScreen
 import xcj.app.appsets.ui.compose.PageRouteNames
@@ -49,34 +51,16 @@ import xcj.app.appsets.ui.compose.custom_component.ImageButtonComponent
 import xcj.app.appsets.ui.compose.search.NavigationSearchBar
 import xcj.app.appsets.ui.model.TabAction
 import xcj.app.appsets.ui.model.TabItem
+import xcj.app.appsets.usecase.NavigationUseCase
 import xcj.app.compose_share.components.DesignHDivider
 
 private const val TAG = "NavigationBar"
-
-@Preview
-@UnstableApi
-@Composable
-fun NavigationBarPreview() {
-    /*   val navigationUseCase = remember {
-           NavigationUseCase().apply {
-               initTabItems()
-           }
-       }
-       NavigationBar(
-           visible = true,
-           enable = true,
-           tabItems = navigationUseCase.tabItems.value,
-           onTabClick = { tab, tabAction -> },
-           onSearchBarClick = {},
-           onBioClick = {},
-       )*/
-}
 
 @Composable
 fun NavigationBar(
     modifier: Modifier = Modifier,
     hazeState: HazeState,
-    hostVisible: Boolean,
+    visible: Boolean,
     enable: Boolean,
     inSearchModel: Boolean,
     tabItems: List<TabItem>,
@@ -88,14 +72,14 @@ fun NavigationBar(
 ) {
     AnimatedVisibility(
         modifier = modifier,
-        visible = hostVisible,
+        visible = visible,
         enter = fadeIn() + slideInVertically(initialOffsetY = { it + it / 20 }),
         exit = fadeOut() + slideOutVertically(targetOffsetY = { it + it / 20 }),
     ) {
         StandardNavigationBar(
             hazeState = hazeState,
             enable = enable,
-            hostVisible = hostVisible,
+            hostVisible = visible,
             inSearchModel = inSearchModel,
             tabItems = tabItems,
             onBackClick = onBackClick,
@@ -329,4 +313,28 @@ fun TabItemMainComponent(naviTabItem: TabItem, onTabClick: (TabItem, TabAction?)
             )
         }
     }
+}
+
+@Preview
+@UnstableApi
+@Composable
+fun NavigationBarPreview() {
+    val hazeState = rememberHazeState()
+    val navigationUseCase = remember {
+        NavigationUseCase().apply {
+            initTabItems()
+        }
+    }
+    NavigationBar(
+        hazeState = hazeState,
+        visible = true,
+        enable = true,
+        inSearchModel = false,
+        tabItems = navigationUseCase.tabItems.value,
+        onTabClick = { tab, tabAction -> },
+        onBackClick = {},
+        onInputContent = {},
+        onSearchBarClick = {},
+        onBioClick = {}
+    )
 }

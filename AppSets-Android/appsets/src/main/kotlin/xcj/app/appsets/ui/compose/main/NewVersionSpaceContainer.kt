@@ -38,7 +38,7 @@ import xcj.app.appsets.usecase.AppUpdateState
 import xcj.app.starter.android.ktx.startWithHttpSchema
 
 @Composable
-fun NewVersionSpace(
+fun NewVersionSpaceContainer(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current

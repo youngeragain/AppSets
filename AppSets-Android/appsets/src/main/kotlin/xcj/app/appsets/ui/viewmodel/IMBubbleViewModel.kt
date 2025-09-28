@@ -3,7 +3,7 @@ package xcj.app.appsets.ui.viewmodel
 import android.content.Context
 import android.content.Intent
 import androidx.activity.ComponentActivity
-import xcj.app.appsets.im.message.ImMessage
+import xcj.app.appsets.im.message.IMMessage
 import xcj.app.appsets.ui.base.BaseIMViewModel
 import xcj.app.appsets.ui.compose.content_selection.ContentSelectionResult
 import xcj.app.appsets.usecase.ConversationUseCase
@@ -31,12 +31,12 @@ class IMBubbleViewModel : BaseIMViewModel() {
 
     override fun handleIntent(intent: Intent) {
         PurpleLogger.current.d(TAG, "handleIntent")
-        val sessionId = intent.getStringExtra(ImMessage.KEY_SESSION_ID)
+        val sessionId = intent.getStringExtra(IMMessage.KEY_SESSION_ID)
         mPendingSessionId = sessionId
         PurpleLogger.current.d(TAG, "handleIntent, sessionId:$sessionId")
         if (!sessionId.isNullOrEmpty()) {
-            val notificationId = intent.getIntExtra(ImMessage.KEY_IM_MESSAGE_NOTIFICATION_ID, -1)
-            val imMessageId = intent.getStringExtra(ImMessage.KEY_IM_MESSAGE_ID)
+            val notificationId = intent.getIntExtra(IMMessage.KEY_IM_MESSAGE_NOTIFICATION_ID, -1)
+            val IMMessageId = intent.getStringExtra(IMMessage.KEY_IM_MESSAGE_ID)
             conversationUseCase.updateCurrentSessionBySessionId(sessionId)
         }
     }

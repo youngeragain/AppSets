@@ -589,7 +589,7 @@ fun SearchedUserComponent(modifier: Modifier, userInfo: UserInfo) {
                 .clip(MaterialTheme.shapes.large), model = userInfo.bioUrl
         )
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text(text = userInfo.name ?: "")
+            Text(text = userInfo.bioName ?: "")
             Text(text = userInfo.introduction ?: "", fontSize = 10.sp)
         }
     }
@@ -612,7 +612,7 @@ fun SearchedGroupComponent(modifier: Modifier, groupInfo: GroupInfo) {
                 .clip(MaterialTheme.shapes.large), model = groupInfo.bioUrl
         )
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text(text = groupInfo.name ?: "")
+            Text(text = groupInfo.bioName ?: "")
             Text(text = groupInfo.introduction ?: "", fontSize = 10.sp)
         }
     }

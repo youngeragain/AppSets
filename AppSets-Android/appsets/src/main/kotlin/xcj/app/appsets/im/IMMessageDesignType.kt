@@ -3,7 +3,7 @@ package xcj.app.appsets.im
 import xcj.app.appsets.im.message.AdMessage
 import xcj.app.appsets.im.message.FileMessage
 import xcj.app.appsets.im.message.HTMLMessage
-import xcj.app.appsets.im.message.ImMessage
+import xcj.app.appsets.im.message.IMMessage
 import xcj.app.appsets.im.message.ImageMessage
 import xcj.app.appsets.im.message.LocationMessage
 import xcj.app.appsets.im.message.MusicMessage
@@ -12,7 +12,7 @@ import xcj.app.appsets.im.message.TextMessage
 import xcj.app.appsets.im.message.VideoMessage
 import xcj.app.appsets.im.message.VoiceMessage
 
-object ImMessageDesignType {
+object IMMessageDesignType {
 
     const val TYPE_TEXT = "im.text"
     const val TYPE_IMAGE = "im.image"
@@ -27,7 +27,7 @@ object ImMessageDesignType {
     const val TYPE_CUSTOM = "im.custom.*"
 
     @JvmStatic
-    fun getType(imMessage: ImMessage): String {
+    fun getType(imMessage: IMMessage): String {
         return when (imMessage) {
             is TextMessage -> TYPE_TEXT
             is ImageMessage -> TYPE_IMAGE

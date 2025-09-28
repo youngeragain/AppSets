@@ -1,5 +1,5 @@
 package xcj.app.appsets.im
 
-interface ImSessionHolder {
+interface IMSessionHolder {
     var imSession: Session?
 }

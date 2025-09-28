@@ -2,6 +2,11 @@ package xcj.app.appsets.settings
 
 import android.content.Context
 import androidx.core.content.edit
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import xcj.app.appsets.db.room.AppDatabase
 import xcj.app.appsets.notification.NotificationChannels
 import xcj.app.appsets.purple_module.ModuleConstant
@@ -40,6 +45,7 @@ class AppSetsModuleSettings : ModuleSettings {
 
         const val KEY_is_im_message_reliability = "is_im_message_reliability"
 
+        const val KEY_is_app_first_launch = "is_app_first_launch"
 
         fun get(): AppSetsModuleSettings {
             val moduleSettings =
@@ -89,38 +95,42 @@ class AppSetsModuleSettings : ModuleSettings {
     var isBackgroundIMEnable: Boolean = true
 
     override fun init() {
-        prepareSettingsConfig()
         prepareNotificationsChanelConfig()
         prepareCoilConfig()
+        LocalPurpleCoroutineScope.current.launch {
+            prepareSettingsConfig()
+        }
     }
 
-    private fun prepareSettingsConfig() {
-        isBackgroundIMEnable =
-            appSettingSharedPreferences.getBoolean(
-                KEY_is_im_message_reliability,
-                false
-            )
-        imMessageDeliveryType =
-            appSettingSharedPreferences.getString(
-                KEY_im_message_delivery_type,
-                IM_MESSAGE_DELIVERY_TYPE_RT
-            ) ?: IM_MESSAGE_DELIVERY_TYPE_RT
-        imBubbleAlignment =
-            appSettingSharedPreferences.getString(
-                KEY_im_bubble_alignment,
-                IM_BUBBLE_ALIGNMENT_START_END
-            ) ?: IM_BUBBLE_ALIGNMENT_START_END
+    private suspend fun prepareSettingsConfig() {
+        withContext(Dispatchers.IO) {
+            isBackgroundIMEnable =
+                appSettingSharedPreferences.getBoolean(
+                    KEY_is_im_message_reliability,
+                    false
+                )
+            imMessageDeliveryType =
+                appSettingSharedPreferences.getString(
+                    KEY_im_message_delivery_type,
+                    IM_MESSAGE_DELIVERY_TYPE_RT
+                ) ?: IM_MESSAGE_DELIVERY_TYPE_RT
+            imBubbleAlignment =
+                appSettingSharedPreferences.getString(
+                    KEY_im_bubble_alignment,
+                    IM_BUBBLE_ALIGNMENT_START_END
+                ) ?: IM_BUBBLE_ALIGNMENT_START_END
 
-        isImMessageShowDate =
-            appSettingSharedPreferences.getBoolean(
-                KEY_is_im_message_show_date,
-                true
-            )
-        isImMessageDateShowSeconds =
-            appSettingSharedPreferences.getBoolean(
-                KEY_is_im_message_date_show_seconds,
-                false
-            )
+            isImMessageShowDate =
+                appSettingSharedPreferences.getBoolean(
+                    KEY_is_im_message_show_date,
+                    true
+                )
+            isImMessageDateShowSeconds =
+                appSettingSharedPreferences.getBoolean(
+                    KEY_is_im_message_date_show_seconds,
+                    false
+                )
+        }
     }
 
     private fun prepareNotificationsChanelConfig() {
@@ -133,38 +143,61 @@ class AppSetsModuleSettings : ModuleSettings {
         configCoil(context)
     }
 
-    fun onIMBubbleAlignmentChanged(alignment: String) {
+    suspend fun onIMBubbleAlignmentChanged(alignment: String) {
         imBubbleAlignment = alignment
         appSettingSharedPreferences.edit {
             putString(KEY_im_bubble_alignment, alignment)
         }
     }
 
-    fun onIMMessageDeliveryTypeChanged(deliveryType: String) {
-        imMessageDeliveryType = deliveryType
-        appSettingSharedPreferences.edit {
-            putString(KEY_im_message_delivery_type, deliveryType)
+    suspend fun onIMMessageDeliveryTypeChanged(deliveryType: String) {
+        withContext(Dispatchers.IO) {
+            imMessageDeliveryType = deliveryType
+            appSettingSharedPreferences.edit {
+                putString(KEY_im_message_delivery_type, deliveryType)
+            }
         }
     }
 
-    fun onIsIMMessageShowDateChanged(show: Boolean) {
-        isImMessageShowDate = show
-        appSettingSharedPreferences.edit {
-            putBoolean(KEY_is_im_message_show_date, show)
+    suspend fun onIsIMMessageShowDateChanged(show: Boolean) {
+        withContext(Dispatchers.IO) {
+            isImMessageShowDate = show
+            appSettingSharedPreferences.edit {
+                putBoolean(KEY_is_im_message_show_date, show)
+            }
         }
     }
 
-    fun onIsIMMessageDateShowSecondsChanged(show: Boolean) {
-        isImMessageDateShowSeconds = show
-        appSettingSharedPreferences.edit {
-            putBoolean(KEY_is_im_message_date_show_seconds, show)
+    suspend fun onIsIMMessageDateShowSecondsChanged(show: Boolean) {
+        withContext(Dispatchers.IO) {
+            isImMessageDateShowSeconds = show
+            appSettingSharedPreferences.edit {
+                putBoolean(KEY_is_im_message_date_show_seconds, show)
+            }
         }
     }
 
-    fun onIsIMMessageReliabilityChanged(show: Boolean) {
-        isBackgroundIMEnable = show
-        appSettingSharedPreferences.edit {
-            putBoolean(KEY_is_im_message_reliability, show)
+    suspend fun onIsIMMessageReliabilityChanged(show: Boolean) {
+        withContext(Dispatchers.IO) {
+            isBackgroundIMEnable = show
+            appSettingSharedPreferences.edit {
+                putBoolean(KEY_is_im_message_reliability, show)
+            }
+        }
+    }
+
+    fun isAppFirstLaunch(): Flow<Boolean> {
+        return flow {
+            val isFirstLaunch = appSettingSharedPreferences.getBoolean(
+                KEY_is_app_first_launch,
+                true
+            )
+            if (isFirstLaunch) {
+                appSettingSharedPreferences.edit {
+                    putBoolean(KEY_is_app_first_launch, false)
+                }
+            }
+            emit(isFirstLaunch)
         }
     }
 }

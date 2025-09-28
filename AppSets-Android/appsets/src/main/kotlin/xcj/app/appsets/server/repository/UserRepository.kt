@@ -48,7 +48,7 @@ class UserRepository(private val userApi: UserApi) {
             LocalFileIO.current.uploadWithUri(context, avatarImageUri, avatarUrlEndpoint)
         }
         val updateParams = hashMapOf<String, String?>().apply {
-            if (userInfoForModify.userName.isNotEmpty() && userInfoForModify.userName != oldUserInfo.name) {
+            if (userInfoForModify.userName.isNotEmpty() && userInfoForModify.userName != oldUserInfo.bioName) {
                 put("name", userInfoForModify.userName)
             }
             if (userInfoForModify.userAge.isNotEmpty() && userInfoForModify.userAge.toInt() != oldUserInfo.age) {

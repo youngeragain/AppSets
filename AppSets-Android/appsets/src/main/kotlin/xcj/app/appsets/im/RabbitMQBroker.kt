@@ -15,7 +15,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import xcj.app.appsets.account.LocalAccountManager
-import xcj.app.appsets.im.message.ImMessage
+import xcj.app.appsets.im.message.IMMessage
 import xcj.app.appsets.im.message.MessageSendInfo
 import xcj.app.appsets.settings.AppSetsModuleSettings
 import xcj.app.appsets.usecase.ConversationUseCase
@@ -85,8 +85,10 @@ class RabbitMQBroker : MessageBroker<RabbitMQBrokerConfig>,
     }
 
     override suspend fun close() {
-        deleteUserQueue()
-        closeConnection()
+        withContext(Dispatchers.IO) {
+            deleteUserQueue()
+            closeConnection()
+        }
     }
 
     private fun deleteUserQueue() {
@@ -330,9 +332,8 @@ class RabbitMQBroker : MessageBroker<RabbitMQBrokerConfig>,
         if (message == null) {
             return
         }
-        val scope = LocalPurpleCoroutineScope.current
-        scope.launch {
-            ImMessageGenerator.generateByReceived(message)?.let { imMessage ->
+        LocalPurpleCoroutineScope.current.launch {
+            IMMessageGenerator.generateByReceived(message)?.let { imMessage ->
                 ConversationUseCase.getInstance()
                     .onMessage(LocalApplication.current, imMessage, false)
                 LocalMessenger.post(MessageBrokerConstants.MESSAGE_KEY_ON_IM_MESSAGE, imMessage)
@@ -341,7 +342,7 @@ class RabbitMQBroker : MessageBroker<RabbitMQBrokerConfig>,
     }
 
     @OptIn(ExperimentalEncodingApi::class)
-    override suspend fun sendMessage(imObj: ImObj, imMessage: ImMessage) {
+    override suspend fun sendMessage(imObj: IMObj, imMessage: IMMessage) {
         if (!checkConnection()) {
             PurpleLogger.current.d(
                 TAG,
@@ -374,42 +375,42 @@ class RabbitMQBroker : MessageBroker<RabbitMQBrokerConfig>,
                 deliveryMode(brokerDeliveryMode)
 
                 val headers = mutableMapOf<String, Any?>()
-                headers[ImMessage.HEADER_MESSAGE_MESSAGE_DELIVERY_TYPE] =
+                headers[IMMessage.HEADER_MESSAGE_MESSAGE_DELIVERY_TYPE] =
                     AppSetsModuleSettings.get().imMessageDeliveryType
-                headers[ImMessage.HEADER_MESSAGE_ID] = imMessage.id
-                headers[ImMessage.HEADER_MESSAGE_UID] = imMessage.fromInfo.uid
-                headers[ImMessage.HEADER_MESSAGE_NAME] = imMessage.fromInfo.name
-                headers[ImMessage.HEADER_MESSAGE_NAME_BASE64] =
-                    imMessage.fromInfo.name?.let {
+                headers[IMMessage.HEADER_MESSAGE_ID] = imMessage.id
+                headers[IMMessage.HEADER_MESSAGE_UID] = imMessage.fromInfo.uid
+                headers[IMMessage.HEADER_MESSAGE_NAME] = imMessage.fromInfo.bioName
+                headers[IMMessage.HEADER_MESSAGE_NAME_BASE64] =
+                    imMessage.fromInfo.bioName?.let {
                         Base64.encode(it.toByteArray())
                     }
-                headers[ImMessage.HEADER_MESSAGE_AVATAR_URL] =
+                headers[IMMessage.HEADER_MESSAGE_AVATAR_URL] =
                     imMessage.fromInfo.avatarUrl
-                headers[ImMessage.HEADER_MESSAGE_ROLES] = imMessage.fromInfo.roles
+                headers[IMMessage.HEADER_MESSAGE_ROLES] = imMessage.fromInfo.roles
 
                 if (!imMessage.messageGroupTag.isNullOrEmpty()) {
-                    headers[ImMessage.HEADER_MESSAGE_MESSAGE_GROUP_TAG] =
+                    headers[IMMessage.HEADER_MESSAGE_MESSAGE_GROUP_TAG] =
                         imMessage.messageGroupTag
                 }
-                if (imMessage.toInfo.id.isNotEmpty()) {
-                    headers[ImMessage.HEADER_MESSAGE_TO_ID] = imMessage.toInfo.id
+                if (imMessage.toInfo.bioId.isNotEmpty()) {
+                    headers[IMMessage.HEADER_MESSAGE_TO_ID] = imMessage.toInfo.bioId
                 }
-                if (!imMessage.toInfo.name.isNullOrEmpty()) {
-                    headers[ImMessage.HEADER_MESSAGE_TO_NAME] = imMessage.toInfo.name
-                    headers[ImMessage.HEADER_MESSAGE_TO_NAME_BASE64] =
-                        imMessage.toInfo.name?.let {
+                if (!imMessage.toInfo.bioName.isNullOrEmpty()) {
+                    headers[IMMessage.HEADER_MESSAGE_TO_NAME] = imMessage.toInfo.bioName
+                    headers[IMMessage.HEADER_MESSAGE_TO_NAME_BASE64] =
+                        imMessage.toInfo.bioName?.let {
                             Base64.encode(it.toByteArray())
                         }
                 }
                 if (imMessage.toInfo.toType.isNotEmpty()) {
-                    headers[ImMessage.HEADER_MESSAGE_TO_TYPE] = imMessage.toInfo.toType
+                    headers[IMMessage.HEADER_MESSAGE_TO_TYPE] = imMessage.toInfo.toType
                 }
                 if (!imMessage.toInfo.iconUrl.isNullOrEmpty()) {
-                    headers[ImMessage.HEADER_MESSAGE_TO_ICON_URL] =
+                    headers[IMMessage.HEADER_MESSAGE_TO_ICON_URL] =
                         imMessage.toInfo.iconUrl
                 }
                 if (!imMessage.toInfo.roles.isNullOrEmpty()) {
-                    headers[ImMessage.HEADER_MESSAGE_TO_ROLES] = imMessage.toInfo.roles
+                    headers[IMMessage.HEADER_MESSAGE_TO_ROLES] = imMessage.toInfo.roles
                 }
 
                 headers(headers)
@@ -417,7 +418,7 @@ class RabbitMQBroker : MessageBroker<RabbitMQBrokerConfig>,
             val exchange = property.groupSubRootExchange
             val routingKey = "msg.to.group_${imObj.id}"
             val contentBytes =
-                ImMessageGenerator.makeMessageMetadataAsJsonString(imMessage).toByteArray()
+                IMMessageGenerator.makeMessageMetadataAsJsonString(imMessage).toByteArray()
             PurpleLogger.current.d(
                 TAG,
                 "sendMessage, exchange:$exchange, routingKey:$routingKey"

@@ -18,13 +18,13 @@ import xcj.app.appsets.server.model.CombineSearchRes
 import xcj.app.appsets.server.repository.SearchRepository
 import xcj.app.appsets.ui.model.page_state.SearchPageState
 import xcj.app.appsets.ui.model.state.SearchResult
-import xcj.app.compose_share.dynamic.IComposeLifecycleAware
+import xcj.app.compose_share.dynamic.ComposeLifecycleAware
 import xcj.app.starter.server.request
 import kotlin.time.Duration.Companion.milliseconds
 
 class SearchUseCase(
     private val searchRepository: SearchRepository,
-) : IComposeLifecycleAware {
+) : ComposeLifecycleAware {
 
     companion object {
         private const val TAG = "SearchUseCase"

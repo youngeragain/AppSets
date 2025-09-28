@@ -47,7 +47,7 @@
     <string name="search">搜索</string>
     <string name="no_content">没有任何内容</string>
     <string name="requires_login_to_appsets">登录AppSets</string>
-    <string name="restricted_content_continue_viewing">受限内容,继续查看</string>
+    <string name="restricted_content_continue_viewing">受限内容，继续查看</string>
     <string name="restricted_content_continue_viewing_user_to_view_notify">将通知对方你的查看请求，对方同意后即可查看，平台不负责任何责任！是否发送查看请求？</string>
     <string name="an_empty_status">一条空的状态:)</string>
     <string name="public_">公开</string>
@@ -164,6 +164,7 @@
     <string name="get">获取</string>
     <string name="get_x">获取 | %1$s %2$s</string>
     <string name="type">类型</string>
+    <string name="category">类型</string>
     <string name="uncategorized">未分类</string>
     <string name="creator_information">创建者</string>
     <string name="x_platform_information">%1$s个平台信息</string>
@@ -189,7 +190,7 @@
     <string name="i">我</string>
     <string name="information_updated">信息已更新</string>
     <string name="updated_failed">更新失败</string>
-    <string name="example_smart_car_huawei">示例: 智能汽车,华为</string>
+    <string name="example_smart_car_huawei">示例: 智能汽车，华为</string>
     <string name="example_jiang_kaixin">示例: 蒋开心</string>
     <string name="need_to_update_app">需要更新AppSets</string>
     <string name="ai">AI</string>
@@ -251,14 +252,14 @@
     <string name="scanned">已扫描</string>
     <string name="confirmed">已确认</string>
     <string name="tips">提示</string>
-    <string name="appsets_aes_login_tips_des">AppSets为你提供类似应用商店，社交，聊天等功能，开发版无法保证你账号的数据和隐私安全\n* 注册时使用AES,DES算法对账号密码处理的情况，需要以同等方式处理后再填入输入框。</string>
+    <string name="appsets_aes_login_tips_des">AppSets为你提供类似应用商店，社交，聊天等功能，开发版无法保证你账号的数据和隐私安全\n* 注册时使用AES，DES算法对账号密码处理的情况，需要以同等方式处理后再填入输入框。</string>
     <string name="registering">Registering</string>
     <string name="login_has_failed">注册失败</string>
     <string name="register_an_account">注册账号</string>
     <string name="sign_up_tips">使用AES，DES算法对账号密码处理后填写到输入框内，增加账号密码安全性。</string>
     <string name="personal_profile">个人简介</string>
     <string name="label">标签</string>
-    <string name="personal_label_placeholder">个人标签,比如爱好</string>
+    <string name="personal_label_placeholder">个人标签，比如爱好</string>
     <string name="sex">性别</string>
     <string name="sex_placeholder">男/女/中性/其他</string>
     <string name="age">年龄</string>
@@ -472,5 +473,12 @@
     <string name="message_reliablity">消息可靠性</string>
     <string name="no">不</string>
     <string name="message_reliablity_tips">应用处于后台时提高实时消息的质量</string>
+    <string name="app_platform_permissions_useage_tips">系统平台权限使用请求</string>
+    <string name="app_platform_permissions_useage_tips_des">一些权限将会在后续使用，现在设置可提高便捷性</string>
+    <string name="system_content_selection">系统实现</string>
+    <string name="system_content_selection_des">最佳实践，最大化隐私需求，无需文件权限</string>
+    <string name="app_custom_content_selection">应用实现</string>
+    <string name="app_custom_content_selection_des">最大化自定义需求，需要文件权限</string>
+    <string name="choose_implementation">选择实现</string>
 
 </resources>

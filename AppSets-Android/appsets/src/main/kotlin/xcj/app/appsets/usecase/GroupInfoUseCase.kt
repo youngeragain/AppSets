@@ -7,13 +7,13 @@ import xcj.app.appsets.server.model.GroupInfo
 import xcj.app.appsets.server.repository.UserRepository
 import xcj.app.appsets.ui.model.page_state.GroupInfoPageState
 import xcj.app.appsets.util.PictureUrlMapper
-import xcj.app.compose_share.dynamic.IComposeLifecycleAware
+import xcj.app.compose_share.dynamic.ComposeLifecycleAware
 import xcj.app.starter.android.util.PurpleLogger
 import xcj.app.starter.server.request
 
 class GroupInfoUseCase(
     private val userRepository: UserRepository,
-) : IComposeLifecycleAware {
+) : ComposeLifecycleAware {
     companion object {
         private const val TAG = "GroupInfoUseCase"
     }

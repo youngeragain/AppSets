@@ -9,7 +9,7 @@ import xcj.app.appsets.annotation.CallStep
 import xcj.app.appsets.im.BrokerTest
 import xcj.app.appsets.im.InputSelector
 import xcj.app.appsets.im.MessageBrokerConstants
-import xcj.app.appsets.im.message.ImMessage
+import xcj.app.appsets.im.message.IMMessage
 import xcj.app.appsets.purple_module.ModuleConstant
 import xcj.app.appsets.server.repository.AppSetsRepository
 import xcj.app.appsets.server.repository.ScreenRepository
@@ -88,7 +88,7 @@ abstract class BaseIMViewModel : VisibilityComposeStateViewModel() {
             dispatchContentSelectedResult(activity, it)
         }
 
-        LocalMessenger.observe<String, ImMessage>(
+        LocalMessenger.observe<String, IMMessage>(
             activity,
             MessageBrokerConstants.MESSAGE_KEY_ON_IM_MESSAGE
         ) {
@@ -122,10 +122,10 @@ abstract class BaseIMViewModel : VisibilityComposeStateViewModel() {
         LocalMessenger.observe<String, String>(
             activity,
             LocalAccountManager.MESSAGE_KEY_ON_LOGIN
-        ) {
-            if (it == LocalAccountManager.LOGIN_BY_NEW) {
+        ) { by ->
+            if (by == LocalAccountManager.LOGIN_BY_NEW) {
                 SystemUseCase.startServiceToSyncAllFromServer(activity)
-            } else if (it == LocalAccountManager.LOGIN_BY_RESTORE) {
+            } else if (by == LocalAccountManager.LOGIN_BY_RESTORE) {
                 SystemUseCase.startServiceToSyncAllFromLocal(activity)
             }
         }
@@ -174,9 +174,10 @@ abstract class BaseIMViewModel : VisibilityComposeStateViewModel() {
             "dispatchContentSelectedResult, contentSelectionResults:$contentSelectionResult"
         )
         systemUseCase.selectedContentsStateHolder.updateSelectedContent(contentSelectionResult)
-        val type = contentSelectionResult.selectType
 
-        when (type) {
+        val selectType = contentSelectionResult.selectType
+
+        when (selectType) {
             ContentSelectionTypes.IMAGE -> {
                 if (contentSelectionResult !is ContentSelectionResult.RichMediaContentSelectionResult) {
                     return
