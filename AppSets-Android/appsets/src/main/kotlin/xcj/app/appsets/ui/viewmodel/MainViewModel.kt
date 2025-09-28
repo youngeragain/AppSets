@@ -12,6 +12,7 @@ import xcj.app.appsets.server.repository.QRCodeRepository
 import xcj.app.appsets.server.repository.ScreenRepository
 import xcj.app.appsets.server.repository.SearchRepository
 import xcj.app.appsets.server.repository.UserRepository
+import xcj.app.appsets.settings.AppSetsModuleSettings
 import xcj.app.appsets.ui.base.BaseIMViewModel
 import xcj.app.appsets.ui.compose.PageRouteNames
 import xcj.app.appsets.ui.compose.content_selection.ContentSelectionResult
@@ -67,13 +68,16 @@ class MainViewModel : BaseIMViewModel() {
         systemUseCase.cleanCaches()
     }
 
-    override suspend fun doActionWhenFileIOInitialed() {
-        super.doActionWhenFileIOInitialed()
+    override suspend fun doActionWhenFileIOInitialed(context: Context) {
+        super.doActionWhenFileIOInitialed(context)
         PurpleLogger.current.d(TAG, "doActionWhenFileIOInitialed")
         appsUseCase.loadHomeApplications()
         screensUseCase.loadOutSideScreens()
         systemUseCase.checkUpdate()
-        nowSpaceContentUseCase.showPlatformPermissionUsageTipsIfNeeded()
+        nowSpaceContentUseCase.showPlatformPermissionUsageTipsIfNeeded(
+            context = context,
+            showFlow = AppSetsModuleSettings.get().isAppFirstLaunch()
+        )
     }
 
     override fun observeSomeThingsOnCreated(activity: ComponentActivity) {

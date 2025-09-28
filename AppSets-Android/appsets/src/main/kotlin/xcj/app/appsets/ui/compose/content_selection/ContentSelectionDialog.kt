@@ -117,6 +117,7 @@ import xcj.app.appsets.util.model.UriProvider
 import xcj.app.compose_share.components.DesignTextField
 import xcj.app.compose_share.components.DesignVDivider
 import xcj.app.starter.android.ActivityThemeInterface
+import xcj.app.starter.android.ui.model.PlatformPermissionsUsage
 import xcj.app.starter.android.usecase.PlatformUseCase
 import java.io.File
 
@@ -229,18 +230,13 @@ fun ContentSelectSheetContentPrompt(
 
                     },
                     onUseAppClick = {
-                        val platformPermissionsUsageOfFile =
-                            PlatformUseCase.providePlatformPermissions(context).firstOrNull {
-                                it.name == xcj.app.appsets.R.string.file
-                            }
-                        if (platformPermissionsUsageOfFile == null) {
-                            return@ContentSelectSheetContentPromptContent
-                        }
-                        if (!platformPermissionsUsageOfFile.granted) {
+                        val platformFilePermission =
+                            PlatformPermissionsUsage.provideFilePermission(context)
+                        if (!platformFilePermission.granted) {
                             onDismiss()
                             coroutineScope.launch {
                                 nowSpaceContentUseCase.showPlatformPermissionUsageTipsIfNeeded(
-                                    directToShow = true
+                                    context = context
                                 )
                             }
                             return@ContentSelectSheetContentPromptContent
@@ -261,7 +257,11 @@ private fun ContentSelectSheetContentPromptContent(
     onUseAppClick: () -> Unit,
 ) {
     Column(
-        modifier = modifier.padding(start = 12.dp, end = 12.dp, bottom = 24.dp),
+        modifier = modifier.padding(
+            start = 12.dp,
+            end = 12.dp,
+            bottom = 24.dp
+        ),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         Text(
@@ -271,6 +271,7 @@ private fun ContentSelectSheetContentPromptContent(
         )
         Row(
             modifier = Modifier
+                .fillMaxWidth()
                 .clickable(onClick = onUseSystemClick)
                 .padding(6.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -301,6 +302,7 @@ private fun ContentSelectSheetContentPromptContent(
         }
         Row(
             modifier = Modifier
+                .fillMaxWidth()
                 .clickable(onClick = onUseAppClick)
                 .padding(6.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp)

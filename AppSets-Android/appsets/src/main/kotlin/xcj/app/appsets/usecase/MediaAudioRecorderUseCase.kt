@@ -11,7 +11,7 @@ import xcj.app.appsets.util.ktx.toast
 import xcj.app.appsets.util.model.UriProvider
 import xcj.app.compose_share.dynamic.ComposeLifecycleAware
 import xcj.app.starter.android.ktx.asFileOrNull
-import xcj.app.starter.android.usecase.PlatformUseCase
+import xcj.app.starter.android.ui.model.PlatformPermissionsUsage
 import xcj.app.starter.android.util.PurpleLogger
 import xcj.app.starter.test.LocalAndroidContextFileDir
 import java.io.File
@@ -30,27 +30,15 @@ class MediaAudioRecorderUseCase() : ComposeLifecycleAware {
         context: Context,
         nowSpaceContentUseCase: NowSpaceContentUseCase
     ) {
-        val platformPermissions = PlatformUseCase.providePlatformPermissions(context)
-        val platformPermissionsUsageOfFile =
-            platformPermissions.firstOrNull {
-                it.name == xcj.app.appsets.R.string.file
-            }
-        if (platformPermissionsUsageOfFile == null) {
-            return
-        }
-        if (!platformPermissionsUsageOfFile.granted) {
-            nowSpaceContentUseCase.showPlatformPermissionUsageTipsIfNeeded(true)
-            return
-        }
-        val platformPermissionsUsageOfRecordAudio =
-            platformPermissions.firstOrNull {
-                it.name == xcj.app.appsets.R.string.record_audio
-            }
-        if (platformPermissionsUsageOfRecordAudio == null) {
-            return
-        }
-        if (!platformPermissionsUsageOfRecordAudio.granted) {
-            nowSpaceContentUseCase.showPlatformPermissionUsageTipsIfNeeded(true)
+        val platformAudioRecordPermission =
+            PlatformPermissionsUsage.provideAudioRecordPermission(context)
+        if (!platformAudioRecordPermission.granted) {
+            nowSpaceContentUseCase.showPlatformPermissionUsageTipsIfNeeded(
+                context = context,
+                platformPermissionsUsagesProvider = { context ->
+                    listOf(platformAudioRecordPermission)
+                }
+            )
             return
         }
         runCatching {

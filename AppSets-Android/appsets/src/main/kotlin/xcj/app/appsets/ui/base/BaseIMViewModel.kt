@@ -115,7 +115,7 @@ abstract class BaseIMViewModel : VisibilityComposeStateViewModel() {
             SimpleFileIO.MESSAGE_KEY_ON_COMPONENTS_INITIALED
         ) {
             viewModelScope.launch {
-                doActionWhenFileIOInitialed()
+                doActionWhenFileIOInitialed(activity)
             }
         }
 
@@ -156,7 +156,7 @@ abstract class BaseIMViewModel : VisibilityComposeStateViewModel() {
     }
 
     @CallStep(5)
-    open suspend fun doActionWhenFileIOInitialed() {
+    open suspend fun doActionWhenFileIOInitialed(context: Context) {
         PurpleLogger.current.d(TAG, "doActionWhenFileIOInitialed")
         systemUseCase.updateIMBrokerProperties()
         systemUseCase.restoreLoginStatusStateIfNeeded()

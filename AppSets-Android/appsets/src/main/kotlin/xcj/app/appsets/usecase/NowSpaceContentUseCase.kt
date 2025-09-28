@@ -1,12 +1,15 @@
 package xcj.app.appsets.usecase
 
+import android.content.Context
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOf
 import xcj.app.appsets.account.UserAccountStateAware
-import xcj.app.appsets.settings.AppSetsModuleSettings
 import xcj.app.appsets.ui.model.state.NowSpaceContent
 import xcj.app.compose_share.dynamic.ComposeLifecycleAware
+import xcj.app.starter.android.ui.model.PlatformPermissionsUsage
 import xcj.app.starter.android.util.PurpleLogger
 
 class NowSpaceContentUseCase() : ComposeLifecycleAware, UserAccountStateAware {
@@ -57,23 +60,21 @@ class NowSpaceContentUseCase() : ComposeLifecycleAware, UserAccountStateAware {
     }
 
     suspend fun showPlatformPermissionUsageTipsIfNeeded(
-        directToShow: Boolean = false
-    ) {
-        if (directToShow) {
-            val platformPermissionUsageTips = NowSpaceContent.PlatformPermissionUsageTips(
-                tips = xcj.app.appsets.R.string.app_platform_permissions_useage_tips,
-                subTips = xcj.app.appsets.R.string.app_platform_permissions_useage_tips_des,
-            )
-            addNowSpaceContent(platformPermissionUsageTips)
-            return
+        context: Context,
+        showFlow: Flow<Boolean> = flowOf(true),
+        platformPermissionsUsagesProvider: (Context) -> List<PlatformPermissionsUsage> = { context ->
+            PlatformPermissionsUsage.provideAll(context)
         }
-        AppSetsModuleSettings.get().isAppFirstLaunch().collect { isFistLaunch ->
-            if (!isFistLaunch) {
+    ) {
+        showFlow.collect { show ->
+            if (!show) {
                 return@collect
             }
+            val platformPermissionsUsages = platformPermissionsUsagesProvider(context)
             val platformPermissionUsageTips = NowSpaceContent.PlatformPermissionUsageTips(
                 tips = xcj.app.appsets.R.string.app_platform_permissions_useage_tips,
                 subTips = xcj.app.appsets.R.string.app_platform_permissions_useage_tips_des,
+                platformPermissionsUsages = platformPermissionsUsages
             )
             addNowSpaceContent(platformPermissionUsageTips)
         }

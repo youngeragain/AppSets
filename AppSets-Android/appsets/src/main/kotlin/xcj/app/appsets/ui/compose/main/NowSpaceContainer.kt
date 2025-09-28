@@ -4,36 +4,43 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.TransformOrigin
@@ -90,6 +97,14 @@ fun NowSpaceContainer(
             }
         }
     }
+    var isBarLongPressed by remember {
+        mutableStateOf(false)
+    }
+    LaunchedEffect(isBarVisible) {
+        if (isBarVisible) {
+            isBarLongPressed = false
+        }
+    }
     Box(
         modifier = modifier
     ) {
@@ -133,6 +148,9 @@ fun NowSpaceContainer(
                     }
                 }
             },
+            onLongClick = {
+                isBarLongPressed = !isBarLongPressed
+            },
             onDismissClick = {
                 nowSpaceContentUseCase.removeContent()
             }
@@ -151,6 +169,7 @@ fun NowSpaceContainer(
                     is NowSpaceContent.IMMessage -> {
                         ImMessageQuickStepBar(
                             nowSpaceContent = targetNowSpaceContent,
+                            isBarLongPressed = isBarLongPressed,
                         )
                     }
 
@@ -158,6 +177,7 @@ fun NowSpaceContainer(
 
                         PlatformPermissionUsageTipsQuickStepBar(
                             nowSpaceContent = targetNowSpaceContent,
+                            isBarLongPressed = isBarLongPressed
                         )
                     }
                 }
@@ -171,12 +191,12 @@ fun QuickStepBarContainer(
     modifier: Modifier = Modifier,
     isVisible: Boolean,
     onClick: () -> Unit,
+    onLongClick: () -> Unit,
     onDismissClick: () -> Unit,
     barContent: @Composable () -> Unit,
 ) {
-    val isBarVisible by rememberUpdatedState(isVisible)
     AnimatedVisibility(
-        visible = isBarVisible,
+        visible = isVisible,
         enter = barEnterTransition(),
         exit = barExitTransition()
     ) {
@@ -199,7 +219,10 @@ fun QuickStepBarContainer(
                         MaterialTheme.shapes.extraLarge
                     )
                     .clip(MaterialTheme.shapes.extraLarge)
-                    .clickable(onClick = onClick)
+                    .combinedClickable(
+                        onClick = onClick,
+                        onLongClick = onLongClick
+                    )
                     .padding(12.dp),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
@@ -230,33 +253,15 @@ fun QuickStepBarContainer(
 fun ImMessageQuickStepBar(
     modifier: Modifier = Modifier,
     nowSpaceContent: NowSpaceContent.IMMessage,
+    isBarLongPressed: Boolean,
 ) {
     val context = LocalContext.current
-    Row(
-        modifier = modifier,
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    Column(
+        modifier = modifier.animateContentSize(),
     ) {
-        AnimatedContent(
-            targetState = nowSpaceContent,
-            label = "message_quick_access_bar_animate_0",
-            transitionSpec = {
-                fadeIn().togetherWith(fadeOut())
-            }
-        ) { targetNewImMessage ->
-            AnyImage(
-                modifier = Modifier
-                    .size(36.dp)
-                    .clip(MaterialTheme.shapes.extraLarge)
-                    .border(
-                        1.dp,
-                        MaterialTheme.colorScheme.outline,
-                        MaterialTheme.shapes.extraLarge
-                    ),
-                model = targetNewImMessage.session.imObj.avatarUrl
-            )
-        }
-        Column {
-
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
             AnimatedContent(
                 targetState = nowSpaceContent,
                 label = "message_quick_access_bar_animate_0",
@@ -264,81 +269,100 @@ fun ImMessageQuickStepBar(
                     fadeIn().togetherWith(fadeOut())
                 }
             ) { targetNewImMessage ->
-                Text(text = targetNewImMessage.session.imObj.name)
+                AnyImage(
+                    modifier = Modifier
+                        .size(36.dp)
+                        .clip(MaterialTheme.shapes.extraLarge)
+                        .border(
+                            1.dp,
+                            MaterialTheme.colorScheme.outline,
+                            MaterialTheme.shapes.extraLarge
+                        ),
+                    model = targetNewImMessage.session.imObj.avatarUrl
+                )
             }
-            AnimatedContent(
-                targetState = nowSpaceContent,
-                label = "message_quick_access_bar_animate_1",
-                transitionSpec = {
-                    fadeIn().togetherWith(fadeOut())
-                }
-            ) { targetNewImMessage ->
-                Column {
-                    if (targetNewImMessage.imMessage is SystemMessage) {
-                        val systemContentInterface =
-                            targetNewImMessage.imMessage.systemContentInterface
-                        when (systemContentInterface) {
-                            is FriendRequestJson -> {
-                                Row(
-                                    modifier = Modifier.padding(horizontal = 12.dp),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                ) {
-                                    AnyImage(
-                                        modifier = Modifier
-                                            .size(32.dp)
-                                            .clip(MaterialTheme.shapes.extraLarge)
-                                            .border(
-                                                1.dp,
-                                                MaterialTheme.colorScheme.outline,
-                                                MaterialTheme.shapes.extraLarge
-                                            ),
-                                        model = systemContentInterface.avatarUrl
-                                    )
-                                    Text(
-                                        text = systemContentInterface.name ?: "",
-                                        fontSize = 12.sp
-                                    )
-                                }
-                            }
-
-                            is GroupRequestJson -> {
-                                Row(
-                                    modifier = Modifier.padding(horizontal = 12.dp),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                ) {
-                                    AnyImage(
-                                        modifier = Modifier
-                                            .size(32.dp)
-                                            .clip(MaterialTheme.shapes.extraLarge)
-                                            .border(
-                                                1.dp,
-                                                MaterialTheme.colorScheme.outline,
-                                                MaterialTheme.shapes.extraLarge
-                                            ),
-                                        model = systemContentInterface.avatarUrl
-                                    )
-                                    Text(
-                                        text = systemContentInterface.name ?: "",
-                                        fontSize = 12.sp
-                                    )
-                                }
-                            }
-
-                            else -> Unit
-                        }
+            Column {
+                AnimatedContent(
+                    targetState = nowSpaceContent,
+                    label = "message_quick_access_bar_animate_1",
+                    transitionSpec = {
+                        fadeIn().togetherWith(fadeOut())
                     }
-                    Text(
-                        text = IMMessage.readableContent(
-                            context,
-                            targetNewImMessage.imMessage
+                ) { targetNewImMessage ->
+                    Text(text = targetNewImMessage.session.imObj.name)
+                }
+                AnimatedContent(
+                    targetState = nowSpaceContent,
+                    label = "message_quick_access_bar_animate_2",
+                    transitionSpec = {
+                        fadeIn().togetherWith(fadeOut())
+                    }
+                ) { targetNewImMessage ->
+                    Column {
+                        if (targetNewImMessage.imMessage is SystemMessage) {
+                            val systemContentInterface =
+                                targetNewImMessage.imMessage.systemContentInterface
+                            when (systemContentInterface) {
+                                is FriendRequestJson -> {
+                                    Row(
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        AnyImage(
+                                            modifier = Modifier
+                                                .size(24.dp)
+                                                .clip(MaterialTheme.shapes.extraLarge)
+                                                .border(
+                                                    1.dp,
+                                                    MaterialTheme.colorScheme.outline,
+                                                    MaterialTheme.shapes.extraLarge
+                                                ),
+                                            model = systemContentInterface.avatarUrl
+                                        )
+                                        Text(
+                                            text = systemContentInterface.name ?: ""
+                                        )
+                                    }
+                                }
+
+                                is GroupRequestJson -> {
+                                    Row(
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        AnyImage(
+                                            modifier = Modifier
+                                                .size(24.dp)
+                                                .clip(MaterialTheme.shapes.extraLarge)
+                                                .border(
+                                                    1.dp,
+                                                    MaterialTheme.colorScheme.outline,
+                                                    MaterialTheme.shapes.extraLarge
+                                                ),
+                                            model = systemContentInterface.avatarUrl
+                                        )
+                                        Text(
+                                            text = systemContentInterface.name ?: "",
+                                        )
+                                    }
+                                }
+
+                                else -> Unit
+                            }
+                        }
+                        Text(
+                            text = IMMessage.readableContent(
+                                context,
+                                targetNewImMessage.imMessage
+                            )
+                                ?: "",
+                            maxLines = if (isBarLongPressed) {
+                                20
+                            } else {
+                                2
+                            },
+                            overflow = TextOverflow.Ellipsis,
+                            fontSize = 12.sp
                         )
-                            ?: "",
-                        maxLines = 3,
-                        overflow = TextOverflow.Ellipsis,
-                        fontSize = 12.sp
-                    )
+                    }
                 }
             }
         }
@@ -349,66 +373,92 @@ fun ImMessageQuickStepBar(
 fun PlatformPermissionUsageTipsQuickStepBar(
     modifier: Modifier = Modifier,
     nowSpaceContent: NowSpaceContent.PlatformPermissionUsageTips,
+    isBarLongPressed: Boolean,
 ) {
-    Row(
-        modifier = modifier,
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    Column(
+        modifier = modifier.animateContentSize(),
     ) {
-        AnyImage(
-            modifier = Modifier
-                .size(36.dp)
-                .clip(MaterialTheme.shapes.extraLarge)
-                .border(
-                    1.dp,
-                    MaterialTheme.colorScheme.outline,
-                    MaterialTheme.shapes.extraLarge
-                ),
-            model = xcj.app.compose_share.R.drawable.ic_info_24
-        )
-        Column {
-            Text(
-                text = stringResource(nowSpaceContent.tips),
+        Row(
+            modifier = modifier,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            AnyImage(
+                modifier = Modifier
+                    .size(36.dp)
+                    .clip(MaterialTheme.shapes.extraLarge)
+                    .border(
+                        1.dp,
+                        MaterialTheme.colorScheme.outline,
+                        MaterialTheme.shapes.extraLarge
+                    ),
+                model = xcj.app.compose_share.R.drawable.ic_info_24
             )
-            Text(
-                text = stringResource(nowSpaceContent.subTips),
-                fontSize = 12.sp
-            )
+            Column {
+                Text(
+                    text = stringResource(nowSpaceContent.tips),
+                )
+                Text(
+                    text = stringResource(nowSpaceContent.subTips),
+                    fontSize = 12.sp
+                )
+                if (isBarLongPressed) {
+                    LazyColumn(
+                        modifier = Modifier.heightIn(max = 220.dp),
+                        verticalArrangement = Arrangement.spacedBy(2.dp)
+                    ) {
+                        items(
+                            items = nowSpaceContent.platformPermissionsUsages,
+                            key = { it.name }) { platformPermissionsUsage ->
+                            Column {
+                                Text(
+                                    text = stringResource(platformPermissionsUsage.name),
+                                    fontSize = 12.sp
+                                )
+                                Text(
+                                    text = stringResource(platformPermissionsUsage.description),
+                                    fontSize = 10.sp
+                                )
+                            }
+                        }
+                    }
+                }
+            }
         }
+
     }
+
 }
 
 private fun barEnterTransition(): EnterTransition {
-    return fadeIn() +
+    return fadeIn(
+        animationSpec = tween()
+    ) +
             scaleIn(
-                transformOrigin = TransformOrigin.Center.copy(1f, 0.5f),
+                transformOrigin = TransformOrigin.Center.copy(0.5f, 0f),
                 animationSpec = spring(
-                    dampingRatio = Spring.DampingRatioLowBouncy,
+                    dampingRatio = Spring.DampingRatioMediumBouncy,
                     stiffness = Spring.StiffnessLow
                 )
             ) +
-            slideInHorizontally(
-                initialOffsetX = { it / 10 },
-                animationSpec = spring(
-                    dampingRatio = Spring.DampingRatioLowBouncy,
-                    stiffness = Spring.StiffnessLow
-                )
+            slideInVertically(
+                initialOffsetY = { -it / 2 },
+                animationSpec = tween()
             )
 }
 
 private fun barExitTransition(): ExitTransition {
-    return fadeOut() +
+    return fadeOut(
+        animationSpec = tween()
+    ) +
             scaleOut(
-                transformOrigin = TransformOrigin.Center.copy(1f, 0.5f),
+                transformOrigin = TransformOrigin.Center.copy(0.5f, 0f),
                 animationSpec = spring(
-                    dampingRatio = Spring.DampingRatioLowBouncy,
+                    dampingRatio = Spring.DampingRatioMediumBouncy,
                     stiffness = Spring.StiffnessLow
                 )
             ) +
-            slideOutHorizontally(
-                targetOffsetX = { it / 10 },
-                animationSpec = spring(
-                    dampingRatio = Spring.DampingRatioLowBouncy,
-                    stiffness = Spring.StiffnessLow
-                )
+            slideOutVertically(
+                targetOffsetY = { -it / 2 },
+                animationSpec = tween()
             )
 }

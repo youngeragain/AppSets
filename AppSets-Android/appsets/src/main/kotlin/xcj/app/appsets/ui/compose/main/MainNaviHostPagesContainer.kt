@@ -175,6 +175,7 @@ import xcj.app.compose_share.ui.viewmodel.VisibilityComposeStateViewModel.Compan
 import xcj.app.io.components.LocalFileIO
 import xcj.app.starter.android.ktx.startWithHttpSchema
 import xcj.app.starter.android.ui.base.DesignComponentActivity
+import xcj.app.starter.android.ui.model.PlatformPermissionsUsage
 import xcj.app.starter.android.usecase.PlatformUseCase
 import xcj.app.starter.android.util.LocalMessenger
 import xcj.app.starter.android.util.PurpleLogger
@@ -1345,11 +1346,11 @@ fun MainNaviHostPagesContainer(
                     SystemUseCase.providePrivacy(context)
                 }
                 var androidPermissionsUsageList by remember {
-                    mutableStateOf(PlatformUseCase.providePlatformPermissions(context))
+                    mutableStateOf(emptyList<PlatformPermissionsUsage>())
                 }
                 LaunchedEffect(lifecycleState) {
                     androidPermissionsUsageList =
-                        PlatformUseCase.providePlatformPermissions(context)
+                        PlatformPermissionsUsage.provideAll(context)
                 }
                 PrivacyPage(
                     privacy = privacy,
@@ -1820,14 +1821,10 @@ fun navigateToCameraActivity(context: Context, navController: NavController) {
     if (context !is Activity) {
         return
     }
-    val platformPermissionsUsageOfFile =
-        PlatformUseCase.providePlatformPermissions(context).firstOrNull {
-            it.name == xcj.app.appsets.R.string.camera
-        }
-    if (platformPermissionsUsageOfFile == null) {
-        return
-    }
-    if (!platformPermissionsUsageOfFile.granted) {
+    val platformCameraPermission =
+        PlatformPermissionsUsage.provideCamera(context)
+
+    if (!platformCameraPermission.granted) {
         navController.navigate(PageRouteNames.PrivacyPage)
         return
     }

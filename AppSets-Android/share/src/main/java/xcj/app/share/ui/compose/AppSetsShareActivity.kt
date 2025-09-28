@@ -22,6 +22,7 @@ import xcj.app.share.http.HttpShareMethod
 import xcj.app.share.mock.MockShareMethod
 import xcj.app.share.ui.compose.theme.AppSetsTheme
 import xcj.app.starter.android.ui.base.DesignComponentActivity
+import xcj.app.starter.android.ui.model.PlatformPermissionsUsage
 import xcj.app.starter.android.usecase.PlatformUseCase
 import xcj.app.starter.android.util.PurpleLogger
 import xcj.app.starter.util.ContentType
@@ -126,21 +127,16 @@ class AppSetsShareActivity : DesignComponentActivity() {
     }
 
     private fun onScanClick() {
-        val platformPermissionsUsageOfCamera =
-            PlatformUseCase.providePlatformPermissions(this).firstOrNull {
-                it.name == xcj.app.starter.R.string.camera
+        val platformCameraPermission =
+            PlatformPermissionsUsage.provideCamera(this)
+
+        if (!platformCameraPermission.granted) {
+            val permissionsToRequest = mutableListOf<String>()
+            permissionsToRequest.addAll(platformCameraPermission.androidDefinitionNames)
+            val relatives = platformCameraPermission.relativeAndroidDefinitionNames
+            if (!relatives.isNullOrEmpty()) {
+                permissionsToRequest.addAll(relatives)
             }
-        if (platformPermissionsUsageOfCamera == null) {
-            return
-        }
-        if (!platformPermissionsUsageOfCamera.granted) {
-            val permissionsToRequest =
-                platformPermissionsUsageOfCamera.androidDefinitionNames.toMutableList().apply {
-                    val relatives = platformPermissionsUsageOfCamera.relativeAndroidDefinitionNames
-                    if (!relatives.isNullOrEmpty()) {
-                        addAll(relatives)
-                    }
-                }
             PlatformUseCase.requestPermission(this, permissionsToRequest)
             return
         }
@@ -193,22 +189,16 @@ class AppSetsShareActivity : DesignComponentActivity() {
     }
 
     private fun onAddFileContentClick() {
-        val platformPermissionsUsageOfFile =
-            PlatformUseCase.providePlatformPermissions(this).firstOrNull {
-                it.name == xcj.app.starter.R.string.file
-            }
-        if (platformPermissionsUsageOfFile == null) {
-            return
-        }
-        if (!platformPermissionsUsageOfFile.granted) {
+        val platformFilePermission =
+            PlatformPermissionsUsage.provideFilePermission(this)
+        if (!platformFilePermission.granted) {
             PurpleLogger.current.d(TAG, "onAddFileContentClick, No Android Permissions!")
-            val permissionsToRequest =
-                platformPermissionsUsageOfFile.androidDefinitionNames.toMutableList().apply {
-                    val relatives = platformPermissionsUsageOfFile.relativeAndroidDefinitionNames
-                    if (!relatives.isNullOrEmpty()) {
-                        addAll(relatives)
-                    }
-                }
+            val permissionsToRequest = mutableListOf<String>()
+            permissionsToRequest.addAll(platformFilePermission.androidDefinitionNames)
+            val relatives = platformFilePermission.relativeAndroidDefinitionNames
+            if (!relatives.isNullOrEmpty()) {
+                permissionsToRequest.addAll(relatives)
+            }
             PlatformUseCase.requestPermission(this, permissionsToRequest)
             return
         }

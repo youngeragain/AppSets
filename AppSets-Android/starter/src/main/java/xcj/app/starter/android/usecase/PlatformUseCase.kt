@@ -15,7 +15,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import xcj.app.starter.android.ActivityThemeInterface
-import xcj.app.starter.android.ui.model.PlatformPermissionsUsage
 import xcj.app.starter.android.util.PurpleLogger
 
 class PlatformUseCase {
@@ -39,19 +38,6 @@ class PlatformUseCase {
                 }
             }
             return true
-        }
-
-        fun providePlatformPermissions(context: Context): List<PlatformPermissionsUsage> {
-            val platformPermissionsUsages =
-                PlatformPermissionsUsage.provideAll(context).toMutableList()
-            platformPermissionsUsages.sortByDescending {
-                if (it.granted) {
-                    -1
-                } else {
-                    1
-                }
-            }
-            return platformPermissionsUsages
         }
 
         fun requestPermission(context: Context, permissions: List<String>) {
