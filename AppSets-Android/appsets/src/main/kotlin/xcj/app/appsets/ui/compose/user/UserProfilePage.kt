@@ -244,7 +244,7 @@ fun UserProfilePage(
                             }
 
                             MODIFY_PROFILE -> {
-                                ProfileModificationComponent(
+                                ProfileModification(
                                     userInfo = userProfilePageState.userInfo,
                                     onSelectUserAvatarClick = onSelectUserAvatarClick,
                                     onConfirmClick = onModifyProfileConfirmClick

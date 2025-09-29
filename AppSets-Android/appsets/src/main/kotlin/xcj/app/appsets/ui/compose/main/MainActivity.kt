@@ -78,12 +78,10 @@ class MainActivity : DesignComponentActivity() {
                 MainPage()
             }
         }
-
+        makeActivityResultLauncher()
         viewModel.onActivityCreated(this@MainActivity)
         viewModel.handleIntent(intent)
-        makeActivityResultLauncher()
         handleExternalShareContentIfNeeded(this@MainActivity, intent)
-
     }
 
     override fun onDestroy() {
@@ -146,22 +144,22 @@ class MainActivity : DesignComponentActivity() {
         }
         intent.putExtra("external_content_handled", true)
         //wait compose first frame draw finish
-        val composeContainerState = viewModel.bottomSheetState()
+        val bottomSheetState = viewModel.bottomSheetState()
         lifecycleScope.launch {
-            composeContainerState.composableStateAvailableFlow.collect { composableAvailable ->
+            bottomSheetState.composableStateAvailableFlow.collect { composableAvailable ->
                 if (!composableAvailable) {
                     return@collect
                 }
-                composeContainerState.setShouldBackgroundSink(true)
+                bottomSheetState.setShouldBackgroundSink(true)
                 val fromAppDefinition = getCallActivityAppDefinition()
-                composeContainerState.show {
+                bottomSheetState.show {
                     ExternalContentSheetContent(
                         intent = intent,
                         fromAppDefinition = fromAppDefinition,
                         onConfirmClick = { handleType ->
                             when (handleType) {
                                 EXTERNAL_CONTENT_HANDLE_BY_LOCAL_SHARE -> {
-                                    composeContainerState.hide()
+                                    bottomSheetState.hide()
                                     handleExternalDataByAppSetsShare(intent)
 
                                 }

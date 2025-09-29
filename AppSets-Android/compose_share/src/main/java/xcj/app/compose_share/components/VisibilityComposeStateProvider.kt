@@ -4,5 +4,5 @@ interface VisibilityComposeStateProvider {
     /**
      * @param name, or key for ComposeContainerState
      */
-    fun provideState(name: String): VisibilityComposeState
+    fun provideState(name: String, default: () -> VisibilityComposeState): VisibilityComposeState
 }

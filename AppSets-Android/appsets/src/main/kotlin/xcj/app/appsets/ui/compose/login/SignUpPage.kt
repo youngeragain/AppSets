@@ -447,7 +447,7 @@ fun SignUpPage(
 }
 
 @Composable
-fun SignUpIndicator(loginSignUpPageState: LoginSignUpPageState) {
+private fun SignUpIndicator(loginSignUpPageState: LoginSignUpPageState) {
     val isShow: Boolean =
         loginSignUpPageState is LoginSignUpPageState.SignUpping || loginSignUpPageState is LoginSignUpPageState.SignUpPageFailed
     AnimatedVisibility(

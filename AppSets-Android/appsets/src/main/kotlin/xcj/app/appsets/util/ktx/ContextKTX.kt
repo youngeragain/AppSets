@@ -5,6 +5,7 @@ import android.app.Application
 import android.app.Service
 import android.content.BroadcastReceiver
 import android.content.ComponentName
+import android.content.ContentProvider
 import android.content.ContentResolver
 import android.content.ContentUris
 import android.content.Context
@@ -14,7 +15,6 @@ import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
 import androidx.activity.ComponentActivity
-import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.view.ContextThemeWrapper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -28,31 +28,35 @@ private const val TAG = "ContextKTX"
  * 扩展context, 用于获取Manifests.xml文件中定义的元数据meta-data
  * BroadcastReceiver获取方式由另外的方法
  */
-inline fun <reified T> T.getMetaData(key: String): Any? {
-    return when (T::class.java) {
-        Application::class.java -> {
-            (this as Application).packageManager.getApplicationInfo(
-                (this as Application).packageName,
+fun <T> T.getMetaData(key: String): Any? {
+    return when (this) {
+        is Application -> {
+            packageManager.getApplicationInfo(
+                packageName,
                 PackageManager.GET_META_DATA
             ).metaData.get(key)
         }
 
-        AppCompatActivity::class.java -> {
-            (this as Activity).packageManager.getActivityInfo(
-                (this as Activity).componentName,
+        is Activity -> {
+            packageManager.getActivityInfo(
+                componentName,
                 PackageManager.GET_META_DATA
             ).metaData.get(key)
         }
 
-        Service::class.java -> {
-            (this as Service).packageManager.getServiceInfo(
+        is Service -> {
+            packageManager.getServiceInfo(
                 ComponentName.unflattenFromString(
-                    T::class.simpleName ?: ""
+                    this::class.simpleName ?: ""
                 )!!, PackageManager.GET_META_DATA
             ).metaData.get(key)
         }
 
-        BroadcastReceiver::class.java -> {
+        is ContentProvider -> {
+            null
+        }
+
+        is BroadcastReceiver -> {
             null
         }
 

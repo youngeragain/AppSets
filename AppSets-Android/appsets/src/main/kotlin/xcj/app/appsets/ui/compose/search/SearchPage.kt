@@ -89,7 +89,7 @@ import xcj.app.appsets.ui.compose.PageRouteNames
 import xcj.app.appsets.ui.compose.apps.SingleApplicationComponent
 import xcj.app.appsets.ui.compose.custom_component.AnyImage
 import xcj.app.appsets.ui.compose.custom_component.ShowNavBar
-import xcj.app.appsets.ui.compose.outside.ScreenComponent
+import xcj.app.appsets.ui.compose.outside.Screen
 import xcj.app.appsets.ui.model.page_state.SearchPageState
 import xcj.app.appsets.ui.model.state.SearchResult
 import xcj.app.compose_share.components.DesignTextField
@@ -146,23 +146,26 @@ fun SearchInputBar(
     })
 
     val corner = sizeOfSearchBar.height.div(2).toFloat()
-    val cornerShape by rememberUpdatedState(
-        RoundedCornerShape(
-            topStart = corner, topEnd = corner, bottomStart = corner, bottomEnd = corner
-        )
+    val cornerShape = RoundedCornerShape(
+        topStart = corner, topEnd = corner, bottomStart = corner, bottomEnd = corner
     )
     DesignTextField(
-        value = inputContent.text, onValueChange = {
+        value = inputContent.text,
+        onValueChange = {
             inputContent = TextFieldValue(it)
             onInputContent(it)
-        }, modifier = Modifier
+        },
+        modifier = Modifier
             .fillMaxWidth()
             .focusRequester(requester)
             .border(
-                border = searchBorderStroke(searchPageState), shape = cornerShape
+                border = searchBorderStroke(searchPageState), shape = RoundedCornerShape(
+                    topStart = corner, topEnd = corner, bottomStart = corner, bottomEnd = corner
+                )
             )
             .clip(cornerShape)
-            .onSizeChanged(onSearchBarSizeChanged), leadingIcon = {
+            .onSizeChanged(onSearchBarSizeChanged),
+        leadingIcon = {
             Icon(
                 modifier = Modifier
                     .clip(CircleShape)
@@ -174,7 +177,8 @@ fun SearchInputBar(
                 painter = painterResource(id = xcj.app.compose_share.R.drawable.ic_arrow_back_24),
                 contentDescription = stringResource(id = xcj.app.appsets.R.string.return_)
             )
-        }, trailingIcon = {
+        },
+        trailingIcon = {
             Icon(
                 modifier = Modifier
                     .clip(CircleShape)
@@ -186,7 +190,10 @@ fun SearchInputBar(
                 contentDescription = stringResource(xcj.app.appsets.R.string.search))
         }, placeholder = {
             Text(text = stringResource(xcj.app.appsets.R.string.search))
-        }, maxLines = 1, shape = cornerShape, colors = TextFieldDefaults.colors(
+        },
+        maxLines = 1,
+        shape = cornerShape,
+        colors = TextFieldDefaults.colors(
             unfocusedIndicatorColor = Color.Transparent,
             focusedIndicatorColor = Color.Transparent,
             focusedPlaceholderColor = Color.Transparent,
@@ -632,7 +639,7 @@ fun SearchedScreenComponent(
                 onBioClick(screenInfo)
             }
             .padding(12.dp)) {
-        ScreenComponent(
+        Screen(
             currentDestinationRoute = PageRouteNames.SearchPage,
             screenInfo = screenInfo,
             onBioClick = onBioClick,

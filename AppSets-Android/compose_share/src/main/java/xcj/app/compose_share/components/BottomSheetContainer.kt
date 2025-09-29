@@ -18,20 +18,26 @@ fun BottomSheetContainer(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
-    val anyStateProvider = LocalVisibilityComposeStateProvider.current
-    val state =
-        anyStateProvider.bottomSheetState()
-    if (state.isShow) {
+    val visibilityComposeStateProvider = LocalVisibilityComposeStateProvider.current
+    val bottomSheetState =
+        visibilityComposeStateProvider.bottomSheetState()
+    val bottomSheetVisibilityComposeState = bottomSheetState as BottomSheetVisibilityComposeState
+
+    if (bottomSheetState.isShow) {
         val rememberModalBottomSheetState = rememberModalBottomSheetState(true)
         ModalBottomSheet(
-            onDismissRequest = state::hideAndRemove,
+            onDismissRequest = {
+                bottomSheetState.hideAndRemove()
+                bottomSheetVisibilityComposeState.resetIfNeeded()
+            },
             sheetState = rememberModalBottomSheetState,
             containerColor = MaterialTheme.colorScheme.surface,
             dragHandle = {
                 BottomSheetDefaults.DragHandle(color = MaterialTheme.colorScheme.outline)
-            }
+            },
+            properties = bottomSheetVisibilityComposeState.getFoundationDesignModalBottomSheetProperties()
         ) {
-            state.getContent(context)?.Content()
+            bottomSheetState.getContent(context)?.Content()
         }
     }
 }

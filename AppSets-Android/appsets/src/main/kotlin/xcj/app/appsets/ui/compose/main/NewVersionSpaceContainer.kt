@@ -34,7 +34,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.net.toUri
 import xcj.app.appsets.ui.compose.LocalUseCaseOfSystem
-import xcj.app.appsets.usecase.AppUpdateState
+import xcj.app.appsets.ui.model.state.AppUpdateState
 import xcj.app.starter.android.ktx.startWithHttpSchema
 
 @Composable

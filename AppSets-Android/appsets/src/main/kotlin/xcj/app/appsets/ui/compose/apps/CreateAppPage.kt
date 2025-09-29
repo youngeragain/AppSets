@@ -113,7 +113,7 @@ fun CreateAppPage(
 ) {
     HideNavBar()
     val appCreationUseCase = LocalUseCaseOfAppCreation.current
-    val anyStateProvider = LocalVisibilityComposeStateProvider.current
+    val visibilityComposeStateProvider = LocalVisibilityComposeStateProvider.current
     DisposableEffect(key1 = true) {
         onDispose {
             appCreationUseCase.onComposeDispose("page dispose")
@@ -413,13 +413,13 @@ fun CreateAppPage(
                         ) {
                             SuggestionChip(
                                 onClick = {
-                                    val composeContainerState =
-                                        anyStateProvider.bottomSheetState()
-                                    composeContainerState.show {
+                                    val bottomSheetState =
+                                        visibilityComposeStateProvider.bottomSheetState()
+                                    bottomSheetState.show {
                                         CustomPlatformAddSheetContent(
                                             platformNames = platformNames,
                                             onConfirmClick = {
-                                                composeContainerState.hide()
+                                                bottomSheetState.hide()
                                             }
                                         )
                                     }

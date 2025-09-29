@@ -32,15 +32,16 @@ import xcj.app.appsets.ui.model.SelectedContentsStateHolder
 import xcj.app.appsets.ui.model.UserInfoForCreate
 import xcj.app.appsets.ui.model.page_state.CreateGroupPageState
 import xcj.app.appsets.ui.model.page_state.LoginSignUpPageState
+import xcj.app.appsets.ui.model.state.AppUpdateState
 import xcj.app.appsets.util.ktx.toast
 import xcj.app.appsets.util.ktx.toastSuspend
 import xcj.app.appsets.util.message_digest.MessageDigestUtil
 import xcj.app.appsets.util.model.UriProvider
+import xcj.app.compose_share.components.BottomSheetVisibilityComposeState
 import xcj.app.compose_share.components.VisibilityComposeStateProvider
 import xcj.app.compose_share.dynamic.ComposeLifecycleAware
 import xcj.app.compose_share.ui.viewmodel.VisibilityComposeStateViewModel.Companion.bottomSheetState
 import xcj.app.starter.android.util.PurpleLogger
-import xcj.app.starter.server.RequestFail
 import xcj.app.starter.server.request
 import xcj.app.starter.server.requestRaw
 import xcj.app.starter.test.LocalAndroidContextFileDir
@@ -48,23 +49,14 @@ import xcj.app.starter.test.LocalApplication
 import xcj.app.starter.test.LocalPurpleCoroutineScope
 import java.util.Calendar
 
-sealed interface AppUpdateState {
-    data object None : AppUpdateState
-
-    data object Checking : AppUpdateState
-    data class Checked(
-        val updateCheckResult: UpdateCheckResult
-    ) : AppUpdateState
-}
-
 class SystemUseCase(
     private val userRepository: UserRepository,
     private val appSetsRepository: AppSetsRepository,
 ) : ComposeLifecycleAware {
 
-    val selectedContentsStateHolder: SelectedContentsStateHolder = SelectedContentsStateHolder()
-
     private val requestIdMap: MutableMap<String, String> = mutableMapOf()
+
+    val selectedContentsStateHolder: SelectedContentsStateHolder = SelectedContentsStateHolder()
 
     val appUpdateState: MutableState<AppUpdateState> = mutableStateOf(AppUpdateState.None)
 
@@ -72,11 +64,8 @@ class SystemUseCase(
         mutableStateOf(LoginSignUpPageState.LoginStart)
 
     val createGroupPageState: MutableState<CreateGroupPageState> = mutableStateOf(
-        CreateGroupPageState.NewGroupPage(
-            GroupInfoForCreate()
-        )
+        CreateGroupPageState.NewGroupPage()
     )
-
 
     fun dismissNewVersionTips() {
         val appUpdateState = appUpdateState.value
@@ -92,10 +81,9 @@ class SystemUseCase(
 
     suspend fun initAppToken() {
         PurpleLogger.current.d(TAG, "initAppToken")
-        request(
-            action = {
-                appSetsRepository.getAppToken()
-            }).onSuccess {
+        request {
+            appSetsRepository.getAppToken()
+        }.onSuccess {
             LocalAccountManager.saveAppToken(it)
         }.onFailure {
             PurpleLogger.current.e(TAG, "initAppToken failed!")
@@ -372,8 +360,10 @@ class SystemUseCase(
 
             if (!loginResponse.success || token.isNullOrEmpty()) {
                 PurpleLogger.current.d(TAG, "login, failed, token get failed!")
-                loginSignUpPageState.value = LoginSignUpPageState.LoggingFailed()
                 loginResponse.info.toastSuspend()
+                loginSignUpPageState.value = LoginSignUpPageState.LoggingFailed()
+                delay(1000)
+                loginSignUpPageState.value = LoginSignUpPageState.LoginStart
                 return
             }
 
@@ -385,7 +375,8 @@ class SystemUseCase(
                 PurpleLogger.current.d(
                     TAG, "login, failed, userInfo isNullOrEmpty!"
                 )
-                loginSignUpPageState.value = LoginSignUpPageState.LoggingFailed()
+                delay(1000)
+                loginSignUpPageState.value = LoginSignUpPageState.LoginStart
                 return
             }
 
@@ -394,17 +385,23 @@ class SystemUseCase(
                 loginSignUpPageState.value = LoginSignUpPageState.LoggingFinish()
                 return
             }
-            val bottomSheetContainerState = visibilityComposeStateProvider.bottomSheetState()
-            val provider = UserAgreementComposeViewProvider(onNextClick = {
-                bottomSheetContainerState.hide()
-                LocalAccountManager.onUserLogged(userInfo, token, false)
-                loginSignUpPageState.value = LoginSignUpPageState.LoggingFinish()
-            })
-            bottomSheetContainerState.show(provider)
+            val bottomSheetState = visibilityComposeStateProvider.bottomSheetState()
+            val bottomSheetVisibilityComposeState =
+                bottomSheetState as BottomSheetVisibilityComposeState
+            bottomSheetVisibilityComposeState.makeCannotDismiss()
+            val provider = UserAgreementComposeViewProvider(
+                onNextClick = {
+                    bottomSheetState.hide()
+                    LocalAccountManager.onUserLogged(userInfo, token, false)
+                    loginSignUpPageState.value = LoginSignUpPageState.LoggingFinish()
+                }
+            )
+            bottomSheetState.show(provider)
         }).onFailure {
             PurpleLogger.current.d(TAG, "login failed")
             logout()
-            loginSignUpPageState.value = LoginSignUpPageState.LoggingFailed()
+            delay(1000)
+            loginSignUpPageState.value = LoginSignUpPageState.LoginStart
         }
     }
 
@@ -413,9 +410,9 @@ class SystemUseCase(
 
         LocalPurpleCoroutineScope.current.launch {
             LocalAccountManager.onUserLogout(LocalAccountManager.LOGOUT_BY_MANUALLY)
-            request(
-                action = userRepository::signOut
-            )
+            if (LocalAccountManager.isLogged()) {
+                request(action = userRepository::signOut)
+            }
         }
     }
 
@@ -442,11 +439,11 @@ class SystemUseCase(
             return
         }
         val signUpUserInfo = oldLoginSignUpState.userInfoForCreate
-        if (signUpUserInfo.account.isEmpty()) {
+        if (signUpUserInfo.account.isEmpty() || signUpUserInfo.account.isBlank()) {
             ContextCompat.getString(context, xcj.app.appsets.R.string.please_input_account).toast()
             return
         }
-        if (signUpUserInfo.password.isEmpty()) {
+        if (signUpUserInfo.password.isEmpty() || signUpUserInfo.password.isBlank()) {
             ContextCompat.getString(context, xcj.app.appsets.R.string.please_input_password).toast()
             return
         }
@@ -455,7 +452,7 @@ class SystemUseCase(
             ContextCompat.getString(context, xcj.app.appsets.R.string.please_choose_avatar).toast()
             return
         }
-        if (signUpUserInfo.userName.isEmpty()) {
+        if (signUpUserInfo.userName.isEmpty() || signUpUserInfo.userName.isBlank()) {
             ContextCompat.getString(context, xcj.app.appsets.R.string.please_input_name).toast()
             return
         }
@@ -473,23 +470,23 @@ class SystemUseCase(
             val preSignUpRes = userRepository.preSignUp(accountEncode)
             val canSignUp = preSignUpRes.data
             if (canSignUp == null) {
+                ContextCompat.getString(context, xcj.app.appsets.R.string.register_failed)
+                    .toastSuspend()
                 loginSignUpPageState.value = LoginSignUpPageState.SignUpPageFailed(
                     signUpUserInfo, xcj.app.appsets.R.string.register_failed
                 )
                 delay(1000)
-                ContextCompat.getString(context, xcj.app.appsets.R.string.register_failed)
-                    .toastSuspend()
                 loginSignUpPageState.value = LoginSignUpPageState.LoginStart
                 return
             } else if (!canSignUp) {
-                loginSignUpPageState.value = LoginSignUpPageState.SignUpPageFailed(
-                    signUpUserInfo, xcj.app.appsets.R.string.a_account_exist_please_retry
-                )
                 ContextCompat.getString(
                     context,
                     xcj.app.appsets.R.string.a_account_exist_please_retry
                 )
                     .toastSuspend()
+                loginSignUpPageState.value = LoginSignUpPageState.SignUpPageFailed(
+                    signUpUserInfo, xcj.app.appsets.R.string.a_account_exist_please_retry
+                )
                 delay(1000)
                 loginSignUpPageState.value = LoginSignUpPageState.SignUpStart(signUpUserInfo)
                 return
@@ -499,28 +496,26 @@ class SystemUseCase(
             )
             val signUpSuccess = signUpRes.data
             if (signUpSuccess != true) {
+                ContextCompat.getString(context, xcj.app.appsets.R.string.register_failed)
+                    .toastSuspend()
                 loginSignUpPageState.value = LoginSignUpPageState.SignUpPageFailed(
                     signUpUserInfo, xcj.app.appsets.R.string.register_failed
                 )
-                ContextCompat.getString(context, xcj.app.appsets.R.string.register_failed)
-                    .toastSuspend()
                 delay(1000)
                 loginSignUpPageState.value = LoginSignUpPageState.SignUpStart(signUpUserInfo)
                 return
             }
-            loginSignUpPageState.value = LoginSignUpPageState.SignUpFinish(signUpUserInfo)
             ContextCompat.getString(context, xcj.app.appsets.R.string.register_appsets_success)
                 .toastSuspend()
+            loginSignUpPageState.value = LoginSignUpPageState.SignUpFinish(signUpUserInfo)
         }).onFailure {
+            ContextCompat.getString(context, xcj.app.appsets.R.string.register_failed)
+                .toastSuspend()
             loginSignUpPageState.value = LoginSignUpPageState.SignUpPageFailed(
                 signUpUserInfo, xcj.app.appsets.R.string.register_failed
             )
-            ContextCompat.getString(context, xcj.app.appsets.R.string.register_failed)
-                .toastSuspend()
             delay(1000)
             loginSignUpPageState.value = LoginSignUpPageState.SignUpStart(signUpUserInfo)
-
-            (it as? RequestFail)?.info?.toastSuspend()
         }
     }
 
@@ -582,7 +577,7 @@ class SystemUseCase(
     }
 
     override fun onComposeDispose(by: String?) {
-        createGroupPageState.value = CreateGroupPageState.NewGroupPage(GroupInfoForCreate())
+        createGroupPageState.value = CreateGroupPageState.NewGroupPage()
         loginSignUpPageState.value = LoginSignUpPageState.LoginStart
     }
 

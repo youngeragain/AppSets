@@ -33,6 +33,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import xcj.app.appsets.account.LocalAccountManager
 import xcj.app.appsets.im.InputSelector
 import xcj.app.appsets.im.Session
 import xcj.app.appsets.ui.compose.LocalUseCaseOfConversation
@@ -46,7 +47,7 @@ import xcj.app.compose_share.ui.viewmodel.VisibilityComposeStateViewModel.Compan
 private const val RECENT_SESSIONS_SHOW_COUNT_LIMIT = 8
 
 @Composable
-fun ConversationQuickStepBottomSheet(
+fun ConversationQuickStepSheetContent(
     quickStepContents: List<QuickStepContent>?
 ) {
     val context = LocalContext.current
@@ -88,22 +89,93 @@ fun ConversationQuickStepBottomSheet(
                     fontWeight = FontWeight.Bold
                 )
             }
-            item {
-                Text(
-                    modifier = Modifier.padding(horizontal = 12.dp),
-                    text = stringResource(xcj.app.appsets.R.string.recently),
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-            item {
-                FlowRow(
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    recentSessions.forEachIndexed { index, session ->
-                        SingleRecentSessionComponent(
+            if (!LocalAccountManager.isLogged()) {
+                item {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 24.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(text = stringResource(xcj.app.appsets.R.string.login_to_appsets))
+                    }
+                }
+            } else {
+                item {
+                    Text(
+                        modifier = Modifier.padding(horizontal = 12.dp),
+                        text = stringResource(xcj.app.appsets.R.string.recently),
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+                if (recentSessions.isEmpty()) {
+                    item {
+                        Box(
                             modifier = Modifier
-                                .sizeIn(90.dp)
+                                .fillMaxWidth()
+                                .padding(vertical = 24.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(text = stringResource(xcj.app.appsets.R.string.there_is_nothing_here))
+                        }
+                    }
+                } else {
+                    item {
+                        FlowRow(
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            recentSessions.forEachIndexed { index, session ->
+                                SingleRecentSessionComponent(
+                                    modifier = Modifier
+                                        .sizeIn(90.dp)
+                                        .padding(horizontal = 12.dp, vertical = 8.dp),
+                                    session = session,
+                                    onSessionClick = {
+                                        val textQuickStepContent =
+                                            inputQuickStepContents.filterIsInstance<TextQuickStepContent>()
+                                                .firstOrNull()
+                                        if (textQuickStepContent != null) {
+                                            conversationUseCase.sendMessage(
+                                                context,
+                                                InputSelector.TEXT,
+                                                textQuickStepContent.text,
+                                                session
+                                            )
+                                            val bottomSheetState =
+                                                visibilityComposeStateProvider.bottomSheetState()
+                                            bottomSheetState.hide()
+                                        }
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
+                item {
+                    Text(
+                        modifier = Modifier.padding(horizontal = 12.dp),
+                        text = stringResource(xcj.app.appsets.R.string.others),
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+
+                if (allSessions.isEmpty()) {
+                    item {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 24.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(text = stringResource(xcj.app.appsets.R.string.there_is_nothing_here))
+                        }
+                    }
+                } else {
+                    itemsIndexed(items = allSessions) { index, session ->
+                        SingleAllSessionComponent(
+                            modifier = Modifier
                                 .padding(horizontal = 12.dp, vertical = 8.dp),
                             session = session,
                             onSessionClick = {
@@ -126,37 +198,7 @@ fun ConversationQuickStepBottomSheet(
                     }
                 }
             }
-            item {
-                Text(
-                    modifier = Modifier.padding(horizontal = 12.dp),
-                    text = stringResource(xcj.app.appsets.R.string.others),
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-            itemsIndexed(items = allSessions) { index, session ->
-                SingleAllSessionComponent(
-                    modifier = Modifier
-                        .padding(horizontal = 12.dp, vertical = 8.dp),
-                    session = session,
-                    onSessionClick = {
-                        val textQuickStepContent =
-                            inputQuickStepContents.filterIsInstance<TextQuickStepContent>()
-                                .firstOrNull()
-                        if (textQuickStepContent != null) {
-                            conversationUseCase.sendMessage(
-                                context,
-                                InputSelector.TEXT,
-                                textQuickStepContent.text,
-                                session
-                            )
-                            val bottomSheetState =
-                                visibilityComposeStateProvider.bottomSheetState()
-                            bottomSheetState.hide()
-                        }
-                    }
-                )
-            }
+
         }
     }
 }

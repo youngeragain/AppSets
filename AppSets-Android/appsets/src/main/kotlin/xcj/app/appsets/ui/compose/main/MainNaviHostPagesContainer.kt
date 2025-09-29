@@ -37,7 +37,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateListOf
@@ -129,7 +128,7 @@ import xcj.app.appsets.ui.compose.apps.tools.ToolStartPage
 import xcj.app.appsets.ui.compose.apps.tools.ToolWeatherPage
 import xcj.app.appsets.ui.compose.camera.DesignCameraActivity
 import xcj.app.appsets.ui.compose.compose_extensions.composableIf
-import xcj.app.appsets.ui.compose.content_selection.ContentSelectSheetContentPrompt
+import xcj.app.appsets.ui.compose.content_selection.ContentSelectionPromptSheetContent
 import xcj.app.appsets.ui.compose.content_selection.ContentSelectionRequest
 import xcj.app.appsets.ui.compose.content_selection.ContentSelectionTypes
 import xcj.app.appsets.ui.compose.content_selection.defaultAllSelectionTypeParam
@@ -149,8 +148,10 @@ import xcj.app.appsets.ui.compose.media.video.single.MediaPlaybackActivity
 import xcj.app.appsets.ui.compose.outside.CreateScreenPage
 import xcj.app.appsets.ui.compose.outside.OutSidePage
 import xcj.app.appsets.ui.compose.outside.RestrictedContentDialog
+import xcj.app.appsets.ui.compose.outside.RestrictedContentHandleState
 import xcj.app.appsets.ui.compose.outside.ScreenDetailsPage
 import xcj.app.appsets.ui.compose.outside.ScreenEditPage
+import xcj.app.appsets.ui.compose.outside.rememberRestrictedContentHandleState
 import xcj.app.appsets.ui.compose.privacy.PrivacyPage
 import xcj.app.appsets.ui.compose.quickstep.QuickStepContent
 import xcj.app.appsets.ui.compose.search.SearchPage
@@ -167,6 +168,7 @@ import xcj.app.appsets.usecase.SystemUseCase
 import xcj.app.appsets.util.BundleDefaults
 import xcj.app.appsets.util.ktx.toast
 import xcj.app.appsets.util.model.MediaStoreDataUri
+import xcj.app.appsets.util.model.UriProvider
 import xcj.app.compose_share.components.LocalVisibilityComposeStateProvider
 import xcj.app.compose_share.components.ProgressiveVisibilityComposeState
 import xcj.app.compose_share.components.VisibilityComposeStateProvider
@@ -182,6 +184,7 @@ import xcj.app.starter.android.util.PurpleLogger
 import xcj.app.starter.test.ComposeEvent
 import xcj.app.starter.test.LocalPurpleEventPublisher
 import xcj.app.starter.test.NaviHostParams
+import java.util.UUID
 
 private const val TAG = "MainNaviHostPages"
 
@@ -194,15 +197,7 @@ fun MainNaviHostPagesContainer(
     hostContextName: String = MainActivity.TAG
 ) {
 
-    val isShowRestrictedContentDialogState = remember {
-        mutableStateOf(false)
-    }
-    val restrictedContentConfirmCallbackState: MutableState<(() -> Unit)?> = remember {
-        mutableStateOf(null)
-    }
-
-    var isShowRestrictedContentDialog by isShowRestrictedContentDialogState
-    val restrictedContentConfirmCallback by restrictedContentConfirmCallbackState
+    val restrictedContentHandleState = rememberRestrictedContentHandleState()
 
     Box(modifier = modifier) {
         DesignNaviHost(
@@ -210,8 +205,6 @@ fun MainNaviHostPagesContainer(
             navController = navController,
             startDestination = startPageRoute,
         ) {
-
-            publishComposeNaviHostFormedEvent(navController, this)
 
             composableIf(
                 test = {
@@ -262,28 +255,28 @@ fun MainNaviHostPagesContainer(
                         )
                     val context = LocalContext.current
                     val conversationUseCase = LocalUseCaseOfConversation.current
-                    val anyStateProvider = LocalVisibilityComposeStateProvider.current
+                    val visibilityComposeStateProvider = LocalVisibilityComposeStateProvider.current
                     val coroutineScope = rememberCoroutineScope()
                     AppDetailsPage(
                         application = application,
                         onBackClick = navController::navigateUp,
                         onGetApplicationClick = { application, appPlatform ->
-                            anyStateProvider.bottomSheetState()
-                                .show {
-                                    DownloadBottomSheetContent(
-                                        application = application,
-                                        appPlatform = appPlatform,
-                                        onDownloadInfoGetClick = { application, downloadInfo ->
-                                            coroutineScope.launch {
-                                                handleApplicationDownload(
-                                                    context,
-                                                    application,
-                                                    downloadInfo
-                                                )
-                                            }
+                            val bottomSheetState = visibilityComposeStateProvider.bottomSheetState()
+                            bottomSheetState.show {
+                                DownloadBottomSheetContent(
+                                    application = application,
+                                    appPlatform = appPlatform,
+                                    onDownloadInfoGetClick = { application, downloadInfo ->
+                                        coroutineScope.launch {
+                                            handleApplicationDownload(
+                                                context,
+                                                application,
+                                                downloadInfo
+                                            )
                                         }
-                                    )
-                                }
+                                    }
+                                )
+                            }
                         },
                         onShowApplicationCreatorClick = { application ->
                             coroutineScope.launch {
@@ -334,7 +327,7 @@ fun MainNaviHostPagesContainer(
                             val currentUri = screenshot.url ?: return@AppDetailsPage
                             val uriList = screenshotList.mapNotNull { screenshot -> screenshot.url }
                             showPictureViewDialog(
-                                anyStateProvider,
+                                visibilityComposeStateProvider,
                                 context,
                                 currentUri,
                                 uriList
@@ -385,7 +378,7 @@ fun MainNaviHostPagesContainer(
 
                     val context = LocalContext.current
                     val appCreationUseCase = LocalUseCaseOfAppCreation.current
-                    val anyStateProvider = LocalVisibilityComposeStateProvider.current
+                    val visibilityComposeStateProvider = LocalVisibilityComposeStateProvider.current
                     val coroutineScope = rememberCoroutineScope()
                     val createApplicationPageState by appCreationUseCase.createApplicationPageState
 
@@ -408,7 +401,7 @@ fun MainNaviHostPagesContainer(
                             coroutineScope.launch {
                                 showContentSelectionDialog(
                                     context,
-                                    anyStateProvider,
+                                    visibilityComposeStateProvider,
                                     navController,
                                     PageRouteNames.CreateAppPage,
                                     requestKey,
@@ -446,7 +439,7 @@ fun MainNaviHostPagesContainer(
                 ) {
                     val context = LocalContext.current
                     val screensUseCase = LocalUseCaseOfScreen.current
-                    val anyStateProvider = LocalVisibilityComposeStateProvider.current
+                    val visibilityComposeStateProvider = LocalVisibilityComposeStateProvider.current
                     val coroutineScope = rememberCoroutineScope()
                     OutSidePage(
                         screens = screensUseCase.systemScreensContainer.screens,
@@ -463,9 +456,8 @@ fun MainNaviHostPagesContainer(
                         onScreenMediaClick = { url, urls ->
                             handleScreenMediaClick(
                                 context,
-                                isShowRestrictedContentDialogState,
-                                restrictedContentConfirmCallbackState,
-                                anyStateProvider,
+                                restrictedContentHandleState,
+                                visibilityComposeStateProvider,
                                 url,
                                 urls
                             )
@@ -487,7 +479,7 @@ fun MainNaviHostPagesContainer(
                 ) {
                     val context = LocalContext.current
                     val screenUseCase = LocalUseCaseOfScreen.current
-                    val anyStateProvider = LocalVisibilityComposeStateProvider.current
+                    val visibilityComposeStateProvider = LocalVisibilityComposeStateProvider.current
                     val coroutineScope = rememberCoroutineScope()
                     val screenInfoForCard by screenUseCase.currentScreenInfoForCard
                     ScreenDetailsPage(
@@ -519,9 +511,8 @@ fun MainNaviHostPagesContainer(
                         onScreenMediaClick = { url, urls ->
                             handleScreenMediaClick(
                                 context,
-                                isShowRestrictedContentDialogState,
-                                restrictedContentConfirmCallbackState,
-                                anyStateProvider,
+                                restrictedContentHandleState,
+                                visibilityComposeStateProvider,
                                 url,
                                 urls
                             )
@@ -553,7 +544,7 @@ fun MainNaviHostPagesContainer(
                     val screenUseCase = LocalUseCaseOfScreen.current
                     val screenPostUseCase = LocalUseCaseOfScreenPost.current
                     val systemUseCase = LocalUseCaseOfSystem.current
-                    val anyStateProvider = LocalVisibilityComposeStateProvider.current
+                    val visibilityComposeStateProvider = LocalVisibilityComposeStateProvider.current
                     val quickStepContents = BundleCompat.getParcelableArrayList(
                         it.arguments ?: BundleDefaults.empty,
                         Constants.QUICK_STEP_CONTENT,
@@ -590,7 +581,7 @@ fun MainNaviHostPagesContainer(
                             coroutineScope.launch {
                                 showContentSelectionDialog(
                                     context,
-                                    anyStateProvider,
+                                    visibilityComposeStateProvider,
                                     navController,
                                     PageRouteNames.CreateScreenPage,
                                     requestKey,
@@ -668,7 +659,7 @@ fun MainNaviHostPagesContainer(
                 ) {
                     val context = LocalContext.current
                     val conversationUseCase = LocalUseCaseOfConversation.current
-                    val anyStateProvider = LocalVisibilityComposeStateProvider.current
+                    val visibilityComposeStateProvider = LocalVisibilityComposeStateProvider.current
                     val systemUseCase = LocalUseCaseOfSystem.current
                     val mediaAudioRecorderUseCase = LocalUseCaseOfMediaAudioRecorder.current
                     val mediaRemoteExoUseCase = LocalUseCaseOfMediaRemoteExo.current
@@ -692,7 +683,7 @@ fun MainNaviHostPagesContainer(
                                 imMessage,
                                 conversationUseCase,
                                 mediaRemoteExoUseCase,
-                                anyStateProvider
+                                visibilityComposeStateProvider
                             )
                         },
                         onAddAIModelClick = {
@@ -729,7 +720,7 @@ fun MainNaviHostPagesContainer(
                             coroutineScope.launch {
                                 showContentSelectionDialog(
                                     context,
-                                    anyStateProvider,
+                                    visibilityComposeStateProvider,
                                     navController,
                                     PageRouteNames.ConversationDetailsPage,
                                     requestKey,
@@ -775,22 +766,22 @@ fun MainNaviHostPagesContainer(
                             mediaAudioRecorderUseCase.resumeRecord("UI click")
                         },
                         onMoreClick = { imObj ->
-                            anyStateProvider.bottomSheetState()
-                                .show {
-                                    ConversationDetailsMoreInfoSheetContent(
-                                        imObj = imObj,
-                                        onBioClick = { bio ->
-                                            coroutineScope.launch {
-                                                onBioClick(context, navController, bio)
-                                            }
-                                        },
-                                        onRequestAddFriend = {},
-                                        onRequestDeleteFriend = {},
-                                        onRequestJoinGroup = {},
-                                        onRequestLeaveGroup = {},
-                                        onRequestDeleteGroup = {},
-                                    )
-                                }
+                            val bottomSheetState = visibilityComposeStateProvider.bottomSheetState()
+                            bottomSheetState.show {
+                                ConversationDetailsMoreInfoSheetContent(
+                                    imObj = imObj,
+                                    onBioClick = { bio ->
+                                        coroutineScope.launch {
+                                            onBioClick(context, navController, bio)
+                                        }
+                                    },
+                                    onRequestAddFriend = {},
+                                    onRequestDeleteFriend = {},
+                                    onRequestJoinGroup = {},
+                                    onRequestLeaveGroup = {},
+                                    onRequestDeleteGroup = {},
+                                )
+                            }
                         },
                         onLandscapeModeEndBackClick = {
                             conversationUseCase.updateCurrentSession(null)
@@ -812,7 +803,7 @@ fun MainNaviHostPagesContainer(
                 ) {
                     val context = LocalContext.current
                     val conversationUseCase = LocalUseCaseOfConversation.current
-                    val anyStateProvider = LocalVisibilityComposeStateProvider.current
+                    val visibilityComposeStateProvider = LocalVisibilityComposeStateProvider.current
                     val mediaAudioRecorderUseCase = LocalUseCaseOfMediaAudioRecorder.current
                     val mediaRemoteExoUseCase = LocalUseCaseOfMediaRemoteExo.current
                     val nowSpaceContentUseCase = LocalUseCaseOfNowSpaceContent.current
@@ -834,14 +825,14 @@ fun MainNaviHostPagesContainer(
                                 imMessage,
                                 conversationUseCase,
                                 mediaRemoteExoUseCase,
-                                anyStateProvider
+                                visibilityComposeStateProvider
                             )
                         },
                         onInputMoreAction = { requestType ->
                             coroutineScope.launch {
                                 showContentSelectionDialog(
                                     context,
-                                    anyStateProvider,
+                                    visibilityComposeStateProvider,
                                     navController,
                                     PageRouteNames.ConversationDetailsPage,
                                     requestType,
@@ -886,22 +877,22 @@ fun MainNaviHostPagesContainer(
                             mediaAudioRecorderUseCase.resumeRecord("UI click")
                         },
                         onMoreClick = { imObj ->
-                            anyStateProvider.bottomSheetState()
-                                .show {
-                                    ConversationDetailsMoreInfoSheetContent(
-                                        imObj = imObj,
-                                        onBioClick = { bio ->
-                                            coroutineScope.launch {
-                                                onBioClick(context, navController, bio)
-                                            }
-                                        },
-                                        onRequestAddFriend = {},
-                                        onRequestDeleteFriend = {},
-                                        onRequestJoinGroup = {},
-                                        onRequestLeaveGroup = {},
-                                        onRequestDeleteGroup = {},
-                                    )
-                                }
+                            val bottomSheetState = visibilityComposeStateProvider.bottomSheetState()
+                            bottomSheetState.show {
+                                ConversationDetailsMoreInfoSheetContent(
+                                    imObj = imObj,
+                                    onBioClick = { bio ->
+                                        coroutineScope.launch {
+                                            onBioClick(context, navController, bio)
+                                        }
+                                    },
+                                    onRequestAddFriend = {},
+                                    onRequestDeleteFriend = {},
+                                    onRequestJoinGroup = {},
+                                    onRequestLeaveGroup = {},
+                                    onRequestDeleteGroup = {},
+                                )
+                            }
                         }
                     )
                 }
@@ -916,7 +907,7 @@ fun MainNaviHostPagesContainer(
                 val context = LocalContext.current
                 val systemUseCase = LocalUseCaseOfSystem.current
                 val qrCodeUseCase = LocalUseCaseOfQRCode.current
-                val anyStateProvider = LocalVisibilityComposeStateProvider.current
+                val visibilityComposeStateProvider = LocalVisibilityComposeStateProvider.current
                 val navigationUseCase = LocalUseCaseOfNavigation.current
                 val coroutineScope = rememberCoroutineScope()
                 val loginSignUpPageState by systemUseCase.loginSignUpPageState
@@ -953,7 +944,7 @@ fun MainNaviHostPagesContainer(
                                 context,
                                 account,
                                 password,
-                                anyStateProvider
+                                visibilityComposeStateProvider
                             )
                         }
                     }
@@ -968,7 +959,7 @@ fun MainNaviHostPagesContainer(
             ) {
                 val context = LocalContext.current
                 val systemUseCase = LocalUseCaseOfSystem.current
-                val anyStateProvider = LocalVisibilityComposeStateProvider.current
+                val visibilityComposeStateProvider = LocalVisibilityComposeStateProvider.current
                 val coroutineScope = rememberCoroutineScope()
                 val loginSignUpPageState by systemUseCase.loginSignUpPageState
                 LaunchedEffect(true) {
@@ -981,7 +972,7 @@ fun MainNaviHostPagesContainer(
                         coroutineScope.launch {
                             showContentSelectionDialog(
                                 context,
-                                anyStateProvider,
+                                visibilityComposeStateProvider,
                                 navController,
                                 PageRouteNames.SignUpPage,
                                 requestKey,
@@ -1165,7 +1156,7 @@ fun MainNaviHostPagesContainer(
                 ) {
                     val context = LocalContext.current
                     val searchUseCase = LocalUseCaseOfSearch.current
-                    val anyStateProvider = LocalVisibilityComposeStateProvider.current
+                    val visibilityComposeStateProvider = LocalVisibilityComposeStateProvider.current
                     val coroutineScope = rememberCoroutineScope()
                     SearchPage(
                         onBioClick = { bio ->
@@ -1176,9 +1167,8 @@ fun MainNaviHostPagesContainer(
                         onScreenMediaClick = { url, urls ->
                             handleScreenMediaClick(
                                 context,
-                                isShowRestrictedContentDialogState,
-                                restrictedContentConfirmCallbackState,
-                                anyStateProvider,
+                                restrictedContentHandleState,
+                                visibilityComposeStateProvider,
                                 url,
                                 urls
                             )
@@ -1248,7 +1238,7 @@ fun MainNaviHostPagesContainer(
                 ) {
                     val context = LocalContext.current
                     val systemUseCase = LocalUseCaseOfSystem.current
-                    val anyStateProvider = LocalVisibilityComposeStateProvider.current
+                    val visibilityComposeStateProvider = LocalVisibilityComposeStateProvider.current
                     val createGroupPageState by systemUseCase.createGroupPageState
                     val coroutineScope = rememberCoroutineScope()
                     CreateGroupPage(
@@ -1261,7 +1251,7 @@ fun MainNaviHostPagesContainer(
                             coroutineScope.launch {
                                 showContentSelectionDialog(
                                     context,
-                                    anyStateProvider,
+                                    visibilityComposeStateProvider,
                                     navController,
                                     PageRouteNames.CreateGroupPage,
                                     requestKey,
@@ -1382,7 +1372,7 @@ fun MainNaviHostPagesContainer(
                 ) {
                     val context = LocalContext.current
                     val userInfoUseCase = LocalUseCaseOfUserInfo.current
-                    val anyStateProvider = LocalVisibilityComposeStateProvider.current
+                    val visibilityComposeStateProvider = LocalVisibilityComposeStateProvider.current
                     val conversationUseCase = LocalUseCaseOfConversation.current
                     val systemUseCase = LocalUseCaseOfSystem.current
                     val screenUseCase = LocalUseCaseOfScreen.current
@@ -1431,9 +1421,8 @@ fun MainNaviHostPagesContainer(
                         onScreenMediaClick = { url, urls ->
                             handleScreenMediaClick(
                                 context,
-                                isShowRestrictedContentDialogState,
-                                restrictedContentConfirmCallbackState,
-                                anyStateProvider,
+                                restrictedContentHandleState,
+                                visibilityComposeStateProvider,
                                 url,
                                 urls
                             )
@@ -1447,7 +1436,7 @@ fun MainNaviHostPagesContainer(
                             coroutineScope.launch {
                                 showContentSelectionDialog(
                                     context,
-                                    anyStateProvider,
+                                    visibilityComposeStateProvider,
                                     navController,
                                     PageRouteNames.UserProfilePage,
                                     requestKey,
@@ -1466,11 +1455,7 @@ fun MainNaviHostPagesContainer(
         }
 
         RestrictedContentDialog(
-            isShow = isShowRestrictedContentDialog,
-            onConfirmClick = restrictedContentConfirmCallback,
-            onDismissRequest = {
-                isShowRestrictedContentDialog = false
-            }
+            restrictedContentHandleState = restrictedContentHandleState
         )
     }
 }
@@ -1488,8 +1473,8 @@ fun publishComposeNaviHostFormedEvent(navController: NavHostController, builder:
  */
 @Composable
 fun NaviHostBackHandlerInterceptor(navController: NavHostController) {
-    val anyStateProvider = LocalVisibilityComposeStateProvider.current
-    val immerseContentState = anyStateProvider.immerseContentState()
+    val visibilityComposeStateProvider = LocalVisibilityComposeStateProvider.current
+    val immerseContentState = visibilityComposeStateProvider.immerseContentState()
     PredictiveBackHandler(immerseContentState.isShow) {
         PurpleLogger.current.d(
             TAG,
@@ -1520,7 +1505,10 @@ fun DesignNaviHost(
             scaleOut(targetScale = 1.07f, animationSpec = tween()) + fadeOut(tween())
         },
         contentAlignment = Alignment.TopCenter,
-        builder = builder,
+        builder = {
+            publishComposeNaviHostFormedEvent(navController, this)
+            builder()
+        },
     )
     NaviHostBackHandlerInterceptor(navController)
 }
@@ -1571,7 +1559,7 @@ suspend fun onBioClick(
 }
 
 @SuppressLint("RestrictedApi")
-fun navigateToAppDetailsPage(
+private fun navigateToAppDetailsPage(
     navController: NavHostController,
     appsUseCase: AppsUseCase,
     application: Application,
@@ -1589,7 +1577,7 @@ fun navigateToAppDetailsPage(
 }
 
 @SuppressLint("RestrictedApi")
-fun navigateToCreateAppPage(
+private fun navigateToCreateAppPage(
     navController: NavController,
     application: Application?,
     platform: AppPlatform?,
@@ -1621,7 +1609,7 @@ fun navigateToCreateAppPage(
     return true
 }
 
-suspend fun navigateToUserInfoPage(
+private suspend fun navigateToUserInfoPage(
     context: Context,
     navController: NavController,
     uid: String?,
@@ -1640,7 +1628,7 @@ suspend fun navigateToUserInfoPage(
     navController.navigate(PageRouteNames.UserProfilePage)
 }
 
-fun showPictureViewDialog(
+private fun showPictureViewDialog(
     visibilityComposeStateProvider: VisibilityComposeStateProvider,
     context: Context,
     data: Any,
@@ -1731,7 +1719,7 @@ fun showPictureViewDialog(
     }
 }
 
-suspend fun showContentSelectionDialog(
+private fun showContentSelectionDialog(
     context: Context,
     visibilityComposeStateProvider: VisibilityComposeStateProvider,
     navController: NavController,
@@ -1740,7 +1728,6 @@ suspend fun showContentSelectionDialog(
     requestSelectionTypeParams: List<ContentSelectionRequest.SelectionTypeParam> = defaultAllSelectionTypeParam(),
     defaultSelectionType: String = requestSelectionTypeParams.first().selectionType,
 ) {
-    val bottomSheetContainerState = visibilityComposeStateProvider.bottomSheetState()
     val request = ContentSelectionRequest(
         context,
         contextName,
@@ -1748,18 +1735,19 @@ suspend fun showContentSelectionDialog(
         requestSelectionTypeParams,
         defaultSelectionType
     )
-    bottomSheetContainerState.show {
-        ContentSelectSheetContentPrompt(
+    val bottomSheetState = visibilityComposeStateProvider.bottomSheetState()
+    bottomSheetState.show {
+        ContentSelectionPromptSheetContent(
             request = request,
             onContentSelected = { contentSelectionResult ->
-                bottomSheetContainerState.hide()
+                bottomSheetState.hide()
                 LocalMessenger.post(
                     ModuleConstant.MESSAGE_KEY_ON_CONTENT_SELECT_RESULT,
                     contentSelectionResult
                 )
             },
             onDismiss = {
-                bottomSheetContainerState.hide()
+                bottomSheetState.hide()
             }
         )
     }
@@ -1791,11 +1779,11 @@ fun navigateToVideoPlaybackActivity(context: Context, playbackContent: Any) {
 
         is VideoMessage -> {
             val uriPair = playbackContent.requireUri() ?: return
-            val url = uriPair.first?.toString() ?: return
+            val uri = uriPair.first?.toString() ?: return
             CommonURIJson(
                 playbackContent.id,
                 playbackContent.metadata.description,
-                url
+                uri
             )
         }
 
@@ -1803,7 +1791,17 @@ fun navigateToVideoPlaybackActivity(context: Context, playbackContent: Any) {
             CommonURIJson(
                 playbackContent.id.toString(),
                 playbackContent.displayName ?: "",
-                playbackContent.uri.toString(),
+                playbackContent.provideUri().toString(),
+                true
+            )
+        }
+
+        is UriProvider -> {
+            val bioId = UUID.randomUUID().toString()
+            CommonURIJson(
+                bioId,
+                bioId,
+                playbackContent.provideUri().toString(),
                 true
             )
         }
@@ -1897,7 +1895,7 @@ fun navigateToExternalWeb(context: Context, uri: Uri) {
     }
 }
 
-suspend fun handleApplicationDownload(
+private suspend fun handleApplicationDownload(
     context: Context,
     application: Application,
     downloadInfo: DownloadInfo,
@@ -1917,7 +1915,7 @@ suspend fun handleApplicationDownload(
     navigateToExternalWeb(context, uri)
 }
 
-fun handleImMessageContentClick(
+private fun handleImMessageContentClick(
     context: Context,
     imMessage: IMMessage,
     conversationUseCase: ConversationUseCase,
@@ -1978,10 +1976,9 @@ fun handleImMessageContentClick(
     }
 }
 
-fun handleScreenMediaClick(
+private fun handleScreenMediaClick(
     context: Context,
-    isShowRestrictedContentDialogState: MutableState<Boolean>,
-    restrictedContentConfirmCallbackState: MutableState<(() -> Unit)?>,
+    restrictedContentHandleState: RestrictedContentHandleState,
     visibilityComposeStateProvider: VisibilityComposeStateProvider,
     url: ScreenMediaFileUrl,
     urls: List<ScreenMediaFileUrl>,
@@ -2002,8 +1999,8 @@ fun handleScreenMediaClick(
 
     }
     if (url.isRestrictedContent) {
-        restrictedContentConfirmCallbackState.value = callback
-        isShowRestrictedContentDialogState.value = true
+        restrictedContentHandleState.setCallback(callback)
+        restrictedContentHandleState.show()
     } else {
         callback.invoke()
     }

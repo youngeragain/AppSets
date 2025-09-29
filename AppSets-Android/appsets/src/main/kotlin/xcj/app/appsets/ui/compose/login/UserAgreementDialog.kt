@@ -33,7 +33,7 @@ class UserAgreementComposeViewProvider(
 }
 
 @Composable
-fun UserAgreementPopupPage(onClick: (Boolean) -> Unit) {
+private fun UserAgreementPopupPage(onClick: (Boolean) -> Unit) {
     val hapticFeedback = LocalHapticFeedback.current
     Column(
         modifier = Modifier.padding(12.dp),

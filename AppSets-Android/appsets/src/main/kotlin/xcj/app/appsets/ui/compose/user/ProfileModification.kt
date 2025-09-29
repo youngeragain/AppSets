@@ -32,7 +32,7 @@ import xcj.app.compose_share.components.DesignHDivider
 import xcj.app.compose_share.components.DesignTextField
 
 @Composable
-fun ProfileModificationComponent(
+fun ProfileModification(
     userInfo: UserInfo,
     onSelectUserAvatarClick: (String) -> Unit,
     onConfirmClick: () -> Unit,

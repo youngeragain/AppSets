@@ -87,7 +87,7 @@ class ConversationQuickStepHandler : QuickStepContentHandler() {
                 if (requestReplaceHostContent.replaceRequest == "quick_send_content") {
                     val quickStepContents =
                         requestReplaceHostContent.payload as? List<QuickStepContent>
-                    ConversationQuickStepBottomSheet(quickStepContents)
+                    ConversationQuickStepSheetContent(quickStepContents)
                 }
             }
         }

@@ -1,8 +1,6 @@
 package xcj.app.appsets.ui.compose.main
 
 import android.annotation.SuppressLint
-import android.content.Context
-import android.content.Intent
 import android.os.Bundle
 import androidx.compose.animation.core.AnimationState
 import androidx.compose.animation.core.animateTo
@@ -28,7 +26,6 @@ import androidx.navigation.NavDirections
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
-import androidx.navigation.navOptions
 import dev.chrisbanes.haze.rememberHazeState
 import kotlinx.coroutines.launch
 import xcj.app.appsets.ui.compose.LocalNavHostController
@@ -48,14 +45,9 @@ import xcj.app.appsets.ui.compose.LocalUseCaseOfSearch
 import xcj.app.appsets.ui.compose.LocalUseCaseOfSystem
 import xcj.app.appsets.ui.compose.LocalUseCaseOfUserInfo
 import xcj.app.appsets.ui.compose.PageRouteNames
-import xcj.app.appsets.ui.compose.media.video.fall.MediaFallActivity
 import xcj.app.appsets.ui.compose.quickstep.QuickStepContentHandlerRegistry
-import xcj.app.appsets.ui.model.TabAction
-import xcj.app.appsets.ui.model.TabItem
+import xcj.app.appsets.ui.model.state.AppUpdateState
 import xcj.app.appsets.ui.viewmodel.MainViewModel
-import xcj.app.appsets.usecase.AppUpdateState
-import xcj.app.appsets.usecase.ConversationUseCase
-import xcj.app.appsets.usecase.ScreenUseCase
 import xcj.app.compose_share.components.BottomSheetContainer
 import xcj.app.compose_share.components.LocalUseCaseOfComposeDynamic
 import xcj.app.compose_share.components.LocalVisibilityComposeStateProvider
@@ -64,26 +56,6 @@ import xcj.app.compose_share.ui.viewmodel.VisibilityComposeStateViewModel.Compan
 import xcj.app.starter.android.util.PurpleLogger
 
 private const val TAG = "MainPages"
-
-@SuppressLint("RestrictedApi")
-fun NavHostController.navigateWithBundle(
-    route: String,
-    bundleCreator: () -> Bundle,
-) {
-    val destinationId = findDestination(route)?.id
-    if (destinationId == null) {
-        PurpleLogger.current.d(
-            TAG,
-            "navigateWithBundle, route:$route, destinationId is null, return"
-        )
-        return
-    }
-    val navDirections: NavDirections = object : NavDirections {
-        override val actionId: Int = destinationId
-        override val arguments: Bundle = bundleCreator()
-    }
-    navigate(navDirections)
-}
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
@@ -154,15 +126,16 @@ fun MainPage() {
 }
 
 @Composable
-fun OnScaffoldLaunch(navController: NavController) {
+private fun OnScaffoldLaunch(navController: NavController) {
     val context = LocalContext.current
     val systemUseCase = LocalUseCaseOfSystem.current
     val navigationUseCase = LocalUseCaseOfNavigation.current
-    val anyStateProvider = LocalVisibilityComposeStateProvider.current
+    val visibilityComposeStateProvider = LocalVisibilityComposeStateProvider.current
     val localQuickStepContentHandlerRegistry = LocalQuickStepContentHandlerRegistry.current
     val appUpdateState by systemUseCase.appUpdateState
     LaunchedEffect(Unit) {
-        anyStateProvider.bottomSheetState().markComposeAvailableState(true)
+        val bottomSheetState = visibilityComposeStateProvider.bottomSheetState()
+        bottomSheetState.markComposeAvailableState(true)
     }
     LaunchedEffect(key1 = appUpdateState, block = {
         val updateState = appUpdateState
@@ -177,7 +150,8 @@ fun OnScaffoldLaunch(navController: NavController) {
         navigationUseCase.initTabItems()
         val destinationChangedListener: NavController.OnDestinationChangedListener =
             NavController.OnDestinationChangedListener { _, destination, _ ->
-                anyStateProvider.bottomSheetState().hide()
+                val bottomSheetState = visibilityComposeStateProvider.bottomSheetState()
+                bottomSheetState.hide()
                 navigationUseCase.invalidateTabItemsOnRouteChanged(
                     destination.route,
                     "On Destination Changed"
@@ -195,9 +169,9 @@ fun OnScaffoldLaunch(navController: NavController) {
 }
 
 @Composable
-fun Modifier.mainScaffoldHandle(): Modifier = composed {
-    val anyStateProvider = LocalVisibilityComposeStateProvider.current
-    val immerseContentState = anyStateProvider.immerseContentState()
+private fun Modifier.mainScaffoldHandle(): Modifier = composed {
+    val visibilityComposeStateProvider = LocalVisibilityComposeStateProvider.current
+    val immerseContentState = visibilityComposeStateProvider.immerseContentState()
     val renderEffectAnimateState = remember {
         AnimationState(0f)
     }
@@ -223,76 +197,31 @@ fun Modifier.mainScaffoldHandle(): Modifier = composed {
     }
 }
 
+@SuppressLint("RestrictedApi")
+fun NavHostController.navigateWithBundle(
+    route: String,
+    bundleCreator: () -> Bundle,
+) {
+    val destinationId = findDestination(route)?.id
+    if (destinationId == null) {
+        PurpleLogger.current.d(
+            TAG,
+            "navigateWithBundle, route:$route, destinationId is null, return"
+        )
+        return
+    }
+    val navDirections: NavDirections = object : NavDirections {
+        override val actionId: Int = destinationId
+        override val arguments: Bundle = bundleCreator()
+    }
+    navigate(navDirections)
+}
+
 fun NavHostController.navigateWithClearStack(route: String) {
     navigate(route) {
         popUpTo(graph.findStartDestination().id) {
             inclusive = true
         }
         launchSingleTop = true
-    }
-}
-
-suspend fun handleTabClick(
-    context: Context,
-    tab: TabItem,
-    tabAction: TabAction?,
-    navController: NavController,
-    screenUseCase: ScreenUseCase,
-    conversationUseCase: ConversationUseCase
-) {
-    if (tabAction != null) {
-        when (tab.routeName) {
-            PageRouteNames.AppsCenterPage -> {
-                if (tabAction.route.isNullOrEmpty()) {
-                    when (tabAction.action) {
-                        TabAction.ACTION_APP_TOOLS -> {
-
-                        }
-                    }
-                } else {
-                    tabAction.route?.let(navController::navigate)
-                }
-            }
-
-            PageRouteNames.OutSidePage -> {
-                if (tabAction.route.isNullOrEmpty()) {
-                    when (tabAction.action) {
-                        TabAction.ACTION_REFRESH -> {
-                            screenUseCase.loadOutSideScreens()
-                        }
-                    }
-                } else {
-                    when (tabAction.route) {
-                        PageRouteNames.MediaFallPage -> {
-                            context.startActivity(
-                                Intent(
-                                    context,
-                                    MediaFallActivity::class.java
-                                )
-                            )
-                        }
-
-                        else -> {
-                            tabAction.route?.let(navController::navigate)
-                        }
-                    }
-                }
-            }
-
-            PageRouteNames.ConversationOverviewPage -> {
-                conversationUseCase.toggleShowAddActions()
-            }
-        }
-    } else if (!tab.isSelect) {
-        navController.navigate(tab.routeName, navOptions {
-            popUpTo(navController.graph.findStartDestination().id) {
-                saveState = true
-            }
-            // Avoid multiple copies of the same destination when
-            // reselecting the same item
-            launchSingleTop = true
-            // Restore state when reselecting a previously selected item
-            restoreState = true
-        })
     }
 }

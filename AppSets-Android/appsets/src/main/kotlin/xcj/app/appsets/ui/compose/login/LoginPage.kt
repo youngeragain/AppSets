@@ -76,6 +76,7 @@ fun LoginPage(
     onLoginConfirmButtonClick: (String, String) -> Unit,
 ) {
     HideNavBar()
+    val configuration = LocalConfiguration.current
     val qrCodeUseCase = LocalUseCaseOfQRCode.current
     LaunchedEffect(loginSignUpPageState) {
         if (loginSignUpPageState is LoginSignUpPageState.LoggingFinish) {
@@ -90,7 +91,6 @@ fun LoginPage(
     Box(
         modifier = Modifier.fillMaxSize()
     ) {
-        val configuration = LocalConfiguration.current
         if (configuration.orientation == Configuration.ORIENTATION_PORTRAIT) {
             LoginComponent1(
                 modifier = Modifier,
@@ -140,7 +140,7 @@ fun LoginPage(
 }
 
 @Composable
-fun LoginComponent2(
+private fun LoginComponent2(
     modifier: Modifier,
     loginSignUpPageState: LoginSignUpPageState,
     onBackClick: () -> Unit,
@@ -208,7 +208,7 @@ fun LoginComponent2(
 }
 
 @Composable
-fun LoginComponent1(
+private fun LoginComponent1(
     modifier: Modifier,
     generatedQRCodeInfo: QRCodeInfoScannedState.AppSetsQRCodeInfo?,
     onSignUpButtonClick: () -> Unit,
@@ -288,7 +288,7 @@ fun LoginComponent1(
 }
 
 @Composable
-fun LoginIndicator(loginSignUpPageState: LoginSignUpPageState) {
+private fun LoginIndicator(loginSignUpPageState: LoginSignUpPageState) {
     AnimatedVisibility(
         visible = loginSignUpPageState is LoginSignUpPageState.Logging,
         enter = fadeIn(tween()) + scaleIn(

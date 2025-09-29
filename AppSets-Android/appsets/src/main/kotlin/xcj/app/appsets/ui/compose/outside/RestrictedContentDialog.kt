@@ -25,18 +25,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 
 @Composable
 fun RestrictedContentDialog(
-    isShow: Boolean,
-    onConfirmClick: (() -> Unit)?,
-    onDismissRequest: () -> Unit
+    restrictedContentHandleState: RestrictedContentHandleState
 ) {
+    val isShow by restrictedContentHandleState.isShow
     if (isShow) {
         BasicAlertDialog(
-            onDismissRequest = onDismissRequest
+            onDismissRequest = {
+                restrictedContentHandleState.hide()
+            }
         ) {
             var requestToView by remember {
                 mutableStateOf(false)
@@ -55,8 +55,8 @@ fun RestrictedContentDialog(
                         if (requestToView) {
                             clickCount += 1
                             if (clickCount >= 10) {
-                                onDismissRequest()
-                                onConfirmClick?.invoke()
+                                restrictedContentHandleState.hide()
+                                restrictedContentHandleState.doCallback()
                             }
                         }
                     }) {
@@ -91,7 +91,7 @@ fun RestrictedContentDialog(
                             if (!requestToView) {
                                 requestToView = true
                             } else {
-                                onDismissRequest()
+                                restrictedContentHandleState.hide()
                             }
                         },
                         contentPadding = PaddingValues(0.dp)
@@ -107,13 +107,4 @@ fun RestrictedContentDialog(
             }
         }
     }
-}
-
-
-@Preview(showBackground = true)
-@Composable
-fun RestrictedContentDialogPreview() {
-    RestrictedContentDialog(
-        true, {}, {}
-    )
 }

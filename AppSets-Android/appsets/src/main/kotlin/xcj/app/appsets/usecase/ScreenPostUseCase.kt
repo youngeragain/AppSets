@@ -50,7 +50,7 @@ class ScreenPostUseCase(
     }
 
     fun onAddMediaFallClick() {
-        ScreenInfoForCreate.updateStateAddMediaFallClick(postScreenPageState)
+        ScreenInfoForCreate.updateStateAddMediaFallStatus(postScreenPageState)
     }
 
     fun updateSelectPictures(uriProviderList: List<UriProvider>) {

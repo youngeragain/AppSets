@@ -19,8 +19,8 @@ fun ImmerseContentContainer(
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
-    val anyStateProvider = LocalVisibilityComposeStateProvider.current
-    val immerseContentState = anyStateProvider.immerseContentState()
+    val visibilityComposeStateProvider = LocalVisibilityComposeStateProvider.current
+    val immerseContentState = visibilityComposeStateProvider.immerseContentState()
     Box(
         modifier
             .fillMaxSize()

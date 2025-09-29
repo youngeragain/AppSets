@@ -58,7 +58,7 @@ data class ScreenInfoForCreate(
                 newPostScreen.copy(postScreen.copy(associatePeoples = associatePeoples))
         }
 
-        fun updateStateAddMediaFallClick(state: MutableState<PostScreenPageState>) {
+        fun updateStateAddMediaFallStatus(state: MutableState<PostScreenPageState>) {
             val newPostScreen = state.value as? PostScreenPageState.NewPostScreenPage
             if (newPostScreen == null) {
                 return

@@ -64,7 +64,6 @@ import xcj.app.appsets.ui.compose.custom_component.HideNavBar
 import xcj.app.appsets.ui.compose.quickstep.QuickStepContent
 import xcj.app.appsets.ui.model.ScreenInfoForCreate
 import xcj.app.appsets.ui.model.page_state.PostScreenPageState
-import xcj.app.appsets.util.model.MediaStoreDataUri
 import xcj.app.appsets.util.model.UriProvider
 import xcj.app.compose_share.components.BackActionTopBar
 import xcj.app.compose_share.components.DesignTextField
@@ -421,14 +420,12 @@ fun NewPostScreenComponent(
                 )
         ) {
             val videoUriProvider = screenInfoForCreate.videos.firstOrNull()
-            val mediaStoreDataUri =
-                videoUriProvider as? MediaStoreDataUri
-            if (mediaStoreDataUri != null) {
+            if (videoUriProvider != null) {
                 AnyImage(
                     modifier = Modifier
                         .fillMaxSize()
                         .clip(MaterialTheme.shapes.extraLarge),
-                    model = mediaStoreDataUri.provideUri()
+                    model = videoUriProvider.provideUri()
                 )
             }
 

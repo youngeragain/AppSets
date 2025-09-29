@@ -187,7 +187,7 @@ fun NowSpaceContainer(
 }
 
 @Composable
-fun QuickStepBarContainer(
+private fun QuickStepBarContainer(
     modifier: Modifier = Modifier,
     isVisible: Boolean,
     onClick: () -> Unit,
@@ -250,7 +250,7 @@ fun QuickStepBarContainer(
 }
 
 @Composable
-fun ImMessageQuickStepBar(
+private fun ImMessageQuickStepBar(
     modifier: Modifier = Modifier,
     nowSpaceContent: NowSpaceContent.IMMessage,
     isBarLongPressed: Boolean,
@@ -370,7 +370,7 @@ fun ImMessageQuickStepBar(
 }
 
 @Composable
-fun PlatformPermissionUsageTipsQuickStepBar(
+private fun PlatformPermissionUsageTipsQuickStepBar(
     modifier: Modifier = Modifier,
     nowSpaceContent: NowSpaceContent.PlatformPermissionUsageTips,
     isBarLongPressed: Boolean,

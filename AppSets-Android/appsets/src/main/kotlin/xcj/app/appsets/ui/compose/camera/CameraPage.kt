@@ -78,7 +78,7 @@ fun CameraContent(
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     val qrCodeUseCase = LocalUseCaseOfQRCode.current
-    val anyStateProvider = LocalVisibilityComposeStateProvider.current
+    val visibilityComposeStateProvider = LocalVisibilityComposeStateProvider.current
 
     val viewModel = viewModel<DesignCameraViewModel>()
     val cameraComponents = remember {
@@ -87,8 +87,8 @@ fun CameraContent(
         }
     }
 
-    val composeContainerState =
-        anyStateProvider.bottomSheetState()
+    val bottomSheetState =
+        visibilityComposeStateProvider.bottomSheetState()
 
     val scannedQRCodeInfo by qrCodeUseCase.scannedQRCodeInfo
 
@@ -123,10 +123,10 @@ fun CameraContent(
     LaunchedEffect(scannedQRCodeInfo) {
         if (scannedQRCodeInfo == null) {
             PurpleLogger.current.d(TAG, "LaunchedEffect, composeContainerState.hide()")
-            composeContainerState.hide()
+            bottomSheetState.hide()
         } else {
             PurpleLogger.current.d(TAG, "LaunchedEffect, composeContainerState.show()")
-            composeContainerState.show {
+            bottomSheetState.show {
                 val qRCodeInfoScannedState = scannedQRCodeInfo
                 if(qRCodeInfoScannedState ==null){
                     return@show

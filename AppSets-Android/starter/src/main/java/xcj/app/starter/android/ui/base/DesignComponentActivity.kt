@@ -26,7 +26,11 @@ abstract class DesignComponentActivity :
     }
 
     override fun getSystemContentSelectionCallback(): SystemContentSelectionCallback? {
-        return systemContentSelectionCallback
+        val returnSystemContentSelectionCallback = systemContentSelectionCallback
+        if (returnSystemContentSelectionCallback !== null && returnSystemContentSelectionCallback.autoRemove()) {
+            this.systemContentSelectionCallback = null
+        }
+        return returnSystemContentSelectionCallback
     }
 
     override fun dispatchTouchEvent(ev: MotionEvent?): Boolean {

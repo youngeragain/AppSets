@@ -95,7 +95,7 @@ fun ExternalContentSheetContent(
 }
 
 @Composable
-fun ExternalContentTipsSheet(
+private fun ExternalContentTipsSheet(
     modifier: Modifier = Modifier,
     quickStepContentHolder: QuickStepContentHolder,
     fromAppDefinition: AppDefinition?,

@@ -6,8 +6,9 @@ import android.Manifest
 import android.graphics.Color
 import android.net.Uri
 import android.provider.MediaStore
-import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.PickVisualMediaRequest.Builder
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia.SingleMimeType
 import androidx.camera.view.PreviewView
 import androidx.camera.view.PreviewView.ImplementationMode
 import androidx.compose.animation.AnimatedContent
@@ -21,6 +22,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -83,6 +85,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -106,6 +109,7 @@ import kotlinx.coroutines.launch
 import xcj.app.appsets.ui.compose.LocalUseCaseOfNowSpaceContent
 import xcj.app.appsets.ui.compose.camera.CameraComponents
 import xcj.app.appsets.ui.compose.content_selection.ContentSelectionRequest.SelectionTypeParam
+import xcj.app.appsets.ui.compose.content_selection.ContentSelectionResult.RichMediaContentSelectionResult
 import xcj.app.appsets.ui.compose.custom_component.AnyImage
 import xcj.app.appsets.ui.compose.custom_component.DragValue
 import xcj.app.appsets.ui.compose.custom_component.LoadMoreHandler
@@ -117,6 +121,7 @@ import xcj.app.appsets.util.model.UriProvider
 import xcj.app.compose_share.components.DesignTextField
 import xcj.app.compose_share.components.DesignVDivider
 import xcj.app.starter.android.ActivityThemeInterface
+import xcj.app.starter.android.SystemContentSelectionCallback
 import xcj.app.starter.android.ui.model.PlatformPermissionsUsage
 import xcj.app.starter.android.usecase.PlatformUseCase
 import java.io.File
@@ -127,37 +132,51 @@ typealias CountProvider = (String) -> Int
 private val defaultMaxCountProvider: CountProvider
     get() = { 1 }
 
-fun defaultImageSelectionTypeParam(countProvider: CountProvider = defaultMaxCountProvider): List<SelectionTypeParam> =
+fun defaultImageSelectionTypeParam(
+    countProvider: CountProvider = defaultMaxCountProvider
+): List<SelectionTypeParam> =
     listOf(
         SelectionTypeParam(ContentSelectionTypes.IMAGE, countProvider)
     )
 
-fun defaultVideoSelectionTypeParam(countProvider: CountProvider = defaultMaxCountProvider): List<SelectionTypeParam> =
+fun defaultVideoSelectionTypeParam(
+    countProvider: CountProvider = defaultMaxCountProvider
+): List<SelectionTypeParam> =
     listOf(
         SelectionTypeParam(ContentSelectionTypes.VIDEO, countProvider)
     )
 
-fun defaultAudioSelectionTypeParam(countProvider: CountProvider = defaultMaxCountProvider): List<SelectionTypeParam> =
+fun defaultAudioSelectionTypeParam(
+    countProvider: CountProvider = defaultMaxCountProvider
+): List<SelectionTypeParam> =
     listOf(
         SelectionTypeParam(ContentSelectionTypes.AUDIO, countProvider)
     )
 
-fun defaultFileSelectionTypeParam(countProvider: CountProvider = defaultMaxCountProvider): List<SelectionTypeParam> =
+fun defaultFileSelectionTypeParam(
+    countProvider: CountProvider = defaultMaxCountProvider
+): List<SelectionTypeParam> =
     listOf(
         SelectionTypeParam(ContentSelectionTypes.FILE, countProvider)
     )
 
-fun defaultLocationSelectionTypeParam(countProvider: CountProvider = defaultMaxCountProvider): List<SelectionTypeParam> =
+fun defaultLocationSelectionTypeParam(
+    countProvider: CountProvider = defaultMaxCountProvider
+): List<SelectionTypeParam> =
     listOf(
         SelectionTypeParam(ContentSelectionTypes.LOCATION, countProvider)
     )
 
-fun defaultCameraSelectionTypeParam(countProvider: CountProvider = defaultMaxCountProvider): List<SelectionTypeParam> =
+fun defaultCameraSelectionTypeParam(
+    countProvider: CountProvider = defaultMaxCountProvider
+): List<SelectionTypeParam> =
     listOf(
         SelectionTypeParam(ContentSelectionTypes.CAMERA, countProvider)
     )
 
-fun defaultAllSelectionTypeParam(countProvider: CountProvider = defaultMaxCountProvider): List<SelectionTypeParam> =
+fun defaultAllSelectionTypeParam(
+    countProvider: CountProvider = defaultMaxCountProvider
+): List<SelectionTypeParam> =
     defaultImageSelectionTypeParam(countProvider) +
             defaultVideoSelectionTypeParam(countProvider) +
             defaultAudioSelectionTypeParam(countProvider) +
@@ -165,96 +184,201 @@ fun defaultAllSelectionTypeParam(countProvider: CountProvider = defaultMaxCountP
             defaultLocationSelectionTypeParam(countProvider) +
             defaultCameraSelectionTypeParam(countProvider)
 
-data class ContentSelectionTab(
-    val selectionType: String,
-    val name: Int,
-)
+
+sealed interface ContentSelectionPageState {
+    object StartPrompt : ContentSelectionPageState
+    object AppImplementation : ContentSelectionPageState
+    data class SystemImplConfirm(
+        val systemSelectedContents: List<UriProvider>
+    ) : ContentSelectionPageState
+}
 
 @Composable
-fun ContentSelectSheetContentPrompt(
+fun ContentSelectionPromptSheetContent(
     request: ContentSelectionRequest,
+    shouldConfirmIfUseSystemImplementation: Boolean = true,
     onContentSelected: (ContentSelectionResult) -> Unit,
     onDismiss: () -> Unit,
 ) {
     val context = LocalContext.current
     val nowSpaceContentUseCase = LocalUseCaseOfNowSpaceContent.current
     val coroutineScope = rememberCoroutineScope()
-    var isUseAppImplementationClicked by remember {
-        mutableStateOf(false)
+    var contentSelectionPageState by remember {
+        mutableStateOf<ContentSelectionPageState>(ContentSelectionPageState.StartPrompt)
     }
     Box {
         AnimatedContent(
-            targetState = isUseAppImplementationClicked
-        ) { targetIsUseAppImplementationClicked ->
-            if (targetIsUseAppImplementationClicked) {
-                ContentSelectSheetContent(
-                    request = request,
-                    onContentSelected = onContentSelected
-                )
-            } else {
-                ContentSelectSheetContentPromptContent(
-                    onUseSystemClick = {
-                        val activity = context.asComponentActivityOrNull()
-                        if (activity == null) {
-                            return@ContentSelectSheetContentPromptContent
-                        }
-                        if (activity !is ActivityThemeInterface) {
-                            return@ContentSelectSheetContentPromptContent
-                        }
-                        activity.setSystemContentSelectionCallback { t ->
-                            if (t is Uri) {
-                                val uri = t
-                                val uriProvider = UriProvider.fromUri(uri)
-                                val selectedContents = listOf(uriProvider)
-                                val results =
-                                    ContentSelectionResult.RichMediaContentSelectionResult(
-                                        context,
-                                        request,
-                                        request.defaultSelectionType,
-                                        selectedContents
-                                    )
-                                onContentSelected(results)
+            targetState = contentSelectionPageState,
+            contentAlignment = Alignment.TopCenter,
+            transitionSpec = {
+                fadeIn(animationSpec = tween())
+                    .togetherWith(fadeOut(animationSpec = tween(90)))
+            }
+        ) { targetContentSelectionPageState ->
+            when (targetContentSelectionPageState) {
+                is ContentSelectionPageState.StartPrompt -> {
+                    ContentSelectPromptContent(
+                        onUseSystemImplClick = {
+                            val activity = context.asComponentActivityOrNull()
+                            if (activity == null) {
+                                return@ContentSelectPromptContent
                             }
-                        }
-                        onDismiss()
-                        val activityResultLauncher =
-                            activity.getActivityResultLauncher(
-                                ActivityResultContracts.PickVisualMedia::class.java,
-                                null
-                            )
-                        val singleMimeType =
-                            ActivityResultContracts.PickVisualMedia.SingleMimeType(request.defaultSelectionType)
-                        val pickVisualMediaRequest =
-                            PickVisualMediaRequest.Builder().setMediaType(singleMimeType).build()
-                        activityResultLauncher?.launch(pickVisualMediaRequest)
+                            if (activity !is ActivityThemeInterface) {
+                                return@ContentSelectPromptContent
+                            }
+                            val systemContentSelectionCallback =
+                                object : SystemContentSelectionCallback {
+                                    override fun onSystemContentSelected(content: Any?) {
+                                        if (content !is Uri) {
+                                            return
+                                        }
+                                        if (shouldConfirmIfUseSystemImplementation) {
+                                            val systemSelectedContents = listOf(content)
+                                                .map(UriProvider::fromUri)
+                                            contentSelectionPageState =
+                                                ContentSelectionPageState.SystemImplConfirm(
+                                                    systemSelectedContents
+                                                )
+                                        } else {
+                                            val systemSelectedContents = listOf(content)
+                                                .map(UriProvider::fromUri)
+                                            val results =
+                                                RichMediaContentSelectionResult(
+                                                    context,
+                                                    request,
+                                                    request.defaultSelectionType,
+                                                    systemSelectedContents
+                                                )
+                                            onContentSelected(results)
+                                            onDismiss()
+                                        }
 
-                    },
-                    onUseAppClick = {
-                        val platformFilePermission =
-                            PlatformPermissionsUsage.provideFilePermission(context)
-                        if (!platformFilePermission.granted) {
-                            onDismiss()
-                            coroutineScope.launch {
-                                nowSpaceContentUseCase.showPlatformPermissionUsageTipsIfNeeded(
-                                    context = context
+                                    }
+                                }
+                            activity.setSystemContentSelectionCallback(
+                                systemContentSelectionCallback
+                            )
+                            val activityResultLauncher =
+                                activity.getActivityResultLauncher(
+                                    ActivityResultContracts.PickVisualMedia::class.java,
+                                    null
                                 )
+                            val singleMimeType =
+                                SingleMimeType(request.defaultSelectionType)
+                            val pickVisualMediaRequest =
+                                Builder().setMediaType(singleMimeType)
+                                    .build()
+                            activityResultLauncher?.launch(pickVisualMediaRequest)
+                        },
+                        onUseAppImplClick = {
+                            val platformFilePermission =
+                                PlatformPermissionsUsage.provideFilePermission(context)
+                            if (!platformFilePermission.granted) {
+                                onDismiss()
+                                coroutineScope.launch {
+                                    nowSpaceContentUseCase.showPlatformPermissionUsageTipsIfNeeded(
+                                        context = context
+                                    )
+                                }
+                                return@ContentSelectPromptContent
                             }
-                            return@ContentSelectSheetContentPromptContent
+                            contentSelectionPageState = ContentSelectionPageState.AppImplementation
                         }
-                        isUseAppImplementationClicked = true
-                    }
-                )
+                    )
+                }
+
+                is ContentSelectionPageState.AppImplementation -> {
+                    AppImplContentSelectionContent(
+                        request = request,
+                        onContentSelected = onContentSelected
+                    )
+                }
+
+                is ContentSelectionPageState.SystemImplConfirm -> {
+                    SystemImplContentSelectionConfirmContent(
+                        systemImplConfirm = targetContentSelectionPageState,
+                        onConfirm = {
+                            val selectedContents =
+                                targetContentSelectionPageState.systemSelectedContents
+                            val results =
+                                RichMediaContentSelectionResult(
+                                    context,
+                                    request,
+                                    request.defaultSelectionType,
+                                    selectedContents
+                                )
+                            onContentSelected(results)
+                            onDismiss()
+                        }
+                    )
+                }
             }
         }
     }
 }
 
+@Composable
+private fun SystemImplContentSelectionConfirmContent(
+    modifier: Modifier = Modifier,
+    systemImplConfirm: ContentSelectionPageState.SystemImplConfirm,
+    onConfirm: () -> Unit
+) {
+    val gridState = rememberLazyGridState()
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+    ) {
+        LazyVerticalGrid(
+            columns = GridCells.Fixed(3),
+            modifier = Modifier.fillMaxWidth(),
+            state = gridState,
+            contentPadding = PaddingValues(
+                start = 4.dp,
+                top = 4.dp,
+                end = 4.dp,
+                bottom = 120.dp
+            )
+        ) {
+            items(
+                items = systemImplConfirm.systemSelectedContents
+            ) { contentUriProvider ->
+                Box(
+                    modifier = Modifier.padding(2.dp)
+                ) {
+                    AnyImage(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(120.dp)
+                            .border(
+                                1.dp,
+                                MaterialTheme.colorScheme.outline,
+                                RectangleShape
+                            ),
+                        model = contentUriProvider.provideUri()
+                    )
+                }
+            }
+        }
+        Column(
+            modifier = Modifier
+                .padding(12.dp)
+                .align(Alignment.BottomEnd)
+        ) {
+            FilledTonalButton(
+                onClick = onConfirm
+            ) {
+                Text(text = stringResource(xcj.app.appsets.R.string.ok))
+            }
+        }
+    }
+
+}
 
 @Composable
-private fun ContentSelectSheetContentPromptContent(
+private fun ContentSelectPromptContent(
     modifier: Modifier = Modifier,
-    onUseSystemClick: () -> Unit,
-    onUseAppClick: () -> Unit,
+    onUseSystemImplClick: () -> Unit,
+    onUseAppImplClick: () -> Unit,
 ) {
     Column(
         modifier = modifier.padding(
@@ -272,7 +396,7 @@ private fun ContentSelectSheetContentPromptContent(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .clickable(onClick = onUseSystemClick)
+                .clickable(onClick = onUseSystemImplClick)
                 .padding(6.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
@@ -303,7 +427,7 @@ private fun ContentSelectSheetContentPromptContent(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .clickable(onClick = onUseAppClick)
+                .clickable(onClick = onUseAppImplClick)
                 .padding(6.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
@@ -332,37 +456,47 @@ private fun ContentSelectSheetContentPromptContent(
 }
 
 @Composable
-private fun ContentSelectSheetContent(
+private fun getTabName(selectionType: String): String {
+    return when (selectionType) {
+        ContentSelectionTypes.IMAGE -> stringResource(xcj.app.appsets.R.string.picture)
+        ContentSelectionTypes.VIDEO -> stringResource(xcj.app.appsets.R.string.video)
+        ContentSelectionTypes.AUDIO -> stringResource(xcj.app.appsets.R.string.audio)
+        ContentSelectionTypes.FILE -> stringResource(xcj.app.appsets.R.string.file)
+        ContentSelectionTypes.LOCATION -> stringResource(xcj.app.appsets.R.string.location)
+        ContentSelectionTypes.CAMERA -> stringResource(xcj.app.appsets.R.string.camera)
+        else -> ""
+    }
+}
+
+@Composable
+private fun AppImplContentSelectionContent(
     modifier: Modifier = Modifier,
     request: ContentSelectionRequest,
     onContentSelected: (ContentSelectionResult) -> Unit,
 ) {
 
-    val selectionTabs = remember {
+    val selectionTypes = remember {
         val contentSelectionTabs = mutableListOf(
-            ContentSelectionTab(ContentSelectionTypes.IMAGE, xcj.app.appsets.R.string.picture),
-            ContentSelectionTab(ContentSelectionTypes.VIDEO, xcj.app.appsets.R.string.video),
-            ContentSelectionTab(ContentSelectionTypes.AUDIO, xcj.app.appsets.R.string.audio),
-            ContentSelectionTab(ContentSelectionTypes.FILE, xcj.app.appsets.R.string.file),
-            ContentSelectionTab(
-                ContentSelectionTypes.LOCATION,
-                xcj.app.appsets.R.string.location
-            ),
-            ContentSelectionTab(ContentSelectionTypes.CAMERA, xcj.app.appsets.R.string.camera),
+            ContentSelectionTypes.IMAGE,
+            ContentSelectionTypes.VIDEO,
+            ContentSelectionTypes.AUDIO,
+            ContentSelectionTypes.FILE,
+            ContentSelectionTypes.LOCATION,
+            ContentSelectionTypes.CAMERA,
         )
-        contentSelectionTabs.removeIf { contentSelectionTab ->
+        contentSelectionTabs.removeIf { selectionType ->
             request.selectionTypeParams.firstOrNull {
-                it.selectionType == contentSelectionTab.selectionType
+                it.selectionType == selectionType
             } == null
         }
         contentSelectionTabs
     }
     var defaultSelectionTypeIndex =
-        selectionTabs.indexOfFirst { it.selectionType == request.defaultSelectionType }
+        selectionTypes.indexOfFirst { selectionType -> selectionType == request.defaultSelectionType }
     if (defaultSelectionTypeIndex == -1) {
         defaultSelectionTypeIndex = 0
     }
-    val pagerState = rememberPagerState(defaultSelectionTypeIndex) { selectionTabs.size }
+    val pagerState = rememberPagerState(defaultSelectionTypeIndex) { selectionTypes.size }
 
     val coroutineScope = rememberCoroutineScope()
 
@@ -371,7 +505,8 @@ private fun ContentSelectSheetContent(
             modifier = Modifier.weight(1f),
             state = pagerState,
         ) { index ->
-            when (selectionTabs[index].selectionType) {
+            val tabSelectionType = selectionTypes[index]
+            when (tabSelectionType) {
                 ContentSelectionTypes.CAMERA -> {
                     CameraContentSelection(
                         request = request,
@@ -415,7 +550,7 @@ private fun ContentSelectSheetContent(
                 }
             }
         }
-        if (selectionTabs.size > 1) {
+        if (selectionTypes.size > 1) {
             val tabsScrollState = rememberScrollState()
 
             val buttonSize = remember {
@@ -432,7 +567,7 @@ private fun ContentSelectSheetContent(
                     .horizontalScroll(tabsScrollState)
             ) {
                 Spacer(modifier = Modifier.width(12.dp))
-                selectionTabs.forEachIndexed { index, selectionType ->
+                selectionTypes.forEachIndexed { index, selectionType ->
                     SegmentedButton(
                         modifier = Modifier.onSizeChanged {
                             buttonSize.value = it
@@ -445,11 +580,12 @@ private fun ContentSelectSheetContent(
                         },
                         shape = SegmentedButtonDefaults.itemShape(
                             index = index,
-                            count = selectionTabs.size
+                            count = selectionTypes.size
                         ),
                         icon = {}
                     ) {
-                        Text(stringResource(selectionType.name))
+                        val tabName = getTabName(selectionType)
+                        Text(text = tabName)
                     }
                 }
                 Spacer(modifier = Modifier.width(12.dp))
@@ -816,9 +952,7 @@ private fun PictureContentSelection(
     val density = LocalDensity.current
     val hapticFeedback = LocalHapticFeedback.current
     val contentSelectionResultsProvider = remember {
-        ContentSelectionResultsProvider().apply {
-            mediaStoreType = MediaStore.Images::class.java
-        }
+        ContentSelectionResultsProvider(MediaStore.Images::class.java)
     }
     val contentUris = contentSelectionResultsProvider.contentUris
     LaunchedEffect(true) {
@@ -875,12 +1009,11 @@ private fun PictureContentSelection(
             state = gridState,
             contentPadding = PaddingValues(start = 4.dp, top = 4.dp, end = 4.dp, bottom = 120.dp)
         ) {
-
             items(
                 items = filteredContentUrls
             ) { contentUriProvider ->
                 Box(
-                    Modifier
+                    modifier = Modifier
                         .padding(2.dp)
                         .animateItem()
                 ) {
@@ -1020,9 +1153,7 @@ private fun VideoContentSelection(
     val context = LocalContext.current
     val hapticFeedback = LocalHapticFeedback.current
     val contentSelectionResultsProvider = remember {
-        ContentSelectionResultsProvider().apply {
-            mediaStoreType = MediaStore.Video::class.java
-        }
+        ContentSelectionResultsProvider(MediaStore.Video::class.java)
     }
     val contentUris = contentSelectionResultsProvider.contentUris
 
@@ -1055,7 +1186,10 @@ private fun VideoContentSelection(
             }
         }
     }
-    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
             state = columnState,
@@ -1064,8 +1198,7 @@ private fun VideoContentSelection(
         ) {
             items(items = filteredContentUrls) { contentUriProvider ->
                 Column(
-                    Modifier
-                        .fillMaxSize()
+                    modifier = Modifier
                         .animateItem()
                         .animateContentSize()
                 ) {
@@ -1178,9 +1311,7 @@ private fun AudioContentSelection(
     val density = LocalDensity.current
     val hapticFeedback = LocalHapticFeedback.current
     val contentSelectionResultsProvider = remember {
-        ContentSelectionResultsProvider().apply {
-            mediaStoreType = MediaStore.Audio::class.java
-        }
+        ContentSelectionResultsProvider(MediaStore.Audio::class.java)
     }
     val contentUris = contentSelectionResultsProvider.contentUris
 
@@ -1216,7 +1347,10 @@ private fun AudioContentSelection(
         }
     }
 
-    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
             state = columnState,
@@ -1325,9 +1459,7 @@ private fun FileContentSelection(
     val density = LocalDensity.current
     val hapticFeedback = LocalHapticFeedback.current
     val contentSelectionResultsProvider = remember {
-        ContentSelectionResultsProvider().apply {
-            mediaStoreType = MediaStore.Files::class.java
-        }
+        ContentSelectionResultsProvider(MediaStore.Files::class.java)
     }
     val contentUris = contentSelectionResultsProvider.contentUris
 
@@ -1363,7 +1495,10 @@ private fun FileContentSelection(
         }
     }
 
-    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
             state = columnState,
@@ -1542,58 +1677,49 @@ private fun BottomActions(
                         )
                     }
                 }
-                AnimatedVisibility(
-                    visible = isReachMinCount,
-                    enter = fadeIn() + slideInVertically { it },
-                    exit = fadeOut() + slideOutVertically { it }
-                ) {
-                    Box(modifier = Modifier.padding(vertical = 6.dp)) {
-                        FilledTonalButton(
-                            modifier = Modifier
-                                .width(TextFieldDefaults.MinWidth)
-                                .height(TextFieldDefaults.MinHeight),
-                            onClick = {
-                                hapticFeedback.performHapticFeedback(HapticFeedbackType.Confirm)
-                                val results =
-                                    ContentSelectionResult.RichMediaContentSelectionResult(
-                                        context,
-                                        request,
-                                        contentSelectionType,
-                                        selectedContents
-                                    )
-                                onContentSelected(results)
-                            }
-                        ) {
-                            Text(text = stringResource(xcj.app.appsets.R.string.confirm))
-                        }
-                    }
-                }
             }
 
             Box(
                 modifier = Modifier.fillMaxWidth()
             ) {
-                if (devicesContents.isNotEmpty()) {
+                Row(
+                    modifier = Modifier
+                        .align(Alignment.CenterStart),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    if (devicesContents.isNotEmpty()) {
+                        FilledTonalIconButton(
+                            modifier = Modifier
+                                .size(TextFieldDefaults.MinHeight),
+                            onClick = {
+                                hapticFeedback.performHapticFeedback(HapticFeedbackType.ContextClick)
+                                onSearchModeChanged(!isSearchMode)
+                            }
+                        ) {
+                            Icon(
+                                painter = painterResource(xcj.app.compose_share.R.drawable.ic_round_search_24),
+                                contentDescription = null
+                            )
+                        }
+                    }
                     FilledTonalIconButton(
                         modifier = Modifier
-                            .size(TextFieldDefaults.MinHeight)
-                            .align(Alignment.CenterStart),
+                            .size(TextFieldDefaults.MinHeight),
                         onClick = {
                             hapticFeedback.performHapticFeedback(HapticFeedbackType.ContextClick)
-                            onSearchModeChanged(!isSearchMode)
+                            onActionClick()
                         }
                     ) {
                         Icon(
-                            painter = painterResource(xcj.app.compose_share.R.drawable.ic_round_search_24),
+                            painter = painterResource(actionIcon),
                             contentDescription = null
                         )
                     }
                 }
-
                 LazyRow(
                     modifier = Modifier
                         .align(Alignment.Center)
-                        .widthIn(max = TextFieldDefaults.MinWidth)
+                        .widthIn(max = TextFieldDefaults.MinWidth / 2)
                         .animateContentSize(alignment = Alignment.CenterStart),
                     horizontalArrangement = Arrangement.spacedBy(2.dp),
                     verticalAlignment = Alignment.CenterVertically
@@ -1625,22 +1751,34 @@ private fun BottomActions(
                             model = uriProvider.provideUri()
                         )
                     }
-
                 }
 
-                FilledTonalIconButton(
-                    modifier = Modifier
-                        .size(TextFieldDefaults.MinHeight)
-                        .align(Alignment.CenterEnd),
-                    onClick = {
-                        hapticFeedback.performHapticFeedback(HapticFeedbackType.ContextClick)
-                        onActionClick()
-                    }
+                Row(
+                    modifier = Modifier.align(Alignment.CenterEnd)
                 ) {
-                    Icon(
-                        painter = painterResource(actionIcon),
-                        contentDescription = null
-                    )
+                    AnimatedVisibility(
+                        visible = isReachMinCount,
+                        enter = fadeIn(),
+                        exit = fadeOut()
+                    ) {
+                        FilledTonalButton(
+                            modifier = Modifier
+                                .height(TextFieldDefaults.MinHeight),
+                            onClick = {
+                                hapticFeedback.performHapticFeedback(HapticFeedbackType.Confirm)
+                                val results =
+                                    ContentSelectionResult.RichMediaContentSelectionResult(
+                                        context,
+                                        request,
+                                        contentSelectionType,
+                                        selectedContents
+                                    )
+                                onContentSelected(results)
+                            }
+                        ) {
+                            Text(text = stringResource(xcj.app.appsets.R.string.ok))
+                        }
+                    }
                 }
             }
         }

@@ -16,41 +16,41 @@ data class GroupInfoForCreate(
             state: MutableState<CreateGroupPageState>,
             uriProvider: UriProvider?
         ) {
-            val newGroupState = state.value as? CreateGroupPageState.NewGroupPage ?: return
+            val oldState = state.value as? CreateGroupPageState.NewGroupPage ?: return
             state.value =
-                newGroupState.copy(newGroupState.groupInfoForCreate.copy(icon = uriProvider))
+                oldState.copy(oldState.groupInfoForCreate.copy(icon = uriProvider))
         }
 
         fun updateGroupCreatePublicStatus(
             state: MutableState<CreateGroupPageState>,
             isPublic: Boolean
         ) {
-            val newGroupState = state.value as? CreateGroupPageState.NewGroupPage ?: return
+            val oldState = state.value as? CreateGroupPageState.NewGroupPage ?: return
             state.value =
-                newGroupState.copy(newGroupState.groupInfoForCreate.copy(isPublic = isPublic))
+                oldState.copy(oldState.groupInfoForCreate.copy(isPublic = isPublic))
         }
 
         fun updateGroupCreateName(state: MutableState<CreateGroupPageState>, string: String) {
-            val newGroupState = state.value as? CreateGroupPageState.NewGroupPage ?: return
-            state.value = newGroupState.copy(newGroupState.groupInfoForCreate.copy(name = string))
+            val oldState = state.value as? CreateGroupPageState.NewGroupPage ?: return
+            state.value = oldState.copy(oldState.groupInfoForCreate.copy(name = string))
         }
 
         fun updateGroupCreateMembersCount(
             state: MutableState<CreateGroupPageState>,
             string: String
         ) {
-            val newGroupState = state.value as? CreateGroupPageState.NewGroupPage ?: return
+            val oldState = state.value as? CreateGroupPageState.NewGroupPage ?: return
             state.value =
-                newGroupState.copy(newGroupState.groupInfoForCreate.copy(membersCount = string))
+                oldState.copy(oldState.groupInfoForCreate.copy(membersCount = string))
         }
 
         fun updateGroupCreateDescription(
             state: MutableState<CreateGroupPageState>,
             string: String
         ) {
-            val newGroupState = state.value as? CreateGroupPageState.NewGroupPage ?: return
+            val oldState = state.value as? CreateGroupPageState.NewGroupPage ?: return
             state.value =
-                newGroupState.copy(newGroupState.groupInfoForCreate.copy(introduction = string))
+                oldState.copy(oldState.groupInfoForCreate.copy(introduction = string))
         }
     }
 }

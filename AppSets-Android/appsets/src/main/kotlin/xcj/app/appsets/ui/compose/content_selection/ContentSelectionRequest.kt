@@ -9,11 +9,14 @@ data class ContentSelectionRequest(
     val selectionTypeParams: List<SelectionTypeParam>,
     val defaultSelectionType: String
 ) {
-    data class SelectionTypeParam(val selectionType: String, val maxCount: CountProvider)
+    data class SelectionTypeParam(
+        val selectionType: String,
+        val maxCount: CountProvider
+    )
 
     fun selectionTypeMaxCount(selectionType: String): Int {
-        return selectionTypeParams.firstOrNull { it.selectionType == selectionType }
-            ?.maxCount(selectionType)
-            ?: 0
+        return selectionTypeParams.firstOrNull {
+            it.selectionType == selectionType
+        }?.maxCount(selectionType) ?: 0
     }
 }

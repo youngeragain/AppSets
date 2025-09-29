@@ -26,13 +26,13 @@ fun VideoMessage.requireUri(): Pair<Uri?, Uri?>? {
     }
 
     val messageSendInfo = messageSending?.sendInfoState?.value
-    if (messageSendInfo != null) {
-        if (messageSendInfo.isSent) {
-            return videoMessageMetadata.url?.toUri() to videoMessageMetadata.companionUrl?.toUri()
-        } else {
-            val pair = videoMessageMetadata.localData as? Pair<UriProvider, UriProvider>
-            return pair?.first?.provideUri() to pair?.second?.provideUri()
-        }
+    if (messageSendInfo == null) {
+        return null
     }
-    return null
+    if (messageSendInfo.isSent) {
+        return videoMessageMetadata.url?.toUri() to videoMessageMetadata.companionUrl?.toUri()
+    } else {
+        val pair = videoMessageMetadata.localData as? Pair<UriProvider, UriProvider>
+        return pair?.first?.provideUri() to pair?.second?.provideUri()
+    }
 }

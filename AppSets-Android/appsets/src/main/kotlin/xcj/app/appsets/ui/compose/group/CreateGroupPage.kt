@@ -233,7 +233,7 @@ fun CreateGroupPage(
 }
 
 @Composable
-fun CreateGroupIndicator(createGroupPageState: CreateGroupPageState) {
+private fun CreateGroupIndicator(createGroupPageState: CreateGroupPageState) {
     AnimatedVisibility(
         visible = createGroupPageState is CreateGroupPageState.Creating,
         enter = fadeIn(tween()) + scaleIn(

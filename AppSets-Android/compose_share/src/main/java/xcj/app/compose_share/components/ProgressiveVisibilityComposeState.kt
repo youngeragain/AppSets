@@ -6,7 +6,7 @@ import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import kotlinx.coroutines.flow.FlowCollector
 
-class ProgressiveVisibilityComposeState : VisibilityComposeState(), FlowCollector<Any> {
+open class ProgressiveVisibilityComposeState : VisibilityComposeState(), FlowCollector<Any> {
 
     private val _progressState: MutableState<Any> = mutableStateOf(Unit)
 
@@ -40,7 +40,7 @@ class ProgressiveVisibilityComposeState : VisibilityComposeState(), FlowCollecto
         progressEnded = false
     }
 
-    suspend fun onProgress(progressObject: Any) {
+    private fun onProgress(progressObject: Any) {
         if (progressObject is BackEventCompat) {
             if (progressObject.progress == 0f) {
                 markStarted()
@@ -57,5 +57,9 @@ class ProgressiveVisibilityComposeState : VisibilityComposeState(), FlowCollecto
 
     override suspend fun emit(value: Any) {
         onProgress(value)
+    }
+
+    fun asBackEventState(): BackEventCompat {
+        return progressState.value as BackEventCompat
     }
 }

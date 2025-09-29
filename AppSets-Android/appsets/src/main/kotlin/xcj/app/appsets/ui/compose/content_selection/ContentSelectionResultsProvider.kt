@@ -3,16 +3,17 @@ package xcj.app.appsets.ui.compose.content_selection
 import android.content.Context
 import android.net.Uri
 import androidx.compose.runtime.mutableStateListOf
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import xcj.app.appsets.util.ktx.getSystemFileUris
 import xcj.app.appsets.util.model.UriProvider
 import xcj.app.starter.android.util.PurpleLogger
 
-class ContentSelectionResultsProvider {
+class ContentSelectionResultsProvider(
+    private val mediaStoreType: Class<*>? = null
+) {
     companion object {
         private const val TAG = "ContentSelectionResultsProvider"
     }
+
     var page: Int = 1
 
     /**
@@ -31,22 +32,22 @@ class ContentSelectionResultsProvider {
      */
     val contentUris: MutableList<UriProvider> = mutableStateListOf()
 
-    var mediaStoreType: Class<*>? = null
-
     private var loading: Boolean = false
 
     private var pageSize: Int = 32
 
     suspend fun load(context: Context, first: Boolean = false) {
-        if (mediaStoreType == null)
+        if (mediaStoreType == null) {
             return
-        if (loading)
+        }
+        if (loading) {
             return
+        }
         loading = true
         if (first) {
             page = 1
         } else {
-            if ((contentUris.size) < pageSize) {
+            if (contentUris.size < pageSize) {
                 return
             } else {
                 page++
@@ -74,17 +75,13 @@ class ContentSelectionResultsProvider {
         )
         val selectedFileUrisMap = selectedContentUris.associateBy { it.path }
         val pagedSystemPhotosFileUris = systemFileUris.filterNot {
-            val selected =
-                selectedFileUrisMap.containsKey(it.uri?.path)
-            selected
+            selectedFileUrisMap.containsKey(it.uri.path)
         }
         PurpleLogger.current.d(
             TAG,
             "getUris, step3, ${System.currentTimeMillis()}"
         )
-        withContext(Dispatchers.Main) {
-            contentUris.addAll(pagedSystemPhotosFileUris)
-        }
+        contentUris.addAll(pagedSystemPhotosFileUris)
         loading = false
     }
 }

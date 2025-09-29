@@ -318,7 +318,7 @@ fun ScreenDetailsPager(
                     .padding(horizontal = 12.dp),
             ) {
                 SelectionContainer {
-                    ScreenComponent(
+                    Screen(
                         currentDestinationRoute = PageRouteNames.ScreenDetailsPage,
                         screenInfo = screenInfoForCard.screenInfo!!,
                         onBioClick = onBioClick,
@@ -344,7 +344,7 @@ fun ScreenDetailsTopBar(
     onCollectClick: (String?) -> Unit,
     onLikesClick: () -> Unit,
 ) {
-    val anyStateProvider = LocalVisibilityComposeStateProvider.current
+    val visibilityComposeStateProvider = LocalVisibilityComposeStateProvider.current
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Box(modifier = Modifier.fillMaxWidth()) {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -441,12 +441,12 @@ fun ScreenDetailsTopBar(
                                     if (screenInfoForCard.isCollectedByUser) {
                                         onCollectClick(null)
                                     } else {
-                                        val bottomSheetContainerState =
-                                            anyStateProvider.bottomSheetState()
-                                        bottomSheetContainerState.show {
+                                        val bottomSheetState =
+                                            visibilityComposeStateProvider.bottomSheetState()
+                                        bottomSheetState.show {
                                             CollectEditSheetContent(
                                                 onConfirmClick = {
-                                                    bottomSheetContainerState.hide()
+                                                    bottomSheetState.hide()
                                                 }
                                             )
                                         }

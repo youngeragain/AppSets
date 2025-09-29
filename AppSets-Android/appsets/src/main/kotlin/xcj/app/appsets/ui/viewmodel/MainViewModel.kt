@@ -116,9 +116,9 @@ class MainViewModel : BaseIMViewModel() {
             "dispatchContentSelectedResult, contentSelectionResults:$contentSelectionResult"
         )
         systemUseCase.selectedContentsStateHolder.updateSelectedContent(contentSelectionResult)
-        val type = contentSelectionResult.selectType
+        val selectType = contentSelectionResult.selectType
 
-        when (type) {
+        when (selectType) {
             ContentSelectionTypes.IMAGE -> {
                 if (contentSelectionResult !is ContentSelectionResult.RichMediaContentSelectionResult) {
                     return

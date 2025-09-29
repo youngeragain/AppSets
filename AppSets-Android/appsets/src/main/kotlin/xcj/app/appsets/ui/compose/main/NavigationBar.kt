@@ -92,7 +92,7 @@ fun NavigationBar(
 }
 
 @Composable
-fun StandardNavigationBar(
+private fun StandardNavigationBar(
     modifier: Modifier = Modifier,
     hazeState: HazeState,
     enable: Boolean,
@@ -140,7 +140,7 @@ fun StandardNavigationBar(
             ) {
                 Row {
                     tabItems.forEach { tab ->
-                        TabItem(
+                        TabItemContainer(
                             modifier = Modifier,
                             hostVisible = hostVisible,
                             naviTabItem = tab,
@@ -165,7 +165,7 @@ fun StandardNavigationBar(
 }
 
 @Composable
-fun TabItem(
+private fun TabItemContainer(
     modifier: Modifier = Modifier,
     hostVisible: Boolean,
     naviTabItem: TabItem,
@@ -180,7 +180,7 @@ fun TabItem(
         Spacer(modifier = Modifier.width(8.dp))
         if (naviTabItem.isShow()) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                TabItemMainComponent(naviTabItem, onTabClick)
+                TabItemMain(naviTabItem, onTabClick)
                 if (!naviTabItem.isSelect) {
                     Spacer(modifier = Modifier.height(4.dp))
                 } else {
@@ -207,7 +207,7 @@ fun TabItem(
                 ) {
                     naviTabItem.actions?.forEach {
                         if (it.isShow()) {
-                            TabItemActionComponent(
+                            TabItemAction(
                                 naviTabItem = naviTabItem,
                                 tabAction = it,
                                 onTabClick = onTabClick
@@ -223,7 +223,7 @@ fun TabItem(
 
 @OptIn(UnstableApi::class)
 @Composable
-fun TabItemActionComponent(
+private fun TabItemAction(
     naviTabItem: TabItem,
     tabAction: TabAction,
     onTabClick: (TabItem, TabAction?) -> Unit,
@@ -279,7 +279,7 @@ fun TabItemActionComponent(
 }
 
 @Composable
-fun TabItemMainComponent(naviTabItem: TabItem, onTabClick: (TabItem, TabAction?) -> Unit) {
+private fun TabItemMain(naviTabItem: TabItem, onTabClick: (TabItem, TabAction?) -> Unit) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {

@@ -4,8 +4,9 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContract
 import androidx.lifecycle.ViewModel
 
-fun interface SystemContentSelectionCallback {
-    fun onSystemContentSelected(t: Any?)
+interface SystemContentSelectionCallback {
+    fun autoRemove(): Boolean = true
+    fun onSystemContentSelected(content: Any?)
 }
 
 interface ActivityThemeInterface {
@@ -16,7 +17,7 @@ interface ActivityThemeInterface {
 
     fun <I, C : ActivityResultContract<I, *>> getActivityResultLauncher(
         contractClass: Class<C>,
-        requestPrams:Any?,
+        requestPrams: Any?,
     ): ActivityResultLauncher<I>? = null
 
     fun <V : ViewModel> requireViewModel(): V? = null
