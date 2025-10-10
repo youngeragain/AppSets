@@ -25,6 +25,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -59,7 +60,7 @@ fun LiteSettingsSheetContent(
 ) {
     val context = LocalContext.current
     val loginStatusState by LocalAccountManager.accountStatus
-    var isShowSwapToLogout = remember {
+    var isShowSwapToLogout by remember {
         mutableStateOf(false)
     }
     Box(
@@ -212,9 +213,9 @@ fun LiteSettingsSheetContent(
             }
 
             AnimatedContent(
-                targetState = isShowSwapToLogout.value
-            ) { canShowSwapToLogout ->
-                if (canShowSwapToLogout) {
+                targetState = isShowSwapToLogout
+            ) { targetIsShowSwapToLogout ->
+                if (targetIsShowSwapToLogout) {
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -225,7 +226,7 @@ fun LiteSettingsSheetContent(
                         SwipeContainer(onDragValueChanged = { dragValue ->
                             if (dragValue == DragValue.End) {
                                 onSettingsLoginClick()
-                                isShowSwapToLogout.value = false
+                                isShowSwapToLogout = false
                             }
                         }) {
                             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -248,7 +249,7 @@ fun LiteSettingsSheetContent(
                             .clip(MaterialTheme.shapes.extraLarge)
                             .clickable(onClick = {
                                 if (LocalAccountManager.isLogged()) {
-                                    isShowSwapToLogout.value = true
+                                    isShowSwapToLogout = true
                                 } else {
                                     onSettingsLoginClick()
                                 }

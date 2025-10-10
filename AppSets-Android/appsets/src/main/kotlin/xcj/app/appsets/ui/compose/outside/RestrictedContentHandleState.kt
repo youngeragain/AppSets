@@ -18,12 +18,15 @@ class RestrictedContentHandleState {
         this.callback = callback
     }
 
-    fun doCallback() {
+    fun invokeCallback() {
         callback?.invoke()
     }
 
-    fun hide() {
+    fun hide(invokeCallback: Boolean = false) {
         _isShow.value = false
+        if (invokeCallback) {
+            invokeCallback()
+        }
     }
 
     fun show() {

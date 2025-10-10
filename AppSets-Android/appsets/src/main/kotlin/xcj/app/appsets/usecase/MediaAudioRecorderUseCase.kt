@@ -28,14 +28,15 @@ class MediaAudioRecorderUseCase() : ComposeLifecycleAware {
 
     suspend fun startRecord(
         context: Context,
+        systemUseCase: SystemUseCase,
         nowSpaceContentUseCase: NowSpaceContentUseCase
     ) {
         val platformAudioRecordPermission =
             PlatformPermissionsUsage.provideAudioRecordPermission(context)
         if (!platformAudioRecordPermission.granted) {
-            nowSpaceContentUseCase.showPlatformPermissionUsageTipsIfNeeded(
-                context = context,
-                platformPermissionsUsagesProvider = { context ->
+            systemUseCase.showPlatformPermissionUsageTipsIfNeeded(
+                nowSpaceContentUseCase = nowSpaceContentUseCase,
+                platformPermissionsUsagesProvider = {
                     listOf(platformAudioRecordPermission)
                 }
             )

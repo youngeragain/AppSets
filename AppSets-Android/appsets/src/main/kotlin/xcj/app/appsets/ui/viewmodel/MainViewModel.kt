@@ -73,11 +73,12 @@ class MainViewModel : BaseIMViewModel() {
         PurpleLogger.current.d(TAG, "doActionWhenFileIOInitialed")
         appsUseCase.loadHomeApplications()
         screensUseCase.loadOutSideScreens()
-        systemUseCase.checkUpdate()
-        nowSpaceContentUseCase.showPlatformPermissionUsageTipsIfNeeded(
-            context = context,
+        systemUseCase.showPlatformPermissionUsageTipsIfNeeded(
+            nowSpaceContentUseCase = nowSpaceContentUseCase,
             showFlow = AppSetsModuleSettings.get().isAppFirstLaunch()
         )
+        systemUseCase.checkUpdate(nowSpaceContentUseCase)
+
     }
 
     override fun observeSomeThingsOnCreated(activity: ComponentActivity) {

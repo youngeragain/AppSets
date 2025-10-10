@@ -1,15 +1,9 @@
 package xcj.app.appsets.usecase
 
-import android.content.Context
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.State
-import androidx.compose.runtime.mutableStateOf
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flowOf
+import androidx.compose.runtime.mutableStateListOf
 import xcj.app.appsets.account.UserAccountStateAware
 import xcj.app.appsets.ui.model.state.NowSpaceContent
 import xcj.app.compose_share.dynamic.ComposeLifecycleAware
-import xcj.app.starter.android.ui.model.PlatformPermissionsUsage
 import xcj.app.starter.android.util.PurpleLogger
 
 class NowSpaceContentUseCase() : ComposeLifecycleAware, UserAccountStateAware {
@@ -18,36 +12,46 @@ class NowSpaceContentUseCase() : ComposeLifecycleAware, UserAccountStateAware {
         private const val TAG = "NowSpaceContentUseCase"
     }
 
-    private var _oldContent: NowSpaceContent = NowSpaceContent.Nothing
 
-    val oldContent: NowSpaceContent
-        get() = _oldContent
+    val contents: MutableList<NowSpaceContent> =
+        mutableStateListOf()
 
-    private val _content: MutableState<NowSpaceContent> =
-        mutableStateOf(NowSpaceContent.Nothing)
-
-    val content: State<NowSpaceContent> = _content
-
-    fun addNowSpaceContent(nowSpaceContent: NowSpaceContent) {
-        PurpleLogger.current.d(TAG, "addNowSpaceContent, nowSpaceContent:$nowSpaceContent")
-        _oldContent = content.value
-        _content.value = nowSpaceContent
+    fun addContent(content: NowSpaceContent) {
+        PurpleLogger.current.d(TAG, "addContent, content:$content")
+        contents.add(content)
     }
 
-    fun contentTypeIsSameAsLast(): Boolean {
-        return content.value::class == oldContent::class
+    /**
+     * @return pair first is old, maybe null, pair second is new
+     */
+    fun replaceOrAddContent(replacer: (List<NowSpaceContent>) -> Pair<NowSpaceContent?, NowSpaceContent>) {
+        val (old, new) = replacer(contents)
+        PurpleLogger.current.d(TAG, "replaceOrAddContent, oldContent:$old, newContent:$new")
+        if (old != null) {
+            val oldPosition = contents.indexOfFirst { it == old }
+            contents[oldPosition] = new
+        } else {
+            contents.add(new)
+        }
     }
 
-    fun removeContent() {
-        PurpleLogger.current.d(TAG, "removeContent")
-        _oldContent = content.value
-        _content.value = NowSpaceContent.Nothing
+    fun removeContent(content: NowSpaceContent) {
+        PurpleLogger.current.d(TAG, "removeContent, content:$content")
+        contents.removeIf {
+            content == it
+        }
     }
 
-    fun removeContentIf(test: (NowSpaceContent) -> Boolean) {
+    fun removeAllContent() {
+        PurpleLogger.current.d(TAG, "removeAllContent")
+        contents.clear()
+    }
+
+    fun removeContentIf(test: (List<NowSpaceContent>) -> NowSpaceContent?) {
         PurpleLogger.current.d(TAG, "removeContentIf")
-        if (test(content.value)) {
-            removeContent()
+        val removeNowSpaceContent = test(contents)
+        if (removeNowSpaceContent != null) {
+            removeContent(removeNowSpaceContent)
         }
     }
 
@@ -56,27 +60,6 @@ class NowSpaceContentUseCase() : ComposeLifecycleAware, UserAccountStateAware {
     }
 
     override fun onUserLogout(by: String?) {
-        removeContent()
-    }
-
-    suspend fun showPlatformPermissionUsageTipsIfNeeded(
-        context: Context,
-        showFlow: Flow<Boolean> = flowOf(true),
-        platformPermissionsUsagesProvider: (Context) -> List<PlatformPermissionsUsage> = { context ->
-            PlatformPermissionsUsage.provideAll(context)
-        }
-    ) {
-        showFlow.collect { show ->
-            if (!show) {
-                return@collect
-            }
-            val platformPermissionsUsages = platformPermissionsUsagesProvider(context)
-            val platformPermissionUsageTips = NowSpaceContent.PlatformPermissionUsageTips(
-                tips = xcj.app.appsets.R.string.app_platform_permissions_useage_tips,
-                subTips = xcj.app.appsets.R.string.app_platform_permissions_useage_tips_des,
-                platformPermissionsUsages = platformPermissionsUsages
-            )
-            addNowSpaceContent(platformPermissionUsageTips)
-        }
+        removeAllContent()
     }
 }

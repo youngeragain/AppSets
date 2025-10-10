@@ -11,6 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -46,7 +47,7 @@ import xcj.app.appsets.ui.compose.LocalUseCaseOfSystem
 import xcj.app.appsets.ui.compose.LocalUseCaseOfUserInfo
 import xcj.app.appsets.ui.compose.PageRouteNames
 import xcj.app.appsets.ui.compose.quickstep.QuickStepContentHandlerRegistry
-import xcj.app.appsets.ui.model.state.AppUpdateState
+import xcj.app.appsets.ui.model.state.NowSpaceContent
 import xcj.app.appsets.ui.viewmodel.MainViewModel
 import xcj.app.compose_share.components.BottomSheetContainer
 import xcj.app.compose_share.components.LocalUseCaseOfComposeDynamic
@@ -116,9 +117,10 @@ fun MainPage() {
 
                 BottomSheetContainer()
 
-                NowSpaceContainer(navController = navController)
-
-                NewVersionSpaceContainer()
+                NowSpaceContainer(
+                    navController = navController,
+                    hazeState = hazeState
+                )
 
             }
         }
@@ -128,19 +130,26 @@ fun MainPage() {
 @Composable
 private fun OnScaffoldLaunch(navController: NavController) {
     val context = LocalContext.current
-    val systemUseCase = LocalUseCaseOfSystem.current
+    val nowSpaceContentUseCase = LocalUseCaseOfNowSpaceContent.current
     val navigationUseCase = LocalUseCaseOfNavigation.current
     val visibilityComposeStateProvider = LocalVisibilityComposeStateProvider.current
     val localQuickStepContentHandlerRegistry = LocalQuickStepContentHandlerRegistry.current
-    val appUpdateState by systemUseCase.appUpdateState
+
+    val nowSpaceContents = nowSpaceContentUseCase.contents
+
+    val appVersionChecked: NowSpaceContent.AppVersionChecked? by remember {
+        derivedStateOf {
+            nowSpaceContents.firstOrNull { it is NowSpaceContent.AppVersionChecked } as? NowSpaceContent.AppVersionChecked
+        }
+    }
+
     LaunchedEffect(Unit) {
         val bottomSheetState = visibilityComposeStateProvider.bottomSheetState()
         bottomSheetState.markComposeAvailableState(true)
     }
-    LaunchedEffect(key1 = appUpdateState, block = {
-        val updateState = appUpdateState
-        if (updateState is AppUpdateState.Checked) {
-            if (updateState.updateCheckResult.forceUpdate == true) {
+    LaunchedEffect(key1 = appVersionChecked, block = {
+        appVersionChecked?.let {
+            if (it.updateCheckResult.forceUpdate == true) {
                 navigationUseCase.barVisible.value = false
             }
         }

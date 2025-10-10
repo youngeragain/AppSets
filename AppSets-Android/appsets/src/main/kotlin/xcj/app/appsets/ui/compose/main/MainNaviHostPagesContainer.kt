@@ -186,7 +186,7 @@ import xcj.app.starter.test.LocalPurpleEventPublisher
 import xcj.app.starter.test.NaviHostParams
 import java.util.UUID
 
-private const val TAG = "MainNaviHostPages"
+private const val TAG = "MainNaviHostPagesContainer"
 
 @Composable
 fun MainNaviHostPagesContainer(
@@ -738,6 +738,7 @@ fun MainNaviHostPagesContainer(
                             coroutineScope.launch {
                                 mediaAudioRecorderUseCase.startRecord(
                                     context,
+                                    systemUseCase,
                                     nowSpaceContentUseCase
                                 )
                             }
@@ -806,6 +807,7 @@ fun MainNaviHostPagesContainer(
                     val visibilityComposeStateProvider = LocalVisibilityComposeStateProvider.current
                     val mediaAudioRecorderUseCase = LocalUseCaseOfMediaAudioRecorder.current
                     val mediaRemoteExoUseCase = LocalUseCaseOfMediaRemoteExo.current
+                    val systemUseCase = LocalUseCaseOfSystem.current
                     val nowSpaceContentUseCase = LocalUseCaseOfNowSpaceContent.current
                     val sessionState by conversationUseCase.currentSessionState
                     val recorderState by mediaAudioRecorderUseCase.recorderState
@@ -850,6 +852,7 @@ fun MainNaviHostPagesContainer(
                             coroutineScope.launch {
                                 mediaAudioRecorderUseCase.startRecord(
                                     context,
+                                    systemUseCase,
                                     nowSpaceContentUseCase
                                 )
                             }

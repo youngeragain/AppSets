@@ -9,6 +9,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.core.content.ContextCompat
 import androidx.navigation.NavController
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import xcj.app.appsets.account.LocalAccountManager
 import xcj.app.appsets.im.Session
@@ -32,7 +34,7 @@ import xcj.app.appsets.ui.model.SelectedContentsStateHolder
 import xcj.app.appsets.ui.model.UserInfoForCreate
 import xcj.app.appsets.ui.model.page_state.CreateGroupPageState
 import xcj.app.appsets.ui.model.page_state.LoginSignUpPageState
-import xcj.app.appsets.ui.model.state.AppUpdateState
+import xcj.app.appsets.ui.model.state.NowSpaceContent
 import xcj.app.appsets.util.ktx.toast
 import xcj.app.appsets.util.ktx.toastSuspend
 import xcj.app.appsets.util.message_digest.MessageDigestUtil
@@ -41,6 +43,7 @@ import xcj.app.compose_share.components.BottomSheetVisibilityComposeState
 import xcj.app.compose_share.components.VisibilityComposeStateProvider
 import xcj.app.compose_share.dynamic.ComposeLifecycleAware
 import xcj.app.compose_share.ui.viewmodel.VisibilityComposeStateViewModel.Companion.bottomSheetState
+import xcj.app.starter.android.ui.model.PlatformPermissionsUsage
 import xcj.app.starter.android.util.PurpleLogger
 import xcj.app.starter.server.request
 import xcj.app.starter.server.requestRaw
@@ -58,7 +61,6 @@ class SystemUseCase(
 
     val selectedContentsStateHolder: SelectedContentsStateHolder = SelectedContentsStateHolder()
 
-    val appUpdateState: MutableState<AppUpdateState> = mutableStateOf(AppUpdateState.None)
 
     val loginSignUpPageState: MutableState<LoginSignUpPageState> =
         mutableStateOf(LoginSignUpPageState.LoginStart)
@@ -66,18 +68,6 @@ class SystemUseCase(
     val createGroupPageState: MutableState<CreateGroupPageState> = mutableStateOf(
         CreateGroupPageState.NewGroupPage()
     )
-
-    fun dismissNewVersionTips() {
-        val appUpdateState = appUpdateState.value
-        if (appUpdateState !is AppUpdateState.Checked) {
-            return
-        }
-        if (appUpdateState.updateCheckResult.forceUpdate == true) {
-            return
-        }
-        PurpleLogger.current.d(TAG, "dismissNewVersionTips")
-        this.appUpdateState.value = AppUpdateState.None
-    }
 
     suspend fun initAppToken() {
         PurpleLogger.current.d(TAG, "initAppToken")
@@ -104,7 +94,33 @@ class SystemUseCase(
         }
     }
 
-    suspend fun checkUpdate() {
+    suspend fun showPlatformPermissionUsageTipsIfNeeded(
+        nowSpaceContentUseCase: NowSpaceContentUseCase,
+        showFlow: Flow<Boolean> = flowOf(true),
+        platformPermissionsUsagesProvider: () -> List<PlatformPermissionsUsage> = {
+            PlatformPermissionsUsage.provideAll(LocalApplication.current)
+        }
+    ) {
+        showFlow.collect { show ->
+            if (!show) {
+                return@collect
+            }
+            nowSpaceContentUseCase.replaceOrAddContent { nowSpaceContents ->
+                val oldNowSpaceContentOfPlatformPermissionUsageTips =
+                    nowSpaceContents.firstOrNull { it is NowSpaceContent.PlatformPermissionUsageTips }
+                val platformPermissionsUsages = platformPermissionsUsagesProvider()
+                val newNowSpaceContentOfPlatformPermissionUsageTips =
+                    NowSpaceContent.PlatformPermissionUsageTips(
+                        tips = xcj.app.appsets.R.string.app_platform_permissions_useage_tips,
+                        subTips = xcj.app.appsets.R.string.app_platform_permissions_useage_tips_des,
+                        platformPermissionsUsages = platformPermissionsUsages
+                    )
+                oldNowSpaceContentOfPlatformPermissionUsageTips to newNowSpaceContentOfPlatformPermissionUsageTips
+            }
+        }
+    }
+
+    suspend fun checkUpdate(nowSpaceContentUseCase: NowSpaceContentUseCase) {
         val context = LocalApplication.current
         val packageInfo = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             context.packageManager.getPackageInfo(
@@ -121,10 +137,10 @@ class SystemUseCase(
             }
             delay(1000 * 3)
             it.versionFromTo = "${packageInfo.versionName} → ${it.newestVersion}"
-            appUpdateState.value = AppUpdateState.Checked(it)
-            if (it.forceUpdate != true) {
-                delay(1000 * 300)
-                appUpdateState.value = AppUpdateState.None
+
+            nowSpaceContentUseCase.replaceOrAddContent { nowSpaceContents ->
+                val newNowSpaceContentOfAppVersionChecked = NowSpaceContent.AppVersionChecked(it)
+                null to newNowSpaceContentOfAppVersionChecked
             }
         }
     }

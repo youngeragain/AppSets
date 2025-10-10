@@ -107,6 +107,7 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import xcj.app.appsets.ui.compose.LocalUseCaseOfNowSpaceContent
+import xcj.app.appsets.ui.compose.LocalUseCaseOfSystem
 import xcj.app.appsets.ui.compose.camera.CameraComponents
 import xcj.app.appsets.ui.compose.content_selection.ContentSelectionRequest.SelectionTypeParam
 import xcj.app.appsets.ui.compose.content_selection.ContentSelectionResult.RichMediaContentSelectionResult
@@ -202,6 +203,7 @@ fun ContentSelectionPromptSheetContent(
 ) {
     val context = LocalContext.current
     val nowSpaceContentUseCase = LocalUseCaseOfNowSpaceContent.current
+    val systemUseCase = LocalUseCaseOfSystem.current
     val coroutineScope = rememberCoroutineScope()
     var contentSelectionPageState by remember {
         mutableStateOf<ContentSelectionPageState>(ContentSelectionPageState.StartPrompt)
@@ -276,8 +278,8 @@ fun ContentSelectionPromptSheetContent(
                             if (!platformFilePermission.granted) {
                                 onDismiss()
                                 coroutineScope.launch {
-                                    nowSpaceContentUseCase.showPlatformPermissionUsageTipsIfNeeded(
-                                        context = context
+                                    systemUseCase.showPlatformPermissionUsageTipsIfNeeded(
+                                        nowSpaceContentUseCase = nowSpaceContentUseCase
                                     )
                                 }
                                 return@ContentSelectPromptContent

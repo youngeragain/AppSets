@@ -14,7 +14,7 @@ import xcj.app.starter.android.util.ThemeUtil
 abstract class DesignComponentActivity :
     ComponentActivity(), ActivityThemeInterface, DesignInterface {
     companion object {
-        private const val TAG = "BaseActivity"
+        private const val TAG = "DesignComponentActivity"
         const val CREATE_BY_DEFAULT = "DEFAULT"
         const val CREATE_BY_REFLECTION = "REFLECTION"
     }

@@ -49,6 +49,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -315,7 +316,7 @@ fun ConversationOverviewPortrait(
             state = pagerState,
             verticalAlignment = Alignment.Top
         ) { index ->
-            val sessions = conversationUseCase.currentTabSessions()
+            val sessions by rememberUpdatedState(conversationUseCase.currentTabSessions())
             when (currentTab) {
                 ConversationUseCase.AI -> {
                     ConversationOverviewSessionsOfAI(

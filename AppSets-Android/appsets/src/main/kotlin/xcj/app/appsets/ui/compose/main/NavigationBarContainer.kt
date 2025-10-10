@@ -18,6 +18,7 @@ import kotlinx.coroutines.launch
 import xcj.app.appsets.account.LocalAccountManager
 import xcj.app.appsets.ui.compose.LocalUseCaseOfConversation
 import xcj.app.appsets.ui.compose.LocalUseCaseOfNavigation
+import xcj.app.appsets.ui.compose.LocalUseCaseOfNowSpaceContent
 import xcj.app.appsets.ui.compose.LocalUseCaseOfQRCode
 import xcj.app.appsets.ui.compose.LocalUseCaseOfScreen
 import xcj.app.appsets.ui.compose.LocalUseCaseOfSearch
@@ -27,7 +28,7 @@ import xcj.app.appsets.ui.compose.media.video.fall.MediaFallActivity
 import xcj.app.appsets.ui.compose.settings.LiteSettingsSheetContent
 import xcj.app.appsets.ui.model.TabAction
 import xcj.app.appsets.ui.model.TabItem
-import xcj.app.appsets.ui.model.state.AppUpdateState
+import xcj.app.appsets.ui.model.state.NowSpaceContent
 import xcj.app.appsets.usecase.ConversationUseCase
 import xcj.app.appsets.usecase.ScreenUseCase
 import xcj.app.compose_share.components.LocalVisibilityComposeStateProvider
@@ -47,7 +48,8 @@ fun NavigationBarContainer(
     val searchUseCase = LocalUseCaseOfSearch.current
     val screenUseCase = LocalUseCaseOfScreen.current
     val conversationUseCase = LocalUseCaseOfConversation.current
-    val appUpdateState by systemUseCase.appUpdateState
+    val nowSpaceContentUseCase = LocalUseCaseOfNowSpaceContent.current
+    val nowSpaceContents = nowSpaceContentUseCase.contents
     val currentRoute by navigationUseCase.currentRouteState
     val coroutineScope = rememberCoroutineScope()
     val inSearchModel by remember {
@@ -57,7 +59,7 @@ fun NavigationBarContainer(
     }
     val isBarEnable by remember {
         derivedStateOf {
-            (appUpdateState as? AppUpdateState.Checked)
+            (nowSpaceContents.firstOrNull { it is NowSpaceContent.AppVersionChecked } as? NowSpaceContent.AppVersionChecked)
                 ?.updateCheckResult
                 ?.forceUpdate != true
         }

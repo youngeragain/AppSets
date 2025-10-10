@@ -216,8 +216,10 @@ private constructor() : ComposeLifecycleAware, UserAccountStateAware {
             lastSessionState = currentSessionState.value
             currentSessionState.value = SessionState.None
         } else {
-            nowSpaceContentUseCase?.removeContentIf { topSpaceObjectState ->
-                topSpaceObjectState is NowSpaceContent.IMMessage && topSpaceObjectState.session.id == session.id
+            nowSpaceContentUseCase?.removeContentIf { nowSpaceContents ->
+                nowSpaceContents.firstOrNull { nowSpaceContent ->
+                    nowSpaceContent is NowSpaceContent.IMMessage && nowSpaceContent.session.id == session.id
+                }
             }
             currentSessionState.value = SessionState.Normal(session)
         }
@@ -391,8 +393,14 @@ private constructor() : ComposeLifecycleAware, UserAccountStateAware {
         if (sessionState !is SessionState.Normal) {
 
         }
-        val nowSpaceIMMessage = NowSpaceContent.IMMessage(session, imMessage)
-        nowSpaceContentUseCase.addNowSpaceContent(nowSpaceIMMessage)
+
+        nowSpaceContentUseCase.replaceOrAddContent { nowSpaceContents ->
+            val oldNowSpaceContentOfIMMessage = nowSpaceContents.firstOrNull { nowSpaceContent ->
+                nowSpaceContent is NowSpaceContent.IMMessage
+            }
+            val newNowSpaceContentOfIMMessage = NowSpaceContent.IMMessage(session, imMessage)
+            oldNowSpaceContentOfIMMessage to newNowSpaceContentOfIMMessage
+        }
     }
 
     private fun getNotificationPusher(): NotificationPusher {

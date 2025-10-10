@@ -189,17 +189,16 @@ class AppSetsModuleSettings : ModuleSettings {
     fun isAppFirstLaunch(): Flow<Boolean> {
         return flow {
             val isFirstLaunch = withContext(Dispatchers.IO) {
-                appSettingSharedPreferences.getBoolean(
+                val isFirst = appSettingSharedPreferences.getBoolean(
                     KEY_is_app_first_launch,
                     true
                 )
-            }
-            if (isFirstLaunch) {
-                withContext(Dispatchers.IO) {
+                if (isFirst) {
                     appSettingSharedPreferences.edit {
                         putBoolean(KEY_is_app_first_launch, false)
                     }
                 }
+                isFirst
             }
             emit(isFirstLaunch)
         }

@@ -51,15 +51,17 @@ fun RestrictedContentDialog(
                     var clickCount by remember {
                         mutableIntStateOf(0)
                     }
-                    Box(contentAlignment = Alignment.Center, modifier = Modifier.clickable {
-                        if (requestToView) {
-                            clickCount += 1
-                            if (clickCount >= 10) {
-                                restrictedContentHandleState.hide()
-                                restrictedContentHandleState.doCallback()
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier.clickable {
+                            if (requestToView) {
+                                clickCount += 1
+                                if (clickCount >= 10) {
+                                    restrictedContentHandleState.hide(invokeCallback = true)
+                                }
                             }
                         }
-                    }) {
+                    ) {
                         Text(
                             text = stringResource(xcj.app.appsets.R.string.prompt),
                             fontWeight = FontWeight.Bold
