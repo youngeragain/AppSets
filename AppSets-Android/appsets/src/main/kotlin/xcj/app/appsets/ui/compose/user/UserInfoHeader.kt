@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SuggestionChip
@@ -111,7 +110,7 @@ private fun makeUserActions(
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun UserInfoHeader(
-    modifier: Modifier,
+    modifier: Modifier = Modifier,
     userInfo: UserInfo,
     userFollowers: List<UserInfo>,
     userFollowed: List<UserInfo>,
@@ -119,6 +118,12 @@ fun UserInfoHeader(
     onActionClick: (UserAction) -> Unit,
 ) {
     val configuration = LocalConfiguration.current
+    val actions = makeUserActions(
+        userInfo,
+        isLoginUserFollowedThisUser,
+        userFollowers,
+        userFollowed
+    )
     if (configuration.orientation == Configuration.ORIENTATION_PORTRAIT) {
         Column(
             modifier = modifier
@@ -156,12 +161,7 @@ fun UserInfoHeader(
                 text = introduction,
                 fontSize = 12.sp
             )
-            val actions = makeUserActions(
-                userInfo,
-                isLoginUserFollowedThisUser,
-                userFollowers,
-                userFollowed
-            )
+
             UserActions(
                 actions = actions,
                 onActionClick = onActionClick
@@ -170,14 +170,15 @@ fun UserInfoHeader(
             DesignHDivider()
         }
     } else {
-        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
             Column(
                 modifier = Modifier
                     .weight(1f)
-                    .padding(horizontal = 12.dp)
-                    .statusBarsPadding(),
+                    .padding(horizontal = 12.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(10.dp)
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 AnyImage(
                     modifier = Modifier
@@ -200,13 +201,8 @@ fun UserInfoHeader(
                         ?: stringResource(id = xcj.app.appsets.R.string.no_introduction)
                 )
             }
-            val actions = makeUserActions(
-                userInfo,
-                isLoginUserFollowedThisUser,
-                userFollowers,
-                userFollowed
-            )
             UserActions(
+                modifier = Modifier.weight(1f),
                 actions = actions,
                 onActionClick = onActionClick
             )
@@ -216,11 +212,12 @@ fun UserInfoHeader(
 
 @Composable
 fun UserActions(
+    modifier: Modifier = Modifier,
     actions: List<UserAction>,
     onActionClick: (UserAction) -> Unit,
 ) {
     FlowRow(
-        modifier = Modifier
+        modifier = modifier
             .padding(horizontal = 12.dp)
             .animateContentSize(),
         horizontalArrangement = Arrangement.spacedBy(12.dp),

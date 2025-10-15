@@ -10,26 +10,37 @@ import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.onPlaced
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import dev.chrisbanes.haze.hazeSource
+import dev.chrisbanes.haze.rememberHazeState
 import xcj.app.appsets.im.Bio
 import xcj.app.appsets.server.model.Application
 import xcj.app.appsets.server.model.ScreenInfo
@@ -77,9 +88,6 @@ fun UserProfilePage(
         }
     }
 
-    var currentShowContent by remember {
-        mutableStateOf(NONE)
-    }
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -113,10 +121,22 @@ fun UserProfilePage(
             }
 
             is UserProfilePageState.LoadSuccess -> {
-                Column(modifier = Modifier.fillMaxSize()) {
-                    BackActionTopBar(
-                        onBackClick = onBackClick
-                    )
+                var currentShowContent by remember {
+                    mutableStateOf(NONE)
+                }
+                val hazeState = rememberHazeState()
+                val density = LocalDensity.current
+                var backActionBarSize by remember {
+                    mutableStateOf(IntSize.Zero)
+                }
+                val backActionsHeight by remember {
+                    derivedStateOf {
+                        with(density) {
+                            backActionBarSize.height.toDp()
+                        }
+                    }
+                }
+                Box(modifier = Modifier.fillMaxSize()) {
                     if (currentShowContent != NONE) {
                         BackHandler {
                             if (currentShowContent != NONE) {
@@ -124,58 +144,75 @@ fun UserProfilePage(
                             }
                         }
                     }
-                    UserInfoHeader(
-                        modifier = Modifier,
-                        userInfo = userProfilePageState.userInfo,
-                        userFollowers = userFollowers,
-                        userFollowed = userFollowed,
-                        isLoginUserFollowedThisUser = isLoginUserFollowedThisUser,
-                        onActionClick = { userAction ->
-                            when (userAction.type) {
-                                UserAction.ACTION_APPLICATION -> {
-                                    currentShowContent = APPLICATION
-                                }
+                    Column(
+                        modifier = Modifier
+                            .hazeSource(hazeState),
+                    ) {
+                        Spacer(
+                            modifier = Modifier.height(
+                                WindowInsets.statusBars.asPaddingValues()
+                                    .calculateTopPadding() + backActionsHeight + 12.dp
+                            )
+                        )
+                        UserInfoHeader(
+                            userInfo = userProfilePageState.userInfo,
+                            userFollowers = userFollowers,
+                            userFollowed = userFollowed,
+                            isLoginUserFollowedThisUser = isLoginUserFollowedThisUser,
+                            onActionClick = { userAction ->
+                                when (userAction.type) {
+                                    UserAction.ACTION_APPLICATION -> {
+                                        currentShowContent = APPLICATION
+                                    }
 
-                                UserAction.ACTION_SCREEN -> {
-                                    onLoadMoreScreens(userProfilePageState.userInfo.uid, true)
-                                    currentShowContent = SCREEN
-                                }
+                                    UserAction.ACTION_SCREEN -> {
+                                        onLoadMoreScreens(userProfilePageState.userInfo.uid, true)
+                                        currentShowContent = SCREEN
+                                    }
 
-                                UserAction.ACTION_FOLLOW_STATE -> {
-                                    currentShowContent = FOLLOWER_FOLLOWED
-                                }
+                                    UserAction.ACTION_FOLLOW_STATE -> {
+                                        currentShowContent = FOLLOWER_FOLLOWED
+                                    }
 
-                                UserAction.ACTION_UPDATE_INFO -> {
-                                    currentShowContent = MODIFY_PROFILE
-                                }
+                                    UserAction.ACTION_UPDATE_INFO -> {
+                                        currentShowContent = MODIFY_PROFILE
+                                    }
 
-                                UserAction.ACTION_FLIP_FOLLOW -> {
-                                    onFlipFollowClick(userProfilePageState.userInfo)
-                                }
+                                    UserAction.ACTION_FLIP_FOLLOW -> {
+                                        onFlipFollowClick(userProfilePageState.userInfo)
+                                    }
 
-                                UserAction.ACTION_CHAT -> {
-                                    onChatClick(userProfilePageState.userInfo)
-                                }
+                                    UserAction.ACTION_CHAT -> {
+                                        onChatClick(userProfilePageState.userInfo)
+                                    }
 
-                                UserAction.ACTION_ADD_FRIEND -> {
-                                    onAddFriendClick(userProfilePageState.userInfo)
+                                    UserAction.ACTION_ADD_FRIEND -> {
+                                        onAddFriendClick(userProfilePageState.userInfo)
+                                    }
                                 }
                             }
-                        }
-                    )
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .fillMaxWidth()
-                    ) {
-                        Text(
-                            modifier = Modifier
-                                .align(Alignment.Center),
-                            text = stringResource(xcj.app.appsets.R.string.select_a_display_content),
-                            fontSize = 12.sp
                         )
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxWidth()
+                        ) {
+                            Text(
+                                modifier = Modifier
+                                    .align(Alignment.Center),
+                                text = stringResource(xcj.app.appsets.R.string.select_a_display_content),
+                                fontSize = 12.sp
+                            )
+                        }
                     }
 
+                    BackActionTopBar(
+                        modifier = Modifier.onPlaced {
+                            backActionBarSize = it.size
+                        },
+                        hazeState = hazeState,
+                        onBackClick = onBackClick
+                    )
                 }
                 AnimatedVisibility(
                     visible = currentShowContent != NONE,

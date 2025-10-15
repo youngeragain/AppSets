@@ -1319,9 +1319,6 @@ fun MainNaviHostPagesContainer(
                     onWebsiteClick = {
                         navigateToExternalWeb(context, AppSetsModuleSettings.WEBSITE_URL.toUri())
                     },
-                    onDispose = {
-
-                    }
                 )
             }
 
@@ -1503,18 +1500,18 @@ fun DesignNaviHost(
         startDestination = startDestination,
         enterTransition = {
             scaleIn(
-                initialScale = 1.07f,
-                animationSpec = tween(350)
+                initialScale = 0.89f,
+                animationSpec = tween()
             ) + fadeIn(
-                animationSpec = tween(350)
+                animationSpec = tween()
             )
         },
         exitTransition = {
             scaleOut(
-                targetScale = 0.93f,
-                animationSpec = tween(350)
+                targetScale = 1.11f,
+                animationSpec = tween()
             ) + fadeOut(
-                animationSpec = tween(350)
+                animationSpec = tween()
             )
         },
         contentAlignment = Alignment.TopCenter,

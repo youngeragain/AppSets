@@ -9,25 +9,27 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilledTonalButton
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -40,9 +42,9 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.layout.onPlaced
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -51,7 +53,9 @@ import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
+import dev.chrisbanes.haze.hazeSource
 import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
+import dev.chrisbanes.haze.rememberHazeState
 import xcj.app.appsets.im.Bio
 import xcj.app.appsets.server.model.GroupInfo
 import xcj.app.appsets.ui.compose.custom_component.AnyImage
@@ -59,7 +63,7 @@ import xcj.app.appsets.ui.compose.custom_component.DesignBackButton
 import xcj.app.appsets.ui.compose.theme.ExtraLarge2
 import xcj.app.appsets.ui.model.page_state.GroupInfoPageState
 import xcj.app.appsets.usecase.RelationsUseCase
-import xcj.app.compose_share.components.DesignHDivider
+import xcj.app.compose_share.components.BackActionTopBar
 import kotlin.math.roundToInt
 
 @Preview(showBackground = true)
@@ -138,174 +142,181 @@ fun GroupInfoPage(
                         }
                     }
                 }
+                val hazeState = rememberHazeState()
+                val density = LocalDensity.current
+                var backActionBarSize by remember {
+                    mutableStateOf(IntSize.Zero)
+                }
+                val backActionsHeight by remember {
+                    derivedStateOf {
+                        with(density) {
+                            backActionBarSize.height.toDp()
+                        }
+                    }
+                }
+                val groupAvatarHeight by remember {
+                    derivedStateOf {
+                        with(density) {
+                            sizeOfGroupAvatar.height.toDp()
+                        }
+                    }
+                }
+
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
                         .nestedScroll(nestedScrollConnection)
                 ) {
-                    val userInfoList = groupInfoPageState.groupInfo.userInfoList
-                    if (userInfoList.isNullOrEmpty()) {
-                        Box(
-                            Modifier
-                                .fillMaxSize(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(text = stringResource(xcj.app.appsets.R.string.no_group_members))
-                        }
-                    } else {
-                        val density = LocalDensity.current
-                        val paddingValues = with(density) {
-                            PaddingValues(
-                                top = sizeOfGroupAvatar.height.toDp(),
-                                bottom = 68.dp
-                            )
-                        }
-                        LazyVerticalGrid(
-                            columns = GridCells.Adaptive(82.dp),
-                            modifier = Modifier,
-                            state = rememberLazyGridState(),
-                            contentPadding = paddingValues
-                        ) {
-                            items(userInfoList) { userInfo ->
-                                Column(
-                                    modifier = Modifier
-                                        .padding(8.dp)
-                                        .clip(MaterialTheme.shapes.small)
-                                        .clickable {
-                                            onBioClick(userInfo)
-                                        },
-                                    horizontalAlignment = Alignment.CenterHorizontally,
-                                    verticalArrangement = Arrangement.spacedBy(10.dp)
-                                ) {
-                                    AnyImage(
-                                        model = userInfo.bioUrl,
-                                        modifier = Modifier
-                                            .size(52.dp)
-                                            .clip(MaterialTheme.shapes.extraLarge)
-                                            .border(
-                                                1.dp,
-                                                MaterialTheme.colorScheme.outline,
-                                                MaterialTheme.shapes.extraLarge
-                                            ),
-                                        error = userInfo.bioName
-                                    )
-                                    Text(
-                                        text = userInfo.bioName ?: "",
-                                        fontSize = 12.sp,
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis,
-                                    )
-                                }
-                            }
-                        }
-                    }
-
-                    Column(modifier = Modifier
-                        .onSizeChanged {
-                            sizeOfGroupAvatar = it
-                        }
-                    ) {
-                        Column(
-                            modifier = Modifier
-                                .zIndex(1f)
-                                .background(MaterialTheme.colorScheme.surface)
-                        ) {
+                    Box(
+                        modifier = Modifier
+                            .hazeSource(hazeState)
+                    )
+                    {
+                        val userInfoList = groupInfoPageState.groupInfo.userInfoList
+                        if (userInfoList.isNullOrEmpty()) {
                             Box(
                                 Modifier
-                                    .fillMaxWidth()
-                                    .statusBarsPadding()
+                                    .fillMaxSize(),
+                                contentAlignment = Alignment.Center
                             ) {
-                                Icon(
-                                    painter = painterResource(id = xcj.app.compose_share.R.drawable.ic_arrow_back_24),
-                                    contentDescription = stringResource(id = xcj.app.appsets.R.string.return_),
-                                    modifier = Modifier
-                                        .clip(CircleShape)
-                                        .clickable(onClick = onBackClick)
-                                        .padding(12.dp)
+                                Text(text = stringResource(xcj.app.appsets.R.string.no_group_members))
+                            }
+                        } else {
+
+                            LazyVerticalGrid(
+                                columns = GridCells.Adaptive(82.dp),
+                                modifier = Modifier,
+                                state = rememberLazyGridState(),
+                                contentPadding = PaddingValues(
+                                    top = groupAvatarHeight + 12.dp,
+                                    bottom = 68.dp
                                 )
-                                if (RelationsUseCase.getInstance()
-                                        .hasGroupRelated(groupInfoPageState.groupInfo.groupId)
-                                    || groupInfoPageState.groupInfo.public == 1
-                                ) {
-                                    Row(
+                            ) {
+                                items(userInfoList) { userInfo ->
+                                    Column(
                                         modifier = Modifier
-                                            .align(Alignment.CenterEnd)
-                                            .padding(horizontal = 12.dp)
+                                            .padding(8.dp)
+                                            .clip(MaterialTheme.shapes.small)
+                                            .clickable {
+                                                onBioClick(userInfo)
+                                            },
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                        verticalArrangement = Arrangement.spacedBy(10.dp)
                                     ) {
-                                        TextButton(
-                                            onClick = {
-                                                onChatClick(groupInfoPageState.groupInfo)
-                                            }
-                                        ) {
-                                            Text(text = stringResource(xcj.app.appsets.R.string.chat))
-                                        }
-                                    }
-                                } else {
-                                    Row(
-                                        modifier = Modifier
-                                            .align(Alignment.CenterEnd)
-                                            .padding(horizontal = 12.dp)
-                                    ) {
-                                        FilledTonalButton(
-                                            onClick = {
-                                                onJoinGroupRequestClick(groupInfoPageState.groupInfo)
-                                            }
-                                        ) {
-                                            Text(text = stringResource(xcj.app.appsets.R.string.apply_to_join))
-                                        }
+                                        AnyImage(
+                                            model = userInfo.bioUrl,
+                                            modifier = Modifier
+                                                .size(52.dp)
+                                                .clip(MaterialTheme.shapes.extraLarge)
+                                                .border(
+                                                    1.dp,
+                                                    MaterialTheme.colorScheme.outline,
+                                                    MaterialTheme.shapes.extraLarge
+                                                ),
+                                            error = userInfo.bioName
+                                        )
+                                        Text(
+                                            text = userInfo.bioName ?: "",
+                                            fontSize = 12.sp,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis,
+                                        )
                                     }
                                 }
                             }
-                            DesignHDivider()
                         }
+
                         Column(
                             modifier = Modifier
-                                .zIndex(0f)
-                                .fillMaxWidth()
-                                .padding(12.dp)
-                                .offset {
-                                    IntOffset(
-                                        x = 0,
-                                        y = groupAvatarOffsetHeightPx.floatValue.roundToInt()
-                                    )
-                                },
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                                .onSizeChanged {
+                                    sizeOfGroupAvatar = it
+                                }
                         ) {
-                            AnyImage(
-                                modifier = Modifier
-                                    .size(250.dp)
-                                    .clip(ExtraLarge2)
-                                    .border(
-                                        1.dp,
-                                        MaterialTheme.colorScheme.outline,
-                                        ExtraLarge2
-                                    ),
-                                model = groupInfoPageState.groupInfo.bioUrl,
-                                error = groupInfoPageState.groupInfo.bioName
+                            Spacer(
+                                modifier = Modifier.height(
+                                    WindowInsets.statusBars.asPaddingValues()
+                                        .calculateTopPadding() + backActionsHeight + 12.dp
+                                )
                             )
                             Column(
                                 modifier = Modifier
-                                    .background(
-                                        MaterialTheme.colorScheme.surface,
-                                        MaterialTheme.shapes.extraLarge
-                                    )
-                                    .clip(
-                                        MaterialTheme.shapes.extraLarge
-                                    )
-                                    .padding(horizontal = 12.dp, vertical = 6.dp),
+                                    .zIndex(0f)
+                                    .fillMaxWidth()
+                                    .padding(12.dp)
+                                    .offset {
+                                        IntOffset(
+                                            x = 0,
+                                            y = groupAvatarOffsetHeightPx.floatValue.roundToInt()
+                                        )
+                                    },
                                 horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.spacedBy(6.dp)
-                            ) {
-                                Text(text = "${(groupInfoPageState.groupInfo.bioName ?: "")}(${userInfoList?.size ?: 0})")
-                                Text(
-                                    text = groupInfoPageState.groupInfo.introduction
-                                        ?: stringResource(xcj.app.appsets.R.string.no_introduction),
-                                    fontSize = 12.sp
+                                verticalArrangement = Arrangement.spacedBy(12.dp)
+                            )
+                            {
+                                AnyImage(
+                                    modifier = Modifier
+                                        .size(250.dp)
+                                        .clip(ExtraLarge2)
+                                        .border(
+                                            1.dp,
+                                            MaterialTheme.colorScheme.outline,
+                                            ExtraLarge2
+                                        ),
+                                    model = groupInfoPageState.groupInfo.bioUrl,
+                                    error = groupInfoPageState.groupInfo.bioName
                                 )
+                                Column(
+                                    modifier = Modifier
+                                        .background(
+                                            MaterialTheme.colorScheme.surface,
+                                            MaterialTheme.shapes.extraLarge
+                                        )
+                                        .clip(
+                                            MaterialTheme.shapes.extraLarge
+                                        )
+                                        .padding(horizontal = 12.dp, vertical = 6.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                                ) {
+                                    Text(text = "${(groupInfoPageState.groupInfo.bioName ?: "")}(${userInfoList?.size ?: 0})")
+                                    Text(
+                                        text = groupInfoPageState.groupInfo.introduction
+                                            ?: stringResource(xcj.app.appsets.R.string.no_introduction),
+                                        fontSize = 12.sp
+                                    )
+                                }
                             }
                         }
                     }
+                    BackActionTopBar(
+                        modifier = Modifier.onPlaced {
+                            backActionBarSize = it.size
+                        },
+                        hazeState = hazeState,
+                        onBackClick = onBackClick,
+                        customEndContent = {
+                            if (RelationsUseCase.getInstance()
+                                    .hasGroupRelated(groupInfoPageState.groupInfo.groupId)
+                                || groupInfoPageState.groupInfo.public == 1
+                            ) {
+                                TextButton(
+                                    onClick = {
+                                        onChatClick(groupInfoPageState.groupInfo)
+                                    }
+                                ) {
+                                    Text(text = stringResource(xcj.app.appsets.R.string.chat))
+                                }
+                            } else {
+                                FilledTonalButton(
+                                    onClick = {
+                                        onJoinGroupRequestClick(groupInfoPageState.groupInfo)
+                                    }
+                                ) {
+                                    Text(text = stringResource(xcj.app.appsets.R.string.apply_to_join))
+                                }
+                            }
+                        }
+                    )
                 }
             }
         }

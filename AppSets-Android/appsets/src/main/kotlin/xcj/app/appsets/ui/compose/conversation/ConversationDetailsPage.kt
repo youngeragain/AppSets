@@ -44,7 +44,6 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
@@ -143,6 +142,7 @@ import xcj.app.appsets.usecase.SessionState
 import xcj.app.appsets.util.DesignRecorder
 import xcj.app.appsets.util.ktx.asComponentActivityOrNull
 import xcj.app.appsets.util.model.UriProvider
+import xcj.app.compose_share.components.BackActionTopBar
 import xcj.app.compose_share.components.DesignHDivider
 import xcj.app.compose_share.modifier.combinedClickableSingle
 import xcj.app.starter.android.ktx.startWithHttpSchema
@@ -559,28 +559,10 @@ fun TopToolBar(
     onBioClick: (Bio) -> Unit,
     onMoreClick: () -> Unit,
 ) {
-    Column(
-        modifier = Modifier.hazeEffect(
-            hazeState,
-            HazeMaterials.thin()
-        ),
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .statusBarsPadding(),
-            horizontalArrangement = Arrangement.spacedBy(2.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                painter = painterResource(id = xcj.app.compose_share.R.drawable.ic_arrow_back_24),
-                contentDescription = stringResource(id = xcj.app.appsets.R.string.return_),
-                modifier = Modifier
-                    .clip(CircleShape)
-                    .clickable(onClick = onBackClick)
-                    .padding(12.dp)
-            )
-            Spacer(modifier = Modifier.weight(1f))
+    BackActionTopBar(
+        hazeState = hazeState,
+        onBackClick = onBackClick,
+        customCenterContent = {
             Row(
                 modifier = Modifier
                     .clickable {
@@ -602,7 +584,8 @@ fun TopToolBar(
                     overflow = TextOverflow.Ellipsis
                 )
             }
-            Spacer(modifier = Modifier.weight(1f))
+        },
+        customEndContent = {
             Icon(
                 painterResource(id = xcj.app.compose_share.R.drawable.ic_outline_more_vert_24),
                 stringResource(id = xcj.app.appsets.R.string.more),
@@ -612,8 +595,7 @@ fun TopToolBar(
                     .padding(12.dp)
             )
         }
-        DesignHDivider()
-    }
+    )
 }
 
 

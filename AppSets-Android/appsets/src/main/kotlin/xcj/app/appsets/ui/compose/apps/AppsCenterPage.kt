@@ -3,7 +3,6 @@
 package xcj.app.appsets.ui.compose.apps
 
 import androidx.compose.animation.core.AnimationState
-import androidx.compose.animation.core.AnimationVector1D
 import androidx.compose.animation.core.animateTo
 import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.tween
@@ -59,16 +58,14 @@ fun AppsCenterPage(
 ) {
     ShowNavBar()
     val hapticFeedback = LocalHapticFeedback.current
-    //val coroutineScope = rememberCoroutineScope()
-
     val allApplications by rememberUpdatedState(appCenterPageState.apps.flatMap { it.applications })
     val iconAnimationStates = remember {
-        val animations = mutableListOf<AnimationState<Float, AnimationVector1D>>()
-        val allCount = allApplications.size
-        repeat(allCount) { index ->
-            animations.add(AnimationState(0f))
+        buildList {
+            val allCount = allApplications.size
+            repeat(allCount) { index ->
+                add(AnimationState(0f))
+            }
         }
-        animations
     }
     LaunchedEffect(true) {
         if (appCenterPageState is AppCenterPageState.LoadSuccess) {
@@ -76,12 +73,12 @@ fun AppsCenterPage(
             val center = (allCount) / 2 + 1
             iconAnimationStates.forEachIndexed { index, animation ->
                 val delay = if (index <= center) {
-                    ((1f - index.toFloat() / center.toFloat()) * 220).toInt()
+                    ((1f - index.toFloat() / center.toFloat()) * 150).toInt()
                 } else {
-                    (((index - center).toFloat() / center.toFloat()) * 220).toInt()
+                    (((index - center).toFloat() / center.toFloat()) * 150).toInt()
                 }
                 launch {
-                    animation.animateTo(1f, tween(750, delay))
+                    animation.animateTo(1f, tween(450, delay))
                 }
             }
         } else {

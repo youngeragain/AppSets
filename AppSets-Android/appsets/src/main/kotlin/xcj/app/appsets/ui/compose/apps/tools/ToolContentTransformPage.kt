@@ -3,7 +3,6 @@ package xcj.app.appsets.ui.compose.apps.tools
 import android.graphics.Bitmap
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateIntAsState
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -12,9 +11,10 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.wrapContentHeight
@@ -40,6 +41,7 @@ import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
@@ -51,11 +53,15 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.onPlaced
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import dev.chrisbanes.haze.rememberHazeState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -101,182 +107,178 @@ fun ToolContentTransformPage(
     onBackClick: () -> Unit
 ) {
     HideNavBar()
-    Column {
-        BackActionTopBar(
-            onBackClick = onBackClick,
-            backButtonRightText = stringResource(xcj.app.appsets.R.string.transform_content)
-        )
-        Box(modifier = Modifier.weight(1f)) {
-            val coroutineScope = rememberCoroutineScope()
-            var transformType by rememberSaveable {
-                mutableStateOf("None")
+    val coroutineScope = rememberCoroutineScope()
+    var transformType by rememberSaveable {
+        mutableStateOf("None")
+    }
+    var content by rememberSaveable {
+        val initString: String =
+            if (quickStepContents.isNullOrEmpty()) {
+                ""
+            } else {
+                val textQuickStepContents =
+                    quickStepContents.filterIsInstance<TextQuickStepContent>()
+                if (!textQuickStepContents.isEmpty()) {
+                    val content = textQuickStepContents.joinToString { it.text }
+                    content
+                } else {
+                    ""
+                }
             }
-            var content by rememberSaveable {
-                val initString: String =
-                    if (quickStepContents.isNullOrEmpty()) {
-                        ""
-                    } else {
-                        val textQuickStepContents =
-                            quickStepContents.filterIsInstance<TextQuickStepContent>()
-                        if (!textQuickStepContents.isEmpty()) {
-                            val content = textQuickStepContents.joinToString { it.text }
-                            content
+        mutableStateOf(initString)
+    }
+
+    var transformedContent: TransformedContent by remember {
+        mutableStateOf(TransformedContent.SimpleContent("", null))
+    }
+
+
+    val transformRunnable: suspend CoroutineScope.() -> Unit = remember {
+        {
+            if (content.isNotEmpty()) {
+                when (transformType) {
+                    "MD5" -> {
+                        val outContent =
+                            MessageDigestUtil.transformWithMD5(content)?.outContent
+                        val qrBitmap = outContent?.let {
+                            QrCodeUtil.encodeAsBitmap(it)
+                        }
+                        transformedContent = TransformedContent.SimpleContent(
+                            outContent,
+                            qrBitmap
+                        )
+                    }
+
+                    "SHA2" -> {
+                        val outContent =
+                            MessageDigestUtil.transformWithSHA256(content)?.outContent
+                        val qrBitmap = outContent?.let {
+                            QrCodeUtil.encodeAsBitmap(it)
+                        }
+                        transformedContent = TransformedContent.SimpleContent(
+                            outContent,
+                            qrBitmap
+                        )
+                    }
+
+                    "Base64" -> {
+                        val outContent = Base64.encode(content.encodeToByteArray())
+                        val qrBitmap = QrCodeUtil.encodeAsBitmap(outContent)
+                        transformedContent = TransformedContent.SimpleContent(
+                            outContent,
+                            qrBitmap
+                        )
+                    }
+
+                    "AES", "DES" -> {
+                        val encryptionResult = if (transformType == "AES") {
+                            EncryptionUtil.encryptWithAES(content)
                         } else {
-                            ""
+                            EncryptionUtil.encryptWithDES(content)
                         }
+                        val outContent = encryptionResult?.outContentBase64
+                        val qrBitmap = outContent?.let {
+                            QrCodeUtil.encodeAsBitmap(it)
+                        }
+                        transformedContent = TransformedContent.AESContent(
+                            outContent,
+                            qrBitmap,
+                            encryptionResult
+                        )
                     }
-                mutableStateOf(initString)
-            }
 
-            var transformedContent: TransformedContent by remember {
-                mutableStateOf(TransformedContent.SimpleContent("", null))
-            }
-
-
-            val transformRunnable: suspend CoroutineScope.() -> Unit = remember {
-                {
-                    if (content.isNotEmpty()) {
-                        when (transformType) {
-                            "MD5" -> {
-                                val outContent =
-                                    MessageDigestUtil.transformWithMD5(content)?.outContent
-                                val qrBitmap = outContent?.let {
-                                    QrCodeUtil.encodeAsBitmap(it)
-                                }
-                                transformedContent = TransformedContent.SimpleContent(
-                                    outContent,
-                                    qrBitmap
-                                )
-                            }
-
-                            "SHA2" -> {
-                                val outContent =
-                                    MessageDigestUtil.transformWithSHA256(content)?.outContent
-                                val qrBitmap = outContent?.let {
-                                    QrCodeUtil.encodeAsBitmap(it)
-                                }
-                                transformedContent = TransformedContent.SimpleContent(
-                                    outContent,
-                                    qrBitmap
-                                )
-                            }
-
-                            "Base64" -> {
-                                val outContent = Base64.encode(content.encodeToByteArray())
-                                val qrBitmap = QrCodeUtil.encodeAsBitmap(outContent)
-                                transformedContent = TransformedContent.SimpleContent(
-                                    outContent,
-                                    qrBitmap
-                                )
-                            }
-
-                            "AES", "DES" -> {
-                                val encryptionResult = if (transformType == "AES") {
-                                    EncryptionUtil.encryptWithAES(content)
-                                } else {
-                                    EncryptionUtil.encryptWithDES(content)
-                                }
-                                val outContent = encryptionResult?.outContentBase64
-                                val qrBitmap = outContent?.let {
-                                    QrCodeUtil.encodeAsBitmap(it)
-                                }
-                                transformedContent = TransformedContent.AESContent(
-                                    outContent,
-                                    qrBitmap,
-                                    encryptionResult
-                                )
-                            }
-
-                            "RSA" -> {
-                                val encryptionResult = EncryptionUtil.encryptWithRSA(content)
-                                val outContent = encryptionResult?.outContentBase64
-                                val qrBitmap = outContent?.let {
-                                    QrCodeUtil.encodeAsBitmap(it)
-                                }
-                                transformedContent = TransformedContent.RSAContent(
-                                    outContent,
-                                    qrBitmap,
-                                    encryptionResult
-                                )
-                            }
-
-                            else -> {
-                                val qrBitmap = QrCodeUtil.encodeAsBitmap(content)
-                                transformedContent =
-                                    TransformedContent.SimpleContent(content, qrBitmap)
-                            }
+                    "RSA" -> {
+                        val encryptionResult = EncryptionUtil.encryptWithRSA(content)
+                        val outContent = encryptionResult?.outContentBase64
+                        val qrBitmap = outContent?.let {
+                            QrCodeUtil.encodeAsBitmap(it)
                         }
+                        transformedContent = TransformedContent.RSAContent(
+                            outContent,
+                            qrBitmap,
+                            encryptionResult
+                        )
+                    }
+
+                    else -> {
+                        val qrBitmap = QrCodeUtil.encodeAsBitmap(content)
+                        transformedContent =
+                            TransformedContent.SimpleContent(content, qrBitmap)
                     }
                 }
             }
-
-            LaunchedEffect(key1 = transformType, key2 = content) {
-                transformRunnable(coroutineScope)
-            }
-
-            PortraitQRCodeComponent(
-                transformType,
-                content,
-                transformedContent,
-                transformTypeChanged = {
-                    transformType = it
-                },
-                contentChanged = {
-                    content = it
-                }
-            )
         }
     }
-}
 
-@OptIn(
-    ExperimentalLayoutApi::class,
-    ExperimentalFoundationApi::class
-)
-@Composable
-fun PortraitQRCodeComponent(
-    transformType: String,
-    content: String,
-    transformedContent: TransformedContent,
-    transformTypeChanged: (String) -> Unit,
-    contentChanged: (String) -> Unit,
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-    ) {
-        val pagerState = rememberPagerState {
-            2
-        }
-        PageIndicator(
-            modifier = Modifier
-                .wrapContentHeight()
-                .fillMaxWidth()
-                .padding(12.dp),
-            pagerState = pagerState
-        )
-        HorizontalPager(
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f),
-            state = pagerState
-        ) { pageIndex ->
-            if (pageIndex == 0) {
-                TransformedQRPage(
-                    transformType,
-                    content,
-                    transformedContent,
-                    transformTypeChanged,
-                    contentChanged
-                )
-            } else {
-                TransformedContentPage(
-                    transformType,
-                    content,
-                    transformedContent
-                )
+    val hazeState = rememberHazeState()
+    val density = LocalDensity.current
+    var backActionBarSize by remember {
+        mutableStateOf(IntSize.Zero)
+    }
+    val backActionsHeight by remember {
+        derivedStateOf {
+            with(density) {
+                backActionBarSize.height.toDp()
             }
         }
+    }
+    LaunchedEffect(key1 = transformType, key2 = content) {
+        transformRunnable(coroutineScope)
+    }
+    Box(modifier = Modifier.fillMaxSize()) {
+
+        Column(
+            modifier = Modifier.padding(
+                top = WindowInsets.statusBars.asPaddingValues()
+                    .calculateTopPadding() + backActionsHeight + 12.dp
+            )
+        ) {
+            val pagerState = rememberPagerState {
+                2
+            }
+            PageIndicator(
+                modifier = Modifier
+                    .wrapContentHeight()
+                    .fillMaxWidth()
+                    .padding(12.dp),
+                pagerState = pagerState
+            )
+            HorizontalPager(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f),
+                state = pagerState
+            ) { pageIndex ->
+                if (pageIndex == 0) {
+                    TransformedQRPage(
+                        transformType = transformType,
+                        content = content,
+                        transformedContent = transformedContent,
+                        transformTypeChanged = {
+                            transformType = it
+                        },
+                        contentChanged = {
+                            content = it
+                        }
+                    )
+                } else {
+                    TransformedContentPage(
+                        transformType,
+                        content,
+                        transformedContent
+                    )
+                }
+            }
+        }
+
+        BackActionTopBar(
+            modifier = Modifier.onPlaced {
+                backActionBarSize = it.size
+            },
+            hazeState = hazeState,
+            onBackClick = onBackClick,
+            centerText = stringResource(xcj.app.appsets.R.string.transform_content)
+        )
     }
 }
 
@@ -326,9 +328,8 @@ fun TransformedQRPage(
                 .fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(Modifier.height(32.dp))
-            AnyImage(
-                model = transformedContent.bitmap,
+            Spacer(modifier = Modifier.height(32.dp))
+            Box(
                 modifier = Modifier
                     .size(sizeOfQRState.dp)
                     .border(
@@ -336,8 +337,22 @@ fun TransformedQRPage(
                         MaterialTheme.colorScheme.outline,
                         MaterialTheme.shapes.extraLarge
                     )
-                    .clip(MaterialTheme.shapes.extraLarge)
-            )
+                    .clip(MaterialTheme.shapes.extraLarge),
+                contentAlignment = Alignment.Center
+            ) {
+                if (transformedContent.bitmap == null) {
+                    Text(text = "QR Code")
+                } else {
+                    AnyImage(
+                        model = transformedContent.bitmap,
+                        modifier = Modifier
+                            .size(sizeOfQRState.dp)
+                            .clip(MaterialTheme.shapes.extraLarge)
+                    )
+                }
+            }
+
+
         }
         Column(
             modifier = Modifier

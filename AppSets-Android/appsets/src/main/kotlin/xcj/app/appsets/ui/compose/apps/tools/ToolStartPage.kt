@@ -3,22 +3,37 @@ package xcj.app.appsets.ui.compose.apps.tools
 import android.content.Context
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.onPlaced
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import dev.chrisbanes.haze.hazeSource
+import dev.chrisbanes.haze.rememberHazeState
 import xcj.app.appsets.ui.compose.PageRouteNames
 import xcj.app.appsets.ui.compose.custom_component.HideNavBar
 import xcj.app.appsets.ui.compose.main.navigateToAppSetsLauncherActivity
@@ -179,13 +194,27 @@ fun ToolStartPage(
     onToolClick: (AppTool) -> Unit
 ) {
     HideNavBar()
-    Column {
-        BackActionTopBar(
-            onBackClick = onBackClick,
-            backButtonRightText = stringResource(id = xcj.app.appsets.R.string.tools)
-        )
-        val tools = generateToolList()
-        LazyColumn {
+    val tools = generateToolList()
+    val hazeState = rememberHazeState()
+    val density = LocalDensity.current
+    var backActionBarSize by remember {
+        mutableStateOf(IntSize.Zero)
+    }
+    val backActionsHeight by remember {
+        derivedStateOf {
+            with(density) {
+                backActionBarSize.height.toDp()
+            }
+        }
+    }
+    Box(modifier = Modifier.fillMaxSize()) {
+        LazyColumn(
+            modifier = Modifier.hazeSource(hazeState),
+            contentPadding = PaddingValues(
+                top = WindowInsets.statusBars.asPaddingValues()
+                    .calculateTopPadding() + backActionsHeight + 12.dp, bottom = 12.dp
+            )
+        ) {
             items(tools) { appTool ->
                 Column {
                     Row(
@@ -216,6 +245,15 @@ fun ToolStartPage(
                 }
             }
         }
+
+        BackActionTopBar(
+            modifier = Modifier.onPlaced {
+                backActionBarSize = it.size
+            },
+            hazeState = hazeState,
+            onBackClick = onBackClick,
+            centerText = stringResource(id = xcj.app.appsets.R.string.tools)
+        )
     }
 }
 

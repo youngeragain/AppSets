@@ -17,8 +17,11 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -26,6 +29,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
@@ -46,7 +50,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
@@ -56,16 +59,21 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.onPlaced
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.media3.common.util.UnstableApi
+import dev.chrisbanes.haze.hazeSource
+import dev.chrisbanes.haze.rememberHazeState
 import xcj.app.appsets.constants.Constants
 import xcj.app.appsets.server.model.AppPlatform
 import xcj.app.appsets.server.model.VersionInfo
@@ -119,7 +127,7 @@ fun CreateAppPage(
             appCreationUseCase.onComposeDispose("page dispose")
         }
     }
-    SideEffect {
+    LaunchedEffect(createApplicationPageState) {
         if (createApplicationPageState is CreateApplicationPageState.CreateSuccessPage) {
             onBackClick()
         }
@@ -146,24 +154,28 @@ fun CreateAppPage(
             )
         }
     }
+    val hazeState = rememberHazeState()
+    val density = LocalDensity.current
+    var backActionBarSize by remember {
+        mutableStateOf(IntSize.Zero)
+    }
+    val backActionsHeight by remember {
+        derivedStateOf {
+            with(density) {
+                backActionBarSize.height.toDp()
+            }
+        }
+    }
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .imePadding()
+        modifier = Modifier.fillMaxSize()
     ) {
-        Column(modifier = Modifier.fillMaxSize()) {
-            val backButtonRightText =
-                if (createStep != ApplicationForCreate.CREATE_STEP_APPLICATION) {
-                    "Add $createStep"
-                } else {
-                    "Create Application"
-                }
-            BackActionTopBar(
-                onBackClick = onBackClick,
-                backButtonRightText = backButtonRightText,
-                endButtonText = stringResource(id = xcj.app.appsets.R.string.ok),
-                onEndButtonClick = onConfirmClick
-            )
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .hazeSource(hazeState)
+                .imePadding()
+        ) {
+
             var newPlatformName: String? by remember {
                 mutableStateOf(null)
             }
@@ -177,7 +189,13 @@ fun CreateAppPage(
                 }
             }
             val applicationForCreate = createApplicationPageState.applicationForCreate
-            LazyColumn(modifier = Modifier.imePadding()) {
+            LazyColumn(
+                modifier = Modifier, contentPadding = PaddingValues(
+                    top = WindowInsets.statusBars.asPaddingValues()
+                        .calculateTopPadding() + backActionsHeight + 12.dp
+                )
+            )
+            {
 
                 item {
                     Column(
@@ -475,6 +493,23 @@ fun CreateAppPage(
             }
 
         }
+
+        val backButtonRightText =
+            if (createStep != ApplicationForCreate.CREATE_STEP_APPLICATION) {
+                "Add $createStep"
+            } else {
+                "Create Application"
+            }
+        BackActionTopBar(
+            modifier = Modifier.onPlaced {
+                backActionBarSize = it.size
+            },
+            hazeState = hazeState,
+            onBackClick = onBackClick,
+            centerText = backButtonRightText,
+            endButtonText = stringResource(id = xcj.app.appsets.R.string.ok),
+            onEndButtonClick = onConfirmClick
+        )
 
         CreateApplicationIndicator(createApplicationPageState = createApplicationPageState)
     }

@@ -2,14 +2,19 @@ package xcj.app.appsets.ui.compose.apps.tools
 
 import android.content.ComponentName
 import android.content.Context
-import android.net.Uri
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyRow
@@ -25,6 +30,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -33,14 +39,20 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.onPlaced
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.net.toUri
+import dev.chrisbanes.haze.hazeSource
+import dev.chrisbanes.haze.rememberHazeState
 import xcj.app.appsets.ui.compose.custom_component.HideNavBar
 import xcj.app.appsets.ui.compose.quickstep.QuickStepContent
 import xcj.app.appsets.ui.compose.quickstep.TextQuickStepContent
@@ -105,7 +117,7 @@ sealed interface IntentCallerModel {
             val intent = android.content.Intent()
             when (model) {
                 is IntentCallerModel.DeepLink -> {
-                    val uri = Uri.parse(model.deeplink)
+                    val uri = model.deeplink.toUri()
                     intent.data = uri
                 }
 
@@ -137,19 +149,34 @@ fun ToolIntentCallerPage(
     val calledIntentList = remember {
         mutableStateListOf<IntentCallerModel>()
     }
-    Column {
-        BackActionTopBar(
-            onBackClick = onBackClick,
-            backButtonRightText = stringResource(xcj.app.appsets.R.string.intent_caller)
-        )
+    val hazeState = rememberHazeState()
+    val density = LocalDensity.current
+    var backActionBarSize by remember {
+        mutableStateOf(IntSize.Zero)
+    }
+    val backActionsHeight by remember {
+        derivedStateOf {
+            with(density) {
+                backActionBarSize.height.toDp()
+            }
+        }
+    }
+    Box(modifier = Modifier.fillMaxSize()) {
         Column(
             modifier = Modifier
+                .hazeSource(hazeState)
                 .fillMaxWidth()
-                .weight(1f)
-                .padding(12.dp)
+                .padding(start = 12.dp, end = 12.dp)
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
+        )
+        {
+            Spacer(
+                modifier = Modifier.height(
+                    WindowInsets.statusBars.asPaddingValues()
+                        .calculateTopPadding() + backActionsHeight + 12.dp
+                )
+            )
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -243,6 +270,16 @@ fun ToolIntentCallerPage(
 
             }
         }
+
+        BackActionTopBar(
+            modifier = Modifier.onPlaced {
+                backActionBarSize = it.size
+            },
+            hazeState = hazeState,
+            onBackClick = onBackClick,
+            centerText = stringResource(xcj.app.appsets.R.string.intent_caller)
+        )
+
     }
 }
 

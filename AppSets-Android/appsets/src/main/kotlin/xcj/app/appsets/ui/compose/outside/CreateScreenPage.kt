@@ -22,6 +22,8 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -29,6 +31,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.wrapContentHeight
@@ -48,15 +51,24 @@ import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.onPlaced
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import dev.chrisbanes.haze.hazeSource
+import dev.chrisbanes.haze.rememberHazeState
 import xcj.app.appsets.ui.compose.LocalUseCaseOfScreenPost
 import xcj.app.appsets.ui.compose.content_selection.ContentSelectionTypes
 import xcj.app.appsets.ui.compose.custom_component.AnyImage
@@ -103,33 +115,61 @@ fun CreateScreenPage(
             onBackClick(true)
         }
     }
-    Box(Modifier.fillMaxSize()) {
+    val hazeState = rememberHazeState()
+    val density = LocalDensity.current
+    var backActionBarSize by remember {
+        mutableStateOf(IntSize.Zero)
+    }
+    val backActionsHeight by remember {
+        derivedStateOf {
+            with(density) {
+                backActionBarSize.height.toDp()
+            }
+        }
+    }
+    Box(modifier = Modifier.fillMaxSize()) {
         Column(
             modifier = Modifier
-                .fillMaxSize()
+                .hazeSource(hazeState)
+                .widthIn(TextFieldDefaults.MinWidth)
                 .imePadding()
+                .padding(horizontal = 12.dp)
+                .verticalScroll(rememberScrollState())
         ) {
-            BackActionTopBar(
-                backButtonRightText = stringResource(xcj.app.appsets.R.string.create_screen),
-                endButtonText = stringResource(id = xcj.app.appsets.R.string.ok),
-                onBackClick = {
-                    onBackClick(false)
-                },
-                onEndButtonClick = onConfirmClick
+            Spacer(
+                modifier = Modifier.height(
+                    WindowInsets.statusBars.asPaddingValues()
+                        .calculateTopPadding() + backActionsHeight + 12.dp
+                )
             )
             NewPostScreenComponent(
-                postScreenState.screenInfoForCreate,
-                onGenerateClick,
-                onIsPublicClick,
-                onInputContent,
-                onInputTopics,
-                onInputPeoples,
-                onAddMediaFallClick,
-                onAddMediaContentClick,
-                onRemoveMediaContent,
-                onVideoPlayClick
+                screenInfoForCreate = postScreenState.screenInfoForCreate,
+                onGenerateClick = onGenerateClick,
+                onVisibilityClick = onIsPublicClick,
+                onInputContent = onInputContent,
+                onInputTopics = onInputTopics,
+                onInputUsers = onInputPeoples,
+                onAddMediaFallClick = onAddMediaFallClick,
+                onAddMediaContentClick = onAddMediaContentClick,
+                onRemoveMediaContent = onRemoveMediaContent,
+                onVideoPlayClick = onVideoPlayClick
             )
         }
+
+
+        BackActionTopBar(
+            modifier = Modifier.onPlaced {
+                backActionBarSize = it.size
+            },
+            hazeState = hazeState,
+            centerText = stringResource(xcj.app.appsets.R.string.create_screen),
+            endButtonText = stringResource(id = xcj.app.appsets.R.string.ok),
+            onBackClick = {
+                onBackClick(false)
+            },
+            onEndButtonClick = onConfirmClick
+        )
+
         CreateScreenIndicator(postScreenPageState = postScreenState)
     }
 }
@@ -182,6 +222,7 @@ fun CreateScreenIndicator(postScreenPageState: PostScreenPageState) {
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun NewPostScreenComponent(
+    modifier: Modifier = Modifier,
     screenInfoForCreate: ScreenInfoForCreate,
     onGenerateClick: () -> Unit,
     onVisibilityClick: (Boolean) -> Unit,
@@ -194,10 +235,7 @@ fun NewPostScreenComponent(
     onVideoPlayClick: (UriProvider) -> Unit
 ) {
     Column(
-        modifier = Modifier
-            .widthIn(TextFieldDefaults.MinWidth)
-            .verticalScroll(rememberScrollState())
-            .padding(horizontal = 12.dp),
+        modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         Row(
