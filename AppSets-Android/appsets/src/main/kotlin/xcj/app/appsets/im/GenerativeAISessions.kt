@@ -1,9 +1,9 @@
 package xcj.app.appsets.im
 
 import kotlinx.coroutines.delay
-import xcj.app.appsets.R
 import xcj.app.appsets.account.LocalAccountManager
 import xcj.app.appsets.im.message.IMMessage
+import xcj.app.appsets.im.message.StringMessageMetadata
 import xcj.app.appsets.im.message.TextMessage
 import java.util.Date
 import java.util.UUID
@@ -31,7 +31,7 @@ object GenerativeAISessions {
         }
     }
 
-    fun createResponseTemplateMessage(session: Session, userPrompt: TextMessage): IMMessage {
+    fun createResponseTemplateMessage(session: Session, userPrompt: TextMessage): IMMessage<*> {
         val toUserInfo = LocalAccountManager.userInfo
         val toIMObj = IMObj.fromBio(toUserInfo)
         val messageFromInfo = MessageFromInfo(
@@ -50,12 +50,12 @@ object GenerativeAISessions {
             fromInfo = messageFromInfo,
             toInfo = messageToInfo,
             messageGroupTag = null,
-            metadata = IMMessage.Companion.textImMessageMetadata("\uD83D\uDC31, Sorry, temporarily unavailable!"),
+            metadata = StringMessageMetadata.fromString("\uD83D\uDC31, Sorry, temporarily unavailable!"),
         )
     }
 
 
-    fun createStartMessage(bio: Bio): IMMessage {
+    fun createStartMessage(bio: Bio): IMMessage<*> {
         val toUserInfo = LocalAccountManager.userInfo
         val toIMObj = IMObj.fromBio(toUserInfo)
         val messageToInfo = MessageToInfo.fromImObj(toIMObj).apply {
@@ -70,7 +70,7 @@ object GenerativeAISessions {
             fromInfo = messageFromInfo,
             toInfo = messageToInfo,
             messageGroupTag = null,
-            metadata = IMMessage.Companion.textImMessageMetadata("Ask me anything!")
+            metadata = StringMessageMetadata.fromString("Ask me anything!")
         )
     }
 
@@ -95,7 +95,7 @@ object GenerativeAISessions {
             val bio = object : AIBio {
                 override val bioId: String = UUID.randomUUID().toString()
                 override val bioName: String = "Gemini"
-                override val bioUrl: Any? = R.drawable.ai_model_logo_google_gemini
+                override val bioUrl: Any? = xcj.app.appsets.R.drawable.ai_model_logo_google_gemini
                 override val description: String? = "Gemini is Google's AI Model"
                 override val models: List<AIModel> = emptyList()
                 override val type: Int = TYPE_ONLINE
@@ -111,7 +111,7 @@ object GenerativeAISessions {
             val bio = object : AIBio {
                 override val bioId: String = UUID.randomUUID().toString()
                 override val bioName: String = "Claude"
-                override val bioUrl: Any? = R.drawable.ai_model_logo_claude
+                override val bioUrl: Any? = xcj.app.appsets.R.drawable.ai_model_logo_claude
                 override val description: String? = "Claude is Anthropic's AI Model"
                 override val models: List<AIModel> = emptyList()
                 override val type: Int = TYPE_ONLINE
@@ -127,7 +127,7 @@ object GenerativeAISessions {
             val bio = object : AIBio {
                 override val bioId: String = UUID.randomUUID().toString()
                 override val bioName: String = "OpenAI ChatGPT"
-                override val bioUrl: Any? = R.drawable.ai_model_logo_openai
+                override val bioUrl: Any? = xcj.app.appsets.R.drawable.ai_model_logo_openai
                 override val description: String? = "OpenAI ChatGPT is OpenAI's AI Model"
                 override val models: List<AIModel> = emptyList()
                 override val type: Int = TYPE_ONLINE
@@ -144,7 +144,7 @@ object GenerativeAISessions {
                 override val bioId: String = UUID.randomUUID().toString()
                 override val bioName: String = "Microsoft Copilot"
                 override val bioUrl: Any? =
-                    R.drawable.ai_model_logo_microsoft_copilot
+                    xcj.app.appsets.R.drawable.ai_model_logo_microsoft_copilot
                 override val description: String? = "Microsoft Copilot is Microsoft's AI Model"
                 override val models: List<AIModel> = emptyList()
                 override val type: Int = TYPE_ONLINE
@@ -160,7 +160,7 @@ object GenerativeAISessions {
             val bio = object : AIBio {
                 override val bioId: String = UUID.randomUUID().toString()
                 override val bioName: String = "DeepSeek"
-                override val bioUrl: Any? = R.drawable.ai_model_logo_deepseek
+                override val bioUrl: Any? = xcj.app.appsets.R.drawable.ai_model_logo_deepseek
                 override val description: String? = "DeepSeek is 深度求索's AI Model"
                 override val models: List<AIModel> = emptyList()
                 override val type: Int = TYPE_ONLINE
@@ -176,7 +176,7 @@ object GenerativeAISessions {
             val bio = object : AIBio {
                 override val bioId: String = UUID.randomUUID().toString()
                 override val bioName: String = "星火"
-                override val bioUrl: Any? = R.drawable.ai_model_logo_xunfei_spark
+                override val bioUrl: Any? = xcj.app.appsets.R.drawable.ai_model_logo_xunfei_spark
                 override val description: String? = "星火 is 讯飞's AI Model"
                 override val models: List<AIModel> = emptyList()
                 override val type: Int = TYPE_ONLINE
@@ -193,7 +193,7 @@ object GenerativeAISessions {
             val bio = object : AIBio {
                 override val bioId: String = UUID.randomUUID().toString()
                 override val bioName: String = "文心一言"
-                override val bioUrl: Any? = R.drawable.ai_model_logo_baidu_wenxin
+                override val bioUrl: Any? = xcj.app.appsets.R.drawable.ai_model_logo_baidu_wenxin
                 override val description: String? = "文心一言 is Baidu's AI Model"
                 override val models: List<AIModel> = emptyList()
                 override val type: Int = TYPE_ONLINE
@@ -210,7 +210,7 @@ object GenerativeAISessions {
             val bio = object : AIBio {
                 override val bioId: String = UUID.randomUUID().toString()
                 override val bioName: String = "豆包"
-                override val bioUrl: Any? = R.drawable.ai_model_logo_doubao
+                override val bioUrl: Any? = xcj.app.appsets.R.drawable.ai_model_logo_doubao
                 override val description: String? = "豆包 is ByteDance's AI Model"
                 override val models: List<AIModel> = emptyList()
                 override val type: Int = TYPE_ONLINE
@@ -227,7 +227,7 @@ object GenerativeAISessions {
             val bio = object : AIBio {
                 override val bioId: String = UUID.randomUUID().toString()
                 override val bioName: String = "通义千问"
-                override val bioUrl: Any? = R.drawable.ai_model_logo_alibaba_qwen
+                override val bioUrl: Any? = xcj.app.appsets.R.drawable.ai_model_logo_alibaba_qwen
                 override val description: String? = "通义千问 is Alibaba's AI Model"
                 override val models: List<AIModel> = emptyList()
                 override val type: Int = TYPE_ONLINE
@@ -243,7 +243,7 @@ object GenerativeAISessions {
             val bio = object : AIBio {
                 override val bioId: String = UUID.randomUUID().toString()
                 override val bioName: String = "元宝"
-                override val bioUrl: Any? = R.drawable.ai_model_logo_tencent_yuanbao
+                override val bioUrl: Any? = xcj.app.appsets.R.drawable.ai_model_logo_tencent_yuanbao
                 override val description: String? = "元宝 is Tencent's AI Model"
                 override val models: List<AIModel> = emptyList()
                 override val type: Int = TYPE_ONLINE
@@ -272,7 +272,7 @@ object GenerativeAISessions {
             val bio = object : AIBio {
                 override val bioId: String = UUID.randomUUID().toString()
                 override val bioName: String = "Gemini Nano"
-                override val bioUrl: Any? = R.drawable.ai_model_logo_google_gemini
+                override val bioUrl: Any? = xcj.app.appsets.R.drawable.ai_model_logo_google_gemini
                 override val description: String? = "Gemini Nano is On-device AI Model"
                 override val models: List<AIModel> = emptyList()
                 override val type: Int = TYPE_ON_DEVICE
@@ -289,7 +289,7 @@ object GenerativeAISessions {
             val bio = object : AIBio {
                 override val bioId: String = UUID.randomUUID().toString()
                 override val bioName: String = "Gemma"
-                override val bioUrl: Any? = R.drawable.ai_model_logo_google_gemini
+                override val bioUrl: Any? = xcj.app.appsets.R.drawable.ai_model_logo_google_gemini
                 override val description: String? = "Gemma is On-device AI Model"
                 override val models: List<AIModel> =
                     listOf(AIModel("Gemma 2B"), AIModel("Gemma 7B"))
@@ -307,7 +307,7 @@ object GenerativeAISessions {
             val bio = object : AIBio {
                 override val bioId: String = UUID.randomUUID().toString()
                 override val bioName: String = "Mistral"
-                override val bioUrl: Any? = R.drawable.ai_model_logo_google_gemini
+                override val bioUrl: Any? = xcj.app.appsets.R.drawable.ai_model_logo_google_gemini
                 override val description: String? = "Mistral is On-device AI Model"
                 override val models: List<AIModel> = listOf(AIModel("Mistral-Lite 7B"))
                 override val type: Int = TYPE_ON_DEVICE
@@ -323,7 +323,7 @@ object GenerativeAISessions {
             val bio = object : AIBio {
                 override val bioId: String = UUID.randomUUID().toString()
                 override val bioName: String = "Phi-2"
-                override val bioUrl: Any? = R.drawable.ai_model_logo_google_gemini
+                override val bioUrl: Any? = xcj.app.appsets.R.drawable.ai_model_logo_google_gemini
                 override val description: String? = "Phi-2 is On-device AI Model"
                 override val models: List<AIModel> = emptyList()
                 override val type: Int = TYPE_ON_DEVICE
@@ -340,7 +340,7 @@ object GenerativeAISessions {
             val bio = object : AIBio {
                 override val bioId: String = UUID.randomUUID().toString()
                 override val bioName: String = "TinyLlama"
-                override val bioUrl: Any? = R.drawable.ai_model_logo_google_gemini
+                override val bioUrl: Any? = xcj.app.appsets.R.drawable.ai_model_logo_google_gemini
                 override val description: String? = "TinyLlama is On-device AI Model"
                 override val models: List<AIModel> = emptyList()
                 override val type: Int = TYPE_ON_DEVICE
@@ -357,7 +357,7 @@ object GenerativeAISessions {
             val bio = object : AIBio {
                 override val bioId: String = UUID.randomUUID().toString()
                 override val bioName: String = "Zephyr"
-                override val bioUrl: Any? = R.drawable.ai_model_logo_google_gemini
+                override val bioUrl: Any? = xcj.app.appsets.R.drawable.ai_model_logo_google_gemini
                 override val description: String? = "Zephyr is On-device AI Model"
                 override val models: List<AIModel> = emptyList()
                 override val type: Int = TYPE_ON_DEVICE

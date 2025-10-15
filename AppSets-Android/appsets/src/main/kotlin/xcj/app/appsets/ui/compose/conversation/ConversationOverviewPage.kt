@@ -90,13 +90,13 @@ fun ConversationOverviewPage(
     isShowActions: Boolean,
     recorderState: DesignRecorder.AudioRecorderState,
     onBioClick: (Bio) -> Unit,
-    onImMessageContentClick: (IMMessage) -> Unit,
+    onImMessageContentClick: (IMMessage<*>) -> Unit,
     onAddAIModelClick: () -> Unit,
     onAddFriendClick: () -> Unit,
     onAddGroupClick: () -> Unit,
     onCreateGroupClick: () -> Unit,
     onConversionSessionClick: (Session, Boolean) -> Unit,
-    onSystemImMessageClick: (Session, IMMessage) -> Unit,
+    onSystemImMessageClick: (Session, IMMessage<*>) -> Unit,
     onUserRequestClick: (Boolean, Session, SystemMessage) -> Unit,
     onInputMoreAction: (String) -> Unit,
     onVoiceAction: () -> Unit,
@@ -154,7 +154,7 @@ fun ConversationOverviewLandscapeEnd(
     recorderState: DesignRecorder.AudioRecorderState,
     onBackClick: () -> Unit,
     onBioClick: (Bio) -> Unit,
-    onImMessageContentClick: (IMMessage) -> Unit,
+    onImMessageContentClick: (IMMessage<*>) -> Unit,
     onMoreClick: ((IMObj) -> Unit),
     onInputMoreAction: (String) -> Unit,
     onVoiceAction: () -> Unit,
@@ -214,9 +214,9 @@ fun ConversationOverviewLandscape(
     onAddGroupClick: () -> Unit,
     onCreateGroupClick: () -> Unit,
     onConversionSessionClick: (Session) -> Unit,
-    onSystemImMessageClick: (Session, IMMessage) -> Unit,
+    onSystemImMessageClick: (Session, IMMessage<*>) -> Unit,
     onBioClick: (Bio) -> Unit,
-    onImMessageContentClick: (IMMessage) -> Unit,
+    onImMessageContentClick: (IMMessage<*>) -> Unit,
     onUserRequestClick: (Boolean, Session, SystemMessage) -> Unit,
     onInputMoreAction: (String) -> Unit,
     onVoiceAction: () -> Unit,
@@ -271,7 +271,7 @@ fun ConversationOverviewPortrait(
     onAddGroupClick: () -> Unit,
     onCreateGroupClick: () -> Unit,
     onConversionSessionClick: (Session) -> Unit,
-    onSystemImMessageClick: (Session, IMMessage) -> Unit,
+    onSystemImMessageClick: (Session, IMMessage<*>) -> Unit,
     onBioClick: (Bio) -> Unit,
     onUserRequestClick: (Boolean, Session, SystemMessage) -> Unit,
 ) {
@@ -363,7 +363,7 @@ fun ConversationOverviewPortrait(
 fun ConversationOverviewSessionsOfSystem(
     tab: String,
     sessions: List<Session>,
-    onSystemImMessageClick: (Session, IMMessage) -> Unit,
+    onSystemImMessageClick: (Session, IMMessage<*>) -> Unit,
     onBioClick: (Bio) -> Unit,
     onUserRequestClick: (Boolean, Session, SystemMessage) -> Unit,
 ) {
@@ -372,7 +372,7 @@ fun ConversationOverviewSessionsOfSystem(
     Box(Modifier.fillMaxSize()) {
         if (!hasMessages) {
             Text(
-                text = stringResource(getEmptyPromptTextFor(tab)),
+                text = stringResource(getTabEmptyPromptText(tab)),
                 fontSize = 12.sp,
                 modifier = Modifier.align(Alignment.Center)
             )
@@ -409,7 +409,7 @@ fun ConversationOverviewSessionsOfGroup(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    text = stringResource(getEmptyPromptTextFor(tab)),
+                    text = stringResource(getTabEmptyPromptText(tab)),
                     fontSize = 12.sp,
                 )
 
@@ -455,7 +455,7 @@ fun ConversationOverviewSessionsOfUser(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    text = stringResource(getEmptyPromptTextFor(tab)),
+                    text = stringResource(getTabEmptyPromptText(tab)),
                     fontSize = 12.sp,
                 )
 
@@ -501,7 +501,7 @@ fun ConversationOverviewSessionsOfAI(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    text = stringResource(getEmptyPromptTextFor(tab)),
+                    text = stringResource(getTabEmptyPromptText(tab)),
                     fontSize = 12.sp,
                 )
 
@@ -590,7 +590,7 @@ fun ConversationOverviewTabs(
 fun ConversationOverviewSystemImMessageItemComponent(
     modifier: Modifier,
     session: Session,
-    onSystemImMessageClick: (Session, IMMessage) -> Unit,
+    onSystemImMessageClick: (Session, IMMessage<*>) -> Unit,
     onBioClick: (Bio) -> Unit,
     onUserRequestClick: (Boolean, Session, SystemMessage) -> Unit,
 ) {
@@ -622,6 +622,7 @@ fun ConversationOverviewSimpleItemComponent(
     session: Session,
     onConversionSessionClick: (Session) -> Unit,
 ) {
+    val context = LocalContext.current
     Row(
         modifier = modifier
             .clickable {
@@ -651,9 +652,8 @@ fun ConversationOverviewSimpleItemComponent(
                 fontSize = 14.sp
             )
             if (session.isO2O) {
-                val context = LocalContext.current
                 Text(
-                    text = IMMessage.readableContent(context, session.latestIMMessage)
+                    text = session.latestIMMessage?.readableContent(context)
                         ?: stringResource(xcj.app.appsets.R.string.no_news),
                     fontSize = 12.sp,
                     maxLines = 1,
@@ -681,10 +681,8 @@ fun ConversationOverviewSimpleItemComponent(
                             model = imMessage.fromInfo.bioUrl,
                             error = imMessage.fromInfo.bioName
                         )
-                        val context = LocalContext.current
                         Text(
-                            text = IMMessage.readableContent(context, imMessage)
-                                ?: stringResource(xcj.app.appsets.R.string.no_news),
+                            text = imMessage.readableContent(context),
                             fontSize = 12.sp,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
@@ -793,7 +791,7 @@ fun ConversationOverviewActionsComponent(
 fun SystemImMessageContent(
     session: Session,
     imMessage: SystemMessage,
-    onSystemImMessageClick: (Session, IMMessage) -> Unit,
+    onSystemImMessageClick: (Session, IMMessage<*>) -> Unit,
     onBioClick: (Bio) -> Unit,
     onUserRequestClick: (Boolean, Session, SystemMessage) -> Unit,
 ) {
@@ -862,7 +860,7 @@ fun GroupJoinRequestFeedbackCard(
     session: Session,
     imMessage: SystemMessage,
     groupJoinRequestFeedbackJson: GroupJoinRequestFeedbackJson,
-    onSystemImMessageClick: (Session, IMMessage) -> Unit,
+    onSystemImMessageClick: (Session, IMMessage<*>) -> Unit,
     onBioClick: (Bio) -> Unit,
 ) {
     val context = LocalContext.current
@@ -878,7 +876,7 @@ fun GroupJoinRequestFeedbackCard(
                 model = imMessage.fromInfo.bioUrl,
             )
             Text(
-                text = IMMessage.readableContent(context, imMessage) ?: "",
+                text = imMessage.readableContent(context),
                 fontWeight = FontWeight.Medium,
                 modifier = Modifier.weight(1f),
                 maxLines = 1,
@@ -895,7 +893,7 @@ fun FriendRequestFeedbackCard(
     session: Session,
     imMessage: SystemMessage,
     friendRequestFeedbackJson: FriendRequestFeedbackJson,
-    onSystemImMessageClick: (Session, IMMessage) -> Unit,
+    onSystemImMessageClick: (Session, IMMessage<*>) -> Unit,
     onBioClick: (Bio) -> Unit,
 ) {
     val context = LocalContext.current
@@ -911,7 +909,7 @@ fun FriendRequestFeedbackCard(
                 model = imMessage.fromInfo.bioUrl
             )
             Text(
-                text = IMMessage.readableContent(context, imMessage) ?: "",
+                text = imMessage.readableContent(context),
                 fontWeight = FontWeight.Medium,
                 modifier = Modifier.weight(1f),
                 maxLines = 1,
@@ -928,7 +926,7 @@ fun GroupRequestCard(
     session: Session,
     imMessage: SystemMessage,
     groupRequestJson: GroupRequestJson,
-    onSystemImMessageClick: (Session, IMMessage) -> Unit,
+    onSystemImMessageClick: (Session, IMMessage<*>) -> Unit,
     onBioClick: (Bio) -> Unit,
     onUserRequestClick: (Boolean, Session, SystemMessage) -> Unit,
 ) {
@@ -1090,7 +1088,7 @@ fun FriendRequestCard(
     session: Session,
     imMessage: SystemMessage,
     friendRequestJson: FriendRequestJson,
-    onSystemImMessageClick: (Session, IMMessage) -> Unit,
+    onSystemImMessageClick: (Session, IMMessage<*>) -> Unit,
     onBioClick: (Bio) -> Unit,
     onUserRequestClick: (Boolean, Session, SystemMessage) -> Unit,
 ) {
@@ -1195,7 +1193,7 @@ fun FriendRequestCard(
     }
 }
 
-private fun getEmptyPromptTextFor(tab: String): Int {
+private fun getTabEmptyPromptText(tab: String): Int {
     return when (tab) {
         ConversationUseCase.USER -> {
             xcj.app.appsets.R.string.empty_personal_list

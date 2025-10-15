@@ -88,7 +88,7 @@ abstract class BaseIMViewModel : VisibilityComposeStateViewModel() {
             dispatchContentSelectedResult(activity, it)
         }
 
-        LocalMessenger.observe<String, IMMessage>(
+        LocalMessenger.observe<String, IMMessage<*>>(
             activity,
             MessageBrokerConstants.MESSAGE_KEY_ON_IM_MESSAGE
         ) {

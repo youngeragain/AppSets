@@ -64,7 +64,6 @@ import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.hazeEffect
 import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
 import dev.chrisbanes.haze.materials.HazeMaterials
-import xcj.app.appsets.im.message.IMMessage
 import xcj.app.appsets.im.message.SystemMessage
 import xcj.app.appsets.im.model.FriendRequestJson
 import xcj.app.appsets.im.model.GroupRequestJson
@@ -499,11 +498,7 @@ private fun ImMessageQuickStepBar(
                             }
                         }
                         Text(
-                            text = IMMessage.readableContent(
-                                context,
-                                targetNewImMessage.message
-                            )
-                                ?: "",
+                            text = targetNewImMessage.message.readableContent(context),
                             maxLines = if (isBarLongPressed) {
                                 20
                             } else {

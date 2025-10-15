@@ -1,7 +1,6 @@
 package xcj.app.appsets.ui.compose.quickstep
 
 import android.content.Context
-import androidx.core.content.ContextCompat
 import xcj.app.appsets.ui.compose.apps.quickstep.ToolAppSetsShareQuickStepHandler
 import xcj.app.appsets.ui.compose.apps.quickstep.ToolContentTransformQuickStepHandler
 import xcj.app.appsets.ui.compose.apps.quickstep.ToolFileCreateQuickStepHandler
@@ -60,14 +59,7 @@ class QuickStepContentHandlerRegistry {
                 it.canAccept(quickStepContentHolder)
             }
         }.filter {
-            if (searchContent.isEmpty()) {
-                true
-            } else {
-                val name = ContextCompat.getString(context, it.name)
-                val category = ContextCompat.getString(context, it.category)
-                name.contains(searchContent) ||
-                        category.contains(searchContent)
-            }
+            it.onSearch(context, searchContent)
         }
         return filtered
     }

@@ -1,6 +1,8 @@
 package xcj.app.appsets.im.message
 
+import android.content.Context
 import android.net.Uri
+import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import xcj.app.appsets.im.IMMessageDesignType
 import xcj.app.appsets.im.MessageFromInfo
@@ -15,14 +17,17 @@ data class VideoMessage(
     override val fromInfo: MessageFromInfo,
     override val toInfo: MessageToInfo,
     override val messageGroupTag: String?,
-    override val metadata: MessageMetadata<*>,
+    override val metadata: VideoMessageMetadata,
     override val messageType: String = IMMessageDesignType.TYPE_VIDEO
-) : IMMessage()
+) : IMMessage<VideoMessageMetadata>() {
+    override fun readableContent(context: Context): String {
+        return "(${ContextCompat.getString(context, xcj.app.appsets.R.string.video)})"
+    }
+}
 
 fun VideoMessage.requireUri(): Pair<Uri?, Uri?>? {
-    val videoMessageMetadata = metadata as VideoMessageMetadata
     if (isReceivedMessage) {
-        return videoMessageMetadata.url?.toUri() to videoMessageMetadata.companionUrl?.toUri()
+        return metadata.url?.toUri() to metadata.companionUrl?.toUri()
     }
 
     val messageSendInfo = messageSending?.sendInfoState?.value
@@ -30,9 +35,9 @@ fun VideoMessage.requireUri(): Pair<Uri?, Uri?>? {
         return null
     }
     if (messageSendInfo.isSent) {
-        return videoMessageMetadata.url?.toUri() to videoMessageMetadata.companionUrl?.toUri()
+        return metadata.url?.toUri() to metadata.companionUrl?.toUri()
     } else {
-        val pair = videoMessageMetadata.localData as? Pair<UriProvider, UriProvider>
+        val pair = metadata.localData as? Pair<UriProvider, UriProvider>
         return pair?.first?.provideUri() to pair?.second?.provideUri()
     }
 }

@@ -95,7 +95,7 @@ object PictureUrlMapper {
                 mapForCommonURLJson(any, simpleFileIO)
             }
 
-            is IMMessage -> {
+            is IMMessage<*> -> {
                 mapForImMessage(any, simpleFileIO)
             }
         }
@@ -111,7 +111,7 @@ object PictureUrlMapper {
     }
 
     private suspend fun mapForImMessage(
-        imMessage: IMMessage,
+        imMessage: IMMessage<*>,
         fileIO: SimpleFileIO
     ) {
         when (imMessage) {

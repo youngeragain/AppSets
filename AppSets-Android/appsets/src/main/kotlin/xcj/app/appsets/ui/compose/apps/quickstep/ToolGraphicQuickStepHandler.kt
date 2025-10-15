@@ -31,17 +31,18 @@ import xcj.app.appsets.ui.compose.quickstep.HandlerClickParams
 import xcj.app.appsets.ui.compose.quickstep.QuickStepContent
 import xcj.app.appsets.ui.compose.quickstep.QuickStepContentHandler
 import xcj.app.appsets.ui.compose.quickstep.QuickStepContentHolder
+import xcj.app.appsets.ui.compose.quickstep.QuickStepInfo
 import xcj.app.appsets.ui.compose.quickstep.TextQuickStepContent
 
 class ToolGraphicQuickStepHandler : QuickStepContentHandler() {
 
     private var mQuickStepContentHolder: QuickStepContentHolder? = null
 
-    override val name: Int = xcj.app.appsets.R.string.graphic
-
-    override val description: Int = xcj.app.appsets.R.string.graphic_description
-
-    override val category: Int = xcj.app.appsets.R.string.tools
+    override val quickStepInfo: QuickStepInfo = QuickStepInfo(
+        xcj.app.appsets.R.string.graphic,
+        xcj.app.appsets.R.string.graphic_description,
+        xcj.app.appsets.R.string.tools
+    )
 
     override fun canAccept(quickStepContentHolder: QuickStepContentHolder): Boolean {
         val firstTextQuickStepContent =
@@ -54,12 +55,12 @@ class ToolGraphicQuickStepHandler : QuickStepContentHandler() {
     }
 
 
-    override fun getContent(onClick: (HandlerClickParams) -> Unit): @Composable (() -> Unit) {
+    override fun getContent(onClick: (HandlerClickParams) -> Unit): @Composable () -> Unit {
         val contentCompose = @Composable {
             val navController = LocalNavHostController.current
             ToolGraphicQuickStepHandlerContent(
-                name = stringResource(name),
-                description = stringResource(description),
+                name = stringResource(quickStepInfo.name),
+                description = stringResource(quickStepInfo.description),
                 onClick = {
                     onClick(HandlerClickParams.SimpleClick)
                     val quickStepContents = mQuickStepContentHolder?.quickStepContents?.let {

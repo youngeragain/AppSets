@@ -232,7 +232,7 @@ private constructor() : ComposeLifecycleAware, UserAccountStateAware {
     /**
      * @param isLocal msg是从本机发送
      */
-    suspend fun onMessage(context: Context, imMessage: IMMessage, isLocal: Boolean) {
+    suspend fun onMessage(context: Context, imMessage: IMMessage<*>, isLocal: Boolean) {
         val currentSessionState = currentSessionState.value
         PurpleLogger.current.d(
             TAG,
@@ -256,7 +256,7 @@ private constructor() : ComposeLifecycleAware, UserAccountStateAware {
         }
     }
 
-    private fun findSessionByImMessage(context: Context, imMessage: IMMessage): Session? {
+    private fun findSessionByImMessage(context: Context, imMessage: IMMessage<*>): Session? {
         PurpleLogger.current.d(
             TAG,
             "findSessionByImMessage, imMessage:${imMessage}"
@@ -324,7 +324,7 @@ private constructor() : ComposeLifecycleAware, UserAccountStateAware {
     private fun addMessageToSession(
         context: Context,
         session: Session,
-        imMessage: IMMessage,
+        imMessage: IMMessage<*>,
     ) {
         session.conversationState.addMessage(imMessage)
     }
@@ -365,7 +365,7 @@ private constructor() : ComposeLifecycleAware, UserAccountStateAware {
     private suspend fun showNotificationForImMessages(
         context: Context,
         session: Session,
-        imMessage: IMMessage,
+        imMessage: IMMessage<*>,
     ) {
         PurpleLogger.current.d(TAG, "showNotificationForImMessages")
         if (imMessage.fromInfo.uid == LocalAccountManager.userInfo.uid) {
@@ -383,7 +383,7 @@ private constructor() : ComposeLifecycleAware, UserAccountStateAware {
     private fun addMessageToNowSpaceIfNeeded(
         context: Context,
         session: Session,
-        imMessage: IMMessage,
+        imMessage: IMMessage<*>,
     ) {
         val nowSpaceContentUseCase = nowSpaceContentUseCase
         if (nowSpaceContentUseCase == null) {
@@ -410,7 +410,7 @@ private constructor() : ComposeLifecycleAware, UserAccountStateAware {
         return mNotificationPusher!!
     }
 
-    private suspend fun saveMessageToLocalDB(imMessage: IMMessage) {
+    private suspend fun saveMessageToLocalDB(imMessage: IMMessage<*>) {
         if (imMessage.fromInfo.roles?.contains(UserRole.ROLE_ADMIN) == true) {
             return
         }
@@ -707,25 +707,25 @@ private constructor() : ComposeLifecycleAware, UserAccountStateAware {
         context: Context,
         notificationPusher: NotificationPusher,
         session: Session,
-        imMessage: IMMessage,
+        imMessage: IMMessage<*>,
     ) {
         PurpleLogger.current.d(TAG, "pushNotificationIfNeeded")
         notificationPusher.pushConversionNotification(context, session, imMessage)
     }
 
-    fun <T : IMMessage> findCurrentSessionByMessageType(type: String): List<T> {
+    fun <T : IMMessage<*>> findCurrentSessionMessagesByMessageType(type: String): List<T> {
         val currentSessionState = currentSessionState.value
-        if (currentSessionState is SessionState.Normal) {
-            val session = currentSessionState.session
-            return session.conversationState.messages.mapNotNull { imMessage ->
-                if (imMessage.messageType == type) {
-                    imMessage as? T
-                } else {
-                    null
-                }
+        if (currentSessionState !is SessionState.Normal) {
+            return emptyList()
+        }
+        val session = currentSessionState.session
+        return session.conversationState.messages.mapNotNull { imMessage ->
+            if (imMessage.messageType == type) {
+                imMessage as? T
+            } else {
+                null
             }
         }
-        return emptyList()
     }
 
     override fun onComposeDispose(by: String?) {

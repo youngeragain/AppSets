@@ -21,7 +21,7 @@ sealed interface NowSpaceContent {
 
     data class IMMessage(
         val session: Session,
-        val message: xcj.app.appsets.im.message.IMMessage,
+        val message: xcj.app.appsets.im.message.IMMessage<*>,
         override val timeout: Int = Int.MAX_VALUE
     ) : NowSpaceContent {
         override val id: String

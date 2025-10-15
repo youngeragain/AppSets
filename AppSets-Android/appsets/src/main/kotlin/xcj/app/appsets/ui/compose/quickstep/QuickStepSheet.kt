@@ -70,7 +70,7 @@ fun QuickStepSheet(
                 context,
                 quickStepContentHolder,
                 searchContent.text
-            ).groupBy { it.category }
+            ).groupBy { it.quickStepInfo.category }
         }
     }
     val filteredContentHandlerCategories = filteredContentHandlersMap.keys.toList()
@@ -147,7 +147,7 @@ fun QuickStepSheet(
 
                                             }
 
-                                            is HandlerClickParams.RequestReplaceHostContent -> {
+                                            is HandlerClickParams.ReplaceHostContentRequest -> {
                                                 replaceSheetContentCompose =
                                                     contentHandler.getHostReplaceContent(
                                                         handlerClickParams

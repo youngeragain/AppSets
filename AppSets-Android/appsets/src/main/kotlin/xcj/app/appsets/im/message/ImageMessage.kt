@@ -1,6 +1,8 @@
 package xcj.app.appsets.im.message
 
+import android.content.Context
 import android.net.Uri
+import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import xcj.app.appsets.im.IMMessageDesignType
 import xcj.app.appsets.im.MessageFromInfo
@@ -17,7 +19,11 @@ data class ImageMessage(
     override val messageGroupTag: String?,
     override val metadata: StringMessageMetadata,
     override val messageType: String = IMMessageDesignType.TYPE_IMAGE
-) : IMMessage()
+) : IMMessage<StringMessageMetadata>() {
+    override fun readableContent(context: Context): String {
+        return "(${ContextCompat.getString(context, xcj.app.appsets.R.string.image)})"
+    }
+}
 
 fun ImageMessage.requireUri(): Uri? {
     if (isReceivedMessage) {

@@ -41,7 +41,7 @@ data class FlatImMessage(
 
         private const val TAG = "FlatImMessage"
 
-        fun parseFromImMessage(imMessage: IMMessage): FlatImMessage {
+        fun parseFromImMessage(imMessage: IMMessage<*>): FlatImMessage {
             val content = IMMessageGenerator.makeMessageMetadataAsJsonString(imMessage)
             PurpleLogger.current.d(TAG, "parseFromImMessage, content:$content")
             return FlatImMessage(

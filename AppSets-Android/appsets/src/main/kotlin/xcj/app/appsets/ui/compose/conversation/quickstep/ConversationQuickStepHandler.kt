@@ -27,28 +27,29 @@ import xcj.app.appsets.ui.compose.quickstep.HandlerClickParams
 import xcj.app.appsets.ui.compose.quickstep.QuickStepContent
 import xcj.app.appsets.ui.compose.quickstep.QuickStepContentHandler
 import xcj.app.appsets.ui.compose.quickstep.QuickStepContentHolder
+import xcj.app.appsets.ui.compose.quickstep.QuickStepInfo
 
 class ConversationQuickStepHandler : QuickStepContentHandler() {
 
     private var mQuickStepContentHolder: QuickStepContentHolder? = null
 
-    override val name: Int = xcj.app.appsets.R.string.conversation
-
-    override val description: Int = xcj.app.appsets.R.string.send_to_people
-
-    override val category: Int = xcj.app.appsets.R.string.social
+    override val quickStepInfo: QuickStepInfo = QuickStepInfo(
+        xcj.app.appsets.R.string.conversation,
+        xcj.app.appsets.R.string.send_to_people,
+        xcj.app.appsets.R.string.social
+    )
 
     override fun canAccept(quickStepContentHolder: QuickStepContentHolder): Boolean {
         mQuickStepContentHolder = quickStepContentHolder
         return true
     }
 
-    override fun getContent(onClick: (HandlerClickParams) -> Unit): @Composable (() -> Unit) {
+    override fun getContent(onClick: (HandlerClickParams) -> Unit): @Composable () -> Unit {
         val contentCompose = @Composable {
             val navController = LocalNavHostController.current
             ConversationQuickStepHandlerContent(
-                name = stringResource(name),
-                description = stringResource(description),
+                name = stringResource(quickStepInfo.name),
+                description = stringResource(quickStepInfo.description),
                 onClick = {
 
                     val quickStepContents = mQuickStepContentHolder?.quickStepContents?.let {
@@ -70,28 +71,30 @@ class ConversationQuickStepHandler : QuickStepContentHandler() {
                             }
                         }
                     )*/
-                    val requestReplaceHostContent = HandlerClickParams.RequestReplaceHostContent(
+                    val replaceHostContentRequest = HandlerClickParams.ReplaceHostContentRequest(
                         "quick_send_content",
                         quickStepContents
                     )
-                    onClick(requestReplaceHostContent)
+                    onClick(replaceHostContentRequest)
                 }
             )
         }
         return contentCompose
     }
 
-    override fun getHostReplaceContent(requestReplaceHostContent: HandlerClickParams.RequestReplaceHostContent): @Composable (() -> Unit) {
-        val contentCompose = @Composable {
+    override fun getHostReplaceContent(
+        replaceHostContentRequest: HandlerClickParams.ReplaceHostContentRequest
+    ): @Composable () -> Unit {
+        val replaceContentCompose = @Composable {
             Box {
-                if (requestReplaceHostContent.replaceRequest == "quick_send_content") {
+                if (replaceHostContentRequest.request == "quick_send_content") {
                     val quickStepContents =
-                        requestReplaceHostContent.payload as? List<QuickStepContent>
+                        replaceHostContentRequest.payload as? List<QuickStepContent>
                     ConversationQuickStepSheetContent(quickStepContents)
                 }
             }
         }
-        return contentCompose
+        return replaceContentCompose
     }
 
 }

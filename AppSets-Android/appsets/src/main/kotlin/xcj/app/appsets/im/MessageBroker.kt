@@ -10,6 +10,6 @@ interface MessageBroker<C : MessageBrokerConfig> {
 
     suspend fun close()
 
-    suspend fun sendMessage(imObj: IMObj, imMessage: IMMessage)
+    suspend fun sendMessage(imObj: IMObj, imMessage: IMMessage<*>)
 
 }

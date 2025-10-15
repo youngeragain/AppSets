@@ -84,7 +84,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.composed
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.SolidColor
@@ -128,11 +127,9 @@ import xcj.app.appsets.im.message.HTMLMessage
 import xcj.app.appsets.im.message.IMMessage
 import xcj.app.appsets.im.message.ImageMessage
 import xcj.app.appsets.im.message.LocationMessage
-import xcj.app.appsets.im.message.LocationMessageMetadata
 import xcj.app.appsets.im.message.MusicMessage
 import xcj.app.appsets.im.message.TextMessage
 import xcj.app.appsets.im.message.VideoMessage
-import xcj.app.appsets.im.message.VideoMessageMetadata
 import xcj.app.appsets.im.message.VoiceMessage
 import xcj.app.appsets.settings.AppSetsModuleSettings
 import xcj.app.appsets.ui.compose.LocalUseCaseOfConversation
@@ -144,6 +141,7 @@ import xcj.app.appsets.ui.compose.custom_component.third_part.waveslider.WaveSli
 import xcj.app.appsets.ui.compose.custom_component.third_part.waveslider.WaveSliderDefaults
 import xcj.app.appsets.usecase.SessionState
 import xcj.app.appsets.util.DesignRecorder
+import xcj.app.appsets.util.ktx.asComponentActivityOrNull
 import xcj.app.appsets.util.model.UriProvider
 import xcj.app.compose_share.components.DesignHDivider
 import xcj.app.compose_share.modifier.combinedClickableSingle
@@ -162,7 +160,7 @@ fun ConversationDetailsPage(
     recorderState: DesignRecorder.AudioRecorderState,
     onBackClick: () -> Unit,
     onBioClick: (Bio) -> Unit,
-    onImMessageContentClick: (IMMessage) -> Unit,
+    onImMessageContentClick: (IMMessage<*>) -> Unit,
     onInputMoreAction: (String) -> Unit,
     onVoiceAction: () -> Unit,
     onVoiceStopClick: (Boolean) -> Unit,
@@ -213,7 +211,7 @@ fun SessionObjectNormal(
     recorderState: DesignRecorder.AudioRecorderState,
     onBackClick: () -> Unit,
     onBioClick: (Bio) -> Unit,
-    onImMessageContentClick: (IMMessage) -> Unit,
+    onImMessageContentClick: (IMMessage<*>) -> Unit,
     onInputMoreAction: (String) -> Unit,
     onVoiceAction: () -> Unit,
     onVoiceStopClick: (Boolean) -> Unit,
@@ -620,7 +618,7 @@ fun TopToolBar(
 
 
 @Composable
-private fun UserAvatarComponent(modifier: Modifier, imMessage: IMMessage) {
+private fun UserAvatarComponent(modifier: Modifier, imMessage: IMMessage<*>) {
     AnyImage(
         modifier = modifier,
         model = imMessage.fromInfo.bioUrl,
@@ -643,11 +641,11 @@ private fun ImMessageListComponent(
     modifier: Modifier = Modifier,
     appSetsModuleSettings: AppSetsModuleSettings,
     session: Session,
-    messages: List<IMMessage>,
+    messages: List<IMMessage<*>>,
     hazeState: HazeState,
     scrollState: LazyListState,
     onBioClick: (Bio) -> Unit,
-    onImMessageContentClick: (IMMessage) -> Unit,
+    onImMessageContentClick: (IMMessage<*>) -> Unit,
 ) {
     Box(modifier = modifier) {
         LazyColumn(
@@ -688,15 +686,21 @@ private fun ImMessageItemWrapperComponent(
     modifier: Modifier,
     appSetsModuleSettings: AppSetsModuleSettings,
     session: Session,
-    imMessage: IMMessage,
+    imMessage: IMMessage<*>,
     onBioClick: (Bio) -> Unit,
-    onImMessageContentClick: (IMMessage) -> Unit,
+    onImMessageContentClick: (IMMessage<*>) -> Unit,
 ) {
     Box(
         modifier = modifier
             .fillMaxWidth()
     ) {
-        Row(modifier = messageBubbleBoxModifier(appSetsModuleSettings, imMessage)) {
+        Row(
+            modifier = Modifier.messageBubbleBoxModifier(
+                this@Box,
+                appSetsModuleSettings,
+                imMessage
+            )
+        ) {
             ImMessageItemStartComponent(appSetsModuleSettings, session, imMessage, onBioClick)
             ImMessageItemCenterComponent(appSetsModuleSettings, imMessage, onImMessageContentClick)
             ImMessageItemEndComponent(appSetsModuleSettings, session, imMessage, onBioClick)
@@ -705,25 +709,27 @@ private fun ImMessageItemWrapperComponent(
 }
 
 @Composable
-private fun BoxScope.messageBubbleBoxModifier(
+private fun Modifier.messageBubbleBoxModifier(
+    boxScope: BoxScope,
     appSetsModuleSettings: AppSetsModuleSettings,
-    imMessage: IMMessage
+    imMessage: IMMessage<*>
 ): Modifier {
+    with(boxScope) {
+        return when (appSetsModuleSettings.imBubbleAlignment) {
+            AppSetsModuleSettings.IM_BUBBLE_ALIGNMENT_ALL_START -> {
+                align(Alignment.CenterStart)
+            }
 
-    return when (appSetsModuleSettings.imBubbleAlignment) {
-        AppSetsModuleSettings.IM_BUBBLE_ALIGNMENT_ALL_START -> {
-            Modifier.align(Alignment.CenterStart)
-        }
+            AppSetsModuleSettings.IM_BUBBLE_ALIGNMENT_ALL_END -> {
+                align(Alignment.CenterEnd)
+            }
 
-        AppSetsModuleSettings.IM_BUBBLE_ALIGNMENT_ALL_END -> {
-            Modifier.align(Alignment.CenterEnd)
-        }
-
-        else -> {
-            if (LocalAccountManager.isLoggedUser(imMessage.fromInfo.uid)) {
-                Modifier.align(Alignment.CenterEnd)
-            } else {
-                Modifier.align(Alignment.CenterStart)
+            else -> {
+                if (LocalAccountManager.isLoggedUser(imMessage.fromInfo.uid)) {
+                    align(Alignment.CenterEnd)
+                } else {
+                    align(Alignment.CenterStart)
+                }
             }
         }
     }
@@ -732,8 +738,8 @@ private fun BoxScope.messageBubbleBoxModifier(
 @Composable
 private fun ImMessageItemCenterComponent(
     appSetsModuleSettings: AppSetsModuleSettings,
-    imMessage: IMMessage,
-    onImMessageContentClick: (IMMessage) -> Unit,
+    imMessage: IMMessage<*>,
+    onImMessageContentClick: (IMMessage<*>) -> Unit,
 ) {
     val messageSendInfo = imMessage.messageSending?.sendInfoState?.value
     val horizontalAlignment = when (appSetsModuleSettings.imBubbleAlignment) {
@@ -829,7 +835,7 @@ private fun ImMessageItemCenterComponent(
 private fun ImMessageItemEndComponent(
     appSetsModuleSettings: AppSetsModuleSettings,
     session: Session,
-    imMessage: IMMessage,
+    imMessage: IMMessage<*>,
     onBioClick: (Bio) -> Unit,
 ) {
     Row(modifier = Modifier.padding(12.dp)) {
@@ -868,7 +874,7 @@ private fun ImMessageItemEndComponent(
 @Composable
 private fun ImMessageItemLocationComponent(
     imMessage: LocationMessage,
-    onImMessageContentClick: (IMMessage) -> Unit,
+    onImMessageContentClick: (IMMessage<*>) -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -904,7 +910,7 @@ private fun ImMessageItemLocationComponent(
                     )
                 }
                 val imMessageMetadata = imMessage.metadata
-                if (imMessageMetadata is LocationMessageMetadata) {
+                if (true) {
                     Text(text = imMessageMetadata.data.info ?: "", fontSize = 12.sp)
                 }
             }
@@ -915,7 +921,7 @@ private fun ImMessageItemLocationComponent(
 @Composable
 fun ImMessageItemFileComponent(
     imMessage: FileMessage,
-    onImMessageContentClick: (IMMessage) -> Unit,
+    onImMessageContentClick: (IMMessage<*>) -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -945,7 +951,7 @@ fun ImMessageItemFileComponent(
 @Composable
 private fun ImMessageItemADComponent(
     imMessage: AdMessage,
-    onImMessageContentClick: (IMMessage) -> Unit,
+    onImMessageContentClick: (IMMessage<*>) -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -977,7 +983,7 @@ private fun ImMessageItemADComponent(
 @Composable
 private fun ImMessageItemMusicComponent(
     imMessage: MusicMessage,
-    onImMessageContentClick: (IMMessage) -> Unit,
+    onImMessageContentClick: (IMMessage<*>) -> Unit,
 ) {
     val mediaRemoteExoUseCase = LocalUseCaseOfMediaRemoteExo.current
     var waveValue by remember {
@@ -1055,11 +1061,10 @@ private fun ImMessageItemMusicComponent(
 @Composable
 private fun ImMessageItemVideoComponent(
     imMessage: VideoMessage,
-    onImMessageContentClick: (IMMessage) -> Unit,
+    onImMessageContentClick: (IMMessage<*>) -> Unit,
 ) {
-    val videoMessageMetadata = imMessage.metadata as VideoMessageMetadata
-    val videoLocalData = videoMessageMetadata.localData as? Pair<UriProvider, UriProvider>
-    val localVideoFirstFrameUri = videoLocalData?.second?.provideUri()
+    val videoLocalData = imMessage.metadata.localData as? Pair<*, *>
+    val localVideoFirstFrameUri = (videoLocalData?.second as? UriProvider)?.provideUri()
     Box(
         modifier = Modifier
             .imMessageBackgroundVideoModifier(
@@ -1076,7 +1081,7 @@ private fun ImMessageItemVideoComponent(
                 .height(355.dp)
                 .width(200.dp)
                 .clip(MaterialTheme.shapes.extraLarge),
-            model = videoMessageMetadata.companionUrl,
+            model = imMessage.metadata.companionUrl,
             placeHolder = rememberAsyncImagePainter(localVideoFirstFrameUri),
             error = rememberAsyncImagePainter(localVideoFirstFrameUri)
         )
@@ -1099,7 +1104,7 @@ private fun ImMessageItemVideoComponent(
 @Composable
 private fun ImMessageItemVoiceComponent(
     imMessage: VoiceMessage,
-    onImMessageContentClick: (IMMessage) -> Unit,
+    onImMessageContentClick: (IMMessage<*>) -> Unit,
 ) {
     val mediaRemoteExoUseCase = LocalUseCaseOfMediaRemoteExo.current
     var waveValue by remember {
@@ -1165,7 +1170,7 @@ private fun ImMessageItemVoiceComponent(
 @Composable
 private fun ImMessageItemHTMLComponent(
     imMessage: HTMLMessage,
-    onImMessageContentClick: (IMMessage) -> Unit,
+    onImMessageContentClick: (IMMessage<*>) -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -1195,7 +1200,7 @@ private fun ImMessageItemHTMLComponent(
 @Composable
 private fun ImMessageItemImageComponent(
     imMessage: ImageMessage,
-    onImMessageContentClick: (IMMessage) -> Unit,
+    onImMessageContentClick: (IMMessage<*>) -> Unit,
 ) {
     val localUri = (imMessage.metadata.localData as? UriProvider)?.provideUri()
     Box(
@@ -1224,7 +1229,7 @@ private fun ImMessageItemImageComponent(
 private fun ImMessageItemTextComponent(
     appSetsModuleSettings: AppSetsModuleSettings,
     imMessage: TextMessage,
-    onImMessageContentClick: (IMMessage) -> Unit,
+    onImMessageContentClick: (IMMessage<*>) -> Unit,
 ) {
     Text(
         modifier = Modifier
@@ -1232,7 +1237,7 @@ private fun ImMessageItemTextComponent(
                 appSetsModuleSettings = appSetsModuleSettings,
                 imMessage = imMessage
             ),
-        text = imMessage.metadata.data.toString()
+        text = imMessage.metadata.data
     )
 }
 
@@ -1240,7 +1245,7 @@ private fun ImMessageItemTextComponent(
 private fun ImMessageItemStartComponent(
     appSetsModuleSettings: AppSetsModuleSettings,
     session: Session,
-    imMessage: IMMessage,
+    imMessage: IMMessage<*>,
     onBioClick: (Bio) -> Unit,
 ) {
     Row(modifier = Modifier.padding(12.dp)) {
@@ -1595,10 +1600,10 @@ private fun UserInputText(
 
     val context = LocalContext.current
 
-    val activity = context as ComponentActivity
+    val activity = context.asComponentActivityOrNull()
 
 
-    var userInputTargetHeight = getUserInputHeight(activity, expandUserInput)
+    val userInputTargetHeight = getUserInputHeight(activity, expandUserInput)
 
     val userInputHeightState by animateDpAsState(
         targetValue = userInputTargetHeight,
@@ -1805,25 +1810,26 @@ private fun UserInputText(
     }
 }
 
-private fun getUserInputHeight(activity: ComponentActivity, expand: Boolean): Dp {
+private fun getUserInputHeight(activity: ComponentActivity?, expand: Boolean): Dp {
     if (!expand) {
         return 64.dp
     }
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
         return 640.dp
     }
-    if (activity.isLaunchedFromBubble) {
+    if (activity?.isLaunchedFromBubble == true) {
         return 320.dp
     } else {
         return 640.dp
     }
 }
 
+@Composable
 private fun Modifier.imMessageBackgroundTextModifier(
     appSetsModuleSettings: AppSetsModuleSettings,
-    imMessage: IMMessage
-): Modifier = composed {
-    when (appSetsModuleSettings.imBubbleAlignment) {
+    imMessage: IMMessage<*>
+): Modifier {
+    return when (appSetsModuleSettings.imBubbleAlignment) {
         AppSetsModuleSettings.IM_BUBBLE_ALIGNMENT_ALL_START -> {
             this
                 .background(
@@ -1886,8 +1892,9 @@ private fun Modifier.imMessageBackgroundTextModifier(
     }
 }
 
-private fun Modifier.imMessageBackgroundADModifier(imMessage: IMMessage): Modifier = composed {
-    if (LocalAccountManager.isLoggedUser(imMessage.fromInfo.uid)) {
+@Composable
+private fun Modifier.imMessageBackgroundADModifier(imMessage: IMMessage<*>): Modifier {
+    return if (LocalAccountManager.isLoggedUser(imMessage.fromInfo.uid)) {
         background(
             MaterialTheme.colorScheme.tertiaryContainer,
             MaterialTheme.shapes.extraLarge
@@ -1904,27 +1911,28 @@ private fun Modifier.imMessageBackgroundADModifier(imMessage: IMMessage): Modifi
     }
 }
 
-private fun Modifier.imMessageBackgroundLocationModifier(imMessage: IMMessage): Modifier =
-    composed {
-        if (LocalAccountManager.isLoggedUser(imMessage.fromInfo.uid)) {
-            background(
-                MaterialTheme.colorScheme.tertiaryContainer,
-                MaterialTheme.shapes.extraLarge
-            )
-                .widthIn(50.dp, max = TextFieldDefaults.MinWidth)
-                .padding(2.dp)
-        } else {
-            background(
-                MaterialTheme.colorScheme.secondaryContainer,
-                MaterialTheme.shapes.extraLarge
-            )
-                .widthIn(50.dp, max = TextFieldDefaults.MinWidth)
-                .padding(2.dp)
-        }
+@Composable
+private fun Modifier.imMessageBackgroundLocationModifier(imMessage: IMMessage<*>): Modifier {
+    return if (LocalAccountManager.isLoggedUser(imMessage.fromInfo.uid)) {
+        background(
+            MaterialTheme.colorScheme.tertiaryContainer,
+            MaterialTheme.shapes.extraLarge
+        )
+            .widthIn(50.dp, max = TextFieldDefaults.MinWidth)
+            .padding(2.dp)
+    } else {
+        background(
+            MaterialTheme.colorScheme.secondaryContainer,
+            MaterialTheme.shapes.extraLarge
+        )
+            .widthIn(50.dp, max = TextFieldDefaults.MinWidth)
+            .padding(2.dp)
     }
+}
 
-private fun Modifier.imMessageBackgroundFileModifier(imMessage: IMMessage): Modifier = composed {
-    if (LocalAccountManager.isLoggedUser(imMessage.fromInfo.uid)) {
+@Composable
+private fun Modifier.imMessageBackgroundFileModifier(imMessage: IMMessage<*>): Modifier {
+    return if (LocalAccountManager.isLoggedUser(imMessage.fromInfo.uid)) {
         background(
             MaterialTheme.colorScheme.tertiaryContainer,
             MaterialTheme.shapes.extraLarge
@@ -1941,8 +1949,9 @@ private fun Modifier.imMessageBackgroundFileModifier(imMessage: IMMessage): Modi
     }
 }
 
-private fun Modifier.imMessageBackgroundHTMLModifier(imMessage: IMMessage): Modifier = composed {
-    if (LocalAccountManager.isLoggedUser(imMessage.fromInfo.uid)) {
+@Composable
+private fun Modifier.imMessageBackgroundHTMLModifier(imMessage: IMMessage<*>): Modifier {
+    return if (LocalAccountManager.isLoggedUser(imMessage.fromInfo.uid)) {
         background(
             MaterialTheme.colorScheme.tertiaryContainer,
             MaterialTheme.shapes.extraLarge
@@ -1959,8 +1968,9 @@ private fun Modifier.imMessageBackgroundHTMLModifier(imMessage: IMMessage): Modi
     }
 }
 
-private fun Modifier.imMessageBackgroundImageModifier(imMessage: IMMessage): Modifier = composed {
-    if (LocalAccountManager.isLoggedUser(imMessage.fromInfo.uid)) {
+@Composable
+private fun Modifier.imMessageBackgroundImageModifier(imMessage: IMMessage<*>): Modifier {
+    return if (LocalAccountManager.isLoggedUser(imMessage.fromInfo.uid)) {
         background(
             MaterialTheme.colorScheme.tertiaryContainer,
             MaterialTheme.shapes.extraLarge
@@ -1977,8 +1987,9 @@ private fun Modifier.imMessageBackgroundImageModifier(imMessage: IMMessage): Mod
     }
 }
 
-private fun Modifier.imMessageBackgroundVideoModifier(imMessage: IMMessage): Modifier = composed {
-    if (LocalAccountManager.isLoggedUser(imMessage.fromInfo.uid)) {
+@Composable
+private fun Modifier.imMessageBackgroundVideoModifier(imMessage: IMMessage<*>): Modifier {
+    return if (LocalAccountManager.isLoggedUser(imMessage.fromInfo.uid)) {
         background(
             MaterialTheme.colorScheme.tertiaryContainer,
             MaterialTheme.shapes.extraLarge
@@ -1995,8 +2006,9 @@ private fun Modifier.imMessageBackgroundVideoModifier(imMessage: IMMessage): Mod
     }
 }
 
-private fun Modifier.imMessageBackgroundVoiceModifier(imMessage: IMMessage): Modifier = composed {
-    if (LocalAccountManager.isLoggedUser(imMessage.fromInfo.uid)) {
+@Composable
+private fun Modifier.imMessageBackgroundVoiceModifier(imMessage: IMMessage<*>): Modifier {
+    return if (LocalAccountManager.isLoggedUser(imMessage.fromInfo.uid)) {
         background(
             MaterialTheme.colorScheme.tertiaryContainer,
             MaterialTheme.shapes.extraLarge
@@ -2013,8 +2025,9 @@ private fun Modifier.imMessageBackgroundVoiceModifier(imMessage: IMMessage): Mod
     }
 }
 
-private fun Modifier.imMessageBackgroundMusicModifier(imMessage: IMMessage): Modifier = composed {
-    if (LocalAccountManager.isLoggedUser(imMessage.fromInfo.uid)) {
+@Composable
+private fun Modifier.imMessageBackgroundMusicModifier(imMessage: IMMessage<*>): Modifier {
+    return if (LocalAccountManager.isLoggedUser(imMessage.fromInfo.uid)) {
         background(
             MaterialTheme.colorScheme.tertiaryContainer,
             MaterialTheme.shapes.extraLarge

@@ -398,7 +398,7 @@ object IMMessageGenerator {
         session: Session,
         inputSelector: Int,
         content: Any
-    ): IMMessage {
+    ): IMMessage<*> {
         PurpleLogger.current.d(TAG, "generateBySend, start")
         val messageId = UUID.randomUUID().toString()
         val timestamp = Calendar.getInstance().time
@@ -510,7 +510,7 @@ object IMMessageGenerator {
         return imMessage
     }
 
-    suspend fun generateByReceived(message: Delivery): IMMessage? {
+    suspend fun generateByReceived(message: Delivery): IMMessage<*>? {
         PurpleLogger.current.d(TAG, "generateByReceived, start")
         val headers = message.properties.headers
         val fromUid = if (headers.containsKey(IMMessage.HEADER_MESSAGE_UID)) {
@@ -599,7 +599,7 @@ object IMMessageGenerator {
         flatImMessage: FlatImMessage,
         messageFromInfo: MessageFromInfo,
         messageToInfo: MessageToInfo,
-    ): IMMessage? {
+    ): IMMessage<*>? {
         PurpleLogger.current.d(TAG, "generateByLocalDb, start")
         val messageMetadataString = flatImMessage.content
         val messageType = flatImMessage.messageType
@@ -627,7 +627,7 @@ object IMMessageGenerator {
         messageFromInfo: MessageFromInfo,
         messageToInfo: MessageToInfo,
         messageGroupTag: String?
-    ): IMMessage? {
+    ): IMMessage<*>? {
         return when (messageType) {
             IMMessageDesignType.TYPE_TEXT -> {
                 val messageMetadata = gson.fromJson<StringMessageMetadata>(
@@ -756,7 +756,7 @@ object IMMessageGenerator {
         }
     }
 
-    fun makeMessageMetadataAsJsonString(message: IMMessage): String {
+    fun makeMessageMetadataAsJsonString(message: IMMessage<*>): String {
         PurpleLogger.current.d(TAG, "makeMessageMetadataAsJsonString, for messageId:${message.id}")
         return gson.toJson(message.metadata)
     }

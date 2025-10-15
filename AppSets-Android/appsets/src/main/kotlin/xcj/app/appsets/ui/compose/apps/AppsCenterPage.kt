@@ -31,7 +31,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -60,7 +59,7 @@ fun AppsCenterPage(
 ) {
     ShowNavBar()
     val hapticFeedback = LocalHapticFeedback.current
-    val coroutineScope = rememberCoroutineScope()
+    //val coroutineScope = rememberCoroutineScope()
 
     val allApplications by rememberUpdatedState(appCenterPageState.apps.flatMap { it.applications })
     val iconAnimationStates = remember {
@@ -77,17 +76,17 @@ fun AppsCenterPage(
             val center = (allCount) / 2 + 1
             iconAnimationStates.forEachIndexed { index, animation ->
                 val delay = if (index <= center) {
-                    ((1f - index.toFloat() / center.toFloat()) * 180).toInt()
+                    ((1f - index.toFloat() / center.toFloat()) * 220).toInt()
                 } else {
-                    (((index - center).toFloat() / center.toFloat()) * 180).toInt()
+                    (((index - center).toFloat() / center.toFloat()) * 220).toInt()
                 }
-                coroutineScope.launch {
-                    animation.animateTo(1f, tween(550, delay))
+                launch {
+                    animation.animateTo(1f, tween(750, delay))
                 }
             }
         } else {
             iconAnimationStates.forEach {
-                coroutineScope.launch {
+                launch {
                     it.animateTo(1f, snap())
                 }
             }

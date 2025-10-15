@@ -27,7 +27,7 @@ object IMMessageDesignType {
     const val TYPE_CUSTOM = "im.custom.*"
 
     @JvmStatic
-    fun getType(imMessage: IMMessage): String {
+    fun getType(imMessage: IMMessage<*>): String {
         return when (imMessage) {
             is TextMessage -> TYPE_TEXT
             is ImageMessage -> TYPE_IMAGE

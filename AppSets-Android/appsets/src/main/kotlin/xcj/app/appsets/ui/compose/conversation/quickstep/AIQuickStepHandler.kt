@@ -30,28 +30,29 @@ import xcj.app.appsets.ui.compose.quickstep.HandlerClickParams
 import xcj.app.appsets.ui.compose.quickstep.QuickStepContent
 import xcj.app.appsets.ui.compose.quickstep.QuickStepContentHandler
 import xcj.app.appsets.ui.compose.quickstep.QuickStepContentHolder
+import xcj.app.appsets.ui.compose.quickstep.QuickStepInfo
 
 class AIQuickStepHandler : QuickStepContentHandler() {
 
     private var mQuickStepContentHolder: QuickStepContentHolder? = null
 
-    override val name: Int = xcj.app.appsets.R.string.ai
-
-    override val description: Int = xcj.app.appsets.R.string.get_suggestions
-
-    override val category: Int = xcj.app.appsets.R.string.tools
+    override val quickStepInfo: QuickStepInfo = QuickStepInfo(
+        xcj.app.appsets.R.string.ai,
+        xcj.app.appsets.R.string.get_suggestions,
+        xcj.app.appsets.R.string.tools
+    )
 
     override fun canAccept(quickStepContentHolder: QuickStepContentHolder): Boolean {
         mQuickStepContentHolder = quickStepContentHolder
         return true
     }
 
-    override fun getContent(onClick: (HandlerClickParams) -> Unit): @Composable (() -> Unit) {
+    override fun getContent(onClick: (HandlerClickParams) -> Unit): @Composable () -> Unit {
         val contentCompose = @Composable {
             val navController = LocalNavHostController.current
             AIQuickStepHandlerContent(
-                name = stringResource(name),
-                description = stringResource(description),
+                name = stringResource(quickStepInfo.name),
+                description = stringResource(quickStepInfo.description),
                 onClick = {
                     onClick(HandlerClickParams.SimpleClick)
                     val quickStepContents = mQuickStepContentHolder?.quickStepContents?.let {

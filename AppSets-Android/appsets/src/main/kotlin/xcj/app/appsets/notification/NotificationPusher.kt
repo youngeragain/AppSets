@@ -61,7 +61,7 @@ class NotificationPusher() {
     private suspend fun requestImSessionIcon(
         context: Context,
         session: Session,
-        imMessage: IMMessage
+        imMessage: IMMessage<*>
     ): Bitmap? {
         PurpleLogger.current.d(TAG, "requestSessionIcon")
         val iconUrl = if (imMessage.toInfo.toType == IMMessage.TYPE_O2M) {
@@ -107,7 +107,7 @@ class NotificationPusher() {
     suspend fun pushConversionNotification(
         context: Context,
         session: Session,
-        imMessage: IMMessage
+        imMessage: IMMessage<*>
     ) {
 
         if (ContextCompat.checkSelfPermission(
@@ -170,7 +170,7 @@ class NotificationPusher() {
     private fun makeBubbleForNotificationIfNeeded(
         context: Context,
         session: Session,
-        imMessage: IMMessage,
+        imMessage: IMMessage<*>,
         notificationBuilder: NotificationCompat.Builder,
         notificationId: Int,
         isExistPerson: Boolean,
@@ -187,13 +187,10 @@ class NotificationPusher() {
         PurpleLogger.current.d(TAG, "makeBubbleForNotificationIfNeeded, person:$person!")
         val contentText = if (imMessage.toInfo.toType == IMMessage.TYPE_O2M) {
             "${imMessage.fromInfo.bioName}\n${
-                IMMessage.readableContent(
-                    context,
-                    imMessage
-                ) ?: ""
+                imMessage.readableContent(context)
             }"
         } else {
-            IMMessage.readableContent(context, imMessage) ?: ""
+            imMessage.readableContent(context)
         }
         val message =
             NotificationCompat.MessagingStyle.Message(
@@ -233,7 +230,7 @@ class NotificationPusher() {
     private fun makeSessionShortcutInfo(
         context: Context,
         session: Session,
-        imMessage: IMMessage,
+        imMessage: IMMessage<*>,
         iconBitmap: Bitmap?,
         isExistPerson: Boolean
     ) {
@@ -284,7 +281,7 @@ class NotificationPusher() {
     private fun makeNotificationBuilderForImSession(
         context: Context,
         session: Session,
-        imMessage: IMMessage,
+        imMessage: IMMessage<*>,
         notificationId: Int,
         sessionIconBitmap: Bitmap?
     ): NotificationCompat.Builder {
@@ -311,9 +308,9 @@ class NotificationPusher() {
             imMessage.fromInfo.bioName
         }
         val contentText = if (imMessage.toInfo.toType == IMMessage.TYPE_O2M) {
-            "${imMessage.fromInfo.bioName}\n${IMMessage.readableContent(context, imMessage) ?: ""}"
+            "${imMessage.fromInfo.bioName}\n${imMessage.readableContent(context)}"
         } else {
-            IMMessage.readableContent(context, imMessage) ?: ""
+            imMessage.readableContent(context)
         }
         val notificationBuilder =
             NotificationCompat

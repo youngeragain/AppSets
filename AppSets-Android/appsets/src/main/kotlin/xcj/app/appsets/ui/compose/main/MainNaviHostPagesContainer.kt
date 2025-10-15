@@ -1502,10 +1502,20 @@ fun DesignNaviHost(
         navController = navController,
         startDestination = startDestination,
         enterTransition = {
-            scaleIn(initialScale = 0.93f, animationSpec = tween()) + fadeIn(tween())
+            scaleIn(
+                initialScale = 1.07f,
+                animationSpec = tween(350)
+            ) + fadeIn(
+                animationSpec = tween(350)
+            )
         },
         exitTransition = {
-            scaleOut(targetScale = 1.07f, animationSpec = tween()) + fadeOut(tween())
+            scaleOut(
+                targetScale = 0.93f,
+                animationSpec = tween(350)
+            ) + fadeOut(
+                animationSpec = tween(350)
+            )
         },
         contentAlignment = Alignment.TopCenter,
         builder = {
@@ -1920,7 +1930,7 @@ private suspend fun handleApplicationDownload(
 
 private fun handleImMessageContentClick(
     context: Context,
-    imMessage: IMMessage,
+    imMessage: IMMessage<*>,
     conversationUseCase: ConversationUseCase,
     mediaRemoteExoUseCase: MediaRemoteExoUseCase,
     visibilityComposeStateProvider: VisibilityComposeStateProvider,
@@ -1956,7 +1966,7 @@ private fun handleImMessageContentClick(
             val currentUri = imMessage.requireUri()
                 ?: return
             val uriList =
-                conversationUseCase.findCurrentSessionByMessageType<ImageMessage>(
+                conversationUseCase.findCurrentSessionMessagesByMessageType<ImageMessage>(
                     IMMessageDesignType.TYPE_IMAGE
                 ).mapNotNull { imageMessage ->
                     imageMessage.requireUri()

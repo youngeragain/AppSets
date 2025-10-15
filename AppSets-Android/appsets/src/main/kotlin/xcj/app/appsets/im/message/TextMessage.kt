@@ -1,5 +1,6 @@
 package xcj.app.appsets.im.message
 
+import android.content.Context
 import xcj.app.appsets.im.IMMessageDesignType
 import xcj.app.appsets.im.MessageFromInfo
 import xcj.app.appsets.im.MessageToInfo
@@ -14,4 +15,8 @@ data class TextMessage(
     override val messageGroupTag: String?,
     override val metadata: StringMessageMetadata,
     override val messageType: String = IMMessageDesignType.TYPE_TEXT
-) : IMMessage()
+) : IMMessage<StringMessageMetadata>() {
+    override fun readableContent(context: Context): String {
+        return metadata.data
+    }
+}

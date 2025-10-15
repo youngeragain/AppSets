@@ -30,6 +30,7 @@ import xcj.app.appsets.ui.compose.quickstep.HandlerClickParams
 import xcj.app.appsets.ui.compose.quickstep.QuickStepContent
 import xcj.app.appsets.ui.compose.quickstep.QuickStepContentHandler
 import xcj.app.appsets.ui.compose.quickstep.QuickStepContentHolder
+import xcj.app.appsets.ui.compose.quickstep.QuickStepInfo
 import xcj.app.appsets.ui.compose.quickstep.TextQuickStepContent
 import xcj.app.appsets.ui.compose.quickstep.UriQuickStepContent
 import xcj.app.starter.util.ContentType
@@ -38,11 +39,11 @@ class OutSideQuickStepHandler : QuickStepContentHandler() {
 
     private var mQuickStepContentHolder: QuickStepContentHolder? = null
 
-    override val name: Int = xcj.app.appsets.R.string.out_side
-
-    override val description: Int = xcj.app.appsets.R.string.create_screen
-
-    override val category: Int = xcj.app.appsets.R.string.social
+    override val quickStepInfo: QuickStepInfo = QuickStepInfo(
+        xcj.app.appsets.R.string.out_side,
+        xcj.app.appsets.R.string.create_screen,
+        xcj.app.appsets.R.string.social
+    )
 
     override fun canAccept(quickStepContentHolder: QuickStepContentHolder): Boolean {
         var accept = false
@@ -67,12 +68,12 @@ class OutSideQuickStepHandler : QuickStepContentHandler() {
         return accept
     }
 
-    override fun getContent(onClick: (HandlerClickParams) -> Unit): @Composable (() -> Unit) {
+    override fun getContent(onClick: (HandlerClickParams) -> Unit): @Composable () -> Unit {
         val contentCompose = @Composable {
             val navController = LocalNavHostController.current
             OutSideQuickStepHandlerContent(
-                name = stringResource(name),
-                description = stringResource(description),
+                name = stringResource(quickStepInfo.name),
+                description = stringResource(quickStepInfo.description),
                 onClick = {
                     onClick(HandlerClickParams.SimpleClick)
                     val quickStepContents = mQuickStepContentHolder?.quickStepContents?.let {

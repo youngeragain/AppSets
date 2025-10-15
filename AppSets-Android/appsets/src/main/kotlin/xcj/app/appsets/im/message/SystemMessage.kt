@@ -1,11 +1,16 @@
 package xcj.app.appsets.im.message
 
+import android.content.Context
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
+import androidx.core.content.ContextCompat
 import xcj.app.appsets.im.IMMessageDesignType
 import xcj.app.appsets.im.IMMessageGenerator
 import xcj.app.appsets.im.MessageFromInfo
 import xcj.app.appsets.im.MessageToInfo
+import xcj.app.appsets.im.model.FriendRequestJson
+import xcj.app.appsets.im.model.GroupRequestJson
+import xcj.app.appsets.im.model.RequestFeedbackJson
 import xcj.app.appsets.im.model.SystemContentInterface
 import xcj.app.appsets.im.model.SystemContentJson
 import java.util.Date
@@ -19,7 +24,7 @@ data class SystemMessage(
     override val messageGroupTag: String?,
     override val metadata: StringMessageMetadata,
     override val messageType: String = IMMessageDesignType.TYPE_SYSTEM
-) : IMMessage() {
+) : IMMessage<StringMessageMetadata>() {
 
     private var systemContentInterfaceCached: SystemContentInterface? = null
 
@@ -42,4 +47,35 @@ data class SystemMessage(
         }
 
     val handling: MutableState<Boolean> = mutableStateOf(false)
+
+    override fun readableContent(context: Context): String {
+        val systemContentInterface = systemContentInterface
+        when (systemContentInterface) {
+            is FriendRequestJson -> {
+                return systemContentInterface.hello
+            }
+
+            is GroupRequestJson -> {
+                return systemContentInterface.hello
+            }
+
+            is RequestFeedbackJson -> {
+                return if (systemContentInterface.isAccept) {
+                    ContextCompat.getString(
+                        context,
+                        xcj.app.appsets.R.string.your_request_has_passed
+                    )
+                } else {
+                    ContextCompat.getString(
+                        context,
+                        xcj.app.appsets.R.string.your_request_has_not_passed
+                    )
+                }
+            }
+
+            else -> return "?"
+        }
+    }
+
+
 }

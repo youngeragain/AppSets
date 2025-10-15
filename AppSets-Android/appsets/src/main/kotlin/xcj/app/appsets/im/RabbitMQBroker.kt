@@ -342,7 +342,7 @@ class RabbitMQBroker : MessageBroker<RabbitMQBrokerConfig>,
     }
 
     @OptIn(ExperimentalEncodingApi::class)
-    override suspend fun sendMessage(imObj: IMObj, imMessage: IMMessage) {
+    override suspend fun sendMessage(imObj: IMObj, imMessage: IMMessage<*>) {
         if (!checkConnection()) {
             PurpleLogger.current.d(
                 TAG,

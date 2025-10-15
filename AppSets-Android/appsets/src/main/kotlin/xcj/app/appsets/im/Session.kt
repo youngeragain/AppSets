@@ -9,7 +9,7 @@ data class Session(
 
     val id: String = imObj.id
 
-    val latestIMMessage: IMMessage?
+    val latestIMMessage: IMMessage<*>?
         get() = conversationState.messages.firstOrNull()
 
     val isO2O: Boolean = imObj is IMObj.IMSingle

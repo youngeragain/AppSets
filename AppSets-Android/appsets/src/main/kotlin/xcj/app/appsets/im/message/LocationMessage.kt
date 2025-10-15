@@ -1,5 +1,7 @@
 package xcj.app.appsets.im.message
 
+import android.content.Context
+import androidx.core.content.ContextCompat
 import xcj.app.appsets.im.IMMessageDesignType
 import xcj.app.appsets.im.MessageFromInfo
 import xcj.app.appsets.im.MessageToInfo
@@ -12,6 +14,15 @@ data class LocationMessage(
     override val fromInfo: MessageFromInfo,
     override val toInfo: MessageToInfo,
     override val messageGroupTag: String?,
-    override val metadata: MessageMetadata<*>,
+    override val metadata: LocationMessageMetadata,
     override val messageType: String = IMMessageDesignType.TYPE_LOCATION
-) : IMMessage()
+) : IMMessage<LocationMessageMetadata>() {
+    override fun readableContent(context: Context): String {
+        return "(${
+            ContextCompat.getString(
+                context,
+                xcj.app.appsets.R.string.location
+            )
+        })"
+    }
+}

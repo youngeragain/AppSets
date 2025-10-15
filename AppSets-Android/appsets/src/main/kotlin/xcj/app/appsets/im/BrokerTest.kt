@@ -95,7 +95,7 @@ object BrokerTest {
         }
     }
 
-    suspend fun sendMessage(imObj: IMObj, imMessage: IMMessage) {
+    suspend fun sendMessage(imObj: IMObj, imMessage: IMMessage<*>) {
         PurpleLogger.current.d(TAG, "sendMessage")
         broker.sendMessage(imObj, imMessage)
     }

@@ -33,20 +33,21 @@ class FlatImMessageRepository private constructor(
      * 如果是单聊消息，接收者信息为当前登录者
      * 如果是群组消息，接收者信息为群组，暂时不需要考虑
      */
-    suspend fun saveImMessage(imMessage: IMMessage) {
+    suspend fun saveImMessage(imMessage: IMMessage<*>) {
         PurpleLogger.current.d(TAG, "saveImMessage")
         addFlatImMessage(imMessage)
         saveUserInfoIfNeeded(imMessage)
         saveGroupInfoIfNeeded(imMessage)
     }
 
-    private suspend fun addFlatImMessage(imMessage: IMMessage) = withContext(Dispatchers.IO) {
+    private suspend fun addFlatImMessage(imMessage: IMMessage<*>) = withContext(Dispatchers.IO) {
         PurpleLogger.current.d(TAG, "addFlatImMessage")
         val flatImMessage = FlatImMessage.parseFromImMessage(imMessage)
         flatImMessageDao.addFlatImMessage(flatImMessage)
     }
 
-    private suspend fun saveGroupInfoIfNeeded(imMessage: IMMessage) = withContext(Dispatchers.IO) {
+    private suspend fun saveGroupInfoIfNeeded(imMessage: IMMessage<*>) =
+        withContext(Dispatchers.IO) {
         if (imMessage.toInfo.toType != IMMessage.TYPE_O2M) {
             PurpleLogger.current.d(
                 TAG,
@@ -72,7 +73,8 @@ class FlatImMessageRepository private constructor(
         userRelationDao.addUserRelation(userRelation)
     }
 
-    private suspend fun saveUserInfoIfNeeded(imMessage: IMMessage) = withContext(Dispatchers.IO) {
+    private suspend fun saveUserInfoIfNeeded(imMessage: IMMessage<*>) =
+        withContext(Dispatchers.IO) {
         if (imMessage.toInfo.toType != IMMessage.TYPE_O2O) {
             PurpleLogger.current.d(
                 TAG,
@@ -118,7 +120,7 @@ class FlatImMessageRepository private constructor(
         user: UserInfo,
         page: Int = 1,
         pageSize: Int = 20
-    ): List<IMMessage>? = withContext(Dispatchers.IO) {
+    ): List<IMMessage<*>>? = withContext(Dispatchers.IO) {
         PurpleLogger.current.d(TAG, "getImMessageListByUser, user:$user")
         val loggedUserInfo = LocalAccountManager.userInfo
         val flatImMessageList = flatImMessageDao.getFlatImMessageByUid(
@@ -172,7 +174,7 @@ class FlatImMessageRepository private constructor(
         group: GroupInfo,
         page: Int = 1,
         pageSize: Int = 20
-    ): List<IMMessage>? = withContext(Dispatchers.IO) {
+    ): List<IMMessage<*>>? = withContext(Dispatchers.IO) {
         PurpleLogger.current.d(TAG, "getImMessageListByGroup, group:$group")
         val flatImMessageList = flatImMessageDao.getFlatImMessageByGroupId(
             group.groupId,
@@ -223,7 +225,7 @@ class FlatImMessageRepository private constructor(
         application: Application,
         page: Int = 1,
         pageSize: Int = 20
-    ): List<IMMessage>? = withContext(Dispatchers.IO) {
+    ): List<IMMessage<*>>? = withContext(Dispatchers.IO) {
         PurpleLogger.current.d(TAG, "getImMessageListByApplication, application:$application")
         val flatImMessageList = flatImMessageDao.getFlatImMessageByGroupId(
             application.bioId,
