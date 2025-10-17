@@ -7,13 +7,10 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBars
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -66,8 +63,7 @@ fun ScreenEditPage(
         ) {
             Spacer(
                 modifier = Modifier.height(
-                    WindowInsets.statusBars.asPaddingValues()
-                        .calculateTopPadding() + backActionsHeight + 12.dp
+                    backActionsHeight + 12.dp
                 )
             )
             Text(text = stringResource(id = xcj.app.appsets.R.string.status))
@@ -109,7 +105,7 @@ fun ScreenEditPage(
                 backActionBarSize = it.size
             },
             hazeState = hazeState,
-            centerText = "Screen",
+            backButtonText = "Screen",
             onBackClick = {
                 onBackClick()
                 val lastIsPublic = screenInfo?.isPublic == 1

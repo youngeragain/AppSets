@@ -16,11 +16,11 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
@@ -28,9 +28,9 @@ import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -40,14 +40,9 @@ import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SegmentedButton
-import androidx.compose.material3.SegmentedButtonDefaults
-import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
@@ -64,20 +59,24 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Brush.Companion.linearGradient
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
-import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import dev.chrisbanes.haze.HazeState
+import dev.chrisbanes.haze.hazeEffect
+import dev.chrisbanes.haze.hazeSource
 import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
+import dev.chrisbanes.haze.materials.HazeMaterials
+import dev.chrisbanes.haze.rememberHazeState
 import kotlinx.coroutines.launch
 import xcj.app.appsets.im.Bio
 import xcj.app.appsets.server.model.GroupInfo
@@ -121,85 +120,98 @@ fun SearchPage(
 
 @Composable
 fun SearchInputBar(
-    searchPageState: SearchPageState,
-    sizeOfSearchBar: IntSize,
+    modifier: Modifier = Modifier,
+    hazeState: HazeState,
     onBackClick: () -> Unit,
-    onInputContent: (String) -> Unit,
-    onSearchBarSizeChanged: (IntSize) -> Unit,
+    onInputContent: (String) -> Unit
 ) {
     val keyboardController = LocalSoftwareKeyboardController.current
+    val searchUseCase = LocalUseCaseOfSearch.current
+    val searchPageState by searchUseCase.searchPageState
     var inputContent by remember {
         mutableStateOf(TextFieldValue())
     }
-    val requester = remember {
+
+    val focusRequester = remember {
         FocusRequester()
+    }
+    var textFiledIsFocused by remember {
+        mutableStateOf(false)
     }
 
     LaunchedEffect(key1 = true, block = {
+
         val searchKeywords = searchPageState.keywords
         if (!searchKeywords.isNullOrEmpty()) {
             inputContent = inputContent.copy(searchKeywords, TextRange(searchKeywords.length))
         }
         if (searchKeywords.isNullOrEmpty()) {
-            requester.requestFocus()
+            //focusRequester.requestFocus()
         }
     })
 
-    val corner = sizeOfSearchBar.height.div(2).toFloat()
-    val cornerShape = RoundedCornerShape(
-        topStart = corner, topEnd = corner, bottomStart = corner, bottomEnd = corner
-    )
-    DesignTextField(
-        value = inputContent.text,
-        onValueChange = {
-            inputContent = TextFieldValue(it)
-            onInputContent(it)
-        },
-        modifier = Modifier
-            .fillMaxWidth()
-            .focusRequester(requester)
-            .border(
-                border = searchBorderStroke(searchPageState), shape = RoundedCornerShape(
-                    topStart = corner, topEnd = corner, bottomStart = corner, bottomEnd = corner
+    Box(modifier = modifier) {
+        DesignTextField(
+            value = inputContent.text,
+            onValueChange = {
+                inputContent = TextFieldValue(it)
+                onInputContent(it)
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .border(
+                    border = searchBorderStroke(searchPageState), shape = CircleShape
                 )
+                .clip(CircleShape)
+                .hazeEffect(
+                    hazeState,
+                    HazeMaterials.thin()
+                )
+                .focusRequester(focusRequester)
+                .onFocusChanged {
+                    textFiledIsFocused = it.hasFocus
+                },
+            leadingIcon = {
+                Icon(
+                    modifier = Modifier
+                        .clip(CircleShape)
+                        .clickable(onClick = {
+                            if (textFiledIsFocused) {
+                                focusRequester.freeFocus()
+                                keyboardController?.hide()
+                                textFiledIsFocused = false
+                                return@clickable
+                            }
+                            onBackClick()
+                        })
+                        .padding(4.dp),
+                    painter = painterResource(id = xcj.app.compose_share.R.drawable.ic_arrow_back_24),
+                    contentDescription = stringResource(id = xcj.app.appsets.R.string.return_)
+                )
+            },
+            trailingIcon = {
+                Icon(
+                    modifier = Modifier
+                        .clip(CircleShape)
+                        .clickable {
+                            onInputContent(inputContent.text)
+                        }
+                        .padding(4.dp),
+                    painter = painterResource(id = xcj.app.compose_share.R.drawable.ic_round_search_24),
+                    contentDescription = stringResource(xcj.app.appsets.R.string.search))
+            }, placeholder = {
+                Text(text = stringResource(xcj.app.appsets.R.string.search))
+            },
+            maxLines = 1,
+            shape = CircleShape,
+            colors = TextFieldDefaults.colors(
+                unfocusedIndicatorColor = Color.Transparent,
+                focusedIndicatorColor = Color.Transparent,
+                focusedContainerColor = Color.Transparent,
+                unfocusedContainerColor = Color.Transparent
             )
-            .clip(cornerShape)
-            .onSizeChanged(onSearchBarSizeChanged),
-        leadingIcon = {
-            Icon(
-                modifier = Modifier
-                    .clip(CircleShape)
-                    .clickable(onClick = {
-                        keyboardController?.hide()
-                        onBackClick()
-                    })
-                    .padding(4.dp),
-                painter = painterResource(id = xcj.app.compose_share.R.drawable.ic_arrow_back_24),
-                contentDescription = stringResource(id = xcj.app.appsets.R.string.return_)
-            )
-        },
-        trailingIcon = {
-            Icon(
-                modifier = Modifier
-                    .clip(CircleShape)
-                    .clickable {
-                        onInputContent(inputContent.text)
-                    }
-                    .padding(4.dp),
-                painter = painterResource(id = xcj.app.compose_share.R.drawable.ic_round_search_24),
-                contentDescription = stringResource(xcj.app.appsets.R.string.search))
-        }, placeholder = {
-            Text(text = stringResource(xcj.app.appsets.R.string.search))
-        },
-        maxLines = 1,
-        shape = cornerShape,
-        colors = TextFieldDefaults.colors(
-            unfocusedIndicatorColor = Color.Transparent,
-            focusedIndicatorColor = Color.Transparent,
-            focusedPlaceholderColor = Color.Transparent,
-            unfocusedPlaceholderColor = Color.Transparent
         )
-    )
+    }
 }
 
 @Composable
@@ -354,20 +366,17 @@ fun SearchSuccessPages(
 ) {
     val pagerState = rememberPagerState { searchSuccess.results.size }
     val coroutineScope = rememberCoroutineScope()
-    val tabsScrollState = rememberScrollState()
-    var buttonSize by remember {
-        mutableStateOf(IntSize.Zero)
-    }
+    val hazeState = rememberHazeState()
     LaunchedEffect(pagerState.currentPage) {
-        tabsScrollState.animateScrollTo(buttonSize.width * pagerState.currentPage)
+
     }
 
     Box {
         HorizontalPager(
+            modifier = Modifier.hazeSource(hazeState),
             state = pagerState, verticalAlignment = Alignment.Top
         ) { index ->
-            val searchResult = searchSuccess.results[index]
-            when (searchResult) {
+            when (val searchResult = searchSuccess.results[index]) {
                 is SearchResult.SearchedApplications -> {
                     SearchedApplicationsPage(
                         searchedApplications = searchResult, onBioClick = onBioClick
@@ -398,54 +407,41 @@ fun SearchSuccessPages(
                     SearchedGoodsListPage(searchResult)
                 }
             }
-
         }
-        val isSystemInDarkTheme = isSystemInDarkTheme()
-        val gradientColors = listOf(
-            if (isSystemInDarkTheme) {
-                Color.Black
-            } else {
-                Color.White
-            },
-            Color.Transparent,
+        StatusBarAreaGradient(
+            modifier = Modifier.align(Alignment.TopCenter)
         )
-        Box(
+        NavigationBarAreaGradient(
+            modifier = Modifier.align(Alignment.BottomCenter)
+        )
+
+        FlowRow(
             modifier = Modifier
-                .align(Alignment.TopCenter)
-                .fillMaxWidth()
-                .height(WindowInsets.systemBars.asPaddingValues().calculateTopPadding() + 52.dp)
-                .background(
-                    brush = Brush.verticalGradient(
-                        colors = gradientColors, startY = 0f, endY = Float.POSITIVE_INFINITY
-                    )
-                ),
-        ) {}
-        SingleChoiceSegmentedButtonRow(
-            modifier = Modifier
-                .align(Alignment.TopCenter)
-                .statusBarsPadding()
-                .padding(horizontal = 12.dp)
-                .horizontalScroll(tabsScrollState)
+                .align(Alignment.BottomStart)
+                .padding(start = 12.dp, end = 12.dp, bottom = 92.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
 
-            searchSuccess.results.forEachIndexed { index, selectionType ->
-                SegmentedButton(
-                    modifier = Modifier.onSizeChanged {
-                        buttonSize = it
-                    },
-                    colors = SegmentedButtonDefaults.colors()
-                        .copy(inactiveContainerColor = MaterialTheme.colorScheme.surface),
-                    selected = index == pagerState.currentPage,
-                    onClick = {
-                        coroutineScope.launch {
-                            pagerState.animateScrollToPage(index)
+            searchSuccess.results.forEachIndexed { index, searchResult ->
+
+                Row(
+                    modifier = Modifier
+                        .clip(CircleShape)
+                        .border(1.dp, MaterialTheme.colorScheme.outline, CircleShape)
+                        .hazeEffect(
+                            hazeState,
+                            HazeMaterials.thin()
+                        )
+                        .clickable {
+                            coroutineScope.launch {
+                                pagerState.animateScrollToPage(index)
+                            }
                         }
-                    },
-                    shape = SegmentedButtonDefaults.itemShape(
-                        index = index, count = searchSuccess.results.size
-                    ),
-                    icon = {}) {
-                    val text = when (selectionType) {
+                        .padding(horizontal = 12.dp, vertical = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    val text = when (searchResult) {
                         is SearchResult.SearchedApplications -> {
                             stringResource(xcj.app.appsets.R.string.application)
                         }
@@ -474,11 +470,61 @@ fun SearchSuccessPages(
 }
 
 @Composable
+fun StatusBarAreaGradient(
+    modifier: Modifier = Modifier
+) {
+    val isSystemInDarkTheme = isSystemInDarkTheme()
+    val gradientColors = listOf(
+        if (isSystemInDarkTheme) {
+            Color.Black
+        } else {
+            Color.White
+        },
+        Color.Transparent,
+    )
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(WindowInsets.systemBars.asPaddingValues().calculateTopPadding() + 52.dp)
+            .background(
+                brush = Brush.verticalGradient(
+                    colors = gradientColors, startY = 0f, endY = Float.POSITIVE_INFINITY
+                )
+            ),
+    ) {}
+}
+
+@Composable
+fun NavigationBarAreaGradient(
+    modifier: Modifier = Modifier
+) {
+    val isSystemInDarkTheme = isSystemInDarkTheme()
+    val gradientColors = listOf(
+        Color.Transparent,
+        if (isSystemInDarkTheme) {
+            Color.Black
+        } else {
+            Color.White
+        },
+    )
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(WindowInsets.navigationBars.asPaddingValues().calculateTopPadding() + 52.dp)
+            .background(
+                brush = Brush.verticalGradient(
+                    colors = gradientColors, startY = 0f, endY = Float.POSITIVE_INFINITY
+                )
+            ),
+    ) {}
+}
+
+@Composable
 fun SearchedGoodsListPage(searchedGoodsList: SearchResult.SearchedGoods) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(
-            top = 52.dp + WindowInsets.systemBars.asPaddingValues().calculateTopPadding(),
-            bottom = 68.dp
+            top = WindowInsets.systemBars.asPaddingValues().calculateTopPadding(),
+            bottom = 120.dp
         )
     ) {
         items(searchedGoodsList.goodsList) { screenInfo ->
@@ -495,8 +541,8 @@ fun SearchedScreensPage(
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(
-            top = 52.dp + WindowInsets.systemBars.asPaddingValues().calculateTopPadding(),
-            bottom = 68.dp
+            top = WindowInsets.systemBars.asPaddingValues().calculateTopPadding(),
+            bottom = 120.dp
         )
     ) {
         items(searchedScreens.screens) { screenInfo ->
@@ -514,8 +560,8 @@ fun SearchedScreensPage(
 fun SearchedGroupsPage(searchedGroups: SearchResult.SearchedGroups, onBioClick: (Bio) -> Unit) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(
-            top = 52.dp + WindowInsets.systemBars.asPaddingValues().calculateTopPadding(),
-            bottom = 68.dp
+            top = WindowInsets.systemBars.asPaddingValues().calculateTopPadding(),
+            bottom = 120.dp
         )
     ) {
         items(searchedGroups.groups) { groupInfo ->
@@ -535,8 +581,8 @@ fun SearchedUsersPage(
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(
-            top = 52.dp + WindowInsets.systemBars.asPaddingValues().calculateTopPadding(),
-            bottom = 68.dp
+            top = WindowInsets.systemBars.asPaddingValues().calculateTopPadding(),
+            bottom = 120.dp
         )
     ) {
         items(searchedUsers.users) { userInfo ->
@@ -559,8 +605,8 @@ fun SearchedApplicationsPage(
         modifier = Modifier.fillMaxSize(),
         state = rememberLazyGridState(),
         contentPadding = PaddingValues(
-            top = 52.dp + WindowInsets.systemBars.asPaddingValues().calculateTopPadding(),
-            bottom = 68.dp
+            top = WindowInsets.systemBars.asPaddingValues().calculateTopPadding(),
+            bottom = 120.dp
         )
     ) {
         itemsIndexed(items = searchedApplications.applications) { index, application ->
@@ -640,7 +686,7 @@ fun SearchedScreenComponent(
             }
             .padding(12.dp)) {
         Screen(
-            currentDestinationRoute = PageRouteNames.SearchPage,
+            currentPageRoute = PageRouteNames.SearchPage,
             screenInfo = screenInfo,
             onBioClick = onBioClick,
             onScreenMediaClick = onScreenMediaClick,

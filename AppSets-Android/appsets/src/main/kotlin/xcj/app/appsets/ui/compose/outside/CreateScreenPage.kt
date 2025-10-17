@@ -22,8 +22,6 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -31,7 +29,6 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.wrapContentHeight
@@ -138,8 +135,7 @@ fun CreateScreenPage(
         ) {
             Spacer(
                 modifier = Modifier.height(
-                    WindowInsets.statusBars.asPaddingValues()
-                        .calculateTopPadding() + backActionsHeight + 12.dp
+                    backActionsHeight + 12.dp
                 )
             )
             NewPostScreenComponent(
@@ -162,7 +158,7 @@ fun CreateScreenPage(
                 backActionBarSize = it.size
             },
             hazeState = hazeState,
-            centerText = stringResource(xcj.app.appsets.R.string.create_screen),
+            backButtonText = stringResource(xcj.app.appsets.R.string.create_screen),
             endButtonText = stringResource(id = xcj.app.appsets.R.string.ok),
             onBackClick = {
                 onBackClick(false)

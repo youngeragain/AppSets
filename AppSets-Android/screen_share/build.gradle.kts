@@ -15,7 +15,7 @@ android {
 
     defaultConfig {
         applicationId = "xcj.app.screen_share"
-        minSdk = 24
+        minSdk = 26
 
         // versionCode = 1
         // versionName = "1.0"

@@ -480,5 +480,8 @@
     <string name="app_custom_content_selection">应用实现</string>
     <string name="app_custom_content_selection_des">最大化自定义需求，需要文件权限</string>
     <string name="choose_implementation">选择实现</string>
+    <string name="latest">最新</string>
+    <string name="stop">停止</string>
+    <string name="select_a_sessio_object">选择一个会话对象</string>
 
 </resources>

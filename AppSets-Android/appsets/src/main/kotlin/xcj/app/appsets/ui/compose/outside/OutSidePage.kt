@@ -12,6 +12,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalConfiguration
@@ -22,6 +23,7 @@ import xcj.app.appsets.server.model.ScreenMediaFileUrl
 import xcj.app.appsets.ui.compose.PageRouteNames
 import xcj.app.appsets.ui.compose.custom_component.LoadMoreHandler
 import xcj.app.appsets.ui.compose.custom_component.ShowNavBar
+import xcj.app.appsets.ui.compose.search.StatusBarAreaGradient
 
 @Composable
 fun OutSidePage(
@@ -80,29 +82,8 @@ fun OutSidePage(
             onScreenMediaClick = onScreenMediaClick,
         )
 
-        /*val bigImageTargetSize = if (bigImageAction?.second is PressInteraction.Press) {
-            boxSizeFloat * 0.8f
-        } else {
-            Size.Zero
-        }
-        val bigImageSizeState = with(LocalDensity.current) {
-            val animateSize = animateSizeAsState(
-                targetValue = bigImageTargetSize,
-                label = "big_image",
-                animationSpec = spring(Spring.DampingRatioMediumBouncy, Spring.StiffnessLow),
-                finishedListener = {
-                    if (it.width == 0f)
-                        bigImageAction = null
-                })
-            animateSize.value.toDpSize()
-        }
-        LocalOrRemoteImage(
-            modifier = Modifier
-                .background(MaterialTheme.colorScheme.surfaceVariant, MaterialTheme.shapes.extraLarge)
-                .clip(MaterialTheme.shapes.extraLarge)
-                .size(bigImageSizeState),
-            any = bigImageAction?.first?.mediaFileUrl,
-            contentScale = ContentScale.FillWidth
-        )*/
+        StatusBarAreaGradient(
+            modifier = Modifier.align(Alignment.TopCenter)
+        )
     }
 }

@@ -152,6 +152,7 @@ private fun StandardNavigationBar(
             }
 
             NavigationSearchBar(
+                hazeState = hazeState,
                 enable = enable,
                 inSearchModel = inSearchModel,
                 onBackClick = onBackClick,

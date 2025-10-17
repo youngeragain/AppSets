@@ -2,7 +2,7 @@ package xcj.app.purple_native.starter
 
 import android.util.Log
 
-class Purple {
+class PurpleNative {
     external fun stringFromJNI(): String
 
     external fun getNumber(): Int

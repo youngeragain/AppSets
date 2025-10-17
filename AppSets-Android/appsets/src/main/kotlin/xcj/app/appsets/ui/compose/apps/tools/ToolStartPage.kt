@@ -7,12 +7,9 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Text
@@ -211,8 +208,8 @@ fun ToolStartPage(
         LazyColumn(
             modifier = Modifier.hazeSource(hazeState),
             contentPadding = PaddingValues(
-                top = WindowInsets.statusBars.asPaddingValues()
-                    .calculateTopPadding() + backActionsHeight + 12.dp, bottom = 12.dp
+                top = backActionsHeight + 12.dp,
+                bottom = 12.dp
             )
         ) {
             items(tools) { appTool ->
@@ -252,7 +249,7 @@ fun ToolStartPage(
             },
             hazeState = hazeState,
             onBackClick = onBackClick,
-            centerText = stringResource(id = xcj.app.appsets.R.string.tools)
+            backButtonText = stringResource(xcj.app.appsets.R.string.tools)
         )
     }
 }

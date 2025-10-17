@@ -11,13 +11,10 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
@@ -77,8 +74,7 @@ fun AboutPage(
         {
             Spacer(
                 modifier = Modifier.height(
-                    WindowInsets.statusBars.asPaddingValues()
-                        .calculateTopPadding() + backActionsHeight + 12.dp
+                    backActionsHeight + 12.dp
                 )
             )
             Image(
@@ -170,7 +166,7 @@ fun AboutPage(
             },
             hazeState = hazeState,
             onBackClick = onBackClick,
-            centerText = stringResource(xcj.app.appsets.R.string.about)
+            backButtonText = stringResource(xcj.app.appsets.R.string.about)
         )
     }
 }

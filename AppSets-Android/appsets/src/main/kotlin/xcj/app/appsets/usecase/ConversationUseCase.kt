@@ -625,12 +625,15 @@ private constructor() : ComposeLifecycleAware, UserAccountStateAware {
     }
 
     fun getAllSimpleSessionsByKeywords(keywords: String? = null): List<Session> {
+        val currentSession =
+            (currentSessionState.value as? SessionState.Normal)?.session ?: return emptyList()
         val overrideKeywords = if (getAllSimpleSessionsCount() > 2) {
             keywords
         } else {
             null
         }
         PurpleLogger.current.d(TAG, "getAllSimpleSessionsByKeywords, keywords:$keywords")
+
         val sessions = mutableListOf<Session>()
         sessionsMap.forEach {
             if (it.key != SYSTEM) {
@@ -638,7 +641,7 @@ private constructor() : ComposeLifecycleAware, UserAccountStateAware {
             }
         }
         sessions.removeIf {
-            if (it == currentSessionState.value) {
+            if (it == currentSession) {
                 true
             } else if (!overrideKeywords.isNullOrEmpty()) {
                 !it.imObj.name.contains(overrideKeywords)
@@ -754,5 +757,9 @@ private constructor() : ComposeLifecycleAware, UserAccountStateAware {
     fun getAllSessions(): List<Session> {
         val sessions = sessionsMap.values.flatten()
         return sessions
+    }
+
+    fun getSessionsByTab(tabType: String): List<Session> {
+        return sessionsMap[tabType] ?: mutableListOf<Session>()
     }
 }

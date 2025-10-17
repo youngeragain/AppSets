@@ -43,7 +43,7 @@ fun ToolGraphicPage(
             },
             hazeState = hazeState,
             onBackClick = onBackClick,
-            centerText = stringResource(xcj.app.appsets.R.string.graphic)
+            backButtonText = stringResource(xcj.app.appsets.R.string.graphic)
         )
     }
 }

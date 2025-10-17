@@ -76,7 +76,7 @@ class SearchUseCase(
                 SearchPageState.SearchPageSuccess(
                     keywords,
                     xcj.app.appsets.R.string.no_content,
-                    xcj.app.appsets.R.string.text_something,
+                    null,
                     emptyList(),
                 )
             return
@@ -105,7 +105,7 @@ class SearchUseCase(
                 SearchPageState.SearchPageSuccess(
                     keywords,
                     xcj.app.appsets.R.string.no_content,
-                    xcj.app.appsets.R.string.text_something,
+                    null,
                     emptyList(),
                 )
             searchPageState.value = searchSuccess

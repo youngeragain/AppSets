@@ -37,7 +37,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import xcj.app.appsets.account.LocalAccountManager
-import xcj.app.appsets.ui.compose.custom_component.AnyImage
 import xcj.app.appsets.ui.compose.custom_component.DragValue
 import xcj.app.appsets.ui.compose.custom_component.ImageButtonComponent
 import xcj.app.appsets.ui.compose.custom_component.SwipeContainer
@@ -108,7 +107,8 @@ fun LiteSettingsSheetContent(
                         QRCodeUseCase.QR_STATE_NEW -> {
                             val qrCodeBitmap = qrCode.bitmap?.asImageBitmap()
                             if (qrCodeBitmap != null) {
-                                AnyImage(
+                                androidx.compose.foundation.Image(
+                                    bitmap = qrCodeBitmap,
                                     modifier = Modifier
                                         .border(
                                             1.dp,
@@ -116,7 +116,7 @@ fun LiteSettingsSheetContent(
                                             MaterialTheme.shapes.extraLarge
                                         )
                                         .clip(MaterialTheme.shapes.extraLarge),
-                                    model = qrCodeBitmap
+                                    contentDescription = null
                                 )
                             }
                         }

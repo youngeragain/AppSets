@@ -46,7 +46,7 @@ android {
     }
     defaultConfig {
         //applicationId = "xcj.app.appsets"
-        minSdk = 24
+        minSdk = 26
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 

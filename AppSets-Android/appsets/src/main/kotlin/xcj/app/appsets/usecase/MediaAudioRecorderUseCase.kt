@@ -115,11 +115,11 @@ class MediaAudioRecorderUseCase() : ComposeLifecycleAware {
 
     }
 
-    fun resetState() {
+    suspend fun resetState() {
         recorderState.value = DesignRecorder.AudioRecorderState()
     }
 
-    fun cleanUp(by: String) {
+    suspend fun cleanUp(by: String) {
         resetState()
         designRecorder.cleanUp(by)
     }

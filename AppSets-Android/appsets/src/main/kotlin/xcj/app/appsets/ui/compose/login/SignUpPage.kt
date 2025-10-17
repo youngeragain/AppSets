@@ -15,15 +15,12 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
@@ -104,8 +101,7 @@ fun SignUpPage(
         {
             Spacer(
                 modifier = Modifier.height(
-                    WindowInsets.statusBars.asPaddingValues()
-                        .calculateTopPadding() + backActionsHeight + 12.dp
+                    backActionsHeight + 12.dp
                 )
             )
             val signUpUserInfo = when (loginState) {
@@ -472,7 +468,7 @@ fun SignUpPage(
                 backActionBarSize = it.size
             },
             hazeState = hazeState,
-            centerText = stringResource(xcj.app.appsets.R.string.register_an_account),
+            backButtonText = stringResource(xcj.app.appsets.R.string.register_an_account),
             onBackClick = onBackClick,
             endButtonText = stringResource(id = xcj.app.starter.R.string.ok),
             onEndButtonClick = onConfirmClick

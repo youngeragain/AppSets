@@ -20,9 +20,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -30,13 +28,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import dev.chrisbanes.haze.HazeState
 import xcj.app.appsets.account.LocalAccountManager
 import xcj.app.appsets.im.BrokerTest
 import xcj.app.appsets.im.IMOnlineState
-import xcj.app.appsets.ui.compose.LocalUseCaseOfSearch
 import xcj.app.appsets.ui.compose.custom_component.ImageButtonComponent
 import xcj.app.appsets.ui.model.state.AccountStatus
 import xcj.app.appsets.util.ktx.toast
@@ -45,6 +42,7 @@ private const val TAG = "NavigationSearchBar"
 
 @Composable
 fun NavigationSearchBar(
+    hazeState: HazeState,
     enable: Boolean,
     inSearchModel: Boolean,
     onBackClick: () -> Unit,
@@ -52,11 +50,6 @@ fun NavigationSearchBar(
     onSearchBarClick: () -> Unit,
     onBioClick: () -> Unit,
 ) {
-    val searchUseCase = LocalUseCaseOfSearch.current
-    val searchState by searchUseCase.searchPageState
-    var sizeOfSearchBar by remember {
-        mutableStateOf(IntSize.Zero)
-    }
     Column {
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -67,18 +60,11 @@ fun NavigationSearchBar(
                 contentAlignment = Alignment.CenterStart
             ) { targetIsSearchMode ->
                 if (targetIsSearchMode) {
-                    Column {
-                        Spacer(modifier = Modifier.height(4.dp))
-                        SearchInputBar(
-                            searchPageState = searchState,
-                            sizeOfSearchBar = sizeOfSearchBar,
-                            onBackClick = onBackClick,
-                            onInputContent = onInputContent,
-                            onSearchBarSizeChanged = {
-                                sizeOfSearchBar = it
-                            }
-                        )
-                    }
+                    SearchInputBar(
+                        hazeState = hazeState,
+                        onBackClick = onBackClick,
+                        onInputContent = onInputContent
+                    )
                 } else {
                     SearchClickableBar(
                         enable = enable,
@@ -94,12 +80,13 @@ fun NavigationSearchBar(
 
 @Composable
 fun SearchClickableBar(
+    modifier: Modifier = Modifier,
     enable: Boolean,
     onSearchBarClick: () -> Unit,
 ) {
     val context = LocalContext.current
     Row(
-        modifier = Modifier
+        modifier = modifier
             .background(
                 MaterialTheme.colorScheme.outline,
                 CircleShape
@@ -124,7 +111,7 @@ fun SearchClickableBar(
             contentDescription = stringResource(id = xcj.app.appsets.R.string.search)
         )
         Spacer(modifier = Modifier.width(8.dp))
-        Text(stringResource(id = xcj.app.appsets.R.string.search), fontSize = 12.sp)
+        Text(text = stringResource(id = xcj.app.appsets.R.string.search), fontSize = 12.sp)
         Spacer(modifier = Modifier.width(10.dp))
     }
 }

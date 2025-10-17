@@ -32,16 +32,17 @@ android {
     }
     defaultConfig {
         applicationId = "xcj.app.container"
-        minSdk = 24
+        minSdk = 26
         targetSdk = 36
-        versionCode = 20250926
-        versionName = "2025.09.26"
+        versionCode = 20251104
+        versionName = "2025.11.04"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         //consumerProguardFiles("consumer-rules.pro")
 
         ndk {
             //noinspection ChromeOsAbiSupport
+//            if(System.getProperty()OSKind.Windows){}
             abiFilters.add("arm64-v8a")
         }
     }
@@ -56,11 +57,10 @@ android {
             )
             runCatching {
                 signingConfigs.getByName("release")
-
             }.onSuccess {
                 signingConfig = it
             }.onFailure {
-                println("Release signing config not found!")
+                println("Release signing config is not found!")
             }
         }
         debug {

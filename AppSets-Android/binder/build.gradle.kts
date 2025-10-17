@@ -9,7 +9,7 @@ android {
     compileSdk = 36
     defaultConfig {
         //applicationId = "xcj.app.binder"
-        minSdk = 24
+        minSdk = 26
 
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"

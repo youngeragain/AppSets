@@ -124,7 +124,7 @@ private fun LandscapeScreenList(
                     .padding(12.dp)
             ) {
                 Screen(
-                    currentDestinationRoute = currentDestinationRoute,
+                    currentPageRoute = currentDestinationRoute,
                     screenInfo = screenInfo,
                     onBioClick = onBioClick,
                     pictureInteractionFlowCollector = pictureInteractionFlowCollector,
@@ -190,7 +190,7 @@ private fun PortraitScreenList(
                     .padding(12.dp)
             ) {
                 Screen(
-                    currentDestinationRoute = currentDestinationRoute,
+                    currentPageRoute = currentDestinationRoute,
                     screenInfo = screenInfo,
                     onBioClick = onBioClick,
                     pictureInteractionFlowCollector = pictureInteractionFlowCollector,
