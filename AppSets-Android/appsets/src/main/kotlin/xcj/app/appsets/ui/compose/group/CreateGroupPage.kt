@@ -257,8 +257,8 @@ fun CreateGroupPage(
                 backActionBarSize = it.size
             },
             hazeState = hazeState,
-            centerText = stringResource(id = xcj.app.appsets.R.string.create_group),
-            endButtonText = stringResource(id = xcj.app.appsets.R.string.ok),
+            backButtonText = stringResource(xcj.app.appsets.R.string.create_group),
+            endButtonText = stringResource(xcj.app.appsets.R.string.ok),
             onBackClick = onBackClick,
             onEndButtonClick = onConfirmAction
         )

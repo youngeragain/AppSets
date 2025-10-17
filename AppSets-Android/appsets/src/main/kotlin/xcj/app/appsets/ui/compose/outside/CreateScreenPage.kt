@@ -162,7 +162,7 @@ fun CreateScreenPage(
                 backActionBarSize = it.size
             },
             hazeState = hazeState,
-            centerText = stringResource(xcj.app.appsets.R.string.create_screen),
+            backButtonText = stringResource(xcj.app.appsets.R.string.create_screen),
             endButtonText = stringResource(id = xcj.app.appsets.R.string.ok),
             onBackClick = {
                 onBackClick(false)

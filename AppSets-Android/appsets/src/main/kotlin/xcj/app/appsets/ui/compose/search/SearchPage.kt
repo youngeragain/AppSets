@@ -189,7 +189,7 @@ fun SearchInputBar(
                 painter = painterResource(id = xcj.app.compose_share.R.drawable.ic_round_search_24),
                 contentDescription = stringResource(xcj.app.appsets.R.string.search))
         }, placeholder = {
-            Text(text = stringResource(xcj.app.appsets.R.string.search))
+            Text(text = stringResource(xcj.app.appsets.R.string.text_something))
         },
         maxLines = 1,
         shape = cornerShape,

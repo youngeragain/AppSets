@@ -5,6 +5,8 @@ import android.media.MediaRecorder
 import android.os.Build
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import xcj.app.starter.android.util.PurpleLogger
 import java.io.File
 import java.util.Timer
@@ -196,7 +198,7 @@ class DesignRecorder : DefaultLifecycleObserver {
         return outPut
     }
 
-    fun cleanUp(by: String) {
+    suspend fun cleanUp(by: String) {
         getOutPut()?.cleanUp(by)
     }
 
@@ -234,16 +236,18 @@ class DesignRecorder : DefaultLifecycleObserver {
             return filePath
         }
 
-        fun cleanUp(by: String) {
-            PurpleLogger.current.d(TAG, "cleanUp, by:$by")
-            val dirFile = outDirFile
-            if (dirFile == null) {
-                return
+        suspend fun cleanUp(by: String) {
+            withContext(Dispatchers.IO) {
+                PurpleLogger.current.d(TAG, "cleanUp, by:$by")
+                val dirFile = outDirFile
+                if (dirFile == null) {
+                    return@withContext
+                }
+                if (!dirFile.exists()) {
+                    return@withContext
+                }
+                dirFile.deleteRecursively()
             }
-            if (!dirFile.exists()) {
-                return
-            }
-            dirFile.deleteRecursively()
         }
     }
 

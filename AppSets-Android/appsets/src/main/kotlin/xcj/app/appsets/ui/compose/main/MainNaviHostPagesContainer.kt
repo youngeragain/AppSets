@@ -74,7 +74,6 @@ import me.saket.telephoto.zoomable.zoomable
 import xcj.app.appsets.constants.Constants
 import xcj.app.appsets.im.Bio
 import xcj.app.appsets.im.IMMessageDesignType
-import xcj.app.appsets.im.InputSelector
 import xcj.app.appsets.im.MessageFromInfo
 import xcj.app.appsets.im.MessageToInfo
 import xcj.app.appsets.im.Session
@@ -103,10 +102,8 @@ import xcj.app.appsets.ui.compose.LocalUseCaseOfAppCreation
 import xcj.app.appsets.ui.compose.LocalUseCaseOfApps
 import xcj.app.appsets.ui.compose.LocalUseCaseOfConversation
 import xcj.app.appsets.ui.compose.LocalUseCaseOfGroupInfo
-import xcj.app.appsets.ui.compose.LocalUseCaseOfMediaAudioRecorder
 import xcj.app.appsets.ui.compose.LocalUseCaseOfMediaRemoteExo
 import xcj.app.appsets.ui.compose.LocalUseCaseOfNavigation
-import xcj.app.appsets.ui.compose.LocalUseCaseOfNowSpaceContent
 import xcj.app.appsets.ui.compose.LocalUseCaseOfQRCode
 import xcj.app.appsets.ui.compose.LocalUseCaseOfScreen
 import xcj.app.appsets.ui.compose.LocalUseCaseOfScreenPost
@@ -661,17 +658,13 @@ fun MainNaviHostPagesContainer(
                     val conversationUseCase = LocalUseCaseOfConversation.current
                     val visibilityComposeStateProvider = LocalVisibilityComposeStateProvider.current
                     val systemUseCase = LocalUseCaseOfSystem.current
-                    val mediaAudioRecorderUseCase = LocalUseCaseOfMediaAudioRecorder.current
                     val mediaRemoteExoUseCase = LocalUseCaseOfMediaRemoteExo.current
-                    val nowSpaceContentUseCase = LocalUseCaseOfNowSpaceContent.current
                     val currentSessionState by conversationUseCase.currentSessionState
-                    val recorderState by mediaAudioRecorderUseCase.recorderState
                     val isShowActions by conversationUseCase.isShowActions
                     val coroutineScope = rememberCoroutineScope()
                     ConversationOverviewPage(
                         sessionState = currentSessionState,
                         isShowActions = isShowActions,
-                        recorderState = recorderState,
                         onBioClick = { bio ->
                             coroutineScope.launch {
                                 onBioClick(context, navController, bio)
@@ -734,38 +727,6 @@ fun MainNaviHostPagesContainer(
                                 )
                             }
                         },
-                        onVoiceAction = {
-                            coroutineScope.launch {
-                                mediaAudioRecorderUseCase.startRecord(
-                                    context,
-                                    systemUseCase,
-                                    nowSpaceContentUseCase
-                                )
-                            }
-                        },
-                        onVoiceStopClick = { showSend ->
-                            mediaAudioRecorderUseCase.stopRecord("UI click")
-                            if (!showSend) {
-                                mediaAudioRecorderUseCase.cleanUp("user stop")
-                                return@ConversationOverviewPage
-                            }
-                            mediaAudioRecorderUseCase.resetState()
-                            val uriProvider = mediaAudioRecorderUseCase.getRecordFileUriProvider()
-                            if (uriProvider == null) {
-                                return@ConversationOverviewPage
-                            }
-                            conversationUseCase.sendMessage(
-                                context,
-                                InputSelector.VOICE,
-                                uriProvider
-                            )
-                        },
-                        onVoicePauseClick = {
-                            mediaAudioRecorderUseCase.pauseRecord("UI click")
-                        },
-                        onVoiceResumeClick = {
-                            mediaAudioRecorderUseCase.resumeRecord("UI click")
-                        },
                         onMoreClick = { imObj ->
                             val bottomSheetState = visibilityComposeStateProvider.bottomSheetState()
                             bottomSheetState.show {
@@ -805,16 +766,11 @@ fun MainNaviHostPagesContainer(
                     val context = LocalContext.current
                     val conversationUseCase = LocalUseCaseOfConversation.current
                     val visibilityComposeStateProvider = LocalVisibilityComposeStateProvider.current
-                    val mediaAudioRecorderUseCase = LocalUseCaseOfMediaAudioRecorder.current
                     val mediaRemoteExoUseCase = LocalUseCaseOfMediaRemoteExo.current
-                    val systemUseCase = LocalUseCaseOfSystem.current
-                    val nowSpaceContentUseCase = LocalUseCaseOfNowSpaceContent.current
                     val sessionState by conversationUseCase.currentSessionState
-                    val recorderState by mediaAudioRecorderUseCase.recorderState
                     val coroutineScope = rememberCoroutineScope()
                     ConversationDetailsPage(
                         sessionState = sessionState,
-                        recorderState = recorderState,
                         onBackClick = navController::navigateUp,
                         onBioClick = { bio ->
                             coroutineScope.launch {
@@ -847,37 +803,6 @@ fun MainNaviHostPagesContainer(
                                     }
                                 )
                             }
-                        },
-                        onVoiceAction = {
-                            coroutineScope.launch {
-                                mediaAudioRecorderUseCase.startRecord(
-                                    context,
-                                    systemUseCase,
-                                    nowSpaceContentUseCase
-                                )
-                            }
-                        },
-                        onVoiceStopClick = { showSend ->
-                            mediaAudioRecorderUseCase.stopRecord("UI click")
-                            if (!showSend) {
-                                mediaAudioRecorderUseCase.cleanUp("user stop")
-                                return@ConversationDetailsPage
-                            }
-                            val uriProvider = mediaAudioRecorderUseCase.getRecordFileUriProvider()
-                            if (uriProvider == null) {
-                                return@ConversationDetailsPage
-                            }
-                            conversationUseCase.sendMessage(
-                                context,
-                                InputSelector.VOICE,
-                                uriProvider
-                            )
-                        },
-                        onVoicePauseClick = {
-                            mediaAudioRecorderUseCase.pauseRecord("UI click")
-                        },
-                        onVoiceResumeClick = {
-                            mediaAudioRecorderUseCase.resumeRecord("UI click")
                         },
                         onMoreClick = { imObj ->
                             val bottomSheetState = visibilityComposeStateProvider.bottomSheetState()

@@ -472,7 +472,7 @@ fun SignUpPage(
                 backActionBarSize = it.size
             },
             hazeState = hazeState,
-            centerText = stringResource(xcj.app.appsets.R.string.register_an_account),
+            backButtonText = stringResource(xcj.app.appsets.R.string.register_an_account),
             onBackClick = onBackClick,
             endButtonText = stringResource(id = xcj.app.starter.R.string.ok),
             onEndButtonClick = onConfirmClick

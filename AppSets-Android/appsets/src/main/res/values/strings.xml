@@ -480,4 +480,6 @@
     <string name="app_custom_content_selection">App Implementation</string>
     <string name="app_custom_content_selection_des">Maximizing custom requirements, file permission required</string>
     <string name="choose_implementation">Choose Implementation</string>
+    <string name="latest">Latest</string>
+    <string name="stop">Stop</string>
 </resources>

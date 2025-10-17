@@ -121,7 +121,7 @@ fun AppDetailsPage(
             }
         }
         val rememberScrollState = rememberScrollState()
-        Box {
+        Box(modifier = Modifier.fillMaxSize()) {
             Column(
                 modifier = Modifier
                     .hazeSource(hazeState)
@@ -162,7 +162,7 @@ fun AppDetailsPage(
                         backActionBarSize = it.size
                     },
                 hazeState = hazeState,
-                centerText = application.bioName ?: "",
+                backButtonText = application.bioName,
                 onBackClick = onBackClick
             )
         }
@@ -207,11 +207,11 @@ fun ApplicationContentComponent(
         }
     )
     Column(
-        modifier = modifier,
+        modifier = modifier.padding(horizontal = 12.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
 
-    Column(
+        Column(
             modifier = Modifier
                 .fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally,

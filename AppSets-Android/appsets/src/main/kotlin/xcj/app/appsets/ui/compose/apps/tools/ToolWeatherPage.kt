@@ -108,7 +108,7 @@ fun ToolWeatherPage(
             },
             hazeState = hazeState,
             onBackClick = onBackClick,
-            centerText = stringResource(xcj.app.appsets.R.string.weather)
+            backButtonText = stringResource(xcj.app.appsets.R.string.weather)
         )
     }
 

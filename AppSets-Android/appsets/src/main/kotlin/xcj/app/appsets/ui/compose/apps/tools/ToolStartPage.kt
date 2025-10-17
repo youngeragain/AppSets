@@ -252,7 +252,7 @@ fun ToolStartPage(
             },
             hazeState = hazeState,
             onBackClick = onBackClick,
-            centerText = stringResource(id = xcj.app.appsets.R.string.tools)
+            backButtonText = stringResource(xcj.app.appsets.R.string.tools)
         )
     }
 }

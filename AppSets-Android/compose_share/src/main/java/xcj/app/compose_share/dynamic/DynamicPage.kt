@@ -150,7 +150,7 @@ fun DynamicPage(
             },
             hazeState = hazeState,
             onBackClick = onBackClick,
-            centerText = stringResource(id = xcj.app.compose_share.R.string.compose_plugin),
+            backButtonText = stringResource(xcj.app.compose_share.R.string.compose_plugin),
             endButtonText = "+",
             onEndButtonClick = onAddClick
         )

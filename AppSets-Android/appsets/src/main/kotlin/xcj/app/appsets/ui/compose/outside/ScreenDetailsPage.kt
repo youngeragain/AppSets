@@ -3,11 +3,12 @@
 package xcj.app.appsets.ui.compose.outside
 
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.animation.core.spring
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -16,6 +17,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -23,11 +25,7 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.layout.windowInsetsTopHeight
-import androidx.compose.foundation.pager.VerticalPager
-import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -39,12 +37,11 @@ import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.SuggestionChip
-import androidx.compose.material3.SuggestionChipDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -52,20 +49,19 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.BlurredEdgeTreatment
-import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.layout.onPlaced
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import xcj.app.appsets.account.LocalAccountManager
 import xcj.app.appsets.im.Bio
@@ -76,6 +72,7 @@ import xcj.app.appsets.ui.compose.custom_component.AnyImage
 import xcj.app.appsets.ui.compose.custom_component.DesignBackButton
 import xcj.app.appsets.ui.compose.custom_component.HideNavBar
 import xcj.app.appsets.ui.model.ScreenInfoForCard
+import xcj.app.compose_share.components.BackActionTopBar
 import xcj.app.compose_share.components.DesignHDivider
 import xcj.app.compose_share.components.DesignTextField
 import xcj.app.compose_share.components.LocalVisibilityComposeStateProvider
@@ -111,61 +108,39 @@ fun ScreenDetailsPage(
         }
 
     } else {
+        val visibilityComposeStateProvider = LocalVisibilityComposeStateProvider.current
         var isShowLikeBigIconAnimation by remember {
             mutableStateOf(false)
         }
-
         val coroutineScope = rememberCoroutineScope()
         val hazeState = remember {
             HazeState()
         }
-        Box(Modifier.fillMaxSize()) {
+        val density = LocalDensity.current
+        var backActionBarSize by remember {
+            mutableStateOf(IntSize.Zero)
+        }
+        val backActionsHeight by remember {
+            derivedStateOf {
+                with(density) {
+                    backActionBarSize.height.toDp()
+                }
+            }
+        }
+
+        Box(
+            modifier = Modifier.fillMaxSize()
+        ) {
             Column(
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Box {
-                    val backgroundImage =
-                        screenInfoForCard.screenInfo.mediaFileUrls?.firstOrNull {
-                            if (it.isVideoMedia) {
-                                !it.mediaFileCompanionUrl.isNullOrEmpty()
-                            } else {
-                                it.mediaFileUrl.isNotEmpty()
-                            }
-                        }
-                    if (backgroundImage != null) {
-                        val backgroundImageUrl = if (backgroundImage.isVideoMedia) {
-                            backgroundImage.mediaFileCompanionUrl
-                        } else {
-                            backgroundImage.mediaFileUrl
-                        }
-                        AnyImage(
-                            modifier = Modifier
-                                .matchParentSize()
-                                .blur(30.dp, BlurredEdgeTreatment.Unbounded),
-                            model = backgroundImageUrl
-                        )
-                    }
-
-                    Column {
-                        Spacer(modifier = Modifier.windowInsetsTopHeight(WindowInsets.statusBars))
-                        val hapticFeedback = LocalHapticFeedback.current
-                        ScreenDetailsTopBar(
-                            screenInfoForCard = screenInfoForCard,
-                            onBackClick = onBackClick,
-                            onBioClick = onBioClick,
-                            onEditClick = onEditClick,
-                            onCollectClick = onCollectClick,
-                            onLikesClick = {
-                                onLikesClick()
-                                coroutineScope.launch {
-                                    hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
-                                    isShowLikeBigIconAnimation = true
-                                }
-                            }
-                        )
-                    }
-                }
-                ScreenDetailsPager(
+                Spacer(
+                    modifier = Modifier.height(
+                        WindowInsets.statusBars.asPaddingValues()
+                            .calculateTopPadding() + backActionsHeight + 12.dp
+                    )
+                )
+                ScreenDetailsBody(
                     screenInfoForCard = screenInfoForCard,
                     onBioClick = onBioClick,
                     onScreenMediaClick = onScreenMediaClick,
@@ -174,36 +149,127 @@ fun ScreenDetailsPage(
                 )
             }
 
+            BackActionTopBar(
+                modifier = Modifier.onPlaced {
+                    backActionBarSize = it.size
+                },
+                hazeState = hazeState,
+                onBackClick = onBackClick,
+                customEndContent = {
+                    Row(modifier = Modifier.padding(horizontal = 12.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            AnimatedContent(
+                                targetState = screenInfoForCard.viewCount,
+                                transitionSpec = {
+                                    fadeIn() togetherWith fadeOut()
+                                },
+                                contentAlignment = Alignment.Center,
+                                label = "view_count_animate"
+                            ) { viewCount ->
+                                Text(text = "$viewCount", fontSize = 12.sp)
+                            }
+                            Icon(
+                                painterResource(xcj.app.compose_share.R.drawable.ic_outline_remove_red_eye_24),
+                                stringResource(xcj.app.appsets.R.string.browser_counts),
+                                modifier = Modifier
+                                    .clip(CircleShape)
+                                    .padding(12.dp)
+                            )
+                        }
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            AnimatedContent(
+                                targetState = screenInfoForCard.likedCount,
+                                transitionSpec = {
+                                    fadeIn() togetherWith fadeOut()
+                                },
+                                contentAlignment = Alignment.Center,
+                                label = "like_count_animate"
+                            ) { likeCount ->
+                                Text(text = "$likeCount", fontSize = 12.sp)
+                            }
+
+                            Icon(
+                                painterResource(id = xcj.app.compose_share.R.drawable.ic_outline_favorite_border_24),
+                                stringResource(xcj.app.appsets.R.string.like_it),
+                                modifier = Modifier
+                                    .clip(CircleShape)
+                                    .combinedClickableSingle(role = Role.Button) {
+                                        onLikesClick()
+                                        coroutineScope.launch {
+                                            isShowLikeBigIconAnimation = true
+                                            delay(450)
+                                            isShowLikeBigIconAnimation = false
+                                        }
+                                    }
+                                    .padding(12.dp)
+                            )
+                        }
+                        if (
+                            LocalAccountManager.isLoggedUser(screenInfoForCard.screenInfo?.userInfo?.uid)
+                        ) {
+                            Icon(
+                                painterResource(id = xcj.app.compose_share.R.drawable.ic_edit_24),
+                                stringResource(xcj.app.appsets.R.string.edit),
+                                modifier = Modifier
+                                    .clip(CircleShape)
+                                    .combinedClickableSingle(role = Role.Button) {
+                                        onEditClick()
+                                    }
+                                    .padding(12.dp)
+                            )
+                        } else {
+                            val resId = if (screenInfoForCard.isCollectedByUser) {
+                                xcj.app.compose_share.R.drawable.ic_round_bookmarks_24
+                            } else {
+                                xcj.app.compose_share.R.drawable.ic_bookmarks_24
+                            }
+
+                            Icon(
+                                painterResource(id = resId),
+                                stringResource(xcj.app.appsets.R.string.collect_it),
+                                modifier = Modifier
+                                    .clip(CircleShape)
+                                    .combinedClickableSingle(role = Role.Button) {
+                                        if (screenInfoForCard.isCollectedByUser) {
+                                            onCollectClick(null)
+                                        } else {
+                                            val bottomSheetState =
+                                                visibilityComposeStateProvider.bottomSheetState()
+                                            bottomSheetState.show {
+                                                CollectEditSheetContent(
+                                                    onConfirmClick = {
+                                                        bottomSheetState.hide()
+                                                    }
+                                                )
+                                            }
+                                        }
+                                    }
+                                    .padding(12.dp)
+                            )
+                        }
+                    }
+                }
+            )
+
             AddReviewSpace(
                 modifier = Modifier.align(Alignment.BottomCenter),
                 onReviewConfirm = onReviewConfirm
             )
 
-            val likeTargetSizeDp = animateDpAsState(
-                targetValue = if (isShowLikeBigIconAnimation) {
-                    250.dp
-                } else {
-                    0.dp
-                },
-                animationSpec = spring(
-                    Spring.DampingRatioMediumBouncy,
-                    Spring.StiffnessLow
-                ),
-                finishedListener = {
-                    if (isShowLikeBigIconAnimation) {
-                        isShowLikeBigIconAnimation = false
-                    }
-                },
-                label = "like_size_animate"
-            )
-            Icon(
-                modifier = Modifier
-                    .size(likeTargetSizeDp.value)
-                    .align(Alignment.Center),
-                painter = painterResource(id = xcj.app.compose_share.R.drawable.ic_favorite_24),
-                tint = Color.Red,
-                contentDescription = stringResource(xcj.app.appsets.R.string.favorite)
-            )
+            AnimatedVisibility(
+                modifier = Modifier.align(Alignment.Center),
+                visible = isShowLikeBigIconAnimation,
+                enter = fadeIn(tween()) + scaleIn(tween()),
+                exit = fadeOut(tween()) + scaleOut(tween())
+            ) {
+                Icon(
+                    modifier = Modifier
+                        .size(250.dp),
+                    painter = painterResource(id = xcj.app.compose_share.R.drawable.ic_favorite_24),
+                    tint = Color.Red,
+                    contentDescription = stringResource(xcj.app.appsets.R.string.favorite)
+                )
+            }
         }
     }
 }
@@ -226,20 +292,15 @@ fun AddReviewSpace(
             .navigationBarsPadding(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        SuggestionChip(
+        FilledTonalButton(
             onClick = {
                 isShowInputContentSheet = true
-            },
-            label = {
-                Text(
-                    text = stringResource(xcj.app.appsets.R.string.add_reply)
-                )
-            },
-            shape = CircleShape,
-            colors = SuggestionChipDefaults.suggestionChipColors().copy(
-                containerColor = MaterialTheme.colorScheme.secondaryContainer
+            }
+        ) {
+            Text(
+                text = stringResource(xcj.app.appsets.R.string.add_reply)
             )
-        )
+        }
     }
 
     if (isShowInputContentSheet) {
@@ -296,179 +357,36 @@ fun AddReviewSpace(
 }
 
 @Composable
-fun ScreenDetailsPager(
+fun ScreenDetailsBody(
     screenInfoForCard: ScreenInfoForCard,
     onBioClick: (Bio) -> Unit,
     onScreenMediaClick: (ScreenMediaFileUrl, List<ScreenMediaFileUrl>) -> Unit,
     onPageShowPrevious: () -> Unit,
     onPageShowNext: () -> Unit
 ) {
-    val pagerState = rememberPagerState { 1 }
-    VerticalPager(
-        state = pagerState
-    ) { pageIndex ->
-        val scrollState = rememberScrollState()
+    val scrollState = rememberScrollState()
+    Column(
+        modifier = Modifier
+            .verticalScroll(scrollState),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
         Column(
             modifier = Modifier
-                .verticalScroll(scrollState),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+                .padding(horizontal = 12.dp),
         ) {
-            Column(
-                modifier = Modifier
-                    .padding(horizontal = 12.dp),
-            ) {
-                SelectionContainer {
-                    Screen(
-                        currentDestinationRoute = PageRouteNames.ScreenDetailsPage,
-                        screenInfo = screenInfoForCard.screenInfo!!,
-                        onBioClick = onBioClick,
-                        pictureInteractionFlowCollector = { a, b -> },
-                        onScreenMediaClick = onScreenMediaClick,
-                    )
-                }
-
-            }
-            DesignHDivider()
-            ScreenReviews(screenInfoForCard.reviews, onBioClick)
-        }
-    }
-
-}
-
-@Composable
-fun ScreenDetailsTopBar(
-    screenInfoForCard: ScreenInfoForCard,
-    onBackClick: () -> Unit,
-    onBioClick: (Bio) -> Unit,
-    onEditClick: () -> Unit,
-    onCollectClick: (String?) -> Unit,
-    onLikesClick: () -> Unit,
-) {
-    val visibilityComposeStateProvider = LocalVisibilityComposeStateProvider.current
-    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Box(modifier = Modifier.fillMaxWidth()) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    painter = painterResource(id = xcj.app.compose_share.R.drawable.ic_arrow_back_24),
-                    contentDescription = stringResource(id = xcj.app.appsets.R.string.return_),
-                    modifier = Modifier
-                        .clip(CircleShape)
-                        .clickable(onClick = {
-                            onBackClick()
-                        })
-                        .padding(12.dp)
+            SelectionContainer {
+                Screen(
+                    currentDestinationRoute = PageRouteNames.ScreenDetailsPage,
+                    screenInfo = screenInfoForCard.screenInfo!!,
+                    onBioClick = onBioClick,
+                    pictureInteractionFlowCollector = { a, b -> },
+                    onScreenMediaClick = onScreenMediaClick,
                 )
-                Text(
-                    text = stringResource(xcj.app.appsets.R.string.screen_expand),
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-            Column(
-                modifier = Modifier
-                    .align(Alignment.CenterEnd),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Row() {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        AnimatedContent(
-                            targetState = screenInfoForCard.viewCount,
-                            transitionSpec = {
-                                fadeIn() togetherWith fadeOut()
-                            },
-                            contentAlignment = Alignment.Center,
-                            label = "view_count_animate"
-                        ) { viewCount ->
-                            Text(text = "$viewCount", fontSize = 12.sp)
-                        }
-                        Icon(
-                            painterResource(id = xcj.app.compose_share.R.drawable.ic_outline_remove_red_eye_24),
-                            stringResource(xcj.app.appsets.R.string.browser_counts),
-                            modifier = Modifier
-                                .clip(CircleShape)
-                                .padding(12.dp)
-                        )
-                    }
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        AnimatedContent(
-                            targetState = screenInfoForCard.likedCount,
-                            transitionSpec = {
-                                fadeIn() togetherWith fadeOut()
-                            },
-                            contentAlignment = Alignment.Center,
-                            label = "like_count_animate"
-                        ) { likeCount ->
-                            Text(text = "$likeCount", fontSize = 12.sp)
-                        }
-
-                        Icon(
-                            painterResource(id = xcj.app.compose_share.R.drawable.ic_outline_favorite_border_24),
-                            stringResource(xcj.app.appsets.R.string.like_it),
-                            modifier = Modifier
-                                .clip(CircleShape)
-                                .combinedClickableSingle(role = Role.Button) {
-                                    onLikesClick()
-                                }
-                                .padding(12.dp)
-                        )
-                    }
-                    if (
-                        LocalAccountManager.isLoggedUser(screenInfoForCard.screenInfo?.userInfo?.uid)
-                    ) {
-                        Icon(
-                            painterResource(id = xcj.app.compose_share.R.drawable.ic_edit_24),
-                            stringResource(xcj.app.appsets.R.string.edit),
-                            modifier = Modifier
-                                .clip(CircleShape)
-                                .combinedClickableSingle(role = Role.Button) {
-                                    onEditClick()
-                                }
-                                .padding(12.dp)
-                        )
-                    } else {
-                        val resId = if (screenInfoForCard.isCollectedByUser) {
-                            xcj.app.compose_share.R.drawable.ic_round_bookmarks_24
-                        } else {
-                            xcj.app.compose_share.R.drawable.ic_bookmarks_24
-                        }
-
-                        Icon(
-                            painterResource(id = resId),
-                            stringResource(xcj.app.appsets.R.string.collect_it),
-                            modifier = Modifier
-                                .clip(CircleShape)
-                                .combinedClickableSingle(role = Role.Button) {
-                                    if (screenInfoForCard.isCollectedByUser) {
-                                        onCollectClick(null)
-                                    } else {
-                                        val bottomSheetState =
-                                            visibilityComposeStateProvider.bottomSheetState()
-                                        bottomSheetState.show {
-                                            CollectEditSheetContent(
-                                                onConfirmClick = {
-                                                    bottomSheetState.hide()
-                                                }
-                                            )
-                                        }
-                                    }
-                                }
-                                .padding(12.dp)
-                        )
-                    }
-                }
-                if (!LocalAccountManager.isLogged()) {
-                    Spacer(modifier = Modifier.height(2.dp))
-                    DesignHDivider(modifier = Modifier.width(42.dp))
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Text(
-                        text = stringResource(xcj.app.appsets.R.string.login_required),
-                        fontSize = 10.sp
-                    )
-                    Spacer(modifier = Modifier.height(2.dp))
-                }
             }
 
         }
+        DesignHDivider()
+        ScreenReviews(screenInfoForCard.reviews, onBioClick)
     }
 }
 

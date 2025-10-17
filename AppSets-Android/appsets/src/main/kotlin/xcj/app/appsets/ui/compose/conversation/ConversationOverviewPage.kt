@@ -46,10 +46,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -79,7 +77,6 @@ import xcj.app.appsets.ui.compose.custom_component.AnyImage
 import xcj.app.appsets.ui.compose.custom_component.ShowNavBar
 import xcj.app.appsets.usecase.ConversationUseCase
 import xcj.app.appsets.usecase.SessionState
-import xcj.app.appsets.util.DesignRecorder
 import xcj.app.compose_share.components.DesignVDivider
 
 private const val TAG = "ConversationOverviewPage"
@@ -88,7 +85,6 @@ private const val TAG = "ConversationOverviewPage"
 fun ConversationOverviewPage(
     sessionState: SessionState,
     isShowActions: Boolean,
-    recorderState: DesignRecorder.AudioRecorderState,
     onBioClick: (Bio) -> Unit,
     onImMessageContentClick: (IMMessage<*>) -> Unit,
     onAddAIModelClick: () -> Unit,
@@ -99,10 +95,6 @@ fun ConversationOverviewPage(
     onSystemImMessageClick: (Session, IMMessage<*>) -> Unit,
     onUserRequestClick: (Boolean, Session, SystemMessage) -> Unit,
     onInputMoreAction: (String) -> Unit,
-    onVoiceAction: () -> Unit,
-    onVoiceStopClick: (Boolean) -> Unit,
-    onVoicePauseClick: () -> Unit,
-    onVoiceResumeClick: () -> Unit,
     onMoreClick: ((IMObj) -> Unit),
     onLandscapeModeEndBackClick: () -> Unit,
 ) {
@@ -125,7 +117,6 @@ fun ConversationOverviewPage(
         ConversationOverviewLandscape(
             isShowActions = isShowActions,
             sessionState = sessionState,
-            recorderState = recorderState,
             onAddAIModelClick = onAddAIModelClick,
             onAddFriendClick = onAddFriendClick,
             onAddGroupClick = onAddGroupClick,
@@ -138,10 +129,6 @@ fun ConversationOverviewPage(
             onImMessageContentClick = onImMessageContentClick,
             onUserRequestClick = onUserRequestClick,
             onInputMoreAction = onInputMoreAction,
-            onVoiceAction = onVoiceAction,
-            onVoiceStopClick = onVoiceStopClick,
-            onVoicePauseClick = onVoicePauseClick,
-            onVoiceResumeClick = onVoiceResumeClick,
             onMoreClick = onMoreClick,
             onLandscapeModeEndBackClick = onLandscapeModeEndBackClick
         )
@@ -151,16 +138,11 @@ fun ConversationOverviewPage(
 @Composable
 fun ConversationOverviewLandscapeEnd(
     sessionState: SessionState,
-    recorderState: DesignRecorder.AudioRecorderState,
     onBackClick: () -> Unit,
     onBioClick: (Bio) -> Unit,
     onImMessageContentClick: (IMMessage<*>) -> Unit,
     onMoreClick: ((IMObj) -> Unit),
     onInputMoreAction: (String) -> Unit,
-    onVoiceAction: () -> Unit,
-    onVoiceStopClick: (Boolean) -> Unit,
-    onVoicePauseClick: () -> Unit,
-    onVoiceResumeClick: () -> Unit,
 ) {
     AnimatedContent(
         targetState = sessionState,
@@ -187,16 +169,11 @@ fun ConversationOverviewLandscapeEnd(
             is SessionState.Normal -> {
                 ConversationDetailsPage(
                     sessionState = targetSessionState,
-                    recorderState = recorderState,
                     onBackClick = onBackClick,
                     onBioClick = onBioClick,
                     onImMessageContentClick = onImMessageContentClick,
                     onMoreClick = onMoreClick,
-                    onInputMoreAction = onInputMoreAction,
-                    onVoiceAction = onVoiceAction,
-                    onVoiceStopClick = onVoiceStopClick,
-                    onVoicePauseClick = onVoicePauseClick,
-                    onVoiceResumeClick = onVoiceResumeClick
+                    onInputMoreAction = onInputMoreAction
                 )
             }
         }
@@ -208,7 +185,6 @@ fun ConversationOverviewLandscape(
     modifier: Modifier = Modifier,
     sessionState: SessionState,
     isShowActions: Boolean,
-    recorderState: DesignRecorder.AudioRecorderState,
     onAddAIModelClick: () -> Unit,
     onAddFriendClick: () -> Unit,
     onAddGroupClick: () -> Unit,
@@ -219,10 +195,6 @@ fun ConversationOverviewLandscape(
     onImMessageContentClick: (IMMessage<*>) -> Unit,
     onUserRequestClick: (Boolean, Session, SystemMessage) -> Unit,
     onInputMoreAction: (String) -> Unit,
-    onVoiceAction: () -> Unit,
-    onVoiceStopClick: (Boolean) -> Unit,
-    onVoicePauseClick: () -> Unit,
-    onVoiceResumeClick: () -> Unit,
     onMoreClick: ((IMObj) -> Unit),
     onLandscapeModeEndBackClick: () -> Unit,
 ) {
@@ -247,16 +219,11 @@ fun ConversationOverviewLandscape(
         ) {
             ConversationOverviewLandscapeEnd(
                 sessionState = sessionState,
-                recorderState = recorderState,
                 onBackClick = onLandscapeModeEndBackClick,
                 onBioClick = onBioClick,
                 onImMessageContentClick = onImMessageContentClick,
                 onMoreClick = onMoreClick,
                 onInputMoreAction = onInputMoreAction,
-                onVoiceAction = onVoiceAction,
-                onVoiceStopClick = onVoiceStopClick,
-                onVoicePauseClick = onVoicePauseClick,
-                onVoiceResumeClick = onVoiceResumeClick
             )
         }
     }
@@ -275,7 +242,7 @@ fun ConversationOverviewPortrait(
     onBioClick: (Bio) -> Unit,
     onUserRequestClick: (Boolean, Session, SystemMessage) -> Unit,
 ) {
-    val tabs = remember {
+    val tabTypes = remember {
         listOf(
             ConversationUseCase.AI,
             ConversationUseCase.USER,
@@ -284,25 +251,24 @@ fun ConversationOverviewPortrait(
         )
     }
     val conversationUseCase = LocalUseCaseOfConversation.current
-    val currentTab by conversationUseCase.currentTab
     val pagerState =
-        rememberPagerState(tabs.indexOf(conversationUseCase.currentTab.value)) { tabs.size }
+        rememberPagerState(tabTypes.indexOf(conversationUseCase.currentTab.value)) { tabTypes.size }
     val coroutineScope = rememberCoroutineScope()
 
     LaunchedEffect(pagerState.currentPage) {
-        conversationUseCase.updateCurrentTab(tabs[pagerState.currentPage])
+        conversationUseCase.updateCurrentTab(tabTypes[pagerState.currentPage])
     }
 
     Column(
         modifier = modifier
     ) {
         ConversationOverviewTabs(
-            tabs = tabs,
-            currentTab = tabs[pagerState.currentPage],
+            tabTypes = tabTypes,
+            currentTabType = tabTypes[pagerState.currentPage],
             isShowAddActions = isShowActions,
             onTabClick = { tab ->
                 coroutineScope.launch {
-                    pagerState.animateScrollToPage(tabs.indexOf(tab))
+                    pagerState.animateScrollToPage(tabTypes.indexOf(tab))
                 }
             },
             onAddAIModelClick = onAddAIModelClick,
@@ -313,14 +279,14 @@ fun ConversationOverviewPortrait(
 
         HorizontalPager(
             modifier = Modifier.weight(1f),
-            state = pagerState,
-            verticalAlignment = Alignment.Top
+            state = pagerState
         ) { index ->
-            val sessions by rememberUpdatedState(conversationUseCase.currentTabSessions())
-            when (currentTab) {
+            val tabType = tabTypes[index]
+            val sessions = conversationUseCase.getSessionsByTab(tabType)
+            when (tabType) {
                 ConversationUseCase.AI -> {
                     ConversationOverviewSessionsOfAI(
-                        tab = currentTab,
+                        tabType = tabType,
                         sessions = sessions,
                         onEmptyTipsClick = onAddAIModelClick,
                         onConversionSessionClick = onConversionSessionClick
@@ -329,7 +295,7 @@ fun ConversationOverviewPortrait(
 
                 ConversationUseCase.USER -> {
                     ConversationOverviewSessionsOfUser(
-                        tab = currentTab,
+                        tabType = tabType,
                         sessions = sessions,
                         onEmptyTipsClick = onAddFriendClick,
                         onConversionSessionClick = onConversionSessionClick
@@ -338,7 +304,7 @@ fun ConversationOverviewPortrait(
 
                 ConversationUseCase.GROUP -> {
                     ConversationOverviewSessionsOfGroup(
-                        tab = currentTab,
+                        tabType = tabType,
                         sessions = sessions,
                         onEmptyTipsClick = onAddGroupClick,
                         onConversionSessionClick = onConversionSessionClick
@@ -347,7 +313,7 @@ fun ConversationOverviewPortrait(
 
                 ConversationUseCase.SYSTEM -> {
                     ConversationOverviewSessionsOfSystem(
-                        tab = currentTab,
+                        tabType = tabType,
                         sessions = sessions,
                         onSystemImMessageClick = onSystemImMessageClick,
                         onBioClick = onBioClick,
@@ -361,7 +327,7 @@ fun ConversationOverviewPortrait(
 
 @Composable
 fun ConversationOverviewSessionsOfSystem(
-    tab: String,
+    tabType: String,
     sessions: List<Session>,
     onSystemImMessageClick: (Session, IMMessage<*>) -> Unit,
     onBioClick: (Bio) -> Unit,
@@ -372,7 +338,7 @@ fun ConversationOverviewSessionsOfSystem(
     Box(Modifier.fillMaxSize()) {
         if (!hasMessages) {
             Text(
-                text = stringResource(getTabEmptyPromptText(tab)),
+                text = stringResource(getTabEmptyPromptText(tabType)),
                 fontSize = 12.sp,
                 modifier = Modifier.align(Alignment.Center)
             )
@@ -396,7 +362,7 @@ fun ConversationOverviewSessionsOfSystem(
 
 @Composable
 fun ConversationOverviewSessionsOfGroup(
-    tab: String,
+    tabType: String,
     sessions: List<Session>,
     onEmptyTipsClick: () -> Unit,
     onConversionSessionClick: (Session) -> Unit,
@@ -409,7 +375,7 @@ fun ConversationOverviewSessionsOfGroup(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    text = stringResource(getTabEmptyPromptText(tab)),
+                    text = stringResource(getTabEmptyPromptText(tabType)),
                     fontSize = 12.sp,
                 )
 
@@ -430,7 +396,7 @@ fun ConversationOverviewSessionsOfGroup(
                 itemsIndexed(sessions) { index, session ->
                     ConversationOverviewSimpleItemComponent(
                         modifier = Modifier.animateItem(),
-                        currentTab = tab,
+                        currentTabType = tabType,
                         session = session,
                         onConversionSessionClick = onConversionSessionClick
                     )
@@ -442,7 +408,7 @@ fun ConversationOverviewSessionsOfGroup(
 
 @Composable
 fun ConversationOverviewSessionsOfUser(
-    tab: String,
+    tabType: String,
     sessions: List<Session>,
     onEmptyTipsClick: () -> Unit,
     onConversionSessionClick: (Session) -> Unit,
@@ -455,7 +421,7 @@ fun ConversationOverviewSessionsOfUser(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    text = stringResource(getTabEmptyPromptText(tab)),
+                    text = stringResource(getTabEmptyPromptText(tabType)),
                     fontSize = 12.sp,
                 )
 
@@ -475,7 +441,7 @@ fun ConversationOverviewSessionsOfUser(
                 itemsIndexed(sessions) { index, session ->
                     ConversationOverviewSimpleItemComponent(
                         modifier = Modifier.animateItem(),
-                        currentTab = tab,
+                        currentTabType = tabType,
                         session = session,
                         onConversionSessionClick = onConversionSessionClick
                     )
@@ -487,7 +453,7 @@ fun ConversationOverviewSessionsOfUser(
 
 @Composable
 fun ConversationOverviewSessionsOfAI(
-    tab: String,
+    tabType: String,
     sessions: List<Session>,
     onEmptyTipsClick: () -> Unit,
     onConversionSessionClick: (Session) -> Unit,
@@ -501,7 +467,7 @@ fun ConversationOverviewSessionsOfAI(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    text = stringResource(getTabEmptyPromptText(tab)),
+                    text = stringResource(getTabEmptyPromptText(tabType)),
                     fontSize = 12.sp,
                 )
 
@@ -521,7 +487,7 @@ fun ConversationOverviewSessionsOfAI(
                 itemsIndexed(sessions) { index, session ->
                     ConversationOverviewSimpleItemComponent(
                         modifier = Modifier.animateItem(),
-                        currentTab = tab,
+                        currentTabType = tabType,
                         session = session,
                         onConversionSessionClick = onConversionSessionClick
                     )
@@ -534,8 +500,8 @@ fun ConversationOverviewSessionsOfAI(
 
 @Composable
 fun ConversationOverviewTabs(
-    tabs: List<String>,
-    currentTab: String,
+    tabTypes: List<String>,
+    currentTabType: String,
     isShowAddActions: Boolean,
     onTabClick: (String) -> Unit,
     onAddAIModelClick: () -> Unit,
@@ -564,20 +530,20 @@ fun ConversationOverviewTabs(
                 .horizontalScroll(rememberScrollState()),
             horizontalArrangement = Arrangement.spacedBy(6.dp)
         ) {
-            tabs.forEachIndexed { index, tab ->
+            tabTypes.forEachIndexed { index, tabType ->
                 FilterChip(
-                    selected = currentTab == tab,
+                    selected = currentTabType == tabType,
                     onClick = {
-                        onTabClick(tab)
+                        onTabClick(tabType)
                     },
                     label = {
-                        Text(text = stringResource(getTabTitleText(tab)), fontSize = 12.sp)
+                        Text(text = stringResource(getTabTitleText(tabType)), fontSize = 12.sp)
                     },
                     shape = CircleShape,
                     border = FilterChipDefaults.filterChipBorder(
                         borderColor = MaterialTheme.colorScheme.outline,
                         enabled = true,
-                        selected = currentTab == tab
+                        selected = currentTabType == tabType
                     )
                 )
             }
@@ -618,7 +584,7 @@ fun ConversationOverviewSystemImMessageItemComponent(
 @Composable
 fun ConversationOverviewSimpleItemComponent(
     modifier: Modifier,
-    currentTab: String,
+    currentTabType: String,
     session: Session,
     onConversionSessionClick: (Session) -> Unit,
 ) {
@@ -699,8 +665,8 @@ fun ConversationOverviewSimpleItemComponent(
                 Text(latestImMessage.readableDate, fontSize = 10.sp)
             }
         }
-        if (currentTab != ConversationUseCase.AI
-            && currentTab != ConversationUseCase.SYSTEM
+        if (currentTabType != ConversationUseCase.AI
+            && currentTabType != ConversationUseCase.SYSTEM
             && !session.imObj.isRelated
         ) {
             Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
@@ -1193,8 +1159,8 @@ fun FriendRequestCard(
     }
 }
 
-private fun getTabEmptyPromptText(tab: String): Int {
-    return when (tab) {
+private fun getTabEmptyPromptText(tabType: String): Int {
+    return when (tabType) {
         ConversationUseCase.USER -> {
             xcj.app.appsets.R.string.empty_personal_list
         }
@@ -1213,8 +1179,8 @@ private fun getTabEmptyPromptText(tab: String): Int {
     }
 }
 
-private fun getTabTitleText(tab: String): Int {
-    return when (tab) {
+private fun getTabTitleText(tabType: String): Int {
+    return when (tabType) {
         ConversationUseCase.AI -> xcj.app.appsets.R.string.generative_ai
         ConversationUseCase.USER -> xcj.app.appsets.R.string.personal
         ConversationUseCase.GROUP -> xcj.app.appsets.R.string.group

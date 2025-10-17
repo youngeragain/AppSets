@@ -755,4 +755,8 @@ private constructor() : ComposeLifecycleAware, UserAccountStateAware {
         val sessions = sessionsMap.values.flatten()
         return sessions
     }
+
+    fun getSessionsByTab(tabType: String): List<Session> {
+        return sessionsMap[tabType] ?: mutableListOf<Session>()
+    }
 }

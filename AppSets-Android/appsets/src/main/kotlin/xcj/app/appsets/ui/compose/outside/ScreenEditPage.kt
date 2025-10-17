@@ -109,7 +109,7 @@ fun ScreenEditPage(
                 backActionBarSize = it.size
             },
             hazeState = hazeState,
-            centerText = "Screen",
+            backButtonText = "Screen",
             onBackClick = {
                 onBackClick()
                 val lastIsPublic = screenInfo?.isPublic == 1

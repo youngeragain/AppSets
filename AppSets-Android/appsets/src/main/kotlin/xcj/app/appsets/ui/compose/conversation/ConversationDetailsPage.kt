@@ -9,7 +9,9 @@ import androidx.activity.OnBackPressedCallback
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -37,7 +39,6 @@ import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.navigationBarsPadding
@@ -65,7 +66,6 @@ import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -132,19 +132,19 @@ import xcj.app.appsets.im.message.VideoMessage
 import xcj.app.appsets.im.message.VoiceMessage
 import xcj.app.appsets.settings.AppSetsModuleSettings
 import xcj.app.appsets.ui.compose.LocalUseCaseOfConversation
+import xcj.app.appsets.ui.compose.LocalUseCaseOfMediaAudioRecorder
 import xcj.app.appsets.ui.compose.LocalUseCaseOfMediaRemoteExo
+import xcj.app.appsets.ui.compose.LocalUseCaseOfNowSpaceContent
+import xcj.app.appsets.ui.compose.LocalUseCaseOfSystem
 import xcj.app.appsets.ui.compose.custom_component.AnyImage
 import xcj.app.appsets.ui.compose.custom_component.BackPressHandler
 import xcj.app.appsets.ui.compose.custom_component.HideNavBar
 import xcj.app.appsets.ui.compose.custom_component.third_part.waveslider.WaveSlider
 import xcj.app.appsets.ui.compose.custom_component.third_part.waveslider.WaveSliderDefaults
 import xcj.app.appsets.usecase.SessionState
-import xcj.app.appsets.util.DesignRecorder
 import xcj.app.appsets.util.ktx.asComponentActivityOrNull
 import xcj.app.appsets.util.model.UriProvider
 import xcj.app.compose_share.components.BackActionTopBar
-import xcj.app.compose_share.components.DesignHDivider
-import xcj.app.compose_share.modifier.combinedClickableSingle
 import xcj.app.starter.android.ktx.startWithHttpSchema
 import xcj.app.starter.android.util.PurpleLogger
 
@@ -157,15 +157,10 @@ var SemanticsPropertyReceiver.keyboardShownProperty by KeyboardShownKey
 @Composable
 fun ConversationDetailsPage(
     sessionState: SessionState,
-    recorderState: DesignRecorder.AudioRecorderState,
     onBackClick: () -> Unit,
     onBioClick: (Bio) -> Unit,
     onImMessageContentClick: (IMMessage<*>) -> Unit,
     onInputMoreAction: (String) -> Unit,
-    onVoiceAction: () -> Unit,
-    onVoiceStopClick: (Boolean) -> Unit,
-    onVoicePauseClick: () -> Unit,
-    onVoiceResumeClick: () -> Unit,
     onMoreClick: ((IMObj) -> Unit),
 ) {
     AnimatedContent(
@@ -182,15 +177,10 @@ fun ConversationDetailsPage(
             is SessionState.Normal -> {
                 SessionObjectNormal(
                     sessionState = targetSessionState,
-                    recorderState = recorderState,
                     onBackClick = onBackClick,
                     onBioClick = onBioClick,
                     onImMessageContentClick = onImMessageContentClick,
                     onInputMoreAction = onInputMoreAction,
-                    onVoiceAction = onVoiceAction,
-                    onVoiceStopClick = onVoiceStopClick,
-                    onVoicePauseClick = onVoicePauseClick,
-                    onVoiceResumeClick = onVoiceResumeClick,
                     onMoreClick = onMoreClick
                 )
             }
@@ -208,15 +198,10 @@ fun SessionObjectNotFound() {
 @Composable
 fun SessionObjectNormal(
     sessionState: SessionState.Normal,
-    recorderState: DesignRecorder.AudioRecorderState,
     onBackClick: () -> Unit,
     onBioClick: (Bio) -> Unit,
     onImMessageContentClick: (IMMessage<*>) -> Unit,
     onInputMoreAction: (String) -> Unit,
-    onVoiceAction: () -> Unit,
-    onVoiceStopClick: (Boolean) -> Unit,
-    onVoicePauseClick: () -> Unit,
-    onVoiceResumeClick: () -> Unit,
     onMoreClick: ((IMObj) -> Unit),
 ) {
     HideNavBar()
@@ -319,19 +304,9 @@ fun SessionObjectNormal(
             session = session,
             quickAccessSessions = quickAccessSessions,
             hazeState = hazeState,
-            isShowJumpToLatestButton = isShowJumpToLatestButton,
             onBackClick = onBackClick,
             onMoreClick = {
                 onMoreClick(session.imObj)
-            },
-            onJumpToLatestClick = {
-                coroutineScope.launch {
-                    if (scrollState.firstVisibleItemIndex > 25) {
-                        scrollState.scrollToItem(0)
-                    } else {
-                        scrollState.animateScrollToItem(0)
-                    }
-                }
             },
             onBioClick = onBioClick,
             onQuickAccessSessionClick = { quickAccessSession ->
@@ -348,7 +323,16 @@ fun SessionObjectNormal(
             inputTextState = inputTextFiledValue,
             textFieldAdviser = textFieldAdviser,
             receiveContentListener = receiveContentListener,
-            recorderState = recorderState,
+            isShowJumpToLatestButton = isShowJumpToLatestButton,
+            onJumpToLatestClick = {
+                coroutineScope.launch {
+                    if (scrollState.firstVisibleItemIndex > 25) {
+                        scrollState.scrollToItem(0)
+                    } else {
+                        scrollState.animateScrollToItem(0)
+                    }
+                }
+            },
             onTextChanged = {
                 inputTextFiledValue = it
                 if (it.text.isEmpty()) {
@@ -382,10 +366,6 @@ fun SessionObjectNormal(
                 }
             },
             onInputMoreAction = onInputMoreAction,
-            onVoiceAction = onVoiceAction,
-            onVoiceStopClick = onVoiceStopClick,
-            onVoicePauseClick = onVoicePauseClick,
-            onVoiceResumeClick = onVoiceResumeClick,
             onRemoveAdviseClick = { advise ->
                 textFieldAdviser.removeAdvise(advise)
                 //remove associate content in receiveContents
@@ -448,10 +428,8 @@ private fun TopBarComponent(
     session: Session,
     quickAccessSessions: List<Session>,
     hazeState: HazeState,
-    isShowJumpToLatestButton: Boolean,
     onBackClick: () -> Unit,
     onMoreClick: () -> Unit,
-    onJumpToLatestClick: () -> Unit,
     onBioClick: (Bio) -> Unit,
     onQuickAccessSessionClick: (Session) -> Unit,
 ) {
@@ -460,58 +438,39 @@ private fun TopBarComponent(
         modifier = modifier
             .fillMaxWidth()
     ) {
-        TopToolBar(
-            session = session,
+        BackActionTopBar(
             hazeState = hazeState,
             onBackClick = onBackClick,
-            onBioClick = onBioClick,
-            onMoreClick = onMoreClick
+            customBackButtonContent = {
+                Row(
+                    modifier = Modifier
+                        .clip(CircleShape)
+                        .clickable(onClick = onMoreClick),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    UserAvatar2Component(
+                        modifier = Modifier
+                            .size(20.dp)
+                            .clip(MaterialTheme.shapes.extraLarge),
+                        imObj = session.imObj
+                    )
+                    Text(
+                        text = session.imObj.name,
+                        modifier = Modifier,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+            }
         )
-
         if (quickAccessSessions.isNotEmpty()) {
             LazyRow(
-                modifier = Modifier
-                    .animateContentSize(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                contentPadding = PaddingValues(horizontal = 6.dp, vertical = 12.dp),
-                verticalAlignment = Alignment.CenterVertically
+                modifier = Modifier,
+                contentPadding = PaddingValues(12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                item {
-                    if (isShowJumpToLatestButton) {
-                        Row(
-                            modifier = Modifier
-                                .clip(CircleShape)
-                                .border(1.dp, MaterialTheme.colorScheme.outline, CircleShape)
-                                .hazeEffect(
-                                    hazeState,
-                                    HazeMaterials.thin()
-                                )
-                                .clickable {
-                                    hapticFeedback.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                    onJumpToLatestClick()
-                                }
-                                .padding(horizontal = 12.dp, vertical = 6.dp)
-                                .animateItem(),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(10.dp)
-                        ) {
-                            Icon(
-                                painter = painterResource(xcj.app.compose_share.R.drawable.ic_keyboard_arrow_down_24),
-                                modifier = Modifier
-                                    .size(20.dp)
-                                    .clip(CircleShape),
-                                contentDescription = null
-                            )
-                            Text(
-                                modifier = Modifier,
-                                text = stringResource(xcj.app.appsets.R.string.show_latest),
-                                fontSize = 12.sp,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                        }
-                    }
-                }
                 items(quickAccessSessions) { session ->
                     Row(
                         modifier = Modifier
@@ -552,54 +511,6 @@ private fun TopBarComponent(
 }
 
 @Composable
-fun TopToolBar(
-    session: Session,
-    hazeState: HazeState,
-    onBackClick: () -> Unit,
-    onBioClick: (Bio) -> Unit,
-    onMoreClick: () -> Unit,
-) {
-    BackActionTopBar(
-        hazeState = hazeState,
-        onBackClick = onBackClick,
-        customCenterContent = {
-            Row(
-                modifier = Modifier
-                    .clickable {
-                        onBioClick(session.imObj.bio)
-                    },
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                UserAvatar2Component(
-                    modifier = Modifier
-                        .size(20.dp)
-                        .clip(MaterialTheme.shapes.extraLarge),
-                    imObj = session.imObj
-                )
-                Text(
-                    text = session.imObj.name,
-                    modifier = Modifier,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
-        },
-        customEndContent = {
-            Icon(
-                painterResource(id = xcj.app.compose_share.R.drawable.ic_outline_more_vert_24),
-                stringResource(id = xcj.app.appsets.R.string.more),
-                modifier = Modifier
-                    .clip(CircleShape)
-                    .clickable(onClick = onMoreClick)
-                    .padding(12.dp)
-            )
-        }
-    )
-}
-
-
-@Composable
 private fun UserAvatarComponent(modifier: Modifier, imMessage: IMMessage<*>) {
     AnyImage(
         modifier = modifier,
@@ -633,9 +544,6 @@ private fun ImMessageListComponent(
         LazyColumn(
             reverseLayout = true,
             state = scrollState,
-            // Add content padding so that the content can be scrolled (y-axis)
-            // below the status bar + app bar
-            // TODO: Get height from somewhere
             contentPadding = PaddingValues(
                 top = WindowInsets.statusBars.asPaddingValues().calculateTopPadding() + 150.dp,
                 bottom = WindowInsets.navigationBars.asPaddingValues()
@@ -648,7 +556,7 @@ private fun ImMessageListComponent(
         ) {
             itemsIndexed(
                 items = messages,
-                key = { index, imMessage -> index }
+                key = { index, imMessage -> imMessage.id }
             ) { _, imMessage ->
                 ImMessageItemWrapperComponent(
                     modifier = Modifier.animateItem(),
@@ -836,7 +744,7 @@ private fun ImMessageItemEndComponent(
 
             AppSetsModuleSettings.IM_BUBBLE_ALIGNMENT_START_END -> {
                 if (
-                    !session.isO2O && imMessage.fromInfo.uid == LocalAccountManager.userInfo.uid
+                    imMessage.fromInfo.uid == LocalAccountManager.userInfo.uid
                 ) {
                     UserAvatarComponent(
                         modifier = Modifier
@@ -1246,7 +1154,7 @@ private fun ImMessageItemStartComponent(
 
             AppSetsModuleSettings.IM_BUBBLE_ALIGNMENT_START_END -> {
                 if (
-                    !session.isO2O && imMessage.fromInfo.uid != LocalAccountManager.userInfo.uid
+                    imMessage.fromInfo.uid != LocalAccountManager.userInfo.uid
                 ) {
                     UserAvatarComponent(
                         modifier = Modifier
@@ -1271,27 +1179,24 @@ private fun UserInputComponent(
     inputTextState: TextFieldValue,
     textFieldAdviser: TextFieldAdviser,
     receiveContentListener: ReceiveContentListener,
-    recorderState: DesignRecorder.AudioRecorderState,
+    isShowJumpToLatestButton: Boolean,
+    onJumpToLatestClick: () -> Unit,
     onTextChanged: (TextFieldValue) -> Unit,
     onSendClick: (Int) -> Unit,
     onSearchIconClick: (String) -> Unit,
     resetScroll: () -> Unit,
     onInputMoreAction: (String) -> Unit,
-    onVoiceAction: () -> Unit,
-    onVoiceStopClick: (Boolean) -> Unit,
-    onVoicePauseClick: () -> Unit,
-    onVoiceResumeClick: () -> Unit,
     onRemoveAdviseClick: (TextFieldAdviser.Advise) -> Unit,
 ) {
-
+    val context = LocalContext.current
     val hapticFeedback = LocalHapticFeedback.current
-
+    val systemUseCase = LocalUseCaseOfSystem.current
+    val nowSpaceContentUseCase = LocalUseCaseOfNowSpaceContent.current
+    val mediaAudioRecorderUseCase = LocalUseCaseOfMediaAudioRecorder.current
+    val coroutineScope = rememberCoroutineScope()
+    var expandUserInput by remember { mutableStateOf(false) }
     var currentInputSelector by rememberSaveable { mutableIntStateOf(InputSelector.NONE) }
-
-    // Used to decide if the keyboard should be shown
     var textFieldFocusState by remember { mutableStateOf(false) }
-
-    // Intercept back navigation if there's a InputSelector visible
     if (currentInputSelector != InputSelector.NONE) {
         val dismissKeyboard: (OnBackPressedCallback?) -> Unit = { callback ->
             currentInputSelector = InputSelector.NONE
@@ -1299,18 +1204,99 @@ private fun UserInputComponent(
         }
         BackPressHandler(onBackPressed = dismissKeyboard)
     }
-    var expandUserInput by remember { mutableStateOf(false) }
-
 
     Column(
-        modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        modifier = modifier
+            .navigationBarsPadding(),
+    ) {
+        AnimatedVisibility(textFieldAdviser.advises.isNotEmpty()) {
+            InputSuggestionsSpace(
+                hazeState = hazeState,
+                textFieldAdviser = textFieldAdviser,
+                onSendClick = onSendClick,
+                resetScroll = resetScroll,
+                onRemoveAdviseClick = onRemoveAdviseClick
+            )
+        }
+
+        UserInputActionsSpace(
+            textFieldValue = inputTextState,
+            hazeState = hazeState,
+            expandUserInput = expandUserInput,
+            // Only show the keyboard if there's no input selector and text field has focus
+            isShowJumpToLatestButton = isShowJumpToLatestButton,
+            onExpandUserInputClick = {
+                hapticFeedback.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                expandUserInput = !expandUserInput
+            },
+            // Close extended selector if text field receives focus
+
+            onInputMoreAction = { action ->
+                hapticFeedback.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                onInputMoreAction(action)
+            },
+            onSendClick = {
+                hapticFeedback.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                expandUserInput = false
+                onSendClick(currentInputSelector)
+                resetScroll()
+            },
+            onSearchIconClick = { keywords ->
+                hapticFeedback.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                onSearchIconClick(keywords)
+            },
+            onJumpToLatestClick = onJumpToLatestClick
+        )
+
+
+        UserInputTextSpace(
+            textFieldValue = inputTextState,
+            hazeState = hazeState,
+            onTextChanged = onTextChanged,
+            receiveContentListener = receiveContentListener,
+            expandUserInput = expandUserInput,
+            // Only show the keyboard if there's no input selector and text field has focus
+            keyboardShown = currentInputSelector == InputSelector.NONE && textFieldFocusState,
+            focusState = textFieldFocusState,
+            // Close extended selector if text field receives focus
+            onTextFieldFocused = { focused ->
+                if (focused) {
+                    currentInputSelector = InputSelector.NONE
+                    resetScroll()
+                }
+                textFieldFocusState = focused
+            },
+            onSendClick = {
+                hapticFeedback.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                expandUserInput = false
+                onSendClick(currentInputSelector)
+                resetScroll()
+            }
+        )
+    }
+}
+
+@Composable
+fun InputSuggestionsSpace(
+    modifier: Modifier = Modifier,
+    hazeState: HazeState,
+    textFieldAdviser: TextFieldAdviser,
+    onSendClick: (Int) -> Unit,
+    resetScroll: () -> Unit,
+    onRemoveAdviseClick: (TextFieldAdviser.Advise) -> Unit,
+) {
+    val hapticFeedback = LocalHapticFeedback.current
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.End
     ) {
         LazyRow(
+            modifier = modifier,
             reverseLayout = true,
             contentPadding = PaddingValues(horizontal = 12.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
+        )
+        {
             items(textFieldAdviser.advises) { advise ->
                 Row(
                     modifier = Modifier
@@ -1396,320 +1382,128 @@ private fun UserInputComponent(
                 }
             }
         }
-        Column(
-            modifier = Modifier
-                .hazeEffect(
-                    hazeState,
-                    HazeMaterials.thin()
-                )
-                .navigationBarsPadding()
-                .animateContentSize(alignment = Alignment.BottomCenter)
-        ) {
-            UserInputText(
-                textFieldValue = inputTextState,
-                onTextChanged = onTextChanged,
-                textFieldAdviser = textFieldAdviser,
-                receiveContentListener = receiveContentListener,
-                expandUserInput = expandUserInput,
-                // Only show the keyboard if there's no input selector and text field has focus
-                keyboardShown = currentInputSelector == InputSelector.NONE && textFieldFocusState,
-                focusState = textFieldFocusState,
-                onExpandUserInputClick = {
-                    hapticFeedback.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                    expandUserInput = !expandUserInput
-                },
-                // Close extended selector if text field receives focus
-                onTextFieldFocused = { focused ->
-                    if (focused) {
-                        currentInputSelector = InputSelector.NONE
-                        resetScroll()
-                    }
-                    textFieldFocusState = focused
-                },
-                onInputMoreAction = { action ->
-                    hapticFeedback.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                    onInputMoreAction(action)
-                },
-                onSendClick = {
-                    hapticFeedback.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                    expandUserInput = false
-                    onSendClick(currentInputSelector)
-                    resetScroll()
-                },
-                onSearchIconClick = { keywords ->
-                    hapticFeedback.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                    onSearchIconClick(keywords)
-                },
-                onVoiceAction = {
-                    hapticFeedback.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                    onVoiceAction()
-                }
-            )
-
-            AudioRecordSpace(
-                recorderState = recorderState,
-                onStopClick = onVoiceStopClick,
-                onPauseClick = onVoicePauseClick,
-                onResumeClick = onVoiceResumeClick
-            )
-        }
+        Spacer(modifier = Modifier.height(6.dp))
     }
 }
 
 @Composable
-fun AudioRecordSpace(
-    recorderState: DesignRecorder.AudioRecorderState,
-    onStopClick: (Boolean) -> Unit,
-    onPauseClick: () -> Unit,
-    onResumeClick: () -> Unit,
-) {
-    Box(
-        Modifier
-            .fillMaxWidth(),
-        contentAlignment = Alignment.Center
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(24.dp)
-        ) {
-            LaunchedEffect(recorderState.seconds) {
-                if (recorderState.seconds == recorderState.maxRecordSeconds) {
-                    PurpleLogger.current.d(TAG, "auto send record audio by reached max seconds!")
-                    onStopClick(true)
-                }
-            }
-            if (recorderState.isStarted) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(2.dp)
-                ) {
-                    Text(
-                        text = String.format(
-                            stringResource(xcj.app.appsets.R.string.auto_send_if_x_seconds),
-                            recorderState.maxRecordSeconds
-                        ),
-                        fontSize = 8.sp
-                    )
-                    Text(
-                        modifier = Modifier.combinedClickableSingle(
-                            onClick = {
-                                onStopClick(false)
-                            }
-                        ),
-                        text = stringResource(xcj.app.appsets.R.string.click_to_stop),
-                        fontSize = 12.sp
-                    )
-                }
-                Row(
-                    verticalAlignment = Alignment.Top,
-                    horizontalArrangement = Arrangement.spacedBy(2.dp)
-                ) {
-                    val seconds = "${recorderState.seconds}"
-                    AnimatedContent(
-                        targetState = seconds,
-                        transitionSpec = {
-                            fadeIn(tween()) + slideInVertically(
-                                tween(),
-                                initialOffsetY = { it }) togetherWith fadeOut(
-                                tween()
-                            ) + slideOutVertically(tween(), targetOffsetY = { -it })
-                        }
-                    ) { targetSeconds ->
-                        Text(
-                            text = targetSeconds,
-                            fontSize = 52.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                    Text(
-                        text = "s",
-                        fontSize = 52.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-                Row(
-                    modifier = Modifier.animateContentSize(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    TextButton(onClick = {
-                        if (!recorderState.isStarted) {
-                            return@TextButton
-                        }
-                        if (recorderState.isPaused) {
-                            onResumeClick()
-                        } else {
-                            onPauseClick()
-                        }
-                    }) {
-                        val textRes = if (recorderState.isPaused) {
-                            xcj.app.appsets.R.string.resume
-                        } else {
-                            xcj.app.appsets.R.string.pause
-                        }
-                        Text(text = stringResource(textRes))
-                    }
-                    if (recorderState.isPaused) {
-                        TextButton(onClick = {
-                            onStopClick(true)
-                        }) {
-                            Text(text = stringResource(xcj.app.appsets.R.string.send))
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun UserInputText(
-    keyboardType: KeyboardType = KeyboardType.Text,
+fun UserInputActionsSpace(
+    modifier: Modifier = Modifier,
+    hazeState: HazeState,
     textFieldValue: TextFieldValue,
-    textFieldAdviser: TextFieldAdviser,
-    receiveContentListener: ReceiveContentListener,
     expandUserInput: Boolean,
-    keyboardShown: Boolean,
-    focusState: Boolean,
+    isShowJumpToLatestButton: Boolean,
     onExpandUserInputClick: () -> Unit,
-    onTextChanged: (TextFieldValue) -> Unit,
-    onTextFieldFocused: (Boolean) -> Unit,
     onInputMoreAction: (String) -> Unit,
     onSendClick: () -> Unit,
     onSearchIconClick: (String) -> Unit,
-    onVoiceAction: () -> Unit,
+    onJumpToLatestClick: () -> Unit
 ) {
-
     val context = LocalContext.current
-
-    val activity = context.asComponentActivityOrNull()
-
-
-    val userInputTargetHeight = getUserInputHeight(activity, expandUserInput)
-
-    val userInputHeightState by animateDpAsState(
-        targetValue = userInputTargetHeight,
-        animationSpec = tween()
-    )
-
-    var lastFocusState by remember { mutableStateOf(false) }
-
-
+    val hapticFeedback = LocalHapticFeedback.current
+    val systemUseCase = LocalUseCaseOfSystem.current
+    val nowSpaceContentUseCase = LocalUseCaseOfNowSpaceContent.current
+    val mediaAudioRecorderUseCase = LocalUseCaseOfMediaAudioRecorder.current
+    val coroutineScope = rememberCoroutineScope()
+    var isShowAudioRecorder by remember {
+        mutableStateOf(false)
+    }
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .semantics {
-                contentDescription =
-                    ContextCompat.getString(context, xcj.app.appsets.R.string.input_something)
-                keyboardShownProperty = keyboardShown
-                //spk.setValue(keyboardShown)
-            }
+        modifier = modifier
     ) {
-        Box(Modifier.padding(horizontal = 12.dp)) {
-            val boxModifier = if (expandUserInput) {
-                Modifier
-                    .height(userInputHeightState)
-                    .border(
-                        2.dp, MaterialTheme.colorScheme.primaryContainer,
-                        MaterialTheme.shapes.extraLarge
-                    )
-                    .clip(MaterialTheme.shapes.extraLarge)
-            } else {
-                Modifier
-                    .height(userInputHeightState)
-            }
-
-            Box(modifier = boxModifier) {
-                BasicTextField(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(start = 12.dp)
-                        .align(Alignment.CenterStart)
-                        .onFocusChanged { state ->
-                            if (lastFocusState != state.isFocused) {
-                                onTextFieldFocused(state.isFocused)
-                            }
-                            lastFocusState = state.isFocused
-                        }
-                        .contentReceiver(receiveContentListener),
-                    value = textFieldValue,
-                    onValueChange = {
-                        onTextChanged(it)
-                    },
-                    keyboardActions = KeyboardActions(
-                        onSend = {
-                            onSendClick()
-                        }
-                    ),
-                    keyboardOptions = KeyboardOptions(
-                        keyboardType = keyboardType,
-                        imeAction = ImeAction.Send
-                    ),
-                    maxLines = if (expandUserInput) {
-                        Int.MAX_VALUE
-                    } else {
-                        5
-                    },
-                    cursorBrush = SolidColor(LocalContentColor.current),
-                    textStyle = LocalTextStyle.current.copy(color = LocalContentColor.current)
-                )
-
-                val disableContentColor =
-                    MaterialTheme.colorScheme.onSurfaceVariant
-                if (textFieldValue.text.isEmpty() || !focusState) {
-                    Text(
-                        modifier = Modifier
-                            .align(Alignment.CenterStart)
-                            .padding(start = 12.dp),
-                        text = stringResource(xcj.app.appsets.R.string.text_something),
-                        style = MaterialTheme.typography.bodyLarge.copy(color = disableContentColor)
-                    )
-                }
-            }
-        }
-
-        if (!expandUserInput) {
-            DesignHDivider(modifier = Modifier)
-        }
-        Spacer(Modifier.heightIn(8.dp))
         Box(
-            modifier = Modifier
+            modifier = modifier
                 .fillMaxWidth()
                 .height(48.dp)
                 .padding(horizontal = 12.dp)
-        ) {
+        )
+        {
             Row(
                 modifier = Modifier
                     .align(Alignment.CenterStart),
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(
-                    tint = MaterialTheme.colorScheme.primary,
-                    painter = painterResource(id = xcj.app.compose_share.R.drawable.ic_round_add_circle_outline_24),
-                    contentDescription = stringResource(xcj.app.appsets.R.string.more_action),
+                Row(
                     modifier = Modifier
-                        .size(32.dp)
                         .clip(CircleShape)
-                        .clickable(
-                            onClick = {
-                                onInputMoreAction("IM_CONTENT_SELECT_REQUEST")
+                        .hazeEffect(hazeState, HazeMaterials.thin())
+                        .clickable(onClick = {
+                            onInputMoreAction("IM_CONTENT_SELECT_REQUEST")
+                        })
+                        .border(1.dp, MaterialTheme.colorScheme.outline, CircleShape)
+                        .padding(12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Icon(
+                        painter = painterResource(id = xcj.app.compose_share.R.drawable.ic_round_add_24),
+                        contentDescription = stringResource(xcj.app.appsets.R.string.more_action)
+                    )
+                }
+                Row(
+                    modifier = Modifier
+                        .clip(CircleShape)
+                        .hazeEffect(hazeState, HazeMaterials.thin())
+                        .clickable(onClick = {
+                            hapticFeedback.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                            isShowAudioRecorder = true
+                            coroutineScope.launch {
+                                mediaAudioRecorderUseCase.startRecord(
+                                    context,
+                                    systemUseCase,
+                                    nowSpaceContentUseCase
+                                )
+                            }
+                        })
+                        .border(1.dp, MaterialTheme.colorScheme.outline, CircleShape)
+                        .padding(12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Icon(
+                        painter = painterResource(id = xcj.app.compose_share.R.drawable.ic_outline_keyboard_voice_24),
+                        contentDescription = stringResource(xcj.app.appsets.R.string.voice_action),
+                    )
+
+                    AnimatedVisibility(isShowAudioRecorder) {
+                        AudioRecordSpace(
+                            onStopCallback = {
+                                isShowAudioRecorder = false
                             }
                         )
-                )
-                Icon(
-                    tint = MaterialTheme.colorScheme.primary,
-                    painter = painterResource(id = xcj.app.compose_share.R.drawable.ic_outline_keyboard_voice_24),
-                    contentDescription = stringResource(xcj.app.appsets.R.string.voice_action),
-                    modifier = Modifier
-                        .size(32.dp)
-                        .clip(CircleShape)
-                        .combinedClickableSingle(
-                            onClick = {
-                                onVoiceAction()
-                            }
+                    }
+                }
+                AnimatedVisibility(isShowJumpToLatestButton) {
+                    Row(
+                        modifier = Modifier
+                            .clip(CircleShape)
+                            .border(1.dp, MaterialTheme.colorScheme.outline, CircleShape)
+                            .hazeEffect(
+                                hazeState,
+                                HazeMaterials.thin()
+                            )
+                            .clickable(onClick = onJumpToLatestClick)
+                            .padding(12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Icon(
+                            painter = painterResource(xcj.app.compose_share.R.drawable.ic_keyboard_arrow_down_24),
+                            modifier = Modifier
+                                .size(20.dp)
+                                .clip(CircleShape),
+                            contentDescription = null
                         )
-                )
+                        Text(
+                            modifier = Modifier,
+                            text = stringResource(xcj.app.appsets.R.string.latest),
+                            fontSize = 12.sp,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                }
             }
 
             androidx.compose.animation.AnimatedVisibility(
@@ -1728,42 +1522,45 @@ private fun UserInputText(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    IconButton(
-                        modifier = Modifier,
-                        onClick = {
-                            onExpandUserInputClick()
+                    AnimatedContent(
+                        targetState = expandUserInput,
+                        transitionSpec = {
+                            fadeIn() togetherWith fadeOut()
                         },
-                        colors = IconButtonDefaults.iconButtonColors(
-                            containerColor = MaterialTheme.colorScheme.primaryContainer
-                        )
-                    ) {
-
-                        AnimatedContent(
-                            targetState = expandUserInput,
-                            transitionSpec = {
-                                fadeIn() togetherWith fadeOut()
-                            },
-                            contentAlignment = Alignment.Center
-                        ) { targetExpandUserInput ->
-                            val expandIconRes = if (targetExpandUserInput) {
-                                xcj.app.compose_share.R.drawable.ic_round_close_fullscreen_24
-                            } else {
-                                xcj.app.compose_share.R.drawable.ic_open_in_full_24px
-                            }
+                        contentAlignment = Alignment.Center
+                    ) { targetExpandUserInput ->
+                        val expandIconRes = if (targetExpandUserInput) {
+                            xcj.app.compose_share.R.drawable.ic_round_close_fullscreen_24
+                        } else {
+                            xcj.app.compose_share.R.drawable.ic_open_in_full_24px
+                        }
+                        Row(
+                            modifier = Modifier
+                                .clip(CircleShape)
+                                .hazeEffect(hazeState, HazeMaterials.thin())
+                                .clickable(onClick = onExpandUserInputClick)
+                                .border(1.dp, MaterialTheme.colorScheme.outline, CircleShape)
+                                .padding(12.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
                             Icon(
                                 painter = painterResource(id = expandIconRes),
                                 contentDescription = stringResource(id = xcj.app.appsets.R.string.send)
                             )
                         }
                     }
-                    IconButton(
-                        modifier = Modifier,
-                        onClick = {
-                            onSearchIconClick(textFieldValue.text)
-                        },
-                        colors = IconButtonDefaults.iconButtonColors(
-                            containerColor = MaterialTheme.colorScheme.primaryContainer
-                        )
+                    Row(
+                        modifier = Modifier
+                            .clip(CircleShape)
+                            .hazeEffect(hazeState, HazeMaterials.thin())
+                            .clickable(onClick = {
+                                onSearchIconClick(textFieldValue.text)
+                            })
+                            .border(1.dp, MaterialTheme.colorScheme.outline, CircleShape)
+                            .padding(12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         Icon(
                             painter = painterResource(id = xcj.app.compose_share.R.drawable.ic_round_search_24),
@@ -1771,14 +1568,15 @@ private fun UserInputText(
                         )
                     }
 
-                    IconButton(
-                        modifier = Modifier,
-                        onClick = {
-                            onSendClick()
-                        },
-                        colors = IconButtonDefaults.iconButtonColors(
-                            containerColor = MaterialTheme.colorScheme.primaryContainer
-                        )
+                    Row(
+                        modifier = Modifier
+                            .clip(CircleShape)
+                            .hazeEffect(hazeState, HazeMaterials.thin())
+                            .clickable(onClick = onSendClick)
+                            .border(1.dp, MaterialTheme.colorScheme.outline, CircleShape)
+                            .padding(12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         Icon(
                             painter = painterResource(id = xcj.app.compose_share.R.drawable.ic_send_24),
@@ -1788,7 +1586,250 @@ private fun UserInputText(
                 }
             }
         }
-        Spacer(modifier = Modifier.height(16.dp))
+
+        Spacer(modifier = Modifier.height(6.dp))
+    }
+}
+
+@Composable
+fun AudioRecordSpace(
+    modifier: Modifier = Modifier,
+    onStopCallback: () -> Unit,
+) {
+    val context = LocalContext.current
+    val conversationUseCase = LocalUseCaseOfConversation.current
+    val mediaAudioRecorderUseCase = LocalUseCaseOfMediaAudioRecorder.current
+    val recorderState by mediaAudioRecorderUseCase.recorderState
+    val coroutineScope = rememberCoroutineScope()
+
+    val stopCallback = remember {
+        { shouldSend: Boolean ->
+            onStopCallback()
+            coroutineScope.launch {
+                mediaAudioRecorderUseCase.stopRecord("UI click")
+                if (!shouldSend) {
+                    mediaAudioRecorderUseCase.cleanUp("user stop")
+                    return@launch
+                }
+                val uriProvider = mediaAudioRecorderUseCase.getRecordFileUriProvider()
+                if (uriProvider == null) {
+                    return@launch
+                }
+                conversationUseCase.sendMessage(
+                    context,
+                    InputSelector.VOICE,
+                    uriProvider
+                )
+            }
+        }
+    }
+
+    LaunchedEffect(recorderState) {
+        if (recorderState.seconds == recorderState.maxRecordSeconds) {
+            PurpleLogger.current.d(TAG, "auto send record audio by reached max seconds!")
+            val shouldSend = true
+            stopCallback(shouldSend)
+        }
+    }
+    Row(
+        modifier = modifier.animateContentSize(),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Row(
+            modifier = Modifier.padding(4.dp)
+        ) {
+            AnimatedContent(
+                targetState = recorderState.seconds,
+                transitionSpec = {
+                    fadeIn(tween()) + slideInVertically(
+                        tween(),
+                        initialOffsetY = { it }) togetherWith fadeOut(
+                        tween()
+                    ) + slideOutVertically(tween(), targetOffsetY = { -it })
+                }
+            ) { targetSeconds ->
+                Text(
+                    text = "$targetSeconds",
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+            Text(
+                text = "s",
+                fontSize = 10.sp
+            )
+        }
+        if (recorderState.isStarted) {
+            Row(
+                modifier = Modifier.animateContentSize(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    modifier = Modifier
+                        .clickable(
+                            onClick = {
+                                val shouldSend = false
+                                stopCallback(shouldSend)
+                            }
+                        )
+                        .padding(4.dp),
+                    text = stringResource(xcj.app.appsets.R.string.stop),
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.Bold
+                )
+                val textRes = if (recorderState.isPaused) {
+                    xcj.app.appsets.R.string.resume
+                } else {
+                    xcj.app.appsets.R.string.pause
+                }
+                Text(
+                    modifier = Modifier
+                        .clickable(
+                            onClick = {
+                                if (recorderState.isPaused) {
+                                    mediaAudioRecorderUseCase.resumeRecord("UI click")
+                                } else {
+                                    mediaAudioRecorderUseCase.pauseRecord("UI click")
+                                }
+                            }
+                        )
+                        .padding(4.dp),
+                    text = stringResource(textRes),
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.Bold
+                )
+
+                if (recorderState.isPaused) {
+                    Text(
+                        modifier = Modifier
+                            .clickable(
+                                onClick = {
+                                    val shouldSend = true
+                                    stopCallback(shouldSend)
+                                }
+                            )
+                            .padding(4.dp),
+                        text = stringResource(xcj.app.appsets.R.string.send),
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun UserInputTextSpace(
+    modifier: Modifier = Modifier,
+    hazeState: HazeState,
+    keyboardType: KeyboardType = KeyboardType.Text,
+    textFieldValue: TextFieldValue,
+    receiveContentListener: ReceiveContentListener,
+    expandUserInput: Boolean,
+    keyboardShown: Boolean,
+    focusState: Boolean,
+    onTextChanged: (TextFieldValue) -> Unit,
+    onTextFieldFocused: (Boolean) -> Unit,
+    onSendClick: () -> Unit,
+) {
+
+    val context = LocalContext.current
+
+    val activity = context.asComponentActivityOrNull()
+
+
+    val userInputTargetHeight = getUserInputHeight(activity, expandUserInput)
+
+    val userInputHeightState by animateDpAsState(
+        targetValue = userInputTargetHeight,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessLow
+        )
+    )
+
+    var lastFocusState by remember { mutableStateOf(false) }
+
+
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 12.dp)
+            .semantics {
+                contentDescription =
+                    ContextCompat.getString(context, xcj.app.appsets.R.string.input_something)
+                keyboardShownProperty = keyboardShown
+                //spk.setValue(keyboardShown)
+            }
+    ) {
+        val boxModifier = if (expandUserInput) {
+            Modifier
+                .height(userInputHeightState)
+                .border(
+                    2.dp, MaterialTheme.colorScheme.primaryContainer,
+                    MaterialTheme.shapes.extraLarge
+                )
+                .clip(MaterialTheme.shapes.extraLarge)
+        } else {
+            Modifier
+                .height(userInputHeightState)
+                .clip(CircleShape)
+        }
+        Box(
+            boxModifier
+                .hazeEffect(hazeState, HazeMaterials.thin())
+        )
+        {
+
+            BasicTextField(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 12.dp)
+                    .align(Alignment.CenterStart)
+                    .onFocusChanged { state ->
+                        if (lastFocusState != state.isFocused) {
+                            onTextFieldFocused(state.isFocused)
+                        }
+                        lastFocusState = state.isFocused
+                    }
+                    .contentReceiver(receiveContentListener),
+                value = textFieldValue,
+                onValueChange = {
+                    onTextChanged(it)
+                },
+                keyboardActions = KeyboardActions(
+                    onSend = {
+                        onSendClick()
+                    }
+                ),
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = keyboardType,
+                    imeAction = ImeAction.Send
+                ),
+                maxLines = if (expandUserInput) {
+                    Int.MAX_VALUE
+                } else {
+                    5
+                },
+                cursorBrush = SolidColor(LocalContentColor.current),
+                textStyle = LocalTextStyle.current.copy(color = LocalContentColor.current)
+            )
+
+            val disableContentColor =
+                MaterialTheme.colorScheme.onSurfaceVariant
+            if (textFieldValue.text.isEmpty() || !focusState) {
+                Text(
+                    modifier = Modifier
+                        .align(Alignment.CenterStart)
+                        .padding(start = 12.dp),
+                    text = stringResource(xcj.app.appsets.R.string.text_something),
+                    style = MaterialTheme.typography.bodyLarge.copy(color = disableContentColor)
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(6.dp))
     }
 }
 

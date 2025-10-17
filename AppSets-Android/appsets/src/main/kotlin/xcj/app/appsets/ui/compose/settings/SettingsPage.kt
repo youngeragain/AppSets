@@ -97,7 +97,7 @@ fun SettingsPage(
                 backActionBarSize = it.size
             },
             hazeState = hazeState,
-            centerText = stringResource(xcj.app.appsets.R.string.settings),
+            backButtonText = stringResource(xcj.app.appsets.R.string.settings),
             onBackClick = onBackClick
         )
     }

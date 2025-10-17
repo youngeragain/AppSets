@@ -494,7 +494,7 @@ fun CreateAppPage(
 
         }
 
-        val backButtonRightText =
+        val backButtonText =
             if (createStep != ApplicationForCreate.CREATE_STEP_APPLICATION) {
                 "Add $createStep"
             } else {
@@ -506,7 +506,7 @@ fun CreateAppPage(
             },
             hazeState = hazeState,
             onBackClick = onBackClick,
-            centerText = backButtonRightText,
+            backButtonText = backButtonText,
             endButtonText = stringResource(id = xcj.app.appsets.R.string.ok),
             onEndButtonClick = onConfirmClick
         )

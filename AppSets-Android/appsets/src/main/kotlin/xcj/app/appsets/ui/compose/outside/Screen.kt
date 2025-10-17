@@ -179,16 +179,19 @@ private fun ScreenSectionOfTopActionsPart(
                             0
                         }
                     }
-                    if (videoCount > 0 && pictureCount > 0) {
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(2.dp)
-                        ) {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(2.dp)
+                    ) {
+                        if (videoCount > 0) {
                             Text(
                                 text = stringResource(
                                     xcj.app.appsets.R.string.x_videos,
                                     videoCount
-                                ), fontSize = 12.sp
+                                ),
+                                fontSize = 12.sp
                             )
+                        }
+                        if (pictureCount > 0) {
                             Text(
                                 text = stringResource(
                                     xcj.app.appsets.R.string.x_pictures,
@@ -196,18 +199,6 @@ private fun ScreenSectionOfTopActionsPart(
                                 ), fontSize = 12.sp
                             )
                         }
-                    } else if (videoCount > 0) {
-                        Text(
-                            text = stringResource(xcj.app.appsets.R.string.x_videos, videoCount),
-                            fontSize = 12.sp
-                        )
-                    } else if (pictureCount > 0) {
-                        Text(
-                            text = stringResource(
-                                xcj.app.appsets.R.string.x_pictures,
-                                pictureCount
-                            ), fontSize = 12.sp
-                        )
                     }
                 },
                 shape = CircleShape

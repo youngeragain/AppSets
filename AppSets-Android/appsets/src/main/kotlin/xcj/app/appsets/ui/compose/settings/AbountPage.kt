@@ -170,7 +170,7 @@ fun AboutPage(
             },
             hazeState = hazeState,
             onBackClick = onBackClick,
-            centerText = stringResource(xcj.app.appsets.R.string.about)
+            backButtonText = stringResource(xcj.app.appsets.R.string.about)
         )
     }
 }

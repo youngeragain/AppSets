@@ -376,7 +376,7 @@ fun ToolFileManagerPage(
             },
             hazeState = hazeState,
             onBackClick = onBackClick,
-            centerText = stringResource(xcj.app.appsets.R.string.file_manager)
+            backButtonText = stringResource(xcj.app.appsets.R.string.file_manager)
         )
     }
 
