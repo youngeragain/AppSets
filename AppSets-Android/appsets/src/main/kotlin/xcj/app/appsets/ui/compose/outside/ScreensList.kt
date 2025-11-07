@@ -7,24 +7,25 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.ScrollableState
-import androidx.compose.foundation.interaction.Interaction
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
-import androidx.compose.foundation.layout.windowInsetsTopHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.lazy.staggeredgrid.LazyStaggeredGridState
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.itemsIndexed
+import androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -36,43 +37,47 @@ import androidx.compose.ui.unit.dp
 import xcj.app.appsets.im.Bio
 import xcj.app.appsets.server.model.ScreenInfo
 import xcj.app.appsets.server.model.ScreenMediaFileUrl
-import xcj.app.appsets.ui.compose.PageRouteNames
+import xcj.app.appsets.ui.compose.custom_component.LoadMoreHandler
 
 private const val TAG = "ScreensList"
 
 @Composable
 fun ScreensList(
     modifier: Modifier,
-    currentDestinationRoute: String,
     screens: List<ScreenInfo>,
-    scrollableState: ScrollableState,
     onBioClick: (Bio) -> Unit,
-    pictureInteractionFlowCollector: (Interaction, ScreenMediaFileUrl) -> Unit,
     onScreenMediaClick: (ScreenMediaFileUrl, List<ScreenMediaFileUrl>) -> Unit,
-    headerContent: (@Composable () -> Unit)? = null,
+    onLoadMore: () -> Unit
 ) {
     val configuration = LocalConfiguration.current
+
     if (configuration.orientation == Configuration.ORIENTATION_PORTRAIT) {
+        val scrollableState = rememberLazyListState()
+
+        LoadMoreHandler(scrollableState = scrollableState) {
+            onLoadMore()
+        }
+
         PortraitScreenList(
             modifier = modifier,
             scrollableState = scrollableState,
-            currentDestinationRoute = currentDestinationRoute,
             screens = screens,
             onBioClick = onBioClick,
-            pictureInteractionFlowCollector = pictureInteractionFlowCollector,
-            onScreenMediaClick = onScreenMediaClick,
-            headerContent = headerContent
+            onScreenMediaClick = onScreenMediaClick
         )
     } else {
+        val scrollableState = rememberLazyStaggeredGridState()
+
+        LoadMoreHandler(scrollableState = scrollableState) {
+            onLoadMore()
+        }
+
         LandscapeScreenList(
             modifier = modifier,
             scrollableState = scrollableState,
-            currentDestinationRoute = currentDestinationRoute,
             screens = screens,
             onBioClick = onBioClick,
-            pictureInteractionFlowCollector = pictureInteractionFlowCollector,
-            onScreenMediaClick = onScreenMediaClick,
-            headerContent = headerContent
+            onScreenMediaClick = onScreenMediaClick
         )
     }
 }
@@ -80,27 +85,26 @@ fun ScreensList(
 @Composable
 private fun LandscapeScreenList(
     modifier: Modifier,
-    currentDestinationRoute: String,
     screens: List<ScreenInfo>,
     scrollableState: ScrollableState,
     onBioClick: (Bio) -> Unit,
-    pictureInteractionFlowCollector: (Interaction, ScreenMediaFileUrl) -> Unit,
     onScreenMediaClick: (ScreenMediaFileUrl, List<ScreenMediaFileUrl>) -> Unit,
     headerContent: (@Composable () -> Unit)? = null,
 ) {
     LazyVerticalStaggeredGrid(
+        modifier = modifier,
         columns = StaggeredGridCells.Fixed(3),
-        contentPadding = PaddingValues(horizontal = 12.dp),
+        contentPadding = PaddingValues(
+            start = 12.dp,
+            top = WindowInsets.statusBars.asPaddingValues().calculateTopPadding(),
+            end = 12.dp,
+            bottom = 150.dp
+        ),
         horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
         verticalItemSpacing = 6.dp,
         state = scrollableState as LazyStaggeredGridState
     )
     {
-        if (currentDestinationRoute == PageRouteNames.OutSidePage) {
-            items(3) {
-                Spacer(modifier = Modifier.windowInsetsTopHeight(WindowInsets.statusBars))
-            }
-        }
         item {
             headerContent?.invoke()
         }
@@ -124,10 +128,8 @@ private fun LandscapeScreenList(
                     .padding(12.dp)
             ) {
                 Screen(
-                    currentPageRoute = currentDestinationRoute,
                     screenInfo = screenInfo,
                     onBioClick = onBioClick,
-                    pictureInteractionFlowCollector = pictureInteractionFlowCollector,
                     onScreenMediaClick = onScreenMediaClick
                 )
             }
@@ -141,30 +143,22 @@ private fun LandscapeScreenList(
 @Composable
 private fun PortraitScreenList(
     modifier: Modifier,
-    currentDestinationRoute: String,
     screens: List<ScreenInfo>,
     scrollableState: ScrollableState,
     onBioClick: (Bio) -> Unit,
-    pictureInteractionFlowCollector: (Interaction, ScreenMediaFileUrl) -> Unit,
     onScreenMediaClick: (ScreenMediaFileUrl, List<ScreenMediaFileUrl>) -> Unit,
-    headerContent: (@Composable () -> Unit)? = null,
 ) {
     LazyColumn(
         modifier = modifier,
-        contentPadding = PaddingValues(horizontal = 12.dp),
+        contentPadding = PaddingValues(
+            start = 12.dp,
+            top = WindowInsets.statusBars.asPaddingValues().calculateTopPadding(),
+            end = 12.dp,
+            bottom = 150.dp
+        ),
         verticalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterVertically),
         state = scrollableState as LazyListState
     ) {
-        if (currentDestinationRoute != PageRouteNames.UserProfilePage) {
-            item {
-                Spacer(modifier = Modifier.windowInsetsTopHeight(WindowInsets.statusBars))
-            }
-        }
-        if (headerContent != null) {
-            item {
-                headerContent()
-            }
-        }
         itemsIndexed(
             items = screens,
             key = { index, screenInfo ->
@@ -190,17 +184,11 @@ private fun PortraitScreenList(
                     .padding(12.dp)
             ) {
                 Screen(
-                    currentPageRoute = currentDestinationRoute,
                     screenInfo = screenInfo,
                     onBioClick = onBioClick,
-                    pictureInteractionFlowCollector = pictureInteractionFlowCollector,
                     onScreenMediaClick = onScreenMediaClick
                 )
             }
-        }
-
-        item {
-            Spacer(modifier = Modifier.height(82.dp))
         }
     }
 }

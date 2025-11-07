@@ -1,4 +1,4 @@
-@file:OptIn(ExperimentalHazeMaterialsApi::class)
+@file:OptIn(ExperimentalHazeMaterialsApi::class, ExperimentalMaterial3ExpressiveApi::class)
 
 package xcj.app.appsets.ui.compose.search
 
@@ -41,7 +41,9 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
@@ -80,15 +82,13 @@ import dev.chrisbanes.haze.rememberHazeState
 import kotlinx.coroutines.launch
 import xcj.app.appsets.im.Bio
 import xcj.app.appsets.server.model.GroupInfo
-import xcj.app.appsets.server.model.ScreenInfo
 import xcj.app.appsets.server.model.ScreenMediaFileUrl
 import xcj.app.appsets.server.model.UserInfo
 import xcj.app.appsets.ui.compose.LocalUseCaseOfSearch
-import xcj.app.appsets.ui.compose.PageRouteNames
 import xcj.app.appsets.ui.compose.apps.SingleApplicationComponent
 import xcj.app.appsets.ui.compose.custom_component.AnyImage
 import xcj.app.appsets.ui.compose.custom_component.ShowNavBar
-import xcj.app.appsets.ui.compose.outside.Screen
+import xcj.app.appsets.ui.compose.outside.ScreensList
 import xcj.app.appsets.ui.model.page_state.SearchPageState
 import xcj.app.appsets.ui.model.state.SearchResult
 import xcj.app.compose_share.components.DesignTextField
@@ -160,7 +160,7 @@ fun SearchInputBar(
             modifier = Modifier
                 .fillMaxWidth()
                 .border(
-                    border = searchBorderStroke(searchPageState), shape = CircleShape
+                    width = 1.dp, color = MaterialTheme.colorScheme.outline, shape = CircleShape
                 )
                 .clip(CircleShape)
                 .hazeEffect(
@@ -215,7 +215,7 @@ fun SearchInputBar(
 }
 
 @Composable
-fun searchBorderStroke(searchPageState: SearchPageState): BorderStroke {
+fun searchBarBorderStroke(searchPageState: SearchPageState): BorderStroke {
     val targetWidth = if (searchPageState is SearchPageState.Searching) {
         2.dp
     } else {
@@ -295,6 +295,7 @@ fun SearchPageResults(
                         modifier = Modifier.align(Alignment.Center),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
+                        LoadingIndicator()
                         Text(
                             text = stringResource(id = targetSearchState.tips)
                         )
@@ -414,55 +415,56 @@ fun SearchSuccessPages(
         NavigationBarAreaGradient(
             modifier = Modifier.align(Alignment.BottomCenter)
         )
+        if (searchSuccess.results.size > 1) {
+            FlowRow(
+                modifier = Modifier
+                    .align(Alignment.BottomStart)
+                    .padding(start = 12.dp, end = 12.dp, bottom = 92.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
 
-        FlowRow(
-            modifier = Modifier
-                .align(Alignment.BottomStart)
-                .padding(start = 12.dp, end = 12.dp, bottom = 92.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
+                searchSuccess.results.forEachIndexed { index, searchResult ->
 
-            searchSuccess.results.forEachIndexed { index, searchResult ->
+                    Row(
+                        modifier = Modifier
+                            .clip(CircleShape)
+                            .border(1.dp, MaterialTheme.colorScheme.outline, CircleShape)
+                            .hazeEffect(
+                                hazeState,
+                                HazeMaterials.thin()
+                            )
+                            .clickable {
+                                coroutineScope.launch {
+                                    pagerState.animateScrollToPage(index)
+                                }
+                            }
+                            .padding(horizontal = 12.dp, vertical = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        val text = when (searchResult) {
+                            is SearchResult.SearchedApplications -> {
+                                stringResource(xcj.app.appsets.R.string.application)
+                            }
 
-                Row(
-                    modifier = Modifier
-                        .clip(CircleShape)
-                        .border(1.dp, MaterialTheme.colorScheme.outline, CircleShape)
-                        .hazeEffect(
-                            hazeState,
-                            HazeMaterials.thin()
-                        )
-                        .clickable {
-                            coroutineScope.launch {
-                                pagerState.animateScrollToPage(index)
+                            is SearchResult.SearchedUsers -> {
+                                stringResource(xcj.app.appsets.R.string.user)
+                            }
+
+                            is SearchResult.SearchedGroups -> {
+                                stringResource(xcj.app.appsets.R.string.group)
+                            }
+
+                            is SearchResult.SearchedScreens -> {
+                                "Screen"
+                            }
+
+                            is SearchResult.SearchedGoods -> {
+                                stringResource(xcj.app.appsets.R.string.goods)
                             }
                         }
-                        .padding(horizontal = 12.dp, vertical = 6.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    val text = when (searchResult) {
-                        is SearchResult.SearchedApplications -> {
-                            stringResource(xcj.app.appsets.R.string.application)
-                        }
-
-                        is SearchResult.SearchedUsers -> {
-                            stringResource(xcj.app.appsets.R.string.user)
-                        }
-
-                        is SearchResult.SearchedGroups -> {
-                            stringResource(xcj.app.appsets.R.string.group)
-                        }
-
-                        is SearchResult.SearchedScreens -> {
-                            "Screen"
-                        }
-
-                        is SearchResult.SearchedGoods -> {
-                            stringResource(xcj.app.appsets.R.string.goods)
-                        }
+                        Text(text = text, fontSize = 12.sp)
                     }
-                    Text(text = text)
                 }
             }
         }
@@ -485,7 +487,7 @@ fun StatusBarAreaGradient(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(WindowInsets.systemBars.asPaddingValues().calculateTopPadding() + 52.dp)
+            .height(WindowInsets.systemBars.asPaddingValues().calculateTopPadding() + 12.dp)
             .background(
                 brush = Brush.verticalGradient(
                     colors = gradientColors, startY = 0f, endY = Float.POSITIVE_INFINITY
@@ -510,7 +512,7 @@ fun NavigationBarAreaGradient(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(WindowInsets.navigationBars.asPaddingValues().calculateTopPadding() + 52.dp)
+            .height(WindowInsets.navigationBars.asPaddingValues().calculateTopPadding() + 12.dp)
             .background(
                 brush = Brush.verticalGradient(
                     colors = gradientColors, startY = 0f, endY = Float.POSITIVE_INFINITY
@@ -539,21 +541,13 @@ fun SearchedScreensPage(
     onBioClick: (Bio) -> Unit,
     onScreenMediaClick: (ScreenMediaFileUrl, List<ScreenMediaFileUrl>) -> Unit,
 ) {
-    LazyColumn(
-        modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(
-            top = WindowInsets.systemBars.asPaddingValues().calculateTopPadding(),
-            bottom = 120.dp
-        )
-    ) {
-        items(searchedScreens.screens) { screenInfo ->
-            SearchedScreenComponent(
-                modifier = Modifier,
-                screenInfo = screenInfo,
-                onBioClick = onBioClick,
-                onScreenMediaClick = onScreenMediaClick
-            )
-        }
-    }
+    ScreensList(
+        modifier = Modifier,
+        screens = searchedScreens.screens,
+        onBioClick = onBioClick,
+        onScreenMediaClick = onScreenMediaClick,
+        onLoadMore = {}
+    )
 }
 
 @Composable
@@ -668,29 +662,5 @@ fun SearchedGroupComponent(modifier: Modifier, groupInfo: GroupInfo) {
             Text(text = groupInfo.bioName ?: "")
             Text(text = groupInfo.introduction ?: "", fontSize = 10.sp)
         }
-    }
-}
-
-@Composable
-fun SearchedScreenComponent(
-    modifier: Modifier,
-    screenInfo: ScreenInfo,
-    onBioClick: (Bio) -> Unit,
-    onScreenMediaClick: (ScreenMediaFileUrl, List<ScreenMediaFileUrl>) -> Unit,
-) {
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .clickable {
-                onBioClick(screenInfo)
-            }
-            .padding(12.dp)) {
-        Screen(
-            currentPageRoute = PageRouteNames.SearchPage,
-            screenInfo = screenInfo,
-            onBioClick = onBioClick,
-            onScreenMediaClick = onScreenMediaClick,
-            pictureInteractionFlowCollector = { a, b -> },
-        )
     }
 }

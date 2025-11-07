@@ -253,7 +253,7 @@ private fun TabItemAction(
         tabAction.action == TabAction.ACTION_REFRESH
     ) {
         val iconRotationState by animateFloatAsState(
-            targetValue = if (screenUseCase.systemScreensContainer.isRequesting.value) {
+            targetValue = if (screenUseCase.systemScreensLoadContainer.isRequesting.value) {
                 135f
             } else {
                 0f

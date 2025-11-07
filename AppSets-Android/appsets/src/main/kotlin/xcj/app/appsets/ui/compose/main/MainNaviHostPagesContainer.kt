@@ -326,8 +326,8 @@ fun MainNaviHostPagesContainer(
                             val currentUri = screenshot.url ?: return@AppDetailsPage
                             val uriList = screenshotList.mapNotNull { screenshot -> screenshot.url }
                             showPictureViewDialog(
-                                visibilityComposeStateProvider,
                                 context,
+                                visibilityComposeStateProvider,
                                 currentUri,
                                 uriList
                             )
@@ -441,7 +441,7 @@ fun MainNaviHostPagesContainer(
                     val visibilityComposeStateProvider = LocalVisibilityComposeStateProvider.current
                     val coroutineScope = rememberCoroutineScope()
                     OutSidePage(
-                        screens = screensUseCase.systemScreensContainer.screens,
+                        screens = screensUseCase.systemScreensLoadContainer.screens,
                         onBioClick = { bio ->
                             coroutineScope.launch {
                                 onBioClick(context, navController, bio)
@@ -449,7 +449,7 @@ fun MainNaviHostPagesContainer(
                         },
                         onLoadMore = {
                             coroutineScope.launch {
-                                screensUseCase.loadMore(null, false)
+                                screensUseCase.loadScreens(null, false)
                             }
                         },
                         onScreenMediaClick = { url, urls ->
@@ -522,7 +522,9 @@ fun MainNaviHostPagesContainer(
                             }
                         },
                         onPageShowNext = {
-                            screenUseCase.updatePageShowNext()
+                            coroutineScope.launch {
+                                screenUseCase.updatePageShowNext()
+                            }
                         }
                     )
                 }
@@ -1312,7 +1314,7 @@ fun MainNaviHostPagesContainer(
                     val userFollowers by userInfoUseCase.followerUsersState
                     val userFollowed by userInfoUseCase.followedUsersState
                     val isLoginUserFollowedThisUser by userInfoUseCase.loggedUserFollowedState
-                    val userScreens = screenUseCase.userScreensContainer.screens
+                    val userScreens = screenUseCase.userScreensLoadContainer.screens
                     UserProfilePage(
                         userProfilePageState = userProfilePageState,
                         userApplications = userApplications,
@@ -1359,7 +1361,7 @@ fun MainNaviHostPagesContainer(
                         },
                         onLoadMoreScreens = { uid, force ->
                             coroutineScope.launch {
-                                screenUseCase.loadMore(uid, force)
+                                screenUseCase.loadScreens(uid, force)
                             }
                         },
                         onSelectUserAvatarClick = { requestKey ->
@@ -1523,11 +1525,11 @@ private fun navigateToCreateAppPage(
     platform: AppPlatform?,
     version: VersionInfo?,
     createStep: String,
-): Boolean {
+) {
     val destinationId = navController.findDestination(PageRouteNames.CreateAppPage)?.id
     if (destinationId == null) {
         PurpleLogger.current.d(TAG, "navigateToCreateAppPage, destinationId is null, return")
-        return false
+        return
     }
     val navDirections: NavDirections = object : NavDirections {
         override val actionId: Int = destinationId
@@ -1546,7 +1548,6 @@ private fun navigateToCreateAppPage(
         }
     }
     navController.navigate(navDirections)
-    return true
 }
 
 private suspend fun navigateToUserInfoPage(
@@ -1569,8 +1570,8 @@ private suspend fun navigateToUserInfoPage(
 }
 
 private fun showPictureViewDialog(
-    visibilityComposeStateProvider: VisibilityComposeStateProvider,
     context: Context,
+    visibilityComposeStateProvider: VisibilityComposeStateProvider,
     data: Any,
     dataList: List<Any>,
 ) {
@@ -1899,8 +1900,8 @@ private fun handleImMessageContentClick(
                     imageMessage.requireUri()
                 }
             showPictureViewDialog(
-                visibilityComposeStateProvider,
                 context,
+                visibilityComposeStateProvider,
                 currentUri,
                 uriList
             )
@@ -1930,8 +1931,8 @@ private fun handleScreenMediaClick(
             val currentUri = url.mediaFileUrl
             val uriList = urls.map { fileUrl -> fileUrl.mediaFileUrl }
             showPictureViewDialog(
-                visibilityComposeStateProvider,
                 context,
+                visibilityComposeStateProvider,
                 currentUri,
                 uriList
             )

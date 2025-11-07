@@ -9,7 +9,6 @@ import android.view.View
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.Interaction
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -62,6 +61,7 @@ import xcj.app.appsets.account.LocalAccountManager
 import xcj.app.appsets.im.Bio
 import xcj.app.appsets.server.model.ScreenInfo
 import xcj.app.appsets.server.model.ScreenMediaFileUrl
+import xcj.app.appsets.ui.compose.LocalUseCaseOfNavigation
 import xcj.app.appsets.ui.compose.PageRouteNames
 import xcj.app.appsets.ui.compose.custom_component.AnyImage
 import xcj.app.appsets.util.saveComposeNodeAsBitmap
@@ -71,10 +71,8 @@ private const val TAG = "Screen"
 
 @Composable
 fun Screen(
-    currentPageRoute: String,
     screenInfo: ScreenInfo,
     onBioClick: (Bio) -> Unit,
-    pictureInteractionFlowCollector: ((Interaction, ScreenMediaFileUrl) -> Unit),
     onScreenMediaClick: (ScreenMediaFileUrl, List<ScreenMediaFileUrl>) -> Unit,
 ) {
     var capturingViewBounds by remember { mutableStateOf<Rect?>(null) }
@@ -89,19 +87,16 @@ fun Screen(
         } else {
             Column {
                 ScreenSectionOfTopActionsPart(
-                    currentDestinationRoute = currentPageRoute,
                     screenInfo = screenInfo,
                     capturingViewBounds = capturingViewBounds
                 )
 
                 ScreenSectionOfContentMediasPart(
                     screenInfo = screenInfo,
-                    onMediaClick = onScreenMediaClick,
-                    mediaInteractionFlowCollector = pictureInteractionFlowCollector
+                    onMediaClick = onScreenMediaClick
                 )
                 ScreenSectionOfContentTextPart(
                     screenInfo = screenInfo,
-                    currentDestinationRoute = currentPageRoute
                 )
                 ScreenSectionOfContentAssociateTopicsPart(screenInfo)
                 ScreenSectionOfContentAssociatePeoplesPart(screenInfo)
@@ -109,8 +104,7 @@ fun Screen(
         }
         ScreenSectionOfUserPart(
             screenInfo,
-            onBioClick,
-            currentPageRoute
+            onBioClick
         )
     }
 }
@@ -135,7 +129,6 @@ private fun ScreenSectionOfContentPartAllEmpty(modifier: Modifier = Modifier) {
 
 @Composable
 private fun ScreenSectionOfTopActionsPart(
-    currentDestinationRoute: String,
     screenInfo: ScreenInfo,
     capturingViewBounds: Rect?,
 ) {
@@ -236,8 +229,7 @@ private fun ScreenSectionOfContentAssociateTopicsPart(
 @Composable
 private fun ScreenSectionOfContentMediasPart(
     screenInfo: ScreenInfo,
-    onMediaClick: ((ScreenMediaFileUrl, List<ScreenMediaFileUrl>) -> Unit)?,
-    mediaInteractionFlowCollector: ((Interaction, ScreenMediaFileUrl) -> Unit)?,
+    onMediaClick: ((ScreenMediaFileUrl, List<ScreenMediaFileUrl>) -> Unit)?
 ) {
     val mediaFileUrls = screenInfo.mediaFileUrls
     if (mediaFileUrls.isNullOrEmpty()) {
@@ -254,11 +246,10 @@ private fun ScreenSectionOfContentMediasPart(
     ) { index ->
         val mediaFileUrl = mediaFileUrls[index]
         MediaCard(
-            mediaFileUrl,
+            mediaFileUrl = mediaFileUrl,
             onMediaClick = {
                 onMediaClick?.invoke(it, mediaFileUrls)
-            },
-            mediaInteractionFlowCollector
+            }
         )
     }
 }
@@ -267,7 +258,6 @@ private fun ScreenSectionOfContentMediasPart(
 private fun MediaCard(
     mediaFileUrl: ScreenMediaFileUrl,
     onMediaClick: ((ScreenMediaFileUrl) -> Unit)?,
-    mediaInteractionFlowCollector: ((Interaction, ScreenMediaFileUrl) -> Unit)?,
 ) {
     Box(
         modifier = Modifier
@@ -339,10 +329,11 @@ private fun MediaCard(
 @Composable
 private fun ScreenSectionOfContentTextPart(
     screenInfo: ScreenInfo,
-    currentDestinationRoute: String,
 ) {
+    val navigationUseCase = LocalUseCaseOfNavigation.current
+    val currentPageRoute by navigationUseCase.currentRouteState
     if (!screenInfo.screenContent.isNullOrEmpty()) {
-        val modifier = if (currentDestinationRoute != PageRouteNames.ScreenDetailsPage) {
+        val modifier = if (currentPageRoute != PageRouteNames.ScreenDetailsPage) {
             Modifier.heightIn(min = 68.dp, max = 350.dp)
         } else {
             Modifier.heightIn(min = 68.dp)
@@ -364,9 +355,10 @@ private fun ScreenSectionOfContentTextPart(
 @Composable
 private fun ScreenSectionOfUserPart(
     screenInfo: ScreenInfo,
-    onBioClick: (Bio) -> Unit,
-    currentDestinationRoute: String,
+    onBioClick: (Bio) -> Unit
 ) {
+    val navigationUseCase = LocalUseCaseOfNavigation.current
+    val currentPageRoute by navigationUseCase.currentRouteState
     Row(
         modifier = Modifier,
         verticalAlignment = Alignment.CenterVertically
@@ -377,7 +369,7 @@ private fun ScreenSectionOfUserPart(
         )
         Spacer(modifier = Modifier.weight(1f))
         if (screenInfo.uid == LocalAccountManager.userInfo.uid
-            && currentDestinationRoute == PageRouteNames.UserProfilePage
+            && currentPageRoute == PageRouteNames.UserProfilePage
         ) {
             Box(
                 modifier = Modifier

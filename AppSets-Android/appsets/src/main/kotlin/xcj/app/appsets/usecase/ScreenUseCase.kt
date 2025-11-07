@@ -2,7 +2,6 @@ package xcj.app.appsets.usecase
 
 import android.content.Context
 import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.core.content.ContextCompat
 import xcj.app.appsets.account.LocalAccountManager
@@ -26,18 +25,13 @@ class ScreenUseCase(
         private const val TAG = "ScreenUseCase"
     }
 
-    class ScreensContainer {
+    class ScreensLoadContainer : DataLoadStateContainer<ScreenInfo>() {
         var uid: String? = null
-        var page: Int = 1
-        var pageSize: Int = 15
-        var lastScreensSize: Int = -1
-        val isRequesting: MutableState<Boolean> = mutableStateOf(false)
-        val screens: MutableList<ScreenInfo> = mutableStateListOf()
     }
 
-    val systemScreensContainer: ScreensContainer = ScreensContainer()
+    val systemScreensLoadContainer: ScreensLoadContainer = ScreensLoadContainer()
 
-    val userScreensContainer: ScreensContainer = ScreensContainer()
+    val userScreensLoadContainer: ScreensLoadContainer = ScreensLoadContainer()
 
     val currentScreenInfoForCard: MutableState<ScreenInfoForCard> =
         mutableStateOf(ScreenInfoForCard())
@@ -49,10 +43,10 @@ class ScreenUseCase(
 
     suspend fun loadOutSideScreens() {
         PurpleLogger.current.d(TAG, "loadOutSideScreens")
-        loadMore(null, true)
+        loadScreens(null, true)
     }
 
-    private suspend fun requestScreens(container: ScreensContainer) {
+    private suspend fun requestScreens(container: ScreensLoadContainer) {
         PurpleLogger.current.d(
             TAG,
             "requestScreens, container uid:${container.uid}"
@@ -62,7 +56,7 @@ class ScreenUseCase(
             PurpleLogger.current.d(TAG, "requestScreens, requesting is true, break")
             return
         }
-        if (container.page > 1 && container.lastScreensSize < systemScreensContainer.pageSize) {
+        if (container.page > 1 && container.lastScreensSize < systemScreensLoadContainer.pageSize) {
             PurpleLogger.current.d(
                 TAG,
                 "requestScreens, lastScreensSize not equals, break"
@@ -101,13 +95,13 @@ class ScreenUseCase(
         }
     }
 
-    suspend fun loadMore(uid: String? = null, force: Boolean = true) {
-        PurpleLogger.current.d(TAG, "loadMore")
+    suspend fun loadScreens(uid: String? = null, force: Boolean = true) {
+        PurpleLogger.current.d(TAG, "loadScreens")
         val container = if (uid.isNullOrEmpty()) {
-            systemScreensContainer
+            systemScreensLoadContainer
         } else {
-            userScreensContainer.uid = uid
-            userScreensContainer
+            userScreensLoadContainer.uid = uid
+            userScreensLoadContainer
         }
         if (force) {
             container.page = 1
@@ -313,29 +307,29 @@ class ScreenUseCase(
     suspend fun updatePageShowPrevious() {
         val currentScreenInfo = currentScreenInfoForCard.value.screenInfo
         if (currentDestination == PageRouteNames.OutSidePage) {
-            if (systemScreensContainer.screens.size < 2) {
+            if (systemScreensLoadContainer.screens.size < 2) {
                 return
             }
             val currentScreenInfoIndex =
-                systemScreensContainer.screens.indexOfFirst { it == currentScreenInfo }
+                systemScreensLoadContainer.screens.indexOfFirst { it == currentScreenInfo }
             val previousScreenInfoIndex = currentScreenInfoIndex - 1
             val previousScreenInfo =
-                systemScreensContainer.screens[previousScreenInfoIndex]
+                systemScreensLoadContainer.screens[previousScreenInfoIndex]
             updateCurrentViewScreen(currentDestination, previousScreenInfo)
         } else {
-            if (userScreensContainer.screens.size < 2) {
+            if (userScreensLoadContainer.screens.size < 2) {
                 return
             }
             val currentScreenInfoIndex =
-                userScreensContainer.screens.indexOfFirst { it == currentScreenInfo }
+                userScreensLoadContainer.screens.indexOfFirst { it == currentScreenInfo }
             val nextScreenInfoIndex = currentScreenInfoIndex - 1
             val previousScreenInfo =
-                userScreensContainer.screens[nextScreenInfoIndex]
+                userScreensLoadContainer.screens[nextScreenInfoIndex]
             updateCurrentViewScreen(currentDestination, previousScreenInfo)
         }
     }
 
-    fun updatePageShowNext() {
+    suspend fun updatePageShowNext() {
 
     }
 
