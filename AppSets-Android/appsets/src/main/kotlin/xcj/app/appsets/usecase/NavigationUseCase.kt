@@ -39,7 +39,7 @@ class NavigationUseCase : ComposeLifecycleAware {
                     route = PageRouteNames.CreateAppPage,
                     icon = xcj.app.compose_share.R.drawable.ic_appsets_plus,
                     action = TabAction.ACTION_ADD,
-                    description = "create application"
+                    description = "Create Application"
                 )
             )
         )

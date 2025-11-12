@@ -11,6 +11,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.ComposeView
@@ -18,22 +19,32 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.launch
 import xcj.app.compose_share.components.ComposeViewProvider
 
 class UserAgreementComposeViewProvider(
-    private val onNextClick: (Boolean) -> Unit
+    private val onNextClick: suspend (Boolean) -> Unit
 ) : ComposeViewProvider {
     override fun provideComposeView(context: Context): ComposeView {
         return ComposeView(context).apply {
             setContent {
-                UserAgreementPopupPage(onNextClick)
+                val coroutineScope = rememberCoroutineScope()
+                UserAgreementPopupPage(
+                    onClick = {
+                        coroutineScope.launch {
+                            onNextClick(true)
+                        }
+                    }
+                )
             }
         }
     }
 }
 
 @Composable
-private fun UserAgreementPopupPage(onClick: (Boolean) -> Unit) {
+private fun UserAgreementPopupPage(
+    onClick: (Boolean) -> Unit
+) {
     val hapticFeedback = LocalHapticFeedback.current
     Column(
         modifier = Modifier.padding(12.dp),

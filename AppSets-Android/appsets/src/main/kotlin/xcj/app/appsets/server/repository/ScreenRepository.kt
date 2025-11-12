@@ -22,9 +22,9 @@ import xcj.app.appsets.util.VideoFileUtil
 import xcj.app.appsets.util.ktx.toastSuspend
 import xcj.app.appsets.util.ktx.writeBitmap
 import xcj.app.appsets.util.model.MediaStoreDataUri
-import xcj.app.appsets.util.model.UriProvider
 import xcj.app.io.components.LocalFileIO
 import xcj.app.starter.android.util.PurpleLogger
+import xcj.app.starter.android.util.UriProvider
 import xcj.app.starter.foundation.http.DesignResponse
 import xcj.app.starter.test.LocalAndroidContextFileDir
 import xcj.app.starter.test.LocalApplication
@@ -95,19 +95,20 @@ class ScreenRepository(
         val mediaFilUrls =
             buildScreenMediaFileUrls(
                 context,
-                screenInfoForCreate.pictures,
-                screenInfoForCreate.videos.firstOrNull()
+                screenInfoForCreate.pictureUriProviders,
+                screenInfoForCreate.videoUriProviders.firstOrNull()
             )
+        val body = AddUserScreenParams(
+            screenInfoForCreate.content.value,
+            screenInfoForCreate.associateTopics.value,
+            screenInfoForCreate.associatePeoples.value,
+            mediaFilUrls,
+            screenInfoForCreate.isPublic.value,
+            "normal add from android app",
+            screenInfoForCreate.addToMediaFall.value
+        )
         return@withContext userApi.addScreen(
-            AddUserScreenParams(
-                screenInfoForCreate.content,
-                screenInfoForCreate.associateTopics,
-                screenInfoForCreate.associatePeoples,
-                mediaFilUrls,
-                screenInfoForCreate.isPublic,
-                "normal add from android app",
-                screenInfoForCreate.addToMediaFall
-            )
+            body
         )
     }
 

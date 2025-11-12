@@ -118,13 +118,13 @@ import xcj.app.appsets.ui.compose.custom_component.SwipeContainer
 import xcj.app.appsets.ui.compose.theme.extShapes
 import xcj.app.appsets.util.ktx.asComponentActivityOrNull
 import xcj.app.appsets.util.model.MediaStoreDataUri
-import xcj.app.appsets.util.model.UriProvider
 import xcj.app.compose_share.components.DesignTextField
 import xcj.app.compose_share.components.DesignVDivider
 import xcj.app.starter.android.ActivityThemeInterface
 import xcj.app.starter.android.SystemContentSelectionCallback
 import xcj.app.starter.android.ui.model.PlatformPermissionsUsage
 import xcj.app.starter.android.usecase.PlatformUseCase
+import xcj.app.starter.android.util.UriProvider
 import java.io.File
 
 
@@ -198,7 +198,7 @@ sealed interface ContentSelectionPageState {
 fun ContentSelectionPromptSheetContent(
     request: ContentSelectionRequest,
     shouldConfirmIfUseSystemImplementation: Boolean = true,
-    onContentSelected: (ContentSelectionResult) -> Unit,
+    onContentSelected: (ContentSelectionResult<*>) -> Unit,
     onDismiss: () -> Unit,
 ) {
     val context = LocalContext.current
@@ -248,9 +248,8 @@ fun ContentSelectionPromptSheetContent(
                                                 RichMediaContentSelectionResult(
                                                     context,
                                                     request,
-                                                    request.defaultSelectionType,
-                                                    systemSelectedContents
-                                                )
+                                                    request.defaultSelectionType
+                                                ) { systemSelectedContents }
                                             onContentSelected(results)
                                             onDismiss()
                                         }
@@ -292,7 +291,10 @@ fun ContentSelectionPromptSheetContent(
                 is ContentSelectionPageState.AppImplementation -> {
                     AppImplContentSelectionContent(
                         request = request,
-                        onContentSelected = onContentSelected
+                        onContentSelected = { contentSelectionResult ->
+                            onContentSelected(contentSelectionResult)
+                            onDismiss()
+                        },
                     )
                 }
 
@@ -306,9 +308,8 @@ fun ContentSelectionPromptSheetContent(
                                 RichMediaContentSelectionResult(
                                     context,
                                     request,
-                                    request.defaultSelectionType,
-                                    selectedContents
-                                )
+                                    request.defaultSelectionType
+                                ) { selectedContents }
                             onContentSelected(results)
                             onDismiss()
                         }
@@ -474,7 +475,7 @@ private fun getTabName(selectionType: String): String {
 private fun AppImplContentSelectionContent(
     modifier: Modifier = Modifier,
     request: ContentSelectionRequest,
-    onContentSelected: (ContentSelectionResult) -> Unit,
+    onContentSelected: (ContentSelectionResult<*>) -> Unit,
 ) {
 
     val selectionTypes = remember {
@@ -600,7 +601,7 @@ private fun AppImplContentSelectionContent(
 @Composable
 private fun CameraContentSelection(
     request: ContentSelectionRequest,
-    onContentSelected: (ContentSelectionResult) -> Unit,
+    onContentSelected: (ContentSelectionResult<*>) -> Unit,
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -747,9 +748,10 @@ private fun CameraContentSelection(
                                         ContentSelectionResult.RichMediaContentSelectionResult(
                                             context,
                                             request,
-                                            ContentSelectionTypes.IMAGE,
+                                            ContentSelectionTypes.IMAGE
+                                        ) {
                                             selectedContents
-                                        )
+                                        }
                                     onContentSelected(results)
                                 },
                             model = capturedPictureFile
@@ -817,7 +819,7 @@ private fun CameraContentSelection(
 @Composable
 private fun LocationContentSelection(
     request: ContentSelectionRequest,
-    onContentSelected: (ContentSelectionResult) -> Unit,
+    onContentSelected: (ContentSelectionResult<*>) -> Unit,
 ) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
@@ -926,9 +928,10 @@ private fun LocationContentSelection(
                             val results = ContentSelectionResult.LocationContentSelectionResult(
                                 context,
                                 request,
-                                ContentSelectionTypes.LOCATION,
+                                ContentSelectionTypes.LOCATION
+                            ) {
                                 locationInfo
-                            )
+                            }
                             onContentSelected(results)
                         }) {
                             Icon(
@@ -947,7 +950,7 @@ private fun LocationContentSelection(
 @Composable
 private fun PictureContentSelection(
     request: ContentSelectionRequest,
-    onContentSelected: (ContentSelectionResult) -> Unit,
+    onContentSelected: (ContentSelectionResult<*>) -> Unit,
 ) {
 
     val context = LocalContext.current
@@ -1150,7 +1153,7 @@ private fun calculateItemClipShape(
 @Composable
 private fun VideoContentSelection(
     request: ContentSelectionRequest,
-    onContentSelected: (ContentSelectionResult) -> Unit,
+    onContentSelected: (ContentSelectionResult<*>) -> Unit,
 ) {
     val context = LocalContext.current
     val hapticFeedback = LocalHapticFeedback.current
@@ -1198,7 +1201,10 @@ private fun VideoContentSelection(
             contentPadding = PaddingValues(start = 4.dp, top = 4.dp, end = 4.dp, bottom = 120.dp),
             verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
-            items(items = filteredContentUrls) { contentUriProvider ->
+            items(
+                items = filteredContentUrls,
+                key = UriProvider::provideUri
+            ) { contentUriProvider ->
                 Column(
                     modifier = Modifier
                         .animateItem()
@@ -1307,7 +1313,7 @@ private fun VideoContentSelection(
 @Composable
 private fun AudioContentSelection(
     request: ContentSelectionRequest,
-    onContentSelected: (ContentSelectionResult) -> Unit,
+    onContentSelected: (ContentSelectionResult<*>) -> Unit,
 ) {
     val context = LocalContext.current
     val density = LocalDensity.current
@@ -1359,7 +1365,10 @@ private fun AudioContentSelection(
             contentPadding = PaddingValues(start = 4.dp, top = 4.dp, end = 4.dp, bottom = 120.dp),
             verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
-            items(items = filteredContentUrls) { contentUriProvider ->
+            items(
+                items = filteredContentUrls,
+                key = UriProvider::provideUri
+            ) { contentUriProvider ->
                 var itemSize by remember {
                     mutableStateOf(IntSize.Zero)
                 }
@@ -1455,7 +1464,7 @@ private fun AudioContentSelection(
 @Composable
 private fun FileContentSelection(
     request: ContentSelectionRequest,
-    onContentSelected: (ContentSelectionResult) -> Unit,
+    onContentSelected: (ContentSelectionResult<*>) -> Unit,
 ) {
     val context = LocalContext.current
     val density = LocalDensity.current
@@ -1507,7 +1516,10 @@ private fun FileContentSelection(
             contentPadding = PaddingValues(start = 4.dp, top = 4.dp, end = 4.dp, bottom = 120.dp),
             verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
-            items(items = filteredContentUrls) { contentUriProvider ->
+            items(
+                items = filteredContentUrls,
+                key = { item -> item.provideUri() }
+            ) { contentUriProvider ->
                 var itemSize by remember {
                     mutableStateOf(IntSize.Zero)
                 }
@@ -1612,7 +1624,7 @@ private fun BottomActions(
     onSearchModeChanged: (Boolean) -> Unit,
     onSearchContentChanged: (String) -> Unit,
     onActionClick: () -> Unit,
-    onContentSelected: (ContentSelectionResult) -> Unit,
+    onContentSelected: (ContentSelectionResult<*>) -> Unit,
 ) {
     val context = LocalContext.current
     val hapticFeedback = LocalHapticFeedback.current
@@ -1745,7 +1757,10 @@ private fun BottomActions(
                         }
                     }
 
-                    items(selectedContents) { uriProvider ->
+                    items(
+                        items = selectedContents,
+                        key = { item -> item.provideUri() }
+                    ) { uriProvider ->
                         AnyImage(
                             modifier = modifier
                                 .animateItem()
@@ -1772,9 +1787,10 @@ private fun BottomActions(
                                     ContentSelectionResult.RichMediaContentSelectionResult(
                                         context,
                                         request,
-                                        contentSelectionType,
+                                        contentSelectionType
+                                    ) {
                                         selectedContents
-                                    )
+                                    }
                                 onContentSelected(results)
                             }
                         ) {

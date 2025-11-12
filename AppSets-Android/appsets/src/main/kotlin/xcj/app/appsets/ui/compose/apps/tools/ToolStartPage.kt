@@ -75,8 +75,8 @@ data class AppTool(
 }
 
 @Composable
-fun generateToolList(): List<AppTool> {
-    val tools = remember {
+fun generateAppToolList(): List<AppTool> {
+    val appTools = remember {
         listOf(
             AppTool(
                 xcj.app.compose_share.R.drawable.ic_round_swap_calls_24,
@@ -182,7 +182,7 @@ fun generateToolList(): List<AppTool> {
             ),
         )
     }
-    return tools
+    return appTools
 }
 
 @Composable
@@ -191,7 +191,7 @@ fun ToolStartPage(
     onToolClick: (AppTool) -> Unit
 ) {
     HideNavBar()
-    val tools = generateToolList()
+    val appTools = generateAppToolList()
     val hazeState = rememberHazeState()
     val density = LocalDensity.current
     var backActionBarSize by remember {
@@ -212,7 +212,10 @@ fun ToolStartPage(
                 bottom = 12.dp
             )
         ) {
-            items(tools) { appTool ->
+            items(
+                items = appTools,
+                key = { item -> item.type }
+            ) { appTool ->
                 Column {
                     Row(
 

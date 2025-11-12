@@ -34,15 +34,15 @@ android {
         applicationId = "xcj.app.container"
         minSdk = 26
         targetSdk = 36
-        versionCode = 20251104
-        versionName = "2025.11.04"
+        versionCode = 20260101
+        versionName = "2026.01.01"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         //consumerProguardFiles("consumer-rules.pro")
 
         ndk {
             //noinspection ChromeOsAbiSupport
-//            if(System.getProperty()OSKind.Windows){}
+            //if(System.getProperty()OSKind.Windows){}
             abiFilters.add("arm64-v8a")
         }
     }

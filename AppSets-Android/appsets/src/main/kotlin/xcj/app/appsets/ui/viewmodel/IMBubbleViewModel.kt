@@ -1,11 +1,9 @@
 package xcj.app.appsets.ui.viewmodel
 
-import android.content.Context
 import android.content.Intent
 import androidx.activity.ComponentActivity
 import xcj.app.appsets.im.message.IMMessage
 import xcj.app.appsets.ui.base.BaseIMViewModel
-import xcj.app.appsets.ui.compose.content_selection.ContentSelectionResult
 import xcj.app.appsets.usecase.ConversationUseCase
 import xcj.app.appsets.usecase.NavigationUseCase
 import xcj.app.starter.android.util.LocalMessenger
@@ -39,20 +37,6 @@ class IMBubbleViewModel : BaseIMViewModel() {
             val IMMessageId = intent.getStringExtra(IMMessage.KEY_IM_MESSAGE_ID)
             conversationUseCase.updateCurrentSessionBySessionId(sessionId)
         }
-    }
-
-    /**
-     * 选择内容后
-     */
-    override fun dispatchContentSelectedResult(
-        context: Context,
-        contentSelectionResult: ContentSelectionResult
-    ) {
-        super.dispatchContentSelectedResult(context, contentSelectionResult)
-        PurpleLogger.current.d(
-            TAG,
-            "dispatchContentSelectedResult, contentSelectionResults:$contentSelectionResult"
-        )
     }
 
     override fun observeSomeThingsOnCreated(activity: ComponentActivity) {

@@ -7,7 +7,7 @@ import androidx.core.net.toUri
 import xcj.app.appsets.im.IMMessageDesignType
 import xcj.app.appsets.im.MessageFromInfo
 import xcj.app.appsets.im.MessageToInfo
-import xcj.app.appsets.util.model.UriProvider
+import xcj.app.starter.android.util.UriProvider
 import java.util.Date
 import java.util.UUID
 

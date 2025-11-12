@@ -152,7 +152,7 @@ class MainActivity : DesignComponentActivity() {
                 }
                 bottomSheetState.setShouldBackgroundSink(true)
                 val fromAppDefinition = getCallActivityAppDefinition()
-                bottomSheetState.show {
+                bottomSheetState.show(null) {
                     ExternalContentSheetContent(
                         intent = intent,
                         fromAppDefinition = fromAppDefinition,

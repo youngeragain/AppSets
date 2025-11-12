@@ -7,16 +7,14 @@ import kotlinx.coroutines.launch
 import xcj.app.appsets.account.LocalAccountManager
 import xcj.app.appsets.annotation.CallStep
 import xcj.app.appsets.im.BrokerTest
-import xcj.app.appsets.im.InputSelector
 import xcj.app.appsets.im.MessageBrokerConstants
 import xcj.app.appsets.im.message.IMMessage
 import xcj.app.appsets.purple_module.ModuleConstant
 import xcj.app.appsets.server.repository.AppSetsRepository
 import xcj.app.appsets.server.repository.ScreenRepository
 import xcj.app.appsets.server.repository.UserRepository
-import xcj.app.appsets.ui.compose.PageRouteNames
+import xcj.app.appsets.ui.compose.content_selection.ContentSelectionRequest
 import xcj.app.appsets.ui.compose.content_selection.ContentSelectionResult
-import xcj.app.appsets.ui.compose.content_selection.ContentSelectionTypes
 import xcj.app.appsets.usecase.ConversationUseCase
 import xcj.app.appsets.usecase.GroupInfoUseCase
 import xcj.app.appsets.usecase.MediaAudioRecorderUseCase
@@ -78,21 +76,41 @@ abstract class BaseIMViewModel : VisibilityComposeStateViewModel() {
     open fun observeSomeThingsOnCreated(activity: ComponentActivity) {
         PurpleLogger.current.d(TAG, "observeSomeThingsOnCreated")
 
-        LocalMessenger.observe<String, ContentSelectionResult>(
+        LocalMessenger.observe<String, ContentSelectionRequest>(
             activity,
-            ModuleConstant.MESSAGE_KEY_ON_CONTENT_SELECT_RESULT
-        ) {
-            if (it.context.asComponentActivityOrNull() != activity) {
+            ModuleConstant.MESSAGE_KEY_ON_CONTENT_SELECTION_CLOSE
+        ) { contentSelectionRequest ->
+            if (contentSelectionRequest.context.asComponentActivityOrNull() != activity) {
                 return@observe
             }
-            dispatchContentSelectedResult(activity, it)
+            onContentSelectSheetClosed(activity, contentSelectionRequest)
+        }
+
+        LocalMessenger.observe<String, ContentSelectionRequest>(
+            activity,
+            ModuleConstant.MESSAGE_KEY_ON_CONTENT_SELECT_REQUEST
+        ) { contentSelectionRequest ->
+            if (contentSelectionRequest.context.asComponentActivityOrNull() != activity) {
+                return@observe
+            }
+            onContentSelectionRequest(activity, contentSelectionRequest)
+        }
+
+        LocalMessenger.observe<String, ContentSelectionResult<*>>(
+            activity,
+            ModuleConstant.MESSAGE_KEY_ON_CONTENT_SELECT_RESULT
+        ) { contentSelectionResult ->
+            if (contentSelectionResult.context.asComponentActivityOrNull() != activity) {
+                return@observe
+            }
+            onContentSelectionResult(activity, contentSelectionResult)
         }
 
         LocalMessenger.observe<String, IMMessage<*>>(
             activity,
             MessageBrokerConstants.MESSAGE_KEY_ON_IM_MESSAGE
-        ) {
-            PurpleLogger.current.d(TAG, "MESSAGE_KEY_ON_IM_MESSAGE")
+        ) { iMMessage ->
+            PurpleLogger.current.d(TAG, "MESSAGE_KEY_ON_IM_MESSAGE, iMMessage:$iMMessage")
         }
 
         LocalMessenger.observe<String, String>(
@@ -122,10 +140,10 @@ abstract class BaseIMViewModel : VisibilityComposeStateViewModel() {
         LocalMessenger.observe<String, String>(
             activity,
             LocalAccountManager.MESSAGE_KEY_ON_LOGIN
-        ) { by ->
-            if (by == LocalAccountManager.LOGIN_BY_NEW) {
+        ) { loginBy ->
+            if (loginBy == LocalAccountManager.LOGIN_BY_NEW) {
                 SystemUseCase.startServiceToSyncAllFromServer(activity)
-            } else if (by == LocalAccountManager.LOGIN_BY_RESTORE) {
+            } else if (loginBy == LocalAccountManager.LOGIN_BY_RESTORE) {
                 SystemUseCase.startServiceToSyncAllFromLocal(activity)
             }
         }
@@ -162,135 +180,30 @@ abstract class BaseIMViewModel : VisibilityComposeStateViewModel() {
         systemUseCase.restoreLoginStatusStateIfNeeded()
     }
 
+    open fun onContentSelectSheetClosed(
+        activity: ComponentActivity,
+        contentSelectionRequest: ContentSelectionRequest
+    ) {
+
+    }
+
+    /**
+     * 请求选择内容时
+     */
+    open fun onContentSelectionRequest(
+        context: Context,
+        contentSelectionRequest: ContentSelectionRequest
+    ) {
+
+    }
+
     /**
      * 选择内容后
      */
-    open fun dispatchContentSelectedResult(
+    open fun onContentSelectionResult(
         context: Context,
-        contentSelectionResult: ContentSelectionResult
+        contentSelectionResult: ContentSelectionResult<*>
     ) {
-        PurpleLogger.current.d(
-            TAG,
-            "dispatchContentSelectedResult, contentSelectionResults:$contentSelectionResult"
-        )
-        systemUseCase.selectedContentsStateHolder.updateSelectedContent(contentSelectionResult)
 
-        val selectType = contentSelectionResult.selectType
-
-        when (selectType) {
-            ContentSelectionTypes.IMAGE -> {
-                if (contentSelectionResult !is ContentSelectionResult.RichMediaContentSelectionResult) {
-                    return
-                }
-                val contentUriList = contentSelectionResult.selectItems
-                when (contentSelectionResult.request.contextName) {
-                    PageRouteNames.ConversationDetailsPage -> {
-                        //todo multi
-                        val imageUri = contentUriList.firstOrNull()
-                        if (imageUri != null) {
-                            conversationUseCase.sendMessage(
-                                context,
-                                InputSelector.IMAGE,
-                                imageUri
-                            )
-                        }
-                    }
-
-                    PageRouteNames.CreateGroupPage -> {
-                        val imageUri = contentUriList.firstOrNull()
-                        if (imageUri != null) {
-                            systemUseCase.updateGroupCreateIconUri(imageUri)
-                        }
-                    }
-
-                    PageRouteNames.UserProfilePage -> {
-                        val imageUri = contentUriList.firstOrNull()
-                        if (imageUri != null) {
-                            userInfoUseCase.updateUserSelectAvatarUri(imageUri)
-                        }
-                    }
-
-                    PageRouteNames.SignUpPage -> {
-                        val imageUri = contentUriList.firstOrNull()
-                        if (imageUri != null) {
-                            systemUseCase.updateSignUpUserSelectAvatarUri(imageUri)
-                        }
-                    }
-                }
-            }
-
-            ContentSelectionTypes.VIDEO -> {
-                if (contentSelectionResult !is ContentSelectionResult.RichMediaContentSelectionResult) {
-                    return
-                }
-                when (contentSelectionResult.request.contextName) {
-                    PageRouteNames.ConversationDetailsPage -> {
-                        //todo multi
-                        val audioUri = contentSelectionResult.selectItems.firstOrNull()
-                        if (audioUri != null) {
-                            conversationUseCase.sendMessage(
-                                context,
-                                InputSelector.VIDEO,
-                                audioUri
-                            )
-                        }
-                    }
-                }
-            }
-
-            ContentSelectionTypes.AUDIO -> {
-                if (contentSelectionResult !is ContentSelectionResult.RichMediaContentSelectionResult) {
-                    return
-                }
-                when (contentSelectionResult.request.contextName) {
-                    PageRouteNames.ConversationDetailsPage -> {
-                        //todo multi
-                        val audioUri = contentSelectionResult.selectItems.firstOrNull()
-                        if (audioUri != null) {
-                            conversationUseCase.sendMessage(
-                                context,
-                                InputSelector.MUSIC,
-                                audioUri
-                            )
-                        }
-                    }
-                }
-            }
-
-            ContentSelectionTypes.FILE -> {
-                if (contentSelectionResult !is ContentSelectionResult.RichMediaContentSelectionResult) {
-                    return
-                }
-                when (contentSelectionResult.request.contextName) {
-                    PageRouteNames.ConversationDetailsPage -> {
-                        //todo multi
-                        val audioUri = contentSelectionResult.selectItems.firstOrNull()
-                        if (audioUri != null) {
-                            conversationUseCase.sendMessage(
-                                context,
-                                InputSelector.FILE,
-                                audioUri
-                            )
-                        }
-                    }
-                }
-            }
-
-            ContentSelectionTypes.LOCATION -> {
-                if (contentSelectionResult !is ContentSelectionResult.LocationContentSelectionResult) {
-                    return
-                }
-                when (contentSelectionResult.request.contextName) {
-                    PageRouteNames.ConversationDetailsPage -> {
-                        val locationInfo = contentSelectionResult.locationInfo
-                        conversationUseCase.sendMessage(
-                            context,
-                            InputSelector.LOCATION,
-                            locationInfo
-                        )
-                    }
-                }
-            }
-        }
     }
 }

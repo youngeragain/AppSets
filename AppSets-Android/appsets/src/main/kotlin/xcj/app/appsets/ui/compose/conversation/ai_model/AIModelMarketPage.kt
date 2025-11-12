@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalMaterial3ExpressiveApi::class)
+
 package xcj.app.appsets.ui.compose.conversation.ai_model
 
 import androidx.compose.animation.AnimatedContent
@@ -23,8 +25,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -180,7 +183,7 @@ fun MixedAIModelsPage() {
                             contentAlignment = Alignment.CenterEnd
                         ) { targetAddState ->
                             if (targetAddState == AIGCSessionTemplate.ADD_STATE_ADDING) {
-                                CircularProgressIndicator(modifier = Modifier.size(24.dp))
+                                LoadingIndicator()
                             } else {
                                 FilledTonalButton(
                                     onClick = {
@@ -293,7 +296,7 @@ fun DeviceLocalAIModelsPage() {
                             contentAlignment = Alignment.CenterEnd
                         ) { targetAddState ->
                             if (targetAddState == AIGCSessionTemplate.ADD_STATE_ADDING) {
-                                CircularProgressIndicator(modifier = Modifier.size(24.dp))
+                                LoadingIndicator()
                             } else {
                                 FilledTonalButton(
                                     onClick = {
@@ -405,7 +408,7 @@ fun OnlineAIModelsPage() {
                             contentAlignment = Alignment.CenterEnd
                         ) { targetAddState ->
                             if (targetAddState == AIGCSessionTemplate.ADD_STATE_ADDING) {
-                                CircularProgressIndicator(modifier = Modifier.size(24.dp))
+                                LoadingIndicator()
                             } else {
                                 FilledTonalButton(
                                     onClick = {

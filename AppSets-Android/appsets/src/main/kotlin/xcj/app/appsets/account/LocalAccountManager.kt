@@ -3,7 +3,9 @@ package xcj.app.appsets.account
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import com.google.gson.Gson
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import xcj.app.appsets.db.room.AppDatabase
 import xcj.app.appsets.im.BrokerTest
 import xcj.app.appsets.purple_module.ModuleConstant
@@ -138,12 +140,13 @@ object LocalAccountManager {
 
     suspend fun onUserLogout(by: String = LOGOUT_BY_MANUALLY) {
         PurpleLogger.current.d(TAG, "onUserLogout, by:$by")
-        MySharedPreferences.clear()
-        val database =
-            ModuleHelper.get<AppDatabase>(Identifiable.fromString(ModuleConstant.MODULE_NAME + "/database"))
-        database?.clearAllTables()
-        BrokerTest.close()
-
+        withContext(Dispatchers.IO) {
+            BrokerTest.close()
+            MySharedPreferences.clear()
+            val database =
+                ModuleHelper.get<AppDatabase>(Identifiable.fromString(ModuleConstant.MODULE_NAME + "/database"))
+            database?.clearAllTables()
+        }
         accountStatus.value = AccountStatus.NotLogged()
         LocalMessenger.post(MESSAGE_KEY_ON_LOGOUT, by)
     }

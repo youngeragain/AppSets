@@ -29,9 +29,9 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -43,30 +43,76 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.onPlaced
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dev.chrisbanes.haze.hazeSource
 import dev.chrisbanes.haze.rememberHazeState
+import xcj.app.appsets.ui.compose.LocalUseCaseOfNavigation
 import xcj.app.appsets.ui.compose.LocalUseCaseOfSystem
+import xcj.app.appsets.ui.compose.content_selection.ContentSelectionResult
 import xcj.app.appsets.ui.compose.custom_component.AnyImage
 import xcj.app.appsets.ui.compose.custom_component.HideNavBar
+import xcj.app.appsets.ui.compose.theme.ExtraLarge2
 import xcj.app.appsets.ui.model.GroupInfoForCreate
-import xcj.app.appsets.ui.model.page_state.CreateGroupPageState
+import xcj.app.appsets.ui.model.page_state.CreateGroupPageUIState
+import xcj.app.appsets.ui.viewmodel.MainViewModel
+import xcj.app.appsets.util.compose_state.ComposeStateUpdater
+import xcj.app.appsets.util.compose_state.RuntimeSingleStateUpdater
 import xcj.app.compose_share.components.BackActionTopBar
 import xcj.app.compose_share.components.DesignTextField
+import xcj.app.starter.android.util.PurpleLogger
 
 private const val TAG = "CreateGroupPage"
 
+
+@Preview
+@Composable
+fun CreateGroupPagePreview(
+) {
+    val createGroupPageUIState by remember {
+        mutableStateOf<CreateGroupPageUIState>(CreateGroupPageUIState.CreateStart())
+    }
+    val groupInfoForCreate by remember {
+        mutableStateOf(GroupInfoForCreate())
+    }
+
+    val mainViewModel = remember {
+        MainViewModel()
+    }
+
+    CompositionLocalProvider(
+        LocalUseCaseOfSystem provides mainViewModel.systemUseCase,
+        LocalUseCaseOfNavigation provides mainViewModel.navigationUseCase
+    ) {
+        CreateGroupPage(
+            createGroupPageUIState = createGroupPageUIState,
+            groupInfoForCreate = groupInfoForCreate,
+            onBackClick = {
+
+            },
+            onConfirmClick = { groupInfoForCreate ->
+
+            },
+            onSelectGroupIconClick = { requestKey, composeStateUpdater ->
+
+            }
+        )
+    }
+}
+
 @Composable
 fun CreateGroupPage(
-    createGroupPageState: CreateGroupPageState,
+    createGroupPageUIState: CreateGroupPageUIState,
+    groupInfoForCreate: GroupInfoForCreate,
     onBackClick: () -> Unit,
-    onConfirmAction: () -> Unit,
-    onSelectGroupIconClick: (String) -> Unit
+    onConfirmClick: (GroupInfoForCreate) -> Unit,
+    onSelectGroupIconClick: (String, ComposeStateUpdater<*>) -> Unit
 ) {
     HideNavBar()
     val systemUseCase = LocalUseCaseOfSystem.current
@@ -75,7 +121,12 @@ fun CreateGroupPage(
             systemUseCase.onComposeDispose("page dispose")
         }
     }
-    val hazeState = rememberHazeState()
+    val isInspectionMode = LocalInspectionMode.current
+    val hazeState = if (isInspectionMode) {
+        null
+    } else {
+        rememberHazeState()
+    }
     val density = LocalDensity.current
     var backActionBarSize by remember {
         mutableStateOf(IntSize.Zero)
@@ -88,9 +139,13 @@ fun CreateGroupPage(
         }
     }
     Box(modifier = Modifier.fillMaxSize()) {
+        val rootColumnModifier = if (isInspectionMode) {
+            Modifier
+        } else {
+            Modifier.hazeSource(hazeState!!)
+        }
         Column(
-            modifier = Modifier
-                .hazeSource(hazeState)
+            modifier = rootColumnModifier
                 .padding(start = 12.dp, end = 12.dp)
                 .verticalScroll(rememberScrollState())
                 .imePadding()
@@ -103,66 +158,67 @@ fun CreateGroupPage(
                     backActionsHeight + 12.dp
                 )
             )
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 16.dp)
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Column {
-                    Text(
-                        text = String.format(
-                            stringResource(id = xcj.app.appsets.R.string.a_is_required_template),
-                            stringResource(id = xcj.app.appsets.R.string.group_logo),
-                            stringResource(id = xcj.app.appsets.R.string.required)
-                        ),
-                        modifier = Modifier.padding(vertical = 12.dp)
-                    )
-                    Box(
-                        modifier = Modifier
-                            .clip(MaterialTheme.shapes.extraLarge)
-                            .border(
-                                1.dp, MaterialTheme.colorScheme.outline,
-                                MaterialTheme.shapes.extraLarge
-                            ),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        val groupIconUri =
-                            createGroupPageState.groupInfoForCreate.icon?.provideUri()
-                                ?: xcj.app.compose_share.R.drawable.ic_emoji_nature_24
-                        AnyImage(
-                            model = groupIconUri,
-                            modifier = Modifier
-                                .size(98.dp)
-                                .clip(MaterialTheme.shapes.extraLarge)
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                }
-                Spacer(modifier = Modifier.weight(1f))
-                Surface(
-                    color = MaterialTheme.colorScheme.secondaryContainer,
-                    shape = MaterialTheme.shapes.extraLarge,
+                Text(
+                    text = String.format(
+                        stringResource(id = xcj.app.appsets.R.string.a_is_required_template),
+                        stringResource(id = xcj.app.appsets.R.string.group_logo),
+                        stringResource(id = xcj.app.appsets.R.string.required)
+                    ),
+                    modifier = Modifier.padding(vertical = 12.dp)
+                )
+                Box(
                     modifier = Modifier
-                        .clip(MaterialTheme.shapes.extraLarge)
+                        .clip(ExtraLarge2)
+                        .border(
+                            1.dp,
+                            MaterialTheme.colorScheme.outline,
+                            ExtraLarge2
+                        )
                         .clickable(onClick = {
-                            onSelectGroupIconClick("CREATE_GROUP_IMAGE_SELECT_REQUEST")
-                        })
+                            val composeStateUpdater =
+                                RuntimeSingleStateUpdater.fromState(groupInfoForCreate.iconUriProvider) { markKey, input ->
+                                    PurpleLogger.current.d(
+                                        TAG,
+                                        "groupInfoForCreate.iconUriProvider, inputHandleDSL:\nmarkKey:$markKey\ninput:$input"
+                                    )
+                                    if (input !is ContentSelectionResult.RichMediaContentSelectionResult) {
+                                        return@fromState
+                                    }
+                                    val uriProviders = input.selectedProvider.provide()
+                                    if (uriProviders.isEmpty()) {
+                                        return@fromState
+                                    }
+                                    update(uriProviders.first())
+                                }
+                            onSelectGroupIconClick(
+                                "CREATE_GROUP_IMAGE_SELECT_REQUEST",
+                                composeStateUpdater
+                            )
+                        }),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Row(Modifier.padding(horizontal = 12.dp, vertical = 6.dp)) {
-                        Text(text = stringResource(id = xcj.app.appsets.R.string.choose))
-                    }
+                    val groupIconUri =
+                        groupInfoForCreate.iconUriProvider.value?.provideUri()
+                            ?: xcj.app.compose_share.R.drawable.ic_emoji_nature_24
+                    AnyImage(
+                        model = groupIconUri,
+                        modifier = Modifier
+                            .size(250.dp)
+                            .clip(ExtraLarge2)
+                    )
                 }
             }
+            Spacer(modifier = Modifier.height(12.dp))
             Text(text = stringResource(id = xcj.app.appsets.R.string.status))
-            Row() {
+            Row {
                 FilterChip(
-                    selected = createGroupPageState.groupInfoForCreate.isPublic,
+                    selected = groupInfoForCreate.isPublic.value,
                     onClick = {
-                        GroupInfoForCreate.updateGroupCreatePublicStatus(
-                            systemUseCase.createGroupPageState,
-                            true
-                        )
+                        groupInfoForCreate.isPublic.value = true
                     },
                     label = {
                         Text(text = stringResource(id = xcj.app.appsets.R.string.public_))
@@ -171,12 +227,9 @@ fun CreateGroupPage(
                 )
                 Spacer(modifier = Modifier.width(12.dp))
                 FilterChip(
-                    selected = !createGroupPageState.groupInfoForCreate.isPublic,
+                    selected = !groupInfoForCreate.isPublic.value,
                     onClick = {
-                        GroupInfoForCreate.updateGroupCreatePublicStatus(
-                            systemUseCase.createGroupPageState,
-                            false
-                        )
+                        groupInfoForCreate.isPublic.value = false
                     },
                     label = {
                         Text(text = stringResource(id = xcj.app.appsets.R.string.private_))
@@ -195,17 +248,14 @@ fun CreateGroupPage(
             DesignTextField(
                 modifier = Modifier.fillMaxWidth(),
                 maxLines = 1,
-                value = createGroupPageState.groupInfoForCreate.name,
+                value = groupInfoForCreate.name.value,
                 onValueChange = {
                     val name = if (it.length > 30) {
                         it.substring(0, 30)
                     } else {
                         it
                     }
-                    GroupInfoForCreate.updateGroupCreateName(
-                        systemUseCase.createGroupPageState,
-                        name
-                    )
+                    groupInfoForCreate.name.value = name
                 }, placeholder = {
                     Text(text = stringResource(xcj.app.appsets.R.string.group_name))
                 })
@@ -216,13 +266,10 @@ fun CreateGroupPage(
             DesignTextField(
                 modifier = Modifier.fillMaxWidth(),
                 maxLines = 1,
-                value = createGroupPageState.groupInfoForCreate.membersCount,
+                value = groupInfoForCreate.membersCount.value,
                 keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
                 onValueChange = {
-                    GroupInfoForCreate.updateGroupCreateMembersCount(
-                        systemUseCase.createGroupPageState,
-                        it.toIntOrNull()?.toString() ?: "100"
-                    )
+                    groupInfoForCreate.membersCount.value = it.toIntOrNull()?.toString() ?: "1000"
                 },
                 placeholder = {
                     Text(text = stringResource(xcj.app.appsets.R.string.quantity))
@@ -234,12 +281,9 @@ fun CreateGroupPage(
             )
             DesignTextField(
                 modifier = Modifier.fillMaxWidth(),
-                value = createGroupPageState.groupInfoForCreate.introduction,
+                value = groupInfoForCreate.introduction.value,
                 onValueChange = {
-                    GroupInfoForCreate.updateGroupCreateDescription(
-                        systemUseCase.createGroupPageState,
-                        it
-                    )
+                    groupInfoForCreate.introduction.value = it
                 },
                 placeholder = {
                     Text(text = stringResource(xcj.app.appsets.R.string.group_description))
@@ -256,18 +300,20 @@ fun CreateGroupPage(
             backButtonText = stringResource(xcj.app.appsets.R.string.create_group),
             endButtonText = stringResource(xcj.app.appsets.R.string.ok),
             onBackClick = onBackClick,
-            onEndButtonClick = onConfirmAction
+            onEndButtonClick = {
+                onConfirmClick(groupInfoForCreate)
+            }
         )
 
-        CreateGroupIndicator(createGroupPageState = createGroupPageState)
+        CreateGroupIndicator(createGroupPageUIState = createGroupPageUIState)
     }
 
 }
 
 @Composable
-private fun CreateGroupIndicator(createGroupPageState: CreateGroupPageState) {
+private fun CreateGroupIndicator(createGroupPageUIState: CreateGroupPageUIState) {
     AnimatedVisibility(
-        visible = createGroupPageState is CreateGroupPageState.Creating,
+        visible = createGroupPageUIState is CreateGroupPageUIState.Creating,
         enter = fadeIn(tween()) + scaleIn(
             tween(),
             2f

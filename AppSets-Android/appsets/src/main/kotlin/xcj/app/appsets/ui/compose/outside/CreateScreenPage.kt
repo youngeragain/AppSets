@@ -18,7 +18,6 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -36,7 +35,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -46,6 +44,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
@@ -61,37 +60,80 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dev.chrisbanes.haze.hazeSource
 import dev.chrisbanes.haze.rememberHazeState
 import xcj.app.appsets.ui.compose.LocalUseCaseOfScreenPost
+import xcj.app.appsets.ui.compose.content_selection.ContentSelectionResult
 import xcj.app.appsets.ui.compose.content_selection.ContentSelectionTypes
 import xcj.app.appsets.ui.compose.custom_component.AnyImage
 import xcj.app.appsets.ui.compose.custom_component.HideNavBar
 import xcj.app.appsets.ui.compose.quickstep.QuickStepContent
 import xcj.app.appsets.ui.model.ScreenInfoForCreate
-import xcj.app.appsets.ui.model.page_state.PostScreenPageState
-import xcj.app.appsets.util.model.UriProvider
+import xcj.app.appsets.ui.model.page_state.CreateScreenPageUIState
+import xcj.app.appsets.ui.viewmodel.MainViewModel
+import xcj.app.appsets.util.compose_state.ComposeStateUpdater
+import xcj.app.appsets.util.compose_state.RuntimeListStateUpdater
 import xcj.app.compose_share.components.BackActionTopBar
 import xcj.app.compose_share.components.DesignTextField
+import xcj.app.starter.android.util.PurpleLogger
+import xcj.app.starter.android.util.UriProvider
 
 private const val TAG = "CreateScreenPage"
 
-@OptIn(ExperimentalMaterial3Api::class)
+
+@Preview
+@Composable
+fun CreateScreenPagePreview(
+) {
+    val createScreenPageUIState by remember {
+        mutableStateOf<CreateScreenPageUIState>(CreateScreenPageUIState.CreateStart())
+    }
+    val screenInfoForCreate by remember {
+        mutableStateOf(ScreenInfoForCreate())
+    }
+
+    val mainViewModel = remember {
+        MainViewModel()
+    }
+
+    CompositionLocalProvider(
+        LocalUseCaseOfScreenPost provides mainViewModel.screenPostUseCase
+    ) {
+        CreateScreenPage(
+            quickStepContents = null,
+            createScreenPageUIState = createScreenPageUIState,
+            screenInfoForCreate = screenInfoForCreate,
+            onBackClick = {},
+            onConfirmClick = { screenInfoForCreate ->
+
+            },
+            onGenerateClick = {},
+            onAddMediaContentClick = { requestKey, requestType, requestTypeMaxCount, composeStateUpdater ->
+
+            },
+            onRemoveMediaContent = { type, uriProvider ->
+
+            },
+            onVideoPlayClick = { uriProvider ->
+
+            }
+        )
+    }
+}
+
 @Composable
 fun CreateScreenPage(
     quickStepContents: List<QuickStepContent>?,
+    createScreenPageUIState: CreateScreenPageUIState,
+    screenInfoForCreate: ScreenInfoForCreate,
     onBackClick: (Boolean) -> Unit,
-    onConfirmClick: () -> Unit,
-    onIsPublicClick: (Boolean) -> Unit,
+    onConfirmClick: (ScreenInfoForCreate) -> Unit,
     onGenerateClick: () -> Unit,
-    onInputContent: (String) -> Unit,
-    onInputTopics: (String) -> Unit,
-    onInputPeoples: (String) -> Unit,
-    onAddMediaFallClick: () -> Unit,
-    onAddMediaContentClick: (String, String, Int) -> Unit,
+    onAddMediaContentClick: (String, String, Int, ComposeStateUpdater<*>) -> Unit,
     onRemoveMediaContent: (String, UriProvider) -> Unit,
     onVideoPlayClick: (UriProvider) -> Unit,
 ) {
@@ -99,16 +141,16 @@ fun CreateScreenPage(
     HideNavBar()
     val screenPostUseCase = LocalUseCaseOfScreenPost.current
     LaunchedEffect(Unit) {
-        screenPostUseCase.updateWithQuickStepContentIfNeeded(quickStepContents)
+        screenPostUseCase.updateWithQuickStepContentIfNeeded(quickStepContents, screenInfoForCreate)
     }
     DisposableEffect(key1 = true, effect = {
         onDispose {
             screenPostUseCase.onComposeDispose("page dispose")
         }
     })
-    val postScreenState by screenPostUseCase.postScreenPageState
-    LaunchedEffect(key1 = postScreenState) {
-        if (postScreenState is PostScreenPageState.PostSuccessPage) {
+
+    LaunchedEffect(key1 = createScreenPageUIState) {
+        if (createScreenPageUIState is CreateScreenPageUIState.CreateSuccess) {
             onBackClick(true)
         }
     }
@@ -139,13 +181,8 @@ fun CreateScreenPage(
                 )
             )
             NewPostScreenComponent(
-                screenInfoForCreate = postScreenState.screenInfoForCreate,
+                screenInfoForCreate = screenInfoForCreate,
                 onGenerateClick = onGenerateClick,
-                onVisibilityClick = onIsPublicClick,
-                onInputContent = onInputContent,
-                onInputTopics = onInputTopics,
-                onInputUsers = onInputPeoples,
-                onAddMediaFallClick = onAddMediaFallClick,
                 onAddMediaContentClick = onAddMediaContentClick,
                 onRemoveMediaContent = onRemoveMediaContent,
                 onVideoPlayClick = onVideoPlayClick
@@ -163,17 +200,19 @@ fun CreateScreenPage(
             onBackClick = {
                 onBackClick(false)
             },
-            onEndButtonClick = onConfirmClick
+            onEndButtonClick = {
+                onConfirmClick(screenInfoForCreate)
+            }
         )
 
-        CreateScreenIndicator(postScreenPageState = postScreenState)
+        CreateScreenIndicator(createScreenPageUIState = createScreenPageUIState)
     }
 }
 
 @Composable
-fun CreateScreenIndicator(postScreenPageState: PostScreenPageState) {
+fun CreateScreenIndicator(createScreenPageUIState: CreateScreenPageUIState) {
     AnimatedVisibility(
-        visible = postScreenPageState is PostScreenPageState.Posting,
+        visible = createScreenPageUIState is CreateScreenPageUIState.Posting,
         enter = fadeIn(tween()) + scaleIn(
             tween(),
             2f
@@ -215,18 +254,15 @@ fun CreateScreenIndicator(postScreenPageState: PostScreenPageState) {
     }
 }
 
-@OptIn(ExperimentalLayoutApi::class)
+/**
+ * @param onAddMediaContentClick param1:requestKey, param2:requestType, param3:requestMaxCount, param4: composeStateUpdater
+ */
 @Composable
 fun NewPostScreenComponent(
     modifier: Modifier = Modifier,
     screenInfoForCreate: ScreenInfoForCreate,
     onGenerateClick: () -> Unit,
-    onVisibilityClick: (Boolean) -> Unit,
-    onInputContent: (String) -> Unit,
-    onInputTopics: (String) -> Unit,
-    onInputUsers: (String) -> Unit,
-    onAddMediaFallClick: () -> Unit,
-    onAddMediaContentClick: (String, String, Int) -> Unit,
+    onAddMediaContentClick: (String, String, Int, ComposeStateUpdater<*>) -> Unit,
     onRemoveMediaContent: (String, UriProvider) -> Unit,
     onVideoPlayClick: (UriProvider) -> Unit
 ) {
@@ -248,9 +284,9 @@ fun NewPostScreenComponent(
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 FilterChip(
-                    selected = screenInfoForCreate.isPublic,
+                    selected = screenInfoForCreate.isPublic.value,
                     onClick = {
-                        onVisibilityClick(true)
+                        screenInfoForCreate.isPublic.value = true
 
                     },
                     label = {
@@ -261,9 +297,9 @@ fun NewPostScreenComponent(
                     shape = CircleShape
                 )
                 FilterChip(
-                    selected = !screenInfoForCreate.isPublic,
+                    selected = !screenInfoForCreate.isPublic.value,
                     onClick = {
-                        onVisibilityClick(false)
+                        screenInfoForCreate.isPublic.value = false
                     },
                     label = {
                         Text(
@@ -274,7 +310,7 @@ fun NewPostScreenComponent(
                 )
             }
         }
-        val statusTip = if (screenInfoForCreate.isPublic) {
+        val statusTip = if (screenInfoForCreate.isPublic.value) {
             stringResource(xcj.app.appsets.R.string.screen_will_randomly_appear_on_the_homepage_after_passing_the_review)
         } else {
             stringResource(xcj.app.appsets.R.string.screen_is_only_visible_to_you)
@@ -319,8 +355,10 @@ fun NewPostScreenComponent(
                     fontSize = 11.sp
                 )
             },
-            value = screenInfoForCreate.content ?: "",
-            onValueChange = onInputContent
+            value = screenInfoForCreate.content.value,
+            onValueChange = {
+                screenInfoForCreate.content.value = it
+            }
         )
         Text(
             text = stringResource(xcj.app.appsets.R.string.related_topics),
@@ -336,8 +374,10 @@ fun NewPostScreenComponent(
                     fontSize = 11.sp
                 )
             },
-            value = screenInfoForCreate.associateTopics ?: "",
-            onValueChange = onInputTopics
+            value = screenInfoForCreate.associateTopics.value,
+            onValueChange = {
+                screenInfoForCreate.associateTopics.value = it
+            }
         )
         Text(
             text = stringResource(xcj.app.appsets.R.string.associated_people),
@@ -354,8 +394,10 @@ fun NewPostScreenComponent(
                     fontSize = 11.sp
                 )
             },
-            value = screenInfoForCreate.associatePeoples ?: "",
-            onValueChange = onInputUsers
+            value = screenInfoForCreate.associatePeoples.value,
+            onValueChange = {
+                screenInfoForCreate.associateTopics.value = it
+            }
         )
         Text(
             text = stringResource(xcj.app.appsets.R.string.picture),
@@ -369,7 +411,7 @@ fun NewPostScreenComponent(
                 .wrapContentHeight()
                 .animateContentSize()
         ) {
-            screenInfoForCreate.pictures.forEach { contentUriProvider ->
+            screenInfoForCreate.pictureUriProviders.forEach { contentUriProvider ->
                 Box(
                     Modifier
                         .padding(4.dp)
@@ -396,10 +438,23 @@ fun NewPostScreenComponent(
                         .size(120.dp, 120.dp)
                         .clip(MaterialTheme.shapes.extraLarge)
                         .clickable(onClick = {
+                            val composeStateUpdater =
+                                RuntimeListStateUpdater.fromState(screenInfoForCreate.pictureUriProviders) { markKey, input ->
+                                    PurpleLogger.current.d(
+                                        TAG,
+                                        "screenInfoForCreate.pictureUriProviders, inputHandleDSL:\nmarkKey:$markKey,\ninput:$input"
+                                    )
+                                    if (input !is ContentSelectionResult.RichMediaContentSelectionResult) {
+                                        return@fromState
+                                    }
+                                    val uriProviders = input.selectedProvider.provide()
+                                    addAll(uriProviders)
+                                }
                             onAddMediaContentClick(
                                 "CREATE_SCREEN_CONTENT_SELECT_IMAGE_REQUEST",
                                 ContentSelectionTypes.IMAGE,
-                                32
+                                32,
+                                composeStateUpdater
                             )
                         }),
                     contentAlignment = Alignment.Center
@@ -418,11 +473,14 @@ fun NewPostScreenComponent(
                     .padding(vertical = 10.dp),
                 fontWeight = FontWeight.Bold
             )
-            if (screenInfoForCreate.videos.firstOrNull() != null) {
+            if (screenInfoForCreate.videoUriProviders.firstOrNull() != null) {
                 Spacer(modifier = Modifier.weight(1f))
                 FilterChip(
-                    selected = screenInfoForCreate.addToMediaFall,
-                    onClick = onAddMediaFallClick,
+                    selected = screenInfoForCreate.addToMediaFall.value,
+                    onClick = {
+                        screenInfoForCreate.addToMediaFall.value =
+                            !screenInfoForCreate.addToMediaFall.value
+                    },
                     label = {
                         Text(text = stringResource(xcj.app.appsets.R.string.add_to_stream))
                     },
@@ -439,21 +497,34 @@ fun NewPostScreenComponent(
                 .combinedClickable(
                     onLongClick = {
                         val mediaUriProvider =
-                            screenInfoForCreate.videos.firstOrNull()
+                            screenInfoForCreate.videoUriProviders.firstOrNull()
                         if (mediaUriProvider != null) {
                             onVideoPlayClick(mediaUriProvider)
                         }
                     },
                     onClick = {
+                        val composeStateUpdater =
+                            RuntimeListStateUpdater.fromState(screenInfoForCreate.videoUriProviders) { markKey, input ->
+                                PurpleLogger.current.d(
+                                    TAG,
+                                    "screenInfoForCreate.videoUriProviders, inputHandleDSL:\nmarkKey:$markKey,\ninput:$input"
+                                )
+                                if (input !is ContentSelectionResult.RichMediaContentSelectionResult) {
+                                    return@fromState
+                                }
+                                val uriProviders = input.selectedProvider.provide()
+                                addAll(uriProviders)
+                            }
                         onAddMediaContentClick(
                             "CREATE_SCREEN_CONTENT_SELECT_VIDEO_REQUEST",
                             ContentSelectionTypes.VIDEO,
-                            1
+                            1,
+                            composeStateUpdater
                         )
                     },
                 )
         ) {
-            val videoUriProvider = screenInfoForCreate.videos.firstOrNull()
+            val videoUriProvider = screenInfoForCreate.videoUriProviders.firstOrNull()
             if (videoUriProvider != null) {
                 AnyImage(
                     modifier = Modifier
@@ -469,7 +540,7 @@ fun NewPostScreenComponent(
                     .align(Alignment.Center),
                 onClick = {
                     val mediaUriProvider =
-                        screenInfoForCreate.videos.firstOrNull()
+                        screenInfoForCreate.videoUriProviders.firstOrNull()
                     if (mediaUriProvider != null) {
                         onVideoPlayClick(mediaUriProvider)
                     }

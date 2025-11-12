@@ -1,0 +1,31 @@
+package xcj.app.appsets.ui.model.page_state
+
+import xcj.app.appsets.server.model.UserInfo
+import xcj.app.appsets.ui.model.TipsProvider
+
+sealed interface UserProfilePageUIState : TipsProvider {
+
+    data object Loading :
+        UserProfilePageUIState {
+        override val tips: Int = xcj.app.appsets.R.string.loading
+        override val subTips: Int? = null
+    }
+
+    data class LoadSuccess(
+        val userInfo: UserInfo,
+        override val tips: Int? = null,
+        override val subTips: Int? = null
+    ) : UserProfilePageUIState
+
+    data object NotFound :
+        UserProfilePageUIState {
+        override val tips: Int = xcj.app.appsets.R.string.not_found
+        override val subTips: Int? = null
+    }
+
+    data class LoadFailed(
+        override val tips: Int = xcj.app.appsets.R.string.something_wrong,
+        override val subTips: Int? = null
+    ) : UserProfilePageUIState
+
+}

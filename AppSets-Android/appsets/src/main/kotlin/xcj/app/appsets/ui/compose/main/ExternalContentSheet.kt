@@ -112,7 +112,10 @@ private fun ExternalContentTipsSheet(
         LazyRow(
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            items(quickStepContentHolder.quickStepContents) { quickStepContent ->
+            items(
+                items = quickStepContentHolder.quickStepContents,
+                key = { item -> item }
+            ) { quickStepContent ->
                 QuickStepContentComponent(quickStepContent)
             }
         }

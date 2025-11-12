@@ -11,7 +11,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.onPlaced
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.IntSize
 import dev.chrisbanes.haze.rememberHazeState
 import xcj.app.appsets.ui.compose.custom_component.HideNavBar
@@ -42,8 +41,7 @@ fun ToolGraphicPage(
                 backActionBarSize = it.size
             },
             hazeState = hazeState,
-            onBackClick = onBackClick,
-            backButtonText = stringResource(xcj.app.appsets.R.string.graphic)
+            onBackClick = onBackClick
         )
     }
 }

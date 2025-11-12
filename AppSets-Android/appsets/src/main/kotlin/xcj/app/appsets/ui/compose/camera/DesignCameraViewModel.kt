@@ -1,11 +1,9 @@
 package xcj.app.appsets.ui.compose.camera
 
 import android.app.Activity
-import androidx.compose.runtime.mutableStateOf
 import com.google.mlkit.vision.barcode.common.Barcode
 import xcj.app.appsets.server.repository.QRCodeRepository
 import xcj.app.appsets.server.repository.UserRepository
-import xcj.app.appsets.ui.model.page_state.LoginSignUpPageState
 import xcj.app.appsets.usecase.QRCodeUseCase
 import xcj.app.compose_share.ui.viewmodel.VisibilityComposeStateViewModel
 import xcj.app.starter.android.util.PurpleLogger
@@ -21,7 +19,6 @@ class DesignCameraViewModel : VisibilityComposeStateViewModel() {
     }
 
     val qrCodeUseCase: QRCodeUseCase = QRCodeUseCase(
-        mutableStateOf(LoginSignUpPageState.LoginStart),
         QRCodeRepository.getInstance(),
         UserRepository.getInstance()
     )

@@ -185,7 +185,10 @@ fun ToolIntentCallerPage(
                         .fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    items(calledIntentList) { calledIntent ->
+                    items(
+                        items = calledIntentList,
+                        key = { item -> item.time.time }
+                    ) { calledIntent ->
                         Card(
                             shape = MaterialTheme.shapes.extraLarge,
                             modifier = Modifier.animateItem()
@@ -272,8 +275,7 @@ fun ToolIntentCallerPage(
                 backActionBarSize = it.size
             },
             hazeState = hazeState,
-            onBackClick = onBackClick,
-            backButtonText = stringResource(xcj.app.appsets.R.string.intent_caller)
+            onBackClick = onBackClick
         )
 
     }

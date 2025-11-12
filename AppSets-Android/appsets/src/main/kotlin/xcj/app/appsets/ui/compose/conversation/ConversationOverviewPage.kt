@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalMaterial3ExpressiveApi::class)
+
 package xcj.app.appsets.ui.compose.conversation
 
 import android.content.res.Configuration
@@ -31,11 +33,12 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -71,6 +74,7 @@ import xcj.app.appsets.ui.compose.custom_component.AnyImage
 import xcj.app.appsets.ui.compose.custom_component.ShowNavBar
 import xcj.app.appsets.usecase.ConversationUseCase
 import xcj.app.appsets.usecase.SessionState
+import xcj.app.appsets.util.compose_state.ComposeStateUpdater
 import xcj.app.compose_share.components.DesignVDivider
 
 private const val TAG = "ConversationOverviewPage"
@@ -88,7 +92,7 @@ fun ConversationOverviewPage(
     onConversionSessionClick: (Session) -> Unit,
     onSystemImMessageClick: (Session, IMMessage<*>) -> Unit,
     onUserRequestClick: (Boolean, Session, SystemMessage) -> Unit,
-    onInputMoreAction: (String) -> Unit,
+    onInputMoreAction: (String, ComposeStateUpdater<*>) -> Unit,
     onMoreClick: ((IMObj) -> Unit),
     onLandscapeBackClick: () -> Unit,
 ) {
@@ -140,7 +144,7 @@ fun ConversationOverviewLandscape(
     onBioClick: (Bio) -> Unit,
     onImMessageContentClick: (IMMessage<*>) -> Unit,
     onUserRequestClick: (Boolean, Session, SystemMessage) -> Unit,
-    onInputMoreAction: (String) -> Unit,
+    onInputMoreAction: (String, ComposeStateUpdater<*>) -> Unit,
     onMoreClick: ((IMObj) -> Unit),
     onBackClick: () -> Unit,
 ) {
@@ -662,7 +666,10 @@ fun ConversationOverviewActionsComponent(
             verticalArrangement = Arrangement.spacedBy(12.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            items(actionsTabs) { actionsTabResInt ->
+            items(
+                items = actionsTabs,
+                key = { item -> item }
+            ) { actionsTabResInt ->
                 FilledTonalButton(
                     onClick = {
                         when (actionsTabResInt) {
@@ -964,7 +971,7 @@ fun GroupRequestCard(
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        CircularProgressIndicator(modifier = Modifier.size(24.dp))
+                        LoadingIndicator()
                         Text(text = stringResource(xcj.app.appsets.R.string.processing))
                     }
                 } else {
@@ -1074,7 +1081,7 @@ fun FriendRequestCard(
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        CircularProgressIndicator(modifier = Modifier.size(24.dp))
+                        LoadingIndicator()
                         Text(text = stringResource(id = xcj.app.appsets.R.string.processing))
                     }
                 } else {

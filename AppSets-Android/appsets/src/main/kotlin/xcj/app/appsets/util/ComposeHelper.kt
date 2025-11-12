@@ -1,7 +1,6 @@
 package xcj.app.appsets.util
 
 import android.app.Activity
-import android.content.Context
 import android.graphics.Bitmap
 import android.os.Build
 import android.os.Handler
@@ -10,16 +9,15 @@ import android.view.PixelCopy
 import android.view.View
 import androidx.compose.ui.geometry.Rect
 import androidx.core.graphics.applyCanvas
+import androidx.core.graphics.createBitmap
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import xcj.app.appsets.util.ktx.writeBitmap
 import xcj.app.starter.android.util.PurpleLogger
 import xcj.app.starter.test.LocalAndroidContextFileDir
 import java.io.File
 import java.util.UUID
 import kotlin.math.roundToInt
-import androidx.core.graphics.createBitmap
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
-import okhttp3.Dispatcher
 
 private const val TAG = "ComposeHelper"
 
@@ -62,15 +60,13 @@ internal suspend fun saveComposeNodeAsBitmap(
             ),
             bitmap,
             {
-                if (it == PixelCopy.SUCCESS) {
-                    saveInternal()
-                } else {
+                if (it != PixelCopy.SUCCESS) {
                     PurpleLogger.current.d(
                         TAG,
                         "above o, save compose node image failure with name:$fileName"
                     )
-                    null
                 }
+                saveInternal()
             },
             Handler(Looper.getMainLooper())
         )

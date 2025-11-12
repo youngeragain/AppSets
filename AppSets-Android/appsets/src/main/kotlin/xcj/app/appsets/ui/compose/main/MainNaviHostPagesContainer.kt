@@ -70,6 +70,7 @@ import androidx.navigation.compose.NavHost
 import com.google.gson.Gson
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.hazeSource
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import me.saket.telephoto.zoomable.rememberZoomableState
 import me.saket.telephoto.zoomable.zoomable
@@ -159,15 +160,24 @@ import xcj.app.appsets.ui.compose.settings.SettingsPage
 import xcj.app.appsets.ui.compose.user.UserProfilePage
 import xcj.app.appsets.ui.compose.web.WebSheetContent
 import xcj.app.appsets.ui.model.ApplicationForCreate
+import xcj.app.appsets.ui.model.GroupInfoForCreate
+import xcj.app.appsets.ui.model.ScreenInfoForCreate
+import xcj.app.appsets.ui.model.UserInfoForCreate
+import xcj.app.appsets.ui.model.page_state.CreateApplicationPageUIState
+import xcj.app.appsets.ui.model.page_state.CreateGroupPageUIState
+import xcj.app.appsets.ui.model.page_state.CreateScreenPageUIState
+import xcj.app.appsets.ui.model.page_state.LoginPageUIState
+import xcj.app.appsets.ui.model.page_state.SignUpPageUIState
 import xcj.app.appsets.ui.viewmodel.MainViewModel
 import xcj.app.appsets.usecase.AppsUseCase
 import xcj.app.appsets.usecase.ConversationUseCase
 import xcj.app.appsets.usecase.MediaRemoteExoUseCase
 import xcj.app.appsets.usecase.SystemUseCase
 import xcj.app.appsets.util.BundleDefaults
+import xcj.app.appsets.util.compose_state.ComposeStateUpdater
+import xcj.app.appsets.util.compose_state.RuntimeSingleStateUpdater
 import xcj.app.appsets.util.ktx.toast
 import xcj.app.appsets.util.model.MediaStoreDataUri
-import xcj.app.appsets.util.model.UriProvider
 import xcj.app.compose_share.components.LocalVisibilityComposeStateProvider
 import xcj.app.compose_share.components.ProgressiveVisibilityComposeState
 import xcj.app.compose_share.components.VisibilityComposeStateProvider
@@ -180,6 +190,7 @@ import xcj.app.starter.android.ui.model.PlatformPermissionsUsage
 import xcj.app.starter.android.usecase.PlatformUseCase
 import xcj.app.starter.android.util.LocalMessenger
 import xcj.app.starter.android.util.PurpleLogger
+import xcj.app.starter.android.util.UriProvider
 import xcj.app.starter.test.ComposeEvent
 import xcj.app.starter.test.LocalPurpleEventPublisher
 import xcj.app.starter.test.NaviHostParams
@@ -214,10 +225,10 @@ fun MainNaviHostPagesContainer(
                 val context = LocalContext.current
                 val appsUseCase = LocalUseCaseOfApps.current
                 val conversationUseCase = LocalUseCaseOfConversation.current
-                val appCenterPageState by appsUseCase.appCenterPageState
+                val appCenterPageState by appsUseCase.appCenterPageUIState
                 val coroutineScope = rememberCoroutineScope()
                 AppsCenterPage(
-                    appCenterPageState = appCenterPageState,
+                    appCenterPageUIState = appCenterPageState,
                     onBioClick = { bio ->
                         coroutineScope.launch {
                             onBioClick(context, navController, bio)
@@ -261,7 +272,7 @@ fun MainNaviHostPagesContainer(
                         onBackClick = navController::navigateUp,
                         onGetApplicationClick = { application, appPlatform ->
                             val bottomSheetState = visibilityComposeStateProvider.bottomSheetState()
-                            bottomSheetState.show {
+                            bottomSheetState.show(null) {
                                 DownloadBottomSheetContent(
                                     application = application,
                                     appPlatform = appPlatform,
@@ -379,36 +390,45 @@ fun MainNaviHostPagesContainer(
                     val appCreationUseCase = LocalUseCaseOfAppCreation.current
                     val visibilityComposeStateProvider = LocalVisibilityComposeStateProvider.current
                     val coroutineScope = rememberCoroutineScope()
-                    val createApplicationPageState by appCreationUseCase.createApplicationPageState
+
+                    val createApplicationPageUIState = remember {
+                        mutableStateOf<CreateApplicationPageUIState>(CreateApplicationPageUIState.CreateStart())
+                    }
+
+                    val applicationForCreate by remember {
+                        mutableStateOf(ApplicationForCreate())
+                    }
 
                     LaunchedEffect(key1 = true, block = {
-                        appCreationUseCase.inflateApplication(application)
+                        appCreationUseCase.inflateApplication(applicationForCreate, application)
                     })
 
                     CreateAppPage(
                         createStep = createStep,
                         platform = platform,
                         versionInfo = versionInfo,
-                        createApplicationPageState = createApplicationPageState,
+                        createApplicationPageUIState = createApplicationPageUIState.value,
+                        applicationForCreate = applicationForCreate,
                         onBackClick = navController::navigateUp,
-                        onApplicationForCreateFiledChanged = appCreationUseCase::onApplicationForCreateFiledChanged,
-                        onChoosePictureClick = { any, filedName, uriHolder ->
-                            val requestKey = "CREATE_APP_PICTURE_REQUEST"
-                            appCreationUseCase.setChooseContentTempValues(
-                                any, filedName
-                            )
+                        onChoosePictureClick = { requestKey, requestMaxCount, composeStateUpdater ->
                             coroutineScope.launch {
                                 showContentSelectionDialog(
-                                    context,
-                                    visibilityComposeStateProvider,
-                                    navController,
-                                    PageRouteNames.CreateAppPage,
-                                    requestKey,
-                                    requestSelectionTypeParams = defaultImageSelectionTypeParam()
+                                    context = context,
+                                    navController = navController,
+                                    visibilityComposeStateProvider = visibilityComposeStateProvider,
+                                    contextName = PageRouteNames.CreateAppPage,
+                                    requestKey = requestKey,
+                                    requestSelectionTypeParams = defaultImageSelectionTypeParam(
+                                        countProvider = {
+                                            requestMaxCount
+                                        }
+                                    ),
+                                    composeStateUpdater = composeStateUpdater,
+                                    coroutineScope = coroutineScope
                                 )
                             }
                         },
-                        onConfirmClick = {
+                        onConfirmClick = { applicationForCreate ->
                             if (createStep != ApplicationForCreate.CREATE_STEP_APPLICATION) {
                                 ContextCompat.getString(
                                     context,
@@ -418,7 +438,15 @@ fun MainNaviHostPagesContainer(
                                 return@CreateAppPage
                             }
                             coroutineScope.launch {
-                                appCreationUseCase.finishCreateApp(context)
+                                val composeStateUpdater =
+                                    RuntimeSingleStateUpdater.fromNonNullState(
+                                        createApplicationPageUIState
+                                    )
+                                appCreationUseCase.finishCreateApp(
+                                    context,
+                                    applicationForCreate,
+                                    composeStateUpdater
+                                )
                             }
                         }
                     )
@@ -551,9 +579,17 @@ fun MainNaviHostPagesContainer(
                         Constants.QUICK_STEP_CONTENT,
                         QuickStepContent::class.java
                     )
+                    val createScreenPageUIState = remember {
+                        mutableStateOf<CreateScreenPageUIState>(CreateScreenPageUIState.CreateStart())
+                    }
+                    val screenInfoForCreate by remember {
+                        mutableStateOf(ScreenInfoForCreate())
+                    }
                     val coroutineScope = rememberCoroutineScope()
                     CreateScreenPage(
                         quickStepContents = quickStepContents,
+                        createScreenPageUIState = createScreenPageUIState.value,
+                        screenInfoForCreate = screenInfoForCreate,
                         onBackClick = { shouldRefresh ->
                             if (shouldRefresh) {
                                 coroutineScope.launch {
@@ -562,30 +598,40 @@ fun MainNaviHostPagesContainer(
                             }
                             navController.navigateUp()
                         },
-                        onConfirmClick = {
+                        onConfirmClick = { screenInfoForCreate ->
                             coroutineScope.launch {
-                                screenPostUseCase.createScreen(context)
+                                val composeStateUpdater =
+                                    RuntimeSingleStateUpdater.fromNonNullState(
+                                        createScreenPageUIState
+                                    )
+                                screenPostUseCase.createScreen(
+                                    context,
+                                    screenInfoForCreate,
+                                    composeStateUpdater
+                                )
                             }
                         },
-                        onIsPublicClick = screenPostUseCase::onIsPublicClick,
                         onGenerateClick = {
                             coroutineScope.launch {
-                                screenPostUseCase.generateContent(context)
+                                val composeStateUpdater =
+                                    RuntimeSingleStateUpdater.fromNonNullState(
+                                        createScreenPageUIState
+                                    )
+                                screenPostUseCase.generateContent(
+                                    context,
+                                    screenInfoForCreate,
+                                    composeStateUpdater
+                                )
                             }
                         },
-                        onInputContent = screenPostUseCase::onInputContent,
-                        onInputTopics = screenPostUseCase::onInputTopics,
-                        onInputPeoples = screenPostUseCase::onInputPeoples,
-                        onAddMediaFallClick = screenPostUseCase::onAddMediaFallClick,
-
-                        onAddMediaContentClick = { requestKey, requestType, requestTypeMaxCount ->
+                        onAddMediaContentClick = { requestKey, requestType, requestTypeMaxCount, composeStateUpdater ->
                             coroutineScope.launch {
                                 showContentSelectionDialog(
-                                    context,
-                                    visibilityComposeStateProvider,
-                                    navController,
-                                    PageRouteNames.CreateScreenPage,
-                                    requestKey,
+                                    context = context,
+                                    navController = navController,
+                                    visibilityComposeStateProvider = visibilityComposeStateProvider,
+                                    contextName = PageRouteNames.CreateScreenPage,
+                                    requestKey = requestKey,
                                     requestSelectionTypeParams = listOf(
                                         ContentSelectionRequest.SelectionTypeParam(
                                             selectionType = requestType,
@@ -594,15 +640,22 @@ fun MainNaviHostPagesContainer(
                                             }
                                         )
                                     ),
-                                    defaultSelectionType = requestType
+                                    defaultSelectionType = requestType,
+                                    composeStateUpdater = composeStateUpdater,
+                                    coroutineScope = coroutineScope
                                 )
                             }
 
                         },
-                        onRemoveMediaContent = { type, scalableItemState ->
+                        onRemoveMediaContent = { type, uriProvider ->
+                            val composeStateUpdater =
+                                RuntimeSingleStateUpdater.fromNonNullState(createScreenPageUIState)
                             screenPostUseCase.onRemoveMediaContent(
                                 type,
-                                scalableItemState
+                                uriProvider,
+                                screenInfoForCreate,
+                                composeStateUpdater
+
                             )
                         },
                         onVideoPlayClick = { uriProvider ->
@@ -716,27 +769,29 @@ fun MainNaviHostPagesContainer(
                                 context, result, session, imMessage
                             )
                         },
-                        onInputMoreAction = { requestKey ->
+                        onInputMoreAction = { requestKey, composeStateUpdater ->
                             coroutineScope.launch {
                                 showContentSelectionDialog(
-                                    context,
-                                    visibilityComposeStateProvider,
-                                    navController,
-                                    PageRouteNames.ConversationDetailsPage,
-                                    requestKey,
+                                    context = context,
+                                    navController = navController,
+                                    visibilityComposeStateProvider = visibilityComposeStateProvider,
+                                    contextName = PageRouteNames.ConversationDetailsPage,
+                                    requestKey = requestKey,
                                     requestSelectionTypeParams = defaultAllSelectionTypeParam { selectionType ->
                                         if (selectionType == ContentSelectionTypes.IMAGE) {
                                             100
                                         } else {
                                             1
                                         }
-                                    }
+                                    },
+                                    composeStateUpdater = composeStateUpdater,
+                                    coroutineScope = coroutineScope
                                 )
                             }
                         },
                         onMoreClick = { imObj ->
                             val bottomSheetState = visibilityComposeStateProvider.bottomSheetState()
-                            bottomSheetState.show {
+                            bottomSheetState.show(null) {
                                 ConversationDetailsMoreInfoSheetContent(
                                     imObj = imObj,
                                     onBioClick = { bio ->
@@ -793,27 +848,29 @@ fun MainNaviHostPagesContainer(
                                 visibilityComposeStateProvider
                             )
                         },
-                        onInputMoreAction = { requestType ->
+                        onInputMoreAction = { requestKey, composeStateUpdater ->
                             coroutineScope.launch {
                                 showContentSelectionDialog(
-                                    context,
-                                    visibilityComposeStateProvider,
-                                    navController,
-                                    PageRouteNames.ConversationDetailsPage,
-                                    requestType,
+                                    context = context,
+                                    navController = navController,
+                                    visibilityComposeStateProvider = visibilityComposeStateProvider,
+                                    contextName = PageRouteNames.ConversationDetailsPage,
+                                    requestKey = requestKey,
                                     requestSelectionTypeParams = defaultAllSelectionTypeParam { selectionType ->
                                         if (selectionType == ContentSelectionTypes.IMAGE) {
-                                            100
+                                            32
                                         } else {
                                             1
                                         }
-                                    }
+                                    },
+                                    composeStateUpdater = composeStateUpdater,
+                                    coroutineScope = coroutineScope
                                 )
                             }
                         },
                         onMoreClick = { imObj ->
                             val bottomSheetState = visibilityComposeStateProvider.bottomSheetState()
-                            bottomSheetState.show {
+                            bottomSheetState.show(null) {
                                 ConversationDetailsMoreInfoSheetContent(
                                     imObj = imObj,
                                     onBioClick = { bio ->
@@ -845,14 +902,13 @@ fun MainNaviHostPagesContainer(
                 val visibilityComposeStateProvider = LocalVisibilityComposeStateProvider.current
                 val navigationUseCase = LocalUseCaseOfNavigation.current
                 val coroutineScope = rememberCoroutineScope()
-                val loginSignUpPageState by systemUseCase.loginSignUpPageState
-                val generatedQRCodeInfo by qrCodeUseCase.generatedQRCodeInfo
-
-                LaunchedEffect(true) {
-                    systemUseCase.prepareLoginState()
+                val loginPageUIState = remember {
+                    mutableStateOf<LoginPageUIState>(LoginPageUIState.LoginStart())
                 }
+                val generatedQRCodeInfo by qrCodeUseCase.generatedQRCodeInfo
                 LoginPage(
-                    loginSignUpPageState = loginSignUpPageState,
+                    loginPageUIState = loginPageUIState.value,
+
                     generatedQRCodeInfo = generatedQRCodeInfo,
                     onBackClick = navController::navigateUp,
                     onLoggingFinish = {
@@ -867,7 +923,7 @@ fun MainNaviHostPagesContainer(
                     },
                     onQRCodeLoginButtonClick = {
                         coroutineScope.launch {
-                            qrCodeUseCase.requestGenerateQRCode()
+                            qrCodeUseCase.requestGenerateQRCode(null)
                         }
                     },
                     onScanQRCodeButtonClick = {
@@ -875,11 +931,14 @@ fun MainNaviHostPagesContainer(
                     },
                     onLoginConfirmButtonClick = { account, password ->
                         coroutineScope.launch {
+                            val composeStateUpdater =
+                                RuntimeSingleStateUpdater.fromNonNullState(loginPageUIState)
                             systemUseCase.login(
                                 context,
                                 account,
                                 password,
-                                visibilityComposeStateProvider
+                                visibilityComposeStateProvider,
+                                composeStateUpdater
                             )
                         }
                     }
@@ -896,28 +955,40 @@ fun MainNaviHostPagesContainer(
                 val systemUseCase = LocalUseCaseOfSystem.current
                 val visibilityComposeStateProvider = LocalVisibilityComposeStateProvider.current
                 val coroutineScope = rememberCoroutineScope()
-                val loginSignUpPageState by systemUseCase.loginSignUpPageState
-                LaunchedEffect(true) {
-                    systemUseCase.prepareSignUpState()
+                val userInfoForCreate by remember {
+                    mutableStateOf(UserInfoForCreate())
                 }
+                val signUpPageUIState = remember {
+                    mutableStateOf<SignUpPageUIState>(SignUpPageUIState.SignUpStart())
+                }
+
                 SignUpPage(
-                    loginState = loginSignUpPageState,
+                    signUpPageUIState = signUpPageUIState.value,
+                    userInfoForCreate = userInfoForCreate,
                     onBackClick = navController::navigateUp,
-                    onSelectUserAvatarClick = { requestKey ->
+                    onSelectUserAvatarClick = { requestKey, composeStateUpdater ->
                         coroutineScope.launch {
                             showContentSelectionDialog(
-                                context,
-                                visibilityComposeStateProvider,
-                                navController,
-                                PageRouteNames.SignUpPage,
-                                requestKey,
-                                requestSelectionTypeParams = defaultImageSelectionTypeParam()
+                                context = context,
+                                visibilityComposeStateProvider = visibilityComposeStateProvider,
+                                navController = navController,
+                                contextName = PageRouteNames.SignUpPage,
+                                requestKey = requestKey,
+                                requestSelectionTypeParams = defaultImageSelectionTypeParam(),
+                                composeStateUpdater = composeStateUpdater,
+                                coroutineScope = coroutineScope
                             )
                         }
                     },
-                    onConfirmClick = {
+                    onConfirmClick = { userInfoForCreate ->
                         coroutineScope.launch {
-                            systemUseCase.signUp(context)
+                            val composeStateUpdater =
+                                RuntimeSingleStateUpdater.fromNonNullState(signUpPageUIState)
+                            systemUseCase.signUp(
+                                context,
+                                userInfoForCreate,
+                                composeStateUpdater
+                            )
                         }
                     }
                 )
@@ -1127,10 +1198,10 @@ fun MainNaviHostPagesContainer(
                     val groupInfoUseCase = LocalUseCaseOfGroupInfo.current
                     val conversationUseCase = LocalUseCaseOfConversation.current
                     val systemUseCase = LocalUseCaseOfSystem.current
-                    val groupInfoState by groupInfoUseCase.groupInfoPageState
+                    val groupInfoState by groupInfoUseCase.groupInfoPageUIState
                     val coroutineScope = rememberCoroutineScope()
                     GroupInfoPage(
-                        groupInfoPageState = groupInfoState,
+                        groupInfoPageUIState = groupInfoState,
                         onBackClick = navController::navigateUp,
                         onBioClick = { bio ->
                             coroutineScope.launch {
@@ -1174,23 +1245,41 @@ fun MainNaviHostPagesContainer(
                     val context = LocalContext.current
                     val systemUseCase = LocalUseCaseOfSystem.current
                     val visibilityComposeStateProvider = LocalVisibilityComposeStateProvider.current
-                    val createGroupPageState by systemUseCase.createGroupPageState
+                    val createGroupPageUIState = remember {
+                        mutableStateOf<CreateGroupPageUIState>(CreateGroupPageUIState.CreateStart())
+                    }
+                    val groupInfoForCreate by remember {
+                        mutableStateOf(GroupInfoForCreate())
+                    }
                     val coroutineScope = rememberCoroutineScope()
                     CreateGroupPage(
-                        createGroupPageState = createGroupPageState,
+                        createGroupPageUIState = createGroupPageUIState.value,
+                        groupInfoForCreate = groupInfoForCreate,
                         onBackClick = navController::navigateUp,
-                        onConfirmAction = {
-                            systemUseCase.createGroup(context)
+                        onConfirmClick = {
+                            coroutineScope.launch {
+                                val composeStateUpdater =
+                                    RuntimeSingleStateUpdater.fromNonNullState(
+                                        createGroupPageUIState
+                                    )
+                                systemUseCase.createGroup(
+                                    context,
+                                    groupInfoForCreate,
+                                    composeStateUpdater
+                                )
+                            }
                         },
-                        onSelectGroupIconClick = { requestKey ->
+                        onSelectGroupIconClick = { requestKey, composeStateUpdater ->
                             coroutineScope.launch {
                                 showContentSelectionDialog(
-                                    context,
-                                    visibilityComposeStateProvider,
-                                    navController,
-                                    PageRouteNames.CreateGroupPage,
-                                    requestKey,
-                                    requestSelectionTypeParams = defaultImageSelectionTypeParam()
+                                    context = context,
+                                    navController = navController,
+                                    visibilityComposeStateProvider = visibilityComposeStateProvider,
+                                    contextName = PageRouteNames.CreateGroupPage,
+                                    requestKey = requestKey,
+                                    requestSelectionTypeParams = defaultImageSelectionTypeParam(),
+                                    composeStateUpdater = composeStateUpdater,
+                                    coroutineScope = coroutineScope
                                 )
                             }
                         }
@@ -1249,7 +1338,10 @@ fun MainNaviHostPagesContainer(
                         }
                     },
                     onWebsiteClick = {
-                        navigateToExternalWeb(context, AppSetsModuleSettings.WEBSITE_URL.toUri())
+                        navigateToExternalWeb(
+                            context,
+                            AppSetsModuleSettings.URI_SELF_DOWNLOAD_URL.toUri()
+                        )
                     },
                 )
             }
@@ -1316,7 +1408,7 @@ fun MainNaviHostPagesContainer(
                     val isLoginUserFollowedThisUser by userInfoUseCase.loggedUserFollowedState
                     val userScreens = screenUseCase.userScreensLoadContainer.screens
                     UserProfilePage(
-                        userProfilePageState = userProfilePageState,
+                        userProfilePageUIState = userProfilePageState,
                         userApplications = userApplications,
                         userFollowers = userFollowers,
                         userFollowed = userFollowed,
@@ -1364,21 +1456,23 @@ fun MainNaviHostPagesContainer(
                                 screenUseCase.loadScreens(uid, force)
                             }
                         },
-                        onSelectUserAvatarClick = { requestKey ->
+                        onSelectUserAvatarClick = { requestKey, composeStateUpdater ->
                             coroutineScope.launch {
                                 showContentSelectionDialog(
-                                    context,
-                                    visibilityComposeStateProvider,
-                                    navController,
-                                    PageRouteNames.UserProfilePage,
-                                    requestKey,
-                                    requestSelectionTypeParams = defaultImageSelectionTypeParam()
+                                    context = context,
+                                    navController = navController,
+                                    visibilityComposeStateProvider = visibilityComposeStateProvider,
+                                    contextName = PageRouteNames.UserProfilePage,
+                                    requestKey = requestKey,
+                                    requestSelectionTypeParams = defaultImageSelectionTypeParam(),
+                                    composeStateUpdater = composeStateUpdater,
+                                    coroutineScope = coroutineScope
                                 )
                             }
                         },
-                        onModifyProfileConfirmClick = {
+                        onModifyProfileConfirmClick = { userInfoForModify ->
                             coroutineScope.launch {
-                                userInfoUseCase.modifyUserInfo(context)
+                                userInfoUseCase.modifyUserInfo(context, userInfoForModify)
                             }
                         }
                     )
@@ -1576,7 +1670,7 @@ private fun showPictureViewDialog(
     dataList: List<Any>,
 ) {
     val immerseContentState = visibilityComposeStateProvider.immerseContentState()
-    immerseContentState.show {
+    immerseContentState.show(null) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -1662,30 +1756,49 @@ private fun showPictureViewDialog(
 
 private fun showContentSelectionDialog(
     context: Context,
-    visibilityComposeStateProvider: VisibilityComposeStateProvider,
     navController: NavController,
+    visibilityComposeStateProvider: VisibilityComposeStateProvider,
     contextName: String,
     requestKey: String,
     requestSelectionTypeParams: List<ContentSelectionRequest.SelectionTypeParam> = defaultAllSelectionTypeParam(),
     defaultSelectionType: String = requestSelectionTypeParams.first().selectionType,
+    composeStateUpdater: ComposeStateUpdater<*>,
+    coroutineScope: CoroutineScope,
 ) {
     val request = ContentSelectionRequest(
         context,
         contextName,
         requestKey,
         requestSelectionTypeParams,
-        defaultSelectionType
+        defaultSelectionType,
+        composeStateUpdater
+    )
+
+    LocalMessenger.post(
+        ModuleConstant.MESSAGE_KEY_ON_CONTENT_SELECT_REQUEST,
+        request
     )
     val bottomSheetState = visibilityComposeStateProvider.bottomSheetState()
-    bottomSheetState.show {
+
+    bottomSheetState.show(
+        {
+            LocalMessenger.post(
+                ModuleConstant.MESSAGE_KEY_ON_CONTENT_SELECTION_CLOSE,
+                request
+            )
+        }
+    ) {
         ContentSelectionPromptSheetContent(
             request = request,
             onContentSelected = { contentSelectionResult ->
-                bottomSheetState.hide()
                 LocalMessenger.post(
                     ModuleConstant.MESSAGE_KEY_ON_CONTENT_SELECT_RESULT,
                     contentSelectionResult
                 )
+                coroutineScope.launch {
+                    val markKey = request.buildMarkKey()
+                    composeStateUpdater.handle(markKey, contentSelectionResult)
+                }
             },
             onDismiss = {
                 bottomSheetState.hide()
@@ -1703,7 +1816,7 @@ fun showWebBrowserDialog(
         return
     }
     val bottomSheetState = visibilityComposeStateProvider.bottomSheetState()
-    bottomSheetState.show {
+    bottomSheetState.show(null) {
         WebSheetContent(null, url = data)
     }
 }

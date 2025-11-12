@@ -273,7 +273,6 @@ fun ToolContentTransformPage(
             },
             hazeState = hazeState,
             onBackClick = onBackClick,
-            backButtonText = stringResource(xcj.app.appsets.R.string.transform_content)
         )
     }
 }

@@ -42,45 +42,45 @@ class UserRepository(private val userApi: UserApi) {
     ): DesignResponse<Boolean> = withContext(Dispatchers.IO) {
         PurpleLogger.current.d(TAG, "updateUserInfo")
         var avatarUrlEndpoint: String? = null
-        val avatarImageUri = userInfoForModify.userAvatarUri?.provideUri()
+        val avatarImageUri = userInfoForModify.userAvatarUriProvider.value?.provideUri()
         if (avatarImageUri != null) {
             avatarUrlEndpoint = UUID.randomUUID().toString()
             LocalFileIO.current.uploadWithUri(context, avatarImageUri, avatarUrlEndpoint)
         }
-        val updateParams = hashMapOf<String, String?>().apply {
-            if (userInfoForModify.userName.isNotEmpty() && userInfoForModify.userName != oldUserInfo.bioName) {
-                put("name", userInfoForModify.userName)
+        val body = hashMapOf<String, String?>().apply {
+            if (userInfoForModify.userName.value.isNotEmpty() && userInfoForModify.userName.value != oldUserInfo.bioName) {
+                put("name", userInfoForModify.userName.value)
             }
-            if (userInfoForModify.userAge.isNotEmpty() && userInfoForModify.userAge.toInt() != oldUserInfo.age) {
-                put("age", userInfoForModify.userAge)
+            if (userInfoForModify.userAge.value.isNotEmpty() && userInfoForModify.userAge.value.toInt() != oldUserInfo.age) {
+                put("age", userInfoForModify.userAge.value)
             }
-            if (userInfoForModify.userSex.isNotEmpty() && userInfoForModify.userSex != oldUserInfo.sex) {
-                put("sex", userInfoForModify.userSex)
+            if (userInfoForModify.userSex.value.isNotEmpty() && userInfoForModify.userSex.value != oldUserInfo.sex) {
+                put("sex", userInfoForModify.userSex.value)
             }
-            if (userInfoForModify.userEmail.isNotEmpty() && userInfoForModify.userEmail != oldUserInfo.email) {
-                put("email", userInfoForModify.userEmail)
+            if (userInfoForModify.userEmail.value.isNotEmpty() && userInfoForModify.userEmail.value != oldUserInfo.email) {
+                put("email", userInfoForModify.userEmail.value)
             }
-            if (userInfoForModify.userPhone.isNotEmpty() && userInfoForModify.userPhone != oldUserInfo.phone) {
-                put("phone", userInfoForModify.userPhone)
+            if (userInfoForModify.userPhone.value.isNotEmpty() && userInfoForModify.userPhone.value != oldUserInfo.phone) {
+                put("phone", userInfoForModify.userPhone.value)
             }
-            if (userInfoForModify.userAddress.isNotEmpty() && userInfoForModify.userAddress != oldUserInfo.address) {
-                put("address", userInfoForModify.userAddress)
+            if (userInfoForModify.userAddress.value.isNotEmpty() && userInfoForModify.userAddress.value != oldUserInfo.address) {
+                put("address", userInfoForModify.userAddress.value)
             }
             if (!avatarUrlEndpoint.isNullOrEmpty()) {
                 put("avatarUrl", avatarUrlEndpoint)
             }
-            if (userInfoForModify.userIntroduction.isNotEmpty() && userInfoForModify.userIntroduction != oldUserInfo.introduction) {
-                put("intro", userInfoForModify.userIntroduction)
+            if (userInfoForModify.userIntroduction.value.isNotEmpty() && userInfoForModify.userIntroduction.value != oldUserInfo.introduction) {
+                put("intro", userInfoForModify.userIntroduction.value)
             }
-            if (userInfoForModify.userWebsite.isNotEmpty() && userInfoForModify.userWebsite != oldUserInfo.website) {
-                put("website", userInfoForModify.userWebsite)
+            if (userInfoForModify.userWebsite.value.isNotEmpty() && userInfoForModify.userWebsite.value != oldUserInfo.website) {
+                put("website", userInfoForModify.userWebsite.value)
             }
         }
-        if (updateParams.isEmpty()) {
+        if (body.isEmpty()) {
             return@withContext DesignResponse(data = false)
         }
-        updateParams["uid"] = oldUserInfo.uid
-        return@withContext userApi.updateUserInfo(updateParams)
+        body["uid"] = oldUserInfo.uid
+        return@withContext userApi.updateUserInfo(body)
     }
 
     suspend fun getFriends(): DesignResponse<List<UserInfo>> = withContext(Dispatchers.IO) {
@@ -103,20 +103,21 @@ class UserRepository(private val userApi: UserApi) {
     ): DesignResponse<Boolean> = withContext(Dispatchers.IO) {
         PurpleLogger.current.d(TAG, "createChatGroup")
         var iconUrlEndpoint: String? = null
-        val uri = groupInfoForCreate.icon?.provideUri()
+        val uri = groupInfoForCreate.iconUriProvider.value?.provideUri()
         if (uri != null) {
             iconUrlEndpoint = UUID.randomUUID().toString()
             LocalFileIO.current.uploadWithUri(context, uri, iconUrlEndpoint)
         }
-        return@withContext userApi.createChatGroup(hashMapOf<String, Any?>().apply {
-            put("name", groupInfoForCreate.name)
-            put("maxMembers", groupInfoForCreate.membersCount)
-            put("isPublic", groupInfoForCreate.isPublic)
-            put("introduction", groupInfoForCreate.introduction)
+        val body = hashMapOf<String, Any?>().apply {
+            put("name", groupInfoForCreate.name.value)
+            put("maxMembers", groupInfoForCreate.membersCount.value.toIntOrNull() ?: 1000)
+            put("isPublic", groupInfoForCreate.isPublic.value)
+            put("introduction", groupInfoForCreate.introduction.value)
             iconUrlEndpoint?.let {
                 put("iconUrl", it)
             }
-        })
+        }
+        return@withContext userApi.createChatGroup(body)
     }
 
     suspend fun getGroupInfoById(groupId: String): DesignResponse<GroupInfo> =
@@ -240,25 +241,27 @@ class UserRepository(private val userApi: UserApi) {
     suspend fun login(account: String, password: String): DesignResponse<String> =
         withContext(Dispatchers.IO) {
             PurpleLogger.current.d(TAG, "login")
+            val body = hashMapOf<String, Any?>(
+                "account" to account,
+                "password" to password,
+                "signInDeviceInfo" to DeviceInfoHelper.provideInfo(),
+                "signInLocation" to "Si Chuan"
+            )
             return@withContext userApi.login(
-                hashMapOf(
-                    "account" to account,
-                    "password" to password,
-                    "signInDeviceInfo" to DeviceInfoHelper.provideInfo(),
-                    "signInLocation" to "Si Chuan"
-                )
+                body
             )
         }
 
     suspend fun login2(): DesignResponse<String> = withContext(Dispatchers.IO) {
         PurpleLogger.current.d(TAG, "login2")
+        val body = hashMapOf<String, Any?>(
+            "account" to "account",
+            "password" to "password",
+            "signInDeviceInfo" to DeviceInfoHelper.provideInfo(),
+            "signInLocation" to "Si Chuan"
+        )
         return@withContext userApi.login2(
-            hashMapOf(
-                "account" to "account",
-                "password" to "password",
-                "signInDeviceInfo" to DeviceInfoHelper.provideInfo(),
-                "signInLocation" to "Si Chuan"
-            )
+            body
         )
     }
 
@@ -273,58 +276,57 @@ class UserRepository(private val userApi: UserApi) {
 
     suspend fun signUp(
         context: Context,
-        account: String,
-        password: String,
+        accountEncoded: String,
+        passwordEncoded: String,
         userInfoForCreate: UserInfoForCreate
     ): DesignResponse<Boolean> = withContext(Dispatchers.IO) {
         PurpleLogger.current.d(TAG, "signUp")
         var avatarUrlEndpoint: String? = null
-        val avatarImageUri = userInfoForCreate.userAvatar?.provideUri()
+        val avatarImageUri = userInfoForCreate.userAvatarUriProvider.value?.provideUri()
         if (avatarImageUri != null) {
             avatarUrlEndpoint = UUID.randomUUID().toString()
             LocalFileIO.current
                 .uploadWithUri(context, avatarImageUri, avatarUrlEndpoint)
         }
-        return@withContext userApi.signUp(
-            hashMapOf<String, Any?>(
-                "account" to account,
-                "password" to password
-            ).apply {
-                if (userInfoForCreate.userName.isNotEmpty()) {
-                    put("name", userInfoForCreate.userName)
-                }
-                if (!avatarUrlEndpoint.isNullOrEmpty()) {
-                    put("avatarUrl", avatarUrlEndpoint)
-                }
-                if (userInfoForCreate.userIntroduction.isNotEmpty()) {
-                    put("introduction", userInfoForCreate.userIntroduction)
-                }
-                if (userInfoForCreate.userTags.isNotEmpty()) {
-                    put("tags", userInfoForCreate.userTags)
-                }
-                if (userInfoForCreate.userSex.isNotEmpty()) {
-                    put("sex", userInfoForCreate.userSex)
-                }
-                if (userInfoForCreate.userAge.isNotEmpty()) {
-                    put("age", userInfoForCreate.userAge.toIntOrNull() ?: 0)
-                }
-                if (userInfoForCreate.userPhone.isNotEmpty()) {
-                    put("phone", userInfoForCreate.userPhone)
-                }
-                if (userInfoForCreate.userEmail.isNotEmpty()) {
-                    put("email", userInfoForCreate.userEmail)
-                }
-                if (userInfoForCreate.userArea.isNotEmpty()) {
-                    put("area", userInfoForCreate.userArea)
-                }
-                if (userInfoForCreate.userAddress.isNotEmpty()) {
-                    put("address", userInfoForCreate.userAddress)
-                }
-                if (userInfoForCreate.userWebsite.isNotEmpty()) {
-                    put("website", userInfoForCreate.userWebsite)
-                }
+
+        val body = hashMapOf<String, Any?>().apply {
+            put("account", accountEncoded)
+            put("password", passwordEncoded)
+            if (userInfoForCreate.userName.value.isNotEmpty()) {
+                put("name", userInfoForCreate.userName.value)
             }
-        )
+            if (!avatarUrlEndpoint.isNullOrEmpty()) {
+                put("avatarUrl", avatarUrlEndpoint)
+            }
+            if (userInfoForCreate.userIntroduction.value.isNotEmpty()) {
+                put("introduction", userInfoForCreate.userIntroduction.value)
+            }
+            if (userInfoForCreate.userTags.value.isNotEmpty()) {
+                put("tags", userInfoForCreate.userTags.value)
+            }
+            if (userInfoForCreate.userSex.value.isNotEmpty()) {
+                put("sex", userInfoForCreate.userSex.value)
+            }
+            if (userInfoForCreate.userAge.value.isNotEmpty()) {
+                put("age", userInfoForCreate.userAge.value.toIntOrNull() ?: 0)
+            }
+            if (userInfoForCreate.userPhone.value.isNotEmpty()) {
+                put("phone", userInfoForCreate.userPhone.value)
+            }
+            if (userInfoForCreate.userEmail.value.isNotEmpty()) {
+                put("email", userInfoForCreate.userEmail.value)
+            }
+            if (userInfoForCreate.userArea.value.isNotEmpty()) {
+                put("area", userInfoForCreate.userArea.value)
+            }
+            if (userInfoForCreate.userAddress.value.isNotEmpty()) {
+                put("address", userInfoForCreate.userAddress.value)
+            }
+            if (userInfoForCreate.userWebsite.value.isNotEmpty()) {
+                put("website", userInfoForCreate.userWebsite.value)
+            }
+        }
+        return@withContext userApi.signUp(body)
     }
 
     suspend fun signOut(): DesignResponse<Boolean> = withContext(Dispatchers.IO) {
@@ -332,10 +334,11 @@ class UserRepository(private val userApi: UserApi) {
         return@withContext userApi.signOut()
     }
 
-    suspend fun preSignUp(account: String): DesignResponse<Boolean> = withContext(Dispatchers.IO) {
-        PurpleLogger.current.d(TAG, "preSignUp")
-        return@withContext userApi.preSignUp(account)
-    }
+    suspend fun preSignUp(accountEncoded: String): DesignResponse<Boolean> =
+        withContext(Dispatchers.IO) {
+            PurpleLogger.current.d(TAG, "preSignUp")
+            return@withContext userApi.preSignUp(accountEncoded)
+        }
 
     companion object {
         private const val TAG = "UserRepository"

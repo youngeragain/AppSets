@@ -2,13 +2,13 @@ package xcj.app.starter.android
 
 import xcj.app.starter.android.util.PurpleLogger
 import xcj.app.starter.foundation.Identifiable
-import xcj.app.starter.foundation.Provider
+import xcj.app.starter.foundation.KeyedProvider
 
 object ModuleHelper {
 
     private const val TAG = "ModuleHelper"
 
-    private val providers: MutableMap<String, Provider<String, *>> = mutableMapOf()
+    private val providers: MutableMap<String, KeyedProvider<String, *>> = mutableMapOf()
 
     fun moduleInitHooks(
         iPurpleModule: IPurpleModule,
@@ -17,18 +17,18 @@ object ModuleHelper {
     }
 
     /**
-     * @param provider
+     * @param keyedProvider
      */
-    fun addProvider(provider: Provider<String, *>) {
+    fun addProvider(keyedProvider: KeyedProvider<String, *>) {
         PurpleLogger.current.d(
-            TAG, "addProvider, providerKey:${provider.key()}"
+            TAG, "addProvider, providerKey:${keyedProvider.key()}"
         )
 
-        val key = provider.key().id
+        val key = keyedProvider.key().id
         if (providers.containsKey(key)) {
             return
         }
-        providers[key] = provider
+        providers[key] = keyedProvider
     }
 
     /**

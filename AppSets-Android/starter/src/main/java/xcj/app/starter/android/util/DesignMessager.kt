@@ -45,11 +45,12 @@ class DesignMessageDeliver : Handler.Callback {
             }
         }
         for (keyedObserver in keyedObservers) {
-            PurpleLogger.current.d(
-                TAG,
-                "delivery for key:${messageWrapper.key}, current keyedObserver:$keyedObserver"
-            )
-            if (keyedObserver.key == messageWrapper.key) {
+            val shouldDelivery = keyedObserver.key == messageWrapper.key
+            if (shouldDelivery) {
+                PurpleLogger.current.d(
+                    TAG,
+                    "delivery for key:${messageWrapper.key}, keyedObserver:[${keyedObserver.key},${keyedObserver.lifecycleOwnerName},${keyedObserver.lifecycleOwnerHash}]"
+                )
                 val content = messageWrapper.content
                 if (content != null) {
                     keyedObserver.observer.onChanged(content)
@@ -86,7 +87,7 @@ class DesignMessageDeliver : Handler.Callback {
 
     @Throws
     fun <K, V> observe(
-        viewLifecycleOwner: LifecycleOwner,
+        lifecycleOwner: LifecycleOwner,
         key: K,
         observer: Observer<V>,
     ) {
@@ -96,27 +97,32 @@ class DesignMessageDeliver : Handler.Callback {
             return
         }
 
-        storeKeyedObserver(viewLifecycleOwner, key, observer)
+        storeKeyedObserver(lifecycleOwner, key, observer)
     }
 
     private fun <K, V> storeKeyedObserver(
-        viewLifecycleOwner: LifecycleOwner,
+        lifecycleOwner: LifecycleOwner,
         key: K,
         observer: Observer<V>,
     ) {
         PurpleLogger.current.d(TAG, "storeKeyedObserver, key:$key")
         var shouldCreateLifecycleEventObserver = true
         for (keyObserver in keyedObservers) {
-            if (keyObserver.lifecycleOwnerHash == viewLifecycleOwner.hashCode()) {
+            if (keyObserver.lifecycleOwnerHash == lifecycleOwner.hashCode()) {
                 PurpleLogger.current.d(
                     TAG,
-                    "storeKeyedObserver, key:$key's mapped LifecycleOwner is exist a LifecycleObserver! owner is:$viewLifecycleOwner"
+                    "storeKeyedObserver, key:$key's mapped LifecycleOwner is exist a LifecycleObserver! owner is:$lifecycleOwner"
                 )
                 shouldCreateLifecycleEventObserver = false
                 break
             }
         }
-        val keyObserver = KeyedObserver(key, observer, viewLifecycleOwner.hashCode())
+        val keyObserver = KeyedObserver(
+            key,
+            observer,
+            lifecycleOwner.javaClass.simpleName,
+            lifecycleOwner.hashCode()
+        )
         val anyAnyKeyedObserver = (keyObserver as? KeyedObserver<Any, Any>)
 
         if (anyAnyKeyedObserver == null) {
@@ -125,14 +131,14 @@ class DesignMessageDeliver : Handler.Callback {
         }
         keyedObservers.add(keyObserver)
         if (shouldCreateLifecycleEventObserver) {
-            createLifecycleEventObserver(viewLifecycleOwner)
+            createLifecycleEventObserver(lifecycleOwner)
         }
     }
 
     private fun createLifecycleEventObserver(
-        viewLifecycleOwner: LifecycleOwner,
+        lifecycleOwner: LifecycleOwner,
     ) {
-        PurpleLogger.current.d(TAG, "createLifecycleEventObserver for source:$viewLifecycleOwner")
+        PurpleLogger.current.d(TAG, "createLifecycleEventObserver for source:$lifecycleOwner")
         val lifecycleEventObserver = object : LifecycleEventObserver {
             override fun onStateChanged(source: LifecycleOwner, event: Lifecycle.Event) {
                 if (event == Lifecycle.Event.ON_DESTROY) {
@@ -146,7 +152,7 @@ class DesignMessageDeliver : Handler.Callback {
             }
         }
 
-        viewLifecycleOwner.lifecycle.addObserver(lifecycleEventObserver)
+        lifecycleOwner.lifecycle.addObserver(lifecycleEventObserver)
     }
 
 
@@ -176,5 +182,6 @@ data class MessageWrapper<K, V>(
 data class KeyedObserver<K, V>(
     val key: K,
     val observer: Observer<V>,
+    val lifecycleOwnerName: String,
     val lifecycleOwnerHash: Int,
 )

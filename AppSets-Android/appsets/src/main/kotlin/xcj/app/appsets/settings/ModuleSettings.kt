@@ -12,9 +12,9 @@ import xcj.app.appsets.notification.NotificationChannels
 import xcj.app.appsets.purple_module.ModuleConstant
 import xcj.app.appsets.purple_module.configCoil
 import xcj.app.starter.android.ModuleHelper
-import xcj.app.starter.foundation.FinalProvider
+import xcj.app.starter.foundation.FinalKeyedProvider
 import xcj.app.starter.foundation.Identifiable
-import xcj.app.starter.foundation.Provider
+import xcj.app.starter.foundation.KeyedProvider
 import xcj.app.starter.test.LocalApplication
 import xcj.app.starter.test.LocalPurpleCoroutineScope
 
@@ -28,24 +28,18 @@ class AppSetsModuleSettings : ModuleSettings {
 
     companion object {
 
-        const val WEBSITE_URL = "http://162.14.70.230/?route=download"
-
-        const val KEY_im_bubble_alignment = "im_bubble_alignment"
+        const val URI_SELF_DOWNLOAD_URL = "http://162.14.70.230/?route=download"
+        const val KEY_IM_BUBBLE_ALIGNMENT = "im_bubble_alignment"
         const val IM_BUBBLE_ALIGNMENT_ALL_START = "all_start"
         const val IM_BUBBLE_ALIGNMENT_ALL_END = "all_end"
         const val IM_BUBBLE_ALIGNMENT_START_END = "start_end"
-
-        const val KEY_im_message_delivery_type = "im_message_delivery_type"
+        const val KEY_IM_MESSAGE_DELIVERY_TYPE = "im_message_delivery_type"
         const val IM_MESSAGE_DELIVERY_TYPE_DI = "send_directly"
         const val IM_MESSAGE_DELIVERY_TYPE_RT = "relay_transmission"
-
-        const val KEY_is_im_message_show_date = "is_im_message_show_date"
-
-        const val KEY_is_im_message_date_show_seconds = "is_im_message_date_show_seconds"
-
-        const val KEY_is_im_message_reliability = "is_im_message_reliability"
-
-        const val KEY_is_app_first_launch = "is_app_first_launch"
+        const val KEY_IS_IM_MESSAGE_SHOW_DATE = "is_im_message_show_date"
+        const val KEY_IS_IM_MESSAGE_DATE_SHOW_SECONDS = "is_im_message_date_show_seconds"
+        const val KEY_IS_IM_MESSAGE_RELIABILITY = "is_im_message_reliability"
+        const val KEY_IS_APP_FIRST_LAUNCH = "is_app_first_launch"
 
         fun get(): AppSetsModuleSettings {
             val moduleSettings =
@@ -56,7 +50,7 @@ class AppSetsModuleSettings : ModuleSettings {
                 return moduleSettings
             }
 
-            val databaseProvider = object : Provider<String, AppDatabase> {
+            val databaseKeyedProvider = object : KeyedProvider<String, AppDatabase> {
                 override fun key(): Identifiable<String> {
                     return Identifiable.fromString(ModuleConstant.MODULE_NAME + "/database")
                 }
@@ -71,9 +65,9 @@ class AppSetsModuleSettings : ModuleSettings {
                 }
             }
 
-            ModuleHelper.addProvider(databaseProvider)
+            ModuleHelper.addProvider(databaseKeyedProvider)
 
-            val settingsProvider = FinalProvider(
+            val settingsProvider = FinalKeyedProvider(
                 Identifiable.fromString(ModuleConstant.MODULE_NAME + "/settings"),
                 AppSetsModuleSettings()
             )
@@ -106,28 +100,28 @@ class AppSetsModuleSettings : ModuleSettings {
         withContext(Dispatchers.IO) {
             isBackgroundIMEnable =
                 appSettingSharedPreferences.getBoolean(
-                    KEY_is_im_message_reliability,
+                    KEY_IS_IM_MESSAGE_RELIABILITY,
                     false
                 )
             imMessageDeliveryType =
                 appSettingSharedPreferences.getString(
-                    KEY_im_message_delivery_type,
+                    KEY_IM_MESSAGE_DELIVERY_TYPE,
                     IM_MESSAGE_DELIVERY_TYPE_RT
                 ) ?: IM_MESSAGE_DELIVERY_TYPE_RT
             imBubbleAlignment =
                 appSettingSharedPreferences.getString(
-                    KEY_im_bubble_alignment,
+                    KEY_IM_BUBBLE_ALIGNMENT,
                     IM_BUBBLE_ALIGNMENT_START_END
                 ) ?: IM_BUBBLE_ALIGNMENT_START_END
 
             isImMessageShowDate =
                 appSettingSharedPreferences.getBoolean(
-                    KEY_is_im_message_show_date,
+                    KEY_IS_IM_MESSAGE_SHOW_DATE,
                     true
                 )
             isImMessageDateShowSeconds =
                 appSettingSharedPreferences.getBoolean(
-                    KEY_is_im_message_date_show_seconds,
+                    KEY_IS_IM_MESSAGE_DATE_SHOW_SECONDS,
                     false
                 )
         }
@@ -146,7 +140,7 @@ class AppSetsModuleSettings : ModuleSettings {
     suspend fun onIMBubbleAlignmentChanged(alignment: String) {
         imBubbleAlignment = alignment
         appSettingSharedPreferences.edit {
-            putString(KEY_im_bubble_alignment, alignment)
+            putString(KEY_IM_BUBBLE_ALIGNMENT, alignment)
         }
     }
 
@@ -154,7 +148,7 @@ class AppSetsModuleSettings : ModuleSettings {
         withContext(Dispatchers.IO) {
             imMessageDeliveryType = deliveryType
             appSettingSharedPreferences.edit {
-                putString(KEY_im_message_delivery_type, deliveryType)
+                putString(KEY_IM_MESSAGE_DELIVERY_TYPE, deliveryType)
             }
         }
     }
@@ -163,7 +157,7 @@ class AppSetsModuleSettings : ModuleSettings {
         withContext(Dispatchers.IO) {
             isImMessageShowDate = show
             appSettingSharedPreferences.edit {
-                putBoolean(KEY_is_im_message_show_date, show)
+                putBoolean(KEY_IS_IM_MESSAGE_SHOW_DATE, show)
             }
         }
     }
@@ -172,7 +166,7 @@ class AppSetsModuleSettings : ModuleSettings {
         withContext(Dispatchers.IO) {
             isImMessageDateShowSeconds = show
             appSettingSharedPreferences.edit {
-                putBoolean(KEY_is_im_message_date_show_seconds, show)
+                putBoolean(KEY_IS_IM_MESSAGE_DATE_SHOW_SECONDS, show)
             }
         }
     }
@@ -181,7 +175,7 @@ class AppSetsModuleSettings : ModuleSettings {
         withContext(Dispatchers.IO) {
             isBackgroundIMEnable = show
             appSettingSharedPreferences.edit {
-                putBoolean(KEY_is_im_message_reliability, show)
+                putBoolean(KEY_IS_IM_MESSAGE_RELIABILITY, show)
             }
         }
     }
@@ -190,12 +184,12 @@ class AppSetsModuleSettings : ModuleSettings {
         return flow {
             val isFirstLaunch = withContext(Dispatchers.IO) {
                 val isFirst = appSettingSharedPreferences.getBoolean(
-                    KEY_is_app_first_launch,
+                    KEY_IS_APP_FIRST_LAUNCH,
                     true
                 )
                 if (isFirst) {
                     appSettingSharedPreferences.edit {
-                        putBoolean(KEY_is_app_first_launch, false)
+                        putBoolean(KEY_IS_APP_FIRST_LAUNCH, false)
                     }
                 }
                 isFirst

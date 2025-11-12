@@ -77,7 +77,7 @@ fun <T> T.getMetaData(key: String): Any? {
  */
 suspend fun Context.getSystemFileUris(
     mediaType: Class<*>?,
-    sortDirection: Int = 1,
+    sortDirection: Int = ContentResolver.QUERY_SORT_DIRECTION_DESCENDING,
     offset: Int = 0,
     limit: Int = 20,
 ): List<MediaStoreDataUri>? = withContext(Dispatchers.IO) {
@@ -85,7 +85,7 @@ suspend fun Context.getSystemFileUris(
         return@withContext null
     PurpleLogger.current.d(
         "getSystemFileUris",
-        "mediaType:${mediaType}, offset:${offset}, limit:${limit}"
+        "mediaType:${mediaType.simpleName}, offset:${offset}, limit:${limit}"
     )
     val uri: Uri = when (mediaType) {
         MediaStore.Images::class.java -> MediaStore.Images.Media.EXTERNAL_CONTENT_URI
@@ -215,13 +215,11 @@ fun Context.asComponentActivityOrNull(): ComponentActivity? {
     do {
         if (context is ComponentActivity) {
             return context
-        }
-        if (context is ContextThemeWrapper) {
+        } else if (context is ContextThemeWrapper) {
             context = context.baseContext
-        }
-        if (context is android.view.ContextThemeWrapper) {
+        } else if (context is android.view.ContextThemeWrapper) {
             context = context.baseContext
-        }
+        } else return null
     } while (true)
 }
 

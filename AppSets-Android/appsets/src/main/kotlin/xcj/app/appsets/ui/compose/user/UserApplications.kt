@@ -48,7 +48,10 @@ fun UserApplications(
             columns = GridCells.Adaptive(90.dp),
             contentPadding = PaddingValues(bottom = 120.dp)
         ) {
-            items(userApplications) { application ->
+            items(
+                items = userApplications,
+                key = { item -> item.bioId }
+            ) { application ->
                 Column(
                     modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,

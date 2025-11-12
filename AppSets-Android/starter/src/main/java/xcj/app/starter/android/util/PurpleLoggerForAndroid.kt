@@ -80,16 +80,16 @@ class PurpleLoggerForAndroid : IPurpleLogger {
         tag: String,
         message: Any?,
         tr: Throwable? = null,
-        logModuleInfoProvider: LogModuleInfoProvider? = null
+        moduleLogConfigProvider: ModuleLogConfigKeyedProvider? = null
     ) {
         if (!enable) {
             return
         }
-        if (logModuleInfoProvider != null && !logModuleInfoProvider.enable) {
+        if (moduleLogConfigProvider != null && !moduleLogConfigProvider.enable) {
             return
         }
         val loggingState = withTag(tag)
-        withModule(loggingState, logModuleInfoProvider?.key())
+        withModule(loggingState, moduleLogConfigProvider?.key())
         withMessage(loggingState, message)
         withThrowable(loggingState, tr)
         logWithLevel(IPurpleLogger.LEVEL_DEBUG, loggingState)
@@ -99,16 +99,16 @@ class PurpleLoggerForAndroid : IPurpleLogger {
         tag: String,
         message: Any?,
         tr: Throwable? = null,
-        logModuleInfoProvider: LogModuleInfoProvider? = null
+        moduleLogConfigProvider: ModuleLogConfigKeyedProvider? = null
     ) {
         if (!enable) {
             return
         }
-        if (logModuleInfoProvider != null && !logModuleInfoProvider.enable) {
+        if (moduleLogConfigProvider != null && !moduleLogConfigProvider.enable) {
             return
         }
         val loggingState = withTag(tag)
-        withModule(loggingState, logModuleInfoProvider?.key())
+        withModule(loggingState, moduleLogConfigProvider?.key())
         withMessage(loggingState, message)
         withThrowable(loggingState, tr)
         logWithLevel(IPurpleLogger.LEVEL_INFO, loggingState)
@@ -118,16 +118,16 @@ class PurpleLoggerForAndroid : IPurpleLogger {
         tag: String,
         message: Any?,
         tr: Throwable? = null,
-        logModuleInfoProvider: LogModuleInfoProvider? = null
+        moduleLogConfigProvider: ModuleLogConfigKeyedProvider? = null
     ) {
         if (!enable) {
             return
         }
-        if (logModuleInfoProvider != null && !logModuleInfoProvider.enable) {
+        if (moduleLogConfigProvider != null && !moduleLogConfigProvider.enable) {
             return
         }
         val loggingState = withTag(tag)
-        withModule(loggingState, logModuleInfoProvider?.key())
+        withModule(loggingState, moduleLogConfigProvider?.key())
         withMessage(loggingState, message)
         withThrowable(loggingState, tr)
         logWithLevel(IPurpleLogger.LEVEL_ERROR, loggingState)
@@ -137,16 +137,16 @@ class PurpleLoggerForAndroid : IPurpleLogger {
         tag: String,
         message: Any?,
         tr: Throwable? = null,
-        logModuleInfoProvider: LogModuleInfoProvider? = null
+        moduleLogConfigProvider: ModuleLogConfigKeyedProvider? = null
     ) {
         if (!enable) {
             return
         }
-        if (logModuleInfoProvider != null && !logModuleInfoProvider.enable) {
+        if (moduleLogConfigProvider != null && !moduleLogConfigProvider.enable) {
             return
         }
         val loggingState = withTag(tag)
-        withModule(loggingState, logModuleInfoProvider?.key())
+        withModule(loggingState, moduleLogConfigProvider?.key())
         withMessage(loggingState, message)
         withThrowable(loggingState, tr)
         logWithLevel(IPurpleLogger.LEVEL_WARN, loggingState)

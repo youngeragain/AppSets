@@ -1,25 +1,28 @@
 package xcj.app.appsets.ui.model
 
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
 import xcj.app.appsets.server.model.AppPlatform
 import xcj.app.appsets.server.model.Application
 import xcj.app.appsets.server.model.DownloadInfo
 import xcj.app.appsets.server.model.ScreenshotInfo
 import xcj.app.appsets.server.model.VersionInfo
-import xcj.app.appsets.util.model.UriProvider
 import xcj.app.starter.android.util.PurpleLogger
+import xcj.app.starter.android.util.UriProvider
 import java.util.UUID
 
 data class ApplicationForCreate(
-    val appId: String = UUID.randomUUID().toString(),
-    val iconUriHolder: UriProvider? = null,
-    val bannerUriHolder: UriProvider? = null,
-    val name: String = "",
-    val category: String = "",
-    val website: String = "",
-    val developerInfo: String = "",
-    val price: String = "",
-    val priceUnit: String = "",
-    val platformForCreates: List<PlatformForCreate> = emptyList()
+    var appId: String = UUID.randomUUID().toString(),
+    val iconUriProvider: MutableState<UriProvider?> = mutableStateOf(null),
+    val bannerUriProvider: MutableState<UriProvider?> = mutableStateOf(null),
+    val name: MutableState<String> = mutableStateOf(""),
+    val category: MutableState<String> = mutableStateOf(""),
+    val website: MutableState<String> = mutableStateOf(""),
+    val developerInfo: MutableState<String> = mutableStateOf(""),
+    val price: MutableState<String> = mutableStateOf(""),
+    val priceUnit: MutableState<String> = mutableStateOf(""),
+    val platformForCreates: MutableList<PlatformForCreate> = mutableStateListOf()
 ) {
     companion object {
         private const val TAG = "ApplicationForCreate"
@@ -33,8 +36,8 @@ data class ApplicationForCreate(
         const val CREATE_STEP_SCREENSHOT = "ScreenShot"
         const val CREATE_STEP_DOWNLOAD = "Download"
 
-        const val FILED_NAME_ICON_URI_HOLDER = "iconUriHolder"
-        const val FILED_NAME_BANNER_URI_HOLDER = "bannerUriHolder"
+        const val FILED_NAME_ICON_URI_HOLDER = "iconUriProvider"
+        const val FILED_NAME_BANNER_URI_HOLDER = "bannerUriProvider"
         const val FILED_NAME_NAME = "name"
         const val FILED_NAME_CATEGORY = "category"
         const val FILED_NAME_WEBSITE = "website"
@@ -43,48 +46,34 @@ data class ApplicationForCreate(
         const val FILED_NAME_PRICE_UNIT = "priceUnit"
 
         fun inflateFromApplication(
-            application: Application,
-            applicationForCreate: ApplicationForCreate?
-        ): ApplicationForCreate {
+            applicationForCreate: ApplicationForCreate,
+            application: Application
+        ) {
             PurpleLogger.current.d(TAG, "inflateFromApplication")
-            if (applicationForCreate != null) {
-                return applicationForCreate.copy(
-                    appId = application.appId ?: "",
-                    iconUriHolder = UriProvider.fromString(application.iconUrl),
-                    bannerUriHolder = UriProvider.fromString(application.bannerUrl),
-                    name = application.bioName ?: "",
-                    category = application.category ?: "",
-                    website = application.website ?: "",
-                    developerInfo = application.developerInfo ?: "",
-                    price = application.price ?: "",
-                    priceUnit = application.priceUnit ?: "",
-                    platformForCreates = application.platforms?.map(PlatformForCreate.Companion::inflateFromPlatform)
-                        ?.toMutableList() ?: mutableListOf()
-                )
+            applicationForCreate.apply {
+                appId = application.appId ?: ""
+                iconUriProvider.value = UriProvider.fromString(application.bioUrl?.toString())
+                bannerUriProvider.value = UriProvider.fromString(application.bannerUrl)
+                name.value = application.bioName ?: ""
+                category.value = application.category ?: ""
+                website.value = application.website ?: ""
+                developerInfo.value = application.developerInfo ?: ""
+                price.value = application.price ?: ""
+                priceUnit.value = application.priceUnit ?: ""
+                application.platforms?.map(PlatformForCreate.Companion::inflateFromPlatform)?.let {
+                    platformForCreates.addAll(it)
+                }
             }
-            return ApplicationForCreate(
-                appId = application.appId ?: "",
-                iconUriHolder = UriProvider.fromString(application.bioUrl?.toString()),
-                bannerUriHolder = UriProvider.fromString(application.bannerUrl),
-                name = application.bioName ?: "",
-                category = application.category ?: "",
-                website = application.website ?: "",
-                developerInfo = application.developerInfo ?: "",
-                price = application.price ?: "",
-                priceUnit = application.priceUnit ?: "",
-                platformForCreates = application.platforms?.map(PlatformForCreate.Companion::inflateFromPlatform)
-                    ?.toMutableList() ?: mutableListOf()
-            )
         }
     }
 }
 
 data class PlatformForCreate(
     val id: String = UUID.randomUUID().toString(),
-    val name: String = "",
-    val packageName: String = "",
-    val introduction: String = "",
-    val versionInfoForCreates: List<VersionInfoForCreate> = emptyList()
+    val name: MutableState<String> = mutableStateOf(""),
+    val packageName: MutableState<String> = mutableStateOf(""),
+    val introduction: MutableState<String> = mutableStateOf(""),
+    val versionInfoForCreates: MutableList<VersionInfoForCreate> = mutableStateListOf()
 ) {
 
     companion object {
@@ -97,28 +86,31 @@ data class PlatformForCreate(
         fun inflateFromPlatform(platForm: AppPlatform): PlatformForCreate {
             PurpleLogger.current.d(TAG, "inflateFromPlatform")
             return PlatformForCreate(
-                id = platForm.id ?: "",
-                name = platForm.name ?: "",
-                packageName = platForm.packageName ?: "",
-                introduction = platForm.introduction ?: "",
-                versionInfoForCreates = platForm.versionInfos?.map(VersionInfoForCreate.Companion::inflateFromVersionInfo)
-                    ?.toMutableList() ?: mutableListOf()
-            )
+                id = platForm.id ?: ""
+            ).apply {
+                name.value = platForm.name ?: ""
+                packageName.value = platForm.packageName ?: ""
+                introduction.value = platForm.introduction ?: ""
+                platForm.versionInfos?.map(VersionInfoForCreate.Companion::inflateFromVersionInfo)
+                    ?.let {
+                        versionInfoForCreates.addAll(it)
+                    }
+            }
         }
     }
 }
 
 data class VersionInfoForCreate(
     val id: String = UUID.randomUUID().toString(),
-    val version: String = "",
-    val versionCode: String = "",
-    val changes: String = "",
-    val versionIconUriHolder: UriProvider? = null,
-    val versionBannerUriHolder: UriProvider? = null,
-    val packageSize: String = "",
-    val privacyPolicyUrl: String = "",
-    val screenshotInfoForCreates: List<ScreenshotInfoForCreate> = emptyList(),
-    val downloadInfoForCreates: List<DownloadInfoForCreate> = emptyList()
+    val version: MutableState<String> = mutableStateOf(""),
+    val versionCode: MutableState<String> = mutableStateOf(""),
+    val changes: MutableState<String> = mutableStateOf(""),
+    val versionIconUriProvider: MutableState<UriProvider?> = mutableStateOf(null),
+    val versionBannerUriProvider: MutableState<UriProvider?> = mutableStateOf(null),
+    val packageSize: MutableState<String> = mutableStateOf(""),
+    val privacyPolicyUrl: MutableState<String> = mutableStateOf(""),
+    val screenshotInfoForCreates: MutableList<ScreenshotInfoForCreate> = mutableStateListOf(),
+    val downloadInfoForCreates: MutableList<DownloadInfoForCreate> = mutableStateListOf()
 ) {
     companion object {
         private const val TAG = "VersionInfoForCreate"
@@ -126,60 +118,67 @@ data class VersionInfoForCreate(
         const val FILED_NAME_VERSION = "version"
         const val FILED_NAME_VERSION_CODE = "versionCode"
         const val FILED_NAME_CHANGES = "changes"
-        const val FILED_NAME_ICON_URI_HOLDER = "versionIconUriHolder"
-        const val FILED_NAME_BANNER_URI_HOLDER = "versionBannerUriHolder"
+        const val FILED_NAME_ICON_URI_HOLDER = "versionIconUriProvider"
+        const val FILED_NAME_BANNER_URI_HOLDER = "versionBannerUriProvider"
         const val FILED_NAME_PACKAGE_SIZE = "packageSize"
         const val FILED_NAME_PRIVACY_POLICY_URL = "privacyPolicyUrl"
 
         fun inflateFromVersionInfo(versionInfo: VersionInfo): VersionInfoForCreate {
             PurpleLogger.current.d(TAG, "inflateFromVersionInfo")
             return VersionInfoForCreate(
-                versionIconUriHolder = UriProvider.fromString(versionInfo.versionIconUrl),
-                versionBannerUriHolder = UriProvider.fromString(versionInfo.versionBannerUrl),
-                id = versionInfo.id ?: "",
-                version = versionInfo.version ?: "",
-                versionCode = versionInfo.versionCode ?: "",
-                changes = versionInfo.changes ?: "",
-                packageSize = versionInfo.packageSize ?: "",
-                privacyPolicyUrl = versionInfo.privacyUrl ?: "",
-                screenshotInfoForCreates = versionInfo.screenshotInfos?.map(
+                id = versionInfo.id ?: ""
+            ).apply {
+                versionIconUriProvider.value =
+                    UriProvider.fromString(versionInfo.versionIconUrl)
+                versionBannerUriProvider.value =
+                    UriProvider.fromString(versionInfo.versionBannerUrl)
+                version.value = versionInfo.version ?: ""
+                versionCode.value = versionInfo.versionCode ?: ""
+                changes.value = versionInfo.changes ?: ""
+                packageSize.value = versionInfo.packageSize ?: ""
+                privacyPolicyUrl.value = versionInfo.privacyUrl ?: ""
+                versionInfo.screenshotInfos?.map(
                     ScreenshotInfoForCreate.Companion::inflateFromScreenshotInfo
-                )?.toMutableList() ?: mutableListOf(),
-                downloadInfoForCreates = versionInfo.downloadInfos?.map(
+                )?.let {
+                    screenshotInfoForCreates.addAll(it)
+                }
+                versionInfo.downloadInfos?.map(
                     DownloadInfoForCreate.Companion::inflateFromDownloadInfo
-                )?.toMutableList() ?: mutableListOf()
-            )
+                )?.let {
+                    downloadInfoForCreates.addAll(it)
+                }
+            }
         }
     }
 }
 
 /**
- * @param type video,image
+ * @param type video, image
  */
 data class ScreenshotInfoForCreate(
     val id: String = UUID.randomUUID().toString(),
-    val uriHolder: UriProvider? = null,
     val type: String? = null,
+    val pictureUriProvider: MutableState<UriProvider?> = mutableStateOf(null),
 ) {
 
     companion object {
         private const val TAG = "ScreenshotInfoForCreate"
 
-        const val FILED_NAME_URI_HOLDER = "uriHolder"
+        const val FILED_NAME_URI_HOLDER = "uriProvider"
         const val FILED_NAME_TYPE = "type"
 
         fun inflateFromScreenshotInfo(screenshotInfo: ScreenshotInfo): ScreenshotInfoForCreate {
             PurpleLogger.current.d(TAG, "inflateFromScreenshotInfo")
-            return ScreenshotInfoForCreate(
-                uriHolder = UriProvider.fromString(screenshotInfo.url)
-            )
+            return ScreenshotInfoForCreate().apply {
+                pictureUriProvider.value = UriProvider.fromString(screenshotInfo.url)
+            }
         }
     }
 }
 
 data class DownloadInfoForCreate(
     val id: String = UUID.randomUUID().toString(),
-    val url: String = "",
+    val url: MutableState<String> = mutableStateOf(""),
 ) {
     companion object {
         private const val TAG = "DownloadInfoForCreate"
@@ -189,11 +188,12 @@ data class DownloadInfoForCreate(
         fun inflateFromDownloadInfo(downloadInfo: DownloadInfo): DownloadInfoForCreate {
             PurpleLogger.current.d(TAG, "inflateFromDownloadInfo")
             return DownloadInfoForCreate(
-                id = downloadInfo.id ?: "",
-                url = downloadInfo.url?.let {
+                id = downloadInfo.id ?: ""
+            ).apply {
+                url.value = downloadInfo.url?.let {
                     "********"
                 } ?: ""
-            )
+            }
         }
     }
 }

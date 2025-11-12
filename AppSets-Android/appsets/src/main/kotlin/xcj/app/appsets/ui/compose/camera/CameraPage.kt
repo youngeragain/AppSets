@@ -126,7 +126,7 @@ fun CameraContent(
             bottomSheetState.hide()
         } else {
             PurpleLogger.current.d(TAG, "LaunchedEffect, composeContainerState.show()")
-            bottomSheetState.show {
+            bottomSheetState.show(null) {
                 val qRCodeInfoScannedState = scannedQRCodeInfo
                 if(qRCodeInfoScannedState ==null){
                     return@show

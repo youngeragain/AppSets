@@ -108,8 +108,8 @@ fun ToolFileManagerPage(
     }
 
     val abstractFileChildren by remember(currentAbstractFile) {
-        derivedStateOf<List<AbstractFile<*>>?> {
-            currentAbstractFile?.listChildren() as? List<AbstractFile<*>>?
+        derivedStateOf {
+            (currentAbstractFile?.listChildren() as? List<AbstractFile<*>>) ?: emptyList()
         }
     }
     LaunchedEffect(hasManageStoragePermission) {
@@ -203,31 +203,32 @@ fun ToolFileManagerPage(
                             .calculateBottomPadding() + 52.dp
                     )
                 ) {
-                    if (!abstractFileChildren.isNullOrEmpty()) {
-                        items(abstractFileChildren!!) { abstractFile ->
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clickable(
-                                        onClick = {
-                                            abstractFileContext?.setCurrent(
-                                                abstractFile,
-                                                "push_new"
-                                            )
-                                        }
-                                    )
-                                    .padding(horizontal = 12.dp, vertical = 6.dp)
-                                    .animateItem(),
-                                horizontalArrangement = Arrangement.spacedBy(12.dp)
-                            ) {
-                                val icon = if (abstractFile.isFolder()) {
-                                    xcj.app.compose_share.R.drawable.ic_folder_24
-                                } else {
-                                    xcj.app.compose_share.R.drawable.ic_insert_drive_file_24
-                                }
-                                Icon(painter = painterResource(icon), contentDescription = null)
-                                Text(text = abstractFile.name)
+                    items(
+                        items = abstractFileChildren,
+                        key = { item -> item }
+                    ) { abstractFile ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable(
+                                    onClick = {
+                                        abstractFileContext?.setCurrent(
+                                            abstractFile,
+                                            "push_new"
+                                        )
+                                    }
+                                )
+                                .padding(horizontal = 12.dp, vertical = 6.dp)
+                                .animateItem(),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            val icon = if (abstractFile.isFolder()) {
+                                xcj.app.compose_share.R.drawable.ic_folder_24
+                            } else {
+                                xcj.app.compose_share.R.drawable.ic_insert_drive_file_24
                             }
+                            Icon(painter = painterResource(icon), contentDescription = null)
+                            Text(text = abstractFile.name)
                         }
                     }
                 }
@@ -373,8 +374,7 @@ fun ToolFileManagerPage(
                 backActionBarSize = it.size
             },
             hazeState = hazeState,
-            onBackClick = onBackClick,
-            backButtonText = stringResource(xcj.app.appsets.R.string.file_manager)
+            onBackClick = onBackClick
         )
     }
 

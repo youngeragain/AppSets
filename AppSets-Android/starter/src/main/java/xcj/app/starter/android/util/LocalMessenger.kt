@@ -35,14 +35,16 @@ class MockLifecycleOwner() : LifecycleOwner {
 object LocalMessenger {
     private const val TAG = "LocalMessenger"
 
-    val designMessageDeliver = DesignMessageDeliver()
+    val designMessageDeliver by lazy {
+        DesignMessageDeliver()
+    }
 
     inline fun <K, V> observe(
-        viewLifecycleOwner: LifecycleOwner,
+        lifecycleOwner: LifecycleOwner,
         key: K,
         crossinline observer: (V) -> Unit
     ) {
-        designMessageDeliver.observe(viewLifecycleOwner, key, Observer<V> {
+        designMessageDeliver.observe(lifecycleOwner, key, Observer<V> {
             observer(it)
         })
     }

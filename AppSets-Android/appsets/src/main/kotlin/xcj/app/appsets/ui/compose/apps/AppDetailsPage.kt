@@ -139,7 +139,7 @@ fun AppDetailsPage(
                     onJoinToChatClick = {
                         onJoinToChatClick(application)
                     },
-                    onAddPlatformInfoClick = { platformPosition ->
+                    onAddPlatformClick = { platformPosition ->
                         onAddPlatformInfoClick(
                             application.platforms?.getOrNull(
                                 platformPosition
@@ -159,7 +159,6 @@ fun AppDetailsPage(
                         backActionBarSize = it.size
                     },
                 hazeState = hazeState,
-                backButtonText = application.bioName,
                 onBackClick = onBackClick
             )
         }
@@ -173,7 +172,7 @@ fun ApplicationContentComponent(
     onGetApplicationClick: (Application, AppPlatform) -> Unit,
     onShowApplicationCreatorClick: () -> Unit,
     onJoinToChatClick: () -> Unit,
-    onAddPlatformInfoClick: (Int) -> Unit,
+    onAddPlatformClick: (Int) -> Unit,
     onAddVersionInfoClick: (AppPlatform) -> Unit,
     onAddScreenshotInfoClick: (AppPlatform, VersionInfo) -> Unit,
     onAddDownloadInfoClick: (AppPlatform, VersionInfo) -> Unit,
@@ -224,6 +223,8 @@ fun ApplicationContentComponent(
                     ),
                 model = application.bioUrl
             )
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(text = application.bioName ?: "", fontSize = 20.sp, fontWeight = FontWeight.Bold)
             Spacer(modifier = Modifier.height(16.dp))
             AnimatedVisibility(visible = getApplicationButtonVisible) {
                 Row {
@@ -331,7 +332,7 @@ fun ApplicationContentComponent(
                     )
                     .clip(MaterialTheme.shapes.extraLarge)
                     .clickable(onClick = {
-                        onAddPlatformInfoClick(platformPosition)
+                        onAddPlatformClick(platformPosition)
                     })
                     .padding(horizontal = 14.dp, vertical = 6.dp),
                 verticalAlignment = Alignment.CenterVertically
@@ -450,14 +451,17 @@ fun DownloadBottomSheetContent(
                 Text(text = stringResource(xcj.app.appsets.R.string.buy))
             }
         } else {
-            val currentPlatformVersionDownloadsInfos by rememberUpdatedState(
-                application.platformVersionDownloadsInfos(appPlatform.name)
+            val currentPlatformVersionDownloadInfos by rememberUpdatedState(
+                application.platformVersionDownloadInfos(appPlatform.name)
             )
             LazyColumn(
                 modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                items(currentPlatformVersionDownloadsInfos) { downloadInfo ->
+                items(
+                    items = currentPlatformVersionDownloadInfos,
+                    key = { item -> item }
+                ) { downloadInfo ->
                     Column(
                         modifier = Modifier.fillMaxWidth(),
                         verticalArrangement = Arrangement.spacedBy(6.dp)

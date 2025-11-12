@@ -12,22 +12,30 @@ import androidx.compose.ui.platform.ComposeView
 import kotlinx.coroutines.flow.MutableStateFlow
 
 abstract class VisibilityComposeState {
-    val composableStateAvailableFlow: MutableStateFlow<Boolean> = MutableStateFlow<Boolean>(false)
+    val composableStateAvailableFlow: MutableStateFlow<Boolean> = MutableStateFlow(false)
     private var shouldBackgroundSinkingDownwards: Boolean = false
     private val _showState: MutableState<Boolean> = mutableStateOf(false)
     private var composeHolder: ComposeViewProvider? = null
 
     val showState: State<Boolean> = _showState
 
+    val showStateFlow: MutableStateFlow<Boolean> = MutableStateFlow(false)
+
     val isShow
         get() = _showState.value
 
+    private var hideCallback: (() -> Unit)? = null
+
     fun hide() {
         _showState.value = false
+        showStateFlow.value = false
+        hideCallback?.invoke()
+        hideCallback = null
     }
 
     fun animateToHide() {
         _showState.value = false
+        showStateFlow.value = false
     }
 
     fun hideAndRemove() {
@@ -35,16 +43,18 @@ abstract class VisibilityComposeState {
         composeHolder = null
     }
 
-    fun show() {
+    fun show(hideCallback: (() -> Unit)? = null) {
+        this.hideCallback = hideCallback
         _showState.value = true
+        showStateFlow.value = true
     }
 
-    fun show(composeHolder: ComposeViewProvider) {
+    fun show(hideCallback: (() -> Unit)? = null, composeHolder: ComposeViewProvider) {
         setContent(composeHolder)
-        show()
+        show(hideCallback)
     }
 
-    fun show(content: @Composable () -> Unit) {
+    fun show(hideCallback: (() -> Unit)? = null, content: @Composable () -> Unit) {
         val provider = object : ComposeViewProvider {
             override fun provideComposeView(context: Context): ComposeView {
                 return ComposeView(context).apply {
@@ -52,7 +62,7 @@ abstract class VisibilityComposeState {
                 }
             }
         }
-        show(provider)
+        show(hideCallback, provider)
     }
 
     fun setShouldBackgroundSink(sink: Boolean) {
@@ -87,7 +97,11 @@ abstract class VisibilityComposeState {
     }
 
     fun toggle() {
-        _showState.value = !_showState.value
+        if (isShow) {
+            hide()
+        } else {
+            show()
+        }
     }
 
     fun markComposeAvailableState(available: Boolean) {

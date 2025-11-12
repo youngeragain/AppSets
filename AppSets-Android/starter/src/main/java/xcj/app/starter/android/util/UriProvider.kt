@@ -1,11 +1,16 @@
-package xcj.app.appsets.util.model
+package xcj.app.starter.android.util
 
 import android.net.Uri
 import androidx.core.net.toUri
+import xcj.app.starter.foundation.Provider
 import java.io.File
 
-interface UriProvider {
+interface UriProvider : Provider<Uri> {
     fun provideUri(): Uri
+
+    override fun provide(): Uri {
+        return provideUri()
+    }
 
     fun isLocalUri(): Boolean = true
 

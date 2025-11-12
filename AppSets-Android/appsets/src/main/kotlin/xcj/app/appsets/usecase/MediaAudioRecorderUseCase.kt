@@ -8,11 +8,11 @@ import androidx.core.net.toUri
 import androidx.lifecycle.LifecycleOwner
 import xcj.app.appsets.util.DesignRecorder
 import xcj.app.appsets.util.ktx.toast
-import xcj.app.appsets.util.model.UriProvider
 import xcj.app.compose_share.dynamic.ComposeLifecycleAware
 import xcj.app.starter.android.ktx.asFileOrNull
 import xcj.app.starter.android.ui.model.PlatformPermissionsUsage
 import xcj.app.starter.android.util.PurpleLogger
+import xcj.app.starter.android.util.UriProvider
 import xcj.app.starter.test.LocalAndroidContextFileDir
 import java.io.File
 

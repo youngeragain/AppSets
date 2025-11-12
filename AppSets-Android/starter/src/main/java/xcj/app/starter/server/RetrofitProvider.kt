@@ -2,6 +2,7 @@ package xcj.app.starter.server
 
 import okhttp3.OkHttpClient
 import xcj.app.starter.android.util.PurpleLogger
+import xcj.app.starter.foundation.Provider
 import java.util.concurrent.TimeUnit
 
 object RetrofitProvider {
@@ -46,17 +47,17 @@ object RetrofitProvider {
     fun <T> getService(
         baseUrl: String,
         clazz: Class<T>,
-        okHttpClient: OkHttpClient?,
+        okHttpClientProvider: Provider<OkHttpClient>?,
         reuse: Boolean = true,
     ): T {
         if (!reuse) {
-            val okHttpClientOverride = okHttpClient ?: defaultOkHttpClient
+            val okHttpClientOverride = okHttpClientProvider?.provide() ?: defaultOkHttpClient
             val retrofit = mRetrofitBuilder.baseUrl(baseUrl).client(okHttpClientOverride).build()
             return retrofit.create(clazz) as T
 
         }
         return retrofitMap.getOrPut(baseUrl) {
-            val okHttpClientOverride = okHttpClient ?: defaultOkHttpClient
+            val okHttpClientOverride = okHttpClientProvider?.provide() ?: defaultOkHttpClient
             mRetrofitBuilder.baseUrl(baseUrl).client(okHttpClientOverride).build()
         }.create(clazz) as T
     }

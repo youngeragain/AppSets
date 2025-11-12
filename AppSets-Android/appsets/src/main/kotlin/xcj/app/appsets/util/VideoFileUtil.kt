@@ -7,8 +7,8 @@ import android.net.Uri
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import xcj.app.appsets.util.ktx.writeBitmap
-import xcj.app.appsets.util.model.UriProvider
 import xcj.app.starter.android.util.PurpleLogger
+import xcj.app.starter.android.util.UriProvider
 import xcj.app.starter.test.LocalAndroidContextFileDir
 import java.io.File
 

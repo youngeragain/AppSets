@@ -143,17 +143,21 @@ import xcj.app.appsets.ui.compose.LocalUseCaseOfMediaAudioRecorder
 import xcj.app.appsets.ui.compose.LocalUseCaseOfMediaRemoteExo
 import xcj.app.appsets.ui.compose.LocalUseCaseOfNowSpaceContent
 import xcj.app.appsets.ui.compose.LocalUseCaseOfSystem
+import xcj.app.appsets.ui.compose.content_selection.ContentSelectionResult
+import xcj.app.appsets.ui.compose.content_selection.ContentSelectionTypes
 import xcj.app.appsets.ui.compose.custom_component.AnyImage
 import xcj.app.appsets.ui.compose.custom_component.BackPressHandler
 import xcj.app.appsets.ui.compose.custom_component.HideNavBar
 import xcj.app.appsets.ui.compose.custom_component.third_part.waveslider.WaveSlider
 import xcj.app.appsets.ui.compose.custom_component.third_part.waveslider.WaveSliderDefaults
 import xcj.app.appsets.usecase.SessionState
+import xcj.app.appsets.util.compose_state.ComposeStateUpdater
+import xcj.app.appsets.util.compose_state.RuntimeSingleStateUpdater
 import xcj.app.appsets.util.ktx.asComponentActivityOrNull
-import xcj.app.appsets.util.model.UriProvider
 import xcj.app.compose_share.components.BackActionTopBar
 import xcj.app.starter.android.ktx.startWithHttpSchema
 import xcj.app.starter.android.util.PurpleLogger
+import xcj.app.starter.android.util.UriProvider
 
 private const val TAG = "ConversationDetailsPage"
 
@@ -168,26 +172,21 @@ fun ConversationDetailsPage(
     onBackClick: () -> Unit,
     onBioClick: (Bio) -> Unit,
     onImMessageContentClick: (IMMessage<*>) -> Unit,
-    onInputMoreAction: (String) -> Unit,
+    onInputMoreAction: (String, ComposeStateUpdater<*>) -> Unit,
     onMoreClick: ((IMObj) -> Unit),
 ) {
     val configuration = LocalConfiguration.current
     Box(modifier = modifier) {
         AnimatedContent(
-            targetState = sessionState,
-            transitionSpec = {
+            targetState = sessionState, transitionSpec = {
                 if (configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
                     slideInHorizontally(
-                        animationSpec = tween(),
-                        initialOffsetX = {
+                        animationSpec = tween(), initialOffsetX = {
                             it / 20
-                        }
-                    ) + fadeIn() togetherWith slideOutHorizontally(
-                        animationSpec = tween(),
-                        targetOffsetX = {
+                        }) + fadeIn() togetherWith slideOutHorizontally(
+                        animationSpec = tween(), targetOffsetX = {
                             -it / 20
-                        }
-                    ) + fadeOut()
+                        }) + fadeOut()
                 } else {
                     fadeIn(
                         animationSpec = tween()
@@ -195,8 +194,7 @@ fun ConversationDetailsPage(
                         animationSpec = tween()
                     )
                 }
-            }
-        ) { targetSessionState ->
+            }) { targetSessionState ->
             when (targetSessionState) {
                 is SessionState.None -> {
                     SessionObjectNotFound()
@@ -220,10 +218,9 @@ fun ConversationDetailsPage(
 @Composable
 fun SessionObjectNotFound() {
     Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
+        modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center
     ) {
-        Text(text = stringResource(xcj.app.appsets.R.string.select_a_sessio_object))
+        Text(text = stringResource(xcj.app.appsets.R.string.select_a_session_object))
     }
 }
 
@@ -233,7 +230,7 @@ fun SessionObjectNormal(
     onBackClick: () -> Unit,
     onBioClick: (Bio) -> Unit,
     onImMessageContentClick: (IMMessage<*>) -> Unit,
-    onInputMoreAction: (String) -> Unit,
+    onInputMoreAction: (String, ComposeStateUpdater<*>) -> Unit,
     onMoreClick: (IMObj) -> Unit,
 ) {
     HideNavBar()
@@ -257,8 +254,7 @@ fun SessionObjectNormal(
 
     val isShowJumpToLatestButton by remember {
         derivedStateOf {
-            scrollState.firstVisibleItemIndex != 0 ||
-                    scrollState.firstVisibleItemScrollOffset > 50
+            scrollState.firstVisibleItemIndex != 0 || scrollState.firstVisibleItemScrollOffset > 50
         }
     }
 
@@ -315,8 +311,7 @@ fun SessionObjectNormal(
 
     Box {
         ImMessageListComponent(
-            modifier = Modifier
-                .imePadding(),
+            modifier = Modifier.imePadding(),
             appSetsModuleSettings = appSetsModuleSettings,
             session = currentSession,
             messages = conversationState.messages,
@@ -326,8 +321,7 @@ fun SessionObjectNormal(
             onImMessageContentClick = onImMessageContentClick
         )
         TopBarComponent(
-            modifier = Modifier
-                .align(Alignment.TopCenter),
+            modifier = Modifier.align(Alignment.TopCenter),
             currentSession = currentSession,
             quickAccessSessions = quickAccessSessions,
             hazeState = hazeState,
@@ -338,8 +332,7 @@ fun SessionObjectNormal(
             onBioClick = onBioClick,
             onQuickAccessSessionClick = { session ->
                 conversationUseCase.updateCurrentSessionBySession(session)
-            }
-        )
+            })
         UserInputComponent(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
@@ -367,9 +360,7 @@ fun SessionObjectNormal(
             onSendClick = { inputSelector ->
                 if (!inputTextFiledValue.text.isEmpty() && !inputTextFiledValue.text.isBlank()) {
                     conversationUseCase.sendMessage(
-                        context,
-                        inputSelector,
-                        inputTextFiledValue.text
+                        context, inputSelector, inputTextFiledValue.text
                     )
                 }
                 // Reset text field and close keyboard
@@ -390,7 +381,67 @@ fun SessionObjectNormal(
                     }
                 }
             },
-            onInputMoreAction = onInputMoreAction,
+            onInputMoreAction = { requestKey ->
+                val composeStateUpdater =
+                    RuntimeSingleStateUpdater.fromState<Void>(null) { markKey, input ->
+                        PurpleLogger.current.d(
+                            TAG,
+                            "onInputMoreAction, inputHandleDSL:\nmarkKey:${markKey}\ninput:$input"
+                        )
+                        if (input is ContentSelectionResult.RichMediaContentSelectionResult) {
+                            if (input.selectType == ContentSelectionTypes.IMAGE) {
+                                val contentUriList =
+                                    input.selectedProvider.provide()
+                                val imageUri = contentUriList.firstOrNull()
+                                if (imageUri != null) {
+                                    conversationUseCase.sendMessage(
+                                        context,
+                                        InputSelector.IMAGE,
+                                        imageUri
+                                    )
+                                }
+                            } else if (input.selectType == ContentSelectionTypes.VIDEO) {
+                                val videoUri =
+                                    input.selectedProvider.provide().firstOrNull()
+                                if (videoUri != null) {
+                                    conversationUseCase.sendMessage(
+                                        context,
+                                        InputSelector.VIDEO,
+                                        videoUri
+                                    )
+                                }
+                            } else if (input.selectType == ContentSelectionTypes.AUDIO) {
+                                val audioUri =
+                                    input.selectedProvider.provide().firstOrNull()
+                                if (audioUri != null) {
+                                    conversationUseCase.sendMessage(
+                                        context,
+                                        InputSelector.MUSIC,
+                                        audioUri
+                                    )
+                                }
+                            } else if (input.selectType == ContentSelectionTypes.FILE) {
+                                val fileUri =
+                                    input.selectedProvider.provide().firstOrNull()
+                                if (fileUri != null) {
+                                    conversationUseCase.sendMessage(
+                                        context,
+                                        InputSelector.FILE,
+                                        fileUri
+                                    )
+                                }
+                            }
+                        } else if (input is ContentSelectionResult.LocationContentSelectionResult) {
+                            val locationInfo = input.selectedProvider.provide()
+                            conversationUseCase.sendMessage(
+                                context,
+                                InputSelector.LOCATION,
+                                locationInfo
+                            )
+                        }
+                    }
+                onInputMoreAction(requestKey, composeStateUpdater)
+            },
             onRemoveAdviseClick = textFieldAdviser::removeAdvise
 
         )
@@ -404,12 +455,10 @@ fun ComplexContentSendingIndicator(isShow: Boolean) {
     AnimatedVisibility(
         visible = isShow,
         enter = fadeIn(tween()) + scaleIn(
-            tween(),
-            2f
+            tween(), 2f
         ),
         exit = fadeOut(tween()) + scaleOut(
-            tween(),
-            0.2f
+            tween(), 0.2f
         ),
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
@@ -421,9 +470,7 @@ fun ComplexContentSendingIndicator(isShow: Boolean) {
                         color = MaterialTheme.colorScheme.surface
                     )
                     .border(
-                        1.dp,
-                        MaterialTheme.colorScheme.outline,
-                        MaterialTheme.shapes.extraLarge
+                        1.dp, MaterialTheme.colorScheme.outline, MaterialTheme.shapes.extraLarge
                     )
                     .padding(vertical = 32.dp, horizontal = 42.dp),
                 contentAlignment = Alignment.Center
@@ -437,8 +484,7 @@ fun ComplexContentSendingIndicator(isShow: Boolean) {
                         contentDescription = null
                     )
                     Text(
-                        text = stringResource(xcj.app.appsets.R.string.processing),
-                        fontSize = 12.sp
+                        text = stringResource(xcj.app.appsets.R.string.processing), fontSize = 12.sp
                     )
                 }
             }
@@ -473,8 +519,7 @@ private fun TopBarComponent(
     val statusBarsPaddingValues = WindowInsets.statusBars.asPaddingValues()
 
     Box(
-        modifier = modifier
-            .fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
     ) {
         val paddingValues by remember {
             derivedStateOf {
@@ -492,14 +537,14 @@ private fun TopBarComponent(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            items(overrideQuickAccessSessions) { session ->
+            items(
+                items = overrideQuickAccessSessions, key = { item -> item.id }) { session ->
                 Row(
                     modifier = Modifier
                         .clip(CircleShape)
                         .border(1.dp, MaterialTheme.colorScheme.outline, CircleShape)
                         .hazeEffect(
-                            hazeState,
-                            HazeMaterials.thin()
+                            hazeState, HazeMaterials.thin()
                         )
                         .clickable {
                             hapticFeedback.performHapticFeedback(HapticFeedbackType.TextHandleMove)
@@ -512,13 +557,11 @@ private fun TopBarComponent(
                         .padding(horizontal = 12.dp, vertical = 12.dp)
                         .animateItem(),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     UserAvatar2Component(
                         modifier = Modifier
                             .size(20.dp)
-                            .clip(CircleShape),
-                        imObj = session.imObj
+                            .clip(CircleShape), imObj = session.imObj
                     )
                     Text(
                         modifier = Modifier,
@@ -535,9 +578,7 @@ private fun TopBarComponent(
         BackActionTopBar(
             modifier = Modifier.onPlaced {
                 backActionTopBarSize = it.size
-            },
-            hazeState = hazeState,
-            onBackClick = onBackClick
+            }, hazeState = hazeState, onBackClick = onBackClick
         )
     }
 }
@@ -545,18 +586,14 @@ private fun TopBarComponent(
 @Composable
 private fun UserAvatarComponent(modifier: Modifier, imMessage: IMMessage<*>) {
     AnyImage(
-        modifier = modifier,
-        model = imMessage.fromInfo.bioUrl,
-        error = imMessage.fromInfo.bioName
+        modifier = modifier, model = imMessage.fromInfo.bioUrl, error = imMessage.fromInfo.bioName
     )
 }
 
 @Composable
 private fun UserAvatar2Component(modifier: Modifier, imObj: IMObj?) {
     AnyImage(
-        modifier = modifier,
-        model = imObj?.avatarUrl,
-        error = imObj?.name
+        modifier = modifier, model = imObj?.avatarUrl, error = imObj?.name
     )
 }
 
@@ -587,9 +624,7 @@ private fun ImMessageListComponent(
                 .hazeSource(hazeState)
         ) {
             itemsIndexed(
-                items = messages,
-                key = { index, imMessage -> imMessage.id }
-            ) { _, imMessage ->
+                items = messages, key = { index, imMessage -> imMessage.id }) { _, imMessage ->
                 ImMessageItemWrapperComponent(
                     modifier = Modifier.animateItem(),
                     appSetsModuleSettings = appSetsModuleSettings,
@@ -613,14 +648,11 @@ private fun ImMessageItemWrapperComponent(
     onImMessageContentClick: (IMMessage<*>) -> Unit,
 ) {
     Box(
-        modifier = modifier
-            .fillMaxWidth()
+        modifier = modifier.fillMaxWidth()
     ) {
         Row(
             modifier = Modifier.messageBubbleBoxModifier(
-                this@Box,
-                appSetsModuleSettings,
-                imMessage
+                this@Box, appSetsModuleSettings, imMessage
             )
         ) {
             ImMessageItemStartComponent(appSetsModuleSettings, session, imMessage, onBioClick)
@@ -632,9 +664,7 @@ private fun ImMessageItemWrapperComponent(
 
 @Composable
 private fun Modifier.messageBubbleBoxModifier(
-    boxScope: BoxScope,
-    appSetsModuleSettings: AppSetsModuleSettings,
-    imMessage: IMMessage<*>
+    boxScope: BoxScope, appSetsModuleSettings: AppSetsModuleSettings, imMessage: IMMessage<*>
 ): Modifier {
     with(boxScope) {
         return when (appSetsModuleSettings.imBubbleAlignment) {
@@ -682,13 +712,11 @@ private fun ImMessageItemCenterComponent(
         }
     }
     Column(
-        verticalArrangement = Arrangement.spacedBy(4.dp),
-        horizontalAlignment = horizontalAlignment
+        verticalArrangement = Arrangement.spacedBy(4.dp), horizontalAlignment = horizontalAlignment
     ) {
         if (appSetsModuleSettings.isImMessageShowDate) {
             Text(
-                text = imMessage.readableDate,
-                fontSize = 10.sp
+                text = imMessage.readableDate, fontSize = 10.sp
             )
         } else {
             Spacer(modifier = Modifier.height(12.dp))
@@ -697,9 +725,7 @@ private fun ImMessageItemCenterComponent(
             is TextMessage -> {
                 SelectionContainer {
                     ImMessageItemTextComponent(
-                        appSetsModuleSettings,
-                        imMessage,
-                        onImMessageContentClick
+                        appSetsModuleSettings, imMessage, onImMessageContentClick
                     )
                 }
             }
@@ -769,23 +795,19 @@ private fun ImMessageItemEndComponent(
                         .clip(MaterialTheme.shapes.large)
                         .clickable {
                             onBioClick(imMessage.fromInfo)
-                        },
-                    imMessage
+                        }, imMessage
                 )
             }
 
             AppSetsModuleSettings.IM_BUBBLE_ALIGNMENT_START_END -> {
-                if (
-                    imMessage.fromInfo.uid == LocalAccountManager.userInfo.uid
-                ) {
+                if (imMessage.fromInfo.uid == LocalAccountManager.userInfo.uid) {
                     UserAvatarComponent(
                         modifier = Modifier
                             .size(42.dp)
                             .clip(MaterialTheme.shapes.large)
                             .clickable {
                                 onBioClick(imMessage.fromInfo)
-                            },
-                        imMessage
+                            }, imMessage
                     )
                 }
             }
@@ -806,8 +828,7 @@ private fun ImMessageItemLocationComponent(
             .clip(MaterialTheme.shapes.extraLarge)
             .clickable {
                 onImMessageContentClick(imMessage)
-            }
-    ) {
+            }) {
         Box {
             Column(
                 modifier = Modifier
@@ -853,11 +874,9 @@ fun ImMessageItemFileComponent(
             .clip(MaterialTheme.shapes.extraLarge)
             .clickable {
                 onImMessageContentClick(imMessage)
-            }
-    ) {
+            }) {
         Column(
-            modifier = Modifier
-                .padding(24.dp),
+            modifier = Modifier.padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
@@ -884,14 +903,11 @@ private fun ImMessageItemADComponent(
             .clickable {
                 onImMessageContentClick(imMessage)
                 PurpleLogger.current.d(
-                    TAG,
-                    "ImMessage.Ad show url:[${imMessage.metadata.data}]"
+                    TAG, "ImMessage.Ad show url:[${imMessage.metadata.data}]"
                 )
-            }
-    ) {
+            }) {
         Box(
-            Modifier
-                .size(150.dp)
+            Modifier.size(150.dp)
         ) {
             Text(
                 stringResource(xcj.app.appsets.R.string.advertisement),
@@ -918,8 +934,7 @@ private fun ImMessageItemMusicComponent(
     LaunchedEffect(audioPlayerState) {
         if (audioPlayerState.id == imMessage.id) {
             waveValue = audioPlayerState.progress
-            isPlaying =
-                mediaRemoteExoUseCase.isPlaying
+            isPlaying = mediaRemoteExoUseCase.isPlaying
         }
     }
     Column(
@@ -932,8 +947,7 @@ private fun ImMessageItemMusicComponent(
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         Column(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalAlignment = Alignment.End
+            modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.End
         ) {
             Icon(
                 painterResource(xcj.app.compose_share.R.drawable.ic_audiotrack_24),
@@ -947,8 +961,7 @@ private fun ImMessageItemMusicComponent(
             onValueChange = {
                 waveValue = it
             },
-            modifier = Modifier
-                .align(Alignment.CenterHorizontally),
+            modifier = Modifier.align(Alignment.CenterHorizontally),
             animationOptions = WaveSliderDefaults.animationOptions(animateWave = isPlaying),
             waveOptions = WaveSliderDefaults.waveOptions(
                 amplitude = if (isPlaying) {
@@ -961,11 +974,9 @@ private fun ImMessageItemMusicComponent(
             steps = 0
         )
         IconButton(
-            modifier = Modifier.align(Alignment.CenterHorizontally),
-            onClick = {
+            modifier = Modifier.align(Alignment.CenterHorizontally), onClick = {
                 onImMessageContentClick(imMessage)
-            }
-        ) {
+            }) {
             val playButtonRes = if (isPlaying) {
                 xcj.app.compose_share.R.drawable.ic_round_pause_circle_filled_24
             } else {
@@ -995,8 +1006,7 @@ private fun ImMessageItemVideoComponent(
             .clip(MaterialTheme.shapes.extraLarge)
             .clickable {
                 onImMessageContentClick(imMessage)
-            },
-        contentAlignment = Alignment.Center
+            }, contentAlignment = Alignment.Center
     ) {
         AnyImage(
             modifier = Modifier
@@ -1010,8 +1020,7 @@ private fun ImMessageItemVideoComponent(
         IconButton(
             onClick = {
                 onImMessageContentClick(imMessage)
-            },
-            colors = IconButtonDefaults.iconButtonColors(
+            }, colors = IconButtonDefaults.iconButtonColors(
                 containerColor = MaterialTheme.colorScheme.tertiaryContainer
             )
         ) {
@@ -1039,8 +1048,7 @@ private fun ImMessageItemVoiceComponent(
     LaunchedEffect(audioPlayerState) {
         if (audioPlayerState.id == imMessage.id) {
             waveValue = audioPlayerState.progress
-            isPlaying =
-                mediaRemoteExoUseCase.isPlaying
+            isPlaying = mediaRemoteExoUseCase.isPlaying
         }
     }
     Row(
@@ -1082,8 +1090,7 @@ private fun ImMessageItemVoiceComponent(
                 xcj.app.compose_share.R.drawable.ic_play_circle_filled_24
             }
             Icon(
-                painter = painterResource(playButtonRes),
-                contentDescription = null
+                painter = painterResource(playButtonRes), contentDescription = null
             )
         }
     }
@@ -1102,11 +1109,9 @@ private fun ImMessageItemHTMLComponent(
             .clip(MaterialTheme.shapes.extraLarge)
             .clickable {
                 onImMessageContentClick(imMessage)
-            }
-    ) {
+            }) {
         Row(
-            modifier = Modifier
-                .padding(horizontal = 12.dp, vertical = 10.dp),
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
@@ -1133,8 +1138,7 @@ private fun ImMessageItemImageComponent(
             .clip(MaterialTheme.shapes.extraLarge)
             .clickable {
                 onImMessageContentClick(imMessage)
-            }
-    ) {
+            }) {
         AnyImage(
             modifier = Modifier
                 .height(355.dp)
@@ -1154,12 +1158,9 @@ private fun ImMessageItemTextComponent(
     onImMessageContentClick: (IMMessage<*>) -> Unit,
 ) {
     Text(
-        modifier = Modifier
-            .imMessageBackgroundTextModifier(
-                appSetsModuleSettings = appSetsModuleSettings,
-                imMessage = imMessage
-            ),
-        text = imMessage.metadata.data
+        modifier = Modifier.imMessageBackgroundTextModifier(
+            appSetsModuleSettings = appSetsModuleSettings, imMessage = imMessage
+        ), text = imMessage.metadata.data
     )
 }
 
@@ -1179,23 +1180,19 @@ private fun ImMessageItemStartComponent(
                         .clip(MaterialTheme.shapes.large)
                         .clickable {
                             onBioClick(imMessage.fromInfo)
-                        },
-                    imMessage = imMessage
+                        }, imMessage = imMessage
                 )
             }
 
             AppSetsModuleSettings.IM_BUBBLE_ALIGNMENT_START_END -> {
-                if (
-                    imMessage.fromInfo.uid != LocalAccountManager.userInfo.uid
-                ) {
+                if (imMessage.fromInfo.uid != LocalAccountManager.userInfo.uid) {
                     UserAvatarComponent(
                         modifier = Modifier
                             .size(42.dp)
                             .clip(MaterialTheme.shapes.large)
                             .clickable {
                                 onBioClick(imMessage.fromInfo)
-                            },
-                        imMessage = imMessage
+                            }, imMessage = imMessage
                     )
                 }
 
@@ -1225,6 +1222,7 @@ private fun UserInputComponent(
     val systemUseCase = LocalUseCaseOfSystem.current
     val nowSpaceContentUseCase = LocalUseCaseOfNowSpaceContent.current
     val mediaAudioRecorderUseCase = LocalUseCaseOfMediaAudioRecorder.current
+    val conversationUseCase = LocalUseCaseOfConversation.current
     val coroutineScope = rememberCoroutineScope()
     var expandUserInput by remember { mutableStateOf(false) }
     var currentInputSelector by rememberSaveable { mutableIntStateOf(InputSelector.NONE) }
@@ -1238,8 +1236,7 @@ private fun UserInputComponent(
     }
 
     Column(
-        modifier = modifier
-            .navigationBarsPadding(),
+        modifier = modifier.navigationBarsPadding(),
     ) {
         AnimatedVisibility(textFieldAdviser.advises.isNotEmpty()) {
             InputSuggestionsSpace(
@@ -1263,9 +1260,9 @@ private fun UserInputComponent(
             },
             // Close extended selector if text field receives focus
 
-            onInputMoreAction = { action ->
+            onInputMoreAction = { requestKey ->
                 hapticFeedback.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                onInputMoreAction(action)
+                onInputMoreAction(requestKey)
             },
             onSendClick = {
                 hapticFeedback.performHapticFeedback(HapticFeedbackType.TextHandleMove)
@@ -1303,8 +1300,7 @@ private fun UserInputComponent(
                 expandUserInput = false
                 onSendClick(currentInputSelector)
                 resetScroll()
-            }
-        )
+            })
     }
 }
 
@@ -1319,24 +1315,22 @@ fun InputSuggestionsSpace(
 ) {
     val hapticFeedback = LocalHapticFeedback.current
     Column(
-        modifier = modifier.fillMaxWidth(),
-        horizontalAlignment = Alignment.End
+        modifier = modifier.fillMaxWidth(), horizontalAlignment = Alignment.End
     ) {
         LazyRow(
             modifier = modifier,
             reverseLayout = true,
             contentPadding = PaddingValues(horizontal = 12.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
-        )
-        {
-            items(textFieldAdviser.advises) { advise ->
+        ) {
+            items(
+                items = textFieldAdviser.advises, key = { item -> item }) { advise ->
                 Row(
                     modifier = Modifier
                         .clip(CircleShape)
                         .border(1.dp, MaterialTheme.colorScheme.outline, CircleShape)
                         .hazeEffect(
-                            hazeState,
-                            HazeMaterials.thin()
+                            hazeState, HazeMaterials.thin()
                         )
                         .clickable {
                             hapticFeedback.performHapticFeedback(HapticFeedbackType.TextHandleMove)
@@ -1347,8 +1341,7 @@ fun InputSuggestionsSpace(
                         .padding(horizontal = 12.dp, vertical = 6.dp)
                         .animateItem(),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     when (advise) {
                         is TextFieldAdviser.WebContent -> {
                             Icon(
@@ -1448,11 +1441,9 @@ fun UserInputActionsSpace(
                 .fillMaxWidth()
                 .height(48.dp)
                 .padding(horizontal = 12.dp)
-        )
-        {
+        ) {
             Row(
-                modifier = Modifier
-                    .align(Alignment.CenterStart),
+                modifier = Modifier.align(Alignment.CenterStart),
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -1482,9 +1473,7 @@ fun UserInputActionsSpace(
                             isShowAudioRecorder = true
                             coroutineScope.launch {
                                 mediaAudioRecorderUseCase.startRecord(
-                                    context,
-                                    systemUseCase,
-                                    nowSpaceContentUseCase
+                                    context, systemUseCase, nowSpaceContentUseCase
                                 )
                             }
                         })
@@ -1502,8 +1491,7 @@ fun UserInputActionsSpace(
                         AudioRecordSpace(
                             onStopCallback = {
                                 isShowAudioRecorder = false
-                            }
-                        )
+                            })
                     }
                 }
                 AnimatedVisibility(isShowJumpToLatestButton) {
@@ -1512,8 +1500,7 @@ fun UserInputActionsSpace(
                             .clip(CircleShape)
                             .border(1.dp, MaterialTheme.colorScheme.outline, CircleShape)
                             .hazeEffect(
-                                hazeState,
-                                HazeMaterials.thin()
+                                hazeState, HazeMaterials.thin()
                             )
                             .clickable(onClick = onJumpToLatestClick)
                             .padding(12.dp),
@@ -1539,8 +1526,7 @@ fun UserInputActionsSpace(
             }
 
             androidx.compose.animation.AnimatedVisibility(
-                modifier = Modifier
-                    .align(Alignment.CenterEnd),
+                modifier = Modifier.align(Alignment.CenterEnd),
                 visible = textFieldValue.text.isNotEmpty(),
                 enter = fadeIn(),
                 exit = fadeOut(),
@@ -1555,11 +1541,9 @@ fun UserInputActionsSpace(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     AnimatedContent(
-                        targetState = expandUserInput,
-                        transitionSpec = {
+                        targetState = expandUserInput, transitionSpec = {
                             fadeIn() togetherWith fadeOut()
-                        },
-                        contentAlignment = Alignment.Center
+                        }, contentAlignment = Alignment.Center
                     ) { targetExpandUserInput ->
                         val expandIconRes = if (targetExpandUserInput) {
                             xcj.app.compose_share.R.drawable.ic_round_close_fullscreen_24
@@ -1648,9 +1632,7 @@ fun AudioRecordSpace(
                     return@launch
                 }
                 conversationUseCase.sendMessage(
-                    context,
-                    InputSelector.VOICE,
-                    uriProvider
+                    context, InputSelector.VOICE, uriProvider
                 )
             }
         }
@@ -1664,31 +1646,24 @@ fun AudioRecordSpace(
         }
     }
     Row(
-        modifier = modifier.animateContentSize(),
-        verticalAlignment = Alignment.CenterVertically
+        modifier = modifier.animateContentSize(), verticalAlignment = Alignment.CenterVertically
     ) {
         Row(
             modifier = Modifier.padding(4.dp)
         ) {
             AnimatedContent(
-                targetState = recorderState.seconds,
-                transitionSpec = {
+                targetState = recorderState.seconds, transitionSpec = {
                     fadeIn(tween()) + slideInVertically(
-                        tween(),
-                        initialOffsetY = { it }) togetherWith fadeOut(
+                        tween(), initialOffsetY = { it }) togetherWith fadeOut(
                         tween()
                     ) + slideOutVertically(tween(), targetOffsetY = { -it })
-                }
-            ) { targetSeconds ->
+                }) { targetSeconds ->
                 Text(
-                    text = "$targetSeconds",
-                    fontSize = 10.sp,
-                    fontWeight = FontWeight.Bold
+                    text = "$targetSeconds", fontSize = 10.sp, fontWeight = FontWeight.Bold
                 )
             }
             Text(
-                text = "s",
-                fontSize = 10.sp
+                text = "s", fontSize = 10.sp
             )
         }
         if (recorderState.isStarted) {
@@ -1702,8 +1677,7 @@ fun AudioRecordSpace(
                             onClick = {
                                 val shouldSend = false
                                 stopCallback(shouldSend)
-                            }
-                        )
+                            })
                         .padding(4.dp),
                     text = stringResource(xcj.app.appsets.R.string.stop),
                     fontSize = 10.sp,
@@ -1723,8 +1697,7 @@ fun AudioRecordSpace(
                                 } else {
                                     mediaAudioRecorderUseCase.pauseRecord("UI click")
                                 }
-                            }
-                        )
+                            })
                         .padding(4.dp),
                     text = stringResource(textRes),
                     fontSize = 10.sp,
@@ -1738,8 +1711,7 @@ fun AudioRecordSpace(
                                 onClick = {
                                     val shouldSend = true
                                     stopCallback(shouldSend)
-                                }
-                            )
+                                })
                             .padding(4.dp),
                         text = stringResource(xcj.app.appsets.R.string.send),
                         fontSize = 10.sp,
@@ -1774,10 +1746,8 @@ private fun UserInputTextSpace(
     val userInputTargetHeight = getUserInputHeight(activity, expandUserInput)
 
     val userInputHeightState by animateDpAsState(
-        targetValue = userInputTargetHeight,
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessLow
+        targetValue = userInputTargetHeight, animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessLow
         )
     )
 
@@ -1793,13 +1763,13 @@ private fun UserInputTextSpace(
                     ContextCompat.getString(context, xcj.app.appsets.R.string.input_something)
                 keyboardShownProperty = keyboardShown
                 //spk.setValue(keyboardShown)
-            }
-    ) {
+            }) {
         val boxModifier = if (expandUserInput) {
             Modifier
                 .height(userInputHeightState)
                 .border(
-                    2.dp, MaterialTheme.colorScheme.primaryContainer,
+                    2.dp,
+                    MaterialTheme.colorScheme.primaryContainer,
                     MaterialTheme.shapes.extraLarge
                 )
                 .clip(MaterialTheme.shapes.extraLarge)
@@ -1809,10 +1779,8 @@ private fun UserInputTextSpace(
                 .clip(CircleShape)
         }
         Box(
-            boxModifier
-                .hazeEffect(hazeState, HazeMaterials.thin())
-        )
-        {
+            boxModifier.hazeEffect(hazeState, HazeMaterials.thin())
+        ) {
 
             BasicTextField(
                 modifier = Modifier
@@ -1833,11 +1801,9 @@ private fun UserInputTextSpace(
                 keyboardActions = KeyboardActions(
                     onSend = {
                         onSendClick()
-                    }
-                ),
+                    }),
                 keyboardOptions = KeyboardOptions(
-                    keyboardType = keyboardType,
-                    imeAction = ImeAction.Send
+                    keyboardType = keyboardType, imeAction = ImeAction.Send
                 ),
                 maxLines = if (expandUserInput) {
                     Int.MAX_VALUE
@@ -1848,8 +1814,7 @@ private fun UserInputTextSpace(
                 textStyle = LocalTextStyle.current.copy(color = LocalContentColor.current)
             )
 
-            val disableContentColor =
-                MaterialTheme.colorScheme.onSurfaceVariant
+            val disableContentColor = MaterialTheme.colorScheme.onSurfaceVariant
             if (textFieldValue.text.isEmpty() || !focusState) {
                 Text(
                     modifier = Modifier
@@ -1881,19 +1846,14 @@ private fun getUserInputHeight(activity: ComponentActivity?, expand: Boolean): D
 
 @Composable
 private fun Modifier.imMessageBackgroundTextModifier(
-    appSetsModuleSettings: AppSetsModuleSettings,
-    imMessage: IMMessage<*>
+    appSetsModuleSettings: AppSetsModuleSettings, imMessage: IMMessage<*>
 ): Modifier {
     return when (appSetsModuleSettings.imBubbleAlignment) {
         AppSetsModuleSettings.IM_BUBBLE_ALIGNMENT_ALL_START -> {
             this
                 .background(
-                    MaterialTheme.colorScheme.secondaryContainer,
-                    RoundedCornerShape(
-                        topStart = 2.dp,
-                        topEnd = 20.dp,
-                        bottomEnd = 20.dp,
-                        bottomStart = 20.dp
+                    MaterialTheme.colorScheme.secondaryContainer, RoundedCornerShape(
+                        topStart = 2.dp, topEnd = 20.dp, bottomEnd = 20.dp, bottomStart = 20.dp
                     )
                 )
                 .widthIn(100.dp, max = TextFieldDefaults.MinWidth)
@@ -1903,12 +1863,8 @@ private fun Modifier.imMessageBackgroundTextModifier(
         AppSetsModuleSettings.IM_BUBBLE_ALIGNMENT_ALL_END -> {
             this
                 .background(
-                    MaterialTheme.colorScheme.tertiaryContainer,
-                    RoundedCornerShape(
-                        topStart = 20.dp,
-                        topEnd = 2.dp,
-                        bottomEnd = 20.dp,
-                        bottomStart = 20.dp
+                    MaterialTheme.colorScheme.tertiaryContainer, RoundedCornerShape(
+                        topStart = 20.dp, topEnd = 2.dp, bottomEnd = 20.dp, bottomStart = 20.dp
                     )
                 )
                 .widthIn(100.dp, max = TextFieldDefaults.MinWidth)
@@ -1919,12 +1875,8 @@ private fun Modifier.imMessageBackgroundTextModifier(
             if (LocalAccountManager.isLoggedUser(imMessage.fromInfo.uid)) {
                 this
                     .background(
-                        MaterialTheme.colorScheme.tertiaryContainer,
-                        RoundedCornerShape(
-                            topStart = 20.dp,
-                            topEnd = 2.dp,
-                            bottomEnd = 20.dp,
-                            bottomStart = 20.dp
+                        MaterialTheme.colorScheme.tertiaryContainer, RoundedCornerShape(
+                            topStart = 20.dp, topEnd = 2.dp, bottomEnd = 20.dp, bottomStart = 20.dp
                         )
                     )
                     .widthIn(100.dp, max = TextFieldDefaults.MinWidth)
@@ -1932,12 +1884,8 @@ private fun Modifier.imMessageBackgroundTextModifier(
             } else {
                 this
                     .background(
-                        MaterialTheme.colorScheme.secondaryContainer,
-                        RoundedCornerShape(
-                            topStart = 2.dp,
-                            topEnd = 20.dp,
-                            bottomEnd = 20.dp,
-                            bottomStart = 20.dp
+                        MaterialTheme.colorScheme.secondaryContainer, RoundedCornerShape(
+                            topStart = 2.dp, topEnd = 20.dp, bottomEnd = 20.dp, bottomStart = 20.dp
                         )
                     )
                     .widthIn(100.dp, max = TextFieldDefaults.MinWidth)
@@ -1951,15 +1899,13 @@ private fun Modifier.imMessageBackgroundTextModifier(
 private fun Modifier.imMessageBackgroundADModifier(imMessage: IMMessage<*>): Modifier {
     return if (LocalAccountManager.isLoggedUser(imMessage.fromInfo.uid)) {
         background(
-            MaterialTheme.colorScheme.tertiaryContainer,
-            MaterialTheme.shapes.extraLarge
+            MaterialTheme.colorScheme.tertiaryContainer, MaterialTheme.shapes.extraLarge
         )
             .widthIn(50.dp)
             .padding(2.dp)
     } else {
         background(
-            MaterialTheme.colorScheme.secondaryContainer,
-            MaterialTheme.shapes.extraLarge
+            MaterialTheme.colorScheme.secondaryContainer, MaterialTheme.shapes.extraLarge
         )
             .widthIn(50.dp)
             .padding(2.dp)
@@ -1970,15 +1916,13 @@ private fun Modifier.imMessageBackgroundADModifier(imMessage: IMMessage<*>): Mod
 private fun Modifier.imMessageBackgroundLocationModifier(imMessage: IMMessage<*>): Modifier {
     return if (LocalAccountManager.isLoggedUser(imMessage.fromInfo.uid)) {
         background(
-            MaterialTheme.colorScheme.tertiaryContainer,
-            MaterialTheme.shapes.extraLarge
+            MaterialTheme.colorScheme.tertiaryContainer, MaterialTheme.shapes.extraLarge
         )
             .widthIn(50.dp, max = TextFieldDefaults.MinWidth)
             .padding(2.dp)
     } else {
         background(
-            MaterialTheme.colorScheme.secondaryContainer,
-            MaterialTheme.shapes.extraLarge
+            MaterialTheme.colorScheme.secondaryContainer, MaterialTheme.shapes.extraLarge
         )
             .widthIn(50.dp, max = TextFieldDefaults.MinWidth)
             .padding(2.dp)
@@ -1989,15 +1933,13 @@ private fun Modifier.imMessageBackgroundLocationModifier(imMessage: IMMessage<*>
 private fun Modifier.imMessageBackgroundFileModifier(imMessage: IMMessage<*>): Modifier {
     return if (LocalAccountManager.isLoggedUser(imMessage.fromInfo.uid)) {
         background(
-            MaterialTheme.colorScheme.tertiaryContainer,
-            MaterialTheme.shapes.extraLarge
+            MaterialTheme.colorScheme.tertiaryContainer, MaterialTheme.shapes.extraLarge
         )
             .widthIn(50.dp)
             .padding(2.dp)
     } else {
         background(
-            MaterialTheme.colorScheme.secondaryContainer,
-            MaterialTheme.shapes.extraLarge
+            MaterialTheme.colorScheme.secondaryContainer, MaterialTheme.shapes.extraLarge
         )
             .widthIn(50.dp)
             .padding(2.dp)
@@ -2008,15 +1950,13 @@ private fun Modifier.imMessageBackgroundFileModifier(imMessage: IMMessage<*>): M
 private fun Modifier.imMessageBackgroundHTMLModifier(imMessage: IMMessage<*>): Modifier {
     return if (LocalAccountManager.isLoggedUser(imMessage.fromInfo.uid)) {
         background(
-            MaterialTheme.colorScheme.tertiaryContainer,
-            MaterialTheme.shapes.extraLarge
+            MaterialTheme.colorScheme.tertiaryContainer, MaterialTheme.shapes.extraLarge
         )
             .widthIn(50.dp)
             .padding(2.dp)
     } else {
         background(
-            MaterialTheme.colorScheme.secondaryContainer,
-            MaterialTheme.shapes.extraLarge
+            MaterialTheme.colorScheme.secondaryContainer, MaterialTheme.shapes.extraLarge
         )
             .widthIn(50.dp)
             .padding(2.dp)
@@ -2027,15 +1967,13 @@ private fun Modifier.imMessageBackgroundHTMLModifier(imMessage: IMMessage<*>): M
 private fun Modifier.imMessageBackgroundImageModifier(imMessage: IMMessage<*>): Modifier {
     return if (LocalAccountManager.isLoggedUser(imMessage.fromInfo.uid)) {
         background(
-            MaterialTheme.colorScheme.tertiaryContainer,
-            MaterialTheme.shapes.extraLarge
+            MaterialTheme.colorScheme.tertiaryContainer, MaterialTheme.shapes.extraLarge
         )
             .widthIn(50.dp)
             .padding(2.dp)
     } else {
         background(
-            MaterialTheme.colorScheme.secondaryContainer,
-            MaterialTheme.shapes.extraLarge
+            MaterialTheme.colorScheme.secondaryContainer, MaterialTheme.shapes.extraLarge
         )
             .widthIn(50.dp)
             .padding(2.dp)
@@ -2046,15 +1984,13 @@ private fun Modifier.imMessageBackgroundImageModifier(imMessage: IMMessage<*>): 
 private fun Modifier.imMessageBackgroundVideoModifier(imMessage: IMMessage<*>): Modifier {
     return if (LocalAccountManager.isLoggedUser(imMessage.fromInfo.uid)) {
         background(
-            MaterialTheme.colorScheme.tertiaryContainer,
-            MaterialTheme.shapes.extraLarge
+            MaterialTheme.colorScheme.tertiaryContainer, MaterialTheme.shapes.extraLarge
         )
             .widthIn(50.dp)
             .padding(2.dp)
     } else {
         background(
-            MaterialTheme.colorScheme.secondaryContainer,
-            MaterialTheme.shapes.extraLarge
+            MaterialTheme.colorScheme.secondaryContainer, MaterialTheme.shapes.extraLarge
         )
             .widthIn(50.dp)
             .padding(2.dp)
@@ -2065,15 +2001,13 @@ private fun Modifier.imMessageBackgroundVideoModifier(imMessage: IMMessage<*>): 
 private fun Modifier.imMessageBackgroundVoiceModifier(imMessage: IMMessage<*>): Modifier {
     return if (LocalAccountManager.isLoggedUser(imMessage.fromInfo.uid)) {
         background(
-            MaterialTheme.colorScheme.tertiaryContainer,
-            MaterialTheme.shapes.extraLarge
+            MaterialTheme.colorScheme.tertiaryContainer, MaterialTheme.shapes.extraLarge
         )
             .widthIn(50.dp)
             .padding(2.dp)
     } else {
         background(
-            MaterialTheme.colorScheme.secondaryContainer,
-            MaterialTheme.shapes.extraLarge
+            MaterialTheme.colorScheme.secondaryContainer, MaterialTheme.shapes.extraLarge
         )
             .widthIn(50.dp)
             .padding(2.dp)
@@ -2084,15 +2018,13 @@ private fun Modifier.imMessageBackgroundVoiceModifier(imMessage: IMMessage<*>): 
 private fun Modifier.imMessageBackgroundMusicModifier(imMessage: IMMessage<*>): Modifier {
     return if (LocalAccountManager.isLoggedUser(imMessage.fromInfo.uid)) {
         background(
-            MaterialTheme.colorScheme.tertiaryContainer,
-            MaterialTheme.shapes.extraLarge
+            MaterialTheme.colorScheme.tertiaryContainer, MaterialTheme.shapes.extraLarge
         )
             .widthIn(50.dp)
             .padding(2.dp)
     } else {
         background(
-            MaterialTheme.colorScheme.secondaryContainer,
-            MaterialTheme.shapes.extraLarge
+            MaterialTheme.colorScheme.secondaryContainer, MaterialTheme.shapes.extraLarge
         )
             .widthIn(50.dp)
             .padding(2.dp)
@@ -2145,22 +2077,21 @@ class TextFieldAdviser {
     suspend fun analysis(
         textFieldValue: TextFieldValue,
         receivedContents: SnapshotStateList<Uri>,
-    ): List<Advise> =
-        withContext(Dispatchers.IO) {
-            val results = mutableListOf<Advise>()
-            if (textFieldValue.text.startWithHttpSchema()) {
-                results.add(WebContent(textFieldValue.text))
-            }
-            if (textFieldValue.text.startsWith("content://") || textFieldValue.text.startsWith("file://")) {
-                results.add(BaseUriContent(textFieldValue.text))
-            }
-            if (receivedContents.isNotEmpty()) {
-                receivedContents.forEach { uri ->
-                    results.add(ImageUriContent(uri.toString()))
-                }
-            }
-            return@withContext results
+    ): List<Advise> = withContext(Dispatchers.IO) {
+        val results = mutableListOf<Advise>()
+        if (textFieldValue.text.startWithHttpSchema()) {
+            results.add(WebContent(textFieldValue.text))
         }
+        if (textFieldValue.text.startsWith("content://") || textFieldValue.text.startsWith("file://")) {
+            results.add(BaseUriContent(textFieldValue.text))
+        }
+        if (receivedContents.isNotEmpty()) {
+            receivedContents.forEach { uri ->
+                results.add(ImageUriContent(uri.toString()))
+            }
+        }
+        return@withContext results
+    }
 
     fun removeAdvise(advise: Advise) {
         _advise.remove(advise)

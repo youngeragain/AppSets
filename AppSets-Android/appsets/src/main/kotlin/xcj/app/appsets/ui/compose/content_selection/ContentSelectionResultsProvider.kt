@@ -1,11 +1,12 @@
 package xcj.app.appsets.ui.compose.content_selection
 
+import android.content.ContentResolver
 import android.content.Context
 import android.net.Uri
 import androidx.compose.runtime.mutableStateListOf
 import xcj.app.appsets.util.ktx.getSystemFileUris
-import xcj.app.appsets.util.model.UriProvider
 import xcj.app.starter.android.util.PurpleLogger
+import xcj.app.starter.android.util.UriProvider
 
 class ContentSelectionResultsProvider(
     private val mediaStoreType: Class<*>? = null
@@ -61,17 +62,22 @@ class ContentSelectionResultsProvider(
         //checkRange()
         PurpleLogger.current.d(
             TAG,
-            "getUris, step1, ${System.currentTimeMillis()}"
+            "getUris, step1"
         )
         val systemFileUris =
-            context.getSystemFileUris(mediaStoreType, 1, fromIndex, pageSize)
+            context.getSystemFileUris(
+                mediaStoreType,
+                ContentResolver.QUERY_SORT_DIRECTION_DESCENDING,
+                fromIndex,
+                pageSize
+            )
         if (systemFileUris.isNullOrEmpty()) {
             PurpleLogger.current.d(TAG, "empty files")
             return
         }
         PurpleLogger.current.d(
             TAG,
-            "getUris, step2, ${System.currentTimeMillis()}"
+            "getUris, step2"
         )
         val selectedFileUrisMap = selectedContentUris.associateBy { it.path }
         val pagedSystemPhotosFileUris = systemFileUris.filterNot {
@@ -79,7 +85,7 @@ class ContentSelectionResultsProvider(
         }
         PurpleLogger.current.d(
             TAG,
-            "getUris, step3, ${System.currentTimeMillis()}"
+            "getUris, step3"
         )
         contentUris.addAll(pagedSystemPhotosFileUris)
         loading = false

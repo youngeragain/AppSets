@@ -8,12 +8,10 @@ class SelectedContentsStateHolder {
 
     val selectedContentsState: MutableState<SelectedContents> = mutableStateOf(SelectedContents())
 
-    fun updateSelectedContent(contentSelectionResult: ContentSelectionResult) {
+    fun updateSelectedContent(contentSelectionResult: ContentSelectionResult<*>) {
         val selectedContents = selectedContentsState.value
-        selectedContents.contents.put(
-            contentSelectionResult.request.requestKey,
+        selectedContents.contents[contentSelectionResult.request.requestKey] =
             contentSelectionResult
-        )
         selectedContentsState.value = SelectedContents(selectedContents.contents)
     }
 }

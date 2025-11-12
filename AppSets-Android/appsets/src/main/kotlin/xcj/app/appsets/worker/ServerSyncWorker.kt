@@ -26,7 +26,7 @@ class ServerSyncWorker(
         if (conditions.isNullOrEmpty()) {
             return Result.failure()
         }
-        var hasSingleCondition: Boolean = false
+        var hasSingleCondition = false
         if (conditions.contains("friends")) {
             hasSingleCondition = true
             val friends = request {

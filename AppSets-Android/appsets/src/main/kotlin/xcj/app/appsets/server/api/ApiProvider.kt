@@ -1,30 +1,16 @@
 package xcj.app.appsets.server.api
 
-import xcj.app.appsets.server.interceptor.AddFixedHeaderInterceptor
-import xcj.app.appsets.server.interceptor.BaseUrlInterceptor
-import xcj.app.appsets.server.ssl.DesignHostnameVerifier
-import xcj.app.appsets.server.ssl.DesignX509TrustManager
+import xcj.app.appsets.server.ModuleOKHttpClientProvider
 import xcj.app.appsets.settings.ModuleConfig
+import xcj.app.starter.android.util.PurpleLogger
+import xcj.app.starter.foundation.http.DesignResponse
 import xcj.app.starter.server.RetrofitProvider
-import java.security.SecureRandom
-import javax.net.ssl.HostnameVerifier
-import javax.net.ssl.SSLContext
-import javax.net.ssl.X509TrustManager
+import java.lang.reflect.Proxy
 
 object ApiProvider {
+    private const val TAG = "ApiProvider"
 
-    private val mOkHttpClient = RetrofitProvider.defaultOkHttpClientBuilder().apply {
-        val sslContext = SSLContext.getInstance("SSL")
-        val x509TrustManager: X509TrustManager = DesignX509TrustManager()
-        val hostnameVerifier: HostnameVerifier = DesignHostnameVerifier()
-        sslContext.init(null, arrayOf(x509TrustManager), SecureRandom())
-        sslSocketFactory(sslContext.socketFactory, x509TrustManager)
-        hostnameVerifier(hostnameVerifier)
-        val baseUrlInterceptor = BaseUrlInterceptor()
-        val addFixedHeaderInterceptor = AddFixedHeaderInterceptor()
-        addInterceptor(addFixedHeaderInterceptor)
-        addInterceptor(baseUrlInterceptor)
-    }.build()
+    private const val IS_ANDROID_STUDIO_PREVIEW = false
 
     private fun <U> makeBaseUrl(apiClazz: Class<U>): String {
         val url = if (ModuleConfig.moduleConfiguration.apiUrl.isEmpty()) {
@@ -62,6 +48,35 @@ object ApiProvider {
     }
 
     fun <U> provide(apiClazz: Class<U>): U {
-        return RetrofitProvider.getService(makeBaseUrl(apiClazz), apiClazz, mOkHttpClient)
+        if (IS_ANDROID_STUDIO_PREVIEW) {
+            return innerProvideForAndroidStudioPreview(apiClazz)
+        }
+        return innerProvideForRuntime(apiClazz)
+    }
+
+    private var okHttpClientProvider: ModuleOKHttpClientProvider? = null
+
+    private fun <U> innerProvideForRuntime(apiClazz: Class<U>): U {
+        if (okHttpClientProvider == null) {
+            okHttpClientProvider = ModuleOKHttpClientProvider()
+        }
+        return RetrofitProvider.getService(
+            baseUrl = makeBaseUrl(apiClazz),
+            clazz = apiClazz,
+            okHttpClientProvider = okHttpClientProvider
+        )
+    }
+
+    private fun <U> innerProvideForAndroidStudioPreview(apiClazz: Class<U>): U {
+        return Proxy.newProxyInstance(
+            apiClazz.classLoader,
+            arrayOf(apiClazz)
+        ) { proxy, method, args ->
+            PurpleLogger.current.d(
+                TAG,
+                "innerProvideForAndroidStudioPreview, proxy:$proxy, method:${method.name}"
+            )
+            DesignResponse.NO_DATA
+        } as U
     }
 }

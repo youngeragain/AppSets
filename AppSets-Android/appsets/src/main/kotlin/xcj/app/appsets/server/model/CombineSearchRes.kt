@@ -5,7 +5,7 @@ data class CombineSearchRes(
     val screens: List<ScreenInfo>? = null,
     val users: List<UserInfo>? = null,
     val groups: List<GroupInfo>? = null,
-    val goods: List<Any>? = null,
+    val goods: List<GoodsInfo>? = null,
 ) {
     val isEmpty: Boolean
         get() {

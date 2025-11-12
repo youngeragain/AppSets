@@ -6,6 +6,7 @@ import android.content.Context
 import android.net.Uri
 import android.os.Build
 import android.os.Environment
+import android.os.Parcelable
 import android.provider.DocumentsContract
 import android.provider.MediaStore
 import android.provider.MediaStore.Files.FileColumns
@@ -13,18 +14,16 @@ import android.provider.OpenableColumns
 import android.text.TextUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.parcelize.Parcelize
 import xcj.app.starter.android.ktx.SCHEMA_FIlE
 import xcj.app.starter.util.ByteUtil
 import java.io.File
 import java.io.FileOutputStream
-import java.util.Objects
 import kotlin.math.min
 
 object FileUtil {
 
-    private const val TAG = "FileUtils"
-
-    private val contentUri: Uri? = null
+    private const val TAG = "FileUtil"
 
     @JvmStatic
     @SuppressLint("NewApi")
@@ -81,9 +80,8 @@ object FileUtil {
                         return getDataColumn(context, contentUri, null, null)
                     } catch (e: NumberFormatException) {
                         //In Android 8 and Android P the id is not a number
-                        return Objects.requireNonNull<String?>(uri.path)
-                            .replaceFirst("^/document/raw:".toRegex(), "")
-                            .replaceFirst("^raw:".toRegex(), "")
+                        return uri.path?.replaceFirst("^/document/raw:".toRegex(), "")
+                            ?.replaceFirst("^raw:".toRegex(), "")
                     }
                 }
             }
@@ -540,9 +538,10 @@ object FileUtil {
     }
 }
 
+@Parcelize
 data class AndroidUriFile(
     var displayName: String? = null,
     var file: File? = null,
     var size: Long = 0L,
     var sizeReadable: String? = null,
-)
+) : Parcelable

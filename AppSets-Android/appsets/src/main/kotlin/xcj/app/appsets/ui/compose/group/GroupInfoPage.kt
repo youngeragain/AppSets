@@ -1,4 +1,4 @@
-@file:OptIn(ExperimentalHazeMaterialsApi::class)
+@file:OptIn(ExperimentalHazeMaterialsApi::class, ExperimentalMaterial3ExpressiveApi::class)
 
 package xcj.app.appsets.ui.compose.group
 
@@ -20,11 +20,10 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -58,7 +57,7 @@ import xcj.app.appsets.server.model.GroupInfo
 import xcj.app.appsets.ui.compose.custom_component.AnyImage
 import xcj.app.appsets.ui.compose.custom_component.DesignBackButton
 import xcj.app.appsets.ui.compose.theme.ExtraLarge2
-import xcj.app.appsets.ui.model.page_state.GroupInfoPageState
+import xcj.app.appsets.ui.model.page_state.GroupInfoPageUIState
 import xcj.app.appsets.usecase.RelationsUseCase
 import xcj.app.compose_share.components.BackActionTopBar
 import kotlin.math.roundToInt
@@ -66,12 +65,12 @@ import kotlin.math.roundToInt
 @Preview(showBackground = true)
 @Composable
 fun GroupInfoPagePreview() {
-    //GroupInfoPage(null)
+
 }
 
 @Composable
 fun GroupInfoPage(
-    groupInfoPageState: GroupInfoPageState,
+    groupInfoPageUIState: GroupInfoPageUIState,
     onBackClick: () -> Unit,
     onBioClick: (Bio) -> Unit,
     onChatClick: (GroupInfo) -> Unit,
@@ -81,12 +80,11 @@ fun GroupInfoPage(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
     ) {
-        when (groupInfoPageState) {
-            is GroupInfoPageState.Loading -> {
+        when (groupInfoPageUIState) {
+            is GroupInfoPageUIState.Loading -> {
                 Box(modifier = Modifier.fillMaxSize()) {
-                    CircularProgressIndicator(
+                    LoadingIndicator(
                         modifier = Modifier
-                            .size(36.dp)
                             .align(Alignment.Center)
                     )
                     DesignBackButton(
@@ -96,9 +94,9 @@ fun GroupInfoPage(
                 }
             }
 
-            is GroupInfoPageState.NotFound -> {
+            is GroupInfoPageUIState.NotFound -> {
                 Box(modifier = Modifier.fillMaxSize()) {
-                    groupInfoPageState.tips?.let {
+                    groupInfoPageUIState.tips?.let {
                         Text(
                             text = stringResource(id = it),
                             modifier = Modifier.align(Alignment.Center)
@@ -111,7 +109,7 @@ fun GroupInfoPage(
                 }
             }
 
-            is GroupInfoPageState.LoadSuccess -> {
+            is GroupInfoPageUIState.LoadSuccess -> {
                 var sizeOfGroupAvatar by remember {
                     mutableStateOf(IntSize.Zero)
                 }
@@ -169,7 +167,7 @@ fun GroupInfoPage(
                             .hazeSource(hazeState)
                     )
                     {
-                        val userInfoList = groupInfoPageState.groupInfo.userInfoList
+                        val userInfoList = groupInfoPageUIState.groupInfo.userInfoList
                         if (userInfoList.isNullOrEmpty()) {
                             Box(
                                 Modifier
@@ -189,7 +187,10 @@ fun GroupInfoPage(
                                     bottom = 68.dp
                                 )
                             ) {
-                                items(userInfoList) { userInfo ->
+                                items(
+                                    items = userInfoList,
+                                    key = { item -> item.uid }
+                                ) { userInfo ->
                                     Column(
                                         modifier = Modifier
                                             .padding(8.dp)
@@ -258,8 +259,8 @@ fun GroupInfoPage(
                                             MaterialTheme.colorScheme.outline,
                                             ExtraLarge2
                                         ),
-                                    model = groupInfoPageState.groupInfo.bioUrl,
-                                    error = groupInfoPageState.groupInfo.bioName
+                                    model = groupInfoPageUIState.groupInfo.bioUrl,
+                                    error = groupInfoPageUIState.groupInfo.bioName
                                 )
                                 Column(
                                     modifier = Modifier
@@ -274,9 +275,9 @@ fun GroupInfoPage(
                                     horizontalAlignment = Alignment.CenterHorizontally,
                                     verticalArrangement = Arrangement.spacedBy(6.dp)
                                 ) {
-                                    Text(text = "${(groupInfoPageState.groupInfo.bioName ?: "")}(${userInfoList?.size ?: 0})")
+                                    Text(text = "${(groupInfoPageUIState.groupInfo.bioName ?: "")}(${userInfoList?.size ?: 0})")
                                     Text(
-                                        text = groupInfoPageState.groupInfo.introduction
+                                        text = groupInfoPageUIState.groupInfo.introduction
                                             ?: stringResource(xcj.app.appsets.R.string.no_introduction),
                                         fontSize = 12.sp
                                     )
@@ -290,26 +291,22 @@ fun GroupInfoPage(
                         },
                         hazeState = hazeState,
                         onBackClick = onBackClick,
-                        customEndContent = {
+                        endButtonText = if (RelationsUseCase.getInstance()
+                                .hasGroupRelated(groupInfoPageUIState.groupInfo.groupId)
+                            || groupInfoPageUIState.groupInfo.public == 1
+                        ) {
+                            stringResource(xcj.app.appsets.R.string.chat)
+                        } else {
+                            stringResource(xcj.app.appsets.R.string.apply_to_join)
+                        },
+                        onEndButtonClick = {
                             if (RelationsUseCase.getInstance()
-                                    .hasGroupRelated(groupInfoPageState.groupInfo.groupId)
-                                || groupInfoPageState.groupInfo.public == 1
+                                    .hasGroupRelated(groupInfoPageUIState.groupInfo.groupId)
+                                || groupInfoPageUIState.groupInfo.public == 1
                             ) {
-                                TextButton(
-                                    onClick = {
-                                        onChatClick(groupInfoPageState.groupInfo)
-                                    }
-                                ) {
-                                    Text(text = stringResource(xcj.app.appsets.R.string.chat))
-                                }
+                                onChatClick(groupInfoPageUIState.groupInfo)
                             } else {
-                                FilledTonalButton(
-                                    onClick = {
-                                        onJoinGroupRequestClick(groupInfoPageState.groupInfo)
-                                    }
-                                ) {
-                                    Text(text = stringResource(xcj.app.appsets.R.string.apply_to_join))
-                                }
+                                onJoinGroupRequestClick(groupInfoPageUIState.groupInfo)
                             }
                         }
                     )

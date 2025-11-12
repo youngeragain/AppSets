@@ -1,7 +1,13 @@
 package xcj.app.appsets.server.api
 
 import retrofit2.Call
-import retrofit2.http.*
+import retrofit2.http.Body
+import retrofit2.http.GET
+import retrofit2.http.Headers
+import retrofit2.http.POST
+import retrofit2.http.PUT
+import retrofit2.http.Path
+import retrofit2.http.Query
 import xcj.app.appsets.server.model.AddUserScreenParams
 import xcj.app.appsets.server.model.GroupInfo
 import xcj.app.appsets.server.model.ScreenInfo
@@ -34,7 +40,7 @@ interface UserApi {
 
     @POST("user/signup/pre")
     suspend fun preSignUp(
-        @Query("ac") account: String
+        @Query("ac") accountEncoded: String
     ): DesignResponse<Boolean>
 
     @GET("user/info/get")

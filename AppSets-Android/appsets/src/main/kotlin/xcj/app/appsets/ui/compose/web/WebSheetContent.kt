@@ -2,6 +2,7 @@ package xcj.app.appsets.ui.compose.web
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.graphics.Color
 import android.view.MotionEvent
 import android.view.ViewGroup
 import android.webkit.WebResourceRequest
@@ -57,7 +58,7 @@ fun WebSheetContent(title: String?, url: String) {
 }
 
 fun urlOverrider(title: String?, url: String): String {
-    return if (url.contains("baidu.com") == true) {
+    return if (url.contains("baidu.com")) {
         "https://www.baidu.com/s?word=$title"
     } else {
         url
@@ -67,6 +68,7 @@ fun urlOverrider(title: String?, url: String): String {
 @SuppressLint("ClickableViewAccessibility", "SetJavaScriptEnabled")
 fun webViewProvider(context: Context): WebView {
     val webView = WebView(context)
+    webView.setBackgroundColor(Color.TRANSPARENT)
     webView.settings.apply {
         javaScriptEnabled = true
         useWideViewPort = false

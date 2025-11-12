@@ -202,8 +202,8 @@ fun SessionSettingsComponent() {
             fontSize = 16.sp
         )
         SingleChoiceInRowComponent(
-            choiceTitle = xcj.app.appsets.R.string.message_reliablity,
-            choiceSubTitle = xcj.app.appsets.R.string.message_reliablity_tips,
+            choiceTitle = xcj.app.appsets.R.string.message_reliability,
+            choiceSubTitle = xcj.app.appsets.R.string.message_reliability_tips,
             currentChoice = imMessageReliability,
             choices = imMessageReliabilityChoices,
             onChoiceClick = {

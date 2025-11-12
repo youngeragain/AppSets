@@ -659,24 +659,24 @@ private constructor() : ComposeLifecycleAware, UserAccountStateAware {
     @SuppressLint("MissingPermission")
     private fun handleSystemNotificationForReplyImMessage(context: Context, intent: Intent) {
         PurpleLogger.current.d(TAG, "handleSystemNotificationForReplyImMessage")
-        val IMMessageId = intent.getStringExtra(IMMessage.KEY_IM_MESSAGE_ID)
+        val imMessageId = intent.getStringExtra(IMMessage.KEY_IM_MESSAGE_ID)
         val sessionId = intent.getStringExtra(IMMessage.KEY_SESSION_ID)
-        val IMMessageNotificationId =
+        val imMessageNotificationId =
             intent.getIntExtra(IMMessage.KEY_IM_MESSAGE_NOTIFICATION_ID, -1)
         PurpleLogger.current.d(
             TAG,
             "handleSystemNotificationForReplyImMessage, " +
-                    "imMessageId:$IMMessageId, " +
+                    "imMessageId:$imMessageId, " +
                     "sessionId:$sessionId, " +
-                    "imMessageNotificationId:$IMMessageNotificationId"
+                    "imMessageNotificationId:$imMessageNotificationId"
         )
-        if (IMMessageId.isNullOrEmpty()) {
+        if (imMessageId.isNullOrEmpty()) {
             return
         }
         if (sessionId.isNullOrEmpty()) {
             return
         }
-        if (IMMessageNotificationId == -1) {
+        if (imMessageNotificationId == -1) {
             return
         }
         val session: Session? = getSessionBySessionId(sessionId)
@@ -702,7 +702,7 @@ private constructor() : ComposeLifecycleAware, UserAccountStateAware {
             )
             return
         }
-        getNotificationPusher().cancelNotification(context, IMMessageNotificationId)
+        getNotificationPusher().cancelNotification(context, imMessageNotificationId)
         sendMessage(context, InputSelector.TEXT, userInputContent)
     }
 

@@ -14,9 +14,6 @@ import xcj.app.appsets.server.repository.SearchRepository
 import xcj.app.appsets.server.repository.UserRepository
 import xcj.app.appsets.settings.AppSetsModuleSettings
 import xcj.app.appsets.ui.base.BaseIMViewModel
-import xcj.app.appsets.ui.compose.PageRouteNames
-import xcj.app.appsets.ui.compose.content_selection.ContentSelectionResult
-import xcj.app.appsets.ui.compose.content_selection.ContentSelectionTypes
 import xcj.app.appsets.usecase.AppCreationUseCase
 import xcj.app.appsets.usecase.AppsUseCase
 import xcj.app.appsets.usecase.NavigationUseCase
@@ -41,7 +38,6 @@ class MainViewModel : BaseIMViewModel() {
         SearchRepository.getInstance()
     )
     val qrCodeUseCase: QRCodeUseCase = QRCodeUseCase(
-        systemUseCase.loginSignUpPageState,
         QRCodeRepository.getInstance(),
         UserRepository.getInstance()
     )
@@ -104,73 +100,6 @@ class MainViewModel : BaseIMViewModel() {
         viewModelScope.launch {
             qrCodeUseCase.onActivityResult(context, requestCode, resultCode, data)
             composeDynamicUseCase.onActivityResult(context, requestCode, resultCode, data)
-        }
-    }
-
-    override fun dispatchContentSelectedResult(
-        context: Context,
-        contentSelectionResult: ContentSelectionResult,
-    ) {
-        super.dispatchContentSelectedResult(context, contentSelectionResult)
-        PurpleLogger.current.d(
-            TAG,
-            "dispatchContentSelectedResult, contentSelectionResults:$contentSelectionResult"
-        )
-        systemUseCase.selectedContentsStateHolder.updateSelectedContent(contentSelectionResult)
-        val selectType = contentSelectionResult.selectType
-
-        when (selectType) {
-            ContentSelectionTypes.IMAGE -> {
-                if (contentSelectionResult !is ContentSelectionResult.RichMediaContentSelectionResult) {
-                    return
-                }
-                val contentUriList = contentSelectionResult.selectItems
-                when (contentSelectionResult.request.contextName) {
-
-                    PageRouteNames.CreateScreenPage -> {
-                        screenPostUseCase.updateSelectPictures(contentUriList)
-                    }
-
-
-                    PageRouteNames.CreateAppPage -> {
-                        val imageUri = contentUriList.firstOrNull()
-                        if (imageUri != null) {
-                            appCreationUseCase.updateSelectPicture(imageUri)
-                        }
-                    }
-                }
-            }
-
-            ContentSelectionTypes.VIDEO -> {
-                if (contentSelectionResult !is ContentSelectionResult.RichMediaContentSelectionResult) {
-                    return
-                }
-                when (contentSelectionResult.request.contextName) {
-                    PageRouteNames.CreateScreenPage -> {
-                        screenPostUseCase.updateSelectVideo(
-                            contentSelectionResult.selectItems
-                        )
-                    }
-                }
-            }
-
-            ContentSelectionTypes.AUDIO -> {
-                if (contentSelectionResult !is ContentSelectionResult.RichMediaContentSelectionResult) {
-                    return
-                }
-            }
-
-            ContentSelectionTypes.FILE -> {
-                if (contentSelectionResult !is ContentSelectionResult.RichMediaContentSelectionResult) {
-                    return
-                }
-            }
-
-            ContentSelectionTypes.LOCATION -> {
-                if (contentSelectionResult !is ContentSelectionResult.LocationContentSelectionResult) {
-                    return
-                }
-            }
         }
     }
 }

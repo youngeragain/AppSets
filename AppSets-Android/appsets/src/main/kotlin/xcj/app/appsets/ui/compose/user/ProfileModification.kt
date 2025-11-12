@@ -16,7 +16,7 @@ import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -24,21 +24,25 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import xcj.app.appsets.server.model.UserInfo
-import xcj.app.appsets.ui.compose.LocalUseCaseOfUserInfo
 import xcj.app.appsets.ui.compose.custom_component.AnyImage
 import xcj.app.appsets.ui.compose.theme.ExtraLarge2
 import xcj.app.appsets.ui.model.UserInfoForModify
+import xcj.app.appsets.util.compose_state.ComposeStateUpdater
+import xcj.app.appsets.util.compose_state.RuntimeSingleStateUpdater
+import xcj.app.appsets.util.reflect.TAG
 import xcj.app.compose_share.components.DesignHDivider
 import xcj.app.compose_share.components.DesignTextField
+import xcj.app.starter.android.util.PurpleLogger
 
 @Composable
 fun ProfileModification(
     userInfo: UserInfo,
-    onSelectUserAvatarClick: (String) -> Unit,
-    onConfirmClick: () -> Unit,
+    onSelectUserAvatarClick: (String, ComposeStateUpdater<*>) -> Unit,
+    onConfirmClick: (UserInfoForModify) -> Unit,
 ) {
-    val userInfoUseCase = LocalUseCaseOfUserInfo.current
-    val userInfoModification by userInfoUseCase.userInfoForModifyState
+    val userInfoForModify = remember {
+        UserInfoForModify()
+    }
     Column(
         modifier = Modifier.verticalScroll(rememberScrollState())
     ) {
@@ -51,7 +55,9 @@ fun ProfileModification(
                     .padding(horizontal = 12.dp)
             ) {
                 FilledTonalButton(
-                    onClick = onConfirmClick
+                    onClick = {
+                        onConfirmClick(userInfoForModify)
+                    }
                 ) {
                     Text(text = stringResource(id = xcj.app.starter.R.string.ok))
                 }
@@ -65,7 +71,8 @@ fun ProfileModification(
                     modifier = Modifier.padding(vertical = 12.dp)
                 )
                 AnyImage(
-                    model = userInfoModification.userAvatarUri?.provideUri() ?: userInfo.bioUrl,
+                    model = userInfoForModify.userAvatarUriProvider.value?.provideUri()
+                        ?: userInfo.bioUrl,
                     modifier = Modifier
                         .size(250.dp)
                         .clip(ExtraLarge2)
@@ -79,7 +86,17 @@ fun ProfileModification(
                 Spacer(modifier = Modifier.height(12.dp))
                 FilledTonalButton(
                     onClick = {
-                        onSelectUserAvatarClick("USER_PROFILE_MODIFY_AVATAR_IMAGE_SELECT_REQUEST")
+                        val composeStateUpdater =
+                            RuntimeSingleStateUpdater.fromState(userInfoForModify.userAvatarUriProvider) { markKey, input ->
+                                PurpleLogger.current.d(
+                                    TAG,
+                                    "userInfoForModify.userAvatarUriProvider, input:$input"
+                                )
+                            }
+                        onSelectUserAvatarClick(
+                            "USER_PROFILE_MODIFY_AVATAR_IMAGE_SELECT_REQUEST",
+                            composeStateUpdater
+                        )
                     },
                     modifier = Modifier.align(Alignment.CenterHorizontally)
                 ) {
@@ -94,18 +111,17 @@ fun ProfileModification(
                 modifier = Modifier.padding(vertical = 10.dp)
             )
             DesignTextField(
-                modifier = Modifier.fillMaxWidth(), value = userInfoModification.userName,
+                modifier = Modifier.fillMaxWidth(),
+                value = userInfoForModify.userName.value,
                 onValueChange = {
                     val newUserName = if (it.length > 30) {
                         it.substring(0, 30)
                     } else {
                         it
                     }
-                    UserInfoForModify.updateStateUserName(
-                        userInfoUseCase.userInfoForModifyState,
-                        newUserName
-                    )
-                }, placeholder = {
+                    userInfoForModify.userName.value = newUserName
+                },
+                placeholder = {
                     Text(text = stringResource(id = xcj.app.appsets.R.string.name))
                 })
             Spacer(modifier = Modifier.height(8.dp))
@@ -116,12 +132,9 @@ fun ProfileModification(
             )
             DesignTextField(
                 modifier = Modifier.fillMaxWidth(),
-                value = userInfoModification.userIntroduction,
+                value = userInfoForModify.userIntroduction.value,
                 onValueChange = {
-                    UserInfoForModify.updateStateUserIntroduction(
-                        userInfoUseCase.userInfoForModifyState,
-                        it
-                    )
+                    userInfoForModify.userIntroduction.value = it
                 },
                 placeholder = {
                     Text(text = stringResource(id = xcj.app.appsets.R.string.brief))
@@ -133,13 +146,12 @@ fun ProfileModification(
                 modifier = Modifier.padding(vertical = 10.dp)
             )
             DesignTextField(
-                modifier = Modifier.fillMaxWidth(), value = userInfoModification.userTags,
+                modifier = Modifier.fillMaxWidth(),
+                value = userInfoForModify.userTags.value,
                 onValueChange = {
-                    UserInfoForModify.updateStateUserTags(
-                        userInfoUseCase.userInfoForModifyState,
-                        it
-                    )
-                }, placeholder = {
+                    userInfoForModify.userTags.value = it
+                },
+                placeholder = {
                     Text(text = stringResource(id = xcj.app.appsets.R.string.personal_label_placeholder))
                 })
             Spacer(modifier = Modifier.height(8.dp))
@@ -149,13 +161,12 @@ fun ProfileModification(
                 modifier = Modifier.padding(vertical = 10.dp)
             )
             DesignTextField(
-                modifier = Modifier.fillMaxWidth(), value = userInfoModification.userSex,
+                modifier = Modifier.fillMaxWidth(),
+                value = userInfoForModify.userSex.value,
                 onValueChange = {
-                    UserInfoForModify.updateStateUserSex(
-                        userInfoUseCase.userInfoForModifyState,
-                        it
-                    )
-                }, placeholder = {
+                    userInfoForModify.userSex.value = it
+                },
+                placeholder = {
                     Text(text = stringResource(id = xcj.app.appsets.R.string.sex_placeholder))
                 })
             Spacer(modifier = Modifier.height(8.dp))
@@ -166,7 +177,7 @@ fun ProfileModification(
             )
             DesignTextField(
                 modifier = Modifier.fillMaxWidth(),
-                value = userInfoModification.userAge,
+                value = userInfoForModify.userAge.value,
                 onValueChange = {
                     val toIntOrNull = it.toIntOrNull()
                     val userAge = if (toIntOrNull != null) {
@@ -178,10 +189,7 @@ fun ProfileModification(
                     } else {
                         ""
                     }
-                    UserInfoForModify.updateStateUserAge(
-                        userInfoUseCase.userInfoForModifyState,
-                        userAge
-                    )
+                    userInfoForModify.userAge.value = userAge
                 },
                 placeholder = {
                     Text(text = stringResource(id = xcj.app.appsets.R.string.age))
@@ -196,13 +204,11 @@ fun ProfileModification(
             )
             DesignTextField(
                 modifier = Modifier.fillMaxWidth(),
-                value = userInfoModification.userPhone,
+                value = userInfoForModify.userPhone.value,
                 onValueChange = {
-                    UserInfoForModify.updateStateUserPhone(
-                        userInfoUseCase.userInfoForModifyState,
-                        it
-                    )
-                }, placeholder = {
+                    userInfoForModify.userPhone.value = it
+                },
+                placeholder = {
                     Text(text = stringResource(id = xcj.app.appsets.R.string.phone_number))
                 },
                 keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Phone)
@@ -214,13 +220,12 @@ fun ProfileModification(
                 modifier = Modifier.padding(vertical = 10.dp)
             )
             DesignTextField(
-                modifier = Modifier.fillMaxWidth(), value = userInfoModification.userEmail,
+                modifier = Modifier.fillMaxWidth(),
+                value = userInfoForModify.userEmail.value,
                 onValueChange = {
-                    UserInfoForModify.updateStateUserEmail(
-                        userInfoUseCase.userInfoForModifyState,
-                        it
-                    )
-                }, placeholder = {
+                    userInfoForModify.userEmail.value = it
+                },
+                placeholder = {
                     Text(text = stringResource(id = xcj.app.appsets.R.string.email_address))
                 },
                 keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Email)
@@ -232,13 +237,12 @@ fun ProfileModification(
                 modifier = Modifier.padding(vertical = 10.dp)
             )
             DesignTextField(
-                modifier = Modifier.fillMaxWidth(), value = userInfoModification.userArea,
+                modifier = Modifier.fillMaxWidth(),
+                value = userInfoForModify.userArea.value,
                 onValueChange = {
-                    UserInfoForModify.updateStateUserArea(
-                        userInfoUseCase.userInfoForModifyState,
-                        it
-                    )
-                }, placeholder = {
+                    userInfoForModify.userArea.value = it
+                },
+                placeholder = {
                     Text(text = stringResource(id = xcj.app.appsets.R.string.area))
                 })
             Spacer(modifier = Modifier.height(8.dp))
@@ -248,13 +252,12 @@ fun ProfileModification(
                 modifier = Modifier.padding(vertical = 10.dp)
             )
             DesignTextField(
-                modifier = Modifier.fillMaxWidth(), value = userInfoModification.userAddress,
+                modifier = Modifier.fillMaxWidth(),
+                value = userInfoForModify.userAddress.value,
                 onValueChange = {
-                    UserInfoForModify.updateStateUserAddress(
-                        userInfoUseCase.userInfoForModifyState,
-                        it
-                    )
-                }, placeholder = {
+                    userInfoForModify.userAddress.value = it
+                },
+                placeholder = {
                     Text(text = stringResource(id = xcj.app.appsets.R.string.address))
                 })
             Spacer(modifier = Modifier.height(8.dp))
@@ -264,18 +267,17 @@ fun ProfileModification(
                 modifier = Modifier.padding(vertical = 10.dp)
             )
             DesignTextField(
-                modifier = Modifier.fillMaxWidth(), value = userInfoModification.userWebsite,
+                modifier = Modifier.fillMaxWidth(),
+                value = userInfoForModify.userWebsite.value,
                 onValueChange = {
                     val userWebsite = if (it.length > 100) {
                         it.substring(0, 100)
                     } else {
                         it
                     }
-                    UserInfoForModify.updateStateUserWebsite(
-                        userInfoUseCase.userInfoForModifyState,
-                        userWebsite
-                    )
-                }, placeholder = {
+                    userInfoForModify.userWebsite.value = userWebsite
+                },
+                placeholder = {
                     Text(text = stringResource(id = xcj.app.appsets.R.string.website))
                 })
             Spacer(modifier = Modifier.height(120.dp))

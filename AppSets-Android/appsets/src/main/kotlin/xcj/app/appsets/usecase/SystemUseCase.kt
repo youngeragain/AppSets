@@ -4,8 +4,6 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableStateOf
 import androidx.core.content.ContextCompat
 import androidx.navigation.NavController
 import kotlinx.coroutines.delay
@@ -30,15 +28,16 @@ import xcj.app.appsets.settings.ModuleConfig
 import xcj.app.appsets.ui.compose.PageRouteNames
 import xcj.app.appsets.ui.compose.login.UserAgreementComposeViewProvider
 import xcj.app.appsets.ui.model.GroupInfoForCreate
-import xcj.app.appsets.ui.model.SelectedContentsStateHolder
 import xcj.app.appsets.ui.model.UserInfoForCreate
-import xcj.app.appsets.ui.model.page_state.CreateGroupPageState
-import xcj.app.appsets.ui.model.page_state.LoginSignUpPageState
+import xcj.app.appsets.ui.model.page_state.CreateGroupPageUIState
+import xcj.app.appsets.ui.model.page_state.LoginPageUIState
+import xcj.app.appsets.ui.model.page_state.SignUpPageUIState
 import xcj.app.appsets.ui.model.state.NowSpaceContent
+import xcj.app.appsets.util.compose_state.ComposeStateUpdater
+import xcj.app.appsets.util.compose_state.SingleStateUpdater
 import xcj.app.appsets.util.ktx.toast
 import xcj.app.appsets.util.ktx.toastSuspend
 import xcj.app.appsets.util.message_digest.MessageDigestUtil
-import xcj.app.appsets.util.model.UriProvider
 import xcj.app.compose_share.components.BottomSheetVisibilityComposeState
 import xcj.app.compose_share.components.VisibilityComposeStateProvider
 import xcj.app.compose_share.dynamic.ComposeLifecycleAware
@@ -58,16 +57,6 @@ class SystemUseCase(
 ) : ComposeLifecycleAware {
 
     private val requestIdMap: MutableMap<String, String> = mutableMapOf()
-
-    val selectedContentsStateHolder: SelectedContentsStateHolder = SelectedContentsStateHolder()
-
-
-    val loginSignUpPageState: MutableState<LoginSignUpPageState> =
-        mutableStateOf(LoginSignUpPageState.LoginStart)
-
-    val createGroupPageState: MutableState<CreateGroupPageState> = mutableStateOf(
-        CreateGroupPageState.NewGroupPage()
-    )
 
     suspend fun initAppToken() {
         PurpleLogger.current.d(TAG, "initAppToken")
@@ -111,8 +100,8 @@ class SystemUseCase(
                 val platformPermissionsUsages = platformPermissionsUsagesProvider()
                 val newNowSpaceContentOfPlatformPermissionUsageTips =
                     NowSpaceContent.PlatformPermissionUsageTips(
-                        tips = xcj.app.appsets.R.string.app_platform_permissions_useage_tips,
-                        subTips = xcj.app.appsets.R.string.app_platform_permissions_useage_tips_des,
+                        tips = xcj.app.appsets.R.string.app_platform_permissions_usage_tips,
+                        subTips = xcj.app.appsets.R.string.app_platform_permissions_usage_tips_des,
                         platformPermissionsUsages = platformPermissionsUsages
                     )
                 oldNowSpaceContentOfPlatformPermissionUsageTips to newNowSpaceContentOfPlatformPermissionUsageTips
@@ -334,23 +323,19 @@ class SystemUseCase(
         }
     }
 
-    fun updateSignUpUserSelectAvatarUri(uriProvider: UriProvider) {
-        UserInfoForCreate.updateStateUserAvatar(loginSignUpPageState, uriProvider)
-    }
-
-    fun updateGroupCreateIconUri(uriProvider: UriProvider) {
-        GroupInfoForCreate.updateGroupCreateIconUri(createGroupPageState, uriProvider)
-    }
-
     suspend fun login(
         context: Context,
         account: String,
         password: String,
         visibilityComposeStateProvider: VisibilityComposeStateProvider,
+        composeStateUpdater: ComposeStateUpdater<LoginPageUIState>
     ) {
         PurpleLogger.current.d(TAG, "login")
-        val signUpState = loginSignUpPageState.value
-        if (signUpState is LoginSignUpPageState.Logging) {
+        if (composeStateUpdater !is SingleStateUpdater) {
+            return
+        }
+        val loginPageUIState = composeStateUpdater.getStateValue()
+        if (loginPageUIState is LoginPageUIState.Logging) {
             return
         }
         if (account.isEmpty()) {
@@ -361,9 +346,8 @@ class SystemUseCase(
             ContextCompat.getString(context, xcj.app.appsets.R.string.please_input_password).toast()
             return
         }
-        loginSignUpPageState.value = LoginSignUpPageState.Logging()
+        composeStateUpdater.update(LoginPageUIState.Logging())
         requestRaw(action = {
-            delay(500)
             val accountEncode = MessageDigestUtil.transformWithMD5(account)?.outContent
             val passwordEncode = MessageDigestUtil.transformWithMD5(password)?.outContent
             if (accountEncode.isNullOrEmpty() || passwordEncode.isNullOrEmpty()) {
@@ -377,9 +361,11 @@ class SystemUseCase(
             if (!loginResponse.success || token.isNullOrEmpty()) {
                 PurpleLogger.current.d(TAG, "login, failed, token get failed!")
                 loginResponse.info.toastSuspend()
-                loginSignUpPageState.value = LoginSignUpPageState.LoggingFailed()
-                delay(1000)
-                loginSignUpPageState.value = LoginSignUpPageState.LoginStart
+                composeStateUpdater.update(
+                    1000,
+                    LoginPageUIState.LoggingFailed(),
+                    LoginPageUIState.LoginStart()
+                )
                 return
             }
 
@@ -391,14 +377,13 @@ class SystemUseCase(
                 PurpleLogger.current.d(
                     TAG, "login, failed, userInfo isNullOrEmpty!"
                 )
-                delay(1000)
-                loginSignUpPageState.value = LoginSignUpPageState.LoginStart
+                composeStateUpdater.update(LoginPageUIState.LoginStart())
                 return
             }
 
             if (userInfo.agreeToTheAgreement == 1) {
                 LocalAccountManager.onUserLogged(userInfo, token, false)
-                loginSignUpPageState.value = LoginSignUpPageState.LoggingFinish()
+                composeStateUpdater.update(LoginPageUIState.LoggingSuccess())
                 return
             }
             val bottomSheetState = visibilityComposeStateProvider.bottomSheetState()
@@ -409,30 +394,26 @@ class SystemUseCase(
                 onNextClick = {
                     bottomSheetState.hide()
                     LocalAccountManager.onUserLogged(userInfo, token, false)
-                    loginSignUpPageState.value = LoginSignUpPageState.LoggingFinish()
+                    composeStateUpdater.update(LoginPageUIState.LoggingSuccess())
                 }
             )
-            bottomSheetState.show(provider)
+            bottomSheetState.show(null, provider)
         }).onFailure {
             PurpleLogger.current.d(TAG, "login failed")
             logout()
-            delay(1000)
-            loginSignUpPageState.value = LoginSignUpPageState.LoginStart
+            composeStateUpdater.update(LoginPageUIState.LoginStart())
         }
     }
 
-    private fun logout() {
+    private suspend fun logout() {
         PurpleLogger.current.d(TAG, "logout")
-
-        LocalPurpleCoroutineScope.current.launch {
-            LocalAccountManager.onUserLogout(LocalAccountManager.LOGOUT_BY_MANUALLY)
-            if (LocalAccountManager.isLogged()) {
-                request(action = userRepository::signOut)
-            }
+        LocalAccountManager.onUserLogout(LocalAccountManager.LOGOUT_BY_MANUALLY)
+        if (LocalAccountManager.isLogged()) {
+            request(action = userRepository::signOut)
         }
     }
 
-    fun loginToggle(context: Context, navController: NavController) {
+    suspend fun loginToggle(context: Context, navController: NavController) {
         if (LocalAccountManager.isLogged()) {
             logout()
         } else {
@@ -442,6 +423,8 @@ class SystemUseCase(
 
     suspend fun signUp(
         context: Context,
+        signUpUserInfo: UserInfoForCreate,
+        composeStateUpdater: ComposeStateUpdater<SignUpPageUIState>
     ) {
         if (!ModuleConfig.moduleConfiguration.canSignUp) {
             ContextCompat.getString(
@@ -450,37 +433,39 @@ class SystemUseCase(
             ).toast()
             return
         }
-        val oldLoginSignUpState = loginSignUpPageState.value
-        if (oldLoginSignUpState !is LoginSignUpPageState.SignUpStart) {
+        if (composeStateUpdater !is SingleStateUpdater) {
             return
         }
-        val signUpUserInfo = oldLoginSignUpState.userInfoForCreate
-        if (signUpUserInfo.account.isEmpty() || signUpUserInfo.account.isBlank()) {
+        val signUpPageUIState = composeStateUpdater.getStateValue()
+        if (signUpPageUIState !is SignUpPageUIState.SignUpStart) {
+            return
+        }
+        if (signUpUserInfo.account.value.isEmpty() || signUpUserInfo.account.value.isBlank()) {
             ContextCompat.getString(context, xcj.app.appsets.R.string.please_input_account).toast()
             return
         }
-        if (signUpUserInfo.password.isEmpty() || signUpUserInfo.password.isBlank()) {
+        if (signUpUserInfo.password.value.isEmpty() || signUpUserInfo.password.value.isBlank()) {
             ContextCompat.getString(context, xcj.app.appsets.R.string.please_input_password).toast()
             return
         }
-        val avatarImageUri = signUpUserInfo.userAvatar?.provideUri()
+        val avatarImageUri = signUpUserInfo.userAvatarUriProvider.value?.provideUri()
         if (avatarImageUri == null) {
             ContextCompat.getString(context, xcj.app.appsets.R.string.please_choose_avatar).toast()
             return
         }
-        if (signUpUserInfo.userName.isEmpty() || signUpUserInfo.userName.isBlank()) {
+        if (signUpUserInfo.userName.value.isEmpty() || signUpUserInfo.userName.value.isBlank()) {
             ContextCompat.getString(context, xcj.app.appsets.R.string.please_input_name).toast()
             return
         }
         PurpleLogger.current.d(TAG, "signUp")
-        loginSignUpPageState.value = LoginSignUpPageState.SignUpping(signUpUserInfo)
+        composeStateUpdater.update(SignUpPageUIState.SignUpping())
         requestRaw(action = {
             val accountEncode =
-                MessageDigestUtil.transformWithMD5(signUpUserInfo.account)?.outContent
+                MessageDigestUtil.transformWithMD5(signUpUserInfo.account.value)?.outContent
             val passwordEncode =
-                MessageDigestUtil.transformWithMD5(signUpUserInfo.password)?.outContent
+                MessageDigestUtil.transformWithMD5(signUpUserInfo.password.value)?.outContent
             if (accountEncode.isNullOrEmpty() || passwordEncode.isNullOrEmpty()) {
-                loginSignUpPageState.value = LoginSignUpPageState.SignUpStart(signUpUserInfo)
+                composeStateUpdater.update(SignUpPageUIState.SignUpStart())
                 return
             }
             val preSignUpRes = userRepository.preSignUp(accountEncode)
@@ -488,11 +473,11 @@ class SystemUseCase(
             if (canSignUp == null) {
                 ContextCompat.getString(context, xcj.app.appsets.R.string.register_failed)
                     .toastSuspend()
-                loginSignUpPageState.value = LoginSignUpPageState.SignUpPageFailed(
-                    signUpUserInfo, xcj.app.appsets.R.string.register_failed
+                composeStateUpdater.update(
+                    1000,
+                    SignUpPageUIState.SignUpPageFailed(xcj.app.appsets.R.string.register_failed),
+                    SignUpPageUIState.SignUpStart()
                 )
-                delay(1000)
-                loginSignUpPageState.value = LoginSignUpPageState.LoginStart
                 return
             } else if (!canSignUp) {
                 ContextCompat.getString(
@@ -500,11 +485,12 @@ class SystemUseCase(
                     xcj.app.appsets.R.string.a_account_exist_please_retry
                 )
                     .toastSuspend()
-                loginSignUpPageState.value = LoginSignUpPageState.SignUpPageFailed(
-                    signUpUserInfo, xcj.app.appsets.R.string.a_account_exist_please_retry
+                composeStateUpdater.update(
+                    1000,
+                    SignUpPageUIState.SignUpPageFailed(xcj.app.appsets.R.string.a_account_exist_please_retry),
+                    SignUpPageUIState.SignUpStart()
                 )
-                delay(1000)
-                loginSignUpPageState.value = LoginSignUpPageState.SignUpStart(signUpUserInfo)
+
                 return
             }
             val signUpRes = userRepository.signUp(
@@ -514,87 +500,99 @@ class SystemUseCase(
             if (signUpSuccess != true) {
                 ContextCompat.getString(context, xcj.app.appsets.R.string.register_failed)
                     .toastSuspend()
-                loginSignUpPageState.value = LoginSignUpPageState.SignUpPageFailed(
-                    signUpUserInfo, xcj.app.appsets.R.string.register_failed
+                composeStateUpdater.update(
+                    1000,
+                    SignUpPageUIState.SignUpPageFailed(xcj.app.appsets.R.string.register_failed),
+                    SignUpPageUIState.SignUpStart()
                 )
-                delay(1000)
-                loginSignUpPageState.value = LoginSignUpPageState.SignUpStart(signUpUserInfo)
                 return
             }
             ContextCompat.getString(context, xcj.app.appsets.R.string.register_appsets_success)
                 .toastSuspend()
-            loginSignUpPageState.value = LoginSignUpPageState.SignUpFinish(signUpUserInfo)
+            composeStateUpdater.update(SignUpPageUIState.SignUpFinish())
         }).onFailure {
             ContextCompat.getString(context, xcj.app.appsets.R.string.register_failed)
                 .toastSuspend()
-            loginSignUpPageState.value = LoginSignUpPageState.SignUpPageFailed(
-                signUpUserInfo, xcj.app.appsets.R.string.register_failed
+            composeStateUpdater.update(
+                1000,
+                SignUpPageUIState.SignUpPageFailed(
+                    xcj.app.appsets.R.string.register_failed
+                ), SignUpPageUIState.SignUpStart()
             )
-            delay(1000)
-            loginSignUpPageState.value = LoginSignUpPageState.SignUpStart(signUpUserInfo)
         }
     }
 
-    fun createGroup(
+    suspend fun createGroup(
         context: Context,
+        groupInfoForCreate: GroupInfoForCreate,
+        composeStateUpdater: ComposeStateUpdater<CreateGroupPageUIState>
     ) {
-        val groupCreateState = createGroupPageState.value
-        if (groupCreateState !is CreateGroupPageState.NewGroupPage) {
+        if (composeStateUpdater !is SingleStateUpdater) {
             return
         }
-        val groupCreateInfo = groupCreateState.groupInfoForCreate
-        if (groupCreateInfo.name.isEmpty()) {
+        val createGroupPageUIState = composeStateUpdater.getStateValue()
+        if (createGroupPageUIState !is CreateGroupPageUIState.CreateStart) {
+            return
+        }
+        if (groupInfoForCreate.name.value.isEmpty()) {
             ContextCompat.getString(context, xcj.app.appsets.R.string.group_name_can_not_be_empty)
                 .toast()
             return
         }
         PurpleLogger.current.d(TAG, "createGroup")
-        createGroupPageState.value = CreateGroupPageState.Creating(groupCreateInfo)
+        composeStateUpdater.update(CreateGroupPageUIState.Creating())
         LocalPurpleCoroutineScope.current.launch {
             requestRaw(action = {
-                val preCheckRes = userRepository.createChatGroupPreCheck(groupCreateInfo.name)
+                val preCheckRes =
+                    userRepository.createChatGroupPreCheck(groupInfoForCreate.name.value)
                 if (preCheckRes.data != true) {
                     ContextCompat.getString(
                         context,
                         xcj.app.appsets.R.string.a_group_name_existed_please_retry
                     )
                         .toastSuspend()
-                    createGroupPageState.value = CreateGroupPageState.NewGroupPage(groupCreateInfo)
+                    composeStateUpdater.update(
+                        CreateGroupPageUIState.CreateStart()
+                    )
                     return@requestRaw
                 }
 
                 val createChatGroupRes = userRepository.createChatGroup(
-                    context, groupCreateInfo
+                    context, groupInfoForCreate
                 )
                 if (createChatGroupRes.data == true) {
                     ContextCompat.getString(context, xcj.app.appsets.R.string.create_success)
                         .toastSuspend()
                     startServiceToSyncGroupsFromServer(context)
-                    createGroupPageState.value =
-                        CreateGroupPageState.CreateFinishPage(groupCreateInfo)
-                    delay(300)
-                    createGroupPageState.value = CreateGroupPageState.NewGroupPage(groupCreateInfo)
+                    composeStateUpdater.update(
+                        300,
+                        CreateGroupPageUIState.CreateSuccess(),
+                        CreateGroupPageUIState.CreateStart()
+                    )
                 } else {
                     ContextCompat.getString(context, xcj.app.appsets.R.string.create_failed)
                         .toastSuspend()
-                    createGroupPageState.value =
-                        CreateGroupPageState.CreateFailedPage(groupCreateInfo)
-                    delay(300)
-                    createGroupPageState.value = CreateGroupPageState.NewGroupPage(groupCreateInfo)
+                    composeStateUpdater.update(
+                        300,
+                        CreateGroupPageUIState.CreateFailed(),
+                        CreateGroupPageUIState.CreateStart()
+                    )
                 }
             }).onFailure {
                 ContextCompat.getString(context, xcj.app.appsets.R.string.create_failed)
                     .toastSuspend()
-                createGroupPageState.value = CreateGroupPageState.CreateFailedPage(groupCreateInfo)
-                delay(300)
-                createGroupPageState.value = CreateGroupPageState.NewGroupPage(groupCreateInfo)
+                composeStateUpdater.update(
+                    300,
+                    CreateGroupPageUIState.CreateFailed(),
+                    CreateGroupPageUIState.CreateStart()
+                )
+
             }
         }
     }
 
     override fun onComposeDispose(by: String?) {
-        createGroupPageState.value = CreateGroupPageState.NewGroupPage()
-        loginSignUpPageState.value = LoginSignUpPageState.LoginStart
+
     }
 
     suspend fun getWeatherInfo(
@@ -610,15 +608,6 @@ class SystemUseCase(
 
     suspend fun restoreLoginStatusStateIfNeeded() {
         LocalAccountManager.restoreLoginStatusStateIfNeeded()
-    }
-
-
-    fun prepareSignUpState() {
-        loginSignUpPageState.value = LoginSignUpPageState.SignUpStart(UserInfoForCreate())
-    }
-
-    fun prepareLoginState() {
-        loginSignUpPageState.value = LoginSignUpPageState.LoginStart
     }
 
     companion object {

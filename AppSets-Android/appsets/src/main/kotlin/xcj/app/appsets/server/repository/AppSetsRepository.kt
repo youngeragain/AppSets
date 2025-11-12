@@ -64,8 +64,7 @@ class AppSetsRepository(
     suspend fun createApplicationPreCheck(appName: String): DesignResponse<Boolean> =
         withContext(Dispatchers.IO) {
             PurpleLogger.current.d(
-                TAG,
-                "createApplicationPreCheck, thread:${Thread.currentThread()}"
+                TAG, "createApplicationPreCheck, thread:${Thread.currentThread()}"
             )
             return@withContext appSetsApi.createApplicationPreCheck(appName)
         }
@@ -82,22 +81,28 @@ class AppSetsRepository(
         val uploadUriList = mutableListOf<Uri>()
 
         val appIconUrlEndpoint = UUID.randomUUID().toString()
-        val appIconUri = applicationForCreate.iconUriHolder!!.provideUri()
+        val appIconUri = applicationForCreate.iconUriProvider.value?.provideUri()
+        if (appIconUri != null) {
+            uploadUrlEndpoints.add(appIconUrlEndpoint)
+            uploadUriList.add(appIconUri)
+        }
+
         val appBannerUrlEndpoint = UUID.randomUUID().toString()
-        val appBannerUri = applicationForCreate.bannerUriHolder!!.provideUri()
-        uploadUrlEndpoints.add(appIconUrlEndpoint)
-        uploadUriList.add(appIconUri)
-        uploadUrlEndpoints.add(appBannerUrlEndpoint)
-        uploadUriList.add(appBannerUri)
+        val appBannerUri = applicationForCreate.bannerUriProvider.value?.provideUri()
+        if (appBannerUri != null) {
+            uploadUrlEndpoints.add(appBannerUrlEndpoint)
+            uploadUriList.add(appBannerUri)
+        }
+
         with(app) {
             put("icon_url", appIconUrlEndpoint)
             put("banner_url", appBannerUrlEndpoint)
-            put("name", applicationForCreate.name)
-            put("category", applicationForCreate.category)
-            put("website", applicationForCreate.website)
-            put("developer_info", applicationForCreate.developerInfo)
-            put("price", applicationForCreate.price)
-            put("price_unit", applicationForCreate.priceUnit)
+            put("name", applicationForCreate.name.value)
+            put("category", applicationForCreate.category.value)
+            put("website", applicationForCreate.website.value)
+            put("developer_info", applicationForCreate.developerInfo.value)
+            put("price", applicationForCreate.price.value)
+            put("price_unit", applicationForCreate.priceUnit.value)
             put("create_uid", uid)
             put("update_uid", uid)
             put("create_time", currentTimeMills)
@@ -112,9 +117,9 @@ class AppSetsRepository(
                 platforms.add(platform)
                 with(platform) {
                     put("id", platformForCreate.id)
-                    put("name", platformForCreate.name)
-                    put("package_name", platformForCreate.packageName)
-                    put("introduction", platformForCreate.introduction)
+                    put("name", platformForCreate.name.value)
+                    put("package_name", platformForCreate.packageName.value)
+                    put("introduction", platformForCreate.introduction.value)
                 }
                 if (platformForCreate.versionInfoForCreates.isNotEmpty()) {
                     val versionInfos = mutableListOf<HashMap<String, Any?>>()
@@ -122,26 +127,30 @@ class AppSetsRepository(
                     platformForCreate.versionInfoForCreates.forEach { versionInfoForCreate ->
                         val appVersionIconUrlEndpoint = UUID.randomUUID().toString()
                         val appVersionIconUri =
-                            versionInfoForCreate.versionIconUriHolder!!.provideUri()
-                        uploadUrlEndpoints.add(appVersionIconUrlEndpoint)
-                        uploadUriList.add(appVersionIconUri)
+                            versionInfoForCreate.versionIconUriProvider.value?.provideUri()
+                        if (appVersionIconUri != null) {
+                            uploadUrlEndpoints.add(appVersionIconUrlEndpoint)
+                            uploadUriList.add(appVersionIconUri)
+                        }
 
                         val appVersionBannerUrlEndpoint = UUID.randomUUID().toString()
                         val appVersionBannerUri =
-                            versionInfoForCreate.versionBannerUriHolder!!.provideUri()
-                        uploadUrlEndpoints.add(appVersionBannerUrlEndpoint)
-                        uploadUriList.add(appVersionBannerUri)
+                            versionInfoForCreate.versionBannerUriProvider.value?.provideUri()
+                        if (appVersionBannerUri != null) {
+                            uploadUrlEndpoints.add(appVersionBannerUrlEndpoint)
+                            uploadUriList.add(appVersionBannerUri)
+                        }
 
                         val versionInfo = hashMapOf<String, Any?>()
                         versionInfos.add(versionInfo)
                         with(versionInfo) {
                             put("version_icon_url", appVersionIconUrlEndpoint)
                             put("version_banner_url", appVersionIconUrlEndpoint)
-                            put("version", versionInfoForCreate.version)
-                            put("version_code", versionInfoForCreate.versionCode)
-                            put("changes", versionInfoForCreate.changes)
-                            put("package_size", versionInfoForCreate.packageSize)
-                            put("privacy_url", versionInfoForCreate.privacyPolicyUrl)
+                            put("version", versionInfoForCreate.version.value)
+                            put("version_code", versionInfoForCreate.versionCode.value)
+                            put("changes", versionInfoForCreate.changes.value)
+                            put("package_size", versionInfoForCreate.packageSize.value)
+                            put("privacy_url", versionInfoForCreate.privacyPolicyUrl.value)
                             put("create_time", currentTimeMills)
                             put("update_time", currentTimeMills)
                             put("create_uid", uid)
@@ -153,9 +162,11 @@ class AppSetsRepository(
                             versionInfoForCreate.screenshotInfoForCreates.forEach { screenshotInfoForCreate ->
                                 val screenshotUrlEndpoint = UUID.randomUUID().toString()
                                 val screenshotUri =
-                                    screenshotInfoForCreate.uriHolder!!.provideUri()
-                                uploadUrlEndpoints.add(screenshotUrlEndpoint)
-                                uploadUriList.add(screenshotUri)
+                                    screenshotInfoForCreate.pictureUriProvider.value?.provideUri()
+                                if (screenshotUri != null) {
+                                    uploadUrlEndpoints.add(screenshotUrlEndpoint)
+                                    uploadUriList.add(screenshotUri)
+                                }
 
                                 val screenShotInfo = hashMapOf<String, Any?>()
                                 screenShotInfos.add(screenShotInfo)
@@ -183,7 +194,7 @@ class AppSetsRepository(
                                     put("create_time", currentTimeMills)
                                     put("update_time", currentTimeMills)
                                     put("download_times", 0)
-                                    put("url", downloadInfoForCreate.url)
+                                    put("url", downloadInfoForCreate.url.value)
                                     put("id", downloadInfoForCreate.id)
                                 }
                             }
@@ -205,9 +216,7 @@ class AppSetsRepository(
         }
 
     suspend fun getMediaContent(
-        contentType: String,
-        page: Int,
-        pageSize: Int
+        contentType: String, page: Int, pageSize: Int
     ): DesignResponse<List<MediaContent>> = withContext(Dispatchers.IO) {
         PurpleLogger.current.d(TAG, "getMediaContent, thread:${Thread.currentThread()}")
         val designResponse = appSetsApi.getMediaContent(contentType, page, pageSize)

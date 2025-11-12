@@ -1,6 +1,7 @@
 package xcj.app.appsets.util.model
 
 import android.net.Uri
+import xcj.app.starter.android.util.UriProvider
 
 data class MediaStoreDataUri(
     val id: Long,

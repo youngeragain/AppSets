@@ -1,12 +1,12 @@
 package xcj.app.appsets.server.model
 
-import android.os.Parcel
 import android.os.Parcelable
+import kotlinx.parcelize.Parcelize
 import xcj.app.appsets.im.Bio
-import java.util.UUID
 
+@Parcelize
 data class Application(
-    val appId: String? = null,
+    val appId: String,
     var iconUrl: String? = null,
     val website: String? = null,
     val updateTime: String? = null,
@@ -23,7 +23,7 @@ data class Application(
 ) : Bio, Parcelable {
 
     override val bioId: String
-        get() = "$BIO_ID_PREFIX${appId ?: UUID.randomUUID().toString()}"
+        get() = "$BIO_ID_PREFIX${appId}"
 
     override val bioName: String?
         get() = name
@@ -32,44 +32,7 @@ data class Application(
 
     var currentVisiblePlatformPosition: Int = -1
 
-    constructor(parcel: Parcel) : this(
-        parcel.readString(),
-        parcel.readString(),
-        parcel.readString(),
-        parcel.readString(),
-        parcel.readString(),
-        parcel.readString(),
-        parcel.readString(),
-        parcel.readString(),
-        parcel.readString(),
-        parcel.readString(),
-        parcel.readString(),
-        parcel.readString(),
-        parcel.readString(),
-        parcel.createTypedArrayList(AppPlatform)
-    ) {
-    }
-
-    override fun writeToParcel(parcel: Parcel, flags: Int) {
-        parcel.writeString(iconUrl)
-        parcel.writeString(website)
-        parcel.writeString(updateTime)
-        parcel.writeString(createTime)
-        parcel.writeString(developerInfo)
-        parcel.writeString(bannerUrl)
-        parcel.writeString(createUid)
-        parcel.writeString(updateUid)
-        parcel.writeString(bioName)
-        parcel.writeString(category)
-        parcel.writeString(appId)
-        parcel.writeTypedList(platforms)
-    }
-
-    override fun describeContents(): Int {
-        return 0
-    }
-
-    fun platformVersionDownloadsInfos(platformName: String?): List<DownloadInfo> {
+    fun platformVersionDownloadInfos(platformName: String?): List<DownloadInfo> {
         if (platformName.isNullOrEmpty()) {
             return emptyList()
         }
@@ -119,17 +82,9 @@ data class Application(
     }
 
 
-    companion object CREATOR : Parcelable.Creator<Application> {
+    companion object {
 
         const val BIO_ID_PREFIX = "APP-"
-
-        override fun createFromParcel(parcel: Parcel): Application {
-            return Application(parcel)
-        }
-
-        override fun newArray(size: Int): Array<Application?> {
-            return arrayOfNulls(size)
-        }
 
         fun basic(id: String, name: String?, iconUrl: String?): Application {
             return Application(appId = id, name = name, iconUrl = iconUrl).apply {
@@ -139,46 +94,17 @@ data class Application(
     }
 }
 
+@Parcelize
 data class AppPlatform(
     val id: String? = null,
     val name: String? = null,
     val packageName: String? = null,
     val introduction: String? = null,
     val versionInfos: List<VersionInfo>? = null,
-) : Parcelable {
+) : Parcelable
 
-    constructor(parcel: Parcel) : this(
-        parcel.readString(),
-        parcel.readString(),
-        parcel.readString(),
-        parcel.readString(),
-        parcel.createTypedArrayList(VersionInfo)
-    ) {
-    }
 
-    override fun writeToParcel(parcel: Parcel, flags: Int) {
-        parcel.writeString(id)
-        parcel.writeString(name)
-        parcel.writeString(packageName)
-        parcel.writeString(introduction)
-        parcel.writeTypedList(versionInfos)
-    }
-
-    override fun describeContents(): Int {
-        return 0
-    }
-
-    companion object CREATOR : Parcelable.Creator<AppPlatform> {
-        override fun createFromParcel(parcel: Parcel): AppPlatform {
-            return AppPlatform(parcel)
-        }
-
-        override fun newArray(size: Int): Array<AppPlatform?> {
-            return arrayOfNulls(size)
-        }
-    }
-}
-
+@Parcelize
 data class VersionInfo(
     val id: String? = null,
     var versionIconUrl: String? = null,
@@ -190,49 +116,9 @@ data class VersionInfo(
     val privacyUrl: String? = null,
     val screenshotInfos: List<ScreenshotInfo>? = null,
     val downloadInfos: List<DownloadInfo>? = null,
-) : Parcelable {
-    constructor(parcel: Parcel) : this(
-        parcel.readString(),
-        parcel.readString(),
-        parcel.readString(),
-        parcel.readString(),
-        parcel.readString(),
-        parcel.readString(),
-        parcel.readString(),
-        parcel.readString(),
-        parcel.createTypedArrayList(ScreenshotInfo),
-        parcel.createTypedArrayList(DownloadInfo)
-    ) {
-    }
+) : Parcelable
 
-    override fun writeToParcel(parcel: Parcel, flags: Int) {
-        parcel.writeString(id)
-        parcel.writeString(versionIconUrl)
-        parcel.writeString(versionBannerUrl)
-        parcel.writeString(version)
-        parcel.writeValue(versionCode)
-        parcel.writeString(changes)
-        parcel.writeString(packageSize)
-        parcel.writeString(privacyUrl)
-        parcel.writeTypedList(screenshotInfos)
-        parcel.writeTypedList(downloadInfos)
-    }
-
-    override fun describeContents(): Int {
-        return 0
-    }
-
-    companion object CREATOR : Parcelable.Creator<VersionInfo> {
-        override fun createFromParcel(parcel: Parcel): VersionInfo {
-            return VersionInfo(parcel)
-        }
-
-        override fun newArray(size: Int): Array<VersionInfo?> {
-            return arrayOfNulls(size)
-        }
-    }
-}
-
+@Parcelize
 data class ScreenshotInfo(
     val id: String? = null,
     val createUid: String? = null,
@@ -242,45 +128,9 @@ data class ScreenshotInfo(
     val type: String? = null,
     val contentType: String? = null,
     var url: String? = null,
-) : Parcelable {
-    constructor(parcel: Parcel) : this(
-        parcel.readString(),
-        parcel.readString(),
-        parcel.readString(),
-        parcel.readString(),
-        parcel.readString(),
-        parcel.readString(),
-        parcel.readString(),
-        parcel.readString()
-    ) {
-    }
+) : Parcelable
 
-    override fun writeToParcel(parcel: Parcel, flags: Int) {
-        parcel.writeString(id)
-        parcel.writeString(createUid)
-        parcel.writeString(updateUid)
-        parcel.writeString(createTime)
-        parcel.writeString(updateTime)
-        parcel.writeString(type)
-        parcel.writeString(contentType)
-        parcel.writeString(url)
-    }
-
-    override fun describeContents(): Int {
-        return 0
-    }
-
-    companion object CREATOR : Parcelable.Creator<ScreenshotInfo> {
-        override fun createFromParcel(parcel: Parcel): ScreenshotInfo {
-            return ScreenshotInfo(parcel)
-        }
-
-        override fun newArray(size: Int): Array<ScreenshotInfo?> {
-            return arrayOfNulls(size)
-        }
-    }
-}
-
+@Parcelize
 data class DownloadInfo(
     val id: String? = null,
     val createUid: String? = null,
@@ -292,45 +142,4 @@ data class DownloadInfo(
     val description: String? = null,
     val architectures: List<String>? = null,
     val size: String? = null,
-) : Parcelable {
-    constructor(parcel: Parcel) : this(
-        parcel.readString(),
-        parcel.readString(),
-        parcel.readString(),
-        parcel.readString(),
-        parcel.readString(),
-        parcel.readValue(Int::class.java.classLoader) as? Int,
-        parcel.readString(),
-        parcel.readString(),
-        parcel.createStringArrayList(),
-        parcel.readString()
-    ) {
-    }
-
-    override fun writeToParcel(parcel: Parcel, flags: Int) {
-        parcel.writeString(id)
-        parcel.writeString(createUid)
-        parcel.writeString(updateUid)
-        parcel.writeString(createTime)
-        parcel.writeString(updateTime)
-        parcel.writeValue(downloadTimes)
-        parcel.writeString(url)
-        parcel.writeString(description)
-        parcel.writeStringList(architectures)
-        parcel.writeString(size)
-    }
-
-    override fun describeContents(): Int {
-        return 0
-    }
-
-    companion object CREATOR : Parcelable.Creator<DownloadInfo> {
-        override fun createFromParcel(parcel: Parcel): DownloadInfo {
-            return DownloadInfo(parcel)
-        }
-
-        override fun newArray(size: Int): Array<DownloadInfo?> {
-            return arrayOfNulls(size)
-        }
-    }
-}
+) : Parcelable

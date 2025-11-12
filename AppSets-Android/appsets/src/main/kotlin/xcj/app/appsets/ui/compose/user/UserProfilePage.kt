@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalMaterial3ExpressiveApi::class)
+
 package xcj.app.appsets.ui.compose.user
 
 import androidx.activity.compose.BackHandler
@@ -15,9 +17,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -47,20 +49,23 @@ import xcj.app.appsets.ui.compose.LocalUseCaseOfUserInfo
 import xcj.app.appsets.ui.compose.custom_component.DesignBackButton
 import xcj.app.appsets.ui.compose.custom_component.DesignDropDownButton
 import xcj.app.appsets.ui.compose.custom_component.HideNavBar
-import xcj.app.appsets.ui.model.page_state.UserProfilePageState
+import xcj.app.appsets.ui.model.UserInfoForModify
+import xcj.app.appsets.ui.model.page_state.UserProfilePageUIState
+import xcj.app.appsets.util.compose_state.ComposeStateUpdater
 import xcj.app.compose_share.components.BackActionTopBar
 
-private const val NONE = "None"
-private const val APPLICATION = "Application"
-private const val SCREEN = "Screen"
-private const val FOLLOWER_FOLLOWED = "Follower/Followed"
-private const val MODIFY_PROFILE = "ModifyProfile"
+private const val CONTENT_NONE = "None"
+private const val CONTENT_APPLICATION = "Application"
+private const val CONTENT_SCREEN = "Screen"
+private const val CONTENT_FOLLOWER_FOLLOWED = "Follower/Followed"
+private const val CONTENT_MODIFY_PROFILE = "ModifyProfile"
 
-private const val GOODS = "Goods"
+private const val CONTENT_GOODS = "Goods"
+
 
 @Composable
 fun UserProfilePage(
-    userProfilePageState: UserProfilePageState,
+    userProfilePageUIState: UserProfilePageUIState,
     userApplications: List<Application>,
     userFollowers: List<UserInfo>,
     userFollowed: List<UserInfo>,
@@ -73,8 +78,8 @@ fun UserProfilePage(
     onBioClick: (Bio) -> Unit,
     onScreenMediaClick: (ScreenMediaFileUrl, List<ScreenMediaFileUrl>) -> Unit,
     onLoadMoreScreens: (String, Boolean) -> Unit,
-    onSelectUserAvatarClick: (String) -> Unit,
-    onModifyProfileConfirmClick: () -> Unit,
+    onSelectUserAvatarClick: (String, ComposeStateUpdater<*>) -> Unit,
+    onModifyProfileConfirmClick: (UserInfoForModify) -> Unit,
 ) {
     HideNavBar()
 
@@ -89,14 +94,14 @@ fun UserProfilePage(
         modifier = Modifier
             .fillMaxSize()
     ) {
-        when (userProfilePageState) {
-            is UserProfilePageState.Loading -> {
+        when (userProfilePageUIState) {
+            is UserProfilePageUIState.Loading -> {
                 Box(modifier = Modifier.fillMaxSize()) {
-                    CircularProgressIndicator(
+                    LoadingIndicator(
                         modifier = Modifier
-                            .size(36.dp)
                             .align(Alignment.Center)
                     )
+
                     DesignBackButton(
                         modifier = Modifier.align(Alignment.BottomCenter),
                         onClick = onBackClick
@@ -104,12 +109,22 @@ fun UserProfilePage(
                 }
             }
 
-            is UserProfilePageState.NotFound -> {
+            is UserProfilePageUIState.NotFound -> {
                 Box(modifier = Modifier.fillMaxSize()) {
-                    Text(
-                        text = stringResource(xcj.app.appsets.R.string.not_found),
-                        modifier = Modifier.align(Alignment.Center)
-                    )
+                    Column(
+                        modifier = Modifier.align(Alignment.Center),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = stringResource(id = userProfilePageUIState.tips)
+                        )
+                        userProfilePageUIState.subTips?.let {
+                            Text(
+                                text = stringResource(id = it),
+                                fontSize = 12.sp
+                            )
+                        }
+                    }
                     DesignBackButton(
                         modifier = Modifier.align(Alignment.BottomCenter),
                         onClick = onBackClick
@@ -117,9 +132,33 @@ fun UserProfilePage(
                 }
             }
 
-            is UserProfilePageState.LoadSuccess -> {
+            is UserProfilePageUIState.LoadFailed -> {
+                Box(modifier = Modifier.fillMaxSize()) {
+                    Column(
+                        modifier = Modifier.align(Alignment.Center),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = stringResource(id = userProfilePageUIState.tips)
+                        )
+                        userProfilePageUIState.subTips?.let {
+                            Text(
+                                text = stringResource(id = it),
+                                fontSize = 12.sp
+                            )
+                        }
+
+                    }
+                    DesignBackButton(
+                        modifier = Modifier.align(Alignment.BottomCenter),
+                        onClick = onBackClick
+                    )
+                }
+            }
+
+            is UserProfilePageUIState.LoadSuccess -> {
                 var currentShowContent by remember {
-                    mutableStateOf(NONE)
+                    mutableStateOf(CONTENT_NONE)
                 }
                 val hazeState = rememberHazeState()
                 val density = LocalDensity.current
@@ -134,10 +173,10 @@ fun UserProfilePage(
                     }
                 }
                 Box(modifier = Modifier.fillMaxSize()) {
-                    if (currentShowContent != NONE) {
+                    if (currentShowContent != CONTENT_NONE) {
                         BackHandler {
-                            if (currentShowContent != NONE) {
-                                currentShowContent = NONE
+                            if (currentShowContent != CONTENT_NONE) {
+                                currentShowContent = CONTENT_NONE
                             }
                         }
                     }
@@ -151,39 +190,39 @@ fun UserProfilePage(
                             )
                         )
                         UserInfoHeader(
-                            userInfo = userProfilePageState.userInfo,
+                            userInfo = userProfilePageUIState.userInfo,
                             userFollowers = userFollowers,
                             userFollowed = userFollowed,
                             isLoginUserFollowedThisUser = isLoginUserFollowedThisUser,
                             onActionClick = { userAction ->
                                 when (userAction.type) {
                                     UserAction.ACTION_APPLICATION -> {
-                                        currentShowContent = APPLICATION
+                                        currentShowContent = CONTENT_APPLICATION
                                     }
 
                                     UserAction.ACTION_SCREEN -> {
-                                        onLoadMoreScreens(userProfilePageState.userInfo.uid, true)
-                                        currentShowContent = SCREEN
+                                        onLoadMoreScreens(userProfilePageUIState.userInfo.uid, true)
+                                        currentShowContent = CONTENT_SCREEN
                                     }
 
                                     UserAction.ACTION_FOLLOW_STATE -> {
-                                        currentShowContent = FOLLOWER_FOLLOWED
+                                        currentShowContent = CONTENT_FOLLOWER_FOLLOWED
                                     }
 
                                     UserAction.ACTION_UPDATE_INFO -> {
-                                        currentShowContent = MODIFY_PROFILE
+                                        currentShowContent = CONTENT_MODIFY_PROFILE
                                     }
 
                                     UserAction.ACTION_FLIP_FOLLOW -> {
-                                        onFlipFollowClick(userProfilePageState.userInfo)
+                                        onFlipFollowClick(userProfilePageUIState.userInfo)
                                     }
 
                                     UserAction.ACTION_CHAT -> {
-                                        onChatClick(userProfilePageState.userInfo)
+                                        onChatClick(userProfilePageUIState.userInfo)
                                     }
 
                                     UserAction.ACTION_ADD_FRIEND -> {
-                                        onAddFriendClick(userProfilePageState.userInfo)
+                                        onAddFriendClick(userProfilePageUIState.userInfo)
                                     }
                                 }
                             }
@@ -211,7 +250,7 @@ fun UserProfilePage(
                     )
                 }
                 AnimatedVisibility(
-                    visible = currentShowContent != NONE,
+                    visible = currentShowContent != CONTENT_NONE,
                     enter = slideInVertically(
                         tween(350),
                         initialOffsetY = { it / 10 }) + fadeIn(tween(350)),
@@ -225,13 +264,13 @@ fun UserProfilePage(
                             .fillMaxSize()
                             .statusBarsPadding()
                     ) {
-                        if (currentShowContent != NONE) {
-                            val titleText = if (currentShowContent == MODIFY_PROFILE) {
+                        if (currentShowContent != CONTENT_NONE) {
+                            val titleText = if (currentShowContent == CONTENT_MODIFY_PROFILE) {
                                 stringResource(xcj.app.appsets.R.string.update_information)
                             } else {
                                 stringResource(
                                     xcj.app.appsets.R.string.a_of_b,
-                                    userProfilePageState.userInfo.bioName ?: "",
+                                    userProfilePageUIState.userInfo.bioName ?: "",
                                     currentShowContent
                                 )
                             }
@@ -243,42 +282,45 @@ fun UserProfilePage(
                             )
                         }
                         when (currentShowContent) {
-                            SCREEN -> {
+                            CONTENT_SCREEN -> {
                                 UserScreens(
                                     screens = userScreens,
                                     onBioClick = { bio ->
                                         onBioClick.invoke(bio)
-                                        currentShowContent = NONE
+                                        currentShowContent = CONTENT_NONE
                                     },
                                     onLoadMore = {
-                                        onLoadMoreScreens(userProfilePageState.userInfo.uid, false)
+                                        onLoadMoreScreens(
+                                            userProfilePageUIState.userInfo.uid,
+                                            false
+                                        )
                                     },
                                     onScreenMediaClick = onScreenMediaClick
                                 )
                             }
 
-                            APPLICATION -> {
+                            CONTENT_APPLICATION -> {
                                 UserApplications(
                                     userApplications = userApplications,
                                     onBioClick = onBioClick
                                 )
                             }
 
-                            FOLLOWER_FOLLOWED -> {
+                            CONTENT_FOLLOWER_FOLLOWED -> {
                                 UserFollowers(
-                                    uid = userProfilePageState.userInfo.uid,
+                                    uid = userProfilePageUIState.userInfo.uid,
                                     userFollowers = userFollowers,
                                     userFollowed = userFollowed,
                                     onBioClick = { userInfo ->
                                         onBioClick.invoke(userInfo)
-                                        currentShowContent = NONE
+                                        currentShowContent = CONTENT_NONE
                                     }
                                 )
                             }
 
-                            MODIFY_PROFILE -> {
+                            CONTENT_MODIFY_PROFILE -> {
                                 ProfileModification(
-                                    userInfo = userProfilePageState.userInfo,
+                                    userInfo = userProfilePageUIState.userInfo,
                                     onSelectUserAvatarClick = onSelectUserAvatarClick,
                                     onConfirmClick = onModifyProfileConfirmClick
                                 )
@@ -286,9 +328,9 @@ fun UserProfilePage(
                         }
                     }
                 }
-                if (currentShowContent != NONE) {
+                if (currentShowContent != CONTENT_NONE) {
                     DesignDropDownButton(modifier = Modifier.align(Alignment.BottomCenter)) {
-                        currentShowContent = NONE
+                        currentShowContent = CONTENT_NONE
                     }
                 }
             }

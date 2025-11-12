@@ -5,6 +5,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -16,6 +17,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.windowInsetsTopHeight
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
@@ -106,6 +109,33 @@ fun PlatformPermissionsComponent(
     platformPermissionsUsageList: List<PlatformPermissionsUsage>,
     onRequest: (PlatformPermissionsUsage, Int) -> Unit,
 ) {
+    LazyColumn(
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 12.dp),
+        contentPadding = PaddingValues(
+            top = WindowInsets.statusBars.asPaddingValues().calculateTopPadding(), bottom = 120.dp
+        )
+    ) {
+        item {
+            Text(
+                text = stringResource(id = xcj.app.appsets.R.string.platform_permission),
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold
+            )
+        }
+        items(
+            items = platformPermissionsUsageList,
+            key = { item -> item.name }
+        ) { platformPermissionsUsage ->
+            PermissionCard(
+                modifier = Modifier.animateItem(),
+                platformPermissionsUsage = platformPermissionsUsage,
+                onRequest = onRequest
+            )
+        }
+    }
     Column(
         verticalArrangement = Arrangement.spacedBy(12.dp),
         modifier = Modifier
@@ -113,15 +143,7 @@ fun PlatformPermissionsComponent(
             .padding(horizontal = 12.dp)
             .verticalScroll(rememberScrollState())
     ) {
-        Spacer(modifier = Modifier.windowInsetsTopHeight(WindowInsets.statusBars))
-        Text(
-            text = stringResource(id = xcj.app.appsets.R.string.platform_permission),
-            fontSize = 20.sp,
-            fontWeight = FontWeight.Bold
-        )
-        platformPermissionsUsageList.forEach {
-            PermissionCard(platformPermissionsUsage = it, onRequest = onRequest)
-        }
+
 
         Spacer(modifier = Modifier.height(120.dp))
     }
@@ -129,11 +151,12 @@ fun PlatformPermissionsComponent(
 
 @Composable
 fun PermissionCard(
+    modifier: Modifier = Modifier,
     platformPermissionsUsage: PlatformPermissionsUsage,
     onRequest: (PlatformPermissionsUsage, Int) -> Unit,
 ) {
     Column(
-        modifier = Modifier
+        modifier = modifier
             .border(
                 1.dp,
                 MaterialTheme.colorScheme.outline,

@@ -17,8 +17,10 @@ import xcj.app.appsets.server.model.UserInfo
 import xcj.app.appsets.server.repository.QRCodeRepository
 import xcj.app.appsets.server.repository.UserRepository
 import xcj.app.appsets.ui.compose.camera.DesignCameraActivity
-import xcj.app.appsets.ui.model.page_state.LoginSignUpPageState
+import xcj.app.appsets.ui.model.page_state.LoginPageUIState
 import xcj.app.appsets.ui.model.state.QRCodeInfoScannedState
+import xcj.app.appsets.util.compose_state.ComposeStateUpdater
+import xcj.app.appsets.util.compose_state.SingleStateUpdater
 import xcj.app.compose_share.dynamic.ComposeLifecycleAware
 import xcj.app.starter.android.util.PurpleLogger
 import xcj.app.starter.foundation.http.DesignResponse
@@ -27,7 +29,6 @@ import xcj.app.starter.server.requestRaw
 import xcj.app.starter.util.QrCodeUtil
 
 class QRCodeUseCase(
-    private val loginSignUpPageState: MutableState<LoginSignUpPageState>,
     private val qrCodeRepository: QRCodeRepository,
     private val userRepository: UserRepository,
 ) : ComposeLifecycleAware {
@@ -56,18 +57,20 @@ class QRCodeUseCase(
     //first is providerId, second is code
     val scannedQRCodeInfo: MutableState<QRCodeInfoScannedState?> = mutableStateOf(null)
 
-    suspend fun requestGenerateQRCode() {
+    suspend fun requestGenerateQRCode(composeStateUpdater: ComposeStateUpdater<LoginPageUIState>?) {
         updateQRCodeStateJob?.cancel("request generate new QRCode!")
         generatedQRCodeInfo.value = null
         request {
-
             qrCodeRepository.genQRCodeCode(null)
         }.onSuccess {
-            handleGeneratedQRCode(it)
+            handleGeneratedQRCode(it, composeStateUpdater)
         }
     }
 
-    suspend fun handleGeneratedQRCode(qrCodeInfoMap: Map<String, String>) {
+    suspend fun handleGeneratedQRCode(
+        qrCodeInfoMap: Map<String, String>,
+        composeStateUpdater: ComposeStateUpdater<LoginPageUIState>?
+    ) {
         val providerId = qrCodeInfoMap[PROVIDER_ID] ?: return
         val code = qrCodeInfoMap[CODE] ?: return
         val state = qrCodeInfoMap[STATE] ?: QR_STATE_NO_EXIST_OR_EXPIRED
@@ -92,10 +95,14 @@ class QRCodeUseCase(
             code = code,
             bitmap = qrcodeBitmap
         )
-        continueQueryQRCodeStatus(providerId, code)
+        continueQueryQRCodeStatus(providerId, code, composeStateUpdater)
     }
 
-    suspend fun continueQueryQRCodeStatus(providerId: String, code: String) {
+    suspend fun continueQueryQRCodeStatus(
+        providerId: String,
+        code: String,
+        composeStateUpdater: ComposeStateUpdater<LoginPageUIState>?
+    ) {
         if (providerId.isEmpty()) {
             return
         }
@@ -104,14 +111,17 @@ class QRCodeUseCase(
             requestRaw {
                 qrCodeRepository.qrCodeCodeStatus(providerId, code)
             }.onSuccess {
-                updateQRCodeStatus(it)
+                updateQRCodeStatus(it, composeStateUpdater)
             }
 
             delay(5000)
         }
     }
 
-    private suspend fun updateQRCodeStatus(qrCodeStatusMapResponse: DesignResponse<Map<String, String?>>) {
+    private suspend fun updateQRCodeStatus(
+        qrCodeStatusMapResponse: DesignResponse<Map<String, String?>>,
+        composeStateUpdater: ComposeStateUpdater<LoginPageUIState>?
+    ) {
         val qrCodeStatusMap = qrCodeStatusMapResponse.data
         if (qrCodeStatusMap != null) {
             val qrCodeState = qrCodeStatusMap[STATE] ?: QR_STATE_NO_EXIST_OR_EXPIRED
@@ -132,7 +142,7 @@ class QRCodeUseCase(
                 } else {
                     //已授权给予登录，拿到token，该token为对方的token
                     val tempToken = qrCodeStatusMap[EXTRA]?.split("=")?.get(1) ?: ""
-                    startQuickLogin(tempToken)
+                    startQuickLogin(tempToken, composeStateUpdater)
                     updateQRCodeStateJob?.cancel("qrcode operated!")
                 }
             }
@@ -152,12 +162,16 @@ class QRCodeUseCase(
 
     private suspend fun startQuickLogin(
         token: String,
+        composeStateUpdater: ComposeStateUpdater<LoginPageUIState>?,
     ) {
-        val oldLoginSignUpState = loginSignUpPageState.value
-        if (oldLoginSignUpState is LoginSignUpPageState.Logging) {
+        if (composeStateUpdater !is SingleStateUpdater) {
             return
         }
-        loginSignUpPageState.value = LoginSignUpPageState.Logging()
+        val stateLoginStart = composeStateUpdater.getStateValue()
+        if (stateLoginStart !is LoginPageUIState.LoginStart) {
+            return
+        }
+        composeStateUpdater.update(LoginPageUIState.Logging())
         requestRaw(
             action = {
                 LocalAccountManager.onUserLogged(UserInfo.default(), token, true)
@@ -165,7 +179,7 @@ class QRCodeUseCase(
                 val token = loginResponse.data
                 if (!loginResponse.success || token.isNullOrEmpty()) {
                     PurpleLogger.current.d(TAG, loginResponse.info)
-                    loginSignUpPageState.value = LoginSignUpPageState.LoggingFailed()
+                    composeStateUpdater.update(LoginPageUIState.LoggingFailed())
                     return
                 }
                 LocalAccountManager.onUserLogged(UserInfo.default(), token, true)
@@ -173,11 +187,11 @@ class QRCodeUseCase(
                 val userInfo = userInfoResponse.data
                 if (userInfo == null) {
                     PurpleLogger.current.d(TAG, "startQuickLogin failed! userInfo is null ")
-                    loginSignUpPageState.value = LoginSignUpPageState.LoggingFailed()
+                    composeStateUpdater.update(LoginPageUIState.LoggingFailed())
                     return
                 }
                 LocalAccountManager.onUserLogged(userInfo, token, false)
-                loginSignUpPageState.value = LoginSignUpPageState.LoggingFinish()
+                composeStateUpdater.update(LoginPageUIState.LoggingSuccess())
             }
         )
     }
@@ -300,6 +314,6 @@ class QRCodeUseCase(
         }
         val providerId = intent.getStringExtra(PROVIDER_ID) ?: return
         val code = intent.getStringExtra(CODE) ?: return
-        continueQueryQRCodeStatus(providerId, code)
+        continueQueryQRCodeStatus(providerId, code, null)
     }
 }

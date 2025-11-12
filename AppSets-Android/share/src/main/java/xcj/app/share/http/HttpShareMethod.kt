@@ -438,7 +438,7 @@ class HttpShareMethod : ShareMethod(),
         )
         //todo
         /*val bottomSheetState = viewModel.bottomSheetState()
-        bottomSheetState.show {
+        bottomSheetState.show(null){
             AppSetsSharePinSheet(
                 shareDevice = shareDevice,
                 pin = 0,
@@ -472,7 +472,7 @@ class HttpShareMethod : ShareMethod(),
 
     private fun showPinToClientSheet(shareDevice: HttpShareDevice, pin: Int) {
         val bottomSheetState = viewModel.bottomSheetState()
-        bottomSheetState.show {
+        bottomSheetState.show(null) {
             AppSetsSharePinSheetContent(
                 shareDevice = shareDevice,
                 pin = pin,
@@ -542,7 +542,7 @@ class HttpShareMethod : ShareMethod(),
             )
         } else {
             val bottomSheetState = viewModel.bottomSheetState()
-            bottomSheetState.show {
+            bottomSheetState.show(null) {
                 AppSetsShareClientPreSendSheetContent(
                     shareDevice = shareDevice,
                     isAutoAccept = isAutoAcceptState.value,

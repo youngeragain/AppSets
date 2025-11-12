@@ -509,7 +509,12 @@ fun DevicesSpace(
                     bottom = 12.dp
                 )
             ) {
-                items(items = shareDeviceList) { shareDevice ->
+                items(
+                    items = shareDeviceList,
+                    key = { item ->
+                        item.deviceAddress.ip4 ?: item.deviceAddress.ip6 ?: item.toString()
+                    }
+                ) { shareDevice ->
                     Box(
                         modifier = Modifier
                             .clip(MaterialTheme.shapes.large)
@@ -847,7 +852,10 @@ fun DeviceContentListComponent(
                         }
                     }
                 }
-                items(contentInfoList.infoList) { contentInfo ->
+                items(
+                    items = contentInfoList.infoList,
+                    key = { item -> item.id }
+                ) { contentInfo ->
                     Column(
                         modifier = Modifier
                             .fillMaxWidth(),

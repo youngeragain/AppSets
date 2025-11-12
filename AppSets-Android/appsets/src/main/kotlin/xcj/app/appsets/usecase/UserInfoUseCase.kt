@@ -10,10 +10,10 @@ import xcj.app.appsets.server.model.UserInfo
 import xcj.app.appsets.server.repository.AppSetsRepository
 import xcj.app.appsets.server.repository.UserRepository
 import xcj.app.appsets.ui.model.UserInfoForModify
-import xcj.app.appsets.ui.model.page_state.UserProfilePageState
+import xcj.app.appsets.ui.model.page_state.UserProfilePageUIState
 import xcj.app.appsets.util.ktx.toastSuspend
-import xcj.app.appsets.util.model.UriProvider
 import xcj.app.compose_share.dynamic.ComposeLifecycleAware
+import xcj.app.starter.server.HttpRequestFail
 import xcj.app.starter.server.request
 import xcj.app.starter.server.requestRaw
 
@@ -22,8 +22,8 @@ class UserInfoUseCase(
     private val appSetsRepository: AppSetsRepository,
 ) : ComposeLifecycleAware {
 
-    val currentUserInfoState: MutableState<UserProfilePageState> = mutableStateOf(
-        UserProfilePageState.Loading
+    val currentUserInfoState: MutableState<UserProfilePageUIState> = mutableStateOf(
+        UserProfilePageUIState.Loading
     )
 
     val loggedUserFollowedState: MutableState<Boolean> = mutableStateOf(false)
@@ -34,19 +34,16 @@ class UserInfoUseCase(
 
     val applicationsState: MutableState<List<Application>> = mutableStateOf(emptyList())
 
-    val userInfoForModifyState: MutableState<UserInfoForModify> = mutableStateOf(
-        UserInfoForModify()
-    )
 
     private suspend fun fetchUserRelateInformation(
         userInfo: UserInfo?,
         requestOnlyUserInfo: Boolean = false,
     ) {
         if (userInfo == null) {
-            currentUserInfoState.value = UserProfilePageState.NotFound
+            currentUserInfoState.value = UserProfilePageUIState.NotFound
             return
         }
-        currentUserInfoState.value = UserProfilePageState.LoadSuccess(userInfo)
+        currentUserInfoState.value = UserProfilePageUIState.LoadSuccess(userInfo)
         if (requestOnlyUserInfo) {
             return
         }
@@ -85,15 +82,30 @@ class UserInfoUseCase(
     suspend fun updateCurrentUserInfoByUid(uid: String, requestOnlyUserInfo: Boolean = false) {
         request {
             userRepository.getUserInfoByUid(uid)
-        }.onSuccess {
-            LocalAccountManager.updateUserInfoIfNeeded(it)
-            fetchUserRelateInformation(it, requestOnlyUserInfo)
+        }.onSuccess { userInfo ->
+            LocalAccountManager.updateUserInfoIfNeeded(userInfo)
+            fetchUserRelateInformation(userInfo, requestOnlyUserInfo)
+        }.onFailure { exception ->
+            if (exception is HttpRequestFail) {
+                when (exception.response?.code) {
+                    -3 -> {
+                        currentUserInfoState.value = UserProfilePageUIState.LoadFailed(
+                            tips = xcj.app.appsets.R.string.login_required,
+                            subTips = xcj.app.appsets.R.string.expired_information
+                        )
+                    }
+
+                    else -> {
+                        currentUserInfoState.value = UserProfilePageUIState.LoadFailed()
+                    }
+                }
+            }
         }
     }
 
     suspend fun updateUserFollowState() {
         val userInfo =
-            (currentUserInfoState.value as? UserProfilePageState.LoadSuccess)?.userInfo ?: return
+            (currentUserInfoState.value as? UserProfilePageUIState.LoadSuccess)?.userInfo ?: return
         requestRaw(
             action = {
                 if (userInfo.uid != LocalAccountManager.userInfo.uid) {
@@ -117,10 +129,11 @@ class UserInfoUseCase(
 
     suspend fun modifyUserInfo(
         context: Context,
+        userInfoForModify: UserInfoForModify
     ) {
 
         val currentUserInfoState = currentUserInfoState.value
-        if (currentUserInfoState !is UserProfilePageState.LoadSuccess) {
+        if (currentUserInfoState !is UserProfilePageUIState.LoadSuccess) {
             return
         }
         val userInfo = currentUserInfoState.userInfo
@@ -128,10 +141,11 @@ class UserInfoUseCase(
         if (!LocalAccountManager.isLoggedUser(userInfo.uid)) {
             return
         }
-        val userInfoModification = userInfoForModifyState.value
         request {
             userRepository.updateUserInfo(
-                context, userInfo, userInfoModification
+                context,
+                userInfo,
+                userInfoForModify
             )
         }.onSuccess {
             updateCurrentUserInfoByUid(userInfo.uid, true)
@@ -142,15 +156,10 @@ class UserInfoUseCase(
         }
     }
 
-    fun updateUserSelectAvatarUri(uriProvider: UriProvider) {
-        UserInfoForModify.updateStateUserAvatarUri(userInfoForModifyState, uriProvider)
-    }
-
     override fun onComposeDispose(by: String?) {
         loggedUserFollowedState.value = false
         followedUsersState.value = emptyList()
         followerUsersState.value = emptyList()
         applicationsState.value = emptyList()
-        userInfoForModifyState.value = UserInfoForModify()
     }
 }

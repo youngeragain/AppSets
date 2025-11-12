@@ -88,7 +88,10 @@ fun QuickStepSheet(
             LazyRow(
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                items(quickStepContentHolder.quickStepContents) { quickStepContent ->
+                items(
+                    items = quickStepContentHolder.quickStepContents,
+                    key = { item -> item }
+                ) { quickStepContent ->
                     QuickStepContentComponent(quickStepContent)
                 }
             }
@@ -120,7 +123,10 @@ fun QuickStepSheet(
                     .weight(1f),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                items(filteredContentHandlerCategories) { contentHandlerCategory ->
+                items(
+                    items = filteredContentHandlerCategories,
+                    key = { item -> item }
+                ) { contentHandlerCategory ->
                     val contentHandlers = filteredContentHandlersMap[contentHandlerCategory]
                     Column(
                         modifier = Modifier

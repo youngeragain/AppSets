@@ -85,11 +85,12 @@ import xcj.app.appsets.server.model.GroupInfo
 import xcj.app.appsets.server.model.ScreenMediaFileUrl
 import xcj.app.appsets.server.model.UserInfo
 import xcj.app.appsets.ui.compose.LocalUseCaseOfSearch
+import xcj.app.appsets.ui.compose.PageRouteNames
 import xcj.app.appsets.ui.compose.apps.SingleApplicationComponent
 import xcj.app.appsets.ui.compose.custom_component.AnyImage
 import xcj.app.appsets.ui.compose.custom_component.ShowNavBar
 import xcj.app.appsets.ui.compose.outside.ScreensList
-import xcj.app.appsets.ui.model.page_state.SearchPageState
+import xcj.app.appsets.ui.model.page_state.SearchPageUIState
 import xcj.app.appsets.ui.model.state.SearchResult
 import xcj.app.compose_share.components.DesignTextField
 
@@ -102,7 +103,7 @@ fun SearchPage(
     ShowNavBar()
     val coroutineScope = rememberCoroutineScope()
     val searchUseCase = LocalUseCaseOfSearch.current
-    val searchState by searchUseCase.searchPageState
+    val searchState by searchUseCase.searchPageUIState
 
     DisposableEffect(key1 = true, effect = {
         searchUseCase.attachToSearchFlow(coroutineScope)
@@ -112,7 +113,7 @@ fun SearchPage(
     })
 
     SearchPageResults(
-        searchPageState = searchState,
+        searchPageUIState = searchState,
         onBioClick = onBioClick,
         onScreenMediaClick = onScreenMediaClick
     )
@@ -127,7 +128,7 @@ fun SearchInputBar(
 ) {
     val keyboardController = LocalSoftwareKeyboardController.current
     val searchUseCase = LocalUseCaseOfSearch.current
-    val searchPageState by searchUseCase.searchPageState
+    val searchPageState by searchUseCase.searchPageUIState
     var inputContent by remember {
         mutableStateOf(TextFieldValue())
     }
@@ -152,26 +153,22 @@ fun SearchInputBar(
 
     Box(modifier = modifier) {
         DesignTextField(
-            value = inputContent.text,
-            onValueChange = {
+            value = inputContent.text, onValueChange = {
                 inputContent = TextFieldValue(it)
                 onInputContent(it)
-            },
-            modifier = Modifier
+            }, modifier = Modifier
                 .fillMaxWidth()
                 .border(
                     width = 1.dp, color = MaterialTheme.colorScheme.outline, shape = CircleShape
                 )
                 .clip(CircleShape)
                 .hazeEffect(
-                    hazeState,
-                    HazeMaterials.thin()
+                    hazeState, HazeMaterials.thin()
                 )
                 .focusRequester(focusRequester)
                 .onFocusChanged {
                     textFiledIsFocused = it.hasFocus
-                },
-            leadingIcon = {
+                }, leadingIcon = {
                 Icon(
                     modifier = Modifier
                         .clip(CircleShape)
@@ -188,8 +185,7 @@ fun SearchInputBar(
                     painter = painterResource(id = xcj.app.compose_share.R.drawable.ic_arrow_back_24),
                     contentDescription = stringResource(id = xcj.app.appsets.R.string.return_)
                 )
-            },
-            trailingIcon = {
+            }, trailingIcon = {
                 Icon(
                     modifier = Modifier
                         .clip(CircleShape)
@@ -201,10 +197,7 @@ fun SearchInputBar(
                     contentDescription = stringResource(xcj.app.appsets.R.string.search))
             }, placeholder = {
                 Text(text = stringResource(xcj.app.appsets.R.string.search))
-            },
-            maxLines = 1,
-            shape = CircleShape,
-            colors = TextFieldDefaults.colors(
+            }, maxLines = 1, shape = CircleShape, colors = TextFieldDefaults.colors(
                 unfocusedIndicatorColor = Color.Transparent,
                 focusedIndicatorColor = Color.Transparent,
                 focusedContainerColor = Color.Transparent,
@@ -215,8 +208,8 @@ fun SearchInputBar(
 }
 
 @Composable
-fun searchBarBorderStroke(searchPageState: SearchPageState): BorderStroke {
-    val targetWidth = if (searchPageState is SearchPageState.Searching) {
+fun searchBarBorderStroke(searchPageUIState: SearchPageUIState): BorderStroke {
+    val targetWidth = if (searchPageUIState is SearchPageUIState.Searching) {
         2.dp
     } else {
         1.dp
@@ -228,7 +221,7 @@ fun searchBarBorderStroke(searchPageState: SearchPageState): BorderStroke {
     )
     val outlineColor = MaterialTheme.colorScheme.outline
     val stroke by rememberUpdatedState(
-        if (searchPageState is SearchPageState.Searching) {
+        if (searchPageUIState is SearchPageUIState.Searching) {
             BorderStroke(
                 targetWidthState.value, linearGradient(
                     0.0f to Color.Red,
@@ -248,15 +241,13 @@ fun searchBarBorderStroke(searchPageState: SearchPageState): BorderStroke {
 
 @Composable
 fun SearchPageResults(
-    searchPageState: SearchPageState,
+    searchPageUIState: SearchPageUIState,
     onBioClick: (Bio) -> Unit,
     onScreenMediaClick: (ScreenMediaFileUrl, List<ScreenMediaFileUrl>) -> Unit,
 ) {
     AnimatedContent(
-        targetState = searchPageState,
-        contentAlignment = Alignment.TopCenter,
-        transitionSpec = {
-            if (searchPageState is SearchPageState.None) {
+        targetState = searchPageUIState, contentAlignment = Alignment.TopCenter, transitionSpec = {
+            if (searchPageUIState is SearchPageUIState.SearchStart) {
                 (fadeIn(
                     animationSpec = snap()
                 ) + slideInVertically()).togetherWith(
@@ -268,29 +259,26 @@ fun SearchPageResults(
                 (fadeIn(
                     animationSpec = tween(450)
                 ) + scaleIn(
-                    initialScale = 0.92f,
-                    animationSpec = tween(450)
+                    initialScale = 0.92f, animationSpec = tween(450)
                 )).togetherWith(
                     (fadeOut(
                         animationSpec = tween(120)
                     ) + scaleOut(
-                        targetScale = 1.12f,
-                        animationSpec = tween(120)
+                        targetScale = 1.12f, animationSpec = tween(120)
                     ))
                 )
             }
 
-        }
-    ) { targetSearchState ->
+        }) { targetSearchState ->
         Box(
             modifier = Modifier.fillMaxSize()
         ) {
             when (targetSearchState) {
-                is SearchPageState.None -> {
+                is SearchPageUIState.SearchStart -> {
 
                 }
 
-                is SearchPageState.Searching -> {
+                is SearchPageUIState.Searching -> {
                     Column(
                         modifier = Modifier.align(Alignment.Center),
                         horizontalAlignment = Alignment.CenterHorizontally
@@ -301,14 +289,13 @@ fun SearchPageResults(
                         )
                         targetSearchState.subTips?.let {
                             Text(
-                                text = stringResource(id = it),
-                                fontSize = 12.sp
+                                text = stringResource(id = it), fontSize = 12.sp
                             )
                         }
                     }
                 }
 
-                is SearchPageState.SearchPageFailed -> {
+                is SearchPageUIState.SearchFailed -> {
                     Column(
                         modifier = Modifier.align(Alignment.Center),
                         horizontalAlignment = Alignment.CenterHorizontally
@@ -320,15 +307,14 @@ fun SearchPageResults(
                         }
                         targetSearchState.subTips?.let {
                             Text(
-                                text = stringResource(id = it),
-                                fontSize = 12.sp
+                                text = stringResource(id = it), fontSize = 12.sp
                             )
                         }
                     }
 
                 }
 
-                is SearchPageState.SearchPageSuccess -> {
+                is SearchPageUIState.SearchSuccess -> {
                     if (targetSearchState.results.isEmpty()) {
                         Column(
                             modifier = Modifier.align(Alignment.Center),
@@ -341,8 +327,7 @@ fun SearchPageResults(
                             }
                             targetSearchState.subTips?.let {
                                 Text(
-                                    text = stringResource(id = it),
-                                    fontSize = 12.sp
+                                    text = stringResource(id = it), fontSize = 12.sp
                                 )
                             }
                         }
@@ -361,7 +346,7 @@ fun SearchPageResults(
 
 @Composable
 fun SearchSuccessPages(
-    searchSuccess: SearchPageState.SearchPageSuccess,
+    searchSuccess: SearchPageUIState.SearchSuccess,
     onBioClick: (Bio) -> Unit,
     onScreenMediaClick: (ScreenMediaFileUrl, List<ScreenMediaFileUrl>) -> Unit,
 ) {
@@ -375,7 +360,8 @@ fun SearchSuccessPages(
     Box {
         HorizontalPager(
             modifier = Modifier.hazeSource(hazeState),
-            state = pagerState, verticalAlignment = Alignment.Top
+            state = pagerState,
+            verticalAlignment = Alignment.Top
         ) { index ->
             when (val searchResult = searchSuccess.results[index]) {
                 is SearchResult.SearchedApplications -> {
@@ -405,7 +391,9 @@ fun SearchSuccessPages(
                 }
 
                 is SearchResult.SearchedGoods -> {
-                    SearchedGoodsListPage(searchResult)
+                    SearchedGoodsListPage(
+                        searchedGoodsList = searchResult
+                    )
                 }
             }
         }
@@ -430,8 +418,7 @@ fun SearchSuccessPages(
                             .clip(CircleShape)
                             .border(1.dp, MaterialTheme.colorScheme.outline, CircleShape)
                             .hazeEffect(
-                                hazeState,
-                                HazeMaterials.thin()
+                                hazeState, HazeMaterials.thin()
                             )
                             .clickable {
                                 coroutineScope.launch {
@@ -440,8 +427,7 @@ fun SearchSuccessPages(
                             }
                             .padding(horizontal = 12.dp, vertical = 6.dp),
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                         val text = when (searchResult) {
                             is SearchResult.SearchedApplications -> {
                                 stringResource(xcj.app.appsets.R.string.application)
@@ -522,14 +508,18 @@ fun NavigationBarAreaGradient(
 }
 
 @Composable
-fun SearchedGoodsListPage(searchedGoodsList: SearchResult.SearchedGoods) {
+fun SearchedGoodsListPage(
+    modifier: Modifier = Modifier, searchedGoodsList: SearchResult.SearchedGoods
+) {
     LazyColumn(
-        modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(
-            top = WindowInsets.systemBars.asPaddingValues().calculateTopPadding(),
-            bottom = 120.dp
+        modifier = modifier.fillMaxSize(), contentPadding = PaddingValues(
+            top = WindowInsets.systemBars.asPaddingValues().calculateTopPadding(), bottom = 120.dp
         )
     ) {
-        items(searchedGoodsList.goodsList) { screenInfo ->
+        items(
+            items = searchedGoodsList.goodsList,
+            key = { item -> item.id }
+        ) { goods ->
 
         }
     }
@@ -537,28 +527,35 @@ fun SearchedGoodsListPage(searchedGoodsList: SearchResult.SearchedGoods) {
 
 @Composable
 fun SearchedScreensPage(
+    modifier: Modifier = Modifier,
     searchedScreens: SearchResult.SearchedScreens,
     onBioClick: (Bio) -> Unit,
     onScreenMediaClick: (ScreenMediaFileUrl, List<ScreenMediaFileUrl>) -> Unit,
 ) {
     ScreensList(
-        modifier = Modifier,
+        modifier = modifier.fillMaxSize(),
+        pageRouteName = PageRouteNames.SearchPage,
         screens = searchedScreens.screens,
         onBioClick = onBioClick,
         onScreenMediaClick = onScreenMediaClick,
-        onLoadMore = {}
-    )
+        onLoadMore = {})
 }
 
 @Composable
-fun SearchedGroupsPage(searchedGroups: SearchResult.SearchedGroups, onBioClick: (Bio) -> Unit) {
+fun SearchedGroupsPage(
+    modifier: Modifier = Modifier,
+    searchedGroups: SearchResult.SearchedGroups,
+    onBioClick: (Bio) -> Unit
+) {
     LazyColumn(
-        modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(
-            top = WindowInsets.systemBars.asPaddingValues().calculateTopPadding(),
-            bottom = 120.dp
+        modifier = modifier.fillMaxSize(), contentPadding = PaddingValues(
+            top = WindowInsets.systemBars.asPaddingValues().calculateTopPadding(), bottom = 120.dp
         )
     ) {
-        items(searchedGroups.groups) { groupInfo ->
+        items(
+            items = searchedGroups.groups,
+            key = GroupInfo::groupId
+        ) { groupInfo ->
             SearchedGroupComponent(
                 modifier = Modifier.clickable {
                     onBioClick.invoke(groupInfo)
@@ -575,11 +572,13 @@ fun SearchedUsersPage(
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(
-            top = WindowInsets.systemBars.asPaddingValues().calculateTopPadding(),
-            bottom = 120.dp
+            top = WindowInsets.systemBars.asPaddingValues().calculateTopPadding(), bottom = 120.dp
         )
     ) {
-        items(searchedUsers.users) { userInfo ->
+        items(
+            items = searchedUsers.users,
+            key = UserInfo::uid
+        ) { userInfo ->
             SearchedUserComponent(
                 modifier = Modifier.clickable {
                     onBioClick.invoke(userInfo)
@@ -591,16 +590,16 @@ fun SearchedUsersPage(
 
 @Composable
 fun SearchedApplicationsPage(
+    modifier: Modifier = Modifier,
     searchedApplications: SearchResult.SearchedApplications,
     onBioClick: (Bio) -> Unit,
 ) {
     LazyVerticalGrid(
         columns = GridCells.Adaptive(90.dp),
-        modifier = Modifier.fillMaxSize(),
+        modifier = modifier.fillMaxSize(),
         state = rememberLazyGridState(),
         contentPadding = PaddingValues(
-            top = WindowInsets.systemBars.asPaddingValues().calculateTopPadding(),
-            bottom = 120.dp
+            top = WindowInsets.systemBars.asPaddingValues().calculateTopPadding(), bottom = 120.dp
         )
     ) {
         itemsIndexed(items = searchedApplications.applications) { index, application ->
@@ -612,8 +611,7 @@ fun SearchedApplicationsPage(
                 },
                 onApplicationLongClick = {
                     onBioClick(application)
-                }
-            )
+                })
         }
     }
 }

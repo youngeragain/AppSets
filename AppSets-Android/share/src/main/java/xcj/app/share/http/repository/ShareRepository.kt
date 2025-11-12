@@ -29,6 +29,7 @@ import xcj.app.share.http.model.ContentInfo
 import xcj.app.share.http.model.ContentInfoList
 import xcj.app.share.util.ShareSystem
 import xcj.app.starter.android.util.PurpleLogger
+import xcj.app.starter.foundation.Provider
 import xcj.app.starter.foundation.http.DesignResponse
 import xcj.app.starter.server.RetrofitProvider
 import xcj.app.starter.util.ContentType
@@ -106,12 +107,17 @@ class ShareRepository() {
 
         PurpleLogger.current.d(TAG, "buildApi, baseUrl:$baseUrl")
         runCatching {
+            val okHttpClientProvider = if (okHttpClient != null) {
+                Provider { okHttpClient }
+            } else {
+                null
+            }
             val shareApi: ShareApi =
                 RetrofitProvider.getService(
-                    baseUrl,
-                    ShareApi::class.java,
-                    okHttpClient,
-                    okHttpClient != null
+                    baseUrl = baseUrl,
+                    clazz = ShareApi::class.java,
+                    okHttpClientProvider = okHttpClientProvider,
+                    reuse = okHttpClientProvider != null
                 )
             return shareApi
         }.onFailure {

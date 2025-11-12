@@ -1,10 +1,7 @@
 package xcj.app.appsets.usecase
 
 import android.content.Context
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableStateOf
 import androidx.core.content.ContextCompat
-import kotlinx.coroutines.delay
 import xcj.app.appsets.server.model.Application
 import xcj.app.appsets.server.repository.AppSetsRepository
 import xcj.app.appsets.ui.model.ApplicationForCreate
@@ -12,9 +9,10 @@ import xcj.app.appsets.ui.model.DownloadInfoForCreate
 import xcj.app.appsets.ui.model.PlatformForCreate
 import xcj.app.appsets.ui.model.ScreenshotInfoForCreate
 import xcj.app.appsets.ui.model.VersionInfoForCreate
-import xcj.app.appsets.ui.model.page_state.CreateApplicationPageState
+import xcj.app.appsets.ui.model.page_state.CreateApplicationPageUIState
+import xcj.app.appsets.util.compose_state.ComposeStateUpdater
+import xcj.app.appsets.util.compose_state.SingleStateUpdater
 import xcj.app.appsets.util.ktx.toast
-import xcj.app.appsets.util.model.UriProvider
 import xcj.app.compose_share.dynamic.ComposeLifecycleAware
 import xcj.app.starter.android.ktx.startWithHttpSchema
 import xcj.app.starter.android.util.PurpleLogger
@@ -27,92 +25,65 @@ class AppCreationUseCase(
         private const val TAG = "AppCreationUseCase"
     }
 
-    private var chooseContentTempAny: Any? = null
-    private var chooseContentTempFiledName: String? = null
-
-    val createApplicationPageState: MutableState<CreateApplicationPageState> =
-        mutableStateOf(CreateApplicationPageState.NewApplicationPage())
-
-    fun inflateApplication(application: Application?) {
-        val state = if (application == null) {
-            CreateApplicationPageState.NewApplicationPage(ApplicationForCreate())
-        } else {
-            val applicationForCreate =
-                ApplicationForCreate.inflateFromApplication(application, null)
-            CreateApplicationPageState.NewApplicationPage(applicationForCreate)
+    fun inflateApplication(applicationForCreate: ApplicationForCreate, application: Application?) {
+        if (application == null) {
+            return
         }
-        createApplicationPageState.value = state
+        ApplicationForCreate.inflateFromApplication(applicationForCreate, application)
     }
 
     override fun onComposeDispose(by: String?) {
-        chooseContentTempAny = null
-        chooseContentTempFiledName = null
-        createApplicationPageState.value = CreateApplicationPageState.NewApplicationPage()
+
     }
 
-    suspend fun finishCreateApp(context: Context) {
-        val createApplicationState = this@AppCreationUseCase.createApplicationPageState.value
-        if (createApplicationState is CreateApplicationPageState.Creating) {
-            ContextCompat.getString(
-                context,
-                xcj.app.appsets.R.string.creating_application_please_wait
-            ).toast()
+    suspend fun finishCreateApp(
+        context: Context,
+        applicationForCreate: ApplicationForCreate,
+        composeStateUpdater: ComposeStateUpdater<CreateApplicationPageUIState>
+    ) {
+        if (composeStateUpdater !is SingleStateUpdater) {
             return
         }
-        val newApplicationState =
-            (this@AppCreationUseCase.createApplicationPageState.value as? CreateApplicationPageState.NewApplicationPage)
-                ?: return
-        val applicationForCreate = newApplicationState.applicationForCreate
+        val createApplicationState = composeStateUpdater.getStateValue()
+        if (createApplicationState !is CreateApplicationPageUIState.CreateStart) {
+            return
+        }
         if (!checkAppIntegrity(context, applicationForCreate)) {
             return
         }
-        this@AppCreationUseCase.createApplicationPageState.value =
-            CreateApplicationPageState.Creating(applicationForCreate)
+        composeStateUpdater.update(CreateApplicationPageUIState.Creating())
         requestRaw(
             action = {
                 val createApplicationPreCheckRes =
-                    appSetsRepository
-                        .createApplicationPreCheck(applicationForCreate.name)
+                    appSetsRepository.createApplicationPreCheck(applicationForCreate.name.value)
                 if (createApplicationPreCheckRes.data != true) {
-                    this@AppCreationUseCase.createApplicationPageState.value =
-                        CreateApplicationPageState.CreateFailedPage(
-                            applicationForCreate,
-                            xcj.app.appsets.R.string.please_use_another_application_name
-                        )
-                    delay(2000)
-                    this@AppCreationUseCase.createApplicationPageState.value =
-                        CreateApplicationPageState.NewApplicationPage(applicationForCreate)
+                    composeStateUpdater.update(
+                        300,
+                        CreateApplicationPageUIState.CreateFailed(xcj.app.appsets.R.string.please_use_another_application_name),
+                        CreateApplicationPageUIState.CreateStart()
+                    )
                     return
                 }
                 val createApplicationRes =
                     appSetsRepository.createApplication(context, applicationForCreate)
                 if (createApplicationRes.data != true) {
-                    this@AppCreationUseCase.createApplicationPageState.value =
-                        CreateApplicationPageState.CreateFailedPage(
-                            applicationForCreate,
-                            xcj.app.appsets.R.string.create_application_failed
-                        )
-                    delay(2000)
-                    this@AppCreationUseCase.createApplicationPageState.value =
-                        CreateApplicationPageState.NewApplicationPage(applicationForCreate)
+                    composeStateUpdater.update(
+                        300,
+                        CreateApplicationPageUIState.CreateFailed(xcj.app.appsets.R.string.create_application_failed),
+                        CreateApplicationPageUIState.CreateStart()
+                    )
                     return
                 }
-                this@AppCreationUseCase.createApplicationPageState.value =
-                    CreateApplicationPageState.CreateSuccessPage(applicationForCreate)
-            }
-        ).onFailure {
+                composeStateUpdater.update(CreateApplicationPageUIState.CreateSuccess())
+            }).onFailure {
             PurpleLogger.current.d(
-                "CreateApplicationUseCase",
-                "finishCreateApp failed:${it}"
+                "CreateApplicationUseCase", "finishCreateApp failed:${it}"
             )
-            this@AppCreationUseCase.createApplicationPageState.value =
-                CreateApplicationPageState.CreateFailedPage(
-                    applicationForCreate,
-                    xcj.app.appsets.R.string.create_application_failed
-                )
-            delay(2000)
-            this@AppCreationUseCase.createApplicationPageState.value =
-                CreateApplicationPageState.NewApplicationPage(applicationForCreate)
+            composeStateUpdater.update(
+                300,
+                CreateApplicationPageUIState.CreateFailed(xcj.app.appsets.R.string.create_application_failed),
+                CreateApplicationPageUIState.CreateStart()
+            )
         }
     }
 
@@ -120,83 +91,80 @@ class AppCreationUseCase(
         context: Context,
         applicationForCreate: ApplicationForCreate,
     ): Boolean {
-        val tempApp = applicationForCreate
-        if (tempApp.iconUriHolder == null) {
+        if (applicationForCreate.iconUriProvider.value == null) {
             String.format(
                 ContextCompat.getString(context, xcj.app.appsets.R.string.please_input_a_template),
                 ContextCompat.getString(context, xcj.app.appsets.R.string.icon)
             ).toast()
             return false
         }
-        if (tempApp.bannerUriHolder == null) {
+        if (applicationForCreate.bannerUriProvider.value == null) {
             String.format(
                 ContextCompat.getString(context, xcj.app.appsets.R.string.please_choose_a_template),
                 "Banner"
             ).toast()
             return false
         }
-        if (tempApp.name.isEmpty()) {
+        if (applicationForCreate.name.value.isEmpty()) {
             String.format(
                 ContextCompat.getString(context, xcj.app.appsets.R.string.please_input_a_template),
                 ContextCompat.getString(context, xcj.app.appsets.R.string.app_name)
             ).toast()
             return false
         }
-        if (tempApp.category.isEmpty()) {
+        if (applicationForCreate.category.value.isEmpty()) {
             String.format(
                 ContextCompat.getString(context, xcj.app.appsets.R.string.please_input_a_template),
                 ContextCompat.getString(context, xcj.app.appsets.R.string.app_types)
             ).toast()
             return false
         }
-        if (tempApp.website.isNotEmpty()) {
-            if (!tempApp.website.startWithHttpSchema()) {
+        if (applicationForCreate.website.value.isNotEmpty()) {
+            if (!applicationForCreate.website.value.startWithHttpSchema()) {
                 String.format(
                     ContextCompat.getString(
-                        context,
-                        xcj.app.appsets.R.string.please_input_a_template
-                    ),
-                    ContextCompat.getString(context, xcj.app.appsets.R.string.website)
+                        context, xcj.app.appsets.R.string.please_input_a_template
+                    ), ContextCompat.getString(context, xcj.app.appsets.R.string.website)
                 ).toast()
                 return false
             }
         }
-        tempApp.platformForCreates.forEach { platformForCreate ->
-            if (platformForCreate.packageName.isEmpty()) {
+        applicationForCreate.platformForCreates.forEach { platformForCreate ->
+            if (platformForCreate.packageName.value.isEmpty()) {
                 "请添加${platformForCreate.name}的应用包名".toast()
                 return false
             }
-            if (platformForCreate.introduction.isEmpty()) {
+            if (platformForCreate.introduction.value.isEmpty()) {
                 "请添加${platformForCreate.name}的介绍".toast()
                 return false
             }
             platformForCreate.versionInfoForCreates.forEach { versionInfoForCreate ->
-                if (versionInfoForCreate.version.isEmpty()) {
+                if (versionInfoForCreate.version.value.isEmpty()) {
                     "请输入${platformForCreate}平台的版本".toast()
                     return false
                 }
-                if (versionInfoForCreate.versionCode.isEmpty()) {
+                if (versionInfoForCreate.versionCode.value.isEmpty()) {
                     "请输入${platformForCreate}平台的版本Code".toast()
                     return false
                 }
-                if (versionInfoForCreate.changes.isEmpty()) {
+                if (versionInfoForCreate.changes.value.isEmpty()) {
                     "请输入${platformForCreate}平台${versionInfoForCreate.version}版本的日志".toast()
                     return false
                 }
-                if (versionInfoForCreate.privacyPolicyUrl.isEmpty()) {
+                if (versionInfoForCreate.privacyPolicyUrl.value.isEmpty()) {
                     "请输入${platformForCreate}平台${versionInfoForCreate.version}版本的隐私链接".toast()
                     return false
                 }
-                if (versionInfoForCreate.versionIconUriHolder == null) {
+                if (versionInfoForCreate.versionIconUriProvider.value == null) {
                     "请选择${platformForCreate}平台${versionInfoForCreate.version}版本的图标".toast()
                     return false
                 }
-                if (versionInfoForCreate.versionBannerUriHolder == null) {
+                if (versionInfoForCreate.versionBannerUriProvider.value == null) {
                     "请选择${platformForCreate}平台${versionInfoForCreate.version}版本的Banner".toast()
                     return false
                 }
                 versionInfoForCreate.downloadInfoForCreates.forEach { downloadInfoForCreate ->
-                    if (!downloadInfoForCreate.url.startWithHttpSchema()) {
+                    if (!downloadInfoForCreate.url.value.startWithHttpSchema()) {
                         "请输入正确的下载链接".toast()
                         return false
                     }
@@ -206,587 +174,81 @@ class AppCreationUseCase(
         return true
     }
 
-    fun setChooseContentTempValues(
-        any: Any,
-        filedName: String,
-    ) {
-        chooseContentTempAny = any
-        chooseContentTempFiledName = filedName
-    }
-
-    fun updateSelectPicture(uri: UriProvider) {
-        val tempAny = chooseContentTempAny
-        val tempFiledName = chooseContentTempFiledName
-        if (tempAny != null && tempFiledName != null) {
-            onApplicationForCreateFiledChanged(tempAny, tempFiledName, uri)
-            chooseContentTempAny = null
-            chooseContentTempFiledName = null
-        }
-    }
-
-    private fun copyApplicationForCreate(applicationForCreate: ApplicationForCreate) {
-        PurpleLogger.current.d(
-            TAG,
-            "copyApplicationForCreate, applicationForCreate:$applicationForCreate"
-        )
-        createApplicationPageState.value =
-            CreateApplicationPageState.NewApplicationPage(applicationForCreate)
-    }
-
-    private fun copyPlatformForCreate(
-        any: PlatformForCreate,
-        platformForCreate: PlatformForCreate,
-    ) {
-        val newApplicationState =
-            (createApplicationPageState.value as? CreateApplicationPageState.NewApplicationPage)
-                ?: return
-        PurpleLogger.current.d(TAG, "copyPlatformForCreate, platformForCreate:$platformForCreate")
-        val applicationForCreate = newApplicationState.applicationForCreate
-        var doCopy = false
-        val platformForCreates = applicationForCreate.platformForCreates.toMutableList()
-        val indexPlatform = platformForCreates.indexOfFirst {
-            it.name == any.name
-        }
-        if (indexPlatform != -1) {
-            platformForCreates.removeAt(indexPlatform)
-            platformForCreates.add(indexPlatform, platformForCreate)
-            doCopy = true
-        }
-        if (!doCopy) {
-            PurpleLogger.current.d(
-                TAG,
-                "copyPlatformForCreate, not to copy return."
-            )
-            return
-        }
-        val newApplicationForCreate =
-            applicationForCreate.copy(platformForCreates = platformForCreates)
-        createApplicationPageState.value =
-            newApplicationState.copy(applicationForCreate = newApplicationForCreate)
-    }
-
-    private fun copyVersionInfoForCreate(
-        any: VersionInfoForCreate,
-        versionInfoForCreate: VersionInfoForCreate,
-    ) {
-        val newApplicationState =
-            (createApplicationPageState.value as? CreateApplicationPageState.NewApplicationPage)
-                ?: return
-        PurpleLogger.current.d(
-            TAG,
-            "copyVersionInfoForCreate, versionInfoForCreate:$versionInfoForCreate"
-        )
-        val applicationForCreate = newApplicationState.applicationForCreate
-        var doCopy = false
-        val platformForCreates = applicationForCreate.platformForCreates.toMutableList()
-        var indexVersion = -1
-        val indexPlatform = platformForCreates.indexOfFirst { platformForCreate ->
-            val versionInfoForCreates = platformForCreate.versionInfoForCreates
-            indexVersion = versionInfoForCreates.indexOfFirst { versionInfoForCreate ->
-                versionInfoForCreate.id == any.id
-            }
-            indexVersion != -1
-        }
-        if (indexPlatform != -1 && indexVersion != -1) {
-            val platformForCreate = platformForCreates[indexPlatform]
-            val versionInfoForCreates =
-                platformForCreate.versionInfoForCreates.toMutableList().apply {
-                    removeAt(indexVersion)
-                    add(indexVersion, versionInfoForCreate)
-                }
-            val newPlatformForCreate =
-                platformForCreate.copy(versionInfoForCreates = versionInfoForCreates)
-            platformForCreates.removeAt(indexPlatform)
-            platformForCreates.add(indexPlatform, newPlatformForCreate)
-            doCopy = true
-        }
-        if (!doCopy) {
-            PurpleLogger.current.d(
-                TAG,
-                "copyVersionInfoForCreate, not to copy return."
-            )
-            return
-        }
-        val newApplicationForCreate =
-            applicationForCreate.copy(platformForCreates = platformForCreates)
-        createApplicationPageState.value =
-            newApplicationState.copy(applicationForCreate = newApplicationForCreate)
-    }
-
-    private fun copyScreenshotInfoForCreate(
-        any: ScreenshotInfoForCreate,
-        screenshotInfoForCreate: ScreenshotInfoForCreate,
-    ) {
-        val newApplicationState =
-            (createApplicationPageState.value as? CreateApplicationPageState.NewApplicationPage)
-                ?: return
-        PurpleLogger.current.d(
-            TAG,
-            "copyScreenshotInfoForCreate, screenshotInfoForCreate:$screenshotInfoForCreate"
-        )
-        val applicationForCreate = newApplicationState.applicationForCreate
-        var doCopy = false
-        val platformForCreates = applicationForCreate.platformForCreates.toMutableList()
-        var indexScreenshot = -1
-        var indexVersion = -1
-        val indexPlatform = platformForCreates.indexOfFirst { platformForCreate ->
-            val versionInfoForCreates = platformForCreate.versionInfoForCreates
-            indexVersion = versionInfoForCreates.indexOfFirst { versionInfoForCreate ->
-                val screenshotInfoForCreates =
-                    versionInfoForCreate.screenshotInfoForCreates
-                indexScreenshot =
-                    screenshotInfoForCreates.indexOfFirst { screenshotInfoForCreate1 ->
-                        screenshotInfoForCreate1.id == any.id
-                    }
-                indexScreenshot != -1
-            }
-            indexVersion != -1
-        }
-        if (indexPlatform != -1 && indexVersion != -1 && indexScreenshot != -1) {
-            val platformForCreate = platformForCreates[indexPlatform]
-
-            val versionInfoForCreates = platformForCreate.versionInfoForCreates.toMutableList()
-            val versionInfoForCreate = versionInfoForCreates[indexVersion]
-            val screenshotInfoForCreates =
-                versionInfoForCreate.screenshotInfoForCreates.toMutableList()
-            screenshotInfoForCreates.removeAt(indexScreenshot)
-            screenshotInfoForCreates.add(indexScreenshot, screenshotInfoForCreate)
-
-            val newVersionInfoForCreate =
-                versionInfoForCreate.copy(screenshotInfoForCreates = screenshotInfoForCreates)
-
-            versionInfoForCreates.removeAt(indexVersion)
-            versionInfoForCreates.add(indexVersion, newVersionInfoForCreate)
-
-            val newPlatformForCreate =
-                platformForCreate.copy(versionInfoForCreates = versionInfoForCreates)
-            platformForCreates.removeAt(indexPlatform)
-            platformForCreates.add(indexPlatform, newPlatformForCreate)
-            doCopy = true
-        }
-        if (!doCopy) {
-            PurpleLogger.current.d(
-                TAG,
-                "copyScreenshotInfoForCreate, not to copy return."
-            )
-            return
-        }
-        val newApplicationForCreate =
-            applicationForCreate.copy(platformForCreates = platformForCreates)
-        createApplicationPageState.value =
-            newApplicationState.copy(applicationForCreate = newApplicationForCreate)
-    }
-
-    private fun copyDownloadInfoForCreate(
-        any: DownloadInfoForCreate,
-        downloadInfoForCreate: DownloadInfoForCreate,
-    ) {
-        val newApplicationState =
-            (createApplicationPageState.value as? CreateApplicationPageState.NewApplicationPage)
-                ?: return
-        PurpleLogger.current.d(
-            TAG,
-            "copyDownloadInfoForCreate, downloadInfoForCreate:$downloadInfoForCreate"
-        )
-        val applicationForCreate = newApplicationState.applicationForCreate
-        var doCopy = false
-        val platformForCreates = applicationForCreate.platformForCreates.toMutableList()
-        var indexDownload = -1
-        var indexVersion = -1
-        val indexPlatform = platformForCreates.indexOfFirst { platformForCreate ->
-            val versionInfoForCreates = platformForCreate.versionInfoForCreates
-            indexVersion = versionInfoForCreates.indexOfFirst { versionInfoForCreate ->
-                val downloadInfoForCreates = versionInfoForCreate.downloadInfoForCreates
-
-                indexDownload =
-                    downloadInfoForCreates.indexOfFirst { downloadInfoForCreate1 ->
-                        downloadInfoForCreate1.id == any.id
-                    }
-                indexDownload != -1
-            }
-            indexVersion != -1
-        }
-        if (indexPlatform != -1 && indexVersion != -1 && indexDownload != -1) {
-            val platformForCreate = platformForCreates[indexPlatform]
-
-            val versionInfoForCreates = platformForCreate.versionInfoForCreates.toMutableList()
-            val versionInfoForCreate = versionInfoForCreates[indexVersion]
-            val downloadInfoForCreates = versionInfoForCreate.downloadInfoForCreates.toMutableList()
-            downloadInfoForCreates.removeAt(indexDownload)
-            downloadInfoForCreates.add(indexDownload, downloadInfoForCreate)
-
-            val newVersionInfoForCreate =
-                versionInfoForCreate.copy(downloadInfoForCreates = downloadInfoForCreates)
-
-            versionInfoForCreates.removeAt(indexVersion)
-            versionInfoForCreates.add(indexVersion, newVersionInfoForCreate)
-
-            val newPlatformForCreate =
-                platformForCreate.copy(versionInfoForCreates = versionInfoForCreates)
-            platformForCreates.removeAt(indexPlatform)
-            platformForCreates.add(indexPlatform, newPlatformForCreate)
-            doCopy = true
-        }
-        if (!doCopy) {
-            PurpleLogger.current.d(
-                TAG,
-                "copyDownloadInfoForCreate, not to copy return."
-            )
-            return
-        }
-        val newApplicationForCreate =
-            applicationForCreate.copy(platformForCreates = platformForCreates)
-        createApplicationPageState.value =
-            newApplicationState.copy(applicationForCreate = newApplicationForCreate)
-    }
-
-    fun onApplicationForCreateFiledChanged(any: Any, filedName: String, filedValue: Any) {
-        PurpleLogger.current.d(
-            TAG,
-            "onApplicationForCreateFiledChanged, any:${any}, filedName:$filedName, filedValue:${filedValue}"
-        )
-        when (any) {
-            is ApplicationForCreate -> {
-                when (filedName) {
-                    ApplicationForCreate.FILED_NAME_ICON_URI_HOLDER -> {
-                        copyApplicationForCreate(any.copy(iconUriHolder = filedValue as? UriProvider))
-                    }
-
-                    ApplicationForCreate.FILED_NAME_BANNER_URI_HOLDER -> {
-                        copyApplicationForCreate(any.copy(bannerUriHolder = filedValue as? UriProvider))
-                    }
-
-                    ApplicationForCreate.FILED_NAME_NAME -> {
-                        copyApplicationForCreate(any.copy(name = (filedValue as? String) ?: ""))
-                    }
-
-                    ApplicationForCreate.FILED_NAME_CATEGORY -> {
-                        copyApplicationForCreate(any.copy(category = (filedValue as? String) ?: ""))
-                    }
-
-                    ApplicationForCreate.FILED_NAME_WEBSITE -> {
-                        copyApplicationForCreate(any.copy(website = (filedValue as? String) ?: ""))
-                    }
-
-                    ApplicationForCreate.FILED_NAME_DEVELOPER_INFO -> {
-                        copyApplicationForCreate(
-                            any.copy(
-                                developerInfo = (filedValue as? String) ?: ""
-                            )
-                        )
-                    }
-
-                    ApplicationForCreate.FILED_NAME_PRICE -> {
-                        copyApplicationForCreate(any.copy(price = (filedValue as? String) ?: ""))
-                    }
-
-                    ApplicationForCreate.FILED_NAME_PRICE_UNIT -> {
-                        copyApplicationForCreate(
-                            any.copy(
-                                priceUnit = (filedValue as? String) ?: ""
-                            )
-                        )
-                    }
-                }
-            }
-
-            is PlatformForCreate -> {
-                when (filedName) {
-                    PlatformForCreate.FILED_NAME_PACKAGE -> {
-                        copyPlatformForCreate(
-                            any,
-                            any.copy(packageName = (filedValue as? String) ?: "")
-                        )
-                    }
-
-                    PlatformForCreate.FILED_NAME_INTRODUCTION -> {
-                        copyPlatformForCreate(
-                            any,
-                            any.copy(introduction = (filedValue as? String) ?: "")
-                        )
-                    }
-                }
-            }
-
-            is VersionInfoForCreate -> {
-                when (filedName) {
-                    VersionInfoForCreate.FILED_NAME_VERSION -> {
-                        copyVersionInfoForCreate(
-                            any,
-                            any.copy(version = (filedValue as? String) ?: "")
-                        )
-                    }
-
-                    VersionInfoForCreate.FILED_NAME_VERSION_CODE -> {
-                        copyVersionInfoForCreate(
-                            any,
-                            any.copy(versionCode = (filedValue as? String) ?: "")
-                        )
-                    }
-
-                    VersionInfoForCreate.FILED_NAME_CHANGES -> {
-                        copyVersionInfoForCreate(
-                            any,
-                            any.copy(changes = (filedValue as? String) ?: "")
-                        )
-                    }
-
-                    VersionInfoForCreate.FILED_NAME_ICON_URI_HOLDER -> {
-                        copyVersionInfoForCreate(
-                            any,
-                            any.copy(versionIconUriHolder = (filedValue as? UriProvider))
-                        )
-                    }
-
-                    VersionInfoForCreate.FILED_NAME_BANNER_URI_HOLDER -> {
-                        copyVersionInfoForCreate(
-                            any,
-                            any.copy(versionBannerUriHolder = (filedValue as? UriProvider))
-                        )
-                    }
-
-                    VersionInfoForCreate.FILED_NAME_PACKAGE_SIZE -> {
-                        copyVersionInfoForCreate(
-                            any,
-                            any.copy(packageSize = (filedValue as? String) ?: "")
-                        )
-                    }
-
-                    VersionInfoForCreate.FILED_NAME_PRIVACY_POLICY_URL -> {
-                        copyVersionInfoForCreate(
-                            any,
-                            any.copy(privacyPolicyUrl = (filedValue as? String) ?: "")
-                        )
-                    }
-                }
-            }
-
-            is ScreenshotInfoForCreate -> {
-                when (filedName) {
-                    ScreenshotInfoForCreate.FILED_NAME_URI_HOLDER -> {
-                        copyScreenshotInfoForCreate(
-                            any,
-                            any.copy(uriHolder = filedValue as? UriProvider)
-                        )
-                    }
-
-                    ScreenshotInfoForCreate.FILED_NAME_TYPE -> {
-                        copyScreenshotInfoForCreate(any, any.copy(type = filedValue as? String))
-                    }
-                }
-            }
-
-            is DownloadInfoForCreate -> {
-                when (filedName) {
-                    DownloadInfoForCreate.FILED_NAME_URL -> {
-                        copyDownloadInfoForCreate(
-                            any,
-                            any.copy(url = (filedValue as? String) ?: "")
-                        )
-                    }
-                }
-            }
-        }
-    }
-
     fun deleteVersionInPlatform(
         platformForCreate: PlatformForCreate,
         versionInfoForCreate: VersionInfoForCreate,
     ) {
-
-        val newApplicationState =
-            (createApplicationPageState.value as? CreateApplicationPageState.NewApplicationPage)
-                ?: return
-        val applicationForCreate = newApplicationState.applicationForCreate
-
-        val newVersionInfoForCreates =
-            platformForCreate.versionInfoForCreates.toMutableList().apply {
-                remove(versionInfoForCreate)
-            }
-        val newPlatformForCreate =
-            platformForCreate.copy(versionInfoForCreates = newVersionInfoForCreates)
-        val newPlatformForCreates = applicationForCreate.platformForCreates.toMutableList().apply {
-            val indexPlatform = indexOfFirst { it.id == platformForCreate.id }
-            if (indexPlatform != -1) {
-                removeAt(indexPlatform)
-                add(indexPlatform, newPlatformForCreate)
-            } else {
-                add(newPlatformForCreate)
-            }
-        }
-
-        val newApplicationForCreate =
-            applicationForCreate.copy(platformForCreates = newPlatformForCreates)
-
-        createApplicationPageState.value =
-            newApplicationState.copy(applicationForCreate = newApplicationForCreate)
+        platformForCreate.versionInfoForCreates.remove(versionInfoForCreate)
     }
 
     fun deleteDownloadInfoInVersion(
-        platformForCreate: PlatformForCreate,
         versionInfoForCreate: VersionInfoForCreate,
         downloadInfoForCreate: DownloadInfoForCreate,
     ) {
-        val newApplicationState =
-            (createApplicationPageState.value as? CreateApplicationPageState.NewApplicationPage)
-                ?: return
-        val applicationForCreate = newApplicationState.applicationForCreate
-
-        val newDownloadInfoForCreates =
-            versionInfoForCreate.downloadInfoForCreates.toMutableList().apply {
-                remove(downloadInfoForCreate)
-            }
-        val newVersionInfoForCreate =
-            versionInfoForCreate.copy(downloadInfoForCreates = newDownloadInfoForCreates)
-
-        val newVersionInfoList = platformForCreate.versionInfoForCreates.toMutableList().apply {
-            val indexVersion = indexOfFirst { it.id == versionInfoForCreate.id }
-            if (indexVersion != -1) {
-                removeAt(indexVersion)
-                add(indexVersion, newVersionInfoForCreate)
-            } else {
-                add(newVersionInfoForCreate)
-            }
-
-        }
-        val newPlatformForCreate =
-            platformForCreate.copy(versionInfoForCreates = newVersionInfoList)
-        val newPlatformForCreates = applicationForCreate.platformForCreates.toMutableList().apply {
-            val indexPlatform = indexOfFirst { it.id == platformForCreate.id }
-            if (indexPlatform != -1) {
-                removeAt(indexPlatform)
-                add(indexPlatform, newPlatformForCreate)
-            } else {
-                add(newPlatformForCreate)
-            }
-        }
-
-        val newApplicationForCreate =
-            applicationForCreate.copy(platformForCreates = newPlatformForCreates)
-
-        createApplicationPageState.value =
-            newApplicationState.copy(applicationForCreate = newApplicationForCreate)
+        versionInfoForCreate.downloadInfoForCreates.remove(downloadInfoForCreate)
     }
 
-    fun deleteScreenInfoInVersion(
-        platformForCreate: PlatformForCreate,
+    fun deleteScreenShotInfoInVersion(
         versionInfoForCreate: VersionInfoForCreate,
         screenshotInfoForCreate: ScreenshotInfoForCreate,
     ) {
-        val newApplicationState =
-            (createApplicationPageState.value as? CreateApplicationPageState.NewApplicationPage)
-                ?: return
-        val applicationForCreate = newApplicationState.applicationForCreate
-
-        val newScreenshotInfoForCreates =
-            versionInfoForCreate.screenshotInfoForCreates.toMutableList().apply {
-                remove(screenshotInfoForCreate)
-            }
-        val newVersionInfoForCreate =
-            versionInfoForCreate.copy(screenshotInfoForCreates = newScreenshotInfoForCreates)
-
-        val newVersionInfoList = platformForCreate.versionInfoForCreates.toMutableList().apply {
-            val indexVersion = indexOfFirst { it.id == versionInfoForCreate.id }
-            if (indexVersion != -1) {
-                removeAt(indexVersion)
-                add(indexVersion, newVersionInfoForCreate)
-            } else {
-                add(newVersionInfoForCreate)
-            }
-        }
-        val newPlatformForCreate =
-            platformForCreate.copy(versionInfoForCreates = newVersionInfoList)
-        val newPlatformForCreates = applicationForCreate.platformForCreates.toMutableList().apply {
-            val indexPlatform = indexOfFirst { it.id == platformForCreate.id }
-            if (indexPlatform != -1) {
-                removeAt(indexPlatform)
-                add(indexPlatform, newPlatformForCreate)
-            } else {
-                add(newPlatformForCreate)
-            }
-        }
-
-        val newApplicationForCreate =
-            applicationForCreate.copy(platformForCreates = newPlatformForCreates)
-
-        createApplicationPageState.value =
-            newApplicationState.copy(applicationForCreate = newApplicationForCreate)
+        versionInfoForCreate.screenshotInfoForCreates.remove(screenshotInfoForCreate)
     }
 
-    fun getPlatformForCreateByName(platformName: String?): PlatformForCreate? {
+    fun getPlatformForCreateByName(
+        applicationForCreate: ApplicationForCreate,
+        platformName: String?
+    ): PlatformForCreate? {
         if (platformName.isNullOrEmpty()) {
-            return getLastPlatformForCreateOrNull()
+            return getLastPlatformForCreateOrNull(applicationForCreate)
         }
-        return getOrCreatePlatformIfNeeded(platformName)
+        return getOrCreatePlatformIfNeeded(applicationForCreate, platformName)
     }
 
-    private fun getOrCreatePlatformIfNeeded(platformName: String): PlatformForCreate {
-        val newApplicationState =
-            (createApplicationPageState.value as? CreateApplicationPageState.NewApplicationPage)
-                ?: throw IllegalStateException()
-
-        val applicationForCreate = newApplicationState.applicationForCreate
+    private fun getOrCreatePlatformIfNeeded(
+        applicationForCreate: ApplicationForCreate,
+        platformName: String
+    ): PlatformForCreate {
 
         val platformForCreates = applicationForCreate.platformForCreates
-        var platformForCreate = platformForCreates.firstOrNull { it.name == platformName }
+        var platformForCreate = platformForCreates.firstOrNull { it.name.value == platformName }
         if (platformForCreate != null) {
             PurpleLogger.current.d(TAG, "getOrCreatePlatformIfNeeded, exist:${platformForCreate}")
             return platformForCreate
         }
 
-        val newPlatformForCreates = platformForCreates.toMutableList()
-        platformForCreate = PlatformForCreate(name = platformName)
-        newPlatformForCreates.add(platformForCreate)
-
-        val newApplicationForCreate =
-            applicationForCreate.copy(platformForCreates = newPlatformForCreates)
-        createApplicationPageState.value =
-            newApplicationState.copy(applicationForCreate = newApplicationForCreate)
+        platformForCreate = PlatformForCreate()
+        platformForCreate.name.value = platformName
+        platformForCreates.add(platformForCreate)
         PurpleLogger.current.d(TAG, "getOrCreatePlatformIfNeeded, new:${platformForCreate}")
         return platformForCreate
     }
 
-    fun removePlatformForCreateByName(platformName: String) {
-        val newApplicationState =
-            (createApplicationPageState.value as? CreateApplicationPageState.NewApplicationPage)
-                ?: return
-
-        val applicationForCreate = newApplicationState.applicationForCreate
-
-        val newPlatformForCreates = applicationForCreate.platformForCreates.toMutableList().apply {
-            removeIf { it.name == platformName }
+    fun removePlatformForCreateByName(
+        applicationForCreate: ApplicationForCreate, platformName: String
+    ) {
+        applicationForCreate.platformForCreates.apply {
+            removeIf { it.name.value == platformName }
         }
-
-        val newApplicationForCreate =
-            applicationForCreate.copy(platformForCreates = newPlatformForCreates)
-        createApplicationPageState.value =
-            newApplicationState.copy(applicationForCreate = newApplicationForCreate)
-
     }
 
-    fun getLastPlatformForCreateOrNull(): PlatformForCreate? {
-        val newApplicationState =
-            (createApplicationPageState.value as? CreateApplicationPageState.NewApplicationPage)
-                ?: return null
-        val applicationForCreate = newApplicationState.applicationForCreate
+    fun getLastPlatformForCreateOrNull(
+        applicationForCreate: ApplicationForCreate
+    ): PlatformForCreate? {
         val platformForCreate = applicationForCreate.platformForCreates.lastOrNull()
         PurpleLogger.current.d(
-            TAG,
-            "getLastPlatformForCreateOrNull, platformForCreate:${platformForCreate}"
+            TAG, "getLastPlatformForCreateOrNull, platformForCreate:${platformForCreate}"
         )
         return platformForCreate
     }
 
-    fun getPlatformForCreateById(platformId: String): PlatformForCreate? {
-        val newApplicationState =
-            (createApplicationPageState.value as? CreateApplicationPageState.NewApplicationPage)
-                ?: return null
-        val applicationForCreate = newApplicationState.applicationForCreate
+    fun getPlatformForCreateById(
+        applicationForCreate: ApplicationForCreate, platformId: String
+    ): PlatformForCreate? {
         val platformForCreate =
             applicationForCreate.platformForCreates.firstOrNull { it.id == platformId }
         PurpleLogger.current.d(
-            TAG,
-            "getPlatformForCreateById:${platformForCreate}"
+            TAG, "getPlatformForCreateById:${platformForCreate}"
         )
         return platformForCreate
     }
@@ -795,135 +257,28 @@ class AppCreationUseCase(
         platformForCreate: PlatformForCreate,
         versionInfoId: String,
     ): VersionInfoForCreate? {
-        val newApplicationState =
-            (createApplicationPageState.value as? CreateApplicationPageState.NewApplicationPage)
-                ?: return null
-        val applicationForCreate = newApplicationState.applicationForCreate
-        return applicationForCreate.platformForCreates.flatMap {
-            it.versionInfoForCreates
-        }.firstOrNull {
+        return platformForCreate.versionInfoForCreates.firstOrNull {
             it.id == versionInfoId
         }
     }
 
     fun addVersionInfoForCreate(platformForCreate: PlatformForCreate) {
-        val newApplicationState =
-            (createApplicationPageState.value as? CreateApplicationPageState.NewApplicationPage)
-                ?: return
-        val applicationForCreate = newApplicationState.applicationForCreate
         val versionInfoForCreate = VersionInfoForCreate()
-        val versionInfoForCreates = platformForCreate.versionInfoForCreates.toMutableList().apply {
-            add(versionInfoForCreate)
-        }
-        val newPlatformForCreate =
-            platformForCreate.copy(versionInfoForCreates = versionInfoForCreates)
-        val newPlatformForCreates = applicationForCreate.platformForCreates.toMutableList().apply {
-            val indexPlatform = indexOfFirst { it.id == platformForCreate.id }
-            if (indexPlatform != -1) {
-                removeAt(indexPlatform)
-                add(indexPlatform, newPlatformForCreate)
-            } else {
-                add(newPlatformForCreate)
-            }
-        }
-        val newApplicationForCreate =
-            applicationForCreate.copy(platformForCreates = newPlatformForCreates)
-        createApplicationPageState.value =
-            newApplicationState.copy(applicationForCreate = newApplicationForCreate)
+        platformForCreate.versionInfoForCreates.add(versionInfoForCreate)
     }
 
     fun addScreenshotForCreate(
-        platformForCreate: PlatformForCreate,
         versionInfoForCreate: VersionInfoForCreate,
     ): ScreenshotInfoForCreate {
-        val newApplicationState =
-            (createApplicationPageState.value as? CreateApplicationPageState.NewApplicationPage)
-                ?: throw IllegalStateException()
-        val applicationForCreate = newApplicationState.applicationForCreate
-
         val screenshotInfoForCreate = ScreenshotInfoForCreate()
-
-        val screenshotInfoForCreates =
-            versionInfoForCreate.screenshotInfoForCreates.toMutableList().apply {
-                add(screenshotInfoForCreate)
-            }
-
-        val newVersionInfoForCreate =
-            versionInfoForCreate.copy(screenshotInfoForCreates = screenshotInfoForCreates)
-
-        val versionInfoForCreates = platformForCreate.versionInfoForCreates.toMutableList().apply {
-            val indexVersion = indexOfFirst { it.id == versionInfoForCreate.id }
-            if (indexVersion != -1) {
-                removeAt(indexVersion)
-                add(indexVersion, newVersionInfoForCreate)
-            } else {
-                add(newVersionInfoForCreate)
-            }
-        }
-        val newPlatformForCreate =
-            platformForCreate.copy(versionInfoForCreates = versionInfoForCreates)
-        val newPlatformForCreates = applicationForCreate.platformForCreates.toMutableList().apply {
-            val indexPlatform = indexOfFirst { it.id == platformForCreate.id }
-            if (indexPlatform != -1) {
-                removeAt(indexPlatform)
-                add(indexPlatform, newPlatformForCreate)
-            } else {
-                add(newPlatformForCreate)
-            }
-        }
-        val newApplicationForCreate =
-            applicationForCreate.copy(platformForCreates = newPlatformForCreates)
-        createApplicationPageState.value =
-            newApplicationState.copy(applicationForCreate = newApplicationForCreate)
-
+        versionInfoForCreate.screenshotInfoForCreates.add(screenshotInfoForCreate)
         return screenshotInfoForCreate
     }
 
     fun addDownloadInfoForCreate(
-        platformForCreate: PlatformForCreate,
         versionInfoForCreate: VersionInfoForCreate,
-    ): DownloadInfoForCreate {
-
-        val newApplicationState =
-            (createApplicationPageState.value as? CreateApplicationPageState.NewApplicationPage)
-                ?: throw IllegalStateException()
-        val applicationForCreate = newApplicationState.applicationForCreate
-
+    ) {
         val downloadInfoForCreate = DownloadInfoForCreate()
-
-        val downloadInfoForCreates =
-            versionInfoForCreate.downloadInfoForCreates.toMutableList().apply {
-                add(downloadInfoForCreate)
-            }
-
-        val newVersionInfoForCreate =
-            versionInfoForCreate.copy(downloadInfoForCreates = downloadInfoForCreates)
-
-        val versionInfoForCreates = platformForCreate.versionInfoForCreates.toMutableList().apply {
-            val indexVersion = indexOfFirst { it.id == versionInfoForCreate.id }
-            if (indexVersion != -1) {
-                removeAt(indexVersion)
-                add(indexVersion, newVersionInfoForCreate)
-            } else {
-                add(newVersionInfoForCreate)
-            }
-        }
-        val newPlatformForCreate =
-            platformForCreate.copy(versionInfoForCreates = versionInfoForCreates)
-        val newPlatformForCreates = applicationForCreate.platformForCreates.toMutableList().apply {
-            val indexPlatform = indexOfFirst { it.id == platformForCreate.id }
-            if (indexPlatform != -1) {
-                removeAt(indexPlatform)
-                add(indexPlatform, newPlatformForCreate)
-            } else {
-                add(newPlatformForCreate)
-            }
-        }
-        val newApplicationForCreate =
-            applicationForCreate.copy(platformForCreates = newPlatformForCreates)
-        createApplicationPageState.value =
-            newApplicationState.copy(applicationForCreate = newApplicationForCreate)
-
-        return downloadInfoForCreate
+        versionInfoForCreate.downloadInfoForCreates.add(downloadInfoForCreate)
     }
 }

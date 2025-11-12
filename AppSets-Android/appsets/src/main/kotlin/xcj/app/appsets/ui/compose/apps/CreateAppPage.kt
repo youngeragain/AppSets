@@ -30,6 +30,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
@@ -39,14 +41,14 @@ import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SuggestionChip
-import androidx.compose.material3.SuggestionChipDefaults
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
@@ -75,33 +77,54 @@ import xcj.app.appsets.constants.Constants
 import xcj.app.appsets.server.model.AppPlatform
 import xcj.app.appsets.server.model.VersionInfo
 import xcj.app.appsets.ui.compose.LocalUseCaseOfAppCreation
+import xcj.app.appsets.ui.compose.content_selection.ContentSelectionResult
 import xcj.app.appsets.ui.compose.custom_component.AnyImage
 import xcj.app.appsets.ui.compose.custom_component.HideNavBar
 import xcj.app.appsets.ui.model.ApplicationForCreate
-import xcj.app.appsets.ui.model.DownloadInfoForCreate
 import xcj.app.appsets.ui.model.PlatformForCreate
-import xcj.app.appsets.ui.model.ScreenshotInfoForCreate
 import xcj.app.appsets.ui.model.VersionInfoForCreate
-import xcj.app.appsets.ui.model.page_state.CreateApplicationPageState
+import xcj.app.appsets.ui.model.page_state.CreateApplicationPageUIState
+import xcj.app.appsets.ui.viewmodel.MainViewModel
+import xcj.app.appsets.util.compose_state.ComposeStateUpdater
+import xcj.app.appsets.util.compose_state.RuntimeSingleStateUpdater
 import xcj.app.appsets.util.ktx.toast
-import xcj.app.appsets.util.model.UriProvider
 import xcj.app.compose_share.components.BackActionTopBar
 import xcj.app.compose_share.components.DesignTextField
 import xcj.app.compose_share.components.DesignVDivider
 import xcj.app.compose_share.components.LocalVisibilityComposeStateProvider
 import xcj.app.compose_share.ui.viewmodel.VisibilityComposeStateViewModel.Companion.bottomSheetState
+import xcj.app.starter.android.util.PurpleLogger
+import xcj.app.starter.android.util.UriProvider
+
+private const val TAG = "CreateAppPage"
 
 @UnstableApi
 @Preview(showBackground = true)
 @Composable
 fun CreateAppPagePreview() {
-    CreateAppPage(
-        createApplicationPageState = CreateApplicationPageState.NewApplicationPage(),
-        onBackClick = {},
-        onApplicationForCreateFiledChanged = { a, b, c -> },
-        onChoosePictureClick = { a, b, c -> },
-        onConfirmClick = {},
-    )
+    val createApplicationPageUIState by remember {
+        mutableStateOf(CreateApplicationPageUIState.CreateStart())
+    }
+    val applicationForCreate by remember {
+        mutableStateOf(ApplicationForCreate())
+    }
+    val mainViewModel = remember {
+        MainViewModel()
+    }
+    CompositionLocalProvider(
+        LocalUseCaseOfAppCreation provides mainViewModel.appCreationUseCase,
+        LocalVisibilityComposeStateProvider provides mainViewModel
+    ) {
+        CreateAppPage(
+            createApplicationPageUIState = createApplicationPageUIState,
+            applicationForCreate = applicationForCreate,
+            onBackClick = {},
+            onChoosePictureClick = { requestKey, requestMaxCount, composeStateUpdater -> },
+            onConfirmClick = { applicationForCreate ->
+
+            },
+        )
+    }
 }
 
 @OptIn(ExperimentalLayoutApi::class, ExperimentalFoundationApi::class)
@@ -110,11 +133,11 @@ fun CreateAppPage(
     createStep: String = ApplicationForCreate.CREATE_STEP_APPLICATION,
     platform: AppPlatform? = null,
     versionInfo: VersionInfo? = null,
-    createApplicationPageState: CreateApplicationPageState,
+    createApplicationPageUIState: CreateApplicationPageUIState,
+    applicationForCreate: ApplicationForCreate,
     onBackClick: () -> Unit,
-    onApplicationForCreateFiledChanged: (Any, String, String) -> Unit,
-    onChoosePictureClick: (Any, String, UriProvider?) -> Unit,
-    onConfirmClick: () -> Unit,
+    onChoosePictureClick: (String, Int, ComposeStateUpdater<*>) -> Unit,
+    onConfirmClick: (ApplicationForCreate) -> Unit,
 ) {
     HideNavBar()
     val appCreationUseCase = LocalUseCaseOfAppCreation.current
@@ -124,8 +147,8 @@ fun CreateAppPage(
             appCreationUseCase.onComposeDispose("page dispose")
         }
     }
-    LaunchedEffect(createApplicationPageState) {
-        if (createApplicationPageState is CreateApplicationPageState.CreateSuccessPage) {
+    LaunchedEffect(createApplicationPageUIState) {
+        if (createApplicationPageUIState is CreateApplicationPageUIState.CreateSuccess) {
             onBackClick()
         }
     }
@@ -179,20 +202,24 @@ fun CreateAppPage(
             val platformForCreate by remember {
                 derivedStateOf {
                     if (platform != null) {
-                        appCreationUseCase.getPlatformForCreateById(platform.id ?: "")
+                        appCreationUseCase.getPlatformForCreateById(
+                            applicationForCreate,
+                            platform.id ?: ""
+                        )
                     } else {
-                        appCreationUseCase.getPlatformForCreateByName(newPlatformName)
+                        appCreationUseCase.getPlatformForCreateByName(
+                            applicationForCreate,
+                            newPlatformName
+                        )
                     }
                 }
             }
-            val applicationForCreate = createApplicationPageState.applicationForCreate
+
             LazyColumn(
                 modifier = Modifier, contentPadding = PaddingValues(
                     top = backActionsHeight + 12.dp
                 )
-            )
-            {
-
+            ) {
                 item {
                     Column(
                         modifier = Modifier
@@ -202,36 +229,35 @@ fun CreateAppPage(
                         IconAndBanner(
                             createStep = createStep,
                             showSelect = createStep == ApplicationForCreate.CREATE_STEP_APPLICATION,
-                            valueHost = applicationForCreate,
-                            iconUseAge = "app_icon",
-                            bannerUseAge = "banner_icon",
-                            iconUriHolder = applicationForCreate.iconUriHolder,
-                            bannerUriProvider = applicationForCreate.bannerUriHolder,
+                            iconKey = "app_icon",
+                            bannerKey = "banner_icon",
+                            iconUriProviderState = applicationForCreate.iconUriProvider,
+                            bannerUriProviderState = applicationForCreate.bannerUriProvider,
                             onChoosePictureClick = onChoosePictureClick
                         )
                         TextOrTextFiled(
                             isField = createStep == ApplicationForCreate.CREATE_STEP_APPLICATION,
                             placeHolderText = stringResource(xcj.app.appsets.R.string.application_name),
-                            valueHost = applicationForCreate,
-                            valueFiledNameOfHost = ApplicationForCreate.FILED_NAME_NAME,
-                            value = applicationForCreate.name,
-                            onFiledChanged = onApplicationForCreateFiledChanged
+                            value = applicationForCreate.name.value,
+                            onValueChange = {
+                                applicationForCreate.name.value = it
+                            }
                         )
                         TextOrTextFiled(
                             isField = createStep == ApplicationForCreate.CREATE_STEP_APPLICATION,
                             placeHolderText = stringResource(xcj.app.appsets.R.string.app_types),
-                            valueHost = applicationForCreate,
-                            valueFiledNameOfHost = ApplicationForCreate.FILED_NAME_CATEGORY,
-                            value = applicationForCreate.category,
-                            onFiledChanged = onApplicationForCreateFiledChanged
+                            value = applicationForCreate.category.value,
+                            onValueChange = {
+                                applicationForCreate.category.value = it
+                            }
                         )
                         TextOrTextFiled(
                             isField = createStep == ApplicationForCreate.CREATE_STEP_APPLICATION,
                             placeHolderText = stringResource(xcj.app.appsets.R.string.website),
-                            valueHost = applicationForCreate,
-                            valueFiledNameOfHost = ApplicationForCreate.FILED_NAME_WEBSITE,
-                            value = applicationForCreate.website,
-                            onFiledChanged = onApplicationForCreateFiledChanged,
+                            value = applicationForCreate.website.value,
+                            onValueChange = {
+                                applicationForCreate.website.value = it
+                            },
                             keyboardOptions = KeyboardOptions.Default.copy(
                                 keyboardType = KeyboardType.Uri,
                                 autoCorrectEnabled = true
@@ -241,16 +267,16 @@ fun CreateAppPage(
                             modifier = Modifier.heightIn(min = 120.dp),
                             isField = createStep == ApplicationForCreate.CREATE_STEP_APPLICATION,
                             placeHolderText = stringResource(xcj.app.appsets.R.string.developer_information),
-                            valueHost = applicationForCreate,
-                            valueFiledNameOfHost = ApplicationForCreate.FILED_NAME_DEVELOPER_INFO,
-                            value = applicationForCreate.developerInfo,
-                            onFiledChanged = onApplicationForCreateFiledChanged
+                            value = applicationForCreate.developerInfo.value,
+                            onValueChange = {
+                                applicationForCreate.developerInfo.value = it
+                            }
                         )
                         var free by remember {
                             mutableStateOf(true)
                         }
                         LaunchedEffect(key1 = true, block = {
-                            free = applicationForCreate.price.isEmpty()
+                            free = applicationForCreate.price.value.isEmpty()
                         })
                         Row(
                             modifier = Modifier
@@ -287,28 +313,25 @@ fun CreateAppPage(
                                     modifier = Modifier,
                                     isField = true,
                                     placeHolderText = stringResource(xcj.app.appsets.R.string.single_product_price),
-                                    valueHost = applicationForCreate,
-                                    valueFiledNameOfHost = ApplicationForCreate.FILED_NAME_PRICE,
-                                    value = applicationForCreate.price,
-                                    onFiledChanged = onApplicationForCreateFiledChanged,
+                                    value = applicationForCreate.price.value,
+                                    onValueChange = {
+                                        applicationForCreate.price.value = it
+                                    },
                                     keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Decimal)
                                 )
-                                LaunchedEffect(key1 = free, block = {
+                                /*LaunchedEffect(key1 = free, block = {
                                     onApplicationForCreateFiledChanged(
                                         applicationForCreate,
                                         ApplicationForCreate.FILED_NAME_PRICE_UNIT,
                                         ApplicationForCreate.DEFAULT_PRICE_UNIT
                                     )
-                                })
+                                })*/
                                 Row(modifier = Modifier.padding(horizontal = 12.dp)) {
                                     FilterChip(
-                                        selected = applicationForCreate.priceUnit == ApplicationForCreate.PRICE_UNIT_RMB,
+                                        selected = applicationForCreate.priceUnit.value == ApplicationForCreate.PRICE_UNIT_RMB,
                                         onClick = {
-                                            onApplicationForCreateFiledChanged(
-                                                applicationForCreate,
-                                                ApplicationForCreate.FILED_NAME_PRICE_UNIT,
+                                            applicationForCreate.priceUnit.value =
                                                 ApplicationForCreate.PRICE_UNIT_RMB
-                                            )
                                         },
                                         label = {
                                             Text(text = ApplicationForCreate.PRICE_UNIT_RMB)
@@ -317,13 +340,10 @@ fun CreateAppPage(
                                     )
                                     Spacer(modifier = Modifier.width(12.dp))
                                     FilterChip(
-                                        selected = applicationForCreate.priceUnit == ApplicationForCreate.PRICE_UNIT_USD,
+                                        selected = applicationForCreate.priceUnit.value == ApplicationForCreate.PRICE_UNIT_USD,
                                         onClick = {
-                                            onApplicationForCreateFiledChanged(
-                                                applicationForCreate,
-                                                ApplicationForCreate.FILED_NAME_PRICE_UNIT,
+                                            applicationForCreate.priceUnit.value =
                                                 ApplicationForCreate.PRICE_UNIT_USD
-                                            )
                                         },
                                         label = {
                                             Text(text = ApplicationForCreate.PRICE_UNIT_USD)
@@ -340,7 +360,7 @@ fun CreateAppPage(
                                     fontWeight = FontWeight.Bold
                                 )
                                 Text(
-                                    text = "${applicationForCreate.price} ${applicationForCreate.priceUnit}",
+                                    text = "${applicationForCreate.price.value} ${applicationForCreate.priceUnit.value}",
                                     modifier = Modifier.padding(12.dp)
                                 )
                             }
@@ -367,7 +387,7 @@ fun CreateAppPage(
                                 add(platform.name ?: "")
                             } else {
                                 if (applicationForCreate.platformForCreates.isNotEmpty()) {
-                                    applicationForCreate.platformForCreates.map { it.name }
+                                    applicationForCreate.platformForCreates.map { it.name.value }
                                         .let { addAll(it) }
                                 }
                             }
@@ -381,7 +401,7 @@ fun CreateAppPage(
                     ) {
                         platformNames.forEach { platformName ->
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                if (platformName == platformForCreate?.name) {
+                                if (platformName == platformForCreate?.name?.value) {
                                     HorizontalDivider(
                                         modifier = Modifier
                                             .height(2.dp)
@@ -399,9 +419,10 @@ fun CreateAppPage(
                                         }
 
                                         if (platformForCreate != null) {
-                                            if (platformForCreate!!.name == platformName) {
+                                            if (platformForCreate?.name?.value == platformName) {
                                                 selectedPlatformNames.remove(platformName)
                                                 appCreationUseCase.removePlatformForCreateByName(
+                                                    applicationForCreate,
                                                     platformName
                                                 )
                                                 newPlatformName = null
@@ -425,11 +446,11 @@ fun CreateAppPage(
                         if (createStep == ApplicationForCreate.CREATE_STEP_APPLICATION ||
                             createStep == ApplicationForCreate.CREATE_STEP_PLATFORM
                         ) {
-                            SuggestionChip(
+                            IconButton(
                                 onClick = {
                                     val bottomSheetState =
                                         visibilityComposeStateProvider.bottomSheetState()
-                                    bottomSheetState.show {
+                                    bottomSheetState.show(null) {
                                         CustomPlatformAddSheetContent(
                                             platformNames = platformNames,
                                             onConfirmClick = {
@@ -437,18 +458,13 @@ fun CreateAppPage(
                                             }
                                         )
                                     }
-                                },
-                                label = {
-                                    Icon(
-                                        painter = painterResource(id = xcj.app.compose_share.R.drawable.ic_round_add_24),
-                                        contentDescription = "add custom platform"
-                                    )
-                                },
-                                colors = SuggestionChipDefaults.suggestionChipColors(
-                                    containerColor = MaterialTheme.colorScheme.secondaryContainer
-                                ),
-                                shape = CircleShape
-                            )
+                                }
+                            ) {
+                                Icon(
+                                    painter = painterResource(xcj.app.compose_share.R.drawable.ic_round_add_24),
+                                    contentDescription = stringResource(xcj.app.appsets.R.string.add)
+                                )
+                            }
                         }
                     }
                 }
@@ -463,7 +479,6 @@ fun CreateAppPage(
                                 createStep = createStep,
                                 platformForCreate = platformForCreate!!,
                                 versionInfo = versionInfo,
-                                onApplicationForCreateFiledChanged = onApplicationForCreateFiledChanged,
                                 onChoosePictureClick = onChoosePictureClick
                             )
                         } else {
@@ -490,11 +505,11 @@ fun CreateAppPage(
 
         }
 
-        val backButtonText =
+        val titleText =
             if (createStep != ApplicationForCreate.CREATE_STEP_APPLICATION) {
-                "Add $createStep"
+                stringResource(xcj.app.appsets.R.string.template_add_xxx, createStep)
             } else {
-                "Create Application"
+                stringResource(xcj.app.appsets.R.string.create_application)
             }
         BackActionTopBar(
             modifier = Modifier.onPlaced {
@@ -502,19 +517,21 @@ fun CreateAppPage(
             },
             hazeState = hazeState,
             onBackClick = onBackClick,
-            backButtonText = backButtonText,
+            backButtonText = titleText,
             endButtonText = stringResource(id = xcj.app.appsets.R.string.ok),
-            onEndButtonClick = onConfirmClick
+            onEndButtonClick = {
+                onConfirmClick(applicationForCreate)
+            }
         )
 
-        CreateApplicationIndicator(createApplicationPageState = createApplicationPageState)
+        CreateApplicationIndicator(createApplicationPageUIState = createApplicationPageUIState)
     }
 }
 
 @Composable
-fun CreateApplicationIndicator(createApplicationPageState: CreateApplicationPageState) {
+fun CreateApplicationIndicator(createApplicationPageUIState: CreateApplicationPageUIState) {
     AnimatedVisibility(
-        visible = createApplicationPageState is CreateApplicationPageState.Creating,
+        visible = createApplicationPageUIState is CreateApplicationPageUIState.Creating,
         enter = fadeIn(tween()) + scaleIn(
             tween(),
             2f
@@ -619,16 +636,18 @@ fun CustomPlatformAddSheetContent(
     }
 }
 
+/**
+ * @param onChoosePictureClick param1:requestKey, param2:composeStateUpdater
+ */
 @Composable
 fun IconAndBanner(
     createStep: String,
     showSelect: Boolean,
-    valueHost: Any,
-    iconUseAge: String,
-    bannerUseAge: String,
-    iconUriHolder: UriProvider?,
-    bannerUriProvider: UriProvider?,
-    onChoosePictureClick: (Any, String, UriProvider?) -> Unit,
+    iconKey: String,
+    iconUriProviderState: MutableState<UriProvider?>,
+    bannerKey: String,
+    bannerUriProviderState: MutableState<UriProvider?>,
+    onChoosePictureClick: (String, Int, ComposeStateUpdater<*>) -> Unit,
 ) {
     Row(
         modifier = Modifier
@@ -651,30 +670,41 @@ fun IconAndBanner(
                         MaterialTheme.shapes.extraLarge
                     )
                     .clickable {
-                        if (iconUseAge == "app_icon") {
+                        if (iconKey == "app_icon") {
                             if (createStep != ApplicationForCreate.CREATE_STEP_APPLICATION)
                                 return@clickable
-                            onChoosePictureClick(
-                                valueHost,
-                                ApplicationForCreate.FILED_NAME_ICON_URI_HOLDER,
-                                iconUriHolder
-                            )
-                        } else if (iconUseAge == "app_version_icon") {
+                        } else if (iconKey == "app_version_icon") {
                             if (createStep == ApplicationForCreate.CREATE_STEP_SCREENSHOT ||
                                 createStep == ApplicationForCreate.CREATE_STEP_DOWNLOAD
                             )
                                 return@clickable
-                            onChoosePictureClick(
-                                valueHost,
-                                VersionInfoForCreate.FILED_NAME_ICON_URI_HOLDER,
-                                iconUriHolder
-                            )
                         }
+
+                        val composeStateUpdater =
+                            RuntimeSingleStateUpdater.fromState(iconUriProviderState) { markKey, input ->
+                                PurpleLogger.current.d(
+                                    TAG,
+                                    "$iconKey/iconUriProviderState, inputHandleDSL:\nmarkKey:$markKey,\ninput:$input"
+                                )
+                                if (input !is ContentSelectionResult.RichMediaContentSelectionResult) {
+                                    return@fromState
+                                }
+                                val uriProviders = input.selectedProvider.provide()
+                                if (uriProviders.isEmpty()) {
+                                    return@fromState
+                                }
+                                update(uriProviders.first())
+                            }
+                        onChoosePictureClick(
+                            iconKey,
+                            1,
+                            composeStateUpdater
+                        )
                     },
                 contentAlignment = Alignment.Center
             ) {
                 val uri =
-                    iconUriHolder?.provideUri()
+                    iconUriProviderState.value?.provideUri()
                 if (uri != null) {
                     AnyImage(
                         modifier = Modifier
@@ -708,31 +738,41 @@ fun IconAndBanner(
                         MaterialTheme.shapes.extraLarge
                     )
                     .clickable {
-                        if (bannerUseAge == "banner_icon") {
+                        if (bannerKey == "banner_icon") {
                             if (createStep != ApplicationForCreate.CREATE_STEP_APPLICATION)
                                 return@clickable
-                            onChoosePictureClick(
-                                valueHost,
-                                ApplicationForCreate.FILED_NAME_BANNER_URI_HOLDER,
-                                bannerUriProvider
-                            )
-                        } else if (bannerUseAge == "app_version_banner_icon") {
+                        } else if (bannerKey == "app_version_banner_icon") {
                             if (createStep == ApplicationForCreate.CREATE_STEP_SCREENSHOT ||
                                 createStep == ApplicationForCreate.CREATE_STEP_DOWNLOAD
                             ) {
                                 return@clickable
                             }
-                            onChoosePictureClick(
-                                valueHost,
-                                VersionInfoForCreate.FILED_NAME_BANNER_URI_HOLDER,
-                                bannerUriProvider
-                            )
                         }
+                        val composeStateUpdater =
+                            RuntimeSingleStateUpdater.fromState(bannerUriProviderState) { markKey, input ->
+                                PurpleLogger.current.d(
+                                    TAG,
+                                    "$bannerKey/bannerUriProviderState, inputHandleDSL:\nmarkKey:$markKey,\ninput:$input"
+                                )
+                                if (input !is ContentSelectionResult.RichMediaContentSelectionResult) {
+                                    return@fromState
+                                }
+                                val uriProviders = input.selectedProvider.provide()
+                                if (uriProviders.isEmpty()) {
+                                    return@fromState
+                                }
+                                update(uriProviders.first())
+                            }
+                        onChoosePictureClick(
+                            bannerKey,
+                            1,
+                            composeStateUpdater
+                        )
                     },
                 contentAlignment = Alignment.Center
             ) {
                 val uri =
-                    bannerUriProvider?.provideUri()
+                    bannerUriProviderState.value?.provideUri()
                 if (uri != null) {
                     AnyImage(
                         modifier = Modifier
@@ -749,7 +789,7 @@ fun IconAndBanner(
                     }
                 }
             }
-            Text(text = "Banner", fontSize = 12.sp)
+            Text(text = stringResource(xcj.app.appsets.R.string.banner), fontSize = 12.sp)
         }
     }
 }
@@ -760,13 +800,12 @@ fun PlatformForApp(
     createStep: String,
     platformForCreate: PlatformForCreate,
     versionInfo: VersionInfo? = null,
-    onApplicationForCreateFiledChanged: (Any, String, String) -> Unit,
-    onChoosePictureClick: (Any, String, UriProvider?) -> Unit,
+    onChoosePictureClick: (String, Int, ComposeStateUpdater<*>) -> Unit,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text(
             modifier = Modifier.padding(horizontal = 12.dp),
-            text = "For ${platformForCreate.name}",
+            text = "For ${platformForCreate.name.value}",
             fontSize = 16.sp,
             fontWeight = FontWeight.Bold
         )
@@ -774,10 +813,10 @@ fun PlatformForApp(
             isField = (createStep == ApplicationForCreate.CREATE_STEP_APPLICATION ||
                     createStep == ApplicationForCreate.CREATE_STEP_PLATFORM),
             placeHolderText = stringResource(xcj.app.appsets.R.string.package_name),
-            valueHost = platformForCreate,
-            valueFiledNameOfHost = PlatformForCreate.FILED_NAME_PACKAGE,
-            value = platformForCreate.packageName,
-            onFiledChanged = onApplicationForCreateFiledChanged
+            value = platformForCreate.packageName.value,
+            onValueChange = {
+                platformForCreate.packageName.value = it
+            }
         )
 
         TextOrTextFiled(
@@ -785,10 +824,10 @@ fun PlatformForApp(
             isField = (createStep == ApplicationForCreate.CREATE_STEP_APPLICATION ||
                     createStep == ApplicationForCreate.CREATE_STEP_PLATFORM),
             placeHolderText = stringResource(id = xcj.app.appsets.R.string.application_introduction),
-            valueHost = platformForCreate,
-            valueFiledNameOfHost = PlatformForCreate.FILED_NAME_INTRODUCTION,
-            value = platformForCreate.introduction,
-            onFiledChanged = onApplicationForCreateFiledChanged
+            value = platformForCreate.introduction.value,
+            onValueChange = {
+                platformForCreate.introduction.value = it
+            }
         )
         val appCreationUseCase = LocalUseCaseOfAppCreation.current
         if (createStep == ApplicationForCreate.CREATE_STEP_APPLICATION ||
@@ -802,27 +841,25 @@ fun PlatformForApp(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "版本信息(${platformForCreate.versionInfoForCreates.size})",
+                    text = stringResource(
+                        xcj.app.appsets.R.string.template_version_info_count_xxx,
+                        platformForCreate.versionInfoForCreates.size
+                    ),
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Medium,
                     modifier = Modifier.weight(1f)
                 )
                 Spacer(modifier = Modifier.width(16.dp))
-                SuggestionChip(
+                IconButton(
                     onClick = {
                         appCreationUseCase.addVersionInfoForCreate(platformForCreate)
-                    },
-                    label = {
-                        Icon(
-                            painter = painterResource(id = xcj.app.compose_share.R.drawable.ic_round_add_24),
-                            contentDescription = "add custom platform"
-                        )
-                    },
-                    colors = SuggestionChipDefaults.suggestionChipColors(
-                        containerColor = MaterialTheme.colorScheme.secondaryContainer
-                    ),
-                    shape = CircleShape
-                )
+                    }
+                ) {
+                    Icon(
+                        painter = painterResource(xcj.app.compose_share.R.drawable.ic_round_add_24),
+                        contentDescription = stringResource(xcj.app.appsets.R.string.add)
+                    )
+                }
             }
         }
         if (versionInfo != null) {
@@ -837,7 +874,6 @@ fun PlatformForApp(
                     platformForCreate = platformForCreate,
                     versionInfoForCreate = versionInfoForCreate,
                     versionInfoForCreateIndex = 0,
-                    onApplicationForCreateFiledChanged = onApplicationForCreateFiledChanged,
                     onChoosePictureClick = onChoosePictureClick
                 )
             } else {
@@ -887,7 +923,6 @@ fun PlatformForApp(
                             platformForCreate = platformForCreate,
                             versionInfoForCreate = versionInfo,
                             versionInfoForCreateIndex = index,
-                            onApplicationForCreateFiledChanged = onApplicationForCreateFiledChanged,
                             onChoosePictureClick = onChoosePictureClick
                         )
                     }
@@ -917,8 +952,7 @@ fun VersionForPlatform(
     platformForCreate: PlatformForCreate,
     versionInfoForCreate: VersionInfoForCreate,
     versionInfoForCreateIndex: Int,
-    onApplicationForCreateFiledChanged: (Any, String, String) -> Unit,
-    onChoosePictureClick: (Any, String, UriProvider?) -> Unit,
+    onChoosePictureClick: (String, Int, ComposeStateUpdater<*>) -> Unit,
 ) {
     Column {
         DesignVDivider()
@@ -936,77 +970,72 @@ fun VersionForPlatform(
                     Alignment.CenterStart
                 )
             )
-            Surface(
-                color = MaterialTheme.colorScheme.secondaryContainer,
-                shape = MaterialTheme.shapes.extraLarge,
+
+            IconButton(
+                onClick = {
+                    appCreationUseCase.deleteVersionInPlatform(
+                        platformForCreate,
+                        versionInfoForCreate
+                    )
+                },
                 modifier = Modifier
                     .align(Alignment.CenterEnd)
-                    .clip(MaterialTheme.shapes.extraLarge)
-                    .clickable(onClick = {
-                        appCreationUseCase.deleteVersionInPlatform(
-                            platformForCreate,
-                            versionInfoForCreate
-                        )
-                    })
             ) {
-                Row(Modifier.padding(horizontal = 12.dp, vertical = 6.dp)) {
-                    Text(
-                        text = stringResource(id = xcj.app.appsets.R.string.delete),
-                        fontSize = 12.sp
-                    )
-                }
+                Icon(
+                    painter = painterResource(xcj.app.compose_share.R.drawable.ic_do_not_disturb_on_24),
+                    contentDescription = stringResource(xcj.app.appsets.R.string.remove)
+                )
             }
         }
         IconAndBanner(
             createStep = createStep,
             showSelect = createStep != ApplicationForCreate.CREATE_STEP_DOWNLOAD,
-            valueHost = versionInfoForCreate,
-            iconUseAge = "app_version_icon",
-            bannerUseAge = "app_version_banner_icon",
-            iconUriHolder = versionInfoForCreate.versionIconUriHolder,
-            bannerUriProvider = versionInfoForCreate.versionBannerUriHolder,
+            iconKey = "app_version_icon",
+            bannerKey = "app_version_banner_icon",
+            iconUriProviderState = versionInfoForCreate.versionIconUriProvider,
+            bannerUriProviderState = versionInfoForCreate.versionBannerUriProvider,
             onChoosePictureClick = onChoosePictureClick
         )
         TextOrTextFiled(
             isField = createStep != ApplicationForCreate.CREATE_STEP_DOWNLOAD,
             placeHolderText = stringResource(xcj.app.appsets.R.string.version),
-            valueHost = versionInfoForCreate,
-            valueFiledNameOfHost = VersionInfoForCreate.FILED_NAME_VERSION,
-            value = versionInfoForCreate.version,
-            onFiledChanged = onApplicationForCreateFiledChanged
+            value = versionInfoForCreate.version.value,
+            onValueChange = {
+                versionInfoForCreate.version.value = it
+            }
         )
         TextOrTextFiled(
             isField = createStep != ApplicationForCreate.CREATE_STEP_DOWNLOAD,
             placeHolderText = stringResource(xcj.app.appsets.R.string.version_code),
-            value = versionInfoForCreate.versionCode,
-            valueHost = versionInfoForCreate,
-            valueFiledNameOfHost = VersionInfoForCreate.FILED_NAME_VERSION_CODE,
-            onFiledChanged = onApplicationForCreateFiledChanged
+            value = versionInfoForCreate.versionCode.value,
+            onValueChange = {
+                versionInfoForCreate.versionCode.value = it
+            }
         )
         TextOrTextFiled(
             modifier = Modifier.heightIn(min = 120.dp),
             isField = createStep != ApplicationForCreate.CREATE_STEP_DOWNLOAD,
             placeHolderText = stringResource(id = xcj.app.appsets.R.string.version_changes),
-            valueHost = versionInfoForCreate,
-            valueFiledNameOfHost = VersionInfoForCreate.FILED_NAME_CHANGES,
-            value = versionInfoForCreate.changes,
-            onFiledChanged = onApplicationForCreateFiledChanged
+            value = versionInfoForCreate.changes.value,
+            onValueChange = {
+                versionInfoForCreate.changes.value = it
+            }
         )
         TextOrTextFiled(
             isField = createStep != ApplicationForCreate.CREATE_STEP_DOWNLOAD,
             placeHolderText = stringResource(xcj.app.appsets.R.string.package_size_of_version),
-            valueHost = versionInfoForCreate,
-            valueFiledNameOfHost = VersionInfoForCreate.FILED_NAME_PACKAGE_SIZE,
-            value = versionInfoForCreate.packageSize,
-            onFiledChanged = onApplicationForCreateFiledChanged
+            value = versionInfoForCreate.packageSize.value,
+            onValueChange = {
+                versionInfoForCreate.packageSize.value = it
+            }
         )
         TextOrTextFiled(
             isField = createStep != ApplicationForCreate.CREATE_STEP_DOWNLOAD,
             placeHolderText = stringResource(xcj.app.appsets.R.string.privacy_link_url),
-            valueHost = versionInfoForCreate,
-            valueFiledNameOfHost = VersionInfoForCreate.FILED_NAME_PRIVACY_POLICY_URL,
-            value = versionInfoForCreate.privacyPolicyUrl,
-            onFiledChanged = onApplicationForCreateFiledChanged
+            value = versionInfoForCreate.privacyPolicyUrl.value,
+            onValueChange = {
+                versionInfoForCreate.privacyPolicyUrl.value = it
+            }
         )
         Column(modifier = Modifier.fillMaxWidth()) {
             if (createStep != ApplicationForCreate.CREATE_STEP_DOWNLOAD) {
@@ -1022,67 +1051,71 @@ fun VersionForPlatform(
                         modifier = Modifier.weight(1f)
                     )
                     Spacer(modifier = Modifier.width(16.dp))
-                    SuggestionChip(
+                    IconButton(
                         onClick = {
-                            val screenshotInfoForCreate =
-                                appCreationUseCase.addScreenshotForCreate(
-                                    platformForCreate,
-                                    versionInfoForCreate
-                                )
+                            val composeStateUpdater =
+                                RuntimeSingleStateUpdater.fromState<Void>(null) { markKey, input ->
+                                    PurpleLogger.current.d(
+                                        TAG,
+                                        "screenshotInfoForCreate.pictureUriProvider, inputHandleDSL:\nmarkKey:$markKey,\ninput:$input"
+                                    )
+                                    if (input !is ContentSelectionResult.RichMediaContentSelectionResult) {
+                                        return@fromState
+                                    }
+                                    val uriProviders = input.selectedProvider.provide()
+                                    if (uriProviders.isEmpty()) {
+                                        return@fromState
+                                    }
+                                    uriProviders.forEach { uriProvider ->
+                                        val screenshotInfoForCreate =
+                                            appCreationUseCase.addScreenshotForCreate(
+                                                versionInfoForCreate
+                                            )
+                                        screenshotInfoForCreate.pictureUriProvider.value =
+                                            uriProvider
+                                    }
+                                }
                             onChoosePictureClick(
-                                screenshotInfoForCreate,
-                                ScreenshotInfoForCreate.FILED_NAME_URI_HOLDER,
-                                screenshotInfoForCreate.uriHolder
+                                "CHOOSE_APP_VERSION_SCREEN_SHOT_PICTURE",
+                                10,
+                                composeStateUpdater
                             )
-                        },
-                        label = {
-                            Icon(
-                                painter = painterResource(id = xcj.app.compose_share.R.drawable.ic_round_add_24),
-                                contentDescription = "add custom platform"
-                            )
-                        },
-                        colors = SuggestionChipDefaults.suggestionChipColors(
-                            containerColor = MaterialTheme.colorScheme.secondaryContainer
-                        ),
-                        shape = CircleShape
-                    )
+                        }
+                    ) {
+                        Icon(
+                            painter = painterResource(xcj.app.compose_share.R.drawable.ic_round_add_24),
+                            contentDescription = stringResource(xcj.app.appsets.R.string.add)
+                        )
+                    }
                 }
             }
             if (versionInfoForCreate.screenshotInfoForCreates.isNotEmpty()) {
-                Row(
-                    modifier = Modifier
-                        .height(200.dp)
-                        .horizontalScroll(rememberScrollState())
+                LazyRow(
+                    modifier = Modifier,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    contentPadding = PaddingValues(12.dp)
                 ) {
-                    versionInfoForCreate.screenshotInfoForCreates.forEachIndexed { index, screenShot ->
+                    items(
+                        items = versionInfoForCreate.screenshotInfoForCreates,
+                        key = { item -> item.id }
+                    ) { screenshotInfoForCreate ->
                         Column(
                             verticalArrangement = Arrangement.spacedBy(8.dp),
                             horizontalAlignment = Alignment.End,
                             modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(start = 12.dp)
+                                .animateItem()
                         ) {
-                            Row(
-                                modifier = Modifier
-                                    .background(
-                                        MaterialTheme.colorScheme.secondaryContainer,
-                                        MaterialTheme.shapes.extraLarge
+                            IconButton(
+                                onClick = {
+                                    appCreationUseCase.deleteScreenShotInfoInVersion(
+                                        versionInfoForCreate,
+                                        screenshotInfoForCreate
                                     )
-                                    .clip(MaterialTheme.shapes.extraLarge)
-                                    .clickable(
-                                        onClick = {
-                                            appCreationUseCase.deleteScreenInfoInVersion(
-                                                platformForCreate,
-                                                versionInfoForCreate,
-                                                screenShot
-                                            )
-                                        }
-                                    )
-                                    .padding(horizontal = 12.dp, vertical = 6.dp)
+                                }
                             ) {
-                                Text(
-                                    text = stringResource(id = xcj.app.appsets.R.string.delete),
-                                    fontSize = 12.sp
+                                Icon(
+                                    painter = painterResource(xcj.app.compose_share.R.drawable.ic_do_not_disturb_on_24),
+                                    contentDescription = stringResource(xcj.app.appsets.R.string.remove)
                                 )
                             }
                             AnyImage(
@@ -1093,7 +1126,7 @@ fun VersionForPlatform(
                                         MaterialTheme.shapes.medium
                                     )
                                     .clip(MaterialTheme.shapes.medium),
-                                model = screenShot.uriHolder?.provideUri()
+                                model = screenshotInfoForCreate.pictureUriProvider.value?.provideUri()
                             )
                         }
                     }
@@ -1126,24 +1159,18 @@ fun VersionForPlatform(
                     modifier = Modifier.weight(1f)
                 )
                 Spacer(modifier = Modifier.width(16.dp))
-                SuggestionChip(
+                IconButton(
                     onClick = {
                         appCreationUseCase.addDownloadInfoForCreate(
-                            platformForCreate,
                             versionInfoForCreate
                         )
-                    },
-                    label = {
-                        Icon(
-                            painter = painterResource(id = xcj.app.compose_share.R.drawable.ic_round_add_24),
-                            contentDescription = "add custom platform"
-                        )
-                    },
-                    colors = SuggestionChipDefaults.suggestionChipColors(
-                        containerColor = MaterialTheme.colorScheme.secondaryContainer
-                    ),
-                    shape = CircleShape
-                )
+                    }
+                ) {
+                    Icon(
+                        painter = painterResource(xcj.app.compose_share.R.drawable.ic_round_add_24),
+                        contentDescription = stringResource(xcj.app.appsets.R.string.add)
+                    )
+                }
             }
             if (versionInfoForCreate.downloadInfoForCreates.isNotEmpty()) {
                 Column(
@@ -1151,42 +1178,17 @@ fun VersionForPlatform(
                     modifier = Modifier.padding(horizontal = 12.dp)
                 ) {
                     versionInfoForCreate.downloadInfoForCreates.forEachIndexed { index, downloadInfo ->
-                        Column(
-                            verticalArrangement = Arrangement.spacedBy(8.dp),
-                            horizontalAlignment = Alignment.End,
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier.fillMaxWidth()
                         ) {
-                            Row(
-                                modifier = Modifier
-                                    .background(
-                                        MaterialTheme.colorScheme.secondaryContainer,
-                                        MaterialTheme.shapes.extraLarge
-                                    )
-                                    .clip(MaterialTheme.shapes.extraLarge)
-                                    .clickable(onClick = {
-                                        appCreationUseCase.deleteDownloadInfoInVersion(
-                                            platformForCreate,
-                                            versionInfoForCreate,
-                                            downloadInfo
-                                        )
-                                    })
-                                    .padding(horizontal = 12.dp, vertical = 6.dp)
-                            ) {
-                                Text(
-                                    text = stringResource(id = xcj.app.appsets.R.string.delete),
-                                    fontSize = 12.sp
-                                )
-                            }
                             DesignTextField(
-                                value = downloadInfo.url,
+                                value = downloadInfo.url.value,
                                 modifier = Modifier
-                                    .fillMaxWidth(),
+                                    .weight(1f),
                                 onValueChange = {
-                                    onApplicationForCreateFiledChanged(
-                                        downloadInfo,
-                                        DownloadInfoForCreate.FILED_NAME_URL,
-                                        it
-                                    )
+                                    downloadInfo.url.value = it
                                 },
                                 placeholder = {
                                     Text(text = stringResource(xcj.app.appsets.R.string.download_link) + "${index + 1}")
@@ -1196,6 +1198,19 @@ fun VersionForPlatform(
                                     autoCorrectEnabled = true
                                 )
                             )
+                            IconButton(
+                                onClick = {
+                                    appCreationUseCase.deleteDownloadInfoInVersion(
+                                        versionInfoForCreate,
+                                        downloadInfo
+                                    )
+                                }
+                            ) {
+                                Icon(
+                                    painter = painterResource(xcj.app.compose_share.R.drawable.ic_do_not_disturb_on_24),
+                                    contentDescription = stringResource(xcj.app.appsets.R.string.remove)
+                                )
+                            }
                         }
                     }
                 }
@@ -1221,10 +1236,8 @@ fun TextOrTextFiled(
     modifier: Modifier = Modifier,
     isField: Boolean,
     placeHolderText: String,
-    valueHost: Any,
-    valueFiledNameOfHost: String,
     value: String,
-    onFiledChanged: (Any, String, String) -> Unit,
+    onValueChange: (String) -> Unit,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
 ) {
     if (isField) {
@@ -1233,9 +1246,7 @@ fun TextOrTextFiled(
             modifier = modifier
                 .fillMaxWidth()
                 .padding(horizontal = 12.dp, vertical = 6.dp),
-            onValueChange = {
-                onFiledChanged(valueHost, valueFiledNameOfHost, it)
-            },
+            onValueChange = onValueChange,
             placeholder = {
                 Text(text = placeHolderText, fontSize = 12.sp)
             },
