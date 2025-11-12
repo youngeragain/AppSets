@@ -6,7 +6,7 @@ import xcj.app.appsets.ui.model.state.SearchResult
 sealed interface SearchPageState : TipsProvider {
     val keywords: String?
 
-    class None(
+    class Default(
         override val keywords: String? = null,
         override val tips: Int? = null,
         override val subTips: Int? = null
@@ -18,14 +18,14 @@ sealed interface SearchPageState : TipsProvider {
         override val subTips: Int? = null
     ) : SearchPageState
 
-    class SearchPageSuccess(
+    class SearchSuccess(
         override val keywords: String? = null,
         override val tips: Int? = null,
         override val subTips: Int? = null,
         val results: List<SearchResult>,
     ) : SearchPageState
 
-    class SearchPageFailed(
+    class SearchFailed(
         override val keywords: String? = null,
         override val tips: Int? = null,
         override val subTips: Int? = null

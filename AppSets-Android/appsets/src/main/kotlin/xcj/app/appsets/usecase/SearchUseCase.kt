@@ -19,6 +19,7 @@ import xcj.app.appsets.server.repository.SearchRepository
 import xcj.app.appsets.ui.model.page_state.SearchPageState
 import xcj.app.appsets.ui.model.state.SearchResult
 import xcj.app.compose_share.dynamic.ComposeLifecycleAware
+import xcj.app.starter.server.HttpRequestFail
 import xcj.app.starter.server.request
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -30,7 +31,7 @@ class SearchUseCase(
         private const val TAG = "SearchUseCase"
     }
 
-    val searchPageState: MutableState<SearchPageState> = mutableStateOf(SearchPageState.None())
+    val searchPageState: MutableState<SearchPageState> = mutableStateOf(SearchPageState.Default())
 
     private val searchInputFlow: MutableStateFlow<String> = MutableStateFlow("")
 
@@ -56,68 +57,88 @@ class SearchUseCase(
     private suspend fun search(keywords: String) {
         val searchState = searchPageState.value
         if (!LocalAccountManager.isLogged()) {
-            if (searchState is SearchPageState.SearchPageFailed) {
+            if (searchState is SearchPageState.SearchFailed) {
                 return
             }
             searchPageState.value =
-                SearchPageState.SearchPageFailed(
-                    keywords,
-                    xcj.app.appsets.R.string.login_to_search
+                SearchPageState.SearchFailed(
+                    keywords = keywords,
+                    tips = xcj.app.appsets.R.string.login_required,
+                    subTips = xcj.app.appsets.R.string.login_to_search
                 )
             return
         }
-        if (searchState is SearchPageState.SearchPageSuccess &&
+        if (searchState is SearchPageState.SearchSuccess &&
             searchState.keywords == keywords
         ) {
             return
         }
         if (keywords.isEmpty()) {
             searchPageState.value =
-                SearchPageState.SearchPageSuccess(
-                    keywords,
-                    xcj.app.appsets.R.string.no_content,
-                    null,
-                    emptyList(),
+                SearchPageState.SearchSuccess(
+                    keywords = keywords,
+                    tips = xcj.app.appsets.R.string.no_content,
+                    subTips = null,
+                    results = emptyList(),
                 )
             return
         }
 
 
         this.searchPageState.value =
-            SearchPageState.Searching(keywords)
+            SearchPageState.Searching(keywords = keywords)
 
         request {
             searchRepository.commonSearch(keywords)
         }.onSuccess {
-            syncAddResult(keywords, it)
-        }.onFailure {
-            this@SearchUseCase.searchPageState.value =
-                SearchPageState.SearchPageFailed(
-                    keywords,
-                    xcj.app.appsets.R.string.something_wrong_when_search
-                )
+            handleSearchResult(keywords, it)
+        }.onFailure { exception ->
+            if (exception is HttpRequestFail) {
+                when (exception.response?.code) {
+                    -3 -> {
+                        this@SearchUseCase.searchPageState.value =
+                            SearchPageState.SearchFailed(
+                                keywords = keywords,
+                                tips = xcj.app.appsets.R.string.login_required,
+                                subTips = xcj.app.appsets.R.string.expired_information
+                            )
+                    }
+
+                    else -> {
+                        this@SearchUseCase.searchPageState.value =
+                            SearchPageState.SearchFailed(
+                                keywords = keywords,
+                                tips = xcj.app.appsets.R.string.something_wrong
+                            )
+                    }
+                }
+            }
+
         }
     }
 
-    private suspend fun syncAddResult(keywords: String, combineSearchRes: CombineSearchRes) {
+    private suspend fun handleSearchResult(
+        keywords: String,
+        combineSearchRes: CombineSearchRes
+    ) {
         if (combineSearchRes.isEmpty) {
             val searchSuccess =
-                SearchPageState.SearchPageSuccess(
-                    keywords,
-                    xcj.app.appsets.R.string.no_content,
-                    null,
-                    emptyList(),
+                SearchPageState.SearchSuccess(
+                    keywords = keywords,
+                    tips = xcj.app.appsets.R.string.no_content,
+                    subTips = null,
+                    results = emptyList(),
                 )
             searchPageState.value = searchSuccess
             return
         }
 
         val searchResults = mutableListOf<SearchResult>()
-        val searchSuccess = SearchPageState.SearchPageSuccess(
-            keywords,
-            null,
-            null,
-            searchResults
+        val searchSuccess = SearchPageState.SearchSuccess(
+            keywords = keywords,
+            tips = null,
+            subTips = null,
+            results = searchResults
         )
         if (!combineSearchRes.applications.isNullOrEmpty()) {
             searchResults.add(SearchResult.SearchedApplications(combineSearchRes.applications))

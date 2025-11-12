@@ -13,14 +13,19 @@ sealed interface UserProfilePageState : TipsProvider {
 
     data object Loading :
         UserProfilePageState {
-        override val tips: Int? = xcj.app.appsets.R.string.loading
+        override val tips: Int = xcj.app.appsets.R.string.loading
         override val subTips: Int? = null
     }
 
     data object NotFound :
         UserProfilePageState {
-        override val tips: Int? = xcj.app.appsets.R.string.not_found
+        override val tips: Int = xcj.app.appsets.R.string.not_found
         override val subTips: Int? = null
     }
+
+    data class LoadFailed(
+        override val tips: Int = xcj.app.appsets.R.string.something_wrong,
+        override val subTips: Int? = null
+    ) : UserProfilePageState
 
 }

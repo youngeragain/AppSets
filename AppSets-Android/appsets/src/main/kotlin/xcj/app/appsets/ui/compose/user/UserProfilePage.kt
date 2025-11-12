@@ -106,10 +106,44 @@ fun UserProfilePage(
 
             is UserProfilePageState.NotFound -> {
                 Box(modifier = Modifier.fillMaxSize()) {
-                    Text(
-                        text = stringResource(xcj.app.appsets.R.string.not_found),
-                        modifier = Modifier.align(Alignment.Center)
+                    Column(
+                        modifier = Modifier.align(Alignment.Center),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = stringResource(id = userProfilePageState.tips)
+                        )
+                        userProfilePageState.subTips?.let {
+                            Text(
+                                text = stringResource(id = it),
+                                fontSize = 12.sp
+                            )
+                        }
+                    }
+                    DesignBackButton(
+                        modifier = Modifier.align(Alignment.BottomCenter),
+                        onClick = onBackClick
                     )
+                }
+            }
+
+            is UserProfilePageState.LoadFailed -> {
+                Box(modifier = Modifier.fillMaxSize()) {
+                    Column(
+                        modifier = Modifier.align(Alignment.Center),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = stringResource(id = userProfilePageState.tips)
+                        )
+                        userProfilePageState.subTips?.let {
+                            Text(
+                                text = stringResource(id = it),
+                                fontSize = 12.sp
+                            )
+                        }
+
+                    }
                     DesignBackButton(
                         modifier = Modifier.align(Alignment.BottomCenter),
                         onClick = onBackClick

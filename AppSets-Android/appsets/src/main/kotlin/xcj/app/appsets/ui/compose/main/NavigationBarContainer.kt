@@ -41,7 +41,7 @@ fun NavigationBarContainer(
     hazeState: HazeState
 ) {
     val context = LocalContext.current
-    val navigationUseCase = LocalUseCaseOfNavigation.current
+
     val qrCodeUseCase = LocalUseCaseOfQRCode.current
     val systemUseCase = LocalUseCaseOfSystem.current
     val visibilityComposeStateProvider = LocalVisibilityComposeStateProvider.current
@@ -50,9 +50,10 @@ fun NavigationBarContainer(
     val conversationUseCase = LocalUseCaseOfConversation.current
     val nowSpaceContentUseCase = LocalUseCaseOfNowSpaceContent.current
     val nowSpaceContents = nowSpaceContentUseCase.contents
+    val navigationUseCase = LocalUseCaseOfNavigation.current
     val currentRoute by navigationUseCase.currentRouteState
     val coroutineScope = rememberCoroutineScope()
-    val inSearchModel by remember {
+    val inSearchMode by remember {
         derivedStateOf {
             currentRoute == PageRouteNames.SearchPage
         }
@@ -71,7 +72,7 @@ fun NavigationBarContainer(
         hazeState = hazeState,
         visible = isBarVisible,
         enable = isBarEnable,
-        inSearchModel = inSearchModel,
+        inSearchMode = inSearchMode,
         tabItems = tabItems,
         onTabClick = { tab, tabAction ->
             coroutineScope.launch {

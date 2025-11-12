@@ -85,6 +85,7 @@ import xcj.app.appsets.server.model.GroupInfo
 import xcj.app.appsets.server.model.ScreenMediaFileUrl
 import xcj.app.appsets.server.model.UserInfo
 import xcj.app.appsets.ui.compose.LocalUseCaseOfSearch
+import xcj.app.appsets.ui.compose.PageRouteNames
 import xcj.app.appsets.ui.compose.apps.SingleApplicationComponent
 import xcj.app.appsets.ui.compose.custom_component.AnyImage
 import xcj.app.appsets.ui.compose.custom_component.ShowNavBar
@@ -256,7 +257,7 @@ fun SearchPageResults(
         targetState = searchPageState,
         contentAlignment = Alignment.TopCenter,
         transitionSpec = {
-            if (searchPageState is SearchPageState.None) {
+            if (searchPageState is SearchPageState.Default) {
                 (fadeIn(
                     animationSpec = snap()
                 ) + slideInVertically()).togetherWith(
@@ -286,7 +287,7 @@ fun SearchPageResults(
             modifier = Modifier.fillMaxSize()
         ) {
             when (targetSearchState) {
-                is SearchPageState.None -> {
+                is SearchPageState.Default -> {
 
                 }
 
@@ -308,7 +309,7 @@ fun SearchPageResults(
                     }
                 }
 
-                is SearchPageState.SearchPageFailed -> {
+                is SearchPageState.SearchFailed -> {
                     Column(
                         modifier = Modifier.align(Alignment.Center),
                         horizontalAlignment = Alignment.CenterHorizontally
@@ -328,7 +329,7 @@ fun SearchPageResults(
 
                 }
 
-                is SearchPageState.SearchPageSuccess -> {
+                is SearchPageState.SearchSuccess -> {
                     if (targetSearchState.results.isEmpty()) {
                         Column(
                             modifier = Modifier.align(Alignment.Center),
@@ -361,7 +362,7 @@ fun SearchPageResults(
 
 @Composable
 fun SearchSuccessPages(
-    searchSuccess: SearchPageState.SearchPageSuccess,
+    searchSuccess: SearchPageState.SearchSuccess,
     onBioClick: (Bio) -> Unit,
     onScreenMediaClick: (ScreenMediaFileUrl, List<ScreenMediaFileUrl>) -> Unit,
 ) {
@@ -380,19 +381,22 @@ fun SearchSuccessPages(
             when (val searchResult = searchSuccess.results[index]) {
                 is SearchResult.SearchedApplications -> {
                     SearchedApplicationsPage(
-                        searchedApplications = searchResult, onBioClick = onBioClick
+                        searchedApplications = searchResult,
+                        onBioClick = onBioClick
                     )
                 }
 
                 is SearchResult.SearchedUsers -> {
                     SearchedUsersPage(
-                        searchedUsers = searchResult, onBioClick = onBioClick
+                        searchedUsers = searchResult,
+                        onBioClick = onBioClick
                     )
                 }
 
                 is SearchResult.SearchedGroups -> {
                     SearchedGroupsPage(
-                        searchedGroups = searchResult, onBioClick = onBioClick
+                        searchedGroups = searchResult,
+                        onBioClick = onBioClick
                     )
                 }
 
@@ -405,7 +409,9 @@ fun SearchSuccessPages(
                 }
 
                 is SearchResult.SearchedGoods -> {
-                    SearchedGoodsListPage(searchResult)
+                    SearchedGoodsListPage(
+                        searchedGoodsList = searchResult
+                    )
                 }
             }
         }
@@ -522,14 +528,18 @@ fun NavigationBarAreaGradient(
 }
 
 @Composable
-fun SearchedGoodsListPage(searchedGoodsList: SearchResult.SearchedGoods) {
+fun SearchedGoodsListPage(
+    modifier: Modifier = Modifier,
+    searchedGoodsList: SearchResult.SearchedGoods
+) {
     LazyColumn(
-        modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(
+        modifier = modifier.fillMaxSize(),
+        contentPadding = PaddingValues(
             top = WindowInsets.systemBars.asPaddingValues().calculateTopPadding(),
             bottom = 120.dp
         )
     ) {
-        items(searchedGoodsList.goodsList) { screenInfo ->
+        items(searchedGoodsList.goodsList) { goods ->
 
         }
     }
@@ -537,12 +547,14 @@ fun SearchedGoodsListPage(searchedGoodsList: SearchResult.SearchedGoods) {
 
 @Composable
 fun SearchedScreensPage(
+    modifier: Modifier = Modifier,
     searchedScreens: SearchResult.SearchedScreens,
     onBioClick: (Bio) -> Unit,
     onScreenMediaClick: (ScreenMediaFileUrl, List<ScreenMediaFileUrl>) -> Unit,
 ) {
     ScreensList(
-        modifier = Modifier,
+        modifier = modifier.fillMaxSize(),
+        pageRouteName = PageRouteNames.SearchPage,
         screens = searchedScreens.screens,
         onBioClick = onBioClick,
         onScreenMediaClick = onScreenMediaClick,
@@ -551,9 +563,14 @@ fun SearchedScreensPage(
 }
 
 @Composable
-fun SearchedGroupsPage(searchedGroups: SearchResult.SearchedGroups, onBioClick: (Bio) -> Unit) {
+fun SearchedGroupsPage(
+    modifier: Modifier = Modifier,
+    searchedGroups: SearchResult.SearchedGroups,
+    onBioClick: (Bio) -> Unit
+) {
     LazyColumn(
-        modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(
+        modifier = modifier.fillMaxSize(),
+        contentPadding = PaddingValues(
             top = WindowInsets.systemBars.asPaddingValues().calculateTopPadding(),
             bottom = 120.dp
         )
@@ -574,7 +591,8 @@ fun SearchedUsersPage(
     onBioClick: (Bio) -> Unit,
 ) {
     LazyColumn(
-        modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(
             top = WindowInsets.systemBars.asPaddingValues().calculateTopPadding(),
             bottom = 120.dp
         )
@@ -591,12 +609,13 @@ fun SearchedUsersPage(
 
 @Composable
 fun SearchedApplicationsPage(
+    modifier: Modifier = Modifier,
     searchedApplications: SearchResult.SearchedApplications,
     onBioClick: (Bio) -> Unit,
 ) {
     LazyVerticalGrid(
         columns = GridCells.Adaptive(90.dp),
-        modifier = Modifier.fillMaxSize(),
+        modifier = modifier.fillMaxSize(),
         state = rememberLazyGridState(),
         contentPadding = PaddingValues(
             top = WindowInsets.systemBars.asPaddingValues().calculateTopPadding(),

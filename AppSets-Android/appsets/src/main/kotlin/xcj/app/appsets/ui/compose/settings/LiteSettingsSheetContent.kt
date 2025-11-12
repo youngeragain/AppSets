@@ -147,7 +147,9 @@ fun LiteSettingsSheetContent(
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                LocalAccountUserAvatar()
+                LocalAccountUserAvatar(
+                    onClick = {}
+                )
                 val name = if (loginStatusState is AccountStatus.Logged) {
                     loginStatusState.userInfo.bioName
                         ?: stringResource(xcj.app.appsets.R.string.jkx)

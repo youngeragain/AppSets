@@ -14,6 +14,7 @@ import xcj.app.appsets.ui.model.page_state.UserProfilePageState
 import xcj.app.appsets.util.ktx.toastSuspend
 import xcj.app.appsets.util.model.UriProvider
 import xcj.app.compose_share.dynamic.ComposeLifecycleAware
+import xcj.app.starter.server.HttpRequestFail
 import xcj.app.starter.server.request
 import xcj.app.starter.server.requestRaw
 
@@ -85,9 +86,24 @@ class UserInfoUseCase(
     suspend fun updateCurrentUserInfoByUid(uid: String, requestOnlyUserInfo: Boolean = false) {
         request {
             userRepository.getUserInfoByUid(uid)
-        }.onSuccess {
-            LocalAccountManager.updateUserInfoIfNeeded(it)
-            fetchUserRelateInformation(it, requestOnlyUserInfo)
+        }.onSuccess { userInfo ->
+            LocalAccountManager.updateUserInfoIfNeeded(userInfo)
+            fetchUserRelateInformation(userInfo, requestOnlyUserInfo)
+        }.onFailure { exception ->
+            if (exception is HttpRequestFail) {
+                when (exception.response?.code) {
+                    -3 -> {
+                        currentUserInfoState.value = UserProfilePageState.LoadFailed(
+                            tips = xcj.app.appsets.R.string.login_required,
+                            subTips = xcj.app.appsets.R.string.expired_information
+                        )
+                    }
+
+                    else -> {
+                        currentUserInfoState.value = UserProfilePageState.LoadFailed()
+                    }
+                }
+            }
         }
     }
 

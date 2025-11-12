@@ -62,7 +62,7 @@ fun NavigationBar(
     hazeState: HazeState,
     visible: Boolean,
     enable: Boolean,
-    inSearchModel: Boolean,
+    inSearchMode: Boolean,
     tabItems: List<TabItem>,
     onTabClick: (TabItem, TabAction?) -> Unit,
     onBackClick: () -> Unit,
@@ -80,7 +80,7 @@ fun NavigationBar(
             hazeState = hazeState,
             enable = enable,
             hostVisible = visible,
-            inSearchModel = inSearchModel,
+            inSearchMode = inSearchMode,
             tabItems = tabItems,
             onBackClick = onBackClick,
             onInputContent = onInputContent,
@@ -97,7 +97,7 @@ private fun StandardNavigationBar(
     hazeState: HazeState,
     enable: Boolean,
     hostVisible: Boolean,
-    inSearchModel: Boolean,
+    inSearchMode: Boolean,
     tabItems: List<TabItem>,
     onTabClick: (TabItem, TabAction?) -> Unit,
     onBackClick: () -> Unit,
@@ -105,7 +105,7 @@ private fun StandardNavigationBar(
     onSearchBarClick: () -> Unit,
     onBioClick: () -> Unit,
 ) {
-    val modifierOverride = if (!inSearchModel) {
+    val modifierOverride = if (!inSearchMode) {
         modifier
             .hazeEffect(
                 hazeState,
@@ -123,7 +123,7 @@ private fun StandardNavigationBar(
     Column(
         modifier = modifierOverride
     ) {
-        if (!inSearchModel) {
+        if (!inSearchMode) {
             DesignHDivider()
             Spacer(modifier = Modifier.height(6.dp))
         }
@@ -136,14 +136,14 @@ private fun StandardNavigationBar(
             verticalAlignment = Alignment.CenterVertically
         ) {
             AnimatedVisibility(
-                !inSearchModel
+                visible = !inSearchMode
             ) {
                 Row {
-                    tabItems.forEach { tab ->
+                    tabItems.forEach { tabItem ->
                         TabItemContainer(
                             modifier = Modifier,
                             hostVisible = hostVisible,
-                            naviTabItem = tab,
+                            tabItem = tabItem,
                             onTabClick = onTabClick
                         )
                     }
@@ -154,7 +154,7 @@ private fun StandardNavigationBar(
             NavigationSearchBar(
                 hazeState = hazeState,
                 enable = enable,
-                inSearchModel = inSearchModel,
+                inSearchMode = inSearchMode,
                 onBackClick = onBackClick,
                 onInputContent = onInputContent,
                 onSearchBarClick = onSearchBarClick,
@@ -169,20 +169,25 @@ private fun StandardNavigationBar(
 private fun TabItemContainer(
     modifier: Modifier = Modifier,
     hostVisible: Boolean,
-    naviTabItem: TabItem,
+    tabItem: TabItem,
     onTabClick: (TabItem, TabAction?) -> Unit,
 ) {
-    //todo bug
-    val itemIsSelectOverride = naviTabItem.isSelect
+    //TODO bug
+    val itemIsSelectOverride = tabItem.isSelect
     Row(
         modifier = modifier.animateContentSize(),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Spacer(modifier = Modifier.width(8.dp))
-        if (naviTabItem.isShow()) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                TabItemMain(naviTabItem, onTabClick)
-                if (!naviTabItem.isSelect) {
+        if (tabItem.isShow()) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                TabItemMain(
+                    tabItem = tabItem,
+                    onTabClick = onTabClick
+                )
+                if (!tabItem.isSelect) {
                     Spacer(modifier = Modifier.height(4.dp))
                 } else {
                     Spacer(modifier = Modifier.height(2.dp))
@@ -206,11 +211,11 @@ private fun TabItemContainer(
                     modifier = Modifier.animateContentSize(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    naviTabItem.actions?.forEach {
-                        if (it.isShow()) {
+                    tabItem.actions?.forEach { tabAction ->
+                        if (tabAction.isShow()) {
                             TabItemAction(
-                                naviTabItem = naviTabItem,
-                                tabAction = it,
+                                tabItem = tabItem,
+                                tabAction = tabAction,
                                 onTabClick = onTabClick
                             )
                         }
@@ -225,74 +230,82 @@ private fun TabItemContainer(
 @OptIn(UnstableApi::class)
 @Composable
 private fun TabItemAction(
-    naviTabItem: TabItem,
+    modifier: Modifier = Modifier,
+    tabItem: TabItem,
     tabAction: TabAction,
     onTabClick: (TabItem, TabAction?) -> Unit,
 ) {
     val conversationUseCase = LocalUseCaseOfConversation.current
     val screenUseCase = LocalUseCaseOfScreen.current
-    if (naviTabItem.routeName == PageRouteNames.ConversationOverviewPage &&
-        tabAction.action == TabAction.ACTION_ADD
-    ) {
-        val iconRotationState by animateFloatAsState(
-            targetValue = if (conversationUseCase.isShowActions.value) {
-                135f
-            } else {
-                0f
-            },
-            label = "conversation_overview_add_button_animate"
-        )
-        ImageButtonComponent(
-            resource = tabAction.icon,
-            resRotate = iconRotationState,
-            onClick = {
-                onTabClick(naviTabItem, tabAction)
-            }
-        )
-    } else if (naviTabItem.routeName == PageRouteNames.OutSidePage &&
-        tabAction.action == TabAction.ACTION_REFRESH
-    ) {
-        val iconRotationState by animateFloatAsState(
-            targetValue = if (screenUseCase.systemScreensLoadContainer.isRequesting.value) {
-                135f
-            } else {
-                0f
-            },
-            label = "outside_refresh_button_animate_state"
-        )
-        ImageButtonComponent(
-            resource = tabAction.icon,
-            resRotate = iconRotationState,
-            useImage = false,
-            onClick = {
-                onTabClick(naviTabItem, tabAction)
-            }
-        )
-    } else {
-        ImageButtonComponent(
-            resource = tabAction.icon,
-            useImage = tabAction.action == TabAction.ACTION_ADD,
-            onClick = {
-                onTabClick(naviTabItem, tabAction)
-            }
-        )
+    when (tabItem.routeName) {
+        PageRouteNames.ConversationOverviewPage if tabAction.action == TabAction.ACTION_ADD
+            -> {
+            val iconRotationState by animateFloatAsState(
+                targetValue = if (conversationUseCase.isShowActions.value) {
+                    135f
+                } else {
+                    0f
+                },
+                label = "conversation_overview_add_button_animate"
+            )
+            ImageButtonComponent(
+                resource = tabAction.icon,
+                resRotate = iconRotationState,
+                onClick = {
+                    onTabClick(tabItem, tabAction)
+                }
+            )
+        }
+
+        PageRouteNames.OutSidePage if tabAction.action == TabAction.ACTION_REFRESH
+            -> {
+            val iconRotationState by animateFloatAsState(
+                targetValue = if (screenUseCase.systemScreensLoadContainer.isRequesting.value) {
+                    135f
+                } else {
+                    0f
+                },
+                label = "outside_refresh_button_animate_state"
+            )
+            ImageButtonComponent(
+                resource = tabAction.icon,
+                resRotate = iconRotationState,
+                useImage = false,
+                onClick = {
+                    onTabClick(tabItem, tabAction)
+                }
+            )
+        }
+
+        else -> {
+            ImageButtonComponent(
+                resource = tabAction.icon,
+                useImage = tabAction.action == TabAction.ACTION_ADD,
+                onClick = {
+                    onTabClick(tabItem, tabAction)
+                }
+            )
+        }
     }
 }
 
 @Composable
-private fun TabItemMain(naviTabItem: TabItem, onTabClick: (TabItem, TabAction?) -> Unit) {
+private fun TabItemMain(
+    tabItem: TabItem,
+    onTabClick: (TabItem, TabAction?) -> Unit
+) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        if (naviTabItem is TabItem.SampleTabItem) {
+        if (tabItem is TabItem.SampleTabItem) {
             ImageButtonComponent(
-                resource = naviTabItem.icon,
+                resource = tabItem.icon,
                 useImage = false,
                 onClick = {
-                    onTabClick(naviTabItem, null)
+                    onTabClick(tabItem, null)
                 }
             )
-        } else if (naviTabItem is TabItem.PlaybackTabItem) {
+        } else if (tabItem is TabItem.PlaybackTabItem) {
             val infiniteTransition =
                 rememberInfiniteTransition(label = "playback_tab_infinite_transition")
             val rotation = infiniteTransition.animateFloat(
@@ -305,11 +318,11 @@ private fun TabItemMain(naviTabItem: TabItem, onTabClick: (TabItem, TabAction?) 
                 label = "playback_tab_animate"
             )
             ImageButtonComponent(
-                resource = naviTabItem.icon,
+                resource = tabItem.icon,
                 useImage = false,
                 resRotate = rotation.value,
                 onClick = {
-                    onTabClick(naviTabItem, null)
+                    onTabClick(tabItem, null)
                 }
             )
         }
@@ -330,7 +343,7 @@ fun NavigationBarPreview() {
         hazeState = hazeState,
         visible = true,
         enable = true,
-        inSearchModel = false,
+        inSearchMode = false,
         tabItems = navigationUseCase.tabItems.value,
         onTabClick = { tab, tabAction -> },
         onBackClick = {},

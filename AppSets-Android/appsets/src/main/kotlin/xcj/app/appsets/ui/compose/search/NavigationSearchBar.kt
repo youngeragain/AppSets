@@ -42,24 +42,25 @@ private const val TAG = "NavigationSearchBar"
 
 @Composable
 fun NavigationSearchBar(
+    modifier: Modifier = Modifier,
     hazeState: HazeState,
     enable: Boolean,
-    inSearchModel: Boolean,
+    inSearchMode: Boolean,
     onBackClick: () -> Unit,
     onInputContent: (String) -> Unit,
     onSearchBarClick: () -> Unit,
     onBioClick: () -> Unit,
 ) {
-    Column {
+    Column(modifier = modifier) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             AnimatedContent(
-                targetState = inSearchModel,
+                targetState = inSearchMode,
                 contentAlignment = Alignment.CenterStart
-            ) { targetIsSearchMode ->
-                if (targetIsSearchMode) {
+            ) { targetInSearchMode ->
+                if (targetInSearchMode) {
                     SearchInputBar(
                         hazeState = hazeState,
                         onBackClick = onBackClick,
@@ -117,7 +118,10 @@ fun SearchClickableBar(
 }
 
 @Composable
-fun LocalAccountUserAvatar(onClick: (() -> Unit)? = null) {
+fun LocalAccountUserAvatar(
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit
+) {
     val loginState by LocalAccountManager.accountStatus
     val imOnlineState by BrokerTest.imOnLineState
     val targetBorderColor = remember {
@@ -145,17 +149,15 @@ fun LocalAccountUserAvatar(onClick: (() -> Unit)? = null) {
         targetValue = targetBorderColor.value,
         label = "border_color_animate"
     )
-    val modifier = if (loginState is AccountStatus.Logged) {
-        Modifier.border(2.dp, borderColor, CircleShape)
+    val modifierOverride = if (loginState is AccountStatus.Logged) {
+        modifier.border(2.dp, borderColor, CircleShape)
     } else {
-        Modifier
+        modifier
     }
     ImageButtonComponent(
-        modifier = modifier,
+        modifier = modifierOverride,
         useImage = false,
         resource = resource,
-        onClick = {
-            onClick?.invoke()
-        }
+        onClick = onClick
     )
 }

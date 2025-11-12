@@ -237,7 +237,7 @@
     <string name="please_choose_some_content">Please choose some content!</string>
     <string name="login_to_search">Need to search after logging in</string>
     <string name="searching">Searching</string>
-    <string name="something_wrong_when_search">An error occurred while searching</string>
+    <string name="something_wrong">Something wrong</string>
     <string name="application">Application</string>
     <string name="user">User</string>
     <string name="appsets_screen">Screen</string>
@@ -466,15 +466,15 @@
     <string name="save_to_file">Save to file</string>
     <string name="save">Save</string>
     <string name="new_file">New File</string>
-    <string name="camera_description">Camera usecase</string>
+    <string name="camera_description">Camera use case</string>
     <string name="recently">Recently</string>
     <string name="all">All</string>
     <string name="others">Others</string>
-    <string name="message_reliablity">Message Reliablity</string>
+    <string name="message_reliability">Message Reliability</string>
     <string name="no">No</string>
-    <string name="message_reliablity_tips">Improve message quality when the application is in the background</string>
-    <string name="app_platform_permissions_useage_tips">System platform permission usage request</string>
-    <string name="app_platform_permissions_useage_tips_des">Some permissions will be used in the future, and setting them now can improve convenience</string>
+    <string name="message_reliability_tips">Improve message quality when the application is in the background</string>
+    <string name="app_platform_permissions_usage_tips">System platform permission usage request</string>
+    <string name="app_platform_permissions_usage_tips_des">Some permissions will be used in the future, and setting them now can improve convenience</string>
     <string name="system_content_selection">System Implementation</string>
     <string name="system_content_selection_des">Best practices to maximize privacy requirements, no file permission required</string>
     <string name="app_custom_content_selection">App Implementation</string>
@@ -482,5 +482,6 @@
     <string name="choose_implementation">Choose Implementation</string>
     <string name="latest">Latest</string>
     <string name="stop">Stop</string>
-    <string name="select_a_sessio_object">Select a session object</string>
+    <string name="select_a_session_object">Select a session object</string>
+    <string name="expired_information">Expired information</string>
 </resources>

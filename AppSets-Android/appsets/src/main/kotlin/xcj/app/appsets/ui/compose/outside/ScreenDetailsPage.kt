@@ -68,6 +68,7 @@ import xcj.app.appsets.account.LocalAccountManager
 import xcj.app.appsets.im.Bio
 import xcj.app.appsets.server.model.ScreenMediaFileUrl
 import xcj.app.appsets.server.model.ScreenReview
+import xcj.app.appsets.ui.compose.PageRouteNames
 import xcj.app.appsets.ui.compose.custom_component.AnyImage
 import xcj.app.appsets.ui.compose.custom_component.DesignBackButton
 import xcj.app.appsets.ui.compose.custom_component.HideNavBar
@@ -396,6 +397,7 @@ fun ScreenDetailsBody(
             modifier = Modifier.padding(horizontal = 12.dp)
         ) {
             Screen(
+                pageRouteName = PageRouteNames.ScreenDetailsPage,
                 screenInfo = screenInfoForCard.screenInfo!!,
                 onBioClick = onBioClick,
                 onScreenMediaClick = onScreenMediaClick,

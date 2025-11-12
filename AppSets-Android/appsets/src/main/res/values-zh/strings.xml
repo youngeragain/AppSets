@@ -237,7 +237,7 @@
     <string name="please_choose_some_content">请选择内容</string>
     <string name="login_to_search">请登录后搜索</string>
     <string name="searching">搜索中</string>
-    <string name="something_wrong_when_search">搜索时发生错误</string>
+    <string name="something_wrong">发生错误</string>
     <string name="application">应用</string>
     <string name="user">用户</string>
     <string name="appsets_screen">Screen</string>
@@ -470,11 +470,11 @@
     <string name="recently">最近</string>
     <string name="all">全部</string>
     <string name="others">其他</string>
-    <string name="message_reliablity">消息可靠性</string>
+    <string name="message_reliability">消息可靠性</string>
     <string name="no">不</string>
-    <string name="message_reliablity_tips">应用处于后台时提高实时消息的质量</string>
-    <string name="app_platform_permissions_useage_tips">系统平台权限使用请求</string>
-    <string name="app_platform_permissions_useage_tips_des">一些权限将会在后续使用，现在设置可提高便捷性</string>
+    <string name="message_reliability_tips">应用处于后台时提高实时消息的质量</string>
+    <string name="app_platform_permissions_usage_tips">系统平台权限使用请求</string>
+    <string name="app_platform_permissions_usage_tips_des">一些权限将会在后续使用，现在设置可提高便捷性</string>
     <string name="system_content_selection">系统实现</string>
     <string name="system_content_selection_des">最佳实践，最大化隐私需求，无需文件权限</string>
     <string name="app_custom_content_selection">应用实现</string>
@@ -482,6 +482,7 @@
     <string name="choose_implementation">选择实现</string>
     <string name="latest">最新</string>
     <string name="stop">停止</string>
-    <string name="select_a_sessio_object">选择一个会话对象</string>
+    <string name="select_a_session_object">选择一个会话对象</string>
+    <string name="expired_information">过期信息</string>
 
 </resources>

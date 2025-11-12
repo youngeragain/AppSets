@@ -44,6 +44,7 @@ private const val TAG = "ScreensList"
 @Composable
 fun ScreensList(
     modifier: Modifier,
+    pageRouteName: String,
     screens: List<ScreenInfo>,
     onBioClick: (Bio) -> Unit,
     onScreenMediaClick: (ScreenMediaFileUrl, List<ScreenMediaFileUrl>) -> Unit,
@@ -60,6 +61,7 @@ fun ScreensList(
 
         PortraitScreenList(
             modifier = modifier,
+            pageRouteName = pageRouteName,
             scrollableState = scrollableState,
             screens = screens,
             onBioClick = onBioClick,
@@ -74,6 +76,7 @@ fun ScreensList(
 
         LandscapeScreenList(
             modifier = modifier,
+            pageRouteName = pageRouteName,
             scrollableState = scrollableState,
             screens = screens,
             onBioClick = onBioClick,
@@ -85,6 +88,7 @@ fun ScreensList(
 @Composable
 private fun LandscapeScreenList(
     modifier: Modifier,
+    pageRouteName: String,
     screens: List<ScreenInfo>,
     scrollableState: ScrollableState,
     onBioClick: (Bio) -> Unit,
@@ -128,6 +132,7 @@ private fun LandscapeScreenList(
                     .padding(12.dp)
             ) {
                 Screen(
+                    pageRouteName = pageRouteName,
                     screenInfo = screenInfo,
                     onBioClick = onBioClick,
                     onScreenMediaClick = onScreenMediaClick
@@ -143,6 +148,7 @@ private fun LandscapeScreenList(
 @Composable
 private fun PortraitScreenList(
     modifier: Modifier,
+    pageRouteName: String,
     screens: List<ScreenInfo>,
     scrollableState: ScrollableState,
     onBioClick: (Bio) -> Unit,
@@ -184,6 +190,7 @@ private fun PortraitScreenList(
                     .padding(12.dp)
             ) {
                 Screen(
+                    pageRouteName = pageRouteName,
                     screenInfo = screenInfo,
                     onBioClick = onBioClick,
                     onScreenMediaClick = onScreenMediaClick

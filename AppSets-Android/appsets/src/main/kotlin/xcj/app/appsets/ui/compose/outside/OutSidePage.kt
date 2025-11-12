@@ -8,6 +8,7 @@ import androidx.compose.ui.Modifier
 import xcj.app.appsets.im.Bio
 import xcj.app.appsets.server.model.ScreenInfo
 import xcj.app.appsets.server.model.ScreenMediaFileUrl
+import xcj.app.appsets.ui.compose.PageRouteNames
 import xcj.app.appsets.ui.compose.custom_component.ShowNavBar
 import xcj.app.appsets.ui.compose.search.StatusBarAreaGradient
 
@@ -25,6 +26,7 @@ fun OutSidePage(
     ) {
         ScreensList(
             modifier = Modifier,
+            pageRouteName = PageRouteNames.OutSidePage,
             screens = screens,
             onBioClick = onBioClick,
             onScreenMediaClick = onScreenMediaClick,

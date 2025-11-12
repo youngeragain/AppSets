@@ -111,8 +111,8 @@ class SystemUseCase(
                 val platformPermissionsUsages = platformPermissionsUsagesProvider()
                 val newNowSpaceContentOfPlatformPermissionUsageTips =
                     NowSpaceContent.PlatformPermissionUsageTips(
-                        tips = xcj.app.appsets.R.string.app_platform_permissions_useage_tips,
-                        subTips = xcj.app.appsets.R.string.app_platform_permissions_useage_tips_des,
+                        tips = xcj.app.appsets.R.string.app_platform_permissions_usage_tips,
+                        subTips = xcj.app.appsets.R.string.app_platform_permissions_usage_tips_des,
                         platformPermissionsUsages = platformPermissionsUsages
                     )
                 oldNowSpaceContentOfPlatformPermissionUsageTips to newNowSpaceContentOfPlatformPermissionUsageTips

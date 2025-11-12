@@ -11,6 +11,7 @@ import androidx.compose.ui.unit.sp
 import xcj.app.appsets.im.Bio
 import xcj.app.appsets.server.model.ScreenInfo
 import xcj.app.appsets.server.model.ScreenMediaFileUrl
+import xcj.app.appsets.ui.compose.PageRouteNames
 import xcj.app.appsets.ui.compose.outside.ScreensList
 
 @Composable
@@ -33,6 +34,7 @@ fun UserScreens(
     } else {
         ScreensList(
             modifier = Modifier,
+            pageRouteName = PageRouteNames.UserProfilePage,
             screens = screens,
             onBioClick = onBioClick,
             onScreenMediaClick = onScreenMediaClick,

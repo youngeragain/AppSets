@@ -223,7 +223,7 @@ fun SessionObjectNotFound() {
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
     ) {
-        Text(text = stringResource(xcj.app.appsets.R.string.select_a_sessio_object))
+        Text(text = stringResource(xcj.app.appsets.R.string.select_a_session_object))
     }
 }
 
