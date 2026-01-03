@@ -15,8 +15,8 @@ object AESHelper {
     private const val TAG = "AESHelper"
     const val ALGORITHM_AES = "AES"
     const val ALGORITHM_DES = "DES"
-    const val TRANSFORM_AES_DEFAULT = "AES/ECB/PKCS5Padding"
-    const val TRANSFORM_DES_DEFAULT = "DES/ECB/PKCS5Padding"
+    const val TRANSFORM_AES_DEFAULT = "AES/CBC/PKCS5PADDING"
+    const val TRANSFORM_DES_DEFAULT = "DES/CBC/PKCS5PADDING"
 
     data class EncryptionResult(
         val password: String,
@@ -48,9 +48,9 @@ object AESHelper {
             runCatching {
                 val uuid = UUID.randomUUID().toString().uppercase()
                 val password = if (algorithm == ALGORITHM_AES) {
-                    uuid.substring(0, 16)
+                    uuid.take(16)
                 } else {
-                    uuid.substring(0, 8)
+                    uuid.take(8)
                 }
                 val privateKey = SecretKeySpec(password.encodeToByteArray(), algorithm)
                 val cipher = Cipher.getInstance(transformation)

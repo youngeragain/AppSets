@@ -35,7 +35,7 @@ sealed interface SpotLight {
     data class AudioPlayer(
         val playbackState: Int = Player.STATE_IDLE,
         val mediaMetadata: MediaMetadata? = null,
-        val id: String? = MediaRemoteExoUseCase.Companion.DEFAULT_EMPTY_UUID,
+        val id: String? = MediaRemoteExoUseCase.DEFAULT_EMPTY_UUID,
         val duration: String = Constants.STR_EMPTY,
         val durationRawValue: Long = 0,
         val currentDuration: String = Constants.STR_EMPTY,

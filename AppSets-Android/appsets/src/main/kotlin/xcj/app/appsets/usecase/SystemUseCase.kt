@@ -509,7 +509,7 @@ class SystemUseCase(
             }
             ContextCompat.getString(context, xcj.app.appsets.R.string.register_appsets_success)
                 .toastSuspend()
-            composeStateUpdater.update(SignUpPageUIState.SignUpFinish())
+            composeStateUpdater.update(SignUpPageUIState.SignUpSuccess())
         }).onFailure {
             ContextCompat.getString(context, xcj.app.appsets.R.string.register_failed)
                 .toastSuspend()

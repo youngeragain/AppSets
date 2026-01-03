@@ -5,7 +5,7 @@ import kotlinx.coroutines.delay
 
 open class RuntimeSingleStateUpdater<S>(
     private val composeState: MutableState<S?>?,
-    private val handleDSL: (suspend RuntimeSingleStateUpdater<S>.(String, Any?) -> Unit)? = null
+    private val onInputHandleDSL: (suspend RuntimeSingleStateUpdater<S>.(String, Any?) -> Unit)? = null
 ) : SingleStateUpdater<S> {
 
     override fun getStateValue(): S? {
@@ -27,14 +27,14 @@ open class RuntimeSingleStateUpdater<S>(
         }
     }
 
-    override suspend fun <I : Any> handle(key: String, input: I?) {
-        handleDSL?.invoke(this, key, input)
+    override suspend fun <I : Any> input(key: String, input: I?) {
+        onInputHandleDSL?.invoke(this, key, input)
     }
 
 
     class RuntimeSingleStateNonNullUpdater<S>(
         private val composeState: MutableState<S>?,
-        private val handleDSL: (suspend RuntimeSingleStateNonNullUpdater<S>.(String, Any?) -> Unit)? = null
+        private val onInputHandleDSL: (suspend RuntimeSingleStateNonNullUpdater<S>.(String, Any?) -> Unit)? = null
     ) : SingleStateUpdater<S> {
 
         override fun getStateValue(): S? {
@@ -59,8 +59,8 @@ open class RuntimeSingleStateUpdater<S>(
             }
         }
 
-        override suspend fun <I : Any> handle(key: String, input: I?) {
-            handleDSL?.invoke(this, key, input)
+        override suspend fun <I : Any> input(key: String, input: I?) {
+            onInputHandleDSL?.invoke(this, key, input)
         }
 
         companion object {
@@ -78,21 +78,27 @@ open class RuntimeSingleStateUpdater<S>(
 
     companion object {
 
-        fun <T> fromState(
-            composeState: MutableState<T?>?,
-            inputHandleDSL: (suspend RuntimeSingleStateUpdater<T>.(String, Any?) -> Unit)? = null
-        ): ComposeStateUpdater<T> {
-            return RuntimeSingleStateUpdater(composeState, inputHandleDSL) as ComposeStateUpdater<T>
+        /**
+         * @param onInputHandleDSL param1:key of composeState, param2:input raw value
+         */
+        fun <S> fromState(
+            composeState: MutableState<S?>?,
+            onInputHandleDSL: (suspend RuntimeSingleStateUpdater<S>.(String, Any?) -> Unit)? = null
+        ): ComposeStateUpdater<S> {
+            return RuntimeSingleStateUpdater(composeState, onInputHandleDSL)
         }
 
-        fun <T> fromNonNullState(
-            composeState: MutableState<T>?,
-            inputHandleDSL: (suspend RuntimeSingleStateNonNullUpdater<T>.(String, Any?) -> Unit)? = null
-        ): ComposeStateUpdater<T> {
+        /**
+         * @param onInputHandleDSL param1:key of ComposeState, param2:input raw value
+         */
+        fun <S> fromNonNullState(
+            composeState: MutableState<S>?,
+            onInputHandleDSL: (suspend RuntimeSingleStateNonNullUpdater<S>.(String, Any?) -> Unit)? = null
+        ): ComposeStateUpdater<S> {
             return RuntimeSingleStateNonNullUpdater(
                 composeState,
-                inputHandleDSL
-            ) as ComposeStateUpdater<T>
+                onInputHandleDSL
+            )
         }
     }
 }

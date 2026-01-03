@@ -22,11 +22,16 @@ data class ContentSelectionRequest(
         }?.maxCount(selectionType) ?: 0
     }
 
-    fun buildMarkKey(): String {
+    private fun buildMarkKey(): String {
         return "${contextName}/${requestKey}/${defaultSelectionType}/${
             selectionTypeMaxCount(
                 defaultSelectionType
             )
         }}"
+    }
+
+    suspend fun handleResult(contentSelectionResult: ContentSelectionResult<*>) {
+        val markKey = buildMarkKey()
+        composeStateUpdater?.input(markKey, contentSelectionResult)
     }
 }

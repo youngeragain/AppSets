@@ -105,7 +105,7 @@ fun SignUpPage(
 ) {
 
     LaunchedEffect(key1 = signUpPageUIState, block = {
-        if (signUpPageUIState is SignUpPageUIState.SignUpFinish) {
+        if (signUpPageUIState is SignUpPageUIState.SignUpSuccess) {
             onBackClick()
         }
     })

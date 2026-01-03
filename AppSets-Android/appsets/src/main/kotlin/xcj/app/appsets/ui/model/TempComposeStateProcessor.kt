@@ -48,7 +48,7 @@ abstract class TempComposeStateProcessor() {
             return
         }
         val composeStateUpdater = composeStateUpdaterMap[key]
-        composeStateUpdater?.handle(key, input)
+        composeStateUpdater?.input(key, input)
         if (autoRemove) {
             unmarkForKey(key)
         }

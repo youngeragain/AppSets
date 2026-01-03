@@ -1765,7 +1765,7 @@ private fun showContentSelectionDialog(
     composeStateUpdater: ComposeStateUpdater<*>,
     coroutineScope: CoroutineScope,
 ) {
-    val request = ContentSelectionRequest(
+    val contentSelectionRequest = ContentSelectionRequest(
         context,
         contextName,
         requestKey,
@@ -1776,7 +1776,7 @@ private fun showContentSelectionDialog(
 
     LocalMessenger.post(
         ModuleConstant.MESSAGE_KEY_ON_CONTENT_SELECT_REQUEST,
-        request
+        contentSelectionRequest
     )
     val bottomSheetState = visibilityComposeStateProvider.bottomSheetState()
 
@@ -1784,20 +1784,19 @@ private fun showContentSelectionDialog(
         {
             LocalMessenger.post(
                 ModuleConstant.MESSAGE_KEY_ON_CONTENT_SELECTION_CLOSE,
-                request
+                contentSelectionRequest
             )
         }
     ) {
         ContentSelectionPromptSheetContent(
-            request = request,
+            contentSelectionRequest = contentSelectionRequest,
             onContentSelected = { contentSelectionResult ->
                 LocalMessenger.post(
                     ModuleConstant.MESSAGE_KEY_ON_CONTENT_SELECT_RESULT,
                     contentSelectionResult
                 )
                 coroutineScope.launch {
-                    val markKey = request.buildMarkKey()
-                    composeStateUpdater.handle(markKey, contentSelectionResult)
+                    contentSelectionRequest.handleResult(contentSelectionResult)
                 }
             },
             onDismiss = {

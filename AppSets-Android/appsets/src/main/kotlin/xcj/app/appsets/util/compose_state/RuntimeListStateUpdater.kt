@@ -2,7 +2,7 @@ package xcj.app.appsets.util.compose_state
 
 open class RuntimeListStateUpdater<S>(
     private val composeState: MutableList<S>?,
-    private val handleDSL: (suspend RuntimeListStateUpdater<S>.(String, Any?) -> Unit)? = null
+    private val onInputHandleDSL: (suspend RuntimeListStateUpdater<S>.(String, Any?) -> Unit)? = null
 ) : ListStateUpdater<S> {
 
     override fun getStateList(): List<S>? {
@@ -19,23 +19,31 @@ open class RuntimeListStateUpdater<S>(
 
 
     override suspend fun remove(element: S): S? {
-        return composeState?.remove(element) as? S
+        val removed = composeState?.remove(element) ?: false
+        return if (removed) {
+            element
+        } else {
+            null
+        }
     }
 
     override suspend fun removeAll() {
         composeState?.clear()
     }
 
-    override suspend fun <I : Any> handle(key: String, input: I?) {
-        handleDSL?.invoke(this, key, input)
+    override suspend fun <I : Any> input(key: String, input: I?) {
+        onInputHandleDSL?.invoke(this, key, input)
     }
 
     companion object {
+        /**
+         * @param onInputHandleDSL param1:key of ComposeState, param2:input raw value
+         */
         fun <S> fromState(
             composeState: MutableList<S>?,
-            inputHandleDSL: (suspend RuntimeListStateUpdater<S>.(String, Any?) -> Unit)? = null
+            onInputHandleDSL: (suspend RuntimeListStateUpdater<S>.(String, Any?) -> Unit)? = null
         ): ComposeStateUpdater<S> {
-            return RuntimeListStateUpdater(composeState, inputHandleDSL) as ComposeStateUpdater<S>
+            return RuntimeListStateUpdater(composeState, onInputHandleDSL)
         }
     }
 }

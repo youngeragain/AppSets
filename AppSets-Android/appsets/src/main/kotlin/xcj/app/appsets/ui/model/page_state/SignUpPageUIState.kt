@@ -14,7 +14,7 @@ sealed interface SignUpPageUIState : TipsProvider {
         override val subTips: Int? = null
     ) : SignUpPageUIState
 
-    data class SignUpFinish(
+    data class SignUpSuccess(
         override val tips: Int? = null,
         override val subTips: Int? = null
     ) : SignUpPageUIState

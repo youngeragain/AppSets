@@ -17,14 +17,10 @@ sealed interface AccountStatus {
     ) : AccountStatus
 
     data class NotLogged(
-        override val userInfo: UserInfo = UserInfo.Companion.default()
+        override val userInfo: UserInfo = UserInfo.default()
     ) : AccountStatus
 
     data class Expired(
-        override val userInfo: UserInfo = UserInfo.Companion.default()
-    ) : AccountStatus
-
-    data class LoggingIn(
-        override val userInfo: UserInfo
+        override val userInfo: UserInfo = UserInfo.default()
     ) : AccountStatus
 }

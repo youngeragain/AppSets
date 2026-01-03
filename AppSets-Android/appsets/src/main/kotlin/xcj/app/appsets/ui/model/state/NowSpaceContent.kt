@@ -9,7 +9,6 @@ import java.util.UUID
 sealed interface NowSpaceContent {
 
     val timeout: Int
-        get() = Int.MAX_VALUE
 
     val id: String
 

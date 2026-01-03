@@ -196,7 +196,7 @@ sealed interface ContentSelectionPageState {
 
 @Composable
 fun ContentSelectionPromptSheetContent(
-    request: ContentSelectionRequest,
+    contentSelectionRequest: ContentSelectionRequest,
     shouldConfirmIfUseSystemImplementation: Boolean = true,
     onContentSelected: (ContentSelectionResult<*>) -> Unit,
     onDismiss: () -> Unit,
@@ -247,8 +247,8 @@ fun ContentSelectionPromptSheetContent(
                                             val results =
                                                 RichMediaContentSelectionResult(
                                                     context,
-                                                    request,
-                                                    request.defaultSelectionType
+                                                    contentSelectionRequest,
+                                                    contentSelectionRequest.defaultSelectionType
                                                 ) { systemSelectedContents }
                                             onContentSelected(results)
                                             onDismiss()
@@ -265,7 +265,7 @@ fun ContentSelectionPromptSheetContent(
                                     null
                                 )
                             val singleMimeType =
-                                SingleMimeType(request.defaultSelectionType)
+                                SingleMimeType(contentSelectionRequest.defaultSelectionType)
                             val pickVisualMediaRequest =
                                 Builder().setMediaType(singleMimeType)
                                     .build()
@@ -290,7 +290,7 @@ fun ContentSelectionPromptSheetContent(
 
                 is ContentSelectionPageState.AppImplementation -> {
                     AppImplContentSelectionContent(
-                        request = request,
+                        contentSelectionRequest = contentSelectionRequest,
                         onContentSelected = { contentSelectionResult ->
                             onContentSelected(contentSelectionResult)
                             onDismiss()
@@ -307,8 +307,8 @@ fun ContentSelectionPromptSheetContent(
                             val results =
                                 RichMediaContentSelectionResult(
                                     context,
-                                    request,
-                                    request.defaultSelectionType
+                                    contentSelectionRequest,
+                                    contentSelectionRequest.defaultSelectionType
                                 ) { selectedContents }
                             onContentSelected(results)
                             onDismiss()
@@ -474,7 +474,7 @@ private fun getTabName(selectionType: String): String {
 @Composable
 private fun AppImplContentSelectionContent(
     modifier: Modifier = Modifier,
-    request: ContentSelectionRequest,
+    contentSelectionRequest: ContentSelectionRequest,
     onContentSelected: (ContentSelectionResult<*>) -> Unit,
 ) {
 
@@ -488,14 +488,14 @@ private fun AppImplContentSelectionContent(
             ContentSelectionTypes.CAMERA,
         )
         contentSelectionTabs.removeIf { selectionType ->
-            request.selectionTypeParams.firstOrNull {
+            contentSelectionRequest.selectionTypeParams.firstOrNull {
                 it.selectionType == selectionType
             } == null
         }
         contentSelectionTabs
     }
     var defaultSelectionTypeIndex =
-        selectionTypes.indexOfFirst { selectionType -> selectionType == request.defaultSelectionType }
+        selectionTypes.indexOfFirst { selectionType -> selectionType == contentSelectionRequest.defaultSelectionType }
     if (defaultSelectionTypeIndex == -1) {
         defaultSelectionTypeIndex = 0
     }
@@ -512,42 +512,42 @@ private fun AppImplContentSelectionContent(
             when (tabSelectionType) {
                 ContentSelectionTypes.CAMERA -> {
                     CameraContentSelection(
-                        request = request,
+                        request = contentSelectionRequest,
                         onContentSelected = onContentSelected
                     )
                 }
 
                 ContentSelectionTypes.LOCATION -> {
                     LocationContentSelection(
-                        request = request,
+                        request = contentSelectionRequest,
                         onContentSelected = onContentSelected
                     )
                 }
 
                 ContentSelectionTypes.IMAGE -> {
                     PictureContentSelection(
-                        request = request,
+                        request = contentSelectionRequest,
                         onContentSelected = onContentSelected
                     )
                 }
 
                 ContentSelectionTypes.VIDEO -> {
                     VideoContentSelection(
-                        request = request,
+                        request = contentSelectionRequest,
                         onContentSelected = onContentSelected
                     )
                 }
 
                 ContentSelectionTypes.AUDIO -> {
                     AudioContentSelection(
-                        request = request,
+                        request = contentSelectionRequest,
                         onContentSelected = onContentSelected
                     )
                 }
 
                 ContentSelectionTypes.FILE -> {
                     FileContentSelection(
-                        request = request,
+                        request = contentSelectionRequest,
                         onContentSelected = onContentSelected
                     )
                 }

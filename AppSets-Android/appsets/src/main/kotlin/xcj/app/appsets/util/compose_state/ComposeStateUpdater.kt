@@ -1,5 +1,5 @@
 package xcj.app.appsets.util.compose_state
 
-interface ComposeStateUpdater<S> {
-    suspend fun <I : Any> handle(key: String, input: I?)
+interface ComposeStateUpdater<out S> {
+    suspend fun <I : Any> input(key: String, input: I?)
 }
