@@ -476,9 +476,9 @@
     <string name="app_platform_permissions_usage_tips">System platform permission usage request</string>
     <string name="app_platform_permissions_usage_tips_des">Some permissions will be used in the future, and setting them now can improve convenience</string>
     <string name="system_content_selection">System Implementation</string>
-    <string name="system_content_selection_des">Best practices to maximize privacy requirements, no file permission required</string>
+    <string name="system_content_selection_des">Best practices to maximize privacy protection, no file permission required</string>
     <string name="app_custom_content_selection">App Implementation</string>
-    <string name="app_custom_content_selection_des">Maximizing custom requirements, file permission required</string>
+    <string name="app_custom_content_selection_des">Maximize customization, file permission required</string>
     <string name="choose_implementation">Choose Implementation</string>
     <string name="latest">Latest</string>
     <string name="stop">Stop</string>
@@ -488,4 +488,5 @@
     <string name="create_application">Create Application</string>
     <string name="template_add_xxx">Add %1$s</string>
     <string name="template_version_info_count_xxx">Version Infos(%d)</string>
+    <string name="logo">Logo</string>
 </resources>

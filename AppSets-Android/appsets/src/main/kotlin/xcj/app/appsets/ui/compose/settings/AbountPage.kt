@@ -153,7 +153,7 @@ fun AboutPage(
                             )
                             DesignHDivider()
                         }
-                        Spacer(modifier = Modifier.height(128.dp))
+                        Spacer(modifier = Modifier.height(150.dp))
                     }
                 }
             }

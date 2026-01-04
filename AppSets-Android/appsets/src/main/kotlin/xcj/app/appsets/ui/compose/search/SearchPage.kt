@@ -428,7 +428,7 @@ fun SearchSuccessPages(
                             .padding(horizontal = 12.dp, vertical = 6.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        val text = when (searchResult) {
+                        val tabName = when (searchResult) {
                             is SearchResult.SearchedApplications -> {
                                 stringResource(xcj.app.appsets.R.string.application)
                             }
@@ -449,7 +449,10 @@ fun SearchSuccessPages(
                                 stringResource(xcj.app.appsets.R.string.goods)
                             }
                         }
-                        Text(text = text, fontSize = 12.sp)
+                        Text(
+                            text = String.format("%s(%d)", tabName, searchResult.count),
+                            fontSize = 12.sp
+                        )
                     }
                 }
             }

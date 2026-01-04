@@ -1,5 +1,6 @@
 package xcj.app.appsets.ui.compose.login
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -25,6 +26,7 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -43,6 +45,7 @@ import androidx.compose.ui.layout.onPlaced
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntSize
@@ -142,8 +145,8 @@ fun SignUpPage(
                     backActionsHeight + 12.dp
                 )
             )
-            Column(Modifier.padding(horizontal = 12.dp)) {
-                Spacer(Modifier.height(12.dp))
+            Column(modifier = Modifier.padding(horizontal = 12.dp)) {
+                Spacer(modifier = Modifier.height(12.dp))
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -179,12 +182,14 @@ fun SignUpPage(
                         text = String.format(
                             stringResource(id = xcj.app.appsets.R.string.a_is_required_template),
                             stringResource(id = xcj.app.appsets.R.string.avatar),
-                            stringResource(id = xcj.app.appsets.R.string.required)
+                            "*",
                         ),
-                        modifier = Modifier.padding(vertical = 12.dp)
+                        modifier = Modifier.padding(vertical = 12.dp),
+                        fontWeight = FontWeight.Bold
                     )
                     Box(
                         modifier = Modifier
+                            .size(250.dp)
                             .clip(ExtraLarge2)
                             .border(
                                 1.dp,
@@ -218,13 +223,19 @@ fun SignUpPage(
                     ) {
                         val avatarUri =
                             userInfoForCreate.userAvatarUriProvider.value?.provideUri()
-                                ?: xcj.app.compose_share.R.drawable.ic_outline_face_24
-                        AnyImage(
-                            model = avatarUri,
-                            modifier = Modifier
-                                .size(250.dp)
-                                .clip(ExtraLarge2)
-                        )
+                        AnimatedContent(avatarUri != null) { hasUri ->
+                            if (hasUri) {
+                                AnyImage(
+                                    model = avatarUri,
+                                    modifier = Modifier
+                                )
+                            } else {
+                                Icon(
+                                    painter = painterResource(xcj.app.compose_share.R.drawable.ic_round_add_24),
+                                    contentDescription = stringResource(xcj.app.appsets.R.string.add)
+                                )
+                            }
+                        }
                     }
                 }
                 Spacer(modifier = Modifier.height(12.dp))
@@ -233,9 +244,10 @@ fun SignUpPage(
                     text = String.format(
                         stringResource(id = xcj.app.appsets.R.string.a_is_required_template),
                         stringResource(id = xcj.app.appsets.R.string.account),
-                        stringResource(id = xcj.app.appsets.R.string.required)
+                        "*"
                     ),
-                    modifier = Modifier.padding(vertical = 10.dp)
+                    modifier = Modifier.padding(vertical = 10.dp),
+                    fontWeight = FontWeight.Bold
                 )
                 DesignTextField(
                     modifier = Modifier.fillMaxWidth(),
@@ -244,7 +256,10 @@ fun SignUpPage(
                         userInfoForCreate.account.value = it
                     },
                     placeholder = {
-                        Text(text = stringResource(id = xcj.app.appsets.R.string.account))
+                        Text(
+                            text = stringResource(id = xcj.app.appsets.R.string.account),
+                            fontSize = 12.sp
+                        )
                     })
                 Spacer(modifier = Modifier.height(8.dp))
 
@@ -252,9 +267,10 @@ fun SignUpPage(
                     text = String.format(
                         stringResource(id = xcj.app.appsets.R.string.a_is_required_template),
                         stringResource(id = xcj.app.appsets.R.string.password),
-                        stringResource(id = xcj.app.appsets.R.string.required)
+                        "*",
                     ),
-                    modifier = Modifier.padding(vertical = 10.dp)
+                    modifier = Modifier.padding(vertical = 10.dp),
+                    fontWeight = FontWeight.Bold
                 )
                 DesignTextField(
                     modifier = Modifier.fillMaxWidth(),
@@ -263,15 +279,19 @@ fun SignUpPage(
                         userInfoForCreate.password.value = it
                     },
                     placeholder = {
-                        Text(text = stringResource(id = xcj.app.appsets.R.string.password))
+                        Text(
+                            text = stringResource(id = xcj.app.appsets.R.string.password),
+                            fontSize = 12.sp
+                        )
                     })
                 Text(
                     text = String.format(
                         stringResource(id = xcj.app.appsets.R.string.a_is_required_template),
                         stringResource(id = xcj.app.appsets.R.string.name),
-                        stringResource(id = xcj.app.appsets.R.string.required)
+                        "*"
                     ),
-                    modifier = Modifier.padding(vertical = 10.dp)
+                    modifier = Modifier.padding(vertical = 10.dp),
+                    fontWeight = FontWeight.Bold
                 )
                 DesignTextField(
                     modifier = Modifier.fillMaxWidth(),
@@ -285,7 +305,10 @@ fun SignUpPage(
                         userInfoForCreate.userName.value = userNameFiltered
                     },
                     placeholder = {
-                        Text(text = stringResource(id = xcj.app.appsets.R.string.name))
+                        Text(
+                            text = stringResource(id = xcj.app.appsets.R.string.name),
+                            fontSize = 12.sp
+                        )
                     })
                 Spacer(modifier = Modifier.height(8.dp))
 
@@ -293,9 +316,10 @@ fun SignUpPage(
                     text = String.format(
                         stringResource(id = xcj.app.appsets.R.string.a_is_required_template),
                         stringResource(id = xcj.app.appsets.R.string.brief),
-                        stringResource(id = xcj.app.appsets.R.string.required)
+                        "*"
                     ),
-                    modifier = Modifier.padding(vertical = 10.dp)
+                    modifier = Modifier.padding(vertical = 10.dp),
+                    fontWeight = FontWeight.Bold
                 )
                 DesignTextField(
                     modifier = Modifier.fillMaxWidth(),
@@ -304,13 +328,17 @@ fun SignUpPage(
                         userInfoForCreate.userIntroduction.value = it
                     },
                     placeholder = {
-                        Text(text = stringResource(xcj.app.appsets.R.string.personal_profile))
+                        Text(
+                            text = stringResource(xcj.app.appsets.R.string.personal_profile),
+                            fontSize = 12.sp
+                        )
                     })
                 Spacer(modifier = Modifier.height(8.dp))
 
                 Text(
                     text = stringResource(xcj.app.appsets.R.string.label),
-                    modifier = Modifier.padding(vertical = 10.dp)
+                    modifier = Modifier.padding(vertical = 10.dp),
+                    fontWeight = FontWeight.Bold
                 )
                 DesignTextField(
                     modifier = Modifier.fillMaxWidth(),
@@ -319,13 +347,18 @@ fun SignUpPage(
                         userInfoForCreate.userTags.value = it
                     },
                     placeholder = {
-                        Text(text = stringResource(xcj.app.appsets.R.string.personal_label_placeholder))
+                        Text(
+                            text = stringResource(xcj.app.appsets.R.string.personal_label_placeholder),
+                            fontSize = 12.sp
+                        )
                     })
                 Spacer(modifier = Modifier.height(8.dp))
 
                 Text(
                     text = stringResource(xcj.app.appsets.R.string.sex),
-                    modifier = Modifier.padding(vertical = 10.dp)
+                    modifier = Modifier.padding(vertical = 10.dp),
+                    fontWeight = FontWeight.Bold
+
                 )
                 DesignTextField(
                     modifier = Modifier.fillMaxWidth(),
@@ -334,13 +367,17 @@ fun SignUpPage(
                         userInfoForCreate.userSex.value = it
                     },
                     placeholder = {
-                        Text(text = stringResource(xcj.app.appsets.R.string.sex_placeholder))
+                        Text(
+                            text = stringResource(xcj.app.appsets.R.string.sex_placeholder),
+                            fontSize = 12.sp
+                        )
                     })
                 Spacer(modifier = Modifier.height(8.dp))
 
                 Text(
                     text = stringResource(xcj.app.appsets.R.string.age),
-                    modifier = Modifier.padding(vertical = 10.dp)
+                    modifier = Modifier.padding(vertical = 10.dp),
+                    fontWeight = FontWeight.Bold
                 )
                 DesignTextField(
                     modifier = Modifier.fillMaxWidth(),
@@ -359,7 +396,10 @@ fun SignUpPage(
                         userInfoForCreate.userAge.value = userAgeFiltered
                     },
                     placeholder = {
-                        Text(text = stringResource(id = xcj.app.appsets.R.string.age))
+                        Text(
+                            text = stringResource(id = xcj.app.appsets.R.string.age),
+                            fontSize = 12.sp
+                        )
                     },
                     keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number)
                 )
@@ -367,7 +407,8 @@ fun SignUpPage(
 
                 Text(
                     text = stringResource(xcj.app.appsets.R.string.phone),
-                    modifier = Modifier.padding(vertical = 10.dp)
+                    modifier = Modifier.padding(vertical = 10.dp),
+                    fontWeight = FontWeight.Bold
                 )
                 DesignTextField(
                     modifier = Modifier.fillMaxWidth(),
@@ -375,8 +416,12 @@ fun SignUpPage(
                     onValueChange = {
                         val userPhoneFiltered = it.toIntOrNull()?.toString() ?: ""
                         userInfoForCreate.userPhone.value = userPhoneFiltered
-                    }, placeholder = {
-                        Text(text = stringResource(xcj.app.appsets.R.string.phone_number))
+                    },
+                    placeholder = {
+                        Text(
+                            text = stringResource(xcj.app.appsets.R.string.phone_number),
+                            fontSize = 12.sp
+                        )
                     },
                     keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Phone)
                 )
@@ -384,7 +429,9 @@ fun SignUpPage(
 
                 Text(
                     text = stringResource(xcj.app.appsets.R.string.email),
-                    modifier = Modifier.padding(vertical = 10.dp)
+                    modifier = Modifier.padding(vertical = 10.dp),
+                    fontWeight = FontWeight.Bold
+
                 )
                 DesignTextField(
                     modifier = Modifier.fillMaxWidth(),
@@ -393,7 +440,10 @@ fun SignUpPage(
                         userInfoForCreate.userEmail.value = it
                     },
                     placeholder = {
-                        Text(text = stringResource(xcj.app.appsets.R.string.email_address))
+                        Text(
+                            text = stringResource(xcj.app.appsets.R.string.email_address),
+                            fontSize = 12.sp
+                        )
                     },
                     keyboardOptions = KeyboardOptions.Default.copy(
                         keyboardType = KeyboardType.Email,
@@ -404,7 +454,8 @@ fun SignUpPage(
 
                 Text(
                     text = stringResource(xcj.app.appsets.R.string.area),
-                    modifier = Modifier.padding(vertical = 10.dp)
+                    modifier = Modifier.padding(vertical = 10.dp),
+                    fontWeight = FontWeight.Bold
                 )
                 DesignTextField(
                     modifier = Modifier.fillMaxWidth(),
@@ -413,13 +464,17 @@ fun SignUpPage(
                         userInfoForCreate.userArea.value = it
                     },
                     placeholder = {
-                        Text(text = stringResource(id = xcj.app.appsets.R.string.area))
+                        Text(
+                            text = stringResource(id = xcj.app.appsets.R.string.area),
+                            fontSize = 12.sp
+                        )
                     })
                 Spacer(modifier = Modifier.height(8.dp))
 
                 Text(
                     text = stringResource(xcj.app.appsets.R.string.address),
-                    modifier = Modifier.padding(vertical = 10.dp)
+                    modifier = Modifier.padding(vertical = 10.dp),
+                    fontWeight = FontWeight.Bold
                 )
                 DesignTextField(
                     modifier = Modifier.fillMaxWidth(),
@@ -428,13 +483,17 @@ fun SignUpPage(
                         userInfoForCreate.userAddress.value = it
                     },
                     placeholder = {
-                        Text(text = stringResource(id = xcj.app.appsets.R.string.address))
+                        Text(
+                            text = stringResource(id = xcj.app.appsets.R.string.address),
+                            fontSize = 12.sp
+                        )
                     })
                 Spacer(modifier = Modifier.height(8.dp))
 
                 Text(
                     text = stringResource(id = xcj.app.appsets.R.string.website),
-                    modifier = Modifier.padding(vertical = 10.dp)
+                    modifier = Modifier.padding(vertical = 10.dp),
+                    fontWeight = FontWeight.Bold
                 )
                 DesignTextField(
                     modifier = Modifier.fillMaxWidth(),
@@ -448,7 +507,10 @@ fun SignUpPage(
                         userInfoForCreate.userWebsite.value = userWebsiteFiltered
                     },
                     placeholder = {
-                        Text(text = stringResource(id = xcj.app.appsets.R.string.website))
+                        Text(
+                            text = stringResource(id = xcj.app.appsets.R.string.website),
+                            fontSize = 12.sp
+                        )
                     },
 
                     keyboardOptions = KeyboardOptions.Default.copy(

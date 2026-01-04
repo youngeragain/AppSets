@@ -330,7 +330,11 @@ class MediaPlayback101Service : MediaLibraryService() {
                 MediaLibrarySession.Builder(this, player, librarySessionCallback)
                     .setSessionActivity(getSingleTopActivity())
                     //.setCustomLayout(ImmutableList.of(customCommands[0]))
-                    .setBitmapLoader(CacheBitmapLoader(DataSourceBitmapLoader(/* context= */ this)))
+                    .setBitmapLoader(
+                        CacheBitmapLoader(
+                            DataSourceBitmapLoader.Builder(this).build()
+                        )
+                    )
                     .build()
         }
         return mediaLibrarySession

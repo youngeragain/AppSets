@@ -2,7 +2,7 @@ package xcj.app.appsets.ui.compose.apps.tools.file_manager
 
 import android.net.Uri
 
-interface AbstractFile<T> : AbstractFileActions {
+interface AbstractFile<T : AbstractFile<T>> : AbstractFileActions {
     val name: String
 
     val nameWithoutExtension: String

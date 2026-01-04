@@ -162,7 +162,7 @@ class RabbitMQBroker : MessageBroker<RabbitMQBrokerConfig>,
             username = property.username
             password = property.password
             virtualHost = property.virtualHost
-            useNio()
+            netty()
             setNetworkRecoveryInterval(500)//millis seconds, 0.5s
             //requestedHeartbeat = 10//seconds
         }

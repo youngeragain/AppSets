@@ -51,7 +51,7 @@ data class ApplicationForCreate(
         ) {
             PurpleLogger.current.d(TAG, "inflateFromApplication")
             applicationForCreate.apply {
-                appId = application.appId ?: ""
+                appId = application.appId
                 iconUriProvider.value = UriProvider.fromString(application.bioUrl?.toString())
                 bannerUriProvider.value = UriProvider.fromString(application.bannerUrl)
                 name.value = application.bioName ?: ""

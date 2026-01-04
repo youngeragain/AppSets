@@ -10,7 +10,6 @@ import xcj.app.appsets.im.message.LocationMessage
 import xcj.app.appsets.im.message.SystemMessage
 import xcj.app.appsets.im.message.TextMessage
 import xcj.app.appsets.im.message.VideoMessage
-import xcj.app.appsets.im.message.VideoMessageMetadata
 import xcj.app.appsets.im.model.CommonURIJson
 import xcj.app.appsets.im.model.FriendRequestJson
 import xcj.app.appsets.im.model.GroupRequestJson
@@ -142,7 +141,7 @@ object PictureUrlMapper {
                 )
                 imMessage.metadata.url = signedUrl
                 if (imMessage is VideoMessage) {
-                    val videoMessageMetadata = imMessage.metadata as VideoMessageMetadata
+                    val videoMessageMetadata = imMessage.metadata
                     val urlEndpoint = (videoMessageMetadata).companionData
                     val signedUrl = fileIO.generatePreSign(
                         urlEndpoint,

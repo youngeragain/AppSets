@@ -109,7 +109,7 @@ fun ToolFileManagerPage(
 
     val abstractFileChildren by remember(currentAbstractFile) {
         derivedStateOf {
-            (currentAbstractFile?.listChildren() as? List<AbstractFile<*>>) ?: emptyList()
+            currentAbstractFile?.listChildren() ?: emptyList()
         }
     }
     LaunchedEffect(hasManageStoragePermission) {
@@ -313,7 +313,7 @@ fun ToolFileManagerPage(
 
             if (currentAbstractFile != null &&
                 currentAbstractFile!!.isFolder() &&
-                abstractFileChildren.isNullOrEmpty()
+                abstractFileChildren.isEmpty()
             ) {
                 Box(
                     modifier = Modifier

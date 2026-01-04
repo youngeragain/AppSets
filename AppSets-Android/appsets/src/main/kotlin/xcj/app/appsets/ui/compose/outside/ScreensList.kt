@@ -140,7 +140,7 @@ private fun LandscapeScreenList(
             }
         }
         item {
-            Spacer(modifier = Modifier.height(82.dp))
+            Spacer(modifier = Modifier.height(150.dp))
         }
     }
 }

@@ -131,7 +131,7 @@ fun UserInfoHeader(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Spacer(Modifier.height(4.dp))
+            Spacer(modifier = Modifier.height(4.dp))
             AnyImage(
                 modifier = Modifier
                     .size(250.dp)

@@ -62,6 +62,6 @@ fun DesignDropDownButton(modifier: Modifier, onClick: () -> Unit) {
                 .clip(MaterialTheme.shapes.extraLarge)
                 .clickable(onClick = onClick)
         )
-        Spacer(Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(12.dp))
     }
 }

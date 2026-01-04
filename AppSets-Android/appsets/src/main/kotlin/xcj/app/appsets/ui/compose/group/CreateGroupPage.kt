@@ -1,5 +1,6 @@
 package xcj.app.appsets.ui.compose.group
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -28,6 +29,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -46,6 +48,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntSize
@@ -165,13 +168,15 @@ fun CreateGroupPage(
                 Text(
                     text = String.format(
                         stringResource(id = xcj.app.appsets.R.string.a_is_required_template),
-                        stringResource(id = xcj.app.appsets.R.string.group_logo),
-                        stringResource(id = xcj.app.appsets.R.string.required)
+                        stringResource(id = xcj.app.appsets.R.string.logo),
+                        "*"
                     ),
-                    modifier = Modifier.padding(vertical = 12.dp)
+                    modifier = Modifier.padding(vertical = 12.dp),
+                    fontWeight = FontWeight.Bold
                 )
                 Box(
                     modifier = Modifier
+                        .size(250.dp)
                         .clip(ExtraLarge2)
                         .border(
                             1.dp,
@@ -203,17 +208,27 @@ fun CreateGroupPage(
                 ) {
                     val groupIconUri =
                         groupInfoForCreate.iconUriProvider.value?.provideUri()
-                            ?: xcj.app.compose_share.R.drawable.ic_emoji_nature_24
-                    AnyImage(
-                        model = groupIconUri,
-                        modifier = Modifier
-                            .size(250.dp)
-                            .clip(ExtraLarge2)
-                    )
+
+                    AnimatedContent(groupIconUri != null) { hasUri ->
+                        if (hasUri) {
+                            AnyImage(
+                                model = groupIconUri,
+                                modifier = Modifier.fillMaxSize()
+                            )
+                        } else {
+                            Icon(
+                                painter = painterResource(xcj.app.compose_share.R.drawable.ic_round_add_24),
+                                contentDescription = stringResource(xcj.app.appsets.R.string.add)
+                            )
+                        }
+                    }
                 }
             }
             Spacer(modifier = Modifier.height(12.dp))
-            Text(text = stringResource(id = xcj.app.appsets.R.string.status))
+            Text(
+                text = stringResource(id = xcj.app.appsets.R.string.status),
+                fontWeight = FontWeight.Bold
+            )
             Row {
                 FilterChip(
                     selected = groupInfoForCreate.isPublic.value,
@@ -241,9 +256,10 @@ fun CreateGroupPage(
                 text = String.format(
                     stringResource(id = xcj.app.appsets.R.string.a_is_required_template),
                     stringResource(id = xcj.app.appsets.R.string.name),
-                    stringResource(id = xcj.app.appsets.R.string.required)
+                    "*"
                 ),
-                modifier = Modifier.padding(vertical = 10.dp)
+                modifier = Modifier.padding(vertical = 10.dp),
+                fontWeight = FontWeight.Bold
             )
             DesignTextField(
                 modifier = Modifier.fillMaxWidth(),
@@ -257,11 +273,15 @@ fun CreateGroupPage(
                     }
                     groupInfoForCreate.name.value = name
                 }, placeholder = {
-                    Text(text = stringResource(xcj.app.appsets.R.string.group_name))
+                    Text(
+                        text = stringResource(xcj.app.appsets.R.string.group_name),
+                        fontSize = 12.sp
+                    )
                 })
             Text(
                 text = stringResource(xcj.app.appsets.R.string.maximum_number_of_members),
-                modifier = Modifier.padding(vertical = 10.dp)
+                modifier = Modifier.padding(vertical = 10.dp),
+                fontWeight = FontWeight.Bold
             )
             DesignTextField(
                 modifier = Modifier.fillMaxWidth(),
@@ -272,12 +292,13 @@ fun CreateGroupPage(
                     groupInfoForCreate.membersCount.value = it.toIntOrNull()?.toString() ?: "1000"
                 },
                 placeholder = {
-                    Text(text = stringResource(xcj.app.appsets.R.string.quantity))
+                    Text(text = stringResource(xcj.app.appsets.R.string.quantity), fontSize = 12.sp)
                 }
             )
             Text(
                 text = stringResource(id = xcj.app.appsets.R.string.introduction),
-                modifier = Modifier.padding(vertical = 10.dp)
+                modifier = Modifier.padding(vertical = 10.dp),
+                fontWeight = FontWeight.Bold
             )
             DesignTextField(
                 modifier = Modifier.fillMaxWidth(),
@@ -286,10 +307,13 @@ fun CreateGroupPage(
                     groupInfoForCreate.introduction.value = it
                 },
                 placeholder = {
-                    Text(text = stringResource(xcj.app.appsets.R.string.group_description))
+                    Text(
+                        text = stringResource(xcj.app.appsets.R.string.group_description),
+                        fontSize = 12.sp
+                    )
                 }
             )
-            Spacer(modifier = Modifier.height(68.dp))
+            Spacer(modifier = Modifier.height(150.dp))
         }
 
         BackActionTopBar(

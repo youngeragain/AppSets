@@ -37,7 +37,9 @@ fun VideoMessage.requireUri(): Pair<Uri?, Uri?>? {
     if (messageSendInfo.isSent) {
         return metadata.url?.toUri() to metadata.companionUrl?.toUri()
     } else {
-        val pair = metadata.localData as? Pair<UriProvider, UriProvider>
-        return pair?.first?.provideUri() to pair?.second?.provideUri()
+        val pair = metadata.localData as? Pair<*, *>
+        val firstUri = (pair?.first as? UriProvider)?.provideUri()
+        val secondUri = (pair?.second as? UriProvider)?.provideUri()
+        return firstUri to secondUri
     }
 }

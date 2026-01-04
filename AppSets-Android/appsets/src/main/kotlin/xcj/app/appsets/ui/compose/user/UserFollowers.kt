@@ -45,7 +45,7 @@ fun UserFollowers(
             Text(text = "Follower", fontSize = 16.sp, fontWeight = FontWeight.Bold)
 
             if (userFollowers.isNullOrEmpty()) {
-                Spacer(modifier = Modifier.height(120.dp))
+                Spacer(modifier = Modifier.height(150.dp))
                 Text(
                     text = String.format(
                         stringResource(id = xcj.app.appsets.R.string.no_a),
@@ -66,7 +66,7 @@ fun UserFollowers(
                     )
                 }
             }
-            Spacer(modifier = Modifier.height(120.dp))
+            Spacer(modifier = Modifier.height(150.dp))
         }
         Column(
             Modifier
@@ -76,7 +76,7 @@ fun UserFollowers(
         ) {
             Text(text = "Followed", fontSize = 16.sp, fontWeight = FontWeight.Bold)
             if (userFollowed.isNullOrEmpty()) {
-                Spacer(modifier = Modifier.height(120.dp))
+                Spacer(modifier = Modifier.height(150.dp))
                 Text(
                     text = String.format(
                         stringResource(id = xcj.app.appsets.R.string.no_a),
@@ -124,7 +124,7 @@ fun UserFollowers(
                         })
                 }
             }
-            Spacer(modifier = Modifier.height(120.dp))
+            Spacer(modifier = Modifier.height(150.dp))
         }
     }
 }

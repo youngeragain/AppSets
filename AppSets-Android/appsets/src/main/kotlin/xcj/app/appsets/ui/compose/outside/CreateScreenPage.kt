@@ -2,6 +2,7 @@
 
 package xcj.app.appsets.ui.compose.outside
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.tween
@@ -34,11 +35,9 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Card
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -57,6 +56,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.onPlaced
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -66,6 +66,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dev.chrisbanes.haze.hazeSource
 import dev.chrisbanes.haze.rememberHazeState
+import xcj.app.appsets.ui.compose.LocalUseCaseOfNavigation
 import xcj.app.appsets.ui.compose.LocalUseCaseOfScreenPost
 import xcj.app.appsets.ui.compose.content_selection.ContentSelectionResult
 import xcj.app.appsets.ui.compose.content_selection.ContentSelectionTypes
@@ -101,7 +102,8 @@ fun CreateScreenPagePreview(
     }
 
     CompositionLocalProvider(
-        LocalUseCaseOfScreenPost provides mainViewModel.screenPostUseCase
+        LocalUseCaseOfScreenPost provides mainViewModel.screenPostUseCase,
+        LocalUseCaseOfNavigation provides mainViewModel.navigationUseCase
     ) {
         CreateScreenPage(
             quickStepContents = null,
@@ -154,7 +156,12 @@ fun CreateScreenPage(
             onBackClick(true)
         }
     }
-    val hazeState = rememberHazeState()
+    val isInspectionMode = LocalInspectionMode.current
+    val hazeState = if (isInspectionMode) {
+        null
+    } else {
+        rememberHazeState()
+    }
     val density = LocalDensity.current
     var backActionBarSize by remember {
         mutableStateOf(IntSize.Zero)
@@ -167,9 +174,14 @@ fun CreateScreenPage(
         }
     }
     Box(modifier = Modifier.fillMaxSize()) {
+        val columRootModifier = if (isInspectionMode) {
+            Modifier
+        } else {
+            Modifier
+                .hazeSource(hazeState!!)
+        }
         Column(
-            modifier = Modifier
-                .hazeSource(hazeState)
+            modifier = columRootModifier
                 .widthIn(TextFieldDefaults.MinWidth)
                 .imePadding()
                 .padding(horizontal = 12.dp)
@@ -247,7 +259,10 @@ fun CreateScreenIndicator(createScreenPageUIState: CreateScreenPageUIState) {
                         painter = painterResource(xcj.app.compose_share.R.drawable.ic_launcher_foreground),
                         contentDescription = null
                     )
-                    Text(stringResource(xcj.app.appsets.R.string.processing), fontSize = 12.sp)
+                    Text(
+                        text = stringResource(xcj.app.appsets.R.string.processing),
+                        fontSize = 12.sp
+                    )
                 }
             }
         }
@@ -275,7 +290,7 @@ fun NewPostScreenComponent(
         ) {
             Text(
                 text = stringResource(xcj.app.appsets.R.string.status),
-                Modifier.padding(vertical = 10.dp),
+                modifier = Modifier.padding(vertical = 10.dp),
                 fontWeight = FontWeight.Bold
             )
             Spacer(Modifier.weight(1f))
@@ -316,7 +331,9 @@ fun NewPostScreenComponent(
             stringResource(xcj.app.appsets.R.string.screen_is_only_visible_to_you)
         }
         Text(
-            text = statusTip, fontSize = 11.sp, modifier = Modifier
+            text = statusTip,
+            fontSize = 11.sp,
+            modifier = Modifier
                 .padding(8.dp)
                 .animateContentSize()
         )
@@ -352,7 +369,7 @@ fun NewPostScreenComponent(
             placeholder = {
                 Text(
                     text = stringResource(xcj.app.appsets.R.string.example_It_s_raining_today),
-                    fontSize = 11.sp
+                    fontSize = 12.sp
                 )
             },
             value = screenInfoForCreate.content.value,
@@ -371,7 +388,7 @@ fun NewPostScreenComponent(
             placeholder = {
                 Text(
                     text = stringResource(xcj.app.appsets.R.string.example_smart_car_huawei),
-                    fontSize = 11.sp
+                    fontSize = 12.sp
                 )
             },
             value = screenInfoForCreate.associateTopics.value,
@@ -391,7 +408,7 @@ fun NewPostScreenComponent(
             placeholder = {
                 Text(
                     text = stringResource(xcj.app.appsets.R.string.example_jiang_kaixin),
-                    fontSize = 11.sp
+                    fontSize = 12.sp
                 )
             },
             value = screenInfoForCreate.associatePeoples.value,
@@ -413,24 +430,37 @@ fun NewPostScreenComponent(
         ) {
             screenInfoForCreate.pictureUriProviders.forEach { contentUriProvider ->
                 Box(
-                    Modifier
+                    modifier = Modifier
                         .padding(4.dp)
                 ) {
-                    Card(
+                    AnyImage(
                         modifier = Modifier
-                            .size(120.dp, 120.dp),
-                        shape = MaterialTheme.shapes.extraLarge
+                            .size(120.dp, 120.dp)
+                            .clip(MaterialTheme.shapes.extraLarge),
+                        model = contentUriProvider.provideUri()
+                    )
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
                     ) {
-                        AnyImage(
-                            modifier = Modifier
-                                .fillMaxSize(),
-                            model = contentUriProvider.provideUri()
-                        )
+                        IconButton(
+                            onClick = {
+                                onRemoveMediaContent(
+                                    ContentSelectionTypes.IMAGE,
+                                    contentUriProvider
+                                )
+                            }
+                        ) {
+                            Icon(
+                                painter = painterResource(xcj.app.compose_share.R.drawable.ic_do_not_disturb_on_24),
+                                contentDescription = stringResource(xcj.app.appsets.R.string.remove)
+                            )
+                        }
                     }
                 }
             }
             Box(
-                Modifier
+                modifier = Modifier
                     .padding(4.dp)
             ) {
                 Box(
@@ -461,7 +491,7 @@ fun NewPostScreenComponent(
                 ) {
                     Icon(
                         painter = painterResource(xcj.app.compose_share.R.drawable.ic_round_add_24),
-                        contentDescription = "add_content"
+                        contentDescription = stringResource(xcj.app.appsets.R.string.add)
                     )
                 }
             }
@@ -503,24 +533,30 @@ fun NewPostScreenComponent(
                         }
                     },
                     onClick = {
-                        val composeStateUpdater =
-                            RuntimeListStateUpdater.fromState(screenInfoForCreate.videoUriProviders) { markKey, input ->
-                                PurpleLogger.current.d(
-                                    TAG,
-                                    "screenInfoForCreate.videoUriProviders, inputHandleDSL:\nmarkKey:$markKey,\ninput:$input"
-                                )
-                                if (input !is ContentSelectionResult.RichMediaContentSelectionResult) {
-                                    return@fromState
+                        val mediaUriProvider =
+                            screenInfoForCreate.videoUriProviders.firstOrNull()
+                        if (mediaUriProvider != null) {
+                            onVideoPlayClick(mediaUriProvider)
+                        } else {
+                            val composeStateUpdater =
+                                RuntimeListStateUpdater.fromState(screenInfoForCreate.videoUriProviders) { markKey, input ->
+                                    PurpleLogger.current.d(
+                                        TAG,
+                                        "screenInfoForCreate.videoUriProviders, inputHandleDSL:\nmarkKey:$markKey,\ninput:$input"
+                                    )
+                                    if (input !is ContentSelectionResult.RichMediaContentSelectionResult) {
+                                        return@fromState
+                                    }
+                                    val uriProviders = input.selectedProvider.provide()
+                                    addAll(uriProviders)
                                 }
-                                val uriProviders = input.selectedProvider.provide()
-                                addAll(uriProviders)
-                            }
-                        onAddMediaContentClick(
-                            "CREATE_SCREEN_CONTENT_SELECT_VIDEO_REQUEST",
-                            ContentSelectionTypes.VIDEO,
-                            1,
-                            composeStateUpdater
-                        )
+                            onAddMediaContentClick(
+                                "CREATE_SCREEN_CONTENT_SELECT_VIDEO_REQUEST",
+                                ContentSelectionTypes.VIDEO,
+                                1,
+                                composeStateUpdater
+                            )
+                        }
                     },
                 )
         ) {
@@ -534,26 +570,26 @@ fun NewPostScreenComponent(
                 )
             }
 
-            IconButton(
+            Box(
                 modifier = Modifier
                     .padding(12.dp)
                     .align(Alignment.Center),
-                onClick = {
-                    val mediaUriProvider =
-                        screenInfoForCreate.videoUriProviders.firstOrNull()
-                    if (mediaUriProvider != null) {
-                        onVideoPlayClick(mediaUriProvider)
-                    }
-                },
-                colors = IconButtonDefaults.iconButtonColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer
-                )
             ) {
-                Icon(
-                    painter = painterResource(id = xcj.app.compose_share.R.drawable.ic_slow_motion_video_24),
-                    contentDescription = null,
-                )
+                AnimatedContent(videoUriProvider != null) { hasVideoUri ->
+                    if (hasVideoUri) {
+                        Icon(
+                            painter = painterResource(id = xcj.app.compose_share.R.drawable.ic_slow_motion_video_24),
+                            contentDescription = null,
+                        )
+                    } else {
+                        Icon(
+                            painter = painterResource(xcj.app.compose_share.R.drawable.ic_round_add_24),
+                            contentDescription = stringResource(xcj.app.appsets.R.string.add)
+                        )
+                    }
+                }
             }
+
         }
         Spacer(modifier = Modifier.height(150.dp))
     }

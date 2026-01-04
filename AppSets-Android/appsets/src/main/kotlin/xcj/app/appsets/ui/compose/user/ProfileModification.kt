@@ -21,8 +21,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import xcj.app.appsets.server.model.UserInfo
 import xcj.app.appsets.ui.compose.custom_component.AnyImage
 import xcj.app.appsets.ui.compose.theme.ExtraLarge2
@@ -63,12 +65,18 @@ fun ProfileModification(
                 }
             }
         }
+        Spacer(modifier = Modifier.height(12.dp))
         DesignHDivider()
-        Column(Modifier.padding(horizontal = 12.dp)) {
-            Column(Modifier.fillMaxWidth()) {
+        Spacer(modifier = Modifier.height(12.dp))
+        Column(modifier = Modifier.padding(horizontal = 12.dp)) {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
                 Text(
                     text = stringResource(id = xcj.app.appsets.R.string.avatar),
-                    modifier = Modifier.padding(vertical = 12.dp)
+                    modifier = Modifier.padding(vertical = 12.dp),
+                    fontWeight = FontWeight.Bold
                 )
                 AnyImage(
                     model = userInfoForModify.userAvatarUriProvider.value?.provideUri()
@@ -81,7 +89,6 @@ fun ProfileModification(
                             color = MaterialTheme.colorScheme.outline,
                             shape = ExtraLarge2
                         )
-                        .align(Alignment.CenterHorizontally)
                 )
                 Spacer(modifier = Modifier.height(12.dp))
                 FilledTonalButton(
@@ -97,8 +104,7 @@ fun ProfileModification(
                             "USER_PROFILE_MODIFY_AVATAR_IMAGE_SELECT_REQUEST",
                             composeStateUpdater
                         )
-                    },
-                    modifier = Modifier.align(Alignment.CenterHorizontally)
+                    }
                 ) {
                     Text(text = stringResource(id = xcj.app.appsets.R.string.choose))
                 }
@@ -108,7 +114,8 @@ fun ProfileModification(
 
             Text(
                 text = stringResource(id = xcj.app.appsets.R.string.name),
-                modifier = Modifier.padding(vertical = 10.dp)
+                modifier = Modifier.padding(vertical = 10.dp),
+                fontWeight = FontWeight.Bold
             )
             DesignTextField(
                 modifier = Modifier.fillMaxWidth(),
@@ -122,13 +129,17 @@ fun ProfileModification(
                     userInfoForModify.userName.value = newUserName
                 },
                 placeholder = {
-                    Text(text = stringResource(id = xcj.app.appsets.R.string.name))
+                    Text(
+                        text = stringResource(id = xcj.app.appsets.R.string.name),
+                        fontSize = 12.sp
+                    )
                 })
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
                 text = stringResource(id = xcj.app.appsets.R.string.brief),
-                modifier = Modifier.padding(vertical = 10.dp)
+                modifier = Modifier.padding(vertical = 10.dp),
+                fontWeight = FontWeight.Bold
             )
             DesignTextField(
                 modifier = Modifier.fillMaxWidth(),
@@ -137,13 +148,17 @@ fun ProfileModification(
                     userInfoForModify.userIntroduction.value = it
                 },
                 placeholder = {
-                    Text(text = stringResource(id = xcj.app.appsets.R.string.brief))
+                    Text(
+                        text = stringResource(id = xcj.app.appsets.R.string.brief),
+                        fontSize = 12.sp
+                    )
                 })
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
                 text = stringResource(id = xcj.app.appsets.R.string.label),
-                modifier = Modifier.padding(vertical = 10.dp)
+                modifier = Modifier.padding(vertical = 10.dp),
+                fontWeight = FontWeight.Bold
             )
             DesignTextField(
                 modifier = Modifier.fillMaxWidth(),
@@ -152,13 +167,17 @@ fun ProfileModification(
                     userInfoForModify.userTags.value = it
                 },
                 placeholder = {
-                    Text(text = stringResource(id = xcj.app.appsets.R.string.personal_label_placeholder))
+                    Text(
+                        text = stringResource(id = xcj.app.appsets.R.string.personal_label_placeholder),
+                        fontSize = 12.sp
+                    )
                 })
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
                 text = stringResource(id = xcj.app.appsets.R.string.sex),
-                modifier = Modifier.padding(vertical = 10.dp)
+                modifier = Modifier.padding(vertical = 10.dp),
+                fontWeight = FontWeight.Bold
             )
             DesignTextField(
                 modifier = Modifier.fillMaxWidth(),
@@ -167,13 +186,17 @@ fun ProfileModification(
                     userInfoForModify.userSex.value = it
                 },
                 placeholder = {
-                    Text(text = stringResource(id = xcj.app.appsets.R.string.sex_placeholder))
+                    Text(
+                        text = stringResource(id = xcj.app.appsets.R.string.sex_placeholder),
+                        fontSize = 12.sp
+                    )
                 })
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
                 text = stringResource(id = xcj.app.appsets.R.string.age),
-                modifier = Modifier.padding(vertical = 10.dp)
+                modifier = Modifier.padding(vertical = 10.dp),
+                fontWeight = FontWeight.Bold
             )
             DesignTextField(
                 modifier = Modifier.fillMaxWidth(),
@@ -192,7 +215,7 @@ fun ProfileModification(
                     userInfoForModify.userAge.value = userAge
                 },
                 placeholder = {
-                    Text(text = stringResource(id = xcj.app.appsets.R.string.age))
+                    Text(text = stringResource(id = xcj.app.appsets.R.string.age), fontSize = 12.sp)
                 },
                 keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number)
             )
@@ -200,7 +223,8 @@ fun ProfileModification(
 
             Text(
                 text = stringResource(id = xcj.app.appsets.R.string.phone),
-                modifier = Modifier.padding(vertical = 10.dp)
+                modifier = Modifier.padding(vertical = 10.dp),
+                fontWeight = FontWeight.Bold
             )
             DesignTextField(
                 modifier = Modifier.fillMaxWidth(),
@@ -209,7 +233,10 @@ fun ProfileModification(
                     userInfoForModify.userPhone.value = it
                 },
                 placeholder = {
-                    Text(text = stringResource(id = xcj.app.appsets.R.string.phone_number))
+                    Text(
+                        text = stringResource(id = xcj.app.appsets.R.string.phone_number),
+                        fontSize = 12.sp
+                    )
                 },
                 keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Phone)
             )
@@ -217,7 +244,8 @@ fun ProfileModification(
 
             Text(
                 text = stringResource(id = xcj.app.appsets.R.string.email),
-                modifier = Modifier.padding(vertical = 10.dp)
+                modifier = Modifier.padding(vertical = 10.dp),
+                fontWeight = FontWeight.Bold
             )
             DesignTextField(
                 modifier = Modifier.fillMaxWidth(),
@@ -226,7 +254,10 @@ fun ProfileModification(
                     userInfoForModify.userEmail.value = it
                 },
                 placeholder = {
-                    Text(text = stringResource(id = xcj.app.appsets.R.string.email_address))
+                    Text(
+                        text = stringResource(id = xcj.app.appsets.R.string.email_address),
+                        fontSize = 12.sp
+                    )
                 },
                 keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Email)
             )
@@ -234,7 +265,8 @@ fun ProfileModification(
 
             Text(
                 text = stringResource(id = xcj.app.appsets.R.string.area),
-                modifier = Modifier.padding(vertical = 10.dp)
+                modifier = Modifier.padding(vertical = 10.dp),
+                fontWeight = FontWeight.Bold
             )
             DesignTextField(
                 modifier = Modifier.fillMaxWidth(),
@@ -243,13 +275,17 @@ fun ProfileModification(
                     userInfoForModify.userArea.value = it
                 },
                 placeholder = {
-                    Text(text = stringResource(id = xcj.app.appsets.R.string.area))
+                    Text(
+                        text = stringResource(id = xcj.app.appsets.R.string.area),
+                        fontSize = 12.sp
+                    )
                 })
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
                 text = stringResource(id = xcj.app.appsets.R.string.address),
-                modifier = Modifier.padding(vertical = 10.dp)
+                modifier = Modifier.padding(vertical = 10.dp),
+                fontWeight = FontWeight.Bold
             )
             DesignTextField(
                 modifier = Modifier.fillMaxWidth(),
@@ -258,13 +294,17 @@ fun ProfileModification(
                     userInfoForModify.userAddress.value = it
                 },
                 placeholder = {
-                    Text(text = stringResource(id = xcj.app.appsets.R.string.address))
+                    Text(
+                        text = stringResource(id = xcj.app.appsets.R.string.address),
+                        fontSize = 12.sp
+                    )
                 })
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
                 text = stringResource(id = xcj.app.appsets.R.string.website),
-                modifier = Modifier.padding(vertical = 10.dp)
+                modifier = Modifier.padding(vertical = 10.dp),
+                fontWeight = FontWeight.Bold
             )
             DesignTextField(
                 modifier = Modifier.fillMaxWidth(),
@@ -278,9 +318,12 @@ fun ProfileModification(
                     userInfoForModify.userWebsite.value = userWebsite
                 },
                 placeholder = {
-                    Text(text = stringResource(id = xcj.app.appsets.R.string.website))
+                    Text(
+                        text = stringResource(id = xcj.app.appsets.R.string.website),
+                        fontSize = 12.sp
+                    )
                 })
-            Spacer(modifier = Modifier.height(120.dp))
+            Spacer(modifier = Modifier.height(150.dp))
         }
     }
 }

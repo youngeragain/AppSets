@@ -198,7 +198,7 @@ private fun LoginComponent2(
             ) {
                 Text(text = stringResource(id = xcj.app.starter.R.string.ok))
             }
-            Spacer(Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(12.dp))
             DesignBackButton(
                 modifier = Modifier.align(Alignment.CenterHorizontally),
                 onClick = onBackClick

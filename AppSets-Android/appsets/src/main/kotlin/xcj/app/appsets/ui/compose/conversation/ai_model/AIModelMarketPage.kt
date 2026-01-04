@@ -175,7 +175,7 @@ fun MixedAIModelsPage() {
                                     text = bio.description ?: "",
                                     fontSize = 12.sp
                                 )
-                                Spacer(Modifier.height(6.dp))
+                                Spacer(modifier = Modifier.height(6.dp))
                             }
                         }
                         AnimatedContent(

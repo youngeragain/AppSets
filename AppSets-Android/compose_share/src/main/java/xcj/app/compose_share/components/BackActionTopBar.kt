@@ -21,6 +21,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dev.chrisbanes.haze.HazeState
@@ -31,6 +32,20 @@ import dev.chrisbanes.haze.materials.HazeMaterials
 sealed interface BackActionModel {
     class Text() : BackActionModel
     class CustomContent() : BackActionModel
+}
+
+
+@Preview
+@Composable
+fun BackActionTopBarPreview() {
+    BackActionTopBar(
+        hazeState = null,
+        onBackClick = {
+
+        },
+        backButtonText = "Back",
+        endButtonText = "OK"
+    )
 }
 
 @Composable
@@ -99,34 +114,40 @@ fun BackActionTopBar(
             }
         }
 
-        if (!endButtonText.isNullOrEmpty() || customEndContent != null) {
-            val endModifier = Modifier
-                .align(Alignment.CenterEnd)
-                .clip(CircleShape)
-            if (hazeState != null && hazeForEnd) {
-                endModifier
-
-                    .hazeEffect(hazeState, HazeMaterials.thin())
-            }
+        if (!endButtonText.isNullOrEmpty()) {
+            val endModifier =
+                if (hazeState != null && hazeForEnd) {
+                    Modifier
+                        .align(Alignment.CenterEnd)
+                        .clip(CircleShape)
+                        .hazeEffect(hazeState, HazeMaterials.thin())
+                } else {
+                    Modifier
+                        .align(Alignment.CenterEnd)
+                        .clip(CircleShape)
+                }
             Row(
                 modifier = endModifier
                     .border(1.dp, MaterialTheme.colorScheme.outline, CircleShape)
             ) {
-                if (!endButtonText.isNullOrEmpty()) {
-                    Box(
-                        modifier = Modifier
-                            .clickable(
-                                onClick = {
-                                    onEndButtonClick?.invoke()
-                                }
-                            )
-                            .padding(12.dp),
-                    ) {
-                        Text(text = endButtonText)
-                    }
-                } else if (customEndContent != null) {
-                    customEndContent()
+                Box(
+                    modifier = Modifier
+                        .clickable(
+                            onClick = {
+                                onEndButtonClick?.invoke()
+                            }
+                        )
+                        .padding(12.dp),
+                ) {
+                    Text(text = endButtonText)
                 }
+            }
+        } else if (customEndContent != null) {
+            Box(
+                modifier = Modifier
+                    .align(Alignment.CenterEnd)
+            ) {
+                customEndContent()
             }
         }
     }

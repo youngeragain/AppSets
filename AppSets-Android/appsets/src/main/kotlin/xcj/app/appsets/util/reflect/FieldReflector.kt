@@ -37,7 +37,7 @@ inline fun <reified C> getField(fieldName: String): Field? {
     return null
 }
 
-inline fun <C> getField(clazz: Class<C>, fieldName: String): Field? {
+fun <C> getField(clazz: Class<C>, fieldName: String): Field? {
     runCatching {
         val field = clazz.getDeclaredField(fieldName)
         if (!field.isAccessible) {
@@ -59,6 +59,6 @@ inline fun <reified C, O> C.getFieldValue(fieldName: String): O? {
     return getField<C>(fieldName)?.get(this) as? O
 }
 
-inline fun <C, O> C.getFieldValue(clazz: Class<C>, fieldName: String): O? {
+fun <C, O> C.getFieldValue(clazz: Class<C>, fieldName: String): O? {
     return getField<C>(clazz, fieldName)?.get(this) as? O
 }
