@@ -100,7 +100,7 @@ fun PrivacyComponent(privacy: String?) {
             text = privacy ?: stringResource(xcj.app.appsets.R.string.not_offered),
             fontSize = 12.sp
         )
-        Spacer(modifier = Modifier.height(120.dp))
+        Spacer(modifier = Modifier.height(150.dp))
     }
 }
 
@@ -145,7 +145,7 @@ fun PlatformPermissionsComponent(
     ) {
 
 
-        Spacer(modifier = Modifier.height(120.dp))
+        Spacer(modifier = Modifier.height(150.dp))
     }
 }
 

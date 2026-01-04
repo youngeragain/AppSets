@@ -1,5 +1,6 @@
 package xcj.app.appsets.ui.compose.apps
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -11,7 +12,6 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -34,7 +34,6 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.FilledTonalButton
@@ -80,6 +79,7 @@ import xcj.app.appsets.ui.compose.LocalUseCaseOfAppCreation
 import xcj.app.appsets.ui.compose.content_selection.ContentSelectionResult
 import xcj.app.appsets.ui.compose.custom_component.AnyImage
 import xcj.app.appsets.ui.compose.custom_component.HideNavBar
+import xcj.app.appsets.ui.compose.theme.ExtraLarge2
 import xcj.app.appsets.ui.model.ApplicationForCreate
 import xcj.app.appsets.ui.model.PlatformForCreate
 import xcj.app.appsets.ui.model.VersionInfoForCreate
@@ -649,11 +649,12 @@ fun IconAndBanner(
     bannerUriProviderState: MutableState<UriProvider?>,
     onChoosePictureClick: (String, Int, ComposeStateUpdater<*>) -> Unit,
 ) {
-    Row(
+    Column(
         modifier = Modifier
-            .padding(12.dp)
-            .horizontalScroll(rememberScrollState()),
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
+            .fillMaxWidth()
+            .padding(12.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
 
         Column(
@@ -662,12 +663,12 @@ fun IconAndBanner(
         ) {
             Box(
                 modifier = Modifier
-                    .size(68.dp)
-                    .clip(MaterialTheme.shapes.extraLarge)
+                    .size(250.dp)
+                    .clip(ExtraLarge2)
                     .border(
                         1.dp,
                         MaterialTheme.colorScheme.outline,
-                        MaterialTheme.shapes.extraLarge
+                        ExtraLarge2
                     )
                     .clickable {
                         if (iconKey == "app_icon") {
@@ -705,19 +706,20 @@ fun IconAndBanner(
             ) {
                 val uri =
                     iconUriProviderState.value?.provideUri()
-                if (uri != null) {
-                    AnyImage(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .clip(MaterialTheme.shapes.extraLarge),
-                        model = uri
-                    )
-                } else {
-                    if (showSelect) {
-                        Text(
-                            text = stringResource(id = xcj.app.appsets.R.string.choose),
-                            fontSize = 12.sp
+                AnimatedContent(uri != null) { hasUri ->
+                    if (hasUri) {
+                        AnyImage(
+                            modifier = Modifier
+                                .fillMaxSize(),
+                            model = uri
                         )
+                    } else {
+                        if (showSelect) {
+                            Icon(
+                                painter = painterResource(xcj.app.compose_share.R.drawable.ic_round_add_24),
+                                contentDescription = stringResource(xcj.app.appsets.R.string.add)
+                            )
+                        }
                     }
                 }
 
@@ -730,12 +732,12 @@ fun IconAndBanner(
         ) {
             Box(
                 modifier = Modifier
-                    .size(width = 158.dp, height = 68.dp)
-                    .clip(MaterialTheme.shapes.extraLarge)
+                    .size(width = 250.dp, height = 120.dp)
+                    .clip(ExtraLarge2)
                     .border(
                         1.dp,
                         MaterialTheme.colorScheme.outline,
-                        MaterialTheme.shapes.extraLarge
+                        ExtraLarge2
                     )
                     .clickable {
                         if (bannerKey == "banner_icon") {
@@ -773,21 +775,23 @@ fun IconAndBanner(
             ) {
                 val uri =
                     bannerUriProviderState.value?.provideUri()
-                if (uri != null) {
-                    AnyImage(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .clip(MaterialTheme.shapes.extraLarge),
-                        model = uri
-                    )
-                } else {
-                    if (showSelect) {
-                        Text(
-                            text = stringResource(id = xcj.app.appsets.R.string.choose),
-                            fontSize = 12.sp
+                AnimatedContent(uri != null) { hasUri ->
+                    if (hasUri) {
+                        AnyImage(
+                            modifier = Modifier
+                                .fillMaxSize(),
+                            model = uri
                         )
+                    } else {
+                        if (showSelect) {
+                            Icon(
+                                painter = painterResource(xcj.app.compose_share.R.drawable.ic_round_add_24),
+                                contentDescription = stringResource(xcj.app.appsets.R.string.add)
+                            )
+                        }
                     }
                 }
+
             }
             Text(text = stringResource(xcj.app.appsets.R.string.banner), fontSize = 12.sp)
         }

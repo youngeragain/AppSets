@@ -7,23 +7,41 @@ import xcj.app.appsets.server.model.ScreenInfo
 import xcj.app.appsets.server.model.UserInfo
 
 sealed interface SearchResult {
+
+    val count: Int
+
     data class SearchedUsers(
         val users: List<UserInfo>,
-    ) : SearchResult
+    ) : SearchResult {
+        override val count: Int
+            get() = users.size
+    }
 
     data class SearchedGroups(
         val groups: List<GroupInfo>,
-    ) : SearchResult
+    ) : SearchResult {
+        override val count: Int
+            get() = groups.size
+    }
 
     data class SearchedScreens(
         val screens: List<ScreenInfo>,
-    ) : SearchResult
+    ) : SearchResult {
+        override val count: Int
+            get() = screens.size
+    }
 
     data class SearchedApplications(
         val applications: List<Application>,
-    ) : SearchResult
+    ) : SearchResult {
+        override val count: Int
+            get() = applications.size
+    }
 
     data class SearchedGoods(
         val goodsList: List<GoodsInfo>,
-    ) : SearchResult
+    ) : SearchResult {
+        override val count: Int
+            get() = goodsList.size
+    }
 }

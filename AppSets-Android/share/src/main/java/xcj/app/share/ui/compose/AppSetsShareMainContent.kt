@@ -1106,7 +1106,7 @@ fun SettingsSheet(
 
                     }
                 }
-                Spacer(modifier = Modifier.height(68.dp))
+                Spacer(modifier = Modifier.height(150.dp))
             }
         }
     }

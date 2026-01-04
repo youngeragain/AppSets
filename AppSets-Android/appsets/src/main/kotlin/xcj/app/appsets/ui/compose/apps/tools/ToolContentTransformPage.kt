@@ -408,7 +408,7 @@ fun TransformedQRPage(
                     },
                     maxLines = 3
                 )
-                Spacer(Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(12.dp))
             }
         }
     }

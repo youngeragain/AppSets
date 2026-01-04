@@ -488,4 +488,5 @@
     <string name="create_application">Create Application</string>
     <string name="template_add_xxx">Add %1$s</string>
     <string name="template_version_info_count_xxx">Version Infos(%d)</string>
+    <string name="logo">Logo</string>
 </resources>

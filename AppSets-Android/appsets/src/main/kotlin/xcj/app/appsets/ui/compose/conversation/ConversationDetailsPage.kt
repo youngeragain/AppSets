@@ -538,7 +538,8 @@ private fun TopBarComponent(
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             items(
-                items = overrideQuickAccessSessions, key = { item -> item.id }) { session ->
+                items = overrideQuickAccessSessions
+            ) { session ->
                 Row(
                     modifier = Modifier
                         .clip(CircleShape)

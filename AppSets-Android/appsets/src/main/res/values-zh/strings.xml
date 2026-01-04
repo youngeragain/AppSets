@@ -291,7 +291,7 @@
     <string name="create_application_success">创建应用成功</string>
     <string name="please_input_a_template">请输入%s</string>
     <string name="please_choose_a_template">请选择%s</string>
-    <string name="icon">Icon</string>
+    <string name="icon">图标</string>
     <string name="explanation">说明</string>
     <string name="intent">意图</string>
     <string name="link">链接</string>
@@ -488,5 +488,6 @@
     <string name="create_application">创建应用</string>
     <string name="template_add_xxx">添加 %1$s</string>
     <string name="template_version_info_count_xxx">版本信息(%1$d)</string>
+    <string name="logo">Logo</string>
 
 </resources>
