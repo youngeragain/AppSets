@@ -9,9 +9,9 @@ plugins {
 
 android {
     namespace = "xcj.app.compose_share"
-    compileSdk = 36
+    compileSdk = libs.versions.android.compileSdk.get().toInt()
     defaultConfig {
-        minSdk = 26
+        minSdk = libs.versions.android.minSdk.get().toInt()
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles("consumer-rules.pro")

@@ -11,11 +11,11 @@ plugins {
 
 android {
     namespace = "xcj.app.screen_share"
-    compileSdk = 36
+    compileSdk = libs.versions.android.compileSdk.get().toInt()
 
     defaultConfig {
         applicationId = "xcj.app.screen_share"
-        minSdk = 26
+        minSdk = libs.versions.android.minSdk.get().toInt()
 
         // versionCode = 1
         // versionName = "1.0"

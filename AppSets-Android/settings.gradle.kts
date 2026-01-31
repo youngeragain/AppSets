@@ -22,6 +22,7 @@ data class DesignProjectInfo(val name: String, val enable: Boolean = true, val i
                 DesignProjectInfo(":purple_native", enable = false),
                 DesignProjectInfo(":webrtc", enable = false),
                 DesignProjectInfo(":screen_share", enable = true),
+                DesignProjectInfo(":app_multiplatform", enable = true, isLib = true),
             )
         }
 
@@ -34,6 +35,8 @@ data class DesignProjectInfo(val name: String, val enable: Boolean = true, val i
         }
     }
 }
+
+enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
 pluginManagement {
 
@@ -116,6 +119,10 @@ dependencyResolutionManagement {
             url = uri("file://D:/MavenLocal")
         }*/
     }
+}
+
+plugins {
+    id("org.gradle.toolchains.foojay-resolver-convention") version "1.0.0"
 }
 
 rootProject.name = "AppSets-Android"

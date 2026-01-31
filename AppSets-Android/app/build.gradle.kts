@@ -15,7 +15,7 @@ apply(from = "custom_build.gradle")
 
 android {
     namespace = "xcj.app.container"
-    compileSdk = 36
+    compileSdk = libs.versions.android.compileSdk.get().toInt()
     signingConfigs {
         getKeystoreProperties()?.let { keystoreProperties ->
             create("release") {
@@ -32,10 +32,10 @@ android {
     }
     defaultConfig {
         applicationId = "xcj.app.container"
-        minSdk = 26
-        targetSdk = 36
-        versionCode = 20260101
-        versionName = "2026.01.01"
+        minSdk = libs.versions.android.minSdk.get().toInt()
+        targetSdk = libs.versions.android.targetSdk.get().toInt()
+        versionCode = 20260201
+        versionName = "2026.02.01"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         //consumerProguardFiles("consumer-rules.pro")
@@ -70,6 +70,19 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+        }
+    }
+
+    flavorDimensions += "version"
+    productFlavors {
+        create("dev") {
+            dimension = "version"
+            applicationIdSuffix = ".dev"
+            versionNameSuffix = "-dev"
+        }
+        create("full") {
+            dimension = "version"
+            // This is the default flavor
         }
     }
 

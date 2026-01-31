@@ -8,9 +8,9 @@ plugins {
 
 android {
     namespace = "xcj.app.rtc"
-    compileSdk = 36
+    compileSdk = libs.versions.android.compileSdk.get().toInt()
     defaultConfig {
-        minSdk = 26
+        minSdk = libs.versions.android.minSdk.get().toInt()
 
         //versionCode = 1
         //versionName = "1.0"

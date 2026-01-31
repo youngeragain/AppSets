@@ -23,9 +23,9 @@ import androidx.navigation.compose.composable
 
 @Composable
 fun <S> AnimatedContentIf(
+    modifier: Modifier = Modifier,
     test: () -> Boolean = { true },
     targetState: S,
-    modifier: Modifier = Modifier,
     transitionSpec: AnimatedContentTransitionScope<S>.() -> ContentTransform = {
         (fadeIn(animationSpec = tween(220, delayMillis = 90)) +
                 scaleIn(initialScale = 0.92f, animationSpec = tween(220, delayMillis = 90)))

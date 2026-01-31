@@ -1,5 +1,6 @@
 package xcj.app.appsets.ui.compose.user
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -26,6 +27,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import xcj.app.appsets.server.model.UserInfo
+import xcj.app.appsets.ui.compose.content_selection.ContentSelectionResult
 import xcj.app.appsets.ui.compose.custom_component.AnyImage
 import xcj.app.appsets.ui.compose.theme.ExtraLarge2
 import xcj.app.appsets.ui.model.UserInfoForModify
@@ -78,18 +80,22 @@ fun ProfileModification(
                     modifier = Modifier.padding(vertical = 12.dp),
                     fontWeight = FontWeight.Bold
                 )
-                AnyImage(
-                    model = userInfoForModify.userAvatarUriProvider.value?.provideUri()
-                        ?: userInfo.bioUrl,
-                    modifier = Modifier
-                        .size(250.dp)
-                        .clip(ExtraLarge2)
-                        .border(
-                            width = 1.dp,
-                            color = MaterialTheme.colorScheme.outline,
-                            shape = ExtraLarge2
-                        )
-                )
+                AnimatedContent(
+                    targetState = userInfoForModify.userAvatarUriProvider.value?.provideUri()
+                        ?: userInfo.bioUrl
+                ) { targetUri ->
+                    AnyImage(
+                        model = targetUri,
+                        modifier = Modifier
+                            .size(250.dp)
+                            .clip(ExtraLarge2)
+                            .border(
+                                width = 1.dp,
+                                color = MaterialTheme.colorScheme.outline,
+                                shape = ExtraLarge2
+                            )
+                    )
+                }
                 Spacer(modifier = Modifier.height(12.dp))
                 FilledTonalButton(
                     onClick = {
@@ -99,6 +105,14 @@ fun ProfileModification(
                                     TAG,
                                     "userInfoForModify.userAvatarUriProvider, input:$input"
                                 )
+                                if (input !is ContentSelectionResult.RichMediaContentSelectionResult) {
+                                    return@fromState
+                                }
+                                val uriProviders = input.selectedProvider.provide()
+                                if (uriProviders.isEmpty()) {
+                                    return@fromState
+                                }
+                                update(uriProviders.first())
                             }
                         onSelectUserAvatarClick(
                             "USER_PROFILE_MODIFY_AVATAR_IMAGE_SELECT_REQUEST",

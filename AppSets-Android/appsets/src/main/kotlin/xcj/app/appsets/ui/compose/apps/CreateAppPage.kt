@@ -706,11 +706,15 @@ fun IconAndBanner(
             ) {
                 val uri =
                     iconUriProviderState.value?.provideUri()
-                AnimatedContent(uri != null) { hasUri ->
+                AnimatedContent(
+                    targetState = uri != null,
+                    contentAlignment = Alignment.Center
+                ) { hasUri ->
                     if (hasUri) {
                         AnyImage(
                             modifier = Modifier
-                                .fillMaxSize(),
+                                .fillMaxSize()
+                                .clip(ExtraLarge2),
                             model = uri
                         )
                     } else {
@@ -775,11 +779,15 @@ fun IconAndBanner(
             ) {
                 val uri =
                     bannerUriProviderState.value?.provideUri()
-                AnimatedContent(uri != null) { hasUri ->
+                AnimatedContent(
+                    targetState = uri != null,
+                    contentAlignment = Alignment.Center
+                ) { hasUri ->
                     if (hasUri) {
                         AnyImage(
                             modifier = Modifier
-                                .fillMaxSize(),
+                                .fillMaxSize()
+                                .clip(ExtraLarge2),
                             model = uri
                         )
                     } else {

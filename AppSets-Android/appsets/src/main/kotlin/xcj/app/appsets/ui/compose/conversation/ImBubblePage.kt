@@ -45,6 +45,7 @@ fun ImBubblePage() {
         Surface {
             Box(modifier = Modifier.fillMaxSize()) {
                 MainNaviHostPagesContainer(
+                    modifier = Modifier.fillMaxSize(),
                     navController = navController,
                     startPageRoute = PageRouteNames.ConversationOverviewPage,
                     hazeState = hazeState,

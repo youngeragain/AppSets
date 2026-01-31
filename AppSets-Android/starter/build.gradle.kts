@@ -9,10 +9,10 @@ plugins {
 
 android {
     namespace = "xcj.app.starter"
-    compileSdk = 36
+    compileSdk = libs.versions.android.compileSdk.get().toInt()
     defaultConfig {
         //applicationId "xcj.app.stater"
-        minSdk = 26
+        minSdk = libs.versions.android.minSdk.get().toInt()
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles("consumer-rules.pro")

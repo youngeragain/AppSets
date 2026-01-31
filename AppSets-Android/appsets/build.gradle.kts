@@ -6,7 +6,7 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.parcelize)
     alias(libs.plugins.ksp)
-    //alias(libs.plugins.hilt)
+    // alias(libs.plugins.hilt)
     // this version matches your Kotlin version
 }
 
@@ -14,7 +14,7 @@ apply(from = "custom_build.gradle")
 
 android {
     namespace = "xcj.app.appsets"
-    compileSdk = 36
+    compileSdk = libs.versions.android.compileSdk.get().toInt()
     sourceSets {
         // Encapsulates configurations for the main source set.
         getByName("main") {
@@ -46,7 +46,7 @@ android {
     }
     defaultConfig {
         //applicationId = "xcj.app.appsets"
-        minSdk = 26
+        minSdk = libs.versions.android.minSdk.get().toInt()
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -72,6 +72,16 @@ android {
     /*composeOptions {
         kotlinCompilerExtensionVersion = "1.5.3"
     }*/
+    flavorDimensions += "version"
+    productFlavors {
+        create("dev") {
+            dimension = "version"
+        }
+        create("full") {
+            dimension = "version"
+            // This is the default flavor
+        }
+    }
 
     buildFeatures {
         compose = true

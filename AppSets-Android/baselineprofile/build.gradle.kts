@@ -8,10 +8,10 @@ plugins {
 
 android {
     namespace = "xcj.app.baselineprofile"
-    compileSdk = 36
+    compileSdk = libs.versions.android.compileSdk.get().toInt()
     defaultConfig {
         minSdk = 28
-        targetSdk = 36
+        targetSdk = libs.versions.android.targetSdk.get().toInt()
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
