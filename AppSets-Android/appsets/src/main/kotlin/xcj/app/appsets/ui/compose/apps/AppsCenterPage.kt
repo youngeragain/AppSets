@@ -2,10 +2,6 @@
 
 package xcj.app.appsets.ui.compose.apps
 
-import androidx.compose.animation.core.AnimationState
-import androidx.compose.animation.core.animateTo
-import androidx.compose.animation.core.snap
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -27,21 +23,17 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import kotlinx.coroutines.launch
 import xcj.app.appsets.im.Bio
 import xcj.app.appsets.server.model.Application
 import xcj.app.appsets.ui.compose.custom_component.AnyImage
@@ -59,36 +51,6 @@ fun AppsCenterPage(
     ShowNavBar()
     val hapticFeedback = LocalHapticFeedback.current
     val allApplications by rememberUpdatedState(appCenterPageUIState.apps.flatMap { it.applications })
-    val iconAnimationStates = remember {
-        buildList {
-            val allCount = allApplications.size
-            repeat(allCount) { index ->
-                add(AnimationState(0f))
-            }
-        }
-    }
-    LaunchedEffect(true) {
-        if (appCenterPageUIState is AppCenterPageUIState.LoadSuccess) {
-            val allCount = iconAnimationStates.size
-            val center = (allCount) / 2 + 1
-            iconAnimationStates.forEachIndexed { index, animation ->
-                val delay = if (index <= center) {
-                    ((1f - index.toFloat() / center.toFloat()) * 150).toInt()
-                } else {
-                    (((index - center).toFloat() / center.toFloat()) * 150).toInt()
-                }
-                launch {
-                    animation.animateTo(1f, tween(450, delay))
-                }
-            }
-        } else {
-            iconAnimationStates.forEach {
-                launch {
-                    it.animateTo(1f, snap())
-                }
-            }
-        }
-    }
 
     LazyVerticalGrid(
         columns = GridCells.Adaptive(90.dp),
@@ -100,15 +62,9 @@ fun AppsCenterPage(
         )
     ) {
         itemsIndexed(items = allApplications) { index, application ->
-            val animateFraction by iconAnimationStates[index]
             SingleApplicationComponent(
                 modifier = Modifier
                     .padding(horizontal = 12.dp, vertical = 8.dp)
-                    .graphicsLayer {
-                        scaleX = animateFraction
-                        scaleY = animateFraction
-                        alpha = animateFraction
-                    }
                     .animateItem(),
                 application = application,
                 onApplicationClick = {

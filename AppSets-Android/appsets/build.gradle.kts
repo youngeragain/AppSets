@@ -6,7 +6,7 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.parcelize)
     alias(libs.plugins.ksp)
-    //alias(libs.plugins.hilt)
+    // alias(libs.plugins.hilt)
     // this version matches your Kotlin version
 }
 
@@ -72,6 +72,16 @@ android {
     /*composeOptions {
         kotlinCompilerExtensionVersion = "1.5.3"
     }*/
+    flavorDimensions += "version"
+    productFlavors {
+        create("dev") {
+            dimension = "version"
+        }
+        create("full") {
+            dimension = "version"
+            // This is the default flavor
+        }
+    }
 
     buildFeatures {
         compose = true

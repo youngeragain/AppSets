@@ -1540,6 +1540,22 @@ fun DesignNaviHost(
                 animationSpec = tween()
             )
         },
+        popEnterTransition = {
+            scaleIn(
+                initialScale = 0.89f,
+                animationSpec = tween()
+            ) + fadeIn(
+                animationSpec = tween()
+            )
+        },
+        popExitTransition = {
+            scaleOut(
+                targetScale = 1.11f,
+                animationSpec = tween()
+            ) + fadeOut(
+                animationSpec = tween()
+            )
+        },
         contentAlignment = Alignment.TopCenter,
         builder = {
             publishComposeNaviHostFormedEvent(navController, this)

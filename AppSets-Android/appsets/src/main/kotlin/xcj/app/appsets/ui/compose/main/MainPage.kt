@@ -90,7 +90,7 @@ fun MainPage() {
         LocalQuickStepContentHandlerRegistry provides quickStepContentHandlerRegistry
     ) {
         Surface {
-            OnScaffoldLaunch(navController)
+            OnScaffoldLaunch(navController = navController)
             Box {
                 Box(
                     modifier = Modifier
@@ -99,6 +99,7 @@ fun MainPage() {
                 ) {
 
                     MainNaviHostPagesContainer(
+                        modifier = Modifier.fillMaxSize(),
                         navController = navController,
                         startPageRoute = PageRouteNames.AppsCenterPage,
                         hazeState = hazeState,

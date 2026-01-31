@@ -223,7 +223,10 @@ fun SignUpPage(
                     ) {
                         val avatarUri =
                             userInfoForCreate.userAvatarUriProvider.value?.provideUri()
-                        AnimatedContent(avatarUri != null) { hasUri ->
+                        AnimatedContent(
+                            targetState = avatarUri != null,
+                            contentAlignment = Alignment.Center
+                        ) { hasUri ->
                             if (hasUri) {
                                 AnyImage(
                                     model = avatarUri,

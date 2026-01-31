@@ -209,11 +209,16 @@ fun CreateGroupPage(
                     val groupIconUri =
                         groupInfoForCreate.iconUriProvider.value?.provideUri()
 
-                    AnimatedContent(groupIconUri != null) { hasUri ->
+                    AnimatedContent(
+                        targetState = groupIconUri != null,
+                        contentAlignment = Alignment.Center
+                    ) { hasUri ->
                         if (hasUri) {
                             AnyImage(
-                                model = groupIconUri,
-                                modifier = Modifier.fillMaxSize()
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .clip(ExtraLarge2),
+                                model = groupIconUri
                             )
                         } else {
                             Icon(
