@@ -6,8 +6,8 @@ plugins {
     alias(libs.plugins.kotlin.android) apply false
     alias(libs.plugins.kotlin.parcelize) apply false
     alias(libs.plugins.kotlin.compose) apply false
-    alias(libs.plugins.baselineprofile) apply false
-    alias(libs.plugins.ksp) apply false
+    alias(libs.plugins.androidx.baselineprofile) apply false
+    alias(libs.plugins.google.ksp) apply false
     alias(libs.plugins.kotlin.multiplatform) apply false
     alias(libs.plugins.compose.multiplatform) apply false
     alias(libs.plugins.composeHotReload) apply false

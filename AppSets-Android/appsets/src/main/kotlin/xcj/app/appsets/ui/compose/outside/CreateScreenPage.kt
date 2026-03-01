@@ -533,30 +533,24 @@ fun NewPostScreenComponent(
                         }
                     },
                     onClick = {
-                        val mediaUriProvider =
-                            screenInfoForCreate.videoUriProviders.firstOrNull()
-                        if (mediaUriProvider != null) {
-                            onVideoPlayClick(mediaUriProvider)
-                        } else {
-                            val composeStateUpdater =
-                                RuntimeListStateUpdater.fromState(screenInfoForCreate.videoUriProviders) { markKey, input ->
-                                    PurpleLogger.current.d(
-                                        TAG,
-                                        "screenInfoForCreate.videoUriProviders, inputHandleDSL:\nmarkKey:$markKey,\ninput:$input"
-                                    )
-                                    if (input !is ContentSelectionResult.RichMediaContentSelectionResult) {
-                                        return@fromState
-                                    }
-                                    val uriProviders = input.selectedProvider.provide()
-                                    addAll(uriProviders)
+                        val composeStateUpdater =
+                            RuntimeListStateUpdater.fromState(screenInfoForCreate.videoUriProviders) { markKey, input ->
+                                PurpleLogger.current.d(
+                                    TAG,
+                                    "screenInfoForCreate.videoUriProviders, inputHandleDSL:\nmarkKey:$markKey,\ninput:$input"
+                                )
+                                if (input !is ContentSelectionResult.RichMediaContentSelectionResult) {
+                                    return@fromState
                                 }
-                            onAddMediaContentClick(
-                                "CREATE_SCREEN_CONTENT_SELECT_VIDEO_REQUEST",
-                                ContentSelectionTypes.VIDEO,
-                                1,
-                                composeStateUpdater
-                            )
-                        }
+                                val uriProviders = input.selectedProvider.provide()
+                                addAll(uriProviders)
+                            }
+                        onAddMediaContentClick(
+                            "CREATE_SCREEN_CONTENT_SELECT_VIDEO_REQUEST",
+                            ContentSelectionTypes.VIDEO,
+                            1,
+                            composeStateUpdater
+                        )
                     },
                 )
         ) {

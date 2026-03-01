@@ -137,12 +137,10 @@ class ScreenPostUseCase(
         uriQuickStepContents.forEach { quickStepContent ->
             if (ContentType.isImage(quickStepContent.uriContentType)) {
                 val uriProvider = UriProvider.fromUri(quickStepContent.uri)
-                val uriProviderList = listOf(uriProvider)
-                //updateSelectPictures(uriProviderList)
+                screenInfoForCreate.pictureUriProviders.add(uriProvider)
             } else if (ContentType.isVideo(quickStepContent.uriContentType)) {
                 val uriProvider = UriProvider.fromUri(quickStepContent.uri)
-                val uriProviderList = listOf(uriProvider)
-                //updateSelectVideo(uriProviderList)
+                screenInfoForCreate.videoUriProviders.add(uriProvider)
             }
         }
     }
