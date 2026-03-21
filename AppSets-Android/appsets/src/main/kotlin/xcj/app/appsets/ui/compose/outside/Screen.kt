@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.overscroll
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -63,6 +64,7 @@ import xcj.app.appsets.server.model.ScreenInfo
 import xcj.app.appsets.server.model.ScreenMediaFileUrl
 import xcj.app.appsets.ui.compose.PageRouteNames
 import xcj.app.appsets.ui.compose.custom_component.AnyImage
+import xcj.app.appsets.ui.compose.custom_component.IosLikeOverscrollEffect
 import xcj.app.appsets.util.saveComposeNodeAsBitmap
 import xcj.app.starter.android.util.PurpleLogger
 
@@ -249,10 +251,13 @@ private fun ScreenSectionOfContentMediasPart(
     if (mediaFileUrls.isNullOrEmpty()) {
         return
     }
+    val scope = rememberCoroutineScope()
+    val overscroll = remember { IosLikeOverscrollEffect(scope) }
     val carouselState = rememberCarouselState { mediaFileUrls.size }
     HorizontalUncontainedCarousel(
         state = carouselState,
         modifier = Modifier
+            .overscroll(overscroll)
             .fillMaxWidth()
             .wrapContentHeight(),
         itemWidth = 250.dp,

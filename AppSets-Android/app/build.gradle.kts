@@ -6,8 +6,8 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
-    alias(libs.plugins.baselineprofile)
-    alias(libs.plugins.ksp)
+    alias(libs.plugins.androidx.baselineprofile)
+    alias(libs.plugins.google.ksp)
     //alias(libs.plugins.appsets.plugin)
 }
 
@@ -15,7 +15,7 @@ apply(from = "custom_build.gradle")
 
 android {
     namespace = "xcj.app.container"
-    compileSdk = 36
+    compileSdk = libs.versions.android.compileSdk.get().toInt()
     signingConfigs {
         getKeystoreProperties()?.let { keystoreProperties ->
             create("release") {
@@ -32,10 +32,10 @@ android {
     }
     defaultConfig {
         applicationId = "xcj.app.container"
-        minSdk = 26
-        targetSdk = 36
-        versionCode = 20260201
-        versionName = "2026.02.01"
+        minSdk = libs.versions.android.minSdk.get().toInt()
+        targetSdk = libs.versions.android.targetSdk.get().toInt()
+        versionCode = 20260321
+        versionName = "2026.03.21"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         //consumerProguardFiles("consumer-rules.pro")

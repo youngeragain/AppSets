@@ -26,9 +26,12 @@ import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.itemsIndexed
 import androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridState
+import androidx.compose.foundation.overscroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -37,6 +40,7 @@ import androidx.compose.ui.unit.dp
 import xcj.app.appsets.im.Bio
 import xcj.app.appsets.server.model.ScreenInfo
 import xcj.app.appsets.server.model.ScreenMediaFileUrl
+import xcj.app.appsets.ui.compose.custom_component.IosLikeOverscrollEffect
 import xcj.app.appsets.ui.compose.custom_component.LoadMoreHandler
 
 private const val TAG = "ScreensList"
@@ -95,8 +99,10 @@ private fun LandscapeScreenList(
     onScreenMediaClick: (ScreenMediaFileUrl, List<ScreenMediaFileUrl>) -> Unit,
     headerContent: (@Composable () -> Unit)? = null,
 ) {
+    val scope = rememberCoroutineScope()
+    val overscrollEffect = remember { IosLikeOverscrollEffect(scope) }
     LazyVerticalStaggeredGrid(
-        modifier = modifier,
+        modifier = modifier.overscroll(overscrollEffect),
         columns = StaggeredGridCells.Fixed(3),
         contentPadding = PaddingValues(
             start = 12.dp,
@@ -154,8 +160,10 @@ private fun PortraitScreenList(
     onBioClick: (Bio) -> Unit,
     onScreenMediaClick: (ScreenMediaFileUrl, List<ScreenMediaFileUrl>) -> Unit,
 ) {
+    val scope = rememberCoroutineScope()
+    val overscrollEffect = remember { IosLikeOverscrollEffect(scope) }
     LazyColumn(
-        modifier = modifier,
+        modifier = modifier.overscroll(overscrollEffect),
         contentPadding = PaddingValues(
             start = 12.dp,
             top = WindowInsets.statusBars.asPaddingValues().calculateTopPadding(),
@@ -197,5 +205,7 @@ private fun PortraitScreenList(
                 )
             }
         }
+
+
     }
 }

@@ -1,4 +1,4 @@
-package xcj.app.module.binder.purple_context
+package xcj.app.module.binder.purple_module
 
 import xcj.app.starter.test.PurpleContext
 

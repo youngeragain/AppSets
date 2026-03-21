@@ -6,10 +6,10 @@ plugins {
 android {
 
     namespace = "xcj.app.binder"
-    compileSdk = 36
+    compileSdk = libs.versions.android.compileSdk.get().toInt()
     defaultConfig {
         //applicationId = "xcj.app.binder"
-        minSdk = 26
+        minSdk = libs.versions.android.minSdk.get().toInt()
 
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"

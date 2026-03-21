@@ -7,10 +7,10 @@ plugins {
 
 android {
     namespace = "xcj.app.webserver"
-    compileSdk = 36
+    compileSdk = libs.versions.android.compileSdk.get().toInt()
 
     defaultConfig {
-        minSdk = 26
+        minSdk = libs.versions.android.minSdk.get().toInt()
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles("consumer-rules.pro")
@@ -47,6 +47,12 @@ dependencies {
     compileOnly(project(":compose_share"))
     //implementation(libs.jetty.server)
     api(libs.netty.all)
+
+    constraints {
+        implementation("org.jetbrains:annotations:26.1.0") {
+            because("Resolve conflict between kotlin-stdlib and kotlinx-coroutines")
+        }
+    }
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
