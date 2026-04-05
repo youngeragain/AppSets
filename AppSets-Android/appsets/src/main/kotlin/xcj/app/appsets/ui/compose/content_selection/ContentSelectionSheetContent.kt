@@ -452,6 +452,12 @@ private fun ContentSelectPromptContent(
                     text = stringResource(xcj.app.appsets.R.string.app_custom_content_selection_des),
                     fontSize = 12.sp
                 )
+                Text(
+                    text = stringResource(xcj.app.appsets.R.string.deprecated),
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.error
+                )
             }
         }
 

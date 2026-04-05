@@ -489,5 +489,6 @@
     <string name="template_add_xxx">添加 %1$s</string>
     <string name="template_version_info_count_xxx">版本信息(%1$d)</string>
     <string name="logo">Logo</string>
+    <string name="deprecated">已弃用</string>
 
 </resources>

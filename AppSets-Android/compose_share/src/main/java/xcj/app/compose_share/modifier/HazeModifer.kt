@@ -8,6 +8,7 @@ import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.HazeStyle
 import dev.chrisbanes.haze.hazeEffect
 import dev.chrisbanes.haze.hazeSource
+import dev.chrisbanes.haze.rememberHazeState
 import xcj.app.starter.android.ProjectConstants
 
 @Composable
@@ -15,7 +16,7 @@ fun rememberHazeStateIfAvailable(): HazeState? {
     if (LocalInspectionMode.current || ProjectConstants.IS_IN_ANDROID_STUDIO_PREVIEW) {
         return null
     }
-    val hazeState = rememberHazeStateIfAvailable()
+    val hazeState = rememberHazeState()
     return hazeState
 }
 
