@@ -48,13 +48,13 @@ import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.net.toUri
-import dev.chrisbanes.haze.hazeSource
-import dev.chrisbanes.haze.rememberHazeState
 import xcj.app.appsets.ui.compose.custom_component.HideNavBar
 import xcj.app.appsets.ui.compose.quickstep.QuickStepContent
 import xcj.app.appsets.ui.compose.quickstep.TextQuickStepContent
 import xcj.app.compose_share.components.BackActionTopBar
 import xcj.app.compose_share.components.DesignTextField
+import xcj.app.compose_share.modifier.hazeSourceIfAvailable
+import xcj.app.compose_share.modifier.rememberHazeStateIfAvailable
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
@@ -146,7 +146,7 @@ fun ToolIntentCallerPage(
     val calledIntentList = remember {
         mutableStateListOf<IntentCallerModel>()
     }
-    val hazeState = rememberHazeState()
+    val hazeState = rememberHazeStateIfAvailable()
     val density = LocalDensity.current
     var backActionBarSize by remember {
         mutableStateOf(IntSize.Zero)
@@ -161,7 +161,7 @@ fun ToolIntentCallerPage(
     Box(modifier = Modifier.fillMaxSize()) {
         Column(
             modifier = Modifier
-                .hazeSource(hazeState)
+                .hazeSourceIfAvailable(hazeState)
                 .fillMaxWidth()
                 .padding(start = 12.dp, end = 12.dp)
                 .verticalScroll(rememberScrollState()),

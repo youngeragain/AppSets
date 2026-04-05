@@ -270,7 +270,7 @@
     <string name="area">Area</string>
     <string name="address">Address</string>
     <string name="required">Required</string>
-    <string name="a_is_required_template">%s (%s)</string>
+    <string name="a_is_required_template">%s %s</string>
     <string name="avatar">Avatar</string>
     <string name="brief">Brief</string>
     <string name="qrcode_scanned_login_tips">The device has been scanned. Are you sure this device is logged in?</string>

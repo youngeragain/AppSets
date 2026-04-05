@@ -9,7 +9,7 @@ import androidx.lifecycle.withCreated
 import kotlinx.coroutines.launch
 import xcj.app.proxy.service.AppSetsVpnService
 import xcj.app.proxy.ui.compose.theme.AppSetsTheme
-import xcj.app.starter.android.ui.base.DesignComponentActivity
+import xcj.app.starter.android.ui.base.platform.DesignComponentActivity
 
 class AppSetsVpnActivity : DesignComponentActivity() {
 

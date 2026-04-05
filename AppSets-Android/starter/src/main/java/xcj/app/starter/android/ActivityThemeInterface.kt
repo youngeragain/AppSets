@@ -5,7 +5,7 @@ import androidx.activity.result.contract.ActivityResultContract
 import androidx.lifecycle.ViewModel
 
 interface SystemContentSelectionCallback {
-    fun autoRemove(): Boolean = true
+    fun removeSelfOnDone(): Boolean = true
     fun onSystemContentSelected(content: Any?)
 }
 

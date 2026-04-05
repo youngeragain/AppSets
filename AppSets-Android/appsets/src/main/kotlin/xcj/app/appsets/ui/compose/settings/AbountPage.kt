@@ -37,11 +37,11 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import dev.chrisbanes.haze.hazeSource
-import dev.chrisbanes.haze.rememberHazeState
 import xcj.app.appsets.server.model.UpdateCheckResult
 import xcj.app.compose_share.components.BackActionTopBar
 import xcj.app.compose_share.components.DesignHDivider
+import xcj.app.compose_share.modifier.hazeSourceIfAvailable
+import xcj.app.compose_share.modifier.rememberHazeStateIfAvailable
 
 @Composable
 fun AboutPage(
@@ -50,7 +50,7 @@ fun AboutPage(
     onWebsiteClick: () -> Unit,
     onHistoryExpandStateChanged: (Boolean) -> Unit,
 ) {
-    val hazeState = rememberHazeState()
+    val hazeState = rememberHazeStateIfAvailable()
     val density = LocalDensity.current
     var backActionBarSize by remember {
         mutableStateOf(IntSize.Zero)
@@ -66,7 +66,7 @@ fun AboutPage(
 
         Column(
             modifier = Modifier
-                .hazeSource(hazeState)
+                .hazeSourceIfAvailable(hazeState)
                 .padding(start = 12.dp, end = 12.dp)
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(12.dp),

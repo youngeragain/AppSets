@@ -14,7 +14,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -51,8 +50,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import dev.chrisbanes.haze.hazeSource
-import dev.chrisbanes.haze.rememberHazeState
 import xcj.app.appsets.ui.compose.LocalUseCaseOfSystem
 import xcj.app.appsets.ui.compose.content_selection.ContentSelectionResult
 import xcj.app.appsets.ui.compose.custom_component.AnyImage
@@ -64,14 +61,15 @@ import xcj.app.appsets.util.compose_state.ComposeStateUpdater
 import xcj.app.appsets.util.compose_state.RuntimeSingleStateUpdater
 import xcj.app.compose_share.components.BackActionTopBar
 import xcj.app.compose_share.components.DesignTextField
+import xcj.app.compose_share.modifier.hazeSourceIfAvailable
+import xcj.app.compose_share.modifier.rememberHazeStateIfAvailable
 import xcj.app.starter.android.util.PurpleLogger
 
 private const val TAG = "SignUpPage"
 
-@Preview
+@Preview(showBackground = true)
 @Composable
-fun SignUpPagePreview(
-) {
+fun SignUpPagePreview() {
     val signUpPageUIState by remember {
         mutableStateOf<SignUpPageUIState>(SignUpPageUIState.SignUpStart())
     }
@@ -118,7 +116,7 @@ fun SignUpPage(
             systemUseCase.onComposeDispose("page dispose")
         }
     }
-    val hazeState = rememberHazeState()
+    val hazeState = rememberHazeStateIfAvailable()
     val density = LocalDensity.current
     var backActionBarSize by remember {
         mutableStateOf(IntSize.Zero)
@@ -134,7 +132,7 @@ fun SignUpPage(
 
         Column(
             modifier = Modifier
-                .hazeSource(hazeState)
+                .hazeSourceIfAvailable(hazeState)
                 .fillMaxWidth()
                 .imePadding()
                 .verticalScroll(rememberScrollState())
@@ -147,32 +145,6 @@ fun SignUpPage(
             )
             Column(modifier = Modifier.padding(horizontal = 12.dp)) {
                 Spacer(modifier = Modifier.height(12.dp))
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .border(
-                                1.dp,
-                                MaterialTheme.colorScheme.outline,
-                                MaterialTheme.shapes.extraLarge
-                            )
-                            .padding(12.dp)
-                    ) {
-                        Text(
-                            text = stringResource(id = xcj.app.appsets.R.string.tips)
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = stringResource(xcj.app.appsets.R.string.sign_up_tips),
-                            fontSize = 12.sp
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(12.dp))
-                }
-
                 Column(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalAlignment = Alignment.CenterHorizontally

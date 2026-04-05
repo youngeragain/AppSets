@@ -114,8 +114,6 @@ import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import coil3.compose.rememberAsyncImagePainter
 import dev.chrisbanes.haze.HazeState
-import dev.chrisbanes.haze.hazeEffect
-import dev.chrisbanes.haze.hazeSource
 import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
 import dev.chrisbanes.haze.materials.HazeMaterials
 import kotlinx.coroutines.Dispatchers
@@ -155,6 +153,8 @@ import xcj.app.appsets.util.compose_state.ComposeStateUpdater
 import xcj.app.appsets.util.compose_state.RuntimeSingleStateUpdater
 import xcj.app.appsets.util.ktx.asComponentActivityOrNull
 import xcj.app.compose_share.components.BackActionTopBar
+import xcj.app.compose_share.modifier.hazeEffectIfAvailable
+import xcj.app.compose_share.modifier.hazeSourceIfAvailable
 import xcj.app.starter.android.ktx.startWithHttpSchema
 import xcj.app.starter.android.util.PurpleLogger
 import xcj.app.starter.android.util.UriProvider
@@ -544,9 +544,7 @@ private fun TopBarComponent(
                     modifier = Modifier
                         .clip(CircleShape)
                         .border(1.dp, MaterialTheme.colorScheme.outline, CircleShape)
-                        .hazeEffect(
-                            hazeState, HazeMaterials.thin()
-                        )
+                        .hazeEffectIfAvailable(hazeState, HazeMaterials.thin())
                         .clickable {
                             hapticFeedback.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                             if (session == currentSession) {
@@ -619,10 +617,11 @@ private fun ImMessageListComponent(
                 bottom = WindowInsets.navigationBars.asPaddingValues()
                     .calculateBottomPadding() + 150.dp
             ),
-            modifier = Modifier
-                .testTag("ConversationTestTag")
-                .fillMaxSize()
-                .hazeSource(hazeState)
+            modifier = Modifier.run {
+                testTag("ConversationTestTag")
+                    .fillMaxSize()
+                    .hazeSourceIfAvailable(hazeState)
+            }
         ) {
             itemsIndexed(
                 items = messages, key = { index, imMessage -> imMessage.id }) { _, imMessage ->
@@ -1330,9 +1329,7 @@ fun InputSuggestionsSpace(
                     modifier = Modifier
                         .clip(CircleShape)
                         .border(1.dp, MaterialTheme.colorScheme.outline, CircleShape)
-                        .hazeEffect(
-                            hazeState, HazeMaterials.thin()
-                        )
+                        .hazeEffectIfAvailable(hazeState, HazeMaterials.thin())
                         .clickable {
                             hapticFeedback.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                             val overrideInputSelect = advise.inputSelector
@@ -1451,7 +1448,7 @@ fun UserInputActionsSpace(
                 Row(
                     modifier = Modifier
                         .clip(CircleShape)
-                        .hazeEffect(hazeState, HazeMaterials.thin())
+                        .hazeEffectIfAvailable(hazeState, HazeMaterials.thin())
                         .clickable(onClick = {
                             onInputMoreAction("IM_CONTENT_SELECT_REQUEST")
                         })
@@ -1468,7 +1465,7 @@ fun UserInputActionsSpace(
                 Row(
                     modifier = Modifier
                         .clip(CircleShape)
-                        .hazeEffect(hazeState, HazeMaterials.thin())
+                        .hazeEffectIfAvailable(hazeState, HazeMaterials.thin())
                         .clickable(onClick = {
                             hapticFeedback.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                             isShowAudioRecorder = true
@@ -1500,9 +1497,7 @@ fun UserInputActionsSpace(
                         modifier = Modifier
                             .clip(CircleShape)
                             .border(1.dp, MaterialTheme.colorScheme.outline, CircleShape)
-                            .hazeEffect(
-                                hazeState, HazeMaterials.thin()
-                            )
+                            .hazeEffectIfAvailable(hazeState, HazeMaterials.thin())
                             .clickable(onClick = onJumpToLatestClick)
                             .padding(12.dp),
                         verticalAlignment = Alignment.CenterVertically,
@@ -1554,7 +1549,7 @@ fun UserInputActionsSpace(
                         Row(
                             modifier = Modifier
                                 .clip(CircleShape)
-                                .hazeEffect(hazeState, HazeMaterials.thin())
+                                .hazeEffectIfAvailable(hazeState, HazeMaterials.thin())
                                 .clickable(onClick = onExpandUserInputClick)
                                 .border(1.dp, MaterialTheme.colorScheme.outline, CircleShape)
                                 .padding(12.dp),
@@ -1570,7 +1565,7 @@ fun UserInputActionsSpace(
                     Row(
                         modifier = Modifier
                             .clip(CircleShape)
-                            .hazeEffect(hazeState, HazeMaterials.thin())
+                            .hazeEffectIfAvailable(hazeState, HazeMaterials.thin())
                             .clickable(onClick = {
                                 onSearchIconClick(textFieldValue.text)
                             })
@@ -1588,7 +1583,7 @@ fun UserInputActionsSpace(
                     Row(
                         modifier = Modifier
                             .clip(CircleShape)
-                            .hazeEffect(hazeState, HazeMaterials.thin())
+                            .hazeEffectIfAvailable(hazeState, HazeMaterials.thin())
                             .clickable(onClick = onSendClick)
                             .border(1.dp, MaterialTheme.colorScheme.outline, CircleShape)
                             .padding(12.dp),
@@ -1780,7 +1775,7 @@ private fun UserInputTextSpace(
                 .clip(CircleShape)
         }
         Box(
-            boxModifier.hazeEffect(hazeState, HazeMaterials.thin())
+            modifier = boxModifier.hazeEffectIfAvailable(hazeState, HazeMaterials.thin())
         ) {
 
             BasicTextField(

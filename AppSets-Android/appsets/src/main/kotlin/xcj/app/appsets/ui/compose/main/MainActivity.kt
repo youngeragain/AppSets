@@ -20,7 +20,7 @@ import xcj.app.appsets.ui.viewmodel.MainViewModel
 import xcj.app.appsets.util.SplashScreenHelper
 import xcj.app.compose_share.ui.viewmodel.VisibilityComposeStateViewModel.Companion.bottomSheetState
 import xcj.app.starter.android.AppDefinition
-import xcj.app.starter.android.ui.base.DesignComponentActivity
+import xcj.app.starter.android.ui.base.platform.DesignComponentActivity
 import xcj.app.starter.android.util.PackageUtil
 import xcj.app.starter.android.util.PurpleLogger
 

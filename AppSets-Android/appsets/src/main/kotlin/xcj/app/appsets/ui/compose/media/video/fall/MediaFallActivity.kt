@@ -10,7 +10,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.withCreated
 import kotlinx.coroutines.launch
 import xcj.app.appsets.ui.compose.theme.AppSetsTheme
-import xcj.app.starter.android.ui.base.DesignFragmentActivity
+import xcj.app.starter.android.ui.base.platform.DesignFragmentActivity
 
 class MediaFallActivity : DesignFragmentActivity() {
 

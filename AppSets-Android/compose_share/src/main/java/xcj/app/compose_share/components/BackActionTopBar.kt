@@ -6,9 +6,13 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsIgnoringVisibility
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
@@ -25,9 +29,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dev.chrisbanes.haze.HazeState
-import dev.chrisbanes.haze.hazeEffect
 import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
 import dev.chrisbanes.haze.materials.HazeMaterials
+import xcj.app.compose_share.modifier.hazeEffectIfAvailable
 
 sealed interface BackActionModel {
     class Text() : BackActionModel
@@ -35,7 +39,7 @@ sealed interface BackActionModel {
 }
 
 
-@Preview
+@Preview(showBackground = true)
 @Composable
 fun BackActionTopBarPreview() {
     BackActionTopBar(
@@ -48,6 +52,7 @@ fun BackActionTopBarPreview() {
     )
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun BackActionTopBar(
     modifier: Modifier = Modifier,
@@ -68,11 +73,21 @@ fun BackActionTopBar(
             modifier
                 .fillMaxWidth()
                 .statusBarsPadding()
-                .padding(horizontal = 12.dp)
+                .padding(
+                    start = 12.dp,
+                    end = 12.dp,
+                    top = WindowInsets.statusBarsIgnoringVisibility.asPaddingValues()
+                        .calculateTopPadding()
+                )
         } else {
             modifier
                 .statusBarsPadding()
-                .padding(horizontal = 12.dp)
+                .padding(
+                    start = 12.dp,
+                    end = 12.dp,
+                    top = WindowInsets.statusBarsIgnoringVisibility.asPaddingValues()
+                        .calculateTopPadding()
+                )
         }
     Box(
         modifier = boxModifier
@@ -83,14 +98,10 @@ fun BackActionTopBar(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            val backIconBoxModifier = if (hazeState == null) {
-                Modifier
-                    .clip(CircleShape)
-            } else {
-                Modifier
-                    .clip(CircleShape)
-                    .hazeEffect(hazeState, HazeMaterials.thin())
-            }
+
+            val backIconBoxModifier = Modifier
+                .clip(CircleShape)
+                .hazeEffectIfAvailable(hazeState, HazeMaterials.thin())
             Box(
                 modifier = backIconBoxModifier
                     .clickable(onClick = onBackClick)
@@ -120,7 +131,7 @@ fun BackActionTopBar(
                     Modifier
                         .align(Alignment.CenterEnd)
                         .clip(CircleShape)
-                        .hazeEffect(hazeState, HazeMaterials.thin())
+                        .hazeEffectIfAvailable(hazeState, HazeMaterials.thin())
                 } else {
                     Modifier
                         .align(Alignment.CenterEnd)

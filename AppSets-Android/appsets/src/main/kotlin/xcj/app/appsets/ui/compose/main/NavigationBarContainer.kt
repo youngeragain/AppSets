@@ -38,7 +38,7 @@ import xcj.app.compose_share.ui.viewmodel.VisibilityComposeStateViewModel.Compan
 fun NavigationBarContainer(
     modifier: Modifier = Modifier,
     navController: NavHostController,
-    hazeState: HazeState
+    hazeState: HazeState?
 ) {
     val context = LocalContext.current
 

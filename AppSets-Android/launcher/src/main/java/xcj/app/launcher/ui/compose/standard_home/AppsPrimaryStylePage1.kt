@@ -44,7 +44,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil3.compose.AsyncImage
 import dev.chrisbanes.haze.HazeState
-import dev.chrisbanes.haze.hazeSource
+import xcj.app.compose_share.modifier.hazeSourceIfAvailable
 import xcj.app.launcher.ui.model.StyledAppDefinition
 
 @Composable
@@ -85,7 +85,7 @@ fun AppsPrimaryStylePageVertical1(
             .onSizeChanged {
                 containerSize = it
             }
-            .hazeSource(hazeState)
+            .hazeSourceIfAvailable(hazeState)
     ) {
         FlowRow(
             modifier = Modifier.verticalScroll(rememberScrollState()),

@@ -28,10 +28,10 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
-import dev.chrisbanes.haze.hazeSource
-import dev.chrisbanes.haze.rememberHazeState
 import xcj.app.appsets.server.model.ScreenInfo
 import xcj.app.compose_share.components.BackActionTopBar
+import xcj.app.compose_share.modifier.hazeSourceIfAvailable
+import xcj.app.compose_share.modifier.rememberHazeStateIfAvailable
 
 @Composable
 fun ScreenEditPage(
@@ -42,7 +42,7 @@ fun ScreenEditPage(
     var isPublic by remember {
         mutableStateOf(screenInfo?.isPublic == 1)
     }
-    val hazeState = rememberHazeState()
+    val hazeState = rememberHazeStateIfAvailable()
     val density = LocalDensity.current
     var backActionBarSize by remember {
         mutableStateOf(IntSize.Zero)
@@ -57,7 +57,7 @@ fun ScreenEditPage(
     Box(modifier = Modifier.fillMaxSize()) {
         Column(
             modifier = Modifier
-                .hazeSource(hazeState)
+                .hazeSourceIfAvailable(hazeState)
                 .padding(start = 12.dp, end = 12.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {

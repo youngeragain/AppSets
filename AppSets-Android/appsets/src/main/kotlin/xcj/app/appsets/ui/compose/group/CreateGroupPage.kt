@@ -45,7 +45,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.onPlaced
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -54,8 +53,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import dev.chrisbanes.haze.hazeSource
-import dev.chrisbanes.haze.rememberHazeState
 import xcj.app.appsets.ui.compose.LocalUseCaseOfNavigation
 import xcj.app.appsets.ui.compose.LocalUseCaseOfSystem
 import xcj.app.appsets.ui.compose.content_selection.ContentSelectionResult
@@ -69,6 +66,8 @@ import xcj.app.appsets.util.compose_state.ComposeStateUpdater
 import xcj.app.appsets.util.compose_state.RuntimeSingleStateUpdater
 import xcj.app.compose_share.components.BackActionTopBar
 import xcj.app.compose_share.components.DesignTextField
+import xcj.app.compose_share.modifier.hazeSourceIfAvailable
+import xcj.app.compose_share.modifier.rememberHazeStateIfAvailable
 import xcj.app.starter.android.util.PurpleLogger
 
 private const val TAG = "CreateGroupPage"
@@ -124,12 +123,7 @@ fun CreateGroupPage(
             systemUseCase.onComposeDispose("page dispose")
         }
     }
-    val isInspectionMode = LocalInspectionMode.current
-    val hazeState = if (isInspectionMode) {
-        null
-    } else {
-        rememberHazeState()
-    }
+    val hazeState = rememberHazeStateIfAvailable()
     val density = LocalDensity.current
     var backActionBarSize by remember {
         mutableStateOf(IntSize.Zero)
@@ -142,13 +136,9 @@ fun CreateGroupPage(
         }
     }
     Box(modifier = Modifier.fillMaxSize()) {
-        val rootColumnModifier = if (isInspectionMode) {
-            Modifier
-        } else {
-            Modifier.hazeSource(hazeState!!)
-        }
         Column(
-            modifier = rootColumnModifier
+            modifier = Modifier
+                .hazeSourceIfAvailable(hazeState)
                 .padding(start = 12.dp, end = 12.dp)
                 .verticalScroll(rememberScrollState())
                 .imePadding()

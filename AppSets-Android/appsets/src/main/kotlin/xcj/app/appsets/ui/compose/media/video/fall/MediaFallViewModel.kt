@@ -11,7 +11,7 @@ import kotlinx.coroutines.launch
 import xcj.app.appsets.server.model.MediaContent
 import xcj.app.appsets.server.repository.AppSetsRepository
 import xcj.app.appsets.usecase.MediaLocalExoUseCase
-import xcj.app.starter.android.ui.base.DesignViewModel
+import xcj.app.starter.android.ui.base.platform.DesignViewModel
 import xcj.app.starter.android.util.PurpleLogger
 import xcj.app.starter.server.request
 import java.util.UUID

@@ -68,8 +68,6 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.currentStateAsState
-import dev.chrisbanes.haze.hazeSource
-import dev.chrisbanes.haze.rememberHazeState
 import kotlinx.coroutines.launch
 import xcj.app.appsets.ui.compose.apps.tools.file_manager.AbstractFile
 import xcj.app.appsets.ui.compose.apps.tools.file_manager.AbstractFileContext
@@ -80,6 +78,8 @@ import xcj.app.appsets.ui.compose.quickstep.QuickStepContent
 import xcj.app.appsets.util.ktx.asComponentActivityOrNull
 import xcj.app.compose_share.components.BackActionTopBar
 import xcj.app.compose_share.components.DesignTextField
+import xcj.app.compose_share.modifier.hazeSourceIfAvailable
+import xcj.app.compose_share.modifier.rememberHazeStateIfAvailable
 import xcj.app.starter.android.util.FileUtil
 
 private const val TAG = "ToolFileManagerPage"
@@ -148,7 +148,7 @@ fun ToolFileManagerPage(
     var isShowCreateFolderSheet by remember {
         mutableStateOf(false)
     }
-    val hazeState = rememberHazeState()
+    val hazeState = rememberHazeStateIfAvailable()
     val density = LocalDensity.current
     var backActionBarSize by remember {
         mutableStateOf(IntSize.Zero)
@@ -167,7 +167,7 @@ fun ToolFileManagerPage(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .hazeSource(hazeState)
+                .hazeSourceIfAvailable(hazeState)
         ) {
             Column(
                 modifier = Modifier

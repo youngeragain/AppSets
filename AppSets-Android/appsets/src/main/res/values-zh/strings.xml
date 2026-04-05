@@ -270,7 +270,7 @@
     <string name="area">地区</string>
     <string name="address">地址</string>
     <string name="required">必要</string>
-    <string name="a_is_required_template">%s (%s)</string>
+    <string name="a_is_required_template">%s %s</string>
     <string name="avatar">头像</string>
     <string name="brief">简介</string>
     <string name="qrcode_scanned_login_tips">设备已扫描，确认此设备登录?</string>

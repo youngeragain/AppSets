@@ -58,7 +58,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import dev.chrisbanes.haze.rememberHazeState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -73,6 +72,7 @@ import xcj.app.appsets.util.message_digest.MessageDigestUtil
 import xcj.app.compose_share.components.BackActionTopBar
 import xcj.app.compose_share.components.DesignHDivider
 import xcj.app.compose_share.components.DesignTextField
+import xcj.app.compose_share.modifier.rememberHazeStateIfAvailable
 import xcj.app.starter.util.QrCodeUtil
 import java.io.File
 import kotlin.io.encoding.Base64
@@ -207,7 +207,7 @@ fun ToolContentTransformPage(
         }
     }
 
-    val hazeState = rememberHazeState()
+    val hazeState = rememberHazeStateIfAvailable()
     val density = LocalDensity.current
     var backActionBarSize by remember {
         mutableStateOf(IntSize.Zero)

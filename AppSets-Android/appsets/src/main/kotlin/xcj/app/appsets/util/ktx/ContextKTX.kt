@@ -11,7 +11,6 @@ import android.content.ContentUris
 import android.content.Context
 import android.content.pm.PackageManager
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
 import androidx.activity.ComponentActivity
@@ -104,39 +103,22 @@ suspend fun Context.getSystemFileUris(
         MediaStore.MediaColumns.MIME_TYPE
     )
     val sortColumns: Array<String> = arrayOf(MediaStore.MediaColumns.DATE_ADDED)
-    val cursor = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-        val selectionArgs = Bundle().apply {
-            putString(
-                ContentResolver.QUERY_ARG_SQL_SELECTION,
-                "((is_pending=0) AND (is_trashed=0) AND (volume_name IN ( 'external_primary' , '0901-3108' )))"
-            )
-            putStringArray(ContentResolver.QUERY_ARG_SORT_COLUMNS, sortColumns)
-            putInt(ContentResolver.QUERY_ARG_SORT_DIRECTION, sortDirection)
-            putInt(ContentResolver.QUERY_ARG_OFFSET, offset)
-            putInt(ContentResolver.QUERY_ARG_LIMIT, limit)
-        }
-        contentResolver.query(
-            uri,
-            projections,
-            selectionArgs,
-            null
+    val selectionArgs = Bundle().apply {
+        putString(
+            ContentResolver.QUERY_ARG_SQL_SELECTION,
+            "((is_pending=0) AND (is_trashed=0) AND (volume_name IN ( 'external_primary' , '0901-3108' )))"
         )
-    } else {
-        val sortDirectionStr = if (sortDirection == 1) {
-            "DESC"
-        } else {
-            "ASC"
-        }
-        val sortOrderSql =
-            "${sortColumns.joinToString(",")} $sortDirectionStr limit ${offset}, $limit"
-        contentResolver.query(
-            uri,
-            projections,
-            null,
-            null,
-            sortOrderSql
-        )
+        putStringArray(ContentResolver.QUERY_ARG_SORT_COLUMNS, sortColumns)
+        putInt(ContentResolver.QUERY_ARG_SORT_DIRECTION, sortDirection)
+        putInt(ContentResolver.QUERY_ARG_OFFSET, offset)
+        putInt(ContentResolver.QUERY_ARG_LIMIT, limit)
     }
+    val cursor = contentResolver.query(
+        uri,
+        projections,
+        selectionArgs,
+        null
+    )
     cursor?.use {
         if (it.count == 0) {
             return@withContext null
@@ -162,18 +144,16 @@ suspend fun Context.getSystemFileUris(
 
             if (size != 0L) {
                 val fullUri = createUri(id, mimeType)
-                if (fullUri != null) {
-                    val mediaStoreDataUri = MediaStoreDataUri(
-                        id = id,
-                        uri = fullUri,
-                        date = dataAdded,
-                        displayName = displayName,
-                        size = size,
-                        sizeReadable = ByteUtil.getNetFileSizeDescription(size),
-                        mimeType = mimeType
-                    )
-                    mediaStoreDataUris.add(mediaStoreDataUri)
-                }
+                val mediaStoreDataUri = MediaStoreDataUri(
+                    id = id,
+                    uri = fullUri,
+                    date = dataAdded,
+                    displayName = displayName,
+                    size = size,
+                    sizeReadable = ByteUtil.getNetFileSizeDescription(size),
+                    mimeType = mimeType
+                )
+                mediaStoreDataUris.add(mediaStoreDataUri)
             } else {
                 PurpleLogger.current.d(
                     TAG,
@@ -187,7 +167,7 @@ suspend fun Context.getSystemFileUris(
     return@withContext null
 }
 
-private fun createUri(id: Long, mimeType: String? = null): Uri? {
+private fun createUri(id: Long, mimeType: String? = null): Uri {
     val contentUri: Uri
 
     if (mimeType?.startsWith("image") == true) {
@@ -213,13 +193,21 @@ fun Context.getScreenWidthHeight(): Pair<Int, Int> {
 fun Context.asComponentActivityOrNull(): ComponentActivity? {
     var context = this
     do {
-        if (context is ComponentActivity) {
-            return context
-        } else if (context is ContextThemeWrapper) {
-            context = context.baseContext
-        } else if (context is android.view.ContextThemeWrapper) {
-            context = context.baseContext
-        } else return null
+        when (context) {
+            is ComponentActivity -> {
+                return context
+            }
+
+            is ContextThemeWrapper -> {
+                context = context.baseContext
+            }
+
+            is android.view.ContextThemeWrapper -> {
+                context = context.baseContext
+            }
+
+            else -> return null
+        }
     } while (true)
 }
 
@@ -228,11 +216,8 @@ suspend fun Context.queryUriFileName(uri: Uri): String? = withContext(Dispatcher
     val projections: Array<String> = arrayOf(
         MediaStore.Files.FileColumns.DISPLAY_NAME
     )
-    val cursor = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+    val cursor =
         contentResolver.query(uri, projections, null, null)
-    } else {
-        contentResolver.query(uri, projections, null, null, null)
-    }
     cursor?.use {
         val moveToNext = it.moveToNext()
         if (!moveToNext) {

@@ -29,8 +29,6 @@ import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import dev.chrisbanes.haze.hazeSource
-import dev.chrisbanes.haze.rememberHazeState
 import xcj.app.appsets.ui.compose.PageRouteNames
 import xcj.app.appsets.ui.compose.custom_component.HideNavBar
 import xcj.app.appsets.ui.compose.main.navigateToAppSetsLauncherActivity
@@ -38,6 +36,8 @@ import xcj.app.appsets.ui.compose.main.navigateToAppSetsShareActivity
 import xcj.app.appsets.ui.compose.main.navigateToAppSetsVpnActivity
 import xcj.app.compose_share.components.BackActionTopBar
 import xcj.app.compose_share.components.DesignHDivider
+import xcj.app.compose_share.modifier.hazeSourceIfAvailable
+import xcj.app.compose_share.modifier.rememberHazeStateIfAvailable
 
 /**
  * @param routeType
@@ -192,7 +192,7 @@ fun ToolStartPage(
 ) {
     HideNavBar()
     val appTools = generateAppToolList()
-    val hazeState = rememberHazeState()
+    val hazeState = rememberHazeStateIfAvailable()
     val density = LocalDensity.current
     var backActionBarSize by remember {
         mutableStateOf(IntSize.Zero)
@@ -206,7 +206,7 @@ fun ToolStartPage(
     }
     Box(modifier = Modifier.fillMaxSize()) {
         LazyColumn(
-            modifier = Modifier.hazeSource(hazeState),
+            modifier = Modifier.hazeSourceIfAvailable(hazeState),
             contentPadding = PaddingValues(
                 top = backActionsHeight + 12.dp,
                 bottom = 12.dp

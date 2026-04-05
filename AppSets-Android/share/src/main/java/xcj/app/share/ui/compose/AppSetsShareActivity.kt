@@ -21,7 +21,7 @@ import xcj.app.share.base.ShareMethod
 import xcj.app.share.http.HttpShareMethod
 import xcj.app.share.mock.MockShareMethod
 import xcj.app.share.ui.compose.theme.AppSetsTheme
-import xcj.app.starter.android.ui.base.DesignComponentActivity
+import xcj.app.starter.android.ui.base.platform.DesignComponentActivity
 import xcj.app.starter.android.ui.model.PlatformPermissionsUsage
 import xcj.app.starter.android.usecase.PlatformUseCase
 import xcj.app.starter.android.util.PurpleLogger

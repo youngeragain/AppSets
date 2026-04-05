@@ -69,7 +69,6 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import com.google.gson.Gson
 import dev.chrisbanes.haze.HazeState
-import dev.chrisbanes.haze.hazeSource
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import me.saket.telephoto.zoomable.rememberZoomableState
@@ -181,11 +180,12 @@ import xcj.app.appsets.util.model.MediaStoreDataUri
 import xcj.app.compose_share.components.LocalVisibilityComposeStateProvider
 import xcj.app.compose_share.components.ProgressiveVisibilityComposeState
 import xcj.app.compose_share.components.VisibilityComposeStateProvider
+import xcj.app.compose_share.modifier.hazeSourceIfAvailable
 import xcj.app.compose_share.ui.viewmodel.VisibilityComposeStateViewModel.Companion.bottomSheetState
 import xcj.app.compose_share.ui.viewmodel.VisibilityComposeStateViewModel.Companion.immerseContentState
 import xcj.app.io.components.LocalFileIO
 import xcj.app.starter.android.ktx.startWithHttpSchema
-import xcj.app.starter.android.ui.base.DesignComponentActivity
+import xcj.app.starter.android.ui.base.platform.DesignComponentActivity
 import xcj.app.starter.android.ui.model.PlatformPermissionsUsage
 import xcj.app.starter.android.usecase.PlatformUseCase
 import xcj.app.starter.android.util.LocalMessenger
@@ -203,7 +203,7 @@ fun MainNaviHostPagesContainer(
     modifier: Modifier = Modifier,
     navController: NavHostController,
     startPageRoute: String,
-    hazeState: HazeState,
+    hazeState: HazeState?,
     hostContextName: String = MainActivity.TAG
 ) {
 
@@ -211,7 +211,7 @@ fun MainNaviHostPagesContainer(
 
     Box(modifier = modifier) {
         DesignNaviHost(
-            modifier = Modifier.hazeSource(hazeState),
+            modifier = Modifier.hazeSourceIfAvailable(hazeState),
             navController = navController,
             startDestination = startPageRoute,
         ) {

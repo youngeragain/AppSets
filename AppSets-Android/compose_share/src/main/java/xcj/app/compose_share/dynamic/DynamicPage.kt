@@ -34,9 +34,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import dev.chrisbanes.haze.hazeSource
-import dev.chrisbanes.haze.rememberHazeState
 import xcj.app.compose_share.components.BackActionTopBar
+import xcj.app.compose_share.modifier.hazeSourceIfAvailable
+import xcj.app.compose_share.modifier.rememberHazeStateIfAvailable
 
 @SuppressLint("UnrememberedMutableState")
 @Preview(showBackground = true)
@@ -54,7 +54,7 @@ fun DynamicPage(
     onDeleteClick: (ComposeMethodsWrapper) -> Unit,
     composeMethods: List<ComposeMethodsWrapper>,
 ) {
-    val hazeState = rememberHazeState()
+    val hazeState = rememberHazeStateIfAvailable()
     val density = LocalDensity.current
     var backActionBarSize by remember {
         mutableStateOf(IntSize.Zero)
@@ -70,7 +70,7 @@ fun DynamicPage(
 
         Box(
             modifier = Modifier
-                .hazeSource(hazeState)
+                .hazeSourceIfAvailable(hazeState)
                 .padding(top = backActionsHeight + 12.dp)
         ) {
             if (composeMethods.isEmpty()) {

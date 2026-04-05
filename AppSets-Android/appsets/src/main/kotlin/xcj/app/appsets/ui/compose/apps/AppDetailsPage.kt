@@ -61,9 +61,7 @@ import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
-import dev.chrisbanes.haze.hazeSource
 import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
-import dev.chrisbanes.haze.rememberHazeState
 import xcj.app.appsets.server.model.AppPlatform
 import xcj.app.appsets.server.model.Application
 import xcj.app.appsets.server.model.DownloadInfo
@@ -75,6 +73,8 @@ import xcj.app.appsets.ui.compose.custom_component.HideNavBar
 import xcj.app.appsets.ui.compose.theme.ExtraLarge2
 import xcj.app.compose_share.components.BackActionTopBar
 import xcj.app.compose_share.components.DesignHDivider
+import xcj.app.compose_share.modifier.hazeSourceIfAvailable
+import xcj.app.compose_share.modifier.rememberHazeStateIfAvailable
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -106,7 +106,7 @@ fun AppDetailsPage(
             )
         }
     } else {
-        val hazeState = rememberHazeState()
+        val hazeState = rememberHazeStateIfAvailable()
         val density = LocalDensity.current
         var backActionBarSize by remember {
             mutableStateOf(IntSize.Zero)
@@ -122,7 +122,7 @@ fun AppDetailsPage(
         Box(modifier = Modifier.fillMaxSize()) {
             Column(
                 modifier = Modifier
-                    .hazeSource(hazeState)
+                    .hazeSourceIfAvailable(hazeState)
                     .verticalScroll(rememberScrollState)
             ) {
                 Spacer(

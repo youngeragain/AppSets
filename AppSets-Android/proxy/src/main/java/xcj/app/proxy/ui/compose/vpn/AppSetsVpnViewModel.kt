@@ -12,7 +12,7 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.core.content.edit
 import xcj.app.proxy.ui.compose.vpn.AppSetsVpnActivity.Prefs
-import xcj.app.starter.android.ui.base.DesignViewModel
+import xcj.app.starter.android.ui.base.platform.DesignViewModel
 import java.util.Arrays
 import java.util.stream.Collectors
 

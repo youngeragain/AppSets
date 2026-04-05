@@ -4,7 +4,7 @@ import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import xcj.app.appsets.ui.compose.theme.AppSetsTheme
-import xcj.app.starter.android.ui.base.DesignComponentActivity
+import xcj.app.starter.android.ui.base.platform.DesignComponentActivity
 
 class DesignCameraActivity : DesignComponentActivity() {
     companion object {

@@ -26,7 +26,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.MaterialTheme
@@ -34,6 +33,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -51,18 +51,59 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import xcj.app.appsets.server.repository.QRCodeRepository
+import xcj.app.appsets.server.repository.UserRepository
+import xcj.app.appsets.ui.compose.LocalUseCaseOfNavigation
 import xcj.app.appsets.ui.compose.LocalUseCaseOfQRCode
 import xcj.app.appsets.ui.compose.custom_component.AnyImage
 import xcj.app.appsets.ui.compose.custom_component.DesignBackButton
 import xcj.app.appsets.ui.compose.custom_component.HideNavBar
 import xcj.app.appsets.ui.model.page_state.LoginPageUIState
 import xcj.app.appsets.ui.model.state.QRCodeInfoScannedState
+import xcj.app.appsets.usecase.NavigationUseCase
 import xcj.app.appsets.usecase.QRCodeUseCase
 import xcj.app.compose_share.components.DesignTextField
 
 private const val TAG = "LoginPage"
+
+@Preview(showBackground = true, widthDp = 1200, heightDp = 600)
+@Composable
+fun LoginPagePreview() {
+    val configuration = LocalConfiguration.current
+    configuration.orientation = Configuration.ORIENTATION_LANDSCAPE
+    val loginPageUIState by remember {
+        mutableStateOf<LoginPageUIState>(LoginPageUIState.LoginStart())
+    }
+    val qrCodeUseCase = remember {
+        QRCodeUseCase(QRCodeRepository.getInstance(), UserRepository.getInstance())
+    }
+
+    val navigationUseCase = remember {
+        NavigationUseCase()
+    }
+
+    CompositionLocalProvider(
+        LocalUseCaseOfQRCode provides qrCodeUseCase,
+        LocalUseCaseOfNavigation provides navigationUseCase,
+        LocalConfiguration provides configuration
+    ) {
+        LoginPage(
+            loginPageUIState = loginPageUIState,
+            generatedQRCodeInfo = null,
+            onBackClick = {},
+            onLoggingFinish = {},
+            onSignUpButtonClick = {},
+            onQRCodeLoginButtonClick = {},
+            onScanQRCodeButtonClick = {},
+            onLoginConfirmButtonClick = { account, password ->
+
+            }
+        )
+    }
+}
 
 @Composable
 fun LoginPage(
@@ -220,8 +261,7 @@ private fun LoginComponent1(
         modifier = modifier
             .statusBarsPadding()
             .padding(horizontal = 12.dp)
-            .animateContentSize(tween())
-            .verticalScroll(scrollState),
+            .animateContentSize(tween()),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         Row {
@@ -231,12 +271,6 @@ private fun LoginComponent1(
             ) {
                 Text(text = stringResource(id = xcj.app.appsets.R.string.sign_up))
             }
-            /*TextButton(
-                onClick = onQRCodeLoginButtonClick,
-                colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.onSurface)
-            ) {
-                Text(text = stringResource(xcj.app.appsets.R.string.login_with_qr_code))
-            }*/
         }
         Text(
             text = stringResource(id = xcj.app.appsets.R.string.login),

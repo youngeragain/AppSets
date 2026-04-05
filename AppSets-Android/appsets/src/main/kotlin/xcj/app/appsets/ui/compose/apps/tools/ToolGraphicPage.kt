@@ -12,10 +12,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.onPlaced
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.IntSize
-import dev.chrisbanes.haze.rememberHazeState
 import xcj.app.appsets.ui.compose.custom_component.HideNavBar
 import xcj.app.appsets.ui.compose.quickstep.QuickStepContent
 import xcj.app.compose_share.components.BackActionTopBar
+import xcj.app.compose_share.modifier.rememberHazeStateIfAvailable
 
 @Composable
 fun ToolGraphicPage(
@@ -23,7 +23,7 @@ fun ToolGraphicPage(
     onBackClick: () -> Unit
 ) {
     HideNavBar()
-    val hazeState = rememberHazeState()
+    val hazeState = rememberHazeStateIfAvailable()
     val density = LocalDensity.current
     var backActionBarSize by remember {
         mutableStateOf(IntSize.Zero)

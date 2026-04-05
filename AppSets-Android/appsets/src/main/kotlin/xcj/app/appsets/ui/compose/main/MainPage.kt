@@ -27,7 +27,6 @@ import androidx.navigation.NavDirections
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
-import dev.chrisbanes.haze.rememberHazeState
 import kotlinx.coroutines.launch
 import xcj.app.appsets.ui.compose.LocalNavHostController
 import xcj.app.appsets.ui.compose.LocalQuickStepContentHandlerRegistry
@@ -52,6 +51,7 @@ import xcj.app.appsets.ui.viewmodel.MainViewModel
 import xcj.app.compose_share.components.BottomSheetContainer
 import xcj.app.compose_share.components.LocalUseCaseOfComposeDynamic
 import xcj.app.compose_share.components.LocalVisibilityComposeStateProvider
+import xcj.app.compose_share.modifier.rememberHazeStateIfAvailable
 import xcj.app.compose_share.ui.viewmodel.VisibilityComposeStateViewModel.Companion.bottomSheetState
 import xcj.app.compose_share.ui.viewmodel.VisibilityComposeStateViewModel.Companion.immerseContentState
 import xcj.app.starter.android.util.PurpleLogger
@@ -67,7 +67,7 @@ fun MainPage() {
     val quickStepContentHandlerRegistry = remember {
         QuickStepContentHandlerRegistry()
     }
-    val hazeState = rememberHazeState()
+    val hazeState = rememberHazeStateIfAvailable()
 
     CompositionLocalProvider(
         LocalUseCaseOfNavigation provides viewModel.navigationUseCase,

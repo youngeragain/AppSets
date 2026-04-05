@@ -7,7 +7,7 @@ import androidx.activity.viewModels
 import androidx.lifecycle.ViewModel
 import xcj.app.appsets.ui.compose.theme.AppSetsTheme
 import xcj.app.appsets.ui.viewmodel.IMBubbleViewModel
-import xcj.app.starter.android.ui.base.DesignComponentActivity
+import xcj.app.starter.android.ui.base.platform.DesignComponentActivity
 import xcj.app.starter.android.util.PurpleLogger
 
 class IMBubbleActivity : DesignComponentActivity() {

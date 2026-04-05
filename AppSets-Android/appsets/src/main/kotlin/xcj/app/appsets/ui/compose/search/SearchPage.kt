@@ -74,11 +74,8 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dev.chrisbanes.haze.HazeState
-import dev.chrisbanes.haze.hazeEffect
-import dev.chrisbanes.haze.hazeSource
 import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
 import dev.chrisbanes.haze.materials.HazeMaterials
-import dev.chrisbanes.haze.rememberHazeState
 import kotlinx.coroutines.launch
 import xcj.app.appsets.im.Bio
 import xcj.app.appsets.server.model.GroupInfo
@@ -93,6 +90,9 @@ import xcj.app.appsets.ui.compose.outside.ScreensList
 import xcj.app.appsets.ui.model.page_state.SearchPageUIState
 import xcj.app.appsets.ui.model.state.SearchResult
 import xcj.app.compose_share.components.DesignTextField
+import xcj.app.compose_share.modifier.hazeEffectIfAvailable
+import xcj.app.compose_share.modifier.hazeSourceIfAvailable
+import xcj.app.compose_share.modifier.rememberHazeStateIfAvailable
 
 @Composable
 fun SearchPage(
@@ -122,7 +122,7 @@ fun SearchPage(
 @Composable
 fun SearchInputBar(
     modifier: Modifier = Modifier,
-    hazeState: HazeState,
+    hazeState: HazeState?,
     onBackClick: () -> Unit,
     onInputContent: (String) -> Unit
 ) {
@@ -162,9 +162,7 @@ fun SearchInputBar(
                     width = 1.dp, color = MaterialTheme.colorScheme.outline, shape = CircleShape
                 )
                 .clip(CircleShape)
-                .hazeEffect(
-                    hazeState, HazeMaterials.thin()
-                )
+                .hazeEffectIfAvailable(hazeState, HazeMaterials.thin())
                 .focusRequester(focusRequester)
                 .onFocusChanged {
                     textFiledIsFocused = it.hasFocus
@@ -352,14 +350,14 @@ fun SearchSuccessPages(
 ) {
     val pagerState = rememberPagerState { searchSuccess.results.size }
     val coroutineScope = rememberCoroutineScope()
-    val hazeState = rememberHazeState()
+    val hazeState = rememberHazeStateIfAvailable()
     LaunchedEffect(pagerState.currentPage) {
 
     }
 
     Box {
         HorizontalPager(
-            modifier = Modifier.hazeSource(hazeState),
+            modifier = Modifier.hazeSourceIfAvailable(hazeState),
             state = pagerState,
             verticalAlignment = Alignment.Top
         ) { index ->
@@ -417,7 +415,7 @@ fun SearchSuccessPages(
                         modifier = Modifier
                             .clip(CircleShape)
                             .border(1.dp, MaterialTheme.colorScheme.outline, CircleShape)
-                            .hazeEffect(
+                            .hazeEffectIfAvailable(
                                 hazeState, HazeMaterials.thin()
                             )
                             .clickable {

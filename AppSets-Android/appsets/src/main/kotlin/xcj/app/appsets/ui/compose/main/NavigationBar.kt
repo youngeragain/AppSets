@@ -40,10 +40,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.media3.common.util.UnstableApi
 import dev.chrisbanes.haze.HazeState
-import dev.chrisbanes.haze.hazeEffect
 import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
 import dev.chrisbanes.haze.materials.HazeMaterials
-import dev.chrisbanes.haze.rememberHazeState
 import xcj.app.appsets.ui.compose.LocalUseCaseOfConversation
 import xcj.app.appsets.ui.compose.LocalUseCaseOfScreen
 import xcj.app.appsets.ui.compose.PageRouteNames
@@ -53,13 +51,15 @@ import xcj.app.appsets.ui.model.TabAction
 import xcj.app.appsets.ui.model.TabItem
 import xcj.app.appsets.usecase.NavigationUseCase
 import xcj.app.compose_share.components.DesignHDivider
+import xcj.app.compose_share.modifier.hazeEffectIfAvailable
+import xcj.app.compose_share.modifier.rememberHazeStateIfAvailable
 
 private const val TAG = "NavigationBar"
 
 @Composable
 fun NavigationBar(
     modifier: Modifier = Modifier,
-    hazeState: HazeState,
+    hazeState: HazeState?,
     visible: Boolean,
     enable: Boolean,
     inSearchMode: Boolean,
@@ -94,7 +94,7 @@ fun NavigationBar(
 @Composable
 private fun StandardNavigationBar(
     modifier: Modifier = Modifier,
-    hazeState: HazeState,
+    hazeState: HazeState?,
     enable: Boolean,
     hostVisible: Boolean,
     inSearchMode: Boolean,
@@ -107,7 +107,7 @@ private fun StandardNavigationBar(
 ) {
     val modifierOverride = if (!inSearchMode) {
         modifier
-            .hazeEffect(
+            .hazeEffectIfAvailable(
                 hazeState,
                 HazeMaterials.thin()
             )
@@ -333,7 +333,7 @@ private fun TabItemMain(
 @UnstableApi
 @Composable
 fun NavigationBarPreview() {
-    val hazeState = rememberHazeState()
+    val hazeState = rememberHazeStateIfAvailable()
     val navigationUseCase = remember {
         NavigationUseCase().apply {
             initTabItems()

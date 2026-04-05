@@ -2,6 +2,7 @@ package xcj.app.appsets.server.api
 
 import xcj.app.appsets.server.ModuleOKHttpClientProvider
 import xcj.app.appsets.settings.ModuleConfig
+import xcj.app.starter.android.ProjectConstants
 import xcj.app.starter.android.util.PurpleLogger
 import xcj.app.starter.foundation.http.DesignResponse
 import xcj.app.starter.server.RetrofitProvider
@@ -9,8 +10,6 @@ import java.lang.reflect.Proxy
 
 object ApiProvider {
     private const val TAG = "ApiProvider"
-
-    private const val IS_ANDROID_STUDIO_PREVIEW = false
 
     private fun <U> makeBaseUrl(apiClazz: Class<U>): String {
         val url = if (ModuleConfig.moduleConfiguration.apiUrl.isEmpty()) {
@@ -48,7 +47,7 @@ object ApiProvider {
     }
 
     fun <U> provide(apiClazz: Class<U>): U {
-        if (IS_ANDROID_STUDIO_PREVIEW) {
+        if (ProjectConstants.IS_IN_ANDROID_STUDIO_PREVIEW) {
             return innerProvideForAndroidStudioPreview(apiClazz)
         }
         return innerProvideForRuntime(apiClazz)

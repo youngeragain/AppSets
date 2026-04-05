@@ -46,8 +46,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import dev.chrisbanes.haze.hazeSource
-import dev.chrisbanes.haze.rememberHazeState
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import xcj.app.appsets.server.model.WeatherInfo
@@ -56,6 +54,8 @@ import xcj.app.appsets.ui.compose.custom_component.HideNavBar
 import xcj.app.appsets.ui.compose.quickstep.QuickStepContent
 import xcj.app.compose_share.components.BackActionTopBar
 import xcj.app.compose_share.components.DesignTextField
+import xcj.app.compose_share.modifier.hazeSourceIfAvailable
+import xcj.app.compose_share.modifier.rememberHazeStateIfAvailable
 import java.util.Calendar
 
 @Composable
@@ -65,7 +65,7 @@ fun ToolWeatherPage(
 ) {
     HideNavBar()
     val configuration = LocalConfiguration.current
-    val hazeState = rememberHazeState()
+    val hazeState = rememberHazeStateIfAvailable()
     val density = LocalDensity.current
     var backActionBarSize by remember {
         mutableStateOf(IntSize.Zero)
@@ -84,7 +84,7 @@ fun ToolWeatherPage(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .hazeSource(hazeState)
+                .hazeSourceIfAvailable(hazeState)
         ) {
             Spacer(
                 modifier = Modifier.height(

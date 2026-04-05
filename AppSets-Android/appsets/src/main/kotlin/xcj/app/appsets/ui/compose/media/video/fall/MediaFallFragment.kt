@@ -14,7 +14,7 @@ import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.media3.common.util.UnstableApi
 import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
-import xcj.app.starter.android.ui.base.DesignFragment
+import xcj.app.starter.android.ui.base.platform.DesignFragment
 
 
 class MediaFallFragment : DesignFragment() {

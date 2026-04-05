@@ -38,8 +38,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import dev.chrisbanes.haze.hazeSource
-import dev.chrisbanes.haze.rememberHazeState
 import xcj.app.appsets.im.Bio
 import xcj.app.appsets.server.model.Application
 import xcj.app.appsets.server.model.ScreenInfo
@@ -53,6 +51,8 @@ import xcj.app.appsets.ui.model.UserInfoForModify
 import xcj.app.appsets.ui.model.page_state.UserProfilePageUIState
 import xcj.app.appsets.util.compose_state.ComposeStateUpdater
 import xcj.app.compose_share.components.BackActionTopBar
+import xcj.app.compose_share.modifier.hazeSourceIfAvailable
+import xcj.app.compose_share.modifier.rememberHazeStateIfAvailable
 
 private const val CONTENT_NONE = "None"
 private const val CONTENT_APPLICATION = "Application"
@@ -160,7 +160,7 @@ fun UserProfilePage(
                 var currentShowContent by remember {
                     mutableStateOf(CONTENT_NONE)
                 }
-                val hazeState = rememberHazeState()
+                val hazeState = rememberHazeStateIfAvailable()
                 val density = LocalDensity.current
                 var backActionBarSize by remember {
                     mutableStateOf(IntSize.Zero)
@@ -182,7 +182,7 @@ fun UserProfilePage(
                     }
                     Column(
                         modifier = Modifier
-                            .hazeSource(hazeState),
+                            .hazeSourceIfAvailable(hazeState),
                     ) {
                         Spacer(
                             modifier = Modifier.height(

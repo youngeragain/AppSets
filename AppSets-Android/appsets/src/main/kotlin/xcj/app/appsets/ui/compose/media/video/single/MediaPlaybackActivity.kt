@@ -11,7 +11,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.withCreated
 import kotlinx.coroutines.launch
 import xcj.app.appsets.ui.compose.theme.AppSetsTheme
-import xcj.app.starter.android.ui.base.DesignComponentActivity
+import xcj.app.starter.android.ui.base.platform.DesignComponentActivity
 import xcj.app.starter.android.util.PurpleLogger
 
 class MediaPlaybackActivity : DesignComponentActivity() {

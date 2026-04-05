@@ -101,9 +101,9 @@ android {
 }
 
 dependencies {
-    compileOnly(project(":starter"))
-    compileOnly(project(":io"))
-    compileOnly(project(":compose_share"))
+    implementation(project(":starter"))
+    implementation(project(":io"))
+    implementation(project(":compose_share"))
 
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.livedata.ktx)
@@ -170,6 +170,12 @@ dependencies {
     androidTestImplementation(libs.androidx.espresso.core)
 
     val composeBom = platform(libs.androidx.compose.bom)
+    implementation(composeBom)
+    implementation(libs.androidx.ui)
+    implementation(libs.androidx.ui.graphics)
+    implementation(libs.androidx.ui.tooling.preview)
+    implementation(libs.androidx.material3)
+
     testImplementation(composeBom)
     androidTestImplementation(composeBom)
     androidTestImplementation(libs.androidx.ui.test.junit4)

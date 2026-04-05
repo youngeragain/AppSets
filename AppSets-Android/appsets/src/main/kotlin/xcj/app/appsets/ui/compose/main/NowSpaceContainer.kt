@@ -61,7 +61,6 @@ import androidx.compose.ui.unit.sp
 import androidx.core.net.toUri
 import androidx.navigation.NavController
 import dev.chrisbanes.haze.HazeState
-import dev.chrisbanes.haze.hazeEffect
 import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
 import dev.chrisbanes.haze.materials.HazeMaterials
 import xcj.app.appsets.im.message.SystemMessage
@@ -76,13 +75,14 @@ import xcj.app.appsets.ui.compose.custom_component.AnyImage
 import xcj.app.appsets.ui.model.state.NowSpaceContent
 import xcj.app.appsets.usecase.ConversationUseCase
 import xcj.app.appsets.usecase.SessionState
+import xcj.app.compose_share.modifier.hazeEffectIfAvailable
 import xcj.app.starter.android.ktx.startWithHttpSchema
 
 @Composable
 fun NowSpaceContainer(
     modifier: Modifier = Modifier,
     navController: NavController,
-    hazeState: HazeState,
+    hazeState: HazeState?,
 ) {
     val nowSpaceContentUseCase = LocalUseCaseOfNowSpaceContent.current
     val conversationUseCase = LocalUseCaseOfConversation.current
@@ -182,7 +182,7 @@ private fun QuickStepBarsContainer(
 @Composable
 private fun QuickStepBar(
     modifier: Modifier = Modifier,
-    hazeState: HazeState,
+    hazeState: HazeState?,
     nowSpaceContent: NowSpaceContent,
     onClick: () -> Unit,
     onLongClick: () -> Unit,
@@ -241,7 +241,7 @@ private fun QuickStepBar(
 @Composable
 private fun QuickStepBarContainer(
     modifier: Modifier = Modifier,
-    hazeState: HazeState,
+    hazeState: HazeState?,
     nowSpaceContent: NowSpaceContent,
     onClick: () -> Unit,
     onLongClick: () -> Unit,
@@ -317,7 +317,7 @@ private fun QuickStepBarContainer(
                         MaterialTheme.shapes.extraLarge
                     )
                     .clip(MaterialTheme.shapes.extraLarge)
-                    .hazeEffect(hazeState, HazeMaterials.thin())
+                    .hazeEffectIfAvailable(hazeState, HazeMaterials.thin())
                     .combinedClickable(
                         onClick = onClick,
                         onLongClick = onLongClick

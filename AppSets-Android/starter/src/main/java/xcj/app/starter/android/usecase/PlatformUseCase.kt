@@ -6,7 +6,6 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
-import android.os.Build
 import android.os.PowerManager
 import android.provider.DocumentsContract
 import android.provider.Settings
@@ -82,7 +81,7 @@ class PlatformUseCase {
                             " fallback go to app's system details page, ${it.message}"
                 )
                 val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
-                intent.setData("package:${context.packageName}".toUri())
+                intent.data = "package:${context.packageName}".toUri()
                 runCatching {
                     context.startActivity(intent)
                 }.onFailure {
@@ -116,7 +115,7 @@ class PlatformUseCase {
                 // Optionally, specify a URI for the directory that should be opened in
                 // the system file picker when it loads.
 
-                if (pickerInitialUri != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                if (pickerInitialUri != null) {
                     putExtra(DocumentsContract.EXTRA_INITIAL_URI, pickerInitialUri)
                 }
             }
@@ -176,17 +175,14 @@ class PlatformUseCase {
         }
 
         fun isIgnoringBatteryOptimizations(context: Context, permissions: List<String>): Boolean {
-            val powerManager = context.getSystemService(PowerManager::class.java)
-            if (powerManager == null) {
-                return true
-            }
+            val powerManager = context.getSystemService(PowerManager::class.java) ?: return true
             val packageName = context.packageName
             return powerManager.isIgnoringBatteryOptimizations(packageName)
         }
 
         fun requestBatteryOptimizationSettings(context: Context) {
             val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS)
-            intent.setData(("package:${context.packageName}").toUri())
+            intent.data = ("package:${context.packageName}").toUri()
             context.startActivity(intent)
         }
     }

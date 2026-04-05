@@ -70,8 +70,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.media3.common.util.UnstableApi
-import dev.chrisbanes.haze.hazeSource
-import dev.chrisbanes.haze.rememberHazeState
 import xcj.app.appsets.constants.Constants
 import xcj.app.appsets.server.model.AppPlatform
 import xcj.app.appsets.server.model.VersionInfo
@@ -92,6 +90,8 @@ import xcj.app.compose_share.components.BackActionTopBar
 import xcj.app.compose_share.components.DesignTextField
 import xcj.app.compose_share.components.DesignVDivider
 import xcj.app.compose_share.components.LocalVisibilityComposeStateProvider
+import xcj.app.compose_share.modifier.hazeSourceIfAvailable
+import xcj.app.compose_share.modifier.rememberHazeStateIfAvailable
 import xcj.app.compose_share.ui.viewmodel.VisibilityComposeStateViewModel.Companion.bottomSheetState
 import xcj.app.starter.android.util.PurpleLogger
 import xcj.app.starter.android.util.UriProvider
@@ -174,7 +174,7 @@ fun CreateAppPage(
             )
         }
     }
-    val hazeState = rememberHazeState()
+    val hazeState = rememberHazeStateIfAvailable()
     val density = LocalDensity.current
     var backActionBarSize by remember {
         mutableStateOf(IntSize.Zero)
@@ -192,7 +192,7 @@ fun CreateAppPage(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .hazeSource(hazeState)
+                .hazeSourceIfAvailable(hazeState)
                 .imePadding()
         ) {
 

@@ -1,4 +1,4 @@
-package xcj.app.starter.android.ui.base
+package xcj.app.starter.android.ui.base.platform
 
 import android.content.Intent
 import androidx.lifecycle.ViewModel

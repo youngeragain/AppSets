@@ -4,7 +4,7 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.Lifecycle
 import xcj.app.appsets.ui.base.InfinityPagerAdapter
-import xcj.app.starter.android.ui.base.DesignViewModel
+import xcj.app.starter.android.ui.base.platform.DesignViewModel
 import xcj.app.starter.android.util.PurpleLogger
 
 class MediaFallFragmentViewModel : DesignViewModel() {

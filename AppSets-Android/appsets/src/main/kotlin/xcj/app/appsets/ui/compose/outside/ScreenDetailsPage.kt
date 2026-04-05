@@ -60,7 +60,6 @@ import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dev.chrisbanes.haze.HazeState
-import dev.chrisbanes.haze.hazeSource
 import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -78,6 +77,7 @@ import xcj.app.compose_share.components.DesignHDivider
 import xcj.app.compose_share.components.DesignTextField
 import xcj.app.compose_share.components.LocalVisibilityComposeStateProvider
 import xcj.app.compose_share.modifier.combinedClickableSingle
+import xcj.app.compose_share.modifier.hazeSourceIfAvailable
 import xcj.app.compose_share.ui.viewmodel.VisibilityComposeStateViewModel.Companion.bottomSheetState
 
 @Composable
@@ -152,7 +152,7 @@ fun ScreenDetailsPage(
                 modifier = Modifier
                     .fillMaxWidth()
                     .verticalScroll(scrollState)
-                    .hazeSource(hazeState)
+                    .hazeSourceIfAvailable(hazeState)
             ) {
                 Spacer(
                     modifier = Modifier.height(

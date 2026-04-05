@@ -1,4 +1,4 @@
-package xcj.app.starter.android.ui.base
+package xcj.app.starter.android.ui.base.platform
 
 import android.os.Build
 import android.os.Bundle
@@ -9,6 +9,7 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContract
 import xcj.app.starter.android.ActivityThemeInterface
 import xcj.app.starter.android.SystemContentSelectionCallback
+import xcj.app.starter.android.ui.base.DesignInterface
 import xcj.app.starter.android.util.ThemeUtil
 
 abstract class DesignComponentActivity :
@@ -27,7 +28,7 @@ abstract class DesignComponentActivity :
 
     override fun getSystemContentSelectionCallback(): SystemContentSelectionCallback? {
         val returnSystemContentSelectionCallback = systemContentSelectionCallback
-        if (returnSystemContentSelectionCallback !== null && returnSystemContentSelectionCallback.autoRemove()) {
+        if (returnSystemContentSelectionCallback !== null && returnSystemContentSelectionCallback.removeSelfOnDone()) {
             this.systemContentSelectionCallback = null
         }
         return returnSystemContentSelectionCallback

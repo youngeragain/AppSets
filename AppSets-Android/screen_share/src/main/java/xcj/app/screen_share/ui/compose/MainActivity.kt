@@ -16,7 +16,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
 import xcj.app.screen_share.service.ScreenCaptureService
-import xcj.app.starter.android.ui.base.DesignComponentActivity
+import xcj.app.starter.android.ui.base.platform.DesignComponentActivity
 
 class MainActivity : DesignComponentActivity() {
     private lateinit var mediaProjectionManager: MediaProjectionManager

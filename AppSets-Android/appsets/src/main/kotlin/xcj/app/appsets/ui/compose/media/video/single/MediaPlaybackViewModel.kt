@@ -8,7 +8,7 @@ import androidx.media3.ui.PlayerView
 import com.google.gson.Gson
 import xcj.app.appsets.im.model.CommonURIJson
 import xcj.app.appsets.usecase.MediaLocalExoUseCase
-import xcj.app.starter.android.ui.base.DesignViewModel
+import xcj.app.starter.android.ui.base.platform.DesignViewModel
 import xcj.app.starter.android.util.PurpleLogger
 
 class MediaPlaybackViewModel : DesignViewModel() {

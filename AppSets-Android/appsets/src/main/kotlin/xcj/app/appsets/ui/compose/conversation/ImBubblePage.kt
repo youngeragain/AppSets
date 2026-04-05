@@ -8,7 +8,6 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
-import dev.chrisbanes.haze.rememberHazeState
 import xcj.app.appsets.ui.compose.LocalUseCaseOfConversation
 import xcj.app.appsets.ui.compose.LocalUseCaseOfGroupInfo
 import xcj.app.appsets.ui.compose.LocalUseCaseOfMediaAudioRecorder
@@ -24,12 +23,13 @@ import xcj.app.appsets.ui.compose.main.MainNaviHostPagesContainer
 import xcj.app.appsets.ui.viewmodel.IMBubbleViewModel
 import xcj.app.compose_share.components.BottomSheetContainer
 import xcj.app.compose_share.components.LocalVisibilityComposeStateProvider
+import xcj.app.compose_share.modifier.rememberHazeStateIfAvailable
 
 @Composable
 fun ImBubblePage() {
     val viewModel = viewModel<IMBubbleViewModel>()
     val navController = rememberNavController()
-    val hazeState = rememberHazeState()
+    val hazeState = rememberHazeStateIfAvailable()
     CompositionLocalProvider(
         LocalUseCaseOfSystem provides viewModel.systemUseCase,
         LocalUseCaseOfNavigation provides viewModel.navigationUseCase,

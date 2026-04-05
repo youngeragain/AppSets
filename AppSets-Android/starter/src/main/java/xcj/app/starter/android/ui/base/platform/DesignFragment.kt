@@ -1,4 +1,4 @@
-package xcj.app.starter.android.ui.base
+package xcj.app.starter.android.ui.base.platform
 
 import android.os.Bundle
 import android.view.LayoutInflater

@@ -43,7 +43,7 @@ private const val TAG = "NavigationSearchBar"
 @Composable
 fun NavigationSearchBar(
     modifier: Modifier = Modifier,
-    hazeState: HazeState,
+    hazeState: HazeState?,
     enable: Boolean,
     inSearchMode: Boolean,
     onBackClick: () -> Unit,
