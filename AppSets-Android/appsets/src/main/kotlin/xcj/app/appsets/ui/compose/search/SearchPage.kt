@@ -30,6 +30,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsIgnoringVisibility
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBars
@@ -52,6 +53,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -72,6 +74,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dev.chrisbanes.haze.HazeState
@@ -91,9 +94,11 @@ import xcj.app.appsets.ui.compose.outside.ScreensList
 import xcj.app.appsets.ui.model.page_state.SearchPageUIState
 import xcj.app.appsets.ui.model.state.SearchResult
 import xcj.app.compose_share.components.DesignTextField
+import xcj.app.compose_share.foundation_extension.customVerticalOverscroll
 import xcj.app.compose_share.modifier.hazeEffectIfAvailable
 import xcj.app.compose_share.modifier.hazeSourceIfAvailable
 import xcj.app.compose_share.modifier.rememberHazeStateIfAvailable
+import kotlin.math.roundToInt
 
 @Composable
 fun SearchPage(
@@ -517,16 +522,27 @@ fun NavigationBarAreaGradient(
 fun SearchedGoodsListPage(
     modifier: Modifier = Modifier, searchedGoodsList: SearchResult.SearchedGoods
 ) {
-    LazyColumn(
-        modifier = modifier.fillMaxSize(), contentPadding = PaddingValues(
-            top = WindowInsets.systemBars.asPaddingValues().calculateTopPadding(), bottom = 150.dp
-        )
-    ) {
-        items(
-            items = searchedGoodsList.goodsList,
-            key = { item -> item.id }
-        ) { goods ->
+    var animatedOverscrollAmount by remember { mutableFloatStateOf(0f) }
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .customVerticalOverscroll(
+                onNewOverscrollAmount = { animatedOverscrollAmount = it }
+            )
+            .offset { IntOffset(0, animatedOverscrollAmount.roundToInt()) })
+    {
+        LazyColumn(
+            modifier = modifier.fillMaxSize(), contentPadding = PaddingValues(
+                top = WindowInsets.systemBars.asPaddingValues().calculateTopPadding(),
+                bottom = 150.dp
+            )
+        ) {
+            items(
+                items = searchedGoodsList.goodsList,
+                key = { item -> item.id }
+            ) { goods ->
 
+            }
         }
     }
 }
@@ -553,20 +569,31 @@ fun SearchedGroupsPage(
     searchedGroups: SearchResult.SearchedGroups,
     onBioClick: (Bio) -> Unit
 ) {
-    LazyColumn(
-        modifier = modifier.fillMaxSize(), contentPadding = PaddingValues(
-            top = WindowInsets.systemBars.asPaddingValues().calculateTopPadding(), bottom = 150.dp
-        )
-    ) {
-        items(
-            items = searchedGroups.groups,
-            key = GroupInfo::groupId
-        ) { groupInfo ->
-            SearchedGroupComponent(
-                modifier = Modifier.clickable {
-                    onBioClick.invoke(groupInfo)
-                }, groupInfo = groupInfo
+    var animatedOverscrollAmount by remember { mutableFloatStateOf(0f) }
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .customVerticalOverscroll(
+                onNewOverscrollAmount = { animatedOverscrollAmount = it }
             )
+            .offset { IntOffset(0, animatedOverscrollAmount.roundToInt()) })
+    {
+        LazyColumn(
+            modifier = modifier.fillMaxSize(), contentPadding = PaddingValues(
+                top = WindowInsets.systemBars.asPaddingValues().calculateTopPadding(),
+                bottom = 150.dp
+            )
+        ) {
+            items(
+                items = searchedGroups.groups,
+                key = GroupInfo::groupId
+            ) { groupInfo ->
+                SearchedGroupComponent(
+                    modifier = Modifier.clickable {
+                        onBioClick.invoke(groupInfo)
+                    }, groupInfo = groupInfo
+                )
+            }
         }
     }
 }
@@ -576,20 +603,31 @@ fun SearchedUsersPage(
     searchedUsers: SearchResult.SearchedUsers,
     onBioClick: (Bio) -> Unit,
 ) {
-    LazyColumn(
-        modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(
-            top = WindowInsets.systemBars.asPaddingValues().calculateTopPadding(), bottom = 150.dp
-        )
-    ) {
-        items(
-            items = searchedUsers.users,
-            key = UserInfo::uid
-        ) { userInfo ->
-            SearchedUserComponent(
-                modifier = Modifier.clickable {
-                    onBioClick.invoke(userInfo)
-                }, userInfo = userInfo
+    var animatedOverscrollAmount by remember { mutableFloatStateOf(0f) }
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .customVerticalOverscroll(
+                onNewOverscrollAmount = { animatedOverscrollAmount = it }
             )
+            .offset { IntOffset(0, animatedOverscrollAmount.roundToInt()) })
+    {
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(
+                top = WindowInsets.systemBars.asPaddingValues().calculateTopPadding(),
+                bottom = 150.dp
+            )
+        ) {
+            items(
+                items = searchedUsers.users,
+                key = UserInfo::uid
+            ) { userInfo ->
+                SearchedUserComponent(
+                    modifier = Modifier.clickable {
+                        onBioClick.invoke(userInfo)
+                    }, userInfo = userInfo
+                )
+            }
         }
     }
 }
@@ -600,24 +638,35 @@ fun SearchedApplicationsPage(
     searchedApplications: SearchResult.SearchedApplications,
     onBioClick: (Bio) -> Unit,
 ) {
-    LazyVerticalGrid(
-        columns = GridCells.Adaptive(90.dp),
-        modifier = modifier.fillMaxSize(),
-        state = rememberLazyGridState(),
-        contentPadding = PaddingValues(
-            top = WindowInsets.systemBars.asPaddingValues().calculateTopPadding(), bottom = 150.dp
-        )
-    ) {
-        itemsIndexed(items = searchedApplications.applications) { index, application ->
-            SingleApplicationComponent(
-                modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
-                application = application,
-                onApplicationClick = {
-                    onBioClick(application)
-                },
-                onApplicationLongClick = {
-                    onBioClick(application)
-                })
+    var animatedOverscrollAmount by remember { mutableFloatStateOf(0f) }
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .customVerticalOverscroll(
+                onNewOverscrollAmount = { animatedOverscrollAmount = it }
+            )
+            .offset { IntOffset(0, animatedOverscrollAmount.roundToInt()) })
+    {
+        LazyVerticalGrid(
+            columns = GridCells.Adaptive(90.dp),
+            modifier = modifier.fillMaxSize(),
+            state = rememberLazyGridState(),
+            contentPadding = PaddingValues(
+                top = WindowInsets.systemBars.asPaddingValues().calculateTopPadding(),
+                bottom = 150.dp
+            )
+        ) {
+            itemsIndexed(items = searchedApplications.applications) { index, application ->
+                SingleApplicationComponent(
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                    application = application,
+                    onApplicationClick = {
+                        onBioClick(application)
+                    },
+                    onApplicationLongClick = {
+                        onBioClick(application)
+                    })
+            }
         }
     }
 }
