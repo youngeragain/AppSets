@@ -7,6 +7,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -17,7 +18,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.statusBarsIgnoringVisibility
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.wrapContentHeight
@@ -64,6 +65,7 @@ data class AIGCSessionTemplate(
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun AIGCMarketPage(
     onBackClick: () -> Unit,
@@ -77,8 +79,9 @@ fun AIGCMarketPage(
                 .fillMaxWidth()
                 .padding(
                     start = 12.dp,
-                    end = 12.dp,
-                    top = WindowInsets.statusBars.asPaddingValues().calculateTopPadding() + 2.dp
+                    top = WindowInsets.statusBarsIgnoringVisibility.asPaddingValues()
+                        .calculateTopPadding() + 12.dp,
+                    end = 12.dp
                 ),
             pagerState = pagerState
         )

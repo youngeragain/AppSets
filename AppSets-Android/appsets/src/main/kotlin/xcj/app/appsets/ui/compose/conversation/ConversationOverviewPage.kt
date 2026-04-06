@@ -4,7 +4,7 @@ package xcj.app.appsets.ui.compose.conversation
 
 import android.content.res.Configuration
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -43,17 +43,23 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.launch
@@ -206,10 +212,66 @@ fun ConversationOverviewPortrait(
         conversationUseCase.updateCurrentTab(tabTypes[pagerState.currentPage])
     }
 
-    Column(
+    var overviewTabsBarSize by remember {
+        mutableStateOf(IntSize.Zero)
+    }
+
+    Box(
         modifier = modifier
     ) {
+        HorizontalPager(
+            state = pagerState
+        ) { index ->
+            val tabType = tabTypes[index]
+            val sessions = conversationUseCase.getSessionsByTab(tabType)
+            when (tabType) {
+                ConversationUseCase.AI -> {
+                    ConversationOverviewSessionsOfAI(
+                        overviewTabsBarSize = overviewTabsBarSize,
+                        tabType = tabType,
+                        sessions = sessions,
+                        onEmptyTipsClick = onAddAIModelClick,
+                        onConversionSessionClick = onConversionSessionClick
+                    )
+                }
+
+                ConversationUseCase.USER -> {
+                    ConversationOverviewSessionsOfUser(
+                        overviewTabsBarSize = overviewTabsBarSize,
+                        tabType = tabType,
+                        sessions = sessions,
+                        onEmptyTipsClick = onAddFriendClick,
+                        onConversionSessionClick = onConversionSessionClick
+                    )
+                }
+
+                ConversationUseCase.GROUP -> {
+                    ConversationOverviewSessionsOfGroup(
+                        overviewTabsBarSize = overviewTabsBarSize,
+                        tabType = tabType,
+                        sessions = sessions,
+                        onEmptyTipsClick = onAddGroupClick,
+                        onConversionSessionClick = onConversionSessionClick
+                    )
+                }
+
+                ConversationUseCase.SYSTEM -> {
+                    ConversationOverviewSessionsOfSystem(
+                        overviewTabsBarSize = overviewTabsBarSize,
+                        tabType = tabType,
+                        sessions = sessions,
+                        onSystemImMessageClick = onSystemImMessageClick,
+                        onBioClick = onBioClick,
+                        onUserRequestClick = onUserRequestClick
+                    )
+                }
+            }
+        }
+
         ConversationOverviewTabs(
+            modifier = Modifier.onSizeChanged {
+                overviewTabsBarSize = it
+            },
             tabTypes = tabTypes,
             currentTabType = tabTypes[pagerState.currentPage],
             isShowAddActions = isShowActions,
@@ -223,66 +285,22 @@ fun ConversationOverviewPortrait(
             onAddGroupClick = onAddGroupClick,
             onCreateGroupClick = onCreateGroupClick
         )
-
-        HorizontalPager(
-            modifier = Modifier.weight(1f),
-            state = pagerState
-        ) { index ->
-            val tabType = tabTypes[index]
-            val sessions = conversationUseCase.getSessionsByTab(tabType)
-            when (tabType) {
-                ConversationUseCase.AI -> {
-                    ConversationOverviewSessionsOfAI(
-                        tabType = tabType,
-                        sessions = sessions,
-                        onEmptyTipsClick = onAddAIModelClick,
-                        onConversionSessionClick = onConversionSessionClick
-                    )
-                }
-
-                ConversationUseCase.USER -> {
-                    ConversationOverviewSessionsOfUser(
-                        tabType = tabType,
-                        sessions = sessions,
-                        onEmptyTipsClick = onAddFriendClick,
-                        onConversionSessionClick = onConversionSessionClick
-                    )
-                }
-
-                ConversationUseCase.GROUP -> {
-                    ConversationOverviewSessionsOfGroup(
-                        tabType = tabType,
-                        sessions = sessions,
-                        onEmptyTipsClick = onAddGroupClick,
-                        onConversionSessionClick = onConversionSessionClick
-                    )
-                }
-
-                ConversationUseCase.SYSTEM -> {
-                    ConversationOverviewSessionsOfSystem(
-                        tabType = tabType,
-                        sessions = sessions,
-                        onSystemImMessageClick = onSystemImMessageClick,
-                        onBioClick = onBioClick,
-                        onUserRequestClick = onUserRequestClick
-                    )
-                }
-            }
-        }
     }
 }
 
 @Composable
 fun ConversationOverviewSessionsOfSystem(
+    overviewTabsBarSize: IntSize,
     tabType: String,
     sessions: List<Session>,
     onSystemImMessageClick: (Session, IMMessage<*>) -> Unit,
     onBioClick: (Bio) -> Unit,
     onUserRequestClick: (Boolean, Session, SystemMessage) -> Unit,
 ) {
+    val density = LocalDensity.current
     val hasMessages =
         sessions.firstOrNull { it.conversationState.messages.isNotEmpty() } != null
-    Box(Modifier.fillMaxSize()) {
+    Box(modifier = Modifier.fillMaxSize()) {
         if (!hasMessages) {
             Text(
                 text = stringResource(getTabEmptyPromptText(tabType)),
@@ -291,7 +309,9 @@ fun ConversationOverviewSessionsOfSystem(
             )
         } else {
             LazyColumn(
-                contentPadding = PaddingValues(top = 12.dp, bottom = 98.dp)
+                contentPadding = PaddingValues(top = with(density) {
+                    overviewTabsBarSize.height.toDp()
+                } + 12.dp, bottom = 98.dp)
             ) {
                 itemsIndexed(sessions) { index, session ->
                     ConversationOverviewSystemImMessageItemComponent(
@@ -309,12 +329,14 @@ fun ConversationOverviewSessionsOfSystem(
 
 @Composable
 fun ConversationOverviewSessionsOfGroup(
+    overviewTabsBarSize: IntSize,
     tabType: String,
     sessions: List<Session>,
     onEmptyTipsClick: () -> Unit,
     onConversionSessionClick: (Session) -> Unit,
 ) {
-    Box(Modifier.fillMaxSize()) {
+    val density = LocalDensity.current
+    Box(modifier = Modifier.fillMaxSize()) {
         if (sessions.isEmpty()) {
             Column(
                 modifier = Modifier.align(Alignment.Center),
@@ -338,7 +360,9 @@ fun ConversationOverviewSessionsOfGroup(
 
         } else {
             LazyColumn(
-                contentPadding = PaddingValues(top = 12.dp, bottom = 98.dp)
+                contentPadding = PaddingValues(top = with(density) {
+                    overviewTabsBarSize.height.toDp()
+                } + 12.dp, bottom = 98.dp)
             ) {
                 itemsIndexed(sessions) { index, session ->
                     ConversationOverviewSimpleItemComponent(
@@ -355,12 +379,14 @@ fun ConversationOverviewSessionsOfGroup(
 
 @Composable
 fun ConversationOverviewSessionsOfUser(
+    overviewTabsBarSize: IntSize,
     tabType: String,
     sessions: List<Session>,
     onEmptyTipsClick: () -> Unit,
     onConversionSessionClick: (Session) -> Unit,
 ) {
-    Box(Modifier.fillMaxSize()) {
+    val density = LocalDensity.current
+    Box(modifier = Modifier.fillMaxSize()) {
         if (sessions.isEmpty()) {
             Column(
                 modifier = Modifier.align(Alignment.Center),
@@ -383,7 +409,9 @@ fun ConversationOverviewSessionsOfUser(
             }
         } else {
             LazyColumn(
-                contentPadding = PaddingValues(top = 12.dp, bottom = 98.dp)
+                contentPadding = PaddingValues(top = with(density) {
+                    overviewTabsBarSize.height.toDp()
+                } + 12.dp, bottom = 98.dp)
             ) {
                 itemsIndexed(sessions) { index, session ->
                     ConversationOverviewSimpleItemComponent(
@@ -400,12 +428,14 @@ fun ConversationOverviewSessionsOfUser(
 
 @Composable
 fun ConversationOverviewSessionsOfAI(
+    overviewTabsBarSize: IntSize,
     tabType: String,
     sessions: List<Session>,
     onEmptyTipsClick: () -> Unit,
     onConversionSessionClick: (Session) -> Unit,
 ) {
-    Box(Modifier.fillMaxSize()) {
+    val density = LocalDensity.current
+    Box(modifier = Modifier.fillMaxSize()) {
 
         if (sessions.isEmpty()) {
             Column(
@@ -429,7 +459,9 @@ fun ConversationOverviewSessionsOfAI(
             }
         } else {
             LazyColumn(
-                contentPadding = PaddingValues(top = 12.dp, bottom = 98.dp)
+                contentPadding = PaddingValues(top = with(density) {
+                    overviewTabsBarSize.height.toDp()
+                } + 12.dp, bottom = 98.dp)
             ) {
                 itemsIndexed(sessions) { index, session ->
                     ConversationOverviewSimpleItemComponent(
@@ -447,6 +479,7 @@ fun ConversationOverviewSessionsOfAI(
 
 @Composable
 fun ConversationOverviewTabs(
+    modifier: Modifier = Modifier,
     tabTypes: List<String>,
     currentTabType: String,
     isShowAddActions: Boolean,
@@ -457,13 +490,12 @@ fun ConversationOverviewTabs(
     onCreateGroupClick: () -> Unit,
 ) {
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
-            .statusBarsPadding()
-            .animateContentSize(),
+            .statusBarsPadding(),
         verticalArrangement = Arrangement.spacedBy(6.dp)
     ) {
-        if (isShowAddActions) {
+        AnimatedVisibility(isShowAddActions) {
             ConversationOverviewActionsComponent(
                 onAddAIModelClick = onAddAIModelClick,
                 onAddFriendClick = onAddFriendClick,
@@ -641,7 +673,7 @@ fun ConversationOverviewActionsComponent(
     onCreateGroupClick: () -> Unit,
 ) {
     Box(
-        Modifier
+        modifier = Modifier
             .fillMaxWidth()
             .padding(12.dp)
     ) {

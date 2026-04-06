@@ -22,6 +22,8 @@ import xcj.app.appsets.util.VideoFileUtil
 import xcj.app.appsets.util.ktx.toastSuspend
 import xcj.app.appsets.util.ktx.writeBitmap
 import xcj.app.appsets.util.model.MediaStoreDataUri
+import xcj.app.appsets.util.model.isImageType
+import xcj.app.appsets.util.model.isVideoType
 import xcj.app.io.components.LocalFileIO
 import xcj.app.starter.android.util.PurpleLogger
 import xcj.app.starter.android.util.UriProvider
@@ -95,8 +97,8 @@ class ScreenRepository(
         val mediaFilUrls =
             buildScreenMediaFileUrls(
                 context,
-                screenInfoForCreate.pictureUriProviders,
-                screenInfoForCreate.videoUriProviders.firstOrNull()
+                screenInfoForCreate.mediaUriProviders.filter { it.isImageType() },
+                screenInfoForCreate.mediaUriProviders.firstOrNull { it.isVideoType() }
             )
         val body = AddUserScreenParams(
             screenInfoForCreate.content.value,

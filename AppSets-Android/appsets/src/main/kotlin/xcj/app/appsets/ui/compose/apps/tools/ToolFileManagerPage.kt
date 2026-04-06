@@ -21,6 +21,7 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -29,7 +30,7 @@ import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.navigationBarsIgnoringVisibility
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -84,6 +85,7 @@ import xcj.app.starter.android.util.FileUtil
 
 private const val TAG = "ToolFileManagerPage"
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun ToolFileManagerPage(
     quickStepContents: List<QuickStepContent>?,
@@ -199,8 +201,8 @@ fun ToolFileManagerPage(
                     modifier = Modifier
                         .fillMaxWidth(),
                     contentPadding = PaddingValues(
-                        bottom = WindowInsets.navigationBars.asPaddingValues()
-                            .calculateBottomPadding() + 52.dp
+                        bottom = WindowInsets.navigationBarsIgnoringVisibility.asPaddingValues()
+                            .calculateBottomPadding() + 150.dp
                     )
                 ) {
                     items(

@@ -47,6 +47,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewWrapper
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -61,12 +62,14 @@ import xcj.app.appsets.util.compose_state.ComposeStateUpdater
 import xcj.app.appsets.util.compose_state.RuntimeSingleStateUpdater
 import xcj.app.compose_share.components.BackActionTopBar
 import xcj.app.compose_share.components.DesignTextField
+import xcj.app.compose_share.foundation_extension.ProjectPreviewWrapperProviderImpl
 import xcj.app.compose_share.modifier.hazeSourceIfAvailable
 import xcj.app.compose_share.modifier.rememberHazeStateIfAvailable
 import xcj.app.starter.android.util.PurpleLogger
 
 private const val TAG = "SignUpPage"
 
+@PreviewWrapper(wrapper = ProjectPreviewWrapperProviderImpl::class)
 @Preview(showBackground = true)
 @Composable
 fun SignUpPagePreview() {

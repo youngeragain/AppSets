@@ -31,16 +31,16 @@ object ContentType {
     const val APPSETS_SHARE_SYSTEM_SERVER_SEND_CLIENT_IP_AND_SELF_NAME = "appsets/share/c_ip_s_name"
     const val APPSETS_SHARE_SYSTEM_CLIENT_SEND_IP_AND_SELF_NAME = "appsets/share/c_ip_c_name"
 
-    fun isImage(contentType: String): Boolean {
-        return contentType.startsWith(IMAGE_PREFIX)
+    fun isImage(contentType: String?): Boolean {
+        return contentType?.startsWith(IMAGE_PREFIX) ?: false
     }
 
-    fun isVideo(contentType: String): Boolean {
-        return contentType.startsWith(VIDEO_PREFIX)
+    fun isVideo(contentType: String?): Boolean {
+        return contentType?.startsWith(VIDEO_PREFIX) ?: false
     }
 
-    fun isAudio(contentType: String): Boolean {
-        return contentType.startsWith(AUDIO_PREFIX)
+    fun isAudio(contentType: String?): Boolean {
+        return contentType?.startsWith(AUDIO_PREFIX) ?: false
     }
 
 }

@@ -18,6 +18,7 @@ import kotlinx.coroutines.launch
 import xcj.app.appsets.ui.compose.theme.AppSetsTheme
 import xcj.app.appsets.ui.viewmodel.MainViewModel
 import xcj.app.appsets.util.SplashScreenHelper
+import xcj.app.appsets.util.ktx.getSystemFileUri
 import xcj.app.compose_share.ui.viewmodel.VisibilityComposeStateViewModel.Companion.bottomSheetState
 import xcj.app.starter.android.AppDefinition
 import xcj.app.starter.android.ui.base.platform.DesignComponentActivity
@@ -45,13 +46,24 @@ class MainActivity : DesignComponentActivity() {
         pickVisualMediaLauncher = registerForActivityResult(
             contract = ActivityResultContracts.PickVisualMedia(),
             callback = { uri ->
-                getSystemContentSelectionCallback()?.onSystemContentSelected(uri)
+                if (uri == null) {
+                    return@registerForActivityResult
+                }
+                lifecycleScope.launch {
+                    val mediaStoreDataUri = this@MainActivity.getSystemFileUri(uri) ?: return@launch
+                    getSystemContentSelectionCallback()?.onSystemContentSelected(mediaStoreDataUri)
+                }
             }
         )
         pickMultipleVisualMediaLauncher = registerForActivityResult(
             contract = ActivityResultContracts.PickMultipleVisualMedia(),
             callback = { uris ->
-                getSystemContentSelectionCallback()?.onSystemContentSelected(uris)
+                lifecycleScope.launch {
+                    val mediaStoreDataUris = uris.mapNotNull { uri ->
+                        this@MainActivity.getSystemFileUri(uri)
+                    }
+                    getSystemContentSelectionCallback()?.onSystemContentSelected(mediaStoreDataUris)
+                }
             }
         )
     }

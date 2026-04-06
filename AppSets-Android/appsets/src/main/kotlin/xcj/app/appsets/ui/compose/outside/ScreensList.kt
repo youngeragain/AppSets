@@ -9,6 +9,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.ScrollableState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -16,7 +17,7 @@ import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.statusBarsIgnoringVisibility
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -85,6 +86,7 @@ fun ScreensList(
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun LandscapeScreenList(
     modifier: Modifier,
@@ -100,7 +102,7 @@ private fun LandscapeScreenList(
         columns = StaggeredGridCells.Fixed(3),
         contentPadding = PaddingValues(
             start = 12.dp,
-            top = WindowInsets.statusBars.asPaddingValues().calculateTopPadding(),
+            top = WindowInsets.statusBarsIgnoringVisibility.asPaddingValues().calculateTopPadding(),
             end = 12.dp,
             bottom = 150.dp
         ),
@@ -145,6 +147,7 @@ private fun LandscapeScreenList(
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun PortraitScreenList(
     modifier: Modifier,
@@ -158,7 +161,7 @@ private fun PortraitScreenList(
         modifier = modifier,
         contentPadding = PaddingValues(
             start = 12.dp,
-            top = WindowInsets.statusBars.asPaddingValues().calculateTopPadding(),
+            top = WindowInsets.statusBarsIgnoringVisibility.asPaddingValues().calculateTopPadding(),
             end = 12.dp,
             bottom = 150.dp
         ),

@@ -10,7 +10,6 @@ data class ScreenInfoForCreate(
     val content: MutableState<String> = mutableStateOf(""),
     val associateTopics: MutableState<String> = mutableStateOf(""),
     val associatePeoples: MutableState<String> = mutableStateOf(""),
-    val pictureUriProviders: MutableList<UriProvider> = mutableStateListOf(),
-    val videoUriProviders: MutableList<UriProvider> = mutableStateListOf(),
+    val mediaUriProviders: MutableList<UriProvider> = mutableStateListOf(),
     val addToMediaFall: MutableState<Boolean> = mutableStateOf(false),
 )

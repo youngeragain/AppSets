@@ -20,6 +20,7 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -28,7 +29,7 @@ import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.navigationBarsIgnoringVisibility
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBars
@@ -483,6 +484,7 @@ fun StatusBarAreaGradient(
     ) {}
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun NavigationBarAreaGradient(
     modifier: Modifier = Modifier
@@ -499,7 +501,10 @@ fun NavigationBarAreaGradient(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(WindowInsets.navigationBars.asPaddingValues().calculateTopPadding() + 12.dp)
+            .height(
+                WindowInsets.navigationBarsIgnoringVisibility.asPaddingValues()
+                    .calculateTopPadding() + 12.dp
+            )
             .background(
                 brush = Brush.verticalGradient(
                     colors = gradientColors, startY = 0f, endY = Float.POSITIVE_INFINITY
@@ -514,7 +519,7 @@ fun SearchedGoodsListPage(
 ) {
     LazyColumn(
         modifier = modifier.fillMaxSize(), contentPadding = PaddingValues(
-            top = WindowInsets.systemBars.asPaddingValues().calculateTopPadding(), bottom = 120.dp
+            top = WindowInsets.systemBars.asPaddingValues().calculateTopPadding(), bottom = 150.dp
         )
     ) {
         items(
@@ -550,7 +555,7 @@ fun SearchedGroupsPage(
 ) {
     LazyColumn(
         modifier = modifier.fillMaxSize(), contentPadding = PaddingValues(
-            top = WindowInsets.systemBars.asPaddingValues().calculateTopPadding(), bottom = 120.dp
+            top = WindowInsets.systemBars.asPaddingValues().calculateTopPadding(), bottom = 150.dp
         )
     ) {
         items(
@@ -573,7 +578,7 @@ fun SearchedUsersPage(
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(
-            top = WindowInsets.systemBars.asPaddingValues().calculateTopPadding(), bottom = 120.dp
+            top = WindowInsets.systemBars.asPaddingValues().calculateTopPadding(), bottom = 150.dp
         )
     ) {
         items(
@@ -600,7 +605,7 @@ fun SearchedApplicationsPage(
         modifier = modifier.fillMaxSize(),
         state = rememberLazyGridState(),
         contentPadding = PaddingValues(
-            top = WindowInsets.systemBars.asPaddingValues().calculateTopPadding(), bottom = 120.dp
+            top = WindowInsets.systemBars.asPaddingValues().calculateTopPadding(), bottom = 150.dp
         )
     ) {
         itemsIndexed(items = searchedApplications.applications) { index, application ->

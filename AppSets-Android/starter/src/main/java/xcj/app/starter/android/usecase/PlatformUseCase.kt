@@ -14,6 +14,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import xcj.app.starter.android.ActivityThemeInterface
+import xcj.app.starter.android.ProjectConstants
 import xcj.app.starter.android.util.PurpleLogger
 
 class PlatformUseCase {
@@ -23,6 +24,9 @@ class PlatformUseCase {
         const val REQUEST_CODE_FOR_FILE_PROVIDER = 2221
 
         fun hasPlatformPermissions(context: Context, permissions: List<String>): Boolean {
+            if (ProjectConstants.IS_IN_ANDROID_STUDIO_PREVIEW) {
+                return false
+            }
             permissions.forEach { permission ->
                 val checkSelfPermissionResult =
                     ContextCompat.checkSelfPermission(context, permission)

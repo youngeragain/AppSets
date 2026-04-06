@@ -5,6 +5,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -15,6 +16,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.statusBarsIgnoringVisibility
 import androidx.compose.foundation.layout.windowInsetsTopHeight
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
@@ -29,19 +31,64 @@ import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.compose.currentStateAsState
+import xcj.app.appsets.ui.compose.LocalUseCaseOfNavigation
 import xcj.app.appsets.ui.compose.apps.tools.PageIndicator
 import xcj.app.appsets.ui.compose.custom_component.DesignBackButton
 import xcj.app.appsets.ui.compose.custom_component.HideNavBar
+import xcj.app.appsets.usecase.NavigationUseCase
 import xcj.app.starter.android.ui.model.PlatformPermissionsUsage
 
-@OptIn(ExperimentalFoundationApi::class)
+
+@Preview(showBackground = true)
+@Composable
+fun PrivacyAndPermissionsPagePreview() {
+    val navigationUseCase = remember {
+        NavigationUseCase()
+    }
+    val lifecycleOwner = LocalLifecycleOwner.current
+    val lifecycle = lifecycleOwner.lifecycle
+    val context = LocalContext.current
+    val lifecycleState by lifecycle.currentStateAsState()
+    var androidPermissionsUsageList by remember {
+        mutableStateOf(emptyList<PlatformPermissionsUsage>())
+    }
+    LaunchedEffect(lifecycleState) {
+        androidPermissionsUsageList =
+            PlatformPermissionsUsage.provideAll(context)
+    }
+    CompositionLocalProvider(
+        LocalUseCaseOfNavigation provides navigationUseCase
+    ) {
+        PrivacyPage(
+            "privacy",
+            androidPermissionsUsageList,
+            {
+
+            },
+            { a, b ->
+
+            }
+        )
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class, ExperimentalLayoutApi::class)
 @Composable
 fun PrivacyPage(
     privacy: String?,
@@ -58,8 +105,9 @@ fun PrivacyPage(
                 .fillMaxWidth()
                 .padding(
                     start = 12.dp,
-                    end = 12.dp,
-                    top = WindowInsets.statusBars.asPaddingValues().calculateTopPadding() + 2.dp
+                    top = WindowInsets.statusBarsIgnoringVisibility.asPaddingValues()
+                        .calculateTopPadding() + 12.dp,
+                    end = 12.dp
                 ),
             pagerState = pagerState
         )
@@ -104,6 +152,7 @@ fun PrivacyComponent(privacy: String?) {
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun PlatformPermissionsComponent(
     platformPermissionsUsageList: List<PlatformPermissionsUsage>,
@@ -115,7 +164,9 @@ fun PlatformPermissionsComponent(
             .fillMaxWidth()
             .padding(horizontal = 12.dp),
         contentPadding = PaddingValues(
-            top = WindowInsets.statusBars.asPaddingValues().calculateTopPadding(), bottom = 120.dp
+            top = WindowInsets.statusBarsIgnoringVisibility.asPaddingValues()
+                .calculateTopPadding() + 12.dp,
+            bottom = 150.dp
         )
     ) {
         item {
@@ -223,10 +274,4 @@ fun PermissionCard(
             }
         }
     }
-}
-
-@Preview(showBackground = true, showSystemUi = true)
-@Composable
-fun PrivacyAndPermissionsPagePreview() {
-    PrivacyPage(null, emptyList(), {}, { a, b -> })
 }

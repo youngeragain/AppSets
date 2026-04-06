@@ -46,7 +46,7 @@ fun UserApplications(
     } else {
         LazyVerticalGrid(
             columns = GridCells.Adaptive(90.dp),
-            contentPadding = PaddingValues(bottom = 120.dp)
+            contentPadding = PaddingValues(bottom = 150.dp)
         ) {
             items(
                 items = userApplications,

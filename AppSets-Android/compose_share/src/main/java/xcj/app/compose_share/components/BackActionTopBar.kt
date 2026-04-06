@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsIgnoringVisibility
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -72,21 +71,19 @@ fun BackActionTopBar(
         ) {
             modifier
                 .fillMaxWidth()
-                .statusBarsPadding()
                 .padding(
                     start = 12.dp,
-                    end = 12.dp,
                     top = WindowInsets.statusBarsIgnoringVisibility.asPaddingValues()
-                        .calculateTopPadding()
+                        .calculateTopPadding() + 12.dp,
+                    end = 12.dp
                 )
         } else {
             modifier
-                .statusBarsPadding()
                 .padding(
                     start = 12.dp,
-                    end = 12.dp,
                     top = WindowInsets.statusBarsIgnoringVisibility.asPaddingValues()
-                        .calculateTopPadding()
+                        .calculateTopPadding() + 12.dp,
+                    end = 12.dp
                 )
         }
     Box(
@@ -98,12 +95,10 @@ fun BackActionTopBar(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-
-            val backIconBoxModifier = Modifier
-                .clip(CircleShape)
-                .hazeEffectIfAvailable(hazeState, HazeMaterials.thin())
             Box(
-                modifier = backIconBoxModifier
+                modifier = Modifier
+                    .clip(CircleShape)
+                    .hazeEffectIfAvailable(hazeState, HazeMaterials.thin())
                     .clickable(onClick = onBackClick)
                     .border(1.dp, MaterialTheme.colorScheme.outline, CircleShape)
                     .padding(12.dp)

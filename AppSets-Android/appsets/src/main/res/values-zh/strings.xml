@@ -490,5 +490,6 @@
     <string name="template_version_info_count_xxx">版本信息(%1$d)</string>
     <string name="logo">Logo</string>
     <string name="deprecated">已弃用</string>
+    <string name="rich_media">富媒体</string>
 
 </resources>

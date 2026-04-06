@@ -8,12 +8,13 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.statusBarsIgnoringVisibility
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -41,7 +42,7 @@ import xcj.app.appsets.ui.compose.custom_component.ShowNavBar
 import xcj.app.appsets.ui.compose.theme.extShapes
 import xcj.app.appsets.ui.model.page_state.AppCenterPageUIState
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun AppsCenterPage(
     appCenterPageUIState: AppCenterPageUIState,
@@ -57,8 +58,9 @@ fun AppsCenterPage(
         modifier = Modifier,
         state = rememberLazyGridState(),
         contentPadding = PaddingValues(
-            top = WindowInsets.statusBars.asPaddingValues().calculateTopPadding(),
-            bottom = 68.dp
+            top = WindowInsets.statusBarsIgnoringVisibility.asPaddingValues()
+                .calculateTopPadding() + 12.dp,
+            bottom = 150.dp
         )
     ) {
         itemsIndexed(items = allApplications) { index, application ->

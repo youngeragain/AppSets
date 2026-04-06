@@ -17,10 +17,10 @@ import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.navigationBarsIgnoringVisibility
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.statusBarsIgnoringVisibility
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
@@ -100,8 +100,9 @@ fun AppsPrimaryStylePageVertical(
             .fillMaxSize(),
         columns = GridCells.Fixed(settings.appCountOnLine),
         contentPadding = PaddingValues(
-            top = WindowInsets.statusBars.asPaddingValues().calculateTopPadding(),
-            bottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding(),
+            top = WindowInsets.statusBarsIgnoringVisibility.asPaddingValues().calculateTopPadding(),
+            bottom = WindowInsets.navigationBarsIgnoringVisibility.asPaddingValues()
+                .calculateBottomPadding(),
             start = space,
             end = space
         )

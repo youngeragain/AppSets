@@ -7,7 +7,6 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.flow
 import xcj.app.appsets.server.repository.GenerationAIRepository
 import xcj.app.appsets.server.repository.ScreenRepository
-import xcj.app.appsets.ui.compose.content_selection.ContentSelectionTypes
 import xcj.app.appsets.ui.compose.quickstep.QuickStepContent
 import xcj.app.appsets.ui.compose.quickstep.TextQuickStepContent
 import xcj.app.appsets.ui.compose.quickstep.UriQuickStepContent
@@ -19,7 +18,6 @@ import xcj.app.appsets.util.ktx.toastSuspend
 import xcj.app.compose_share.dynamic.ComposeLifecycleAware
 import xcj.app.starter.android.util.UriProvider
 import xcj.app.starter.server.request
-import xcj.app.starter.util.ContentType
 
 class ScreenPostUseCase(
     private val screenRepository: ScreenRepository,
@@ -113,11 +111,7 @@ class ScreenPostUseCase(
         if (createScreenPageUIState !is CreateScreenPageUIState.CreateStart) {
             return
         }
-        if (type == ContentSelectionTypes.IMAGE) {
-            screenInfoForCreate.pictureUriProviders.remove(uriProvider)
-        } else if (type == ContentSelectionTypes.VIDEO) {
-            screenInfoForCreate.videoUriProviders.remove(uriProvider)
-        }
+        screenInfoForCreate.mediaUriProviders.remove(uriProvider)
     }
 
     fun updateWithQuickStepContentIfNeeded(
@@ -135,13 +129,8 @@ class ScreenPostUseCase(
             }
         val uriQuickStepContents = quickStepContents.filterIsInstance<UriQuickStepContent>()
         uriQuickStepContents.forEach { quickStepContent ->
-            if (ContentType.isImage(quickStepContent.uriContentType)) {
-                val uriProvider = UriProvider.fromUri(quickStepContent.uri)
-                screenInfoForCreate.pictureUriProviders.add(uriProvider)
-            } else if (ContentType.isVideo(quickStepContent.uriContentType)) {
-                val uriProvider = UriProvider.fromUri(quickStepContent.uri)
-                screenInfoForCreate.videoUriProviders.add(uriProvider)
-            }
+            val uriProvider = UriProvider.fromUri(quickStepContent.uri)
+            screenInfoForCreate.mediaUriProviders.add(uriProvider)
         }
     }
 

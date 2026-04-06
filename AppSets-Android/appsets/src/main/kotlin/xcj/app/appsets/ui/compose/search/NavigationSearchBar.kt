@@ -25,7 +25,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -85,21 +84,19 @@ fun SearchClickableBar(
     enable: Boolean,
     onSearchBarClick: () -> Unit,
 ) {
-    val context = LocalContext.current
+    val tips = stringResource(xcj.app.appsets.R.string.need_to_update_app)
     Row(
         modifier = modifier
             .background(
                 MaterialTheme.colorScheme.outline,
                 CircleShape
             )
-            .widthIn(min = 100.dp, max = 150.dp)
+            .widthIn(min = 120.dp, max = 150.dp)
             .height(42.dp)
             .clip(CircleShape)
             .clickable {
                 if (!enable) {
-                    context
-                        .getString(xcj.app.appsets.R.string.need_to_update_app)
-                        .toast()
+                    tips.toast()
                 } else {
                     onSearchBarClick()
                 }

@@ -490,4 +490,5 @@
     <string name="template_version_info_count_xxx">Version Infos(%d)</string>
     <string name="logo">Logo</string>
     <string name="deprecated">Deprecated</string>
+    <string name="rich_media">Rich Media</string>
 </resources>

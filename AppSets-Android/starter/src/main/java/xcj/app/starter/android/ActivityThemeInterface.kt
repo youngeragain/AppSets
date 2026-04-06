@@ -3,10 +3,12 @@ package xcj.app.starter.android
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContract
 import androidx.lifecycle.ViewModel
+import xcj.app.starter.android.util.UriProvider
 
 interface SystemContentSelectionCallback {
     fun removeSelfOnDone(): Boolean = true
-    fun onSystemContentSelected(content: Any?)
+    fun onSystemContentSelected(content: UriProvider)
+    fun onSystemContentSelected(contents: List<UriProvider>)
 }
 
 interface ActivityThemeInterface {

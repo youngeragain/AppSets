@@ -183,6 +183,8 @@ jb-androidx-lifecycle-viewmodelCompose = { module = "org.jetbrains.androidx.life
 jb-androidx-lifecycle-runtimeCompose = { module = "org.jetbrains.androidx.lifecycle:lifecycle-runtime-compose", version.ref = "jb-androidx-lifecycle" }
 jb-compose-material3 = { module = "org.jetbrains.compose.material3:material3", version.ref = "jb-compose-material3" }
 
+google-ksp-api = { group = "com.google.devtools.ksp", name = "symbol-processing-api", version.ref = "google-ksp" }
+
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "android-gradle-plugin" }

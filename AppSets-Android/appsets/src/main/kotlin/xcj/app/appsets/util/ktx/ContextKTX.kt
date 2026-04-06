@@ -167,6 +167,81 @@ suspend fun Context.getSystemFileUris(
     return@withContext null
 }
 
+suspend fun Context.getSystemFileUri(
+    uri: Uri,
+): MediaStoreDataUri? = withContext(Dispatchers.IO) {
+    PurpleLogger.current.d(
+        "getSystemFileUri",
+        "uri:${uri}"
+    )
+    val projections: Array<String> = arrayOf(
+        MediaStore.MediaColumns._ID,
+        MediaStore.MediaColumns.DISPLAY_NAME,
+        MediaStore.MediaColumns.MIME_TYPE,
+        MediaStore.MediaColumns.SIZE,
+        MediaStore.MediaColumns.DATA,
+        MediaStore.MediaColumns.DATE_ADDED,
+        MediaStore.MediaColumns.MIME_TYPE
+    )
+    val selectionArgs = Bundle().apply {
+        putString(
+            ContentResolver.QUERY_ARG_SQL_SELECTION,
+            "((is_pending=0) AND (is_trashed=0) AND (volume_name IN ( 'external_primary' , '0901-3108' )))"
+        )
+    }
+    val cursor = contentResolver.query(
+        uri,
+        projections,
+        selectionArgs,
+        null
+    )
+    cursor?.use {
+        if (it.count == 0) {
+            return@withContext null
+        }
+
+        val idColumnIndex = cursor.getColumnIndexOrThrow(MediaStore.Files.FileColumns._ID)
+        val displayNameColumnIndex =
+            cursor.getColumnIndexOrThrow(MediaStore.Files.FileColumns.DISPLAY_NAME)
+        val sizeColumnIndex = cursor.getColumnIndexOrThrow(MediaStore.Files.FileColumns.SIZE)
+        val dataColumnIndex = cursor.getColumnIndexOrThrow(MediaStore.Files.FileColumns.DATA)
+        val dataAddedColumnIndex =
+            cursor.getColumnIndexOrThrow(MediaStore.Files.FileColumns.DATE_ADDED)
+        val mimeTypeColumnIndex =
+            cursor.getColumnIndexOrThrow(MediaStore.Files.FileColumns.MIME_TYPE)
+
+        if (!it.moveToNext()) {
+            return@withContext null
+        }
+        val id = cursor.getLong(idColumnIndex)
+        val displayName = cursor.getString(displayNameColumnIndex)
+        val size = cursor.getLong(sizeColumnIndex)
+        val data = cursor.getString(dataColumnIndex)
+        val dataAdded = cursor.getString(dataAddedColumnIndex)
+        val mimeType = cursor.getString(mimeTypeColumnIndex)
+
+        if (size == 0L) {
+            PurpleLogger.current.d(
+                TAG,
+                "getSystemFileUris, mediaStoreDataUri size is 0, $displayName"
+            )
+            return@withContext null
+        }
+        val mediaStoreDataUri = MediaStoreDataUri(
+            id = id,
+            uri = uri,
+            date = dataAdded,
+            displayName = displayName,
+            size = size,
+            sizeReadable = ByteUtil.getNetFileSizeDescription(size),
+            mimeType = mimeType
+        )
+        return@withContext mediaStoreDataUri
+    }
+
+    return@withContext null
+}
+
 private fun createUri(id: Long, mimeType: String? = null): Uri {
     val contentUri: Uri
 

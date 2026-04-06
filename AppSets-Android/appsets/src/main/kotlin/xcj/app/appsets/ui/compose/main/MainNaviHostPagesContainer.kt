@@ -19,6 +19,7 @@ import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -26,6 +27,7 @@ import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.navigationBarsIgnoringVisibility
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.pager.VerticalPager
@@ -132,6 +134,7 @@ import xcj.app.appsets.ui.compose.content_selection.ContentSelectionRequest
 import xcj.app.appsets.ui.compose.content_selection.ContentSelectionTypes
 import xcj.app.appsets.ui.compose.content_selection.defaultAllSelectionTypeParam
 import xcj.app.appsets.ui.compose.content_selection.defaultImageSelectionTypeParam
+import xcj.app.appsets.ui.compose.content_selection.defaultMediaSelectionTypeParam
 import xcj.app.appsets.ui.compose.conversation.ConversationDetailsMoreInfoSheetContent
 import xcj.app.appsets.ui.compose.conversation.ConversationDetailsPage
 import xcj.app.appsets.ui.compose.conversation.ConversationOverviewPage
@@ -177,6 +180,8 @@ import xcj.app.appsets.util.compose_state.ComposeStateUpdater
 import xcj.app.appsets.util.compose_state.RuntimeSingleStateUpdater
 import xcj.app.appsets.util.ktx.toast
 import xcj.app.appsets.util.model.MediaStoreDataUri
+import xcj.app.appsets.util.model.isImageType
+import xcj.app.appsets.util.model.isVideoType
 import xcj.app.compose_share.components.LocalVisibilityComposeStateProvider
 import xcj.app.compose_share.components.ProgressiveVisibilityComposeState
 import xcj.app.compose_share.components.VisibilityComposeStateProvider
@@ -624,7 +629,7 @@ fun MainNaviHostPagesContainer(
                                 )
                             }
                         },
-                        onAddMediaContentClick = { requestKey, requestType, requestTypeMaxCount, composeStateUpdater ->
+                        onAddMediaContentClick = { requestKey, requestType, requestTypeMaxCountProvider, composeStateUpdater ->
                             coroutineScope.launch {
                                 showContentSelectionDialog(
                                     context = context,
@@ -632,13 +637,8 @@ fun MainNaviHostPagesContainer(
                                     visibilityComposeStateProvider = visibilityComposeStateProvider,
                                     contextName = PageRouteNames.CreateScreenPage,
                                     requestKey = requestKey,
-                                    requestSelectionTypeParams = listOf(
-                                        ContentSelectionRequest.SelectionTypeParam(
-                                            selectionType = requestType,
-                                            maxCount = { selectionType ->
-                                                requestTypeMaxCount
-                                            }
-                                        )
+                                    requestSelectionTypeParams = defaultMediaSelectionTypeParam(
+                                        countProvider = requestTypeMaxCountProvider
                                     ),
                                     defaultSelectionType = requestType,
                                     composeStateUpdater = composeStateUpdater,
@@ -658,8 +658,17 @@ fun MainNaviHostPagesContainer(
 
                             )
                         },
-                        onVideoPlayClick = { uriProvider ->
-                            navigateToVideoPlaybackActivity(context, uriProvider)
+                        onMediaClick = { uriProvider ->
+                            if (uriProvider.isImageType()) {
+                                showPictureViewDialog(
+                                    context,
+                                    visibilityComposeStateProvider,
+                                    uriProvider.provideUri(),
+                                    listOf(uriProvider.provideUri())
+                                )
+                            } else if (uriProvider.isVideoType()) {
+                                navigateToVideoPlaybackActivity(context, uriProvider)
+                            }
                         }
                     )
                 }
@@ -1679,6 +1688,7 @@ private suspend fun navigateToUserInfoPage(
     navController.navigate(PageRouteNames.UserProfilePage)
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 private fun showPictureViewDialog(
     context: Context,
     visibilityComposeStateProvider: VisibilityComposeStateProvider,
@@ -1733,7 +1743,8 @@ private fun showPictureViewDialog(
             ) {
                 Spacer(
                     modifier = Modifier.width(
-                        WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
+                        WindowInsets.navigationBarsIgnoringVisibility.asPaddingValues()
+                            .calculateBottomPadding()
                     )
                 )
                 Card(
@@ -1761,7 +1772,8 @@ private fun showPictureViewDialog(
                 )
                 Spacer(
                     modifier = Modifier.width(
-                        WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
+                        WindowInsets.navigationBarsIgnoringVisibility.asPaddingValues()
+                            .calculateBottomPadding()
                     )
                 )
             }

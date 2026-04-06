@@ -34,6 +34,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -43,11 +44,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.navigationBarsIgnoringVisibility
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.statusBarsIgnoringVisibility
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
@@ -233,7 +234,10 @@ fun SessionObjectNormal(
     onInputMoreAction: (String, ComposeStateUpdater<*>) -> Unit,
     onMoreClick: (IMObj) -> Unit,
 ) {
-    HideNavBar()
+    val configuration = LocalConfiguration.current
+    if (configuration.orientation == Configuration.ORIENTATION_PORTRAIT) {
+        HideNavBar()
+    }
     val context = LocalContext.current
     val hapticFeedback = LocalHapticFeedback.current
     val conversationUseCase = LocalUseCaseOfConversation.current
@@ -492,7 +496,7 @@ fun ComplexContentSendingIndicator(isShow: Boolean) {
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class, ExperimentalLayoutApi::class)
 @Composable
 private fun TopBarComponent(
     modifier: Modifier,
@@ -516,24 +520,18 @@ private fun TopBarComponent(
         }
         mutableStateOf(sessions)
     }
-    val statusBarsPaddingValues = WindowInsets.statusBars.asPaddingValues()
 
     Box(
         modifier = modifier.fillMaxWidth(),
     ) {
-        val paddingValues by remember {
-            derivedStateOf {
-                val startDp = with(density) { backActionTopBarSize.width.toDp() }
-                PaddingValues(
-                    start = startDp,
-                    top = statusBarsPaddingValues.calculateTopPadding(),
-                    end = 12.dp
-                )
-            }
-        }
         LazyRow(
             modifier = Modifier,
-            contentPadding = paddingValues,
+            contentPadding = PaddingValues(
+                start = with(density) { backActionTopBarSize.width.toDp() },
+                top = WindowInsets.statusBarsIgnoringVisibility.asPaddingValues()
+                    .calculateTopPadding() + 12.dp,
+                end = 12.dp
+            ),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
@@ -596,7 +594,7 @@ private fun UserAvatar2Component(modifier: Modifier, imObj: IMObj?) {
     )
 }
 
-@OptIn(ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class, ExperimentalLayoutApi::class)
 @Composable
 private fun ImMessageListComponent(
     modifier: Modifier = Modifier,
@@ -613,8 +611,9 @@ private fun ImMessageListComponent(
             reverseLayout = true,
             state = scrollState,
             contentPadding = PaddingValues(
-                top = WindowInsets.statusBars.asPaddingValues().calculateTopPadding() + 150.dp,
-                bottom = WindowInsets.navigationBars.asPaddingValues()
+                top = WindowInsets.statusBarsIgnoringVisibility.asPaddingValues()
+                    .calculateTopPadding() + 150.dp,
+                bottom = WindowInsets.navigationBarsIgnoringVisibility.asPaddingValues()
                     .calculateBottomPadding() + 150.dp
             ),
             modifier = Modifier.run {

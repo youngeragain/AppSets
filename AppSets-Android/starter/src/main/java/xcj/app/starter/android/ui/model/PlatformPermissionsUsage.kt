@@ -16,6 +16,7 @@ data class PlatformPermissionsUsage(
     val granted: Boolean = false,
 ) {
     var icon: Int? = null
+
     companion object {
 
         private const val TAG = "PlatformPermissionsUsage"
