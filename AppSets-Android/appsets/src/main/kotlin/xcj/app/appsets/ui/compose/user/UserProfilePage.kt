@@ -76,6 +76,7 @@ fun UserProfilePage(
     onFlipFollowClick: (UserInfo) -> Unit,
     onChatClick: (UserInfo) -> Unit,
     onBioClick: (Bio) -> Unit,
+    onApplicationLongPress: (Application) -> Unit,
     onScreenMediaClick: (ScreenMediaFileUrl, List<ScreenMediaFileUrl>) -> Unit,
     onLoadMoreScreens: (String, Boolean) -> Unit,
     onSelectUserAvatarClick: (String, ComposeStateUpdater<*>) -> Unit,
@@ -302,7 +303,8 @@ fun UserProfilePage(
                             CONTENT_APPLICATION -> {
                                 UserApplications(
                                     userApplications = userApplications,
-                                    onBioClick = onBioClick
+                                    onBioClick = onBioClick,
+                                    onApplicationLongPress = onApplicationLongPress
                                 )
                             }
 

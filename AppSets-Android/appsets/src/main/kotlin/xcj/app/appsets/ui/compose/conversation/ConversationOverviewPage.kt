@@ -16,10 +16,8 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -45,7 +43,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -61,7 +58,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -81,12 +77,11 @@ import xcj.app.appsets.server.model.UserInfo
 import xcj.app.appsets.ui.compose.LocalUseCaseOfConversation
 import xcj.app.appsets.ui.compose.custom_component.AnyImage
 import xcj.app.appsets.ui.compose.custom_component.ShowNavBar
+import xcj.app.appsets.ui.compose.custom_component.VerticalOverscrollBox
 import xcj.app.appsets.usecase.ConversationUseCase
 import xcj.app.appsets.usecase.SessionState
 import xcj.app.appsets.util.compose_state.ComposeStateUpdater
 import xcj.app.compose_share.components.DesignVDivider
-import xcj.app.compose_share.foundation_extension.customVerticalOverscroll
-import kotlin.math.roundToInt
 
 private const val TAG = "ConversationOverviewPage"
 
@@ -305,15 +300,7 @@ fun ConversationOverviewSessionsOfSystem(
     val density = LocalDensity.current
     val hasMessages =
         sessions.firstOrNull { it.conversationState.messages.isNotEmpty() } != null
-    var animatedOverscrollAmount by remember { mutableFloatStateOf(0f) }
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .customVerticalOverscroll(
-                onNewOverscrollAmount = { animatedOverscrollAmount = it }
-            )
-            .offset { IntOffset(0, animatedOverscrollAmount.roundToInt()) })
-    {
+    VerticalOverscrollBox {
         if (!hasMessages) {
             Text(
                 text = stringResource(getTabEmptyPromptText(tabType)),
@@ -349,15 +336,7 @@ fun ConversationOverviewSessionsOfGroup(
     onConversionSessionClick: (Session) -> Unit,
 ) {
     val density = LocalDensity.current
-    var animatedOverscrollAmount by remember { mutableFloatStateOf(0f) }
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .customVerticalOverscroll(
-                onNewOverscrollAmount = { animatedOverscrollAmount = it }
-            )
-            .offset { IntOffset(0, animatedOverscrollAmount.roundToInt()) })
-    {
+    VerticalOverscrollBox {
         if (sessions.isEmpty()) {
             Column(
                 modifier = Modifier.align(Alignment.Center),
@@ -407,15 +386,7 @@ fun ConversationOverviewSessionsOfUser(
     onConversionSessionClick: (Session) -> Unit,
 ) {
     val density = LocalDensity.current
-    var animatedOverscrollAmount by remember { mutableFloatStateOf(0f) }
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .customVerticalOverscroll(
-                onNewOverscrollAmount = { animatedOverscrollAmount = it }
-            )
-            .offset { IntOffset(0, animatedOverscrollAmount.roundToInt()) })
-    {
+    VerticalOverscrollBox {
         if (sessions.isEmpty()) {
             Column(
                 modifier = Modifier.align(Alignment.Center),
@@ -464,16 +435,7 @@ fun ConversationOverviewSessionsOfAI(
     onConversionSessionClick: (Session) -> Unit,
 ) {
     val density = LocalDensity.current
-    var animatedOverscrollAmount by remember { mutableFloatStateOf(0f) }
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .customVerticalOverscroll(
-                onNewOverscrollAmount = { animatedOverscrollAmount = it }
-            )
-            .offset { IntOffset(0, animatedOverscrollAmount.roundToInt()) })
-    {
-
+    VerticalOverscrollBox {
         if (sessions.isEmpty()) {
             Column(
                 modifier = Modifier.align(Alignment.Center),

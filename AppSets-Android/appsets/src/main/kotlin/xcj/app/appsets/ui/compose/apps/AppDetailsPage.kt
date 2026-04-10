@@ -24,7 +24,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBars
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -44,7 +43,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -59,7 +57,6 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -73,13 +70,12 @@ import xcj.app.appsets.server.model.VersionInfo
 import xcj.app.appsets.ui.compose.custom_component.AnyImage
 import xcj.app.appsets.ui.compose.custom_component.DesignBackButton
 import xcj.app.appsets.ui.compose.custom_component.HideNavBar
+import xcj.app.appsets.ui.compose.custom_component.VerticalOverscrollBox
 import xcj.app.appsets.ui.compose.theme.ExtraLarge2
 import xcj.app.compose_share.components.BackActionTopBar
 import xcj.app.compose_share.components.DesignHDivider
-import xcj.app.compose_share.foundation_extension.customVerticalOverscroll
 import xcj.app.compose_share.modifier.hazeSourceIfAvailable
 import xcj.app.compose_share.modifier.rememberHazeStateIfAvailable
-import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -111,31 +107,23 @@ fun AppDetailsPage(
             )
         }
     } else {
-        val hazeState = rememberHazeStateIfAvailable()
-        val density = LocalDensity.current
-        var backActionBarSize by remember {
-            mutableStateOf(IntSize.Zero)
-        }
-        val backActionsHeight by remember {
-            derivedStateOf {
-                with(density) {
-                    backActionBarSize.height.toDp()
+        VerticalOverscrollBox {
+            val hazeState = rememberHazeStateIfAvailable()
+            val density = LocalDensity.current
+            var backActionBarSize by remember {
+                mutableStateOf(IntSize.Zero)
+            }
+            val backActionsHeight by remember {
+                derivedStateOf {
+                    with(density) {
+                        backActionBarSize.height.toDp()
+                    }
                 }
             }
-        }
-        val rememberScrollState = rememberScrollState()
-        var animatedOverscrollAmount by remember { mutableFloatStateOf(0f) }
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .customVerticalOverscroll(
-                    onNewOverscrollAmount = { animatedOverscrollAmount = it }
-                )
-                .offset { IntOffset(0, animatedOverscrollAmount.roundToInt()) }) {
             Column(
                 modifier = Modifier
                     .hazeSourceIfAvailable(hazeState)
-                    .verticalScroll(rememberScrollState)
+                    .verticalScroll(rememberScrollState())
             ) {
                 Spacer(
                     modifier = Modifier.height(

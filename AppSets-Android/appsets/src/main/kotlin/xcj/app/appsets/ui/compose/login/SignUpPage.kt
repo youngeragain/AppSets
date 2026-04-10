@@ -14,13 +14,17 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsIgnoringVisibility
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
@@ -54,6 +58,7 @@ import androidx.compose.ui.unit.sp
 import xcj.app.appsets.ui.compose.LocalUseCaseOfSystem
 import xcj.app.appsets.ui.compose.content_selection.ContentSelectionResult
 import xcj.app.appsets.ui.compose.custom_component.AnyImage
+import xcj.app.appsets.ui.compose.custom_component.VerticalOverscrollBox
 import xcj.app.appsets.ui.compose.theme.ExtraLarge2
 import xcj.app.appsets.ui.model.UserInfoForCreate
 import xcj.app.appsets.ui.model.page_state.SignUpPageUIState
@@ -99,6 +104,7 @@ fun SignUpPagePreview() {
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun SignUpPage(
     signUpPageUIState: SignUpPageUIState,
@@ -131,7 +137,7 @@ fun SignUpPage(
             }
         }
     }
-    Box(modifier = Modifier.fillMaxSize()) {
+    VerticalOverscrollBox {
 
         Column(
             modifier = Modifier
@@ -141,11 +147,12 @@ fun SignUpPage(
                 .verticalScroll(rememberScrollState())
         )
         {
-            Spacer(
-                modifier = Modifier.height(
-                    backActionsHeight + 12.dp
-                )
-            )
+            val statusBarHeight =
+                WindowInsets.statusBarsIgnoringVisibility.asPaddingValues().calculateTopPadding()
+            val finalTopPadding = remember(backActionsHeight, statusBarHeight) {
+                if (backActionsHeight > 0.dp) backActionsHeight + 12.dp else statusBarHeight + 84.dp
+            }
+            Spacer(modifier = Modifier.height(finalTopPadding))
             Column(modifier = Modifier.padding(horizontal = 12.dp)) {
                 Spacer(modifier = Modifier.height(12.dp))
                 Column(
@@ -496,7 +503,7 @@ fun SignUpPage(
                         autoCorrectEnabled = true
                     )
                 )
-                Spacer(modifier = Modifier.height(120.dp))
+                Spacer(modifier = Modifier.height(150.dp))
             }
         }
 

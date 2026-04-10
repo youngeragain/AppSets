@@ -45,7 +45,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.derivedStateOf
@@ -65,11 +64,13 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.media3.common.util.UnstableApi
+import dev.chrisbanes.haze.HazeState
 import xcj.app.appsets.constants.Constants
 import xcj.app.appsets.server.model.AppPlatform
 import xcj.app.appsets.server.model.VersionInfo
@@ -77,6 +78,7 @@ import xcj.app.appsets.ui.compose.LocalUseCaseOfAppCreation
 import xcj.app.appsets.ui.compose.content_selection.ContentSelectionResult
 import xcj.app.appsets.ui.compose.custom_component.AnyImage
 import xcj.app.appsets.ui.compose.custom_component.HideNavBar
+import xcj.app.appsets.ui.compose.custom_component.VerticalOverscrollBox
 import xcj.app.appsets.ui.compose.theme.ExtraLarge2
 import xcj.app.appsets.ui.model.ApplicationForCreate
 import xcj.app.appsets.ui.model.PlatformForCreate
@@ -140,18 +142,75 @@ fun CreateAppPage(
     onConfirmClick: (ApplicationForCreate) -> Unit,
 ) {
     HideNavBar()
-    val appCreationUseCase = LocalUseCaseOfAppCreation.current
-    val visibilityComposeStateProvider = LocalVisibilityComposeStateProvider.current
-    DisposableEffect(key1 = true) {
-        onDispose {
-            appCreationUseCase.onComposeDispose("page dispose")
-        }
-    }
     LaunchedEffect(createApplicationPageUIState) {
         if (createApplicationPageUIState is CreateApplicationPageUIState.CreateSuccess) {
             onBackClick()
         }
     }
+
+    val hazeState = rememberHazeStateIfAvailable()
+    val density = LocalDensity.current
+    var backActionBarSize by remember {
+        mutableStateOf(IntSize.Zero)
+    }
+    val backActionsHeight by remember {
+        derivedStateOf {
+            with(density) {
+                backActionBarSize.height.toDp()
+            }
+        }
+    }
+    VerticalOverscrollBox(
+        modifier = Modifier.fillMaxSize()
+    ) {
+
+        CreateApplicationBody(
+            hazeState = hazeState,
+            backActionsHeight = backActionsHeight,
+            applicationForCreate = applicationForCreate,
+            createStep = createStep,
+            platform = platform,
+            versionInfo = versionInfo,
+            onChoosePictureClick = onChoosePictureClick
+        )
+
+        CreateApplicationIndicator(createApplicationPageUIState = createApplicationPageUIState)
+
+        val titleText =
+            if (createStep != ApplicationForCreate.CREATE_STEP_APPLICATION) {
+                stringResource(xcj.app.appsets.R.string.template_add_xxx, createStep)
+            } else {
+                stringResource(xcj.app.appsets.R.string.create_application)
+            }
+
+        BackActionTopBar(
+            modifier = Modifier.onPlaced {
+                backActionBarSize = it.size
+            },
+            hazeState = hazeState,
+            onBackClick = onBackClick,
+            backButtonText = titleText,
+            endButtonText = stringResource(id = xcj.app.appsets.R.string.ok),
+            onEndButtonClick = {
+                onConfirmClick(applicationForCreate)
+            }
+        )
+    }
+}
+
+@Composable
+fun CreateApplicationBody(
+    modifier: Modifier = Modifier,
+    hazeState: HazeState?,
+    backActionsHeight: Dp,
+    applicationForCreate: ApplicationForCreate,
+    createStep: String,
+    platform: AppPlatform? = null,
+    versionInfo: VersionInfo? = null,
+    onChoosePictureClick: (String, Int, ComposeStateUpdater<*>) -> Unit,
+) {
+    val appCreationUseCase = LocalUseCaseOfAppCreation.current
+    val visibilityComposeStateProvider = LocalVisibilityComposeStateProvider.current
     val platformNames = remember {
         if (platform != null && createStep != ApplicationForCreate.CREATE_STEP_APPLICATION &&
             createStep != ApplicationForCreate.CREATE_STEP_PLATFORM
@@ -174,362 +233,319 @@ fun CreateAppPage(
             )
         }
     }
-    val hazeState = rememberHazeStateIfAvailable()
-    val density = LocalDensity.current
-    var backActionBarSize by remember {
-        mutableStateOf(IntSize.Zero)
+    var newPlatformName: String? by remember {
+        mutableStateOf(null)
     }
-    val backActionsHeight by remember {
+    val platformForCreate by remember {
         derivedStateOf {
-            with(density) {
-                backActionBarSize.height.toDp()
+            if (platform != null) {
+                appCreationUseCase.getPlatformForCreateById(
+                    applicationForCreate,
+                    platform.id ?: ""
+                )
+            } else {
+                appCreationUseCase.getPlatformForCreateByName(
+                    applicationForCreate,
+                    newPlatformName
+                )
             }
         }
     }
-    Box(
-        modifier = Modifier.fillMaxSize()
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .hazeSourceIfAvailable(hazeState)
+            .imePadding()
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .hazeSourceIfAvailable(hazeState)
-                .imePadding()
+        LazyColumn(
+            modifier = modifier,
+            contentPadding = PaddingValues(
+                top = backActionsHeight + 12.dp
+            )
         ) {
-
-            var newPlatformName: String? by remember {
-                mutableStateOf(null)
-            }
-            val platformForCreate by remember {
-                derivedStateOf {
-                    if (platform != null) {
-                        appCreationUseCase.getPlatformForCreateById(
-                            applicationForCreate,
-                            platform.id ?: ""
+            item {
+                Column(
+                    modifier = Modifier
+                        .padding(vertical = 12.dp)
+                        .fillMaxWidth()
+                ) {
+                    IconAndBanner(
+                        createStep = createStep,
+                        showSelect = createStep == ApplicationForCreate.CREATE_STEP_APPLICATION,
+                        iconKey = "app_icon",
+                        bannerKey = "banner_icon",
+                        iconUriProviderState = applicationForCreate.iconUriProvider,
+                        bannerUriProviderState = applicationForCreate.bannerUriProvider,
+                        onChoosePictureClick = onChoosePictureClick
+                    )
+                    TextOrTextFiled(
+                        isField = createStep == ApplicationForCreate.CREATE_STEP_APPLICATION,
+                        placeHolderText = stringResource(xcj.app.appsets.R.string.application_name),
+                        value = applicationForCreate.name.value,
+                        onValueChange = {
+                            applicationForCreate.name.value = it
+                        }
+                    )
+                    TextOrTextFiled(
+                        isField = createStep == ApplicationForCreate.CREATE_STEP_APPLICATION,
+                        placeHolderText = stringResource(xcj.app.appsets.R.string.app_types),
+                        value = applicationForCreate.category.value,
+                        onValueChange = {
+                            applicationForCreate.category.value = it
+                        }
+                    )
+                    TextOrTextFiled(
+                        isField = createStep == ApplicationForCreate.CREATE_STEP_APPLICATION,
+                        placeHolderText = stringResource(xcj.app.appsets.R.string.website),
+                        value = applicationForCreate.website.value,
+                        onValueChange = {
+                            applicationForCreate.website.value = it
+                        },
+                        keyboardOptions = KeyboardOptions.Default.copy(
+                            keyboardType = KeyboardType.Uri,
+                            autoCorrectEnabled = true
                         )
-                    } else {
-                        appCreationUseCase.getPlatformForCreateByName(
-                            applicationForCreate,
-                            newPlatformName
-                        )
+                    )
+                    TextOrTextFiled(
+                        modifier = Modifier.heightIn(min = 120.dp),
+                        isField = createStep == ApplicationForCreate.CREATE_STEP_APPLICATION,
+                        placeHolderText = stringResource(xcj.app.appsets.R.string.developer_information),
+                        value = applicationForCreate.developerInfo.value,
+                        onValueChange = {
+                            applicationForCreate.developerInfo.value = it
+                        }
+                    )
+                    var free by remember {
+                        mutableStateOf(true)
                     }
-                }
-            }
-
-            LazyColumn(
-                modifier = Modifier, contentPadding = PaddingValues(
-                    top = backActionsHeight + 12.dp
-                )
-            ) {
-                item {
-                    Column(
+                    LaunchedEffect(key1 = true, block = {
+                        free = applicationForCreate.price.value.isEmpty()
+                    })
+                    Row(
                         modifier = Modifier
-                            .padding(vertical = 12.dp)
-                            .fillMaxWidth()
+                            .padding(horizontal = 12.dp)
                     ) {
-                        IconAndBanner(
-                            createStep = createStep,
-                            showSelect = createStep == ApplicationForCreate.CREATE_STEP_APPLICATION,
-                            iconKey = "app_icon",
-                            bannerKey = "banner_icon",
-                            iconUriProviderState = applicationForCreate.iconUriProvider,
-                            bannerUriProviderState = applicationForCreate.bannerUriProvider,
-                            onChoosePictureClick = onChoosePictureClick
-                        )
-                        TextOrTextFiled(
-                            isField = createStep == ApplicationForCreate.CREATE_STEP_APPLICATION,
-                            placeHolderText = stringResource(xcj.app.appsets.R.string.application_name),
-                            value = applicationForCreate.name.value,
-                            onValueChange = {
-                                applicationForCreate.name.value = it
-                            }
-                        )
-                        TextOrTextFiled(
-                            isField = createStep == ApplicationForCreate.CREATE_STEP_APPLICATION,
-                            placeHolderText = stringResource(xcj.app.appsets.R.string.app_types),
-                            value = applicationForCreate.category.value,
-                            onValueChange = {
-                                applicationForCreate.category.value = it
-                            }
-                        )
-                        TextOrTextFiled(
-                            isField = createStep == ApplicationForCreate.CREATE_STEP_APPLICATION,
-                            placeHolderText = stringResource(xcj.app.appsets.R.string.website),
-                            value = applicationForCreate.website.value,
-                            onValueChange = {
-                                applicationForCreate.website.value = it
+                        FilterChip(
+                            selected = free,
+                            onClick = {
+                                if (createStep == ApplicationForCreate.CREATE_STEP_APPLICATION)
+                                    free = true
                             },
-                            keyboardOptions = KeyboardOptions.Default.copy(
-                                keyboardType = KeyboardType.Uri,
-                                autoCorrectEnabled = true
-                            )
+                            label = {
+                                Text(text = stringResource(xcj.app.appsets.R.string.free))
+                            },
+                            shape = CircleShape
                         )
-                        TextOrTextFiled(
-                            modifier = Modifier.heightIn(min = 120.dp),
-                            isField = createStep == ApplicationForCreate.CREATE_STEP_APPLICATION,
-                            placeHolderText = stringResource(xcj.app.appsets.R.string.developer_information),
-                            value = applicationForCreate.developerInfo.value,
-                            onValueChange = {
-                                applicationForCreate.developerInfo.value = it
-                            }
+                        Spacer(modifier = Modifier.width(12.dp))
+                        FilterChip(
+                            selected = !free,
+                            onClick = {
+                                if (createStep == ApplicationForCreate.CREATE_STEP_APPLICATION)
+                                    free = false
+                            },
+                            label = {
+                                Text(text = stringResource(xcj.app.appsets.R.string.paid))
+                            },
+                            shape = CircleShape
                         )
-                        var free by remember {
-                            mutableStateOf(true)
-                        }
-                        LaunchedEffect(key1 = true, block = {
-                            free = applicationForCreate.price.value.isEmpty()
-                        })
-                        Row(
-                            modifier = Modifier
-                                .padding(horizontal = 12.dp)
-                        ) {
-                            FilterChip(
-                                selected = free,
-                                onClick = {
-                                    if (createStep == ApplicationForCreate.CREATE_STEP_APPLICATION)
-                                        free = true
-                                },
-                                label = {
-                                    Text(text = stringResource(xcj.app.appsets.R.string.free))
-                                },
-                                shape = CircleShape
-                            )
-                            Spacer(modifier = Modifier.width(12.dp))
-                            FilterChip(
-                                selected = !free,
-                                onClick = {
-                                    if (createStep == ApplicationForCreate.CREATE_STEP_APPLICATION)
-                                        free = false
-                                },
-                                label = {
-                                    Text(text = stringResource(xcj.app.appsets.R.string.paid))
-                                },
-                                shape = CircleShape
-                            )
-                        }
-
-                        if (createStep == ApplicationForCreate.CREATE_STEP_APPLICATION) {
-                            if (!free) {
-                                TextOrTextFiled(
-                                    modifier = Modifier,
-                                    isField = true,
-                                    placeHolderText = stringResource(xcj.app.appsets.R.string.single_product_price),
-                                    value = applicationForCreate.price.value,
-                                    onValueChange = {
-                                        applicationForCreate.price.value = it
-                                    },
-                                    keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Decimal)
-                                )
-                                /*LaunchedEffect(key1 = free, block = {
-                                    onApplicationForCreateFiledChanged(
-                                        applicationForCreate,
-                                        ApplicationForCreate.FILED_NAME_PRICE_UNIT,
-                                        ApplicationForCreate.DEFAULT_PRICE_UNIT
-                                    )
-                                })*/
-                                Row(modifier = Modifier.padding(horizontal = 12.dp)) {
-                                    FilterChip(
-                                        selected = applicationForCreate.priceUnit.value == ApplicationForCreate.PRICE_UNIT_RMB,
-                                        onClick = {
-                                            applicationForCreate.priceUnit.value =
-                                                ApplicationForCreate.PRICE_UNIT_RMB
-                                        },
-                                        label = {
-                                            Text(text = ApplicationForCreate.PRICE_UNIT_RMB)
-                                        },
-                                        shape = CircleShape
-                                    )
-                                    Spacer(modifier = Modifier.width(12.dp))
-                                    FilterChip(
-                                        selected = applicationForCreate.priceUnit.value == ApplicationForCreate.PRICE_UNIT_USD,
-                                        onClick = {
-                                            applicationForCreate.priceUnit.value =
-                                                ApplicationForCreate.PRICE_UNIT_USD
-                                        },
-                                        label = {
-                                            Text(text = ApplicationForCreate.PRICE_UNIT_USD)
-                                        },
-                                        shape = CircleShape
-                                    )
-                                }
-                            }
-                        } else {
-                            if (!free) {
-                                Text(
-                                    text = stringResource(xcj.app.appsets.R.string.single_product_price),
-                                    modifier = Modifier.padding(12.dp),
-                                    fontWeight = FontWeight.Bold
-                                )
-                                Text(
-                                    text = "${applicationForCreate.price.value} ${applicationForCreate.priceUnit.value}",
-                                    modifier = Modifier.padding(12.dp)
-                                )
-                            }
-                        }
-                        Row(modifier = Modifier.padding(horizontal = 12.dp, vertical = 24.dp)) {
-                            Text(
-                                text = stringResource(xcj.app.appsets.R.string.select_platform_information),
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
                     }
 
-                }
-
-
-                item {
-                    val selectedPlatformNames = remember {
-                        mutableSetOf<String>().apply {
-                            if (platform != null &&
-                                createStep != ApplicationForCreate.CREATE_STEP_APPLICATION &&
-                                createStep != ApplicationForCreate.CREATE_STEP_PLATFORM
-                            ) {
-                                add(platform.name ?: "")
-                            } else {
-                                if (applicationForCreate.platformForCreates.isNotEmpty()) {
-                                    applicationForCreate.platformForCreates.map { it.name.value }
-                                        .let { addAll(it) }
-                                }
-                            }
-                        }
-                    }
-
-
-                    FlowRow(
-                        modifier = Modifier.padding(horizontal = 12.dp),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        platformNames.forEach { platformName ->
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                if (platformName == platformForCreate?.name?.value) {
-                                    HorizontalDivider(
-                                        modifier = Modifier
-                                            .height(2.dp)
-                                            .width(18.dp),
-                                        color = MaterialTheme.colorScheme.primary
-                                    )
-                                }
+                    if (createStep == ApplicationForCreate.CREATE_STEP_APPLICATION) {
+                        if (!free) {
+                            TextOrTextFiled(
+                                modifier = Modifier,
+                                isField = true,
+                                placeHolderText = stringResource(xcj.app.appsets.R.string.single_product_price),
+                                value = applicationForCreate.price.value,
+                                onValueChange = {
+                                    applicationForCreate.price.value = it
+                                },
+                                keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Decimal)
+                            )
+                            Row(modifier = Modifier.padding(horizontal = 12.dp)) {
                                 FilterChip(
-                                    selected = selectedPlatformNames.contains(platformName),
+                                    selected = applicationForCreate.priceUnit.value == ApplicationForCreate.PRICE_UNIT_RMB,
                                     onClick = {
-                                        if (createStep != ApplicationForCreate.CREATE_STEP_APPLICATION &&
-                                            createStep != ApplicationForCreate.CREATE_STEP_PLATFORM
-                                        ) {
-                                            return@FilterChip
-                                        }
-
-                                        if (platformForCreate != null) {
-                                            if (platformForCreate?.name?.value == platformName) {
-                                                selectedPlatformNames.remove(platformName)
-                                                appCreationUseCase.removePlatformForCreateByName(
-                                                    applicationForCreate,
-                                                    platformName
-                                                )
-                                                newPlatformName = null
-                                            } else {
-                                                selectedPlatformNames.add(platformName)
-                                                newPlatformName = platformName
-                                            }
-                                        } else {
-                                            selectedPlatformNames.add(platformName)
-                                            newPlatformName = platformName
-                                        }
-
+                                        applicationForCreate.priceUnit.value =
+                                            ApplicationForCreate.PRICE_UNIT_RMB
                                     },
                                     label = {
-                                        Text(text = platformName)
+                                        Text(text = ApplicationForCreate.PRICE_UNIT_RMB)
+                                    },
+                                    shape = CircleShape
+                                )
+                                Spacer(modifier = Modifier.width(12.dp))
+                                FilterChip(
+                                    selected = applicationForCreate.priceUnit.value == ApplicationForCreate.PRICE_UNIT_USD,
+                                    onClick = {
+                                        applicationForCreate.priceUnit.value =
+                                            ApplicationForCreate.PRICE_UNIT_USD
+                                    },
+                                    label = {
+                                        Text(text = ApplicationForCreate.PRICE_UNIT_USD)
                                     },
                                     shape = CircleShape
                                 )
                             }
                         }
-                        if (createStep == ApplicationForCreate.CREATE_STEP_APPLICATION ||
-                            createStep == ApplicationForCreate.CREATE_STEP_PLATFORM
-                        ) {
-                            IconButton(
-                                onClick = {
-                                    val bottomSheetState =
-                                        visibilityComposeStateProvider.bottomSheetState()
-                                    bottomSheetState.show(null) {
-                                        CustomPlatformAddSheetContent(
-                                            platformNames = platformNames,
-                                            onConfirmClick = {
-                                                bottomSheetState.hide()
-                                            }
-                                        )
-                                    }
-                                }
-                            ) {
-                                Icon(
-                                    painter = painterResource(xcj.app.compose_share.R.drawable.ic_round_add_24),
-                                    contentDescription = stringResource(xcj.app.appsets.R.string.add)
-                                )
-                            }
-                        }
-                    }
-                }
-
-                item {
-                    Column(modifier = Modifier.animateItem()) {
-                        Spacer(modifier = Modifier.height(10.dp))
-                        DesignVDivider()
-                        Spacer(modifier = Modifier.height(10.dp))
-                        if (platformForCreate != null) {
-                            PlatformForApp(
-                                createStep = createStep,
-                                platformForCreate = platformForCreate!!,
-                                versionInfo = versionInfo,
-                                onChoosePictureClick = onChoosePictureClick
+                    } else {
+                        if (!free) {
+                            Text(
+                                text = stringResource(xcj.app.appsets.R.string.single_product_price),
+                                modifier = Modifier.padding(12.dp),
+                                fontWeight = FontWeight.Bold
                             )
+                            Text(
+                                text = "${applicationForCreate.price.value} ${applicationForCreate.priceUnit.value}",
+                                modifier = Modifier.padding(12.dp)
+                            )
+                        }
+                    }
+                    Row(modifier = Modifier.padding(horizontal = 12.dp, vertical = 24.dp)) {
+                        Text(
+                            text = stringResource(xcj.app.appsets.R.string.select_platform_information),
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+
+            }
+
+
+            item {
+                val selectedPlatformNames = remember {
+                    mutableSetOf<String>().apply {
+                        if (platform != null &&
+                            createStep != ApplicationForCreate.CREATE_STEP_APPLICATION &&
+                            createStep != ApplicationForCreate.CREATE_STEP_PLATFORM
+                        ) {
+                            add(platform.name ?: "")
                         } else {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(150.dp)
-                                    .padding(12.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(
-                                    text = stringResource(xcj.app.appsets.R.string.click_platform_to_add_or_select_the_added_platform_information),
-                                    fontSize = 12.sp
-                                )
+                            if (applicationForCreate.platformForCreates.isNotEmpty()) {
+                                applicationForCreate.platformForCreates.map { it.name.value }
+                                    .let { addAll(it) }
                             }
                         }
                     }
                 }
 
-                item {
-                    Spacer(modifier = Modifier.height(150.dp))
+
+                FlowRow(
+                    modifier = Modifier.padding(horizontal = 12.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    platformNames.forEach { platformName ->
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            if (platformName == platformForCreate?.name?.value) {
+                                HorizontalDivider(
+                                    modifier = Modifier
+                                        .height(2.dp)
+                                        .width(18.dp),
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                            FilterChip(
+                                selected = selectedPlatformNames.contains(platformName),
+                                onClick = {
+                                    if (createStep != ApplicationForCreate.CREATE_STEP_APPLICATION &&
+                                        createStep != ApplicationForCreate.CREATE_STEP_PLATFORM
+                                    ) {
+                                        return@FilterChip
+                                    }
+
+                                    if (platformForCreate != null) {
+                                        if (platformForCreate?.name?.value == platformName) {
+                                            selectedPlatformNames.remove(platformName)
+                                            appCreationUseCase.removePlatformForCreateByName(
+                                                applicationForCreate,
+                                                platformName
+                                            )
+                                            newPlatformName = null
+                                        } else {
+                                            selectedPlatformNames.add(platformName)
+                                            newPlatformName = platformName
+                                        }
+                                    } else {
+                                        selectedPlatformNames.add(platformName)
+                                        newPlatformName = platformName
+                                    }
+
+                                },
+                                label = {
+                                    Text(text = platformName)
+                                },
+                                shape = CircleShape
+                            )
+                        }
+                    }
+                    if (createStep == ApplicationForCreate.CREATE_STEP_APPLICATION ||
+                        createStep == ApplicationForCreate.CREATE_STEP_PLATFORM
+                    ) {
+                        IconButton(
+                            onClick = {
+                                val bottomSheetState =
+                                    visibilityComposeStateProvider.bottomSheetState()
+                                bottomSheetState.show(null) {
+                                    CustomPlatformAddSheetContent(
+                                        platformNames = platformNames,
+                                        onConfirmClick = {
+                                            bottomSheetState.hide()
+                                        }
+                                    )
+                                }
+                            }
+                        ) {
+                            Icon(
+                                painter = painterResource(xcj.app.compose_share.R.drawable.ic_round_add_24),
+                                contentDescription = stringResource(xcj.app.appsets.R.string.add)
+                            )
+                        }
+                    }
                 }
             }
 
+            item {
+                Column(modifier = Modifier.animateItem()) {
+                    Spacer(modifier = Modifier.height(10.dp))
+                    DesignVDivider()
+                    Spacer(modifier = Modifier.height(10.dp))
+                    if (platformForCreate != null) {
+                        PlatformForApp(
+                            createStep = createStep,
+                            platformForCreate = platformForCreate!!,
+                            versionInfo = versionInfo,
+                            onChoosePictureClick = onChoosePictureClick
+                        )
+                    } else {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(150.dp)
+                                .padding(12.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = stringResource(xcj.app.appsets.R.string.click_platform_to_add_or_select_the_added_platform_information),
+                                fontSize = 12.sp
+                            )
+                        }
+                    }
+                }
+            }
+
+            item {
+                Spacer(modifier = Modifier.height(150.dp))
+            }
         }
 
-        val titleText =
-            if (createStep != ApplicationForCreate.CREATE_STEP_APPLICATION) {
-                stringResource(xcj.app.appsets.R.string.template_add_xxx, createStep)
-            } else {
-                stringResource(xcj.app.appsets.R.string.create_application)
-            }
-        BackActionTopBar(
-            modifier = Modifier.onPlaced {
-                backActionBarSize = it.size
-            },
-            hazeState = hazeState,
-            onBackClick = onBackClick,
-            backButtonText = titleText,
-            endButtonText = stringResource(id = xcj.app.appsets.R.string.ok),
-            onEndButtonClick = {
-                onConfirmClick(applicationForCreate)
-            }
-        )
-
-        CreateApplicationIndicator(createApplicationPageUIState = createApplicationPageUIState)
     }
 }
 
 @Composable
-fun CreateApplicationIndicator(createApplicationPageUIState: CreateApplicationPageUIState) {
+fun CreateApplicationIndicator(
+    createApplicationPageUIState: CreateApplicationPageUIState
+) {
     AnimatedVisibility(
         visible = createApplicationPageUIState is CreateApplicationPageUIState.Creating,
         enter = fadeIn(tween()) + scaleIn(

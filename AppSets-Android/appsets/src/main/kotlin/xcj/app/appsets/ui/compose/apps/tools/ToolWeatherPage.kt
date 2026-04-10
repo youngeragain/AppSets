@@ -172,7 +172,7 @@ fun PortraitWeatherComponent() {
                 val nowHourTime = Calendar.getInstance().time.time
                 val previousHourTime = nowHourTime - 3600000
                 temperatureInfoList.forEachIndexed { index, temperatureInfo ->
-                    if (temperatureInfo.time > previousHourTime && temperatureInfo.time < nowHourTime) {
+                    if (temperatureInfo.time in (previousHourTime + 1)..<nowHourTime) {
                         val weatherTemperature = String.format("%s ℃", temperatureInfo.temperature)
                         val fontSize = 72.sp
                         Text(

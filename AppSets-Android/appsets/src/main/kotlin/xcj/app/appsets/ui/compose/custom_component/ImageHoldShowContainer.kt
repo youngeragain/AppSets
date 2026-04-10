@@ -27,8 +27,8 @@ import androidx.compose.ui.unit.dp
 fun ImageHoldShowContainer(url: String) {
     Box(
         modifier = Modifier
-            .padding(horizontal = 12.dp)
             .fillMaxSize()
+            .padding(horizontal = 12.dp)
     ) {
 
         var pressInteraction by remember {

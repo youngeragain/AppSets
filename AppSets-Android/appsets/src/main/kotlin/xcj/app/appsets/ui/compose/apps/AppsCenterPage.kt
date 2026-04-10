@@ -7,14 +7,11 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsIgnoringVisibility
@@ -28,10 +25,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -39,17 +33,15 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import xcj.app.appsets.im.Bio
 import xcj.app.appsets.server.model.Application
 import xcj.app.appsets.ui.compose.custom_component.AnyImage
 import xcj.app.appsets.ui.compose.custom_component.ShowNavBar
+import xcj.app.appsets.ui.compose.custom_component.VerticalOverscrollBox
 import xcj.app.appsets.ui.compose.theme.extShapes
 import xcj.app.appsets.ui.model.page_state.AppCenterPageUIState
-import xcj.app.compose_share.foundation_extension.customVerticalOverscroll
-import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -59,18 +51,26 @@ fun AppsCenterPage(
     onApplicationLongPress: (Application) -> Unit
 ) {
     ShowNavBar()
-    val hapticFeedback = LocalHapticFeedback.current
     val allApplications by rememberUpdatedState(appCenterPageUIState.apps.flatMap { it.applications })
-    var animatedOverscrollAmount by remember { mutableFloatStateOf(0f) }
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .customVerticalOverscroll(
-                onNewOverscrollAmount = { animatedOverscrollAmount = it }
-            )
-            .offset { IntOffset(0, animatedOverscrollAmount.roundToInt()) }
+    SimpleApplicationList(
+        apps = allApplications,
+        onBioClick = onBioClick,
+        onApplicationLongPress = onApplicationLongPress
     )
-    {
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+fun SimpleApplicationList(
+    modifier: Modifier = Modifier,
+    apps: List<Application>,
+    onBioClick: (Bio) -> Unit,
+    onApplicationLongPress: (Application) -> Unit
+) {
+    val hapticFeedback = LocalHapticFeedback.current
+    VerticalOverscrollBox(
+        modifier = modifier
+    ) {
         LazyVerticalGrid(
             columns = GridCells.Adaptive(90.dp),
             modifier = Modifier,
@@ -80,24 +80,17 @@ fun AppsCenterPage(
                     .calculateTopPadding() + 12.dp,
                 bottom = 150.dp
             )
-        )
-        {
-            itemsIndexed(items = allApplications) { index, application ->
+        ) {
+            itemsIndexed(items = apps) { index, application ->
                 SingleApplicationComponent(
                     modifier = Modifier
                         .padding(horizontal = 12.dp, vertical = 8.dp)
                         .animateItem(),
                     application = application,
                     onApplicationClick = {
-                        if (appCenterPageUIState !is AppCenterPageUIState.LoadSuccess) {
-                            return@SingleApplicationComponent
-                        }
                         onBioClick(application)
                     },
                     onApplicationLongClick = {
-                        if (appCenterPageUIState !is AppCenterPageUIState.LoadSuccess) {
-                            return@SingleApplicationComponent
-                        }
                         hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
                         onApplicationLongPress(application)
                     }

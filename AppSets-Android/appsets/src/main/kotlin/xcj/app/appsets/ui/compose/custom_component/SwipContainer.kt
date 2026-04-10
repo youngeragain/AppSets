@@ -55,7 +55,7 @@ fun SwipeContainer(
             .border(1.dp, MaterialTheme.colorScheme.outline, CircleShape)
     ) {
         Box(
-            Modifier
+            modifier = Modifier
                 .offset {
                     IntOffset(
                         x = state

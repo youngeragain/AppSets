@@ -2,10 +2,8 @@ package xcj.app.appsets.ui.compose.settings
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -35,6 +33,7 @@ import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.launch
 import xcj.app.appsets.settings.AppSetsModuleSettings
 import xcj.app.appsets.ui.compose.custom_component.HideNavBar
+import xcj.app.appsets.ui.compose.custom_component.VerticalOverscrollBox
 import xcj.app.compose_share.components.BackActionTopBar
 import xcj.app.compose_share.components.DesignHDivider
 import xcj.app.compose_share.modifier.hazeSourceIfAvailable
@@ -66,7 +65,7 @@ fun SettingsPage(
             }
         }
     }
-    Box(modifier = Modifier.fillMaxSize()) {
+    VerticalOverscrollBox {
 
         Column(
             modifier = Modifier

@@ -63,7 +63,7 @@ fun FlipCardContainer(
             )
         }
     }
-    var scale = remember {
+    val scale = remember {
         derivedStateOf {
             val animatedValue = animateState.value
             1 - sin(Math.toRadians(animatedValue.toDouble())).toFloat() * 0.38f

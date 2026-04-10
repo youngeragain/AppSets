@@ -18,7 +18,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
@@ -34,7 +33,6 @@ import androidx.compose.material3.carousel.HorizontalUncontainedCarousel
 import androidx.compose.material3.carousel.rememberCarouselState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -53,7 +51,6 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.FileProvider
@@ -66,10 +63,9 @@ import xcj.app.appsets.server.model.ScreenInfo
 import xcj.app.appsets.server.model.ScreenMediaFileUrl
 import xcj.app.appsets.ui.compose.PageRouteNames
 import xcj.app.appsets.ui.compose.custom_component.AnyImage
+import xcj.app.appsets.ui.compose.custom_component.HorizontalOverscrollBox
 import xcj.app.appsets.util.saveComposeNodeAsBitmap
-import xcj.app.compose_share.foundation_extension.customHorizontalOverscroll
 import xcj.app.starter.android.util.PurpleLogger
-import kotlin.math.roundToInt
 
 private const val TAG = "Screen"
 
@@ -253,15 +249,7 @@ private fun ScreenSectionOfContentMediasPart(
     if (mediaFileUrls.isNullOrEmpty()) {
         return
     }
-    var animatedOverscrollAmount by remember { mutableFloatStateOf(0f) }
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .customHorizontalOverscroll(
-                onNewOverscrollAmount = { animatedOverscrollAmount = it }
-            )
-            .offset { IntOffset(x = animatedOverscrollAmount.roundToInt(), y = 0) }
-    ) {
+    HorizontalOverscrollBox {
         val carouselState = rememberCarouselState { mediaFileUrls.size }
         HorizontalUncontainedCarousel(
             state = carouselState,

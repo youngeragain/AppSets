@@ -1173,10 +1173,19 @@ fun MainNaviHostPagesContainer(
                     val searchUseCase = LocalUseCaseOfSearch.current
                     val visibilityComposeStateProvider = LocalVisibilityComposeStateProvider.current
                     val coroutineScope = rememberCoroutineScope()
+                    val conversationUseCase = LocalUseCaseOfConversation.current
                     SearchPage(
                         onBioClick = { bio ->
                             coroutineScope.launch {
                                 onBioClick(context, navController, bio)
+                            }
+                        },
+                        onApplicationLongPress = { application ->
+                            conversationUseCase.updateCurrentSessionByBio(application)
+                            navController.navigate(PageRouteNames.ConversationDetailsPage) {
+                                popUpTo(PageRouteNames.ConversationDetailsPage) {
+                                    inclusive = true
+                                }
                             }
                         },
                         onScreenMediaClick = { url, urls ->
@@ -1449,6 +1458,14 @@ fun MainNaviHostPagesContainer(
                         onBioClick = { bio ->
                             coroutineScope.launch {
                                 onBioClick(context, navController, bio)
+                            }
+                        },
+                        onApplicationLongPress = { application ->
+                            conversationUseCase.updateCurrentSessionByBio(application)
+                            navController.navigate(PageRouteNames.ConversationDetailsPage) {
+                                popUpTo(PageRouteNames.ConversationDetailsPage) {
+                                    inclusive = true
+                                }
                             }
                         },
                         onScreenMediaClick = { url, urls ->
@@ -1809,7 +1826,7 @@ private fun showContentSelectionDialog(
     val bottomSheetState = visibilityComposeStateProvider.bottomSheetState()
 
     bottomSheetState.show(
-        {
+        hideCallback = {
             LocalMessenger.post(
                 ModuleConstant.MESSAGE_KEY_ON_CONTENT_SELECTION_CLOSE,
                 contentSelectionRequest

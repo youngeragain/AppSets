@@ -45,7 +45,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsIgnoringVisibility
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsIgnoringVisibility
@@ -1200,6 +1199,7 @@ private fun ImMessageItemStartComponent(
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun UserInputComponent(
     modifier: Modifier = Modifier,
@@ -1216,13 +1216,8 @@ private fun UserInputComponent(
     onInputMoreAction: (String) -> Unit,
     onRemoveAdviseClick: (TextFieldAdviser.Advise) -> Unit,
 ) {
-    val context = LocalContext.current
+    val configuration = LocalConfiguration.current
     val hapticFeedback = LocalHapticFeedback.current
-    val systemUseCase = LocalUseCaseOfSystem.current
-    val nowSpaceContentUseCase = LocalUseCaseOfNowSpaceContent.current
-    val mediaAudioRecorderUseCase = LocalUseCaseOfMediaAudioRecorder.current
-    val conversationUseCase = LocalUseCaseOfConversation.current
-    val coroutineScope = rememberCoroutineScope()
     var expandUserInput by remember { mutableStateOf(false) }
     var currentInputSelector by rememberSaveable { mutableIntStateOf(InputSelector.NONE) }
     var textFieldFocusState by remember { mutableStateOf(false) }
@@ -1234,8 +1229,16 @@ private fun UserInputComponent(
         BackPressHandler(onBackPressed = dismissKeyboard)
     }
 
+    val paddingBottom = if (configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+        52.dp
+    } else {
+        0.dp
+    }
     Column(
-        modifier = modifier.navigationBarsPadding(),
+        modifier = modifier.padding(
+            bottom = paddingBottom + WindowInsets.navigationBarsIgnoringVisibility.asPaddingValues()
+                .calculateBottomPadding()
+        ),
     ) {
         AnimatedVisibility(textFieldAdviser.advises.isNotEmpty()) {
             InputSuggestionsSpace(
@@ -1314,7 +1317,8 @@ fun InputSuggestionsSpace(
 ) {
     val hapticFeedback = LocalHapticFeedback.current
     Column(
-        modifier = modifier.fillMaxWidth(), horizontalAlignment = Alignment.End
+        modifier = modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.End
     ) {
         LazyRow(
             modifier = modifier,
@@ -1338,7 +1342,8 @@ fun InputSuggestionsSpace(
                         .padding(horizontal = 12.dp, vertical = 6.dp)
                         .animateItem(),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    horizontalArrangement = Arrangement.spacedBy(10.dp))
+                {
                     when (advise) {
                         is TextFieldAdviser.WebContent -> {
                             Icon(

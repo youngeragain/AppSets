@@ -32,10 +32,10 @@ import kotlin.math.sign
 //Thank you for sharing the implementation effect with @sinasamaki
 //https://www.sinasamaki.com/overscroll-animations-in-jetpack-compose/
 
-val CustomEasing: Easing = CubicBezierEasing(0.5f, 0.5f, 1.0f, 0.25f)
+private val CustomEasing: Easing = CubicBezierEasing(0.5f, 0.5f, 1.0f, 0.25f)
 
 @Composable
-fun Modifier.customOverscrollBase(
+private fun Modifier.customOverscrollBase(
     orientation: Orientation,
     onNewOverscrollAmount: (Float) -> Unit,
     animationSpec: SpringSpec<Float> = spring(stiffness = Spring.StiffnessLow)
@@ -52,7 +52,7 @@ fun Modifier.customOverscrollBase(
     val nestedScrollConnection = remember {
         object : NestedScrollConnection {
             // we will override the
-            // functions here (onPostSroll, onPreFling, etc.)
+            // functions here (onPostScroll, onPreFling, etc.)
             override fun onPostScroll(
                 consumed: Offset,
                 available: Offset,

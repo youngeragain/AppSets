@@ -8,7 +8,6 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.ScrollableState
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.PaddingValues
@@ -17,7 +16,6 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsIgnoringVisibility
 import androidx.compose.foundation.lazy.LazyColumn
@@ -32,23 +30,16 @@ import androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridS
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import xcj.app.appsets.im.Bio
 import xcj.app.appsets.server.model.ScreenInfo
 import xcj.app.appsets.server.model.ScreenMediaFileUrl
 import xcj.app.appsets.ui.compose.custom_component.LoadMoreHandler
-import xcj.app.compose_share.foundation_extension.customOverscroll
-import kotlin.math.roundToInt
+import xcj.app.appsets.ui.compose.custom_component.VerticalOverscrollBox
 
 private const val TAG = "ScreensList"
 
@@ -61,38 +52,40 @@ fun ScreensList(
     onScreenMediaClick: (ScreenMediaFileUrl, List<ScreenMediaFileUrl>) -> Unit,
     onLoadMore: () -> Unit
 ) {
-    val configuration = LocalConfiguration.current
+    VerticalOverscrollBox {
+        val configuration = LocalConfiguration.current
 
-    if (configuration.orientation == Configuration.ORIENTATION_PORTRAIT) {
-        val scrollableState = rememberLazyListState()
+        if (configuration.orientation == Configuration.ORIENTATION_PORTRAIT) {
+            val scrollableState = rememberLazyListState()
 
-        LoadMoreHandler(scrollableState = scrollableState) {
-            onLoadMore()
+            LoadMoreHandler(scrollableState = scrollableState) {
+                onLoadMore()
+            }
+
+            PortraitScreenList(
+                modifier = modifier,
+                pageRouteName = pageRouteName,
+                scrollableState = scrollableState,
+                screens = screens,
+                onBioClick = onBioClick,
+                onScreenMediaClick = onScreenMediaClick
+            )
+        } else {
+            val scrollableState = rememberLazyStaggeredGridState()
+
+            LoadMoreHandler(scrollableState = scrollableState) {
+                onLoadMore()
+            }
+
+            LandscapeScreenList(
+                modifier = modifier,
+                pageRouteName = pageRouteName,
+                scrollableState = scrollableState,
+                screens = screens,
+                onBioClick = onBioClick,
+                onScreenMediaClick = onScreenMediaClick
+            )
         }
-
-        PortraitScreenList(
-            modifier = modifier,
-            pageRouteName = pageRouteName,
-            scrollableState = scrollableState,
-            screens = screens,
-            onBioClick = onBioClick,
-            onScreenMediaClick = onScreenMediaClick
-        )
-    } else {
-        val scrollableState = rememberLazyStaggeredGridState()
-
-        LoadMoreHandler(scrollableState = scrollableState) {
-            onLoadMore()
-        }
-
-        LandscapeScreenList(
-            modifier = modifier,
-            pageRouteName = pageRouteName,
-            scrollableState = scrollableState,
-            screens = screens,
-            onBioClick = onBioClick,
-            onScreenMediaClick = onScreenMediaClick
-        )
     }
 }
 
@@ -105,7 +98,6 @@ private fun LandscapeScreenList(
     scrollableState: ScrollableState,
     onBioClick: (Bio) -> Unit,
     onScreenMediaClick: (ScreenMediaFileUrl, List<ScreenMediaFileUrl>) -> Unit,
-    headerContent: (@Composable () -> Unit)? = null,
 ) {
     LazyVerticalStaggeredGrid(
         modifier = modifier,
@@ -121,9 +113,6 @@ private fun LandscapeScreenList(
         state = scrollableState as LazyStaggeredGridState
     )
     {
-        item {
-            headerContent?.invoke()
-        }
         itemsIndexed(screens, { index, screenInfo -> screenInfo.bioId }) { _, screenInfo ->
             Column(
                 modifier = Modifier
@@ -167,64 +156,49 @@ private fun PortraitScreenList(
     onBioClick: (Bio) -> Unit,
     onScreenMediaClick: (ScreenMediaFileUrl, List<ScreenMediaFileUrl>) -> Unit,
 ) {
-    val listState = scrollableState as LazyListState
-    var animatedOverscrollAmount by remember { mutableFloatStateOf(0f) }
-    Box(
-        modifier = Modifier
-            .customOverscroll(
-                listState,
-                onNewOverscrollAmount = { animatedOverscrollAmount = it }
-            )
-            .offset { IntOffset(0, animatedOverscrollAmount.roundToInt()) }
-    ) {
-        LazyColumn(
-            modifier = modifier,
-            state = listState,
-            contentPadding = PaddingValues(
-                start = 12.dp,
-                top = WindowInsets.statusBarsIgnoringVisibility.asPaddingValues()
-                    .calculateTopPadding(),
-                end = 12.dp,
-                bottom = 150.dp
-            ),
-            verticalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterVertically)
-        )
-        {
-            itemsIndexed(
-                items = screens,
-                key = { index, screenInfo ->
-                    screenInfo.bioId
-                }
-            ) { index, screenInfo ->
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .graphicsLayer {
-                            translationY = (animatedOverscrollAmount * .07f) *
-                                    if (animatedOverscrollAmount > 0) index else screens.lastIndex - index
-                        }
-                        .background(
-                            MaterialTheme.colorScheme.surface,
-                            MaterialTheme.shapes.extraLarge
-                        )
-                        .border(
-                            width = 1.dp,
-                            color = MaterialTheme.colorScheme.outline,
-                            MaterialTheme.shapes.extraLarge
-                        )
-                        .clip(MaterialTheme.shapes.extraLarge)
-                        .clickable {
-                            onBioClick(screenInfo)
-                        }
-                        .padding(12.dp)
-                ) {
-                    Screen(
-                        pageRouteName = pageRouteName,
-                        screenInfo = screenInfo,
-                        onBioClick = onBioClick,
-                        onScreenMediaClick = onScreenMediaClick
+    LazyColumn(
+        modifier = modifier,
+        state = scrollableState as LazyListState,
+        contentPadding = PaddingValues(
+            start = 12.dp,
+            top = WindowInsets.statusBarsIgnoringVisibility.asPaddingValues()
+                .calculateTopPadding(),
+            end = 12.dp,
+            bottom = 150.dp
+        ),
+        verticalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterVertically)
+    )
+    {
+        itemsIndexed(
+            items = screens,
+            key = { index, screenInfo ->
+                screenInfo.bioId
+            }
+        ) { index, screenInfo ->
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(
+                        MaterialTheme.colorScheme.surface,
+                        MaterialTheme.shapes.extraLarge
                     )
-                }
+                    .border(
+                        width = 1.dp,
+                        color = MaterialTheme.colorScheme.outline,
+                        MaterialTheme.shapes.extraLarge
+                    )
+                    .clip(MaterialTheme.shapes.extraLarge)
+                    .clickable {
+                        onBioClick(screenInfo)
+                    }
+                    .padding(12.dp)
+            ) {
+                Screen(
+                    pageRouteName = pageRouteName,
+                    screenInfo = screenInfo,
+                    onBioClick = onBioClick,
+                    onScreenMediaClick = onScreenMediaClick
+                )
             }
         }
     }

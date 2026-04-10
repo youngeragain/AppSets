@@ -3,11 +3,9 @@ package xcj.app.appsets.ui.compose.apps.tools
 import android.content.Context
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -31,6 +29,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import xcj.app.appsets.ui.compose.PageRouteNames
 import xcj.app.appsets.ui.compose.custom_component.HideNavBar
+import xcj.app.appsets.ui.compose.custom_component.VerticalOverscrollBox
 import xcj.app.appsets.ui.compose.main.navigateToAppSetsLauncherActivity
 import xcj.app.appsets.ui.compose.main.navigateToAppSetsShareActivity
 import xcj.app.appsets.ui.compose.main.navigateToAppSetsVpnActivity
@@ -75,7 +74,7 @@ data class AppTool(
 }
 
 @Composable
-fun generateAppToolList(): List<AppTool> {
+fun rememberAppToolList(): List<AppTool> {
     val appTools = remember {
         listOf(
             AppTool(
@@ -191,7 +190,7 @@ fun ToolStartPage(
     onToolClick: (AppTool) -> Unit
 ) {
     HideNavBar()
-    val appTools = generateAppToolList()
+    val appTools = rememberAppToolList()
     val hazeState = rememberHazeStateIfAvailable()
     val density = LocalDensity.current
     var backActionBarSize by remember {
@@ -204,7 +203,7 @@ fun ToolStartPage(
             }
         }
     }
-    Box(modifier = Modifier.fillMaxSize()) {
+    VerticalOverscrollBox {
         LazyColumn(
             modifier = Modifier.hazeSourceIfAvailable(hazeState),
             contentPadding = PaddingValues(

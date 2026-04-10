@@ -30,15 +30,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsIgnoringVisibility
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.itemsIndexed
-import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
@@ -53,7 +48,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -74,7 +68,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dev.chrisbanes.haze.HazeState
@@ -82,27 +75,29 @@ import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
 import dev.chrisbanes.haze.materials.HazeMaterials
 import kotlinx.coroutines.launch
 import xcj.app.appsets.im.Bio
+import xcj.app.appsets.server.model.Application
 import xcj.app.appsets.server.model.GroupInfo
 import xcj.app.appsets.server.model.ScreenMediaFileUrl
 import xcj.app.appsets.server.model.UserInfo
 import xcj.app.appsets.ui.compose.LocalUseCaseOfSearch
 import xcj.app.appsets.ui.compose.PageRouteNames
-import xcj.app.appsets.ui.compose.apps.SingleApplicationComponent
+import xcj.app.appsets.ui.compose.apps.SimpleApplicationList
 import xcj.app.appsets.ui.compose.custom_component.AnyImage
 import xcj.app.appsets.ui.compose.custom_component.ShowNavBar
+import xcj.app.appsets.ui.compose.custom_component.VerticalOverscrollBox
 import xcj.app.appsets.ui.compose.outside.ScreensList
 import xcj.app.appsets.ui.model.page_state.SearchPageUIState
 import xcj.app.appsets.ui.model.state.SearchResult
 import xcj.app.compose_share.components.DesignTextField
-import xcj.app.compose_share.foundation_extension.customVerticalOverscroll
 import xcj.app.compose_share.modifier.hazeEffectIfAvailable
 import xcj.app.compose_share.modifier.hazeSourceIfAvailable
 import xcj.app.compose_share.modifier.rememberHazeStateIfAvailable
-import kotlin.math.roundToInt
+import java.util.Locale
 
 @Composable
 fun SearchPage(
     onBioClick: (Bio) -> Unit,
+    onApplicationLongPress: (Application) -> Unit,
     onScreenMediaClick: (ScreenMediaFileUrl, List<ScreenMediaFileUrl>) -> Unit,
 ) {
 
@@ -121,6 +116,7 @@ fun SearchPage(
     SearchPageResults(
         searchPageUIState = searchState,
         onBioClick = onBioClick,
+        onApplicationLongPress = onApplicationLongPress,
         onScreenMediaClick = onScreenMediaClick
     )
 }
@@ -135,13 +131,13 @@ fun SearchInputBar(
     val keyboardController = LocalSoftwareKeyboardController.current
     val searchUseCase = LocalUseCaseOfSearch.current
     val searchPageState by searchUseCase.searchPageUIState
+    val focusRequester = remember {
+        FocusRequester()
+    }
     var inputContent by remember {
         mutableStateOf(TextFieldValue())
     }
 
-    val focusRequester = remember {
-        FocusRequester()
-    }
     var textFiledIsFocused by remember {
         mutableStateOf(false)
     }
@@ -159,10 +155,12 @@ fun SearchInputBar(
 
     Box(modifier = modifier) {
         DesignTextField(
-            value = inputContent.text, onValueChange = {
+            value = inputContent.text,
+            onValueChange = {
                 inputContent = TextFieldValue(it)
                 onInputContent(it)
-            }, modifier = Modifier
+            },
+            modifier = Modifier
                 .fillMaxWidth()
                 .border(
                     width = 1.dp, color = MaterialTheme.colorScheme.outline, shape = CircleShape
@@ -172,7 +170,8 @@ fun SearchInputBar(
                 .focusRequester(focusRequester)
                 .onFocusChanged {
                     textFiledIsFocused = it.hasFocus
-                }, leadingIcon = {
+                },
+            leadingIcon = {
                 Icon(
                     modifier = Modifier
                         .clip(CircleShape)
@@ -189,7 +188,8 @@ fun SearchInputBar(
                     painter = painterResource(id = xcj.app.compose_share.R.drawable.ic_arrow_back_24),
                     contentDescription = stringResource(id = xcj.app.appsets.R.string.return_)
                 )
-            }, trailingIcon = {
+            },
+            trailingIcon = {
                 Icon(
                     modifier = Modifier
                         .clip(CircleShape)
@@ -199,9 +199,13 @@ fun SearchInputBar(
                         .padding(4.dp),
                     painter = painterResource(id = xcj.app.compose_share.R.drawable.ic_round_search_24),
                     contentDescription = stringResource(xcj.app.appsets.R.string.search))
-            }, placeholder = {
+            },
+            placeholder = {
                 Text(text = stringResource(xcj.app.appsets.R.string.search))
-            }, maxLines = 1, shape = CircleShape, colors = TextFieldDefaults.colors(
+            },
+            maxLines = 1,
+            shape = CircleShape,
+            colors = TextFieldDefaults.colors(
                 unfocusedIndicatorColor = Color.Transparent,
                 focusedIndicatorColor = Color.Transparent,
                 focusedContainerColor = Color.Transparent,
@@ -247,6 +251,7 @@ fun searchBarBorderStroke(searchPageUIState: SearchPageUIState): BorderStroke {
 fun SearchPageResults(
     searchPageUIState: SearchPageUIState,
     onBioClick: (Bio) -> Unit,
+    onApplicationLongPress: (Application) -> Unit,
     onScreenMediaClick: (ScreenMediaFileUrl, List<ScreenMediaFileUrl>) -> Unit,
 ) {
     AnimatedContent(
@@ -339,7 +344,8 @@ fun SearchPageResults(
                         SearchSuccessPages(
                             searchSuccess = targetSearchState,
                             onBioClick = onBioClick,
-                            onScreenMediaClick = onScreenMediaClick
+                            onScreenMediaClick = onScreenMediaClick,
+                            onApplicationLongPress = onApplicationLongPress
                         )
                     }
                 }
@@ -352,6 +358,7 @@ fun SearchPageResults(
 fun SearchSuccessPages(
     searchSuccess: SearchPageUIState.SearchSuccess,
     onBioClick: (Bio) -> Unit,
+    onApplicationLongPress: (Application) -> Unit,
     onScreenMediaClick: (ScreenMediaFileUrl, List<ScreenMediaFileUrl>) -> Unit,
 ) {
     val pagerState = rememberPagerState { searchSuccess.results.size }
@@ -370,7 +377,9 @@ fun SearchSuccessPages(
             when (val searchResult = searchSuccess.results[index]) {
                 is SearchResult.SearchedApplications -> {
                     SearchedApplicationsPage(
-                        searchedApplications = searchResult, onBioClick = onBioClick
+                        searchedApplications = searchResult,
+                        onBioClick = onBioClick,
+                        onApplicationLongPress = onApplicationLongPress
                     )
                 }
 
@@ -454,7 +463,12 @@ fun SearchSuccessPages(
                             }
                         }
                         Text(
-                            text = String.format("%s(%d)", tabName, searchResult.count),
+                            text = String.format(
+                                Locale.ENGLISH,
+                                "%s(%d)",
+                                tabName,
+                                searchResult.count
+                            ),
                             fontSize = 12.sp
                         )
                     }
@@ -522,15 +536,7 @@ fun NavigationBarAreaGradient(
 fun SearchedGoodsListPage(
     modifier: Modifier = Modifier, searchedGoodsList: SearchResult.SearchedGoods
 ) {
-    var animatedOverscrollAmount by remember { mutableFloatStateOf(0f) }
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .customVerticalOverscroll(
-                onNewOverscrollAmount = { animatedOverscrollAmount = it }
-            )
-            .offset { IntOffset(0, animatedOverscrollAmount.roundToInt()) })
-    {
+    VerticalOverscrollBox {
         LazyColumn(
             modifier = modifier.fillMaxSize(), contentPadding = PaddingValues(
                 top = WindowInsets.systemBars.asPaddingValues().calculateTopPadding(),
@@ -569,15 +575,7 @@ fun SearchedGroupsPage(
     searchedGroups: SearchResult.SearchedGroups,
     onBioClick: (Bio) -> Unit
 ) {
-    var animatedOverscrollAmount by remember { mutableFloatStateOf(0f) }
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .customVerticalOverscroll(
-                onNewOverscrollAmount = { animatedOverscrollAmount = it }
-            )
-            .offset { IntOffset(0, animatedOverscrollAmount.roundToInt()) })
-    {
+    VerticalOverscrollBox {
         LazyColumn(
             modifier = modifier.fillMaxSize(), contentPadding = PaddingValues(
                 top = WindowInsets.systemBars.asPaddingValues().calculateTopPadding(),
@@ -603,15 +601,7 @@ fun SearchedUsersPage(
     searchedUsers: SearchResult.SearchedUsers,
     onBioClick: (Bio) -> Unit,
 ) {
-    var animatedOverscrollAmount by remember { mutableFloatStateOf(0f) }
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .customVerticalOverscroll(
-                onNewOverscrollAmount = { animatedOverscrollAmount = it }
-            )
-            .offset { IntOffset(0, animatedOverscrollAmount.roundToInt()) })
-    {
+    VerticalOverscrollBox {
         LazyColumn(
             modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(
                 top = WindowInsets.systemBars.asPaddingValues().calculateTopPadding(),
@@ -637,38 +627,13 @@ fun SearchedApplicationsPage(
     modifier: Modifier = Modifier,
     searchedApplications: SearchResult.SearchedApplications,
     onBioClick: (Bio) -> Unit,
+    onApplicationLongPress: (Application) -> Unit
 ) {
-    var animatedOverscrollAmount by remember { mutableFloatStateOf(0f) }
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .customVerticalOverscroll(
-                onNewOverscrollAmount = { animatedOverscrollAmount = it }
-            )
-            .offset { IntOffset(0, animatedOverscrollAmount.roundToInt()) })
-    {
-        LazyVerticalGrid(
-            columns = GridCells.Adaptive(90.dp),
-            modifier = modifier.fillMaxSize(),
-            state = rememberLazyGridState(),
-            contentPadding = PaddingValues(
-                top = WindowInsets.systemBars.asPaddingValues().calculateTopPadding(),
-                bottom = 150.dp
-            )
-        ) {
-            itemsIndexed(items = searchedApplications.applications) { index, application ->
-                SingleApplicationComponent(
-                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
-                    application = application,
-                    onApplicationClick = {
-                        onBioClick(application)
-                    },
-                    onApplicationLongClick = {
-                        onBioClick(application)
-                    })
-            }
-        }
-    }
+    SimpleApplicationList(
+        apps = searchedApplications.applications,
+        onBioClick = onBioClick,
+        onApplicationLongPress = onApplicationLongPress
+    )
 }
 
 

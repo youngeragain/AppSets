@@ -14,8 +14,11 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -23,6 +26,7 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsIgnoringVisibility
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -58,6 +62,7 @@ import xcj.app.appsets.ui.compose.LocalUseCaseOfSystem
 import xcj.app.appsets.ui.compose.content_selection.ContentSelectionResult
 import xcj.app.appsets.ui.compose.custom_component.AnyImage
 import xcj.app.appsets.ui.compose.custom_component.HideNavBar
+import xcj.app.appsets.ui.compose.custom_component.VerticalOverscrollBox
 import xcj.app.appsets.ui.compose.theme.ExtraLarge2
 import xcj.app.appsets.ui.model.GroupInfoForCreate
 import xcj.app.appsets.ui.model.page_state.CreateGroupPageUIState
@@ -75,8 +80,7 @@ private const val TAG = "CreateGroupPage"
 
 @Preview
 @Composable
-fun CreateGroupPagePreview(
-) {
+fun CreateGroupPagePreview() {
     val createGroupPageUIState by remember {
         mutableStateOf<CreateGroupPageUIState>(CreateGroupPageUIState.CreateStart())
     }
@@ -108,6 +112,7 @@ fun CreateGroupPagePreview(
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun CreateGroupPage(
     createGroupPageUIState: CreateGroupPageUIState,
@@ -135,7 +140,7 @@ fun CreateGroupPage(
             }
         }
     }
-    Box(modifier = Modifier.fillMaxSize()) {
+    VerticalOverscrollBox {
         Column(
             modifier = Modifier
                 .hazeSourceIfAvailable(hazeState)
@@ -146,11 +151,12 @@ fun CreateGroupPage(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         )
         {
-            Spacer(
-                modifier = Modifier.height(
-                    backActionsHeight + 12.dp
-                )
-            )
+            val statusBarHeight =
+                WindowInsets.statusBarsIgnoringVisibility.asPaddingValues().calculateTopPadding()
+            val finalTopPadding = remember(backActionsHeight, statusBarHeight) {
+                if (backActionsHeight > 0.dp) backActionsHeight + 12.dp else statusBarHeight + 84.dp
+            }
+            Spacer(modifier = Modifier.height(finalTopPadding))
             Column(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally

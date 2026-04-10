@@ -58,7 +58,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onPlaced
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -68,14 +67,13 @@ import androidx.compose.ui.tooling.preview.PreviewWrapper
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import dev.chrisbanes.haze.hazeSource
-import dev.chrisbanes.haze.rememberHazeState
 import xcj.app.appsets.ui.compose.LocalUseCaseOfNavigation
 import xcj.app.appsets.ui.compose.LocalUseCaseOfScreenPost
 import xcj.app.appsets.ui.compose.content_selection.ContentSelectionResult
 import xcj.app.appsets.ui.compose.content_selection.ContentSelectionTypes
 import xcj.app.appsets.ui.compose.custom_component.AnyImage
 import xcj.app.appsets.ui.compose.custom_component.HideNavBar
+import xcj.app.appsets.ui.compose.custom_component.VerticalOverscrollBox
 import xcj.app.appsets.ui.compose.quickstep.QuickStepContent
 import xcj.app.appsets.ui.model.ScreenInfoForCreate
 import xcj.app.appsets.ui.model.page_state.CreateScreenPageUIState
@@ -86,6 +84,8 @@ import xcj.app.appsets.util.model.isVideoType
 import xcj.app.compose_share.components.BackActionTopBar
 import xcj.app.compose_share.components.DesignTextField
 import xcj.app.compose_share.foundation_extension.ProjectPreviewWrapperProviderImpl
+import xcj.app.compose_share.modifier.hazeSourceIfAvailable
+import xcj.app.compose_share.modifier.rememberHazeStateIfAvailable
 import xcj.app.starter.android.util.UriProvider
 
 @PreviewWrapper(wrapper = ProjectPreviewWrapperProviderImpl::class)
@@ -156,12 +156,7 @@ fun CreateScreenPage(
             onBackClick(true)
         }
     }
-    val isInspectionMode = LocalInspectionMode.current
-    val hazeState = if (isInspectionMode) {
-        null
-    } else {
-        rememberHazeState()
-    }
+    val hazeState = rememberHazeStateIfAvailable()
     val density = LocalDensity.current
     var backActionBarSize by remember {
         mutableStateOf(IntSize.Zero)
@@ -173,26 +168,21 @@ fun CreateScreenPage(
             }
         }
     }
-    val statusBarHeight =
-        WindowInsets.statusBarsIgnoringVisibility.asPaddingValues().calculateTopPadding()
-    val finalTopPadding = remember(backActionsHeight, statusBarHeight) {
-        if (backActionsHeight > 0.dp) backActionsHeight + 12.dp else statusBarHeight + 84.dp
-    }
 
-    Box(modifier = Modifier.fillMaxSize()) {
-        val columRootModifier = if (isInspectionMode) {
-            Modifier
-        } else {
-            Modifier
-                .hazeSource(hazeState!!)
-        }
+    VerticalOverscrollBox {
         Column(
-            modifier = columRootModifier
+            modifier = Modifier
+                .hazeSourceIfAvailable(hazeState)
                 .widthIn(TextFieldDefaults.MinWidth)
                 .imePadding()
                 .padding(horizontal = 20.dp)
                 .verticalScroll(rememberScrollState())
         ) {
+            val statusBarHeight =
+                WindowInsets.statusBarsIgnoringVisibility.asPaddingValues().calculateTopPadding()
+            val finalTopPadding = remember(backActionsHeight, statusBarHeight) {
+                if (backActionsHeight > 0.dp) backActionsHeight + 12.dp else statusBarHeight + 84.dp
+            }
             Spacer(modifier = Modifier.height(finalTopPadding))
             NewPostScreenComponent(
                 screenInfoForCreate = screenInfoForCreate,
@@ -203,6 +193,7 @@ fun CreateScreenPage(
             )
         }
 
+        CreateScreenIndicator(createScreenPageUIState = createScreenPageUIState)
 
         BackActionTopBar(
             modifier = Modifier.onPlaced {
@@ -218,8 +209,6 @@ fun CreateScreenPage(
                 onConfirmClick(screenInfoForCreate)
             }
         )
-
-        CreateScreenIndicator(createScreenPageUIState = createScreenPageUIState)
     }
 }
 
@@ -523,7 +512,7 @@ fun NewPostScreenComponent(
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 screenInfoForCreate.mediaUriProviders.forEach { contentUriProvider ->
-                    Box(modifier = Modifier.size(120.dp)) {
+                    Box(modifier = Modifier.size(150.dp)) {
                         AnyImage(
                             modifier = Modifier
                                 .fillMaxSize()
@@ -569,7 +558,7 @@ fun NewPostScreenComponent(
                     }
                 }
                 AddMediaButton(
-                    modifier = Modifier.size(120.dp),
+                    modifier = Modifier.size(150.dp),
                     onClick = {
                         val composeStateUpdater =
                             RuntimeListStateUpdater.fromState<Void>(null) { _, input ->
@@ -609,6 +598,6 @@ fun NewPostScreenComponent(
             }
         }
 
-        Spacer(modifier = Modifier.height(120.dp))
+        Spacer(modifier = Modifier.height(150.dp))
     }
 }
