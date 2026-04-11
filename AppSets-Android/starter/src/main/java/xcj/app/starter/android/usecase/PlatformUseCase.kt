@@ -179,6 +179,9 @@ class PlatformUseCase {
         }
 
         fun isIgnoringBatteryOptimizations(context: Context, permissions: List<String>): Boolean {
+            if (ProjectConstants.IS_IN_ANDROID_STUDIO_PREVIEW) {
+                return false
+            }
             val powerManager = context.getSystemService(PowerManager::class.java) ?: return true
             val packageName = context.packageName
             return powerManager.isIgnoringBatteryOptimizations(packageName)

@@ -90,10 +90,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.layout.onPlaced
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
@@ -108,7 +106,6 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
@@ -146,15 +143,18 @@ import xcj.app.appsets.ui.compose.content_selection.ContentSelectionTypes
 import xcj.app.appsets.ui.compose.custom_component.AnyImage
 import xcj.app.appsets.ui.compose.custom_component.BackPressHandler
 import xcj.app.appsets.ui.compose.custom_component.HideNavBar
+import xcj.app.appsets.ui.compose.custom_component.HorizontalOverscrollBox2
+import xcj.app.appsets.ui.compose.custom_component.VerticalOverscrollBox
 import xcj.app.appsets.ui.compose.custom_component.third_part.waveslider.WaveSlider
 import xcj.app.appsets.ui.compose.custom_component.third_part.waveslider.WaveSliderDefaults
 import xcj.app.appsets.usecase.SessionState
 import xcj.app.appsets.util.compose_state.ComposeStateUpdater
 import xcj.app.appsets.util.compose_state.RuntimeSingleStateUpdater
-import xcj.app.appsets.util.ktx.asComponentActivityOrNull
 import xcj.app.compose_share.components.BackActionTopBar
+import xcj.app.compose_share.components.backActionsBarHeightDp
 import xcj.app.compose_share.modifier.hazeEffectIfAvailable
 import xcj.app.compose_share.modifier.hazeSourceIfAvailable
+import xcj.app.starter.android.ktx.asComponentActivityOrNull
 import xcj.app.starter.android.ktx.startWithHttpSchema
 import xcj.app.starter.android.util.PurpleLogger
 import xcj.app.starter.android.util.UriProvider
@@ -507,11 +507,7 @@ private fun TopBarComponent(
     onBioClick: (Bio) -> Unit,
     onQuickAccessSessionClick: (Session) -> Unit,
 ) {
-    val density = LocalDensity.current
     val hapticFeedback = LocalHapticFeedback.current
-    var backActionTopBarSize by remember {
-        mutableStateOf(IntSize.Zero)
-    }
     val overrideQuickAccessSessions by remember(quickAccessSessions) {
         val sessions = buildList {
             add(currentSession)
@@ -520,15 +516,15 @@ private fun TopBarComponent(
         mutableStateOf(sessions)
     }
 
-    Box(
+    HorizontalOverscrollBox2(
         modifier = modifier.fillMaxWidth(),
     ) {
         LazyRow(
             modifier = Modifier,
             contentPadding = PaddingValues(
-                start = with(density) { backActionTopBarSize.width.toDp() },
-                top = WindowInsets.statusBarsIgnoringVisibility.asPaddingValues()
-                    .calculateTopPadding() + 12.dp,
+                start = 12.dp + backActionsBarHeightDp(),
+                top = 12.dp + WindowInsets.statusBarsIgnoringVisibility.asPaddingValues()
+                    .calculateTopPadding(),
                 end = 12.dp
             ),
             verticalAlignment = Alignment.CenterVertically,
@@ -557,7 +553,8 @@ private fun TopBarComponent(
                     UserAvatar2Component(
                         modifier = Modifier
                             .size(20.dp)
-                            .clip(CircleShape), imObj = session.imObj
+                            .clip(CircleShape),
+                        imObj = session.imObj
                     )
                     Text(
                         modifier = Modifier,
@@ -572,9 +569,8 @@ private fun TopBarComponent(
         }
 
         BackActionTopBar(
-            modifier = Modifier.onPlaced {
-                backActionTopBarSize = it.size
-            }, hazeState = hazeState, onBackClick = onBackClick
+            hazeState = hazeState,
+            onBackClick = onBackClick
         )
     }
 }
@@ -605,7 +601,7 @@ private fun ImMessageListComponent(
     onBioClick: (Bio) -> Unit,
     onImMessageContentClick: (IMMessage<*>) -> Unit,
 ) {
-    Box(modifier = modifier) {
+    VerticalOverscrollBox(modifier = modifier) {
         LazyColumn(
             reverseLayout = true,
             state = scrollState,
@@ -1326,8 +1322,10 @@ fun InputSuggestionsSpace(
             contentPadding = PaddingValues(horizontal = 12.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            items(
-                items = textFieldAdviser.advises, key = { item -> item }) { advise ->
+            itemsIndexed(
+                items = textFieldAdviser.advises,
+                key = { index, advise -> index }
+            ) { index, advise ->
                 Row(
                     modifier = Modifier
                         .clip(CircleShape)

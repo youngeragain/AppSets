@@ -21,6 +21,15 @@
         </service>
         <activity
             android:name=".ui.compose.vpn.AppSetsVpnActivity"
-            android:exported="true" />
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data
+                    android:host="local.function"
+                    android:pathPrefix="/vpn"
+                    android:scheme="appsets" />
+            </intent-filter>
+        </activity>
     </application>
 </manifest>

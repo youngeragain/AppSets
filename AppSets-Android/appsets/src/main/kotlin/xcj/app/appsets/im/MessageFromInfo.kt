@@ -10,7 +10,7 @@ data class MessageFromInfo(
 ) : Bio {
     override val bioId: String
         get() = uid
-    override val bioName: String?
+    override val bioName: String
         get() = name ?: uid
     override var bioUrl: Any? = null
 

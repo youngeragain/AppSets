@@ -22,7 +22,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import xcj.app.appsets.ui.compose.LocalNavHostController
+import xcj.app.appsets.ui.compose.LocalNavControllers
+import xcj.app.appsets.ui.compose.main.KEY_MAIN_NAVI_CONTROLLER
 import xcj.app.appsets.ui.compose.quickstep.HandlerClickParams
 import xcj.app.appsets.ui.compose.quickstep.QuickStepContent
 import xcj.app.appsets.ui.compose.quickstep.QuickStepContentHandler
@@ -46,7 +47,7 @@ class ConversationQuickStepHandler : QuickStepContentHandler() {
 
     override fun getContent(onClick: (HandlerClickParams) -> Unit): @Composable () -> Unit {
         val contentCompose = @Composable {
-            val navController = LocalNavHostController.current
+            val navController = LocalNavControllers.current[KEY_MAIN_NAVI_CONTROLLER]
             ConversationQuickStepHandlerContent(
                 name = stringResource(quickStepInfo.name),
                 description = stringResource(quickStepInfo.description),

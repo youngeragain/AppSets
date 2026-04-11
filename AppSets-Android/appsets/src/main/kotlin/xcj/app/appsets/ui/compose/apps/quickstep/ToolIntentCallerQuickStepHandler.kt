@@ -23,9 +23,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.os.bundleOf
 import xcj.app.appsets.constants.Constants
-import xcj.app.appsets.ui.compose.LocalNavHostController
+import xcj.app.appsets.ui.compose.LocalNavControllers
 import xcj.app.appsets.ui.compose.PageRouteNames
 import xcj.app.appsets.ui.compose.apps.tools.AppTool
+import xcj.app.appsets.ui.compose.main.KEY_MAIN_NAVI_CONTROLLER
 import xcj.app.appsets.ui.compose.main.navigateWithBundle
 import xcj.app.appsets.ui.compose.quickstep.HandlerClickParams
 import xcj.app.appsets.ui.compose.quickstep.QuickStepContent
@@ -57,7 +58,7 @@ class ToolIntentCallerQuickStepHandler : QuickStepContentHandler() {
 
     override fun getContent(onClick: (HandlerClickParams) -> Unit): @Composable () -> Unit {
         val contentCompose = @Composable {
-            val navController = LocalNavHostController.current
+            val navController = LocalNavControllers.current[KEY_MAIN_NAVI_CONTROLLER]
             ToolIntentCallerQuickStepHandlerContent(
                 name = stringResource(quickStepInfo.name),
                 description = stringResource(quickStepInfo.description),
@@ -72,7 +73,7 @@ class ToolIntentCallerQuickStepHandler : QuickStepContentHandler() {
                     if (quickStepContents == null) {
                         return@ToolIntentCallerQuickStepHandlerContent
                     }
-                    navController.navigateWithBundle(
+                    navController?.navigateWithBundle(
                         PageRouteNames.ToolsDetailsPage + AppTool.TOOL_TYPE_AppSets_Intent_Caller,
                         bundleCreator = {
                             bundleOf().apply {

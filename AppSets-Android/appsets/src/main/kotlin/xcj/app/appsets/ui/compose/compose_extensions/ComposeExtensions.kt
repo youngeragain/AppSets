@@ -79,17 +79,18 @@ fun NavGraphBuilder.composableIf(
         null,
     content: @Composable AnimatedContentScope.(NavBackStackEntry) -> Unit
 ) {
-    if (test()) {
-        composable(
-            route,
-            arguments,
-            deepLinks,
-            enterTransition,
-            exitTransition,
-            popEnterTransition,
-            popExitTransition,
-            sizeTransform,
-            content
-        )
+    if (!test()) {
+        return
     }
+    composable(
+        route,
+        arguments,
+        deepLinks,
+        enterTransition,
+        exitTransition,
+        popEnterTransition,
+        popExitTransition,
+        sizeTransform,
+        content
+    )
 }

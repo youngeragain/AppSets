@@ -11,11 +11,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavController
 import androidx.navigation.NavGraph.Companion.findStartDestination
-import androidx.navigation.NavHostController
 import androidx.navigation.navOptions
 import dev.chrisbanes.haze.HazeState
 import kotlinx.coroutines.launch
 import xcj.app.appsets.account.LocalAccountManager
+import xcj.app.appsets.ui.compose.LocalNavControllers
 import xcj.app.appsets.ui.compose.LocalUseCaseOfConversation
 import xcj.app.appsets.ui.compose.LocalUseCaseOfNavigation
 import xcj.app.appsets.ui.compose.LocalUseCaseOfNowSpaceContent
@@ -37,20 +37,19 @@ import xcj.app.compose_share.ui.viewmodel.VisibilityComposeStateViewModel.Compan
 @Composable
 fun NavigationBarContainer(
     modifier: Modifier = Modifier,
-    navController: NavHostController,
     hazeState: HazeState?
 ) {
     val context = LocalContext.current
-
+    val navController = LocalNavControllers.current[KEY_MAIN_NAVI_CONTROLLER]!!
+    val navigationUseCase = LocalUseCaseOfNavigation.current
+    val visibilityComposeStateProvider = LocalVisibilityComposeStateProvider.current
     val qrCodeUseCase = LocalUseCaseOfQRCode.current
     val systemUseCase = LocalUseCaseOfSystem.current
-    val visibilityComposeStateProvider = LocalVisibilityComposeStateProvider.current
     val searchUseCase = LocalUseCaseOfSearch.current
     val screenUseCase = LocalUseCaseOfScreen.current
     val conversationUseCase = LocalUseCaseOfConversation.current
     val nowSpaceContentUseCase = LocalUseCaseOfNowSpaceContent.current
     val nowSpaceContents = nowSpaceContentUseCase.contents
-    val navigationUseCase = LocalUseCaseOfNavigation.current
     val currentRoute by navigationUseCase.currentRouteState
     val coroutineScope = rememberCoroutineScope()
     val inSearchMode by remember {

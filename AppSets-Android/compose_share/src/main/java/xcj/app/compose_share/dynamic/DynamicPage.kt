@@ -18,23 +18,16 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.layout.onPlaced
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import xcj.app.compose_share.components.BackActionTopBar
+import xcj.app.compose_share.components.StatusBarWithTopActionBarSpacer
 import xcj.app.compose_share.modifier.hazeSourceIfAvailable
 import xcj.app.compose_share.modifier.rememberHazeStateIfAvailable
 
@@ -55,23 +48,10 @@ fun DynamicPage(
     composeMethods: List<ComposeMethodsWrapper>,
 ) {
     val hazeState = rememberHazeStateIfAvailable()
-    val density = LocalDensity.current
-    var backActionBarSize by remember {
-        mutableStateOf(IntSize.Zero)
-    }
-    val backActionsHeight by remember {
-        derivedStateOf {
-            with(density) {
-                backActionBarSize.height.toDp()
-            }
-        }
-    }
     Box(modifier = Modifier.fillMaxSize()) {
-
         Box(
             modifier = Modifier
                 .hazeSourceIfAvailable(hazeState)
-                .padding(top = backActionsHeight + 12.dp)
         ) {
             if (composeMethods.isEmpty()) {
                 Box(
@@ -96,11 +76,7 @@ fun DynamicPage(
                             .verticalScroll(rememberScrollState())
 
                     ) {
-                        Spacer(
-                            modifier = Modifier.height(
-                                backActionsHeight + 12.dp
-                            )
-                        )
+                        StatusBarWithTopActionBarSpacer()
                         targetComposeMethods.forEach { wrapper ->
                             Column(
                                 modifier = Modifier
@@ -141,9 +117,6 @@ fun DynamicPage(
         }
 
         BackActionTopBar(
-            modifier = Modifier.onPlaced {
-                backActionBarSize = it.size
-            },
             hazeState = hazeState,
             onBackClick = onBackClick,
             backButtonText = stringResource(xcj.app.compose_share.R.string.compose_plugin),

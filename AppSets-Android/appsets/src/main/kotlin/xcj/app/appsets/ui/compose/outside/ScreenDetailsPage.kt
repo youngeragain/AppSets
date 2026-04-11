@@ -25,10 +25,9 @@ import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.navigationBarsIgnoringVisibility
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsIgnoringVisibility
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -49,7 +48,6 @@ import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -61,13 +59,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.layout.onPlaced
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dev.chrisbanes.haze.HazeState
@@ -87,6 +82,7 @@ import xcj.app.appsets.ui.model.ScreenInfoForCard
 import xcj.app.compose_share.components.BackActionTopBar
 import xcj.app.compose_share.components.DesignTextField
 import xcj.app.compose_share.components.LocalVisibilityComposeStateProvider
+import xcj.app.compose_share.components.StatusBarWithTopActionBarSpacer
 import xcj.app.compose_share.modifier.combinedClickableSingle
 import xcj.app.compose_share.modifier.hazeSourceIfAvailable
 import xcj.app.compose_share.ui.viewmodel.VisibilityComposeStateViewModel.Companion.bottomSheetState
@@ -129,23 +125,16 @@ fun ScreenDetailsPage(
         val hazeState = remember {
             HazeState()
         }
-        val density = LocalDensity.current
-        var backActionBarSize by remember {
-            mutableStateOf(IntSize.Zero)
-        }
-        val backActionsHeight by remember {
-            derivedStateOf {
-                with(density) {
-                    backActionBarSize.height.toDp()
-                }
-            }
-        }
         val coroutineScope = rememberCoroutineScope()
         val likeIconAnimationState = remember {
             AnimationState(0f)
         }
 
         var isShowScreenReviews by remember {
+            mutableStateOf(false)
+        }
+
+        var isShowInputContentSheet by remember {
             mutableStateOf(false)
         }
 
@@ -167,14 +156,8 @@ fun ScreenDetailsPage(
                     .verticalScroll(rememberScrollState())
                     .hazeSourceIfAvailable(hazeState)
             ) {
-                val statusBarHeight =
-                    WindowInsets.statusBarsIgnoringVisibility.asPaddingValues()
-                        .calculateTopPadding()
-                val finalTopPadding = remember(backActionsHeight, statusBarHeight) {
-                    if (backActionsHeight > 0.dp) backActionsHeight + 12.dp else statusBarHeight + 84.dp
-                }
-                Spacer(modifier = Modifier.height(finalTopPadding))
-                ScreenDetailsBody(
+                StatusBarWithTopActionBarSpacer()
+                ScreenDetailsContent(
                     screenInfoForCard = screenInfoForCard,
                     onBioClick = onBioClick,
                     onScreenMediaClick = onScreenMediaClick,
@@ -183,19 +166,27 @@ fun ScreenDetailsPage(
                 )
             }
 
-            AddReviewSpace(
-                modifier = Modifier.align(Alignment.BottomCenter),
-                onReviewConfirm = onReviewConfirm
-            )
-
             AnimatedVisibility(
                 visible = isShowScreenReviews,
                 enter = fadeIn() + expandIn(expandFrom = Alignment.TopCenter),
                 exit = shrinkOut(shrinkTowards = Alignment.TopCenter) + fadeOut()
             ) {
-                ScreenReviews(screenInfoForCard.reviews, onBioClick)
+                ScreenReviews(
+                    screenReviews = screenInfoForCard.reviews,
+                    onBioClick = onBioClick,
+                    onShowAddReviewClick = {
+                        isShowInputContentSheet = true
+                    }
+                )
             }
 
+            AddReviewSpace(
+                isShowInputContentSheet = isShowInputContentSheet,
+                onDismissRequest = {
+                    isShowInputContentSheet = false
+                },
+                onReviewConfirm = onReviewConfirm
+            )
 
             Icon(
                 modifier = Modifier
@@ -217,9 +208,6 @@ fun ScreenDetailsPage(
             )
 
             BackActionTopBar(
-                modifier = Modifier.onPlaced {
-                    backActionBarSize = it.size
-                },
                 hazeState = hazeState,
                 onBackClick = onBackClick,
                 customEndContent = {
@@ -263,11 +251,11 @@ fun ScreenDetailsTopEndActions(
                 stringResource(xcj.app.appsets.R.string.reply),
                 modifier = Modifier
                     .clip(CircleShape)
-                    .padding(12.dp)
-                    .clickable(onClick = {
+                    .combinedClickableSingle(onClick = {
                         hapticFeedback.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                         onReviewClick()
                     })
+                    .padding(12.dp)
             )
         }
 
@@ -364,39 +352,18 @@ fun ScreenDetailsTopEndActions(
 
 @Composable
 fun AddReviewSpace(
-    modifier: Modifier,
+    isShowInputContentSheet: Boolean,
+    onDismissRequest: () -> Unit,
     onReviewConfirm: (String?) -> Unit,
 ) {
     var inputContentText by remember {
         mutableStateOf("")
     }
-    var isShowInputContentSheet by remember {
-        mutableStateOf(false)
-    }
-
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .navigationBarsPadding(),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        FilledTonalButton(
-            onClick = {
-                isShowInputContentSheet = true
-            }
-        ) {
-            Text(
-                text = stringResource(xcj.app.appsets.R.string.add_reply)
-            )
-        }
-    }
 
     if (isShowInputContentSheet) {
         ModalBottomSheet(
             sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-            onDismissRequest = {
-                isShowInputContentSheet = false
-            },
+            onDismissRequest = onDismissRequest,
             dragHandle = {
                 BottomSheetDefaults.DragHandle(
                     color = MaterialTheme.colorScheme.outline
@@ -413,7 +380,7 @@ fun AddReviewSpace(
                 Row {
                     Spacer(modifier = Modifier.weight(1f))
                     FilledTonalButton(onClick = {
-                        isShowInputContentSheet = false
+                        onDismissRequest()
                         onReviewConfirm(inputContentText)
                     }) {
                         Text(text = stringResource(xcj.app.starter.R.string.ok))
@@ -445,7 +412,7 @@ fun AddReviewSpace(
 }
 
 @Composable
-fun ScreenDetailsBody(
+fun ScreenDetailsContent(
     modifier: Modifier = Modifier,
     screenInfoForCard: ScreenInfoForCard,
     onBioClick: (Bio) -> Unit,
@@ -510,10 +477,12 @@ fun CollectEditSheetContent(
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun ScreenReviews(
     screenReviews: List<ScreenReview>?,
-    onBioClick: (Bio) -> Unit
+    onBioClick: (Bio) -> Unit,
+    onShowAddReviewClick: () -> Unit,
 ) {
     Surface(
         modifier = Modifier.fillMaxSize()
@@ -521,8 +490,7 @@ fun ScreenReviews(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 12.dp),
-            contentAlignment = Alignment.Center
+                .padding(horizontal = 12.dp)
         ) {
             if (!screenReviews.isNullOrEmpty()) {
                 LazyColumn(
@@ -574,7 +542,30 @@ fun ScreenReviews(
                     }
                 }
             } else {
-                Text(text = stringResource(xcj.app.appsets.R.string.no_reply), fontSize = 12.sp)
+                Text(
+                    text = stringResource(xcj.app.appsets.R.string.no_reply),
+                    fontSize = 12.sp,
+                    modifier = Modifier.align(
+                        Alignment.Center
+                    )
+                )
+            }
+
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(
+                        bottom = 12.dp + WindowInsets.navigationBarsIgnoringVisibility.asPaddingValues()
+                            .calculateBottomPadding()
+                    )
+            ) {
+                FilledTonalButton(
+                    onClick = onShowAddReviewClick
+                ) {
+                    Text(
+                        text = stringResource(xcj.app.appsets.R.string.add_reply)
+                    )
+                }
             }
         }
     }

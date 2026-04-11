@@ -376,7 +376,7 @@ private fun ScreenSectionOfUserPart(
     onBioClick: (Bio) -> Unit
 ) {
     Row(
-        modifier = modifier,
+        modifier = modifier.padding(top = 12.dp, bottom = 6.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(

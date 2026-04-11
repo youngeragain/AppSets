@@ -21,10 +21,22 @@ fun VerticalOverscrollBox(
     onOverscrollOffset: ((Float) -> Unit)? = null,
     content: @Composable BoxScope.() -> Unit
 ) {
+    VerticalOverscrollBox2(
+        modifier = modifier.fillMaxSize(),
+        onOverscrollOffset = onOverscrollOffset,
+        content = content
+    )
+}
+
+@Composable
+fun VerticalOverscrollBox2(
+    modifier: Modifier = Modifier,
+    onOverscrollOffset: ((Float) -> Unit)? = null,
+    content: @Composable BoxScope.() -> Unit
+) {
     var animatedOverscrollAmount by remember { mutableFloatStateOf(0f) }
     Box(
         modifier = modifier
-            .fillMaxSize()
             .customVerticalOverscroll(
                 onNewOverscrollAmount = {
                     animatedOverscrollAmount = it
@@ -43,17 +55,29 @@ fun HorizontalOverscrollBox(
     onOverscrollOffset: ((Float) -> Unit)? = null,
     content: @Composable BoxScope.() -> Unit
 ) {
+    HorizontalOverscrollBox2(
+        modifier = modifier.fillMaxSize(),
+        onOverscrollOffset = onOverscrollOffset,
+        content = content
+    )
+}
+
+@Composable
+fun HorizontalOverscrollBox2(
+    modifier: Modifier = Modifier,
+    onOverscrollOffset: ((Float) -> Unit)? = null,
+    content: @Composable BoxScope.() -> Unit
+) {
     var animatedOverscrollAmount by remember { mutableFloatStateOf(0f) }
     Box(
         modifier = modifier
-            .fillMaxSize()
             .customHorizontalOverscroll(
                 onNewOverscrollAmount = {
                     animatedOverscrollAmount = it
                     onOverscrollOffset?.invoke(it)
                 }
             )
-            .offset { IntOffset(0, animatedOverscrollAmount.roundToInt()) }
+            .offset { IntOffset(animatedOverscrollAmount.roundToInt(), 0) }
     ) {
         content()
     }

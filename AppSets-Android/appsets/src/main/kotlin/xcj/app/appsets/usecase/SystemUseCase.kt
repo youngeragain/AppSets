@@ -42,6 +42,7 @@ import xcj.app.compose_share.components.BottomSheetVisibilityComposeState
 import xcj.app.compose_share.components.VisibilityComposeStateProvider
 import xcj.app.compose_share.dynamic.ComposeLifecycleAware
 import xcj.app.compose_share.ui.viewmodel.VisibilityComposeStateViewModel.Companion.bottomSheetState
+import xcj.app.starter.android.ProjectConstants
 import xcj.app.starter.android.ui.model.PlatformPermissionsUsage
 import xcj.app.starter.android.util.PurpleLogger
 import xcj.app.starter.server.request
@@ -682,6 +683,9 @@ class SystemUseCase(
         }
 
         fun getAppSetsPackageVersionName(context: Context): String? {
+            if (ProjectConstants.IS_IN_ANDROID_STUDIO_PREVIEW) {
+                return "1"
+            }
             val packageInfo = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 context.packageManager.getPackageInfo(
                     context.packageName, PackageManager.PackageInfoFlags.of(0)

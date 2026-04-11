@@ -24,10 +24,10 @@ import xcj.app.appsets.usecase.ScreenUseCase
 import xcj.app.appsets.usecase.SystemUseCase
 import xcj.app.appsets.usecase.ThirdPartUseCase
 import xcj.app.appsets.usecase.UserInfoUseCase
-import xcj.app.appsets.util.ktx.asComponentActivityOrNull
 import xcj.app.appsets.worker.LastSyncWorker
 import xcj.app.compose_share.ui.viewmodel.VisibilityComposeStateViewModel
 import xcj.app.io.components.SimpleFileIO
+import xcj.app.starter.android.ktx.asComponentActivityOrNull
 import xcj.app.starter.android.util.LocalMessenger
 import xcj.app.starter.android.util.PurpleLogger
 import xcj.app.starter.test.AndroidContexts

@@ -1,8 +1,13 @@
-@file:OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@file:OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalFoundationApi::class)
 
 package xcj.app.appsets.ui.compose.conversation.ai_model
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.slideInVertically
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -23,25 +28,33 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
@@ -53,6 +66,7 @@ import xcj.app.appsets.ui.compose.apps.tools.PageIndicator
 import xcj.app.appsets.ui.compose.custom_component.AnyImage
 import xcj.app.appsets.ui.compose.custom_component.DesignBackButton
 import xcj.app.appsets.ui.compose.custom_component.HideNavBar
+import xcj.app.appsets.ui.compose.custom_component.preview_tooling.DesignPreviewCompositionLocalProvider
 
 data class AIGCSessionTemplate(
     val session: Session,
@@ -65,14 +79,50 @@ data class AIGCSessionTemplate(
     }
 }
 
+@Preview(showBackground = true)
+@Composable
+fun AIGCMarketPagePreview() {
+    DesignPreviewCompositionLocalProvider {
+        AIGCMarketPage(onBackClick = {})
+    }
+}
+
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun AIGCMarketPage(
     onBackClick: () -> Unit,
 ) {
     HideNavBar()
-    val pagerState = rememberPagerState { 3 }
-    Box(modifier = Modifier.fillMaxSize()) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.surface)
+    ) {
+        val pagerState = rememberPagerState { 3 }
+        HorizontalPager(
+            modifier = Modifier.fillMaxSize(),
+            state = pagerState,
+            pageSpacing = 16.dp,
+            contentPadding = PaddingValues(horizontal = 16.dp)
+        ) { pageIndex ->
+            when (pageIndex) {
+                0 -> AIModelListPage(
+                    title = stringResource(xcj.app.appsets.R.string.online_ai_models),
+                    sessions = GenerativeAISessions.onlineSessions
+                )
+
+                1 -> AIModelListPage(
+                    title = stringResource(xcj.app.appsets.R.string.device_local_ai_models),
+                    sessions = GenerativeAISessions.onDeviceSessions
+                )
+
+                2 -> AIModelListPage(
+                    title = stringResource(xcj.app.appsets.R.string.mixed_ai_models),
+                    sessions = GenerativeAISessions.mixedSessions
+                )
+            }
+        }
+
         PageIndicator(
             modifier = Modifier
                 .wrapContentHeight()
@@ -85,359 +135,175 @@ fun AIGCMarketPage(
                 ),
             pagerState = pagerState
         )
-        HorizontalPager(
-            modifier = Modifier.fillMaxSize(),
-            state = pagerState
-        ) { pageIndex ->
-            if (pageIndex == 0) {
-                OnlineAIModelsPage()
-            } else if (pageIndex == 1) {
-                DeviceLocalAIModelsPage()
-            } else if (pageIndex == 2) {
-                MixedAIModelsPage()
-            }
-        }
 
         DesignBackButton(
             modifier = Modifier
-                .align(Alignment.BottomCenter), onClick = onBackClick
+                .align(Alignment.BottomCenter),
+            onClick = onBackClick
         )
     }
 }
 
 @Composable
-fun MixedAIModelsPage() {
-    val sessionsTemplates = remember {
-        val sessions = mutableStateListOf<AIGCSessionTemplate>()
-        val aiSessionTemplates = GenerativeAISessions.mixedSessions.map {
-            AIGCSessionTemplate(it)
-        }
-        sessions.addAll(aiSessionTemplates)
-        sessions
+fun AIModelListPage(
+    title: String,
+    sessions: List<Session>
+) {
+    val sessionsTemplates = remember(sessions) {
+        val list = mutableStateListOf<AIGCSessionTemplate>()
+        list.addAll(sessions.map { AIGCSessionTemplate(it) })
+        list
     }
+
     val conversationUseCase = LocalUseCaseOfConversation.current
     val density = LocalDensity.current
     val coroutineScope = rememberCoroutineScope()
+
+    var visible by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) { visible = true }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .statusBarsPadding()
-            .padding(horizontal = 12.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+            .padding(horizontal = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        Spacer(modifier = Modifier.height(6.dp))
+        Spacer(modifier = Modifier.height(24.dp))
+
         Text(
-            text = stringResource(xcj.app.appsets.R.string.mixed_ai_models),
-            style = MaterialTheme.typography.titleSmall
+            text = title,
+            style = MaterialTheme.typography.headlineSmall,
+            fontWeight = FontWeight.ExtraBold,
+            color = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.padding(horizontal = 8.dp)
         )
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f)
-        ) {
+
+        Box(modifier = Modifier
+            .fillMaxWidth()
+            .weight(1f)) {
             LazyColumn(
                 modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
                 contentPadding = PaddingValues(
+                    top = 4.dp,
                     bottom = with(density) {
                         WindowInsets.systemBars.getBottom(density).toDp()
-                    } + 68.dp
+                    } + 80.dp
                 )
             ) {
-                items(
-                    items = sessionsTemplates
-                ) { sessionTemplate ->
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 8.dp),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                itemsIndexed(
+                    items = sessionsTemplates,
+                    key = { _, item -> item.session.imObj.id }
+                ) { index, sessionTemplate ->
+                    // Animated entry for each item
+                    androidx.compose.animation.AnimatedVisibility(
+                        visible = visible,
+                        enter = fadeIn(spring(stiffness = Spring.StiffnessLow)) +
+                                slideInVertically(spring(stiffness = Spring.StiffnessLow)) { it / 2 }
                     ) {
-                        AnyImage(
-                            modifier = Modifier
-                                .size(48.dp)
-                                .background(
-                                    color = MaterialTheme.colorScheme.outline,
-                                    shape = MaterialTheme.shapes.large
-                                )
-                                .clip(MaterialTheme.shapes.large),
-                            model = sessionTemplate.session.imObj.avatarUrl
-                        )
-                        Column(
-                            modifier = Modifier
-                                .weight(1f),
-                            verticalArrangement = Arrangement.spacedBy(2.dp)
-                        ) {
-                            //名称
-                            Text(
-                                text = sessionTemplate.session.imObj.name,
-                                fontSize = 14.sp
-                            )
-                            val bio = sessionTemplate.session.imObj.bio
-                            if (bio is GenerativeAISessions.AIBio) {
-                                Text(
-                                    text = bio.description ?: "",
-                                    fontSize = 12.sp
-                                )
-                                Spacer(modifier = Modifier.height(6.dp))
-                            }
-                        }
-                        AnimatedContent(
-                            targetState = sessionTemplate.addState.value,
-                            contentAlignment = Alignment.CenterEnd
-                        ) { targetAddState ->
-                            if (targetAddState == AIGCSessionTemplate.ADD_STATE_ADDING) {
-                                LoadingIndicator()
-                            } else {
-                                FilledTonalButton(
-                                    onClick = {
-                                        coroutineScope.launch {
-                                            sessionTemplate.addState.value =
-                                                AIGCSessionTemplate.ADD_STATE_ADDING
-
-                                            conversationUseCase.addAIGCSessionIfAbsent(
-                                                sessionTemplate.session
-                                            )
-                                            delay(1000)
-                                            sessionTemplate.addState.value =
-                                                AIGCSessionTemplate.ADD_STATE_ADDED
-                                        }
-                                    }
-                                ) {
-                                    Text(text = stringResource(xcj.app.appsets.R.string.add))
+                        AIModelItem(
+                            modifier = Modifier.animateItem(),
+                            sessionTemplate = sessionTemplate,
+                            onAddClick = {
+                                coroutineScope.launch {
+                                    sessionTemplate.addState.value =
+                                        AIGCSessionTemplate.ADD_STATE_ADDING
+                                    conversationUseCase.addAIGCSessionIfAbsent(sessionTemplate.session)
+                                    delay(800)
+                                    sessionTemplate.addState.value =
+                                        AIGCSessionTemplate.ADD_STATE_ADDED
                                 }
                             }
-                        }
-
+                        )
                     }
                 }
             }
+
             if (sessionsTemplates.isEmpty()) {
-                Text(text = stringResource(xcj.app.appsets.R.string.no_models_available), modifier = Modifier.align(Alignment.Center))
+                Text(
+                    text = stringResource(xcj.app.appsets.R.string.no_models_available),
+                    style = MaterialTheme.typography.bodyLarge,
+                    modifier = Modifier.align(Alignment.Center),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
         }
     }
 }
 
 @Composable
-fun DeviceLocalAIModelsPage() {
-    val sessionsTemplates = remember {
-        val sessions = mutableStateListOf<AIGCSessionTemplate>()
-        val aiSessionTemplates = GenerativeAISessions.onDeviceSessions.map {
-            AIGCSessionTemplate(it)
-        }
-        sessions.addAll(aiSessionTemplates)
-        sessions
-    }
-    val conversationUseCase = LocalUseCaseOfConversation.current
-    val density = LocalDensity.current
-    val coroutineScope = rememberCoroutineScope()
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .statusBarsPadding()
-            .padding(horizontal = 12.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+fun AIModelItem(
+    modifier: Modifier = Modifier,
+    sessionTemplate: AIGCSessionTemplate,
+    onAddClick: () -> Unit
+) {
+    Surface(
+        modifier = modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.extraLarge,
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        tonalElevation = 2.dp
     ) {
-        Spacer(modifier = Modifier.height(6.dp))
-        Text(
-            text = stringResource(xcj.app.appsets.R.string.device_local_ai_models),
-            style = MaterialTheme.typography.titleSmall
-        )
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f)
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            LazyColumn(
-                modifier = Modifier.fillMaxWidth(),
-                contentPadding = PaddingValues(
-                    bottom = with(density) {
-                        WindowInsets.systemBars.getBottom(density).toDp()
-                    } + 68.dp
-                )
+            AnyImage(
+                modifier = Modifier
+                    .size(56.dp)
+                    .background(
+                        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                        shape = MaterialTheme.shapes.large
+                    )
+                    .clip(MaterialTheme.shapes.large),
+                model = sessionTemplate.session.imObj.avatarUrl
+            )
+
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                items(
-                    items = sessionsTemplates
-                ) { sessionTemplate ->
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 8.dp),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        AnyImage(
-                            modifier = Modifier
-                                .size(48.dp)
-                                .background(
-                                    color = MaterialTheme.colorScheme.outline,
-                                    shape = MaterialTheme.shapes.large
-                                )
-                                .clip(MaterialTheme.shapes.large),
-                            model = sessionTemplate.session.imObj.avatarUrl
-                        )
-                        Column(
-                            modifier = Modifier
-                                .weight(1f),
-                            verticalArrangement = Arrangement.spacedBy(2.dp)
-                        ) {
-                            //名称
-                            Text(
-                                text = sessionTemplate.session.imObj.name,
-                                fontSize = 14.sp
-                            )
-                            val bio = sessionTemplate.session.imObj.bio
-                            if (bio is GenerativeAISessions.AIBio) {
-                                Text(
-                                    text = bio.description ?: "",
-                                    fontSize = 12.sp
-                                )
-                                Spacer(Modifier.height(6.dp))
-                            }
-                        }
-                        AnimatedContent(
-                            targetState = sessionTemplate.addState.value,
-                            contentAlignment = Alignment.CenterEnd
-                        ) { targetAddState ->
-                            if (targetAddState == AIGCSessionTemplate.ADD_STATE_ADDING) {
-                                LoadingIndicator()
-                            } else {
-                                FilledTonalButton(
-                                    onClick = {
-                                        coroutineScope.launch {
-                                            sessionTemplate.addState.value =
-                                                AIGCSessionTemplate.ADD_STATE_ADDING
+                Text(
+                    text = sessionTemplate.session.imObj.name,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
 
-                                            conversationUseCase.addAIGCSessionIfAbsent(
-                                                sessionTemplate.session
-                                            )
-                                            delay(1000)
-                                            sessionTemplate.addState.value =
-                                                AIGCSessionTemplate.ADD_STATE_ADDED
-                                        }
-                                    }
-                                ) {
-                                    Text(text = stringResource(xcj.app.appsets.R.string.add))
-                                }
-                            }
-                        }
-
-                    }
+                val bio = sessionTemplate.session.imObj.bio
+                if (bio is GenerativeAISessions.AIBio) {
+                    Text(
+                        text = bio.description ?: "",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                        lineHeight = 16.sp
+                    )
                 }
             }
-            if (sessionsTemplates.isEmpty()) {
-                Text(text = stringResource(xcj.app.appsets.R.string.no_models_available), modifier = Modifier.align(Alignment.Center))
-            }
-        }
-    }
-}
 
-@Composable
-fun OnlineAIModelsPage() {
-    val sessionsTemplates = remember {
-        val sessions = mutableStateListOf<AIGCSessionTemplate>()
-        val aiSessionTemplates = GenerativeAISessions.onlineSessions.map {
-            AIGCSessionTemplate(it)
-        }
-        sessions.addAll(aiSessionTemplates)
-        sessions
-    }
-    val conversationUseCase = LocalUseCaseOfConversation.current
-    val density = LocalDensity.current
-    val coroutineScope = rememberCoroutineScope()
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .statusBarsPadding()
-            .padding(horizontal = 12.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        Spacer(modifier = Modifier.height(6.dp))
-        Text(
-            text = stringResource(xcj.app.appsets.R.string.online_ai_models),
-            style = MaterialTheme.typography.titleSmall
-        )
-        Box(
-            modifier = Modifier
-                .weight(1f)
-        ) {
-            LazyColumn(
-                modifier = Modifier.fillMaxWidth(),
-                contentPadding = PaddingValues(
-                    bottom = with(density) {
-                        WindowInsets.systemBars.getBottom(density).toDp()
-                    } + 68.dp
-                )
-            ) {
-                items(
-                    items = sessionsTemplates
-                ) { sessionTemplate ->
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 8.dp),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+            AnimatedContent(
+                targetState = sessionTemplate.addState.value,
+                label = "AddState"
+            ) { state ->
+                if (state == AIGCSessionTemplate.ADD_STATE_ADDING) {
+                    LoadingIndicator(modifier = Modifier.size(32.dp))
+                } else {
+                    val added = state == AIGCSessionTemplate.ADD_STATE_ADDED
+                    FilledTonalButton(
+                        onClick = onAddClick,
+                        enabled = !added,
+                        shape = MaterialTheme.shapes.medium
                     ) {
-                        AnyImage(
-                            modifier = Modifier
-                                .size(48.dp)
-                                .background(
-                                    color = MaterialTheme.colorScheme.outline,
-                                    shape = MaterialTheme.shapes.large
-                                )
-                                .clip(MaterialTheme.shapes.large),
-                            model = sessionTemplate.session.imObj.avatarUrl
+                        Text(
+                            text = if (added) "✓" else stringResource(xcj.app.appsets.R.string.add),
+                            style = MaterialTheme.typography.labelLarge
                         )
-                        Column(
-                            modifier = Modifier
-                                .weight(1f),
-                            verticalArrangement = Arrangement.spacedBy(2.dp)
-                        ) {
-                            //名称
-                            Text(
-                                text = sessionTemplate.session.imObj.name,
-                                fontSize = 14.sp
-                            )
-                            val bio = sessionTemplate.session.imObj.bio
-                            if (bio is GenerativeAISessions.AIBio) {
-                                Text(
-                                    text = bio.description ?: "",
-                                    fontSize = 12.sp
-                                )
-                                Spacer(Modifier.height(6.dp))
-                            }
-                        }
-                        AnimatedContent(
-                            targetState = sessionTemplate.addState.value,
-                            contentAlignment = Alignment.CenterEnd
-                        ) { targetAddState ->
-                            if (targetAddState == AIGCSessionTemplate.ADD_STATE_ADDING) {
-                                LoadingIndicator()
-                            } else {
-                                FilledTonalButton(
-                                    onClick = {
-                                        coroutineScope.launch {
-                                            sessionTemplate.addState.value =
-                                                AIGCSessionTemplate.ADD_STATE_ADDING
-
-                                            conversationUseCase.addAIGCSessionIfAbsent(
-                                                sessionTemplate.session
-                                            )
-                                            delay(1000)
-                                            sessionTemplate.addState.value =
-                                                AIGCSessionTemplate.ADD_STATE_ADDED
-                                        }
-                                    }
-                                ) {
-                                    Text(text = stringResource(xcj.app.appsets.R.string.add))
-                                }
-                            }
-                        }
-
                     }
                 }
-            }
-            if (sessionsTemplates.isEmpty()) {
-                Text(text = stringResource(xcj.app.appsets.R.string.no_models_available), modifier = Modifier.align(Alignment.Center))
             }
         }
     }

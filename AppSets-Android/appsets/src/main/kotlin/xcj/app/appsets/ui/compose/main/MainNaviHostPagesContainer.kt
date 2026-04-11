@@ -4,7 +4,6 @@ package xcj.app.appsets.ui.compose.main
 
 import android.annotation.SuppressLint
 import android.app.Activity
-import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
@@ -102,12 +101,14 @@ import xcj.app.appsets.server.model.UserInfo
 import xcj.app.appsets.server.model.VersionInfo
 import xcj.app.appsets.settings.AppSetsModuleSettings
 import xcj.app.appsets.ui.base.BaseIMViewModel
+import xcj.app.appsets.ui.compose.LocalNavControllers
 import xcj.app.appsets.ui.compose.LocalUseCaseOfAppCreation
 import xcj.app.appsets.ui.compose.LocalUseCaseOfApps
 import xcj.app.appsets.ui.compose.LocalUseCaseOfConversation
 import xcj.app.appsets.ui.compose.LocalUseCaseOfGroupInfo
 import xcj.app.appsets.ui.compose.LocalUseCaseOfMediaRemoteExo
 import xcj.app.appsets.ui.compose.LocalUseCaseOfNavigation
+import xcj.app.appsets.ui.compose.LocalUseCaseOfNowSpaceContent
 import xcj.app.appsets.ui.compose.LocalUseCaseOfQRCode
 import xcj.app.appsets.ui.compose.LocalUseCaseOfScreen
 import xcj.app.appsets.ui.compose.LocalUseCaseOfScreenPost
@@ -170,18 +171,17 @@ import xcj.app.appsets.ui.model.page_state.CreateGroupPageUIState
 import xcj.app.appsets.ui.model.page_state.CreateScreenPageUIState
 import xcj.app.appsets.ui.model.page_state.LoginPageUIState
 import xcj.app.appsets.ui.model.page_state.SignUpPageUIState
+import xcj.app.appsets.ui.model.state.NowSpaceContent
 import xcj.app.appsets.ui.viewmodel.MainViewModel
 import xcj.app.appsets.usecase.AppsUseCase
 import xcj.app.appsets.usecase.ConversationUseCase
 import xcj.app.appsets.usecase.MediaRemoteExoUseCase
+import xcj.app.appsets.usecase.NowSpaceContentUseCase
 import xcj.app.appsets.usecase.SystemUseCase
 import xcj.app.appsets.util.BundleDefaults
 import xcj.app.appsets.util.compose_state.ComposeStateUpdater
 import xcj.app.appsets.util.compose_state.RuntimeSingleStateUpdater
 import xcj.app.appsets.util.ktx.toast
-import xcj.app.appsets.util.model.MediaStoreDataUri
-import xcj.app.appsets.util.model.isImageType
-import xcj.app.appsets.util.model.isVideoType
 import xcj.app.compose_share.components.LocalVisibilityComposeStateProvider
 import xcj.app.compose_share.components.ProgressiveVisibilityComposeState
 import xcj.app.compose_share.components.VisibilityComposeStateProvider
@@ -196,6 +196,10 @@ import xcj.app.starter.android.usecase.PlatformUseCase
 import xcj.app.starter.android.util.LocalMessenger
 import xcj.app.starter.android.util.PurpleLogger
 import xcj.app.starter.android.util.UriProvider
+import xcj.app.starter.android.util.model.MediaStoreDataUri
+import xcj.app.starter.android.util.model.isAudioType
+import xcj.app.starter.android.util.model.isImageType
+import xcj.app.starter.android.util.model.isVideoType
 import xcj.app.starter.test.ComposeEvent
 import xcj.app.starter.test.LocalPurpleEventPublisher
 import xcj.app.starter.test.NaviHostParams
@@ -206,16 +210,15 @@ private const val TAG = "MainNaviHostPagesContainer"
 @Composable
 fun MainNaviHostPagesContainer(
     modifier: Modifier = Modifier,
-    navController: NavHostController,
     startPageRoute: String,
     hazeState: HazeState?,
     hostContextName: String = MainActivity.TAG
 ) {
-
+    val navController = LocalNavControllers.current[KEY_MAIN_NAVI_CONTROLLER]!!
     val restrictedContentHandleState = rememberRestrictedContentHandleState()
 
     Box(modifier = modifier) {
-        DesignNaviHost(
+        DesignNaviHostIf(
             modifier = Modifier.hazeSourceIfAvailable(hazeState),
             navController = navController,
             startDestination = startPageRoute,
@@ -295,7 +298,7 @@ fun MainNaviHostPagesContainer(
                         },
                         onShowApplicationCreatorClick = { application ->
                             coroutineScope.launch {
-                                navigateToUserInfoPage(
+                                navigateToUserProfilePage(
                                     context,
                                     navController,
                                     application.createUid
@@ -578,6 +581,8 @@ fun MainNaviHostPagesContainer(
                     val screenUseCase = LocalUseCaseOfScreen.current
                     val screenPostUseCase = LocalUseCaseOfScreenPost.current
                     val systemUseCase = LocalUseCaseOfSystem.current
+                    val mediaRemoteExoUseCase = LocalUseCaseOfMediaRemoteExo.current
+                    val nowSpaceContentUseCase = LocalUseCaseOfNowSpaceContent.current
                     val visibilityComposeStateProvider = LocalVisibilityComposeStateProvider.current
                     val quickStepContents = BundleCompat.getParcelableArrayList(
                         it.arguments ?: BundleDefaults.empty,
@@ -668,6 +673,13 @@ fun MainNaviHostPagesContainer(
                                 )
                             } else if (uriProvider.isVideoType()) {
                                 navigateToVideoPlaybackActivity(context, uriProvider)
+                            } else if (uriProvider.isAudioType()) {
+                                navigateAudioPlayback(
+                                    context,
+                                    uriProvider,
+                                    nowSpaceContentUseCase,
+                                    mediaRemoteExoUseCase
+                                )
                             }
                         }
                     )
@@ -1540,55 +1552,61 @@ fun NaviHostBackHandlerInterceptor(navController: NavHostController) {
 }
 
 @Composable
-fun DesignNaviHost(
+fun DesignNaviHostIf(
     modifier: Modifier = Modifier,
     navController: NavHostController,
     startDestination: String,
+    test: () -> Boolean = { true },
     builder: NavGraphBuilder.() -> Unit,
 ) {
-    NavHost(
-        modifier = modifier,
-        navController = navController,
-        startDestination = startDestination,
-        enterTransition = {
-            scaleIn(
-                initialScale = 0.89f,
-                animationSpec = tween()
-            ) + fadeIn(
-                animationSpec = tween()
-            )
-        },
-        exitTransition = {
-            scaleOut(
-                targetScale = 1.11f,
-                animationSpec = tween()
-            ) + fadeOut(
-                animationSpec = tween()
-            )
-        },
-        popEnterTransition = {
-            scaleIn(
-                initialScale = 0.89f,
-                animationSpec = tween()
-            ) + fadeIn(
-                animationSpec = tween()
-            )
-        },
-        popExitTransition = {
-            scaleOut(
-                targetScale = 1.11f,
-                animationSpec = tween()
-            ) + fadeOut(
-                animationSpec = tween()
-            )
-        },
-        contentAlignment = Alignment.TopCenter,
-        builder = {
-            publishComposeNaviHostFormedEvent(navController, this)
-            builder()
-        },
-    )
-    NaviHostBackHandlerInterceptor(navController)
+    if (!test()) {
+        return
+    }
+    Box {
+        NavHost(
+            modifier = modifier,
+            navController = navController,
+            startDestination = startDestination,
+            enterTransition = {
+                scaleIn(
+                    initialScale = 0.89f,
+                    animationSpec = tween()
+                ) + fadeIn(
+                    animationSpec = tween()
+                )
+            },
+            exitTransition = {
+                scaleOut(
+                    targetScale = 1.11f,
+                    animationSpec = tween()
+                ) + fadeOut(
+                    animationSpec = tween()
+                )
+            },
+            popEnterTransition = {
+                scaleIn(
+                    initialScale = 0.89f,
+                    animationSpec = tween()
+                ) + fadeIn(
+                    animationSpec = tween()
+                )
+            },
+            popExitTransition = {
+                scaleOut(
+                    targetScale = 1.11f,
+                    animationSpec = tween()
+                ) + fadeOut(
+                    animationSpec = tween()
+                )
+            },
+            contentAlignment = Alignment.TopCenter,
+            builder = {
+                publishComposeNaviHostFormedEvent(navController, this)
+                builder()
+            },
+        )
+        NaviHostBackHandlerInterceptor(navController)
+    }
 }
 
 suspend fun onBioClick(
@@ -1608,7 +1626,7 @@ suspend fun onBioClick(
         is MessageToInfo,
         is MessageFromInfo,
             -> {
-            navigateToUserInfoPage(context, navController, bio.bioId)
+            navigateToUserProfilePage(context, navController, bio.bioId)
         }
 
         is GroupInfo -> {
@@ -1686,7 +1704,7 @@ private fun navigateToCreateAppPage(
     navController.navigate(navDirections)
 }
 
-private suspend fun navigateToUserInfoPage(
+private suspend fun navigateToUserProfilePage(
     context: Context,
     navController: NavController,
     uid: String?,
@@ -1701,8 +1719,8 @@ private suspend fun navigateToUserInfoPage(
     if (baseViewModel == null) {
         return
     }
-    baseViewModel.userInfoUseCase.updateCurrentUserInfoByUid(uid)
     navController.navigate(PageRouteNames.UserProfilePage)
+    baseViewModel.userInfoUseCase.updateCurrentUserInfoByUid(uid)
 }
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -1865,6 +1883,33 @@ fun showWebBrowserDialog(
     }
 }
 
+fun navigateAudioPlayback(
+    context: Context,
+    uriProvider: UriProvider,
+    nowSpaceContentUseCase: NowSpaceContentUseCase,
+    mediaRemoteExoUseCase: MediaRemoteExoUseCase
+) {
+    val nowSpaceContentOfAudioPlayer = NowSpaceContent.AudioPlayer(uriProvider = uriProvider)
+    nowSpaceContentUseCase.replaceOrAddContent { existContents ->
+        val oldAudioPlayer = existContents.firstOrNull { existContent ->
+            if (existContent is NowSpaceContent.AudioPlayer) {
+                return@firstOrNull existContent.uriProvider == uriProvider
+            } else {
+                return@firstOrNull false
+            }
+        }
+        oldAudioPlayer to nowSpaceContentOfAudioPlayer
+    }
+    val uri =
+        uriProvider.provideUri()
+    val commonURIJson = CommonURIJson(
+        nowSpaceContentOfAudioPlayer.id,
+        "",
+        uri.toString()
+    )
+    mediaRemoteExoUseCase.playOrPauseAudio(context, commonURIJson)
+}
+
 fun navigateToVideoPlaybackActivity(context: Context, playbackContent: Any) {
     val commonURIJson = when (playbackContent) {
         is ScreenMediaFileUrl -> {
@@ -1930,12 +1975,8 @@ fun navigateToCameraActivity(context: Context, navController: NavController) {
 
 fun navigateToAppSetsLauncherActivity(context: Context) {
     val intent = Intent()
-    val componentName =
-        ComponentName(
-            "xcj.app.container",
-            "xcj.app.launcher.ui.compose.standard_home.StandardWindowHome"
-        )
-    intent.setComponent(componentName)
+    intent.action = Intent.ACTION_VIEW
+    intent.data = "appsets://local.function/launcher".toUri()
     runCatching {
         context.startActivity(intent)
         if (context is Activity) {
@@ -1951,12 +1992,8 @@ fun navigateToAppSetsLauncherActivity(context: Context) {
 
 fun navigateToAppSetsVpnActivity(context: Context) {
     val intent = Intent()
-    val componentName =
-        ComponentName(
-            "xcj.app.container",
-            "xcj.app.proxy.ui.compose.vpn.AppSetsVpnActivity"
-        )
-    intent.setComponent(componentName)
+    intent.action = Intent.ACTION_VIEW
+    intent.data = "appsets://local.function/vpn".toUri()
     runCatching {
         context.startActivity(intent)
     }.onFailure {
@@ -1966,12 +2003,8 @@ fun navigateToAppSetsVpnActivity(context: Context) {
 
 fun navigateToAppSetsShareActivity(context: Context, intentN: Intent?) {
     val intent = Intent()
-    val componentName =
-        ComponentName(
-            "xcj.app.container",
-            "xcj.app.share.ui.compose.AppSetsShareActivity"
-        )
-    intent.setComponent(componentName)
+    intent.action = Intent.ACTION_VIEW
+    intent.data = "appsets://local.function/share".toUri()
     intentN?.let {
         intent.type = it.type
         intent.action = it.action
@@ -1980,7 +2013,7 @@ fun navigateToAppSetsShareActivity(context: Context, intentN: Intent?) {
     runCatching {
         context.startActivity(intent)
     }.onFailure {
-        PurpleLogger.current.d(TAG, "navigateToAppSetsVpnActivity, failed!, e:${it.message}")
+        PurpleLogger.current.d(TAG, "navigateToAppSetsShareActivity, failed!, e:${it.message}")
     }
 }
 

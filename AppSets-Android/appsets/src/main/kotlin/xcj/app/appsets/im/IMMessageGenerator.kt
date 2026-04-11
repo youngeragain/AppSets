@@ -29,14 +29,14 @@ import xcj.app.appsets.im.message.VoiceMessage
 import xcj.app.appsets.ui.compose.content_selection.ContentSelectionResult
 import xcj.app.appsets.util.PictureUrlMapper
 import xcj.app.appsets.util.VideoFileUtil
-import xcj.app.appsets.util.ktx.queryUriFileName
-import xcj.app.appsets.util.model.MediaStoreDataUri
 import xcj.app.io.components.FileIO
 import xcj.app.io.components.LocalFileIO
 import xcj.app.io.components.ObjectUploadOptions
 import xcj.app.io.compress.ICompressor
+import xcj.app.starter.android.ktx.queryUriFileName
 import xcj.app.starter.android.util.PurpleLogger
 import xcj.app.starter.android.util.UriProvider
+import xcj.app.starter.android.util.model.MediaStoreDataUri
 import xcj.app.starter.util.ContentType
 import java.io.File
 import java.text.SimpleDateFormat

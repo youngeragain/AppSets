@@ -71,8 +71,8 @@ val LocalUseCaseOfNowSpaceContent =
 val LocalQuickStepContentHandlerRegistry =
     staticCompositionLocalOf<QuickStepContentHandlerRegistry> { error("No QuickStepContentHandlerRegistry provided") }
 
-val LocalNavHostController =
-    staticCompositionLocalOf<NavHostController> { error("No NavHostController provided") }
+val LocalNavControllers =
+    staticCompositionLocalOf<Map<String, NavHostController>> { error("No NavController Map provided") }
 
 //提供所有需要登录拦截页面名
 val LocalPageRouteNameNeedLoggedProvider = staticCompositionLocalOf {

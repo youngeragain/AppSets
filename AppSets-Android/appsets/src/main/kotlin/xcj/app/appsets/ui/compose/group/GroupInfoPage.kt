@@ -9,10 +9,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -38,7 +36,6 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.layout.onPlaced
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
@@ -58,6 +55,7 @@ import xcj.app.appsets.ui.compose.theme.ExtraLarge2
 import xcj.app.appsets.ui.model.page_state.GroupInfoPageUIState
 import xcj.app.appsets.usecase.RelationsUseCase
 import xcj.app.compose_share.components.BackActionTopBar
+import xcj.app.compose_share.components.StatusBarWithTopActionBarSpacer
 import xcj.app.compose_share.modifier.hazeSourceIfAvailable
 import xcj.app.compose_share.modifier.rememberHazeStateIfAvailable
 import kotlin.math.roundToInt
@@ -139,16 +137,6 @@ fun GroupInfoPage(
                 }
                 val hazeState = rememberHazeStateIfAvailable()
                 val density = LocalDensity.current
-                var backActionBarSize by remember {
-                    mutableStateOf(IntSize.Zero)
-                }
-                val backActionsHeight by remember {
-                    derivedStateOf {
-                        with(density) {
-                            backActionBarSize.height.toDp()
-                        }
-                    }
-                }
                 val groupAvatarHeight by remember {
                     derivedStateOf {
                         with(density) {
@@ -230,11 +218,7 @@ fun GroupInfoPage(
                                     sizeOfGroupAvatar = it
                                 }
                         ) {
-                            Spacer(
-                                modifier = Modifier.height(
-                                    backActionsHeight + 12.dp
-                                )
-                            )
+                            StatusBarWithTopActionBarSpacer()
                             Column(
                                 modifier = Modifier
                                     .zIndex(0f)
@@ -286,9 +270,6 @@ fun GroupInfoPage(
                         }
                     }
                     BackActionTopBar(
-                        modifier = Modifier.onPlaced {
-                            backActionBarSize = it.size
-                        },
                         hazeState = hazeState,
                         onBackClick = onBackClick,
                         endButtonText = if (RelationsUseCase.getInstance()

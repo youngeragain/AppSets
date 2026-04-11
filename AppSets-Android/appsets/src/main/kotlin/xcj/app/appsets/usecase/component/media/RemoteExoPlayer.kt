@@ -40,27 +40,27 @@ class RemoteExoPlayer(
         private const val TAG = "RemoteExoPlayer"
     }
 
-    private lateinit var controllerFuture: ListenableFuture<MediaController>
-    private lateinit var mediaController: MediaController
+    private var controllerFuture: ListenableFuture<MediaController>? = null
+    private var mediaController: MediaController? = null
 
     private var mLifecycleOwner: LifecycleOwner? = null
 
     private var progressRetrieveJob: Job? = null
 
     fun isPlaying(): Boolean {
-        return isBound() && mediaController.isPlaying
+        return isBound() && mediaController?.isPlaying == true
     }
 
     fun isBound(): Boolean {
-        return ::controllerFuture.isInitialized
-                && controllerFuture.isDone
-                && ::mediaController.isInitialized
-                && mediaController.isConnected
+        return controllerFuture != null
+                && controllerFuture?.isDone == true
+                && mediaController != null
+                && mediaController?.isConnected == true
     }
 
     @SuppressLint("RestrictedApi")
     private fun initializeController(context: Context, onDone: (() -> Unit)? = null) {
-        if (::controllerFuture.isInitialized) {
+        if (controllerFuture != null) {
             return
         }
         PurpleLogger.current.d(TAG, "initializeController")
@@ -83,8 +83,13 @@ class RemoteExoPlayer(
             }
         }
         Futures.addCallback(controllerFuture, futureCallback, MoreExecutors.directExecutor())
-        controllerFuture.get()
-        onDone?.invoke()
+        controllerFuture.addListener(
+            {
+                onDone?.invoke()
+            },
+            MoreExecutors.directExecutor()
+        )
+
     }
 
     private fun setupController(controller: MediaController) {
@@ -122,6 +127,7 @@ class RemoteExoPlayer(
                     TAG,
                     "onPlaybackStateChanged:$playbackState"
                 )
+                val mediaController = mediaController ?: return
                 updateAudioPlaybackState(playbackState)
                 if (playbackState == Player.STATE_READY && mediaController.playWhenReady) {
                     mLifecycleOwner?.lifecycleScope?.launch {
@@ -173,7 +179,7 @@ class RemoteExoPlayer(
         if (!isBound()) {
             return
         }
-        val mediaController = this.mediaController
+        val mediaController = this.mediaController ?: return
         val oldState = audioPlayerState.value
         val duration = if (mediaController.duration == C.TIME_UNSET) {
             0
@@ -189,9 +195,7 @@ class RemoteExoPlayer(
     }
 
     private fun releaseController() {
-        if (!::controllerFuture.isInitialized) {
-            return
-        }
+        val controllerFuture = controllerFuture ?: return
         MediaController.releaseFuture(controllerFuture)
     }
 
@@ -201,18 +205,18 @@ class RemoteExoPlayer(
     }
 
     fun playAudio(context: Context, mediaJson: CommonURIJson) {
-        PurpleLogger.current.d(TAG, "playAudio, mediaController:$mediaController")
         if (!isBound()) {
             initializeController(context) {
                 playAudio(context, mediaJson)
             }
             return
         }
+        PurpleLogger.current.d(TAG, "playAudio, mediaController:$mediaController")
         val oldState = audioPlayerState.value
 
         if (oldState.id == mediaJson.bioId) {
             //same audio
-            mediaController.play()
+            mediaController?.play()
             return
         }
         //new audio to play
@@ -232,7 +236,7 @@ class RemoteExoPlayer(
         val commandBundle = Bundle().apply {
             putString("url", mediaJson.uri)
         }
-        mediaController.sendCustomCommand(
+        mediaController?.sendCustomCommand(
             SessionCommand("set_playback_item", commandBundle),
             Bundle.EMPTY
         )
@@ -255,7 +259,7 @@ class RemoteExoPlayer(
         if (!isBound()) {
             return
         }
-        mediaController.play()
+        mediaController?.play()
     }
 
 
@@ -263,21 +267,21 @@ class RemoteExoPlayer(
         if (!isBound()) {
             return
         }
-        mediaController.pause()
+        mediaController?.pause()
     }
 
     fun stop() {
         if (!isBound()) {
             return
         }
-        mediaController.stop()
+        mediaController?.stop()
     }
 
     fun seekTo(duration: Long) {
         if (!isBound()) {
             return
         }
-        mediaController.seekTo(duration)
+        mediaController?.seekTo(duration)
     }
 
     override fun onCreate(owner: LifecycleOwner) {

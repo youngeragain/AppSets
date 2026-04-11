@@ -38,7 +38,6 @@ import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
@@ -50,12 +49,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.layout.onPlaced
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.CoroutineScope
@@ -72,6 +68,7 @@ import xcj.app.appsets.util.message_digest.MessageDigestUtil
 import xcj.app.compose_share.components.BackActionTopBar
 import xcj.app.compose_share.components.DesignHDivider
 import xcj.app.compose_share.components.DesignTextField
+import xcj.app.compose_share.components.StatusBarWithTopActionBarSpacer
 import xcj.app.compose_share.modifier.rememberHazeStateIfAvailable
 import xcj.app.starter.util.QrCodeUtil
 import java.io.File
@@ -208,27 +205,13 @@ fun ToolContentTransformPage(
     }
 
     val hazeState = rememberHazeStateIfAvailable()
-    val density = LocalDensity.current
-    var backActionBarSize by remember {
-        mutableStateOf(IntSize.Zero)
-    }
-    val backActionsHeight by remember {
-        derivedStateOf {
-            with(density) {
-                backActionBarSize.height.toDp()
-            }
-        }
-    }
     LaunchedEffect(key1 = transformType, key2 = content) {
         transformRunnable(coroutineScope)
     }
     Box(modifier = Modifier.fillMaxSize()) {
 
-        Column(
-            modifier = Modifier.padding(
-                top = backActionsHeight + 12.dp
-            )
-        ) {
+        Column {
+            StatusBarWithTopActionBarSpacer()
             val pagerState = rememberPagerState {
                 2
             }
@@ -268,9 +251,6 @@ fun ToolContentTransformPage(
         }
 
         BackActionTopBar(
-            modifier = Modifier.onPlaced {
-                backActionBarSize = it.size
-            },
             hazeState = hazeState,
             onBackClick = onBackClick,
         )

@@ -55,6 +55,14 @@
                 <action android:name="xcj.app.share" />
                 <category android:name="xcj.app.share.main" />
             </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data
+                    android:host="local.function"
+                    android:pathPrefix="/share"
+                    android:scheme="appsets" />
+            </intent-filter>
         </activity>
     </application>
 </manifest>

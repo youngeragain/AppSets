@@ -4,11 +4,13 @@ import android.content.res.Configuration
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -33,7 +35,6 @@ import xcj.app.appsets.server.model.UserInfo
 import xcj.app.appsets.ui.compose.custom_component.AnyImage
 import xcj.app.appsets.ui.compose.theme.ExtraLarge2
 import xcj.app.appsets.usecase.RelationsUseCase
-import xcj.app.compose_share.components.DesignHDivider
 
 private const val TAG = "UserInfoHeader"
 
@@ -51,7 +52,7 @@ data class UserAction(val type: String, val name: String) {
 }
 
 @Composable
-private fun makeUserActions(
+private fun rememberUserProfleActions(
     userInfo: UserInfo,
     isLoginUserFollowedThisUser: Boolean,
     userFollowers: List<UserInfo>,
@@ -109,7 +110,7 @@ private fun makeUserActions(
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun UserInfoHeader(
+fun UserProfileStarter(
     modifier: Modifier = Modifier,
     userInfo: UserInfo,
     userFollowers: List<UserInfo>,
@@ -118,7 +119,7 @@ fun UserInfoHeader(
     onActionClick: (UserAction) -> Unit,
 ) {
     val configuration = LocalConfiguration.current
-    val actions = makeUserActions(
+    val actions = rememberUserProfleActions(
         userInfo,
         isLoginUserFollowedThisUser,
         userFollowers,
@@ -167,7 +168,18 @@ fun UserInfoHeader(
                 onActionClick = onActionClick
             )
 
-            DesignHDivider()
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+            ) {
+                Text(
+                    modifier = Modifier
+                        .align(Alignment.Center),
+                    text = stringResource(xcj.app.appsets.R.string.select_a_display_content),
+                    fontSize = 12.sp
+                )
+            }
         }
     } else {
         Row(
@@ -200,12 +212,24 @@ fun UserInfoHeader(
                     text = userInfo.introduction
                         ?: stringResource(id = xcj.app.appsets.R.string.no_introduction)
                 )
+                UserActions(
+                    modifier = Modifier.weight(1f),
+                    actions = actions,
+                    onActionClick = onActionClick
+                )
             }
-            UserActions(
-                modifier = Modifier.weight(1f),
-                actions = actions,
-                onActionClick = onActionClick
-            )
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxSize()
+            ) {
+                Text(
+                    modifier = Modifier
+                        .align(Alignment.Center),
+                    text = stringResource(xcj.app.appsets.R.string.select_a_display_content),
+                    fontSize = 12.sp
+                )
+            }
         }
     }
 }

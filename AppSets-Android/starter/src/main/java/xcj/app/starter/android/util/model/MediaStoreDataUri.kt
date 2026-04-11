@@ -1,4 +1,4 @@
-package xcj.app.appsets.util.model
+package xcj.app.starter.android.util.model
 
 import android.net.Uri
 import xcj.app.starter.android.util.UriProvider

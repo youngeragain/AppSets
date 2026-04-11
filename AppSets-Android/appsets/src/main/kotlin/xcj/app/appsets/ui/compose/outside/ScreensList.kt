@@ -10,14 +10,10 @@ import androidx.compose.foundation.gestures.ScrollableState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBarsIgnoringVisibility
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -30,6 +26,7 @@ import androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridS
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -38,8 +35,13 @@ import androidx.compose.ui.unit.dp
 import xcj.app.appsets.im.Bio
 import xcj.app.appsets.server.model.ScreenInfo
 import xcj.app.appsets.server.model.ScreenMediaFileUrl
+import xcj.app.appsets.ui.compose.LocalUseCaseOfNavigation
+import xcj.app.appsets.ui.compose.PageRouteNames
 import xcj.app.appsets.ui.compose.custom_component.LoadMoreHandler
 import xcj.app.appsets.ui.compose.custom_component.VerticalOverscrollBox
+import xcj.app.compose_share.components.statusBarWithTopActionBarPaddingValues
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 private const val TAG = "ScreensList"
 
@@ -89,7 +91,7 @@ fun ScreensList(
     }
 }
 
-@OptIn(ExperimentalLayoutApi::class)
+@OptIn(ExperimentalLayoutApi::class, ExperimentalUuidApi::class)
 @Composable
 private fun LandscapeScreenList(
     modifier: Modifier,
@@ -99,21 +101,26 @@ private fun LandscapeScreenList(
     onBioClick: (Bio) -> Unit,
     onScreenMediaClick: (ScreenMediaFileUrl, List<ScreenMediaFileUrl>) -> Unit,
 ) {
+    val navigationUseCase = LocalUseCaseOfNavigation.current
+    val randomKeyPrefix = remember { Uuid.random().toString() }
     LazyVerticalStaggeredGrid(
         modifier = modifier,
         columns = StaggeredGridCells.Fixed(3),
-        contentPadding = PaddingValues(
-            start = 12.dp,
-            top = WindowInsets.statusBarsIgnoringVisibility.asPaddingValues().calculateTopPadding(),
-            end = 12.dp,
-            bottom = 150.dp
+        contentPadding = statusBarWithTopActionBarPaddingValues(
+            bottom = 150.dp,
+            containsTopBarHeight = navigationUseCase.currentRouteState.value == PageRouteNames.UserProfilePage
         ),
         horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
         verticalItemSpacing = 6.dp,
         state = scrollableState as LazyStaggeredGridState
     )
     {
-        itemsIndexed(screens, { index, screenInfo -> screenInfo.bioId }) { _, screenInfo ->
+        itemsIndexed(
+            items = screens,
+            key = { index, screenInfo ->
+                randomKeyPrefix + screenInfo.bioId
+            }
+        ) { _, screenInfo ->
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -146,7 +153,7 @@ private fun LandscapeScreenList(
     }
 }
 
-@OptIn(ExperimentalLayoutApi::class)
+@OptIn(ExperimentalLayoutApi::class, ExperimentalUuidApi::class)
 @Composable
 private fun PortraitScreenList(
     modifier: Modifier,
@@ -156,15 +163,14 @@ private fun PortraitScreenList(
     onBioClick: (Bio) -> Unit,
     onScreenMediaClick: (ScreenMediaFileUrl, List<ScreenMediaFileUrl>) -> Unit,
 ) {
+    val navigationUseCase = LocalUseCaseOfNavigation.current
+    val randomKeyPrefix = remember { Uuid.random().toString() }
     LazyColumn(
         modifier = modifier,
         state = scrollableState as LazyListState,
-        contentPadding = PaddingValues(
-            start = 12.dp,
-            top = WindowInsets.statusBarsIgnoringVisibility.asPaddingValues()
-                .calculateTopPadding(),
-            end = 12.dp,
-            bottom = 150.dp
+        contentPadding = statusBarWithTopActionBarPaddingValues(
+            bottom = 150.dp,
+            containsTopBarHeight = navigationUseCase.currentRouteState.value == PageRouteNames.UserProfilePage
         ),
         verticalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterVertically)
     )
@@ -172,7 +178,7 @@ private fun PortraitScreenList(
         itemsIndexed(
             items = screens,
             key = { index, screenInfo ->
-                screenInfo.bioId
+                randomKeyPrefix + screenInfo.bioId
             }
         ) { index, screenInfo ->
             Column(

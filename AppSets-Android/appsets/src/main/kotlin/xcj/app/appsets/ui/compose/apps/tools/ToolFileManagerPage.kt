@@ -29,7 +29,6 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsIgnoringVisibility
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
@@ -58,13 +57,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.layout.onPlaced
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -76,11 +72,12 @@ import xcj.app.appsets.ui.compose.apps.tools.file_manager.DefaultFile
 import xcj.app.appsets.ui.compose.custom_component.AnyImage
 import xcj.app.appsets.ui.compose.custom_component.HideNavBar
 import xcj.app.appsets.ui.compose.quickstep.QuickStepContent
-import xcj.app.appsets.util.ktx.asComponentActivityOrNull
 import xcj.app.compose_share.components.BackActionTopBar
 import xcj.app.compose_share.components.DesignTextField
+import xcj.app.compose_share.components.StatusBarWithTopActionBarSpacer
 import xcj.app.compose_share.modifier.hazeSourceIfAvailable
 import xcj.app.compose_share.modifier.rememberHazeStateIfAvailable
+import xcj.app.starter.android.ktx.asComponentActivityOrNull
 import xcj.app.starter.android.util.FileUtil
 
 private const val TAG = "ToolFileManagerPage"
@@ -151,17 +148,6 @@ fun ToolFileManagerPage(
         mutableStateOf(false)
     }
     val hazeState = rememberHazeStateIfAvailable()
-    val density = LocalDensity.current
-    var backActionBarSize by remember {
-        mutableStateOf(IntSize.Zero)
-    }
-    val backActionsHeight by remember {
-        derivedStateOf {
-            with(density) {
-                backActionBarSize.height.toDp()
-            }
-        }
-    }
     Box(
         modifier = Modifier.fillMaxSize()
     )
@@ -177,11 +163,7 @@ fun ToolFileManagerPage(
                     .animateContentSize()
             )
             {
-                Spacer(
-                    modifier = Modifier.height(
-                        backActionsHeight + 12.dp
-                    )
-                )
+                StatusBarWithTopActionBarSpacer()
                 if (currentAbstractFile != null) {
                     Box(
                         modifier = Modifier
@@ -372,9 +354,6 @@ fun ToolFileManagerPage(
         }
 
         BackActionTopBar(
-            modifier = Modifier.onPlaced {
-                backActionBarSize = it.size
-            },
             hazeState = hazeState,
             onBackClick = onBackClick
         )

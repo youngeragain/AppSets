@@ -18,9 +18,9 @@ import kotlinx.coroutines.launch
 import xcj.app.appsets.ui.compose.theme.AppSetsTheme
 import xcj.app.appsets.ui.viewmodel.MainViewModel
 import xcj.app.appsets.util.SplashScreenHelper
-import xcj.app.appsets.util.ktx.getSystemFileUri
 import xcj.app.compose_share.ui.viewmodel.VisibilityComposeStateViewModel.Companion.bottomSheetState
 import xcj.app.starter.android.AppDefinition
+import xcj.app.starter.android.ktx.getSystemFileUri
 import xcj.app.starter.android.ui.base.platform.DesignComponentActivity
 import xcj.app.starter.android.util.PackageUtil
 import xcj.app.starter.android.util.PurpleLogger

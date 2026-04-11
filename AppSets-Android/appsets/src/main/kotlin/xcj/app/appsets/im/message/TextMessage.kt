@@ -12,7 +12,7 @@ data class TextMessage(
     override val timestamp: Date,
     override val fromInfo: MessageFromInfo,
     override val toInfo: MessageToInfo,
-    override val messageGroupTag: String?,
+    override val messageGroupTag: String? = null,
     override val metadata: StringMessageMetadata,
     override val messageType: String = IMMessageDesignType.TYPE_TEXT
 ) : IMMessage<StringMessageMetadata>() {

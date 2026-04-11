@@ -1,4 +1,4 @@
-package xcj.app.appsets.util.ktx
+package xcj.app.starter.android.ktx
 
 import android.app.Activity
 import android.app.Application
@@ -17,8 +17,8 @@ import androidx.activity.ComponentActivity
 import androidx.appcompat.view.ContextThemeWrapper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import xcj.app.appsets.util.model.MediaStoreDataUri
 import xcj.app.starter.android.util.PurpleLogger
+import xcj.app.starter.android.util.model.MediaStoreDataUri
 import xcj.app.starter.util.ByteUtil
 
 private const val TAG = "ContextKTX"

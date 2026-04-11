@@ -16,15 +16,12 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsIgnoringVisibility
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
@@ -33,40 +30,35 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.layout.onPlaced
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewWrapper
-import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import xcj.app.appsets.ui.compose.LocalUseCaseOfSystem
 import xcj.app.appsets.ui.compose.content_selection.ContentSelectionResult
 import xcj.app.appsets.ui.compose.custom_component.AnyImage
 import xcj.app.appsets.ui.compose.custom_component.VerticalOverscrollBox
+import xcj.app.appsets.ui.compose.custom_component.preview_tooling.DesignPreviewCompositionLocalProvider
 import xcj.app.appsets.ui.compose.theme.ExtraLarge2
 import xcj.app.appsets.ui.model.UserInfoForCreate
 import xcj.app.appsets.ui.model.page_state.SignUpPageUIState
-import xcj.app.appsets.ui.viewmodel.MainViewModel
 import xcj.app.appsets.util.compose_state.ComposeStateUpdater
 import xcj.app.appsets.util.compose_state.RuntimeSingleStateUpdater
 import xcj.app.compose_share.components.BackActionTopBar
 import xcj.app.compose_share.components.DesignTextField
+import xcj.app.compose_share.components.StatusBarWithTopActionBarSpacer
 import xcj.app.compose_share.foundation_extension.ProjectPreviewWrapperProviderImpl
 import xcj.app.compose_share.modifier.hazeSourceIfAvailable
 import xcj.app.compose_share.modifier.rememberHazeStateIfAvailable
@@ -84,12 +76,7 @@ fun SignUpPagePreview() {
     val userInfoForCreate by remember {
         mutableStateOf(UserInfoForCreate())
     }
-    val mainViewModel = remember {
-        MainViewModel()
-    }
-    CompositionLocalProvider(
-        LocalUseCaseOfSystem provides mainViewModel.systemUseCase
-    ) {
+    DesignPreviewCompositionLocalProvider {
         SignUpPage(
             signUpPageUIState = signUpPageUIState,
             userInfoForCreate = userInfoForCreate,
@@ -126,17 +113,7 @@ fun SignUpPage(
         }
     }
     val hazeState = rememberHazeStateIfAvailable()
-    val density = LocalDensity.current
-    var backActionBarSize by remember {
-        mutableStateOf(IntSize.Zero)
-    }
-    val backActionsHeight by remember {
-        derivedStateOf {
-            with(density) {
-                backActionBarSize.height.toDp()
-            }
-        }
-    }
+
     VerticalOverscrollBox {
 
         Column(
@@ -145,14 +122,8 @@ fun SignUpPage(
                 .fillMaxWidth()
                 .imePadding()
                 .verticalScroll(rememberScrollState())
-        )
-        {
-            val statusBarHeight =
-                WindowInsets.statusBarsIgnoringVisibility.asPaddingValues().calculateTopPadding()
-            val finalTopPadding = remember(backActionsHeight, statusBarHeight) {
-                if (backActionsHeight > 0.dp) backActionsHeight + 12.dp else statusBarHeight + 84.dp
-            }
-            Spacer(modifier = Modifier.height(finalTopPadding))
+        ) {
+            StatusBarWithTopActionBarSpacer()
             Column(modifier = Modifier.padding(horizontal = 12.dp)) {
                 Spacer(modifier = Modifier.height(12.dp))
                 Column(
@@ -509,9 +480,6 @@ fun SignUpPage(
 
 
         BackActionTopBar(
-            modifier = Modifier.onPlaced {
-                backActionBarSize = it.size
-            },
             hazeState = hazeState,
             onBackClick = onBackClick,
             backButtonText = stringResource(xcj.app.appsets.R.string.create_account),

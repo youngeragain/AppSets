@@ -113,16 +113,16 @@ import xcj.app.appsets.ui.compose.custom_component.DragValue
 import xcj.app.appsets.ui.compose.custom_component.LoadMoreHandler
 import xcj.app.appsets.ui.compose.custom_component.SwipeContainer
 import xcj.app.appsets.ui.compose.theme.extShapes
-import xcj.app.appsets.util.ktx.asComponentActivityOrNull
-import xcj.app.appsets.util.model.MediaStoreDataUri
-import xcj.app.appsets.util.model.isVideoType
 import xcj.app.compose_share.components.DesignTextField
 import xcj.app.compose_share.components.DesignVDivider
 import xcj.app.starter.android.ActivityThemeInterface
 import xcj.app.starter.android.SystemContentSelectionCallback
+import xcj.app.starter.android.ktx.asComponentActivityOrNull
 import xcj.app.starter.android.ui.model.PlatformPermissionsUsage
 import xcj.app.starter.android.usecase.PlatformUseCase
 import xcj.app.starter.android.util.UriProvider
+import xcj.app.starter.android.util.model.MediaStoreDataUri
+import xcj.app.starter.android.util.model.isVideoType
 import java.io.File
 
 

@@ -32,6 +32,7 @@ class AppSetsShareActivity : DesignComponentActivity() {
         private const val TAG = "AppSetsShareActivity"
 
         const val INTENT_ACTION = "xcj.app.share"
+
         const val INTENT_CATEGORY = "xcj.app.share.main"
 
         const val CONTENT_FORM_APP = 0

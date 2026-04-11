@@ -92,6 +92,7 @@ import xcj.app.compose_share.components.BackActionTopBar
 import xcj.app.compose_share.components.DesignTextField
 import xcj.app.compose_share.components.DesignVDivider
 import xcj.app.compose_share.components.LocalVisibilityComposeStateProvider
+import xcj.app.compose_share.components.statusBarWithTopActionBarPaddingValues
 import xcj.app.compose_share.modifier.hazeSourceIfAvailable
 import xcj.app.compose_share.modifier.rememberHazeStateIfAvailable
 import xcj.app.compose_share.ui.viewmodel.VisibilityComposeStateViewModel.Companion.bottomSheetState
@@ -164,7 +165,7 @@ fun CreateAppPage(
         modifier = Modifier.fillMaxSize()
     ) {
 
-        CreateApplicationBody(
+        CreateApplicationContent(
             hazeState = hazeState,
             backActionsHeight = backActionsHeight,
             applicationForCreate = applicationForCreate,
@@ -199,7 +200,7 @@ fun CreateAppPage(
 }
 
 @Composable
-fun CreateApplicationBody(
+fun CreateApplicationContent(
     modifier: Modifier = Modifier,
     hazeState: HazeState?,
     backActionsHeight: Dp,
@@ -259,9 +260,7 @@ fun CreateApplicationBody(
     ) {
         LazyColumn(
             modifier = modifier,
-            contentPadding = PaddingValues(
-                top = backActionsHeight + 12.dp
-            )
+            contentPadding = statusBarWithTopActionBarPaddingValues(bottom = 150.dp)
         ) {
             item {
                 Column(

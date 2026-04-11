@@ -40,15 +40,18 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.TransformOrigin
@@ -57,6 +60,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewWrapper
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.net.toUri
@@ -67,25 +72,58 @@ import dev.chrisbanes.haze.materials.HazeMaterials
 import xcj.app.appsets.im.message.SystemMessage
 import xcj.app.appsets.im.model.FriendRequestJson
 import xcj.app.appsets.im.model.GroupRequestJson
+import xcj.app.appsets.ui.compose.LocalNavControllers
 import xcj.app.appsets.ui.compose.LocalUseCaseOfConversation
+import xcj.app.appsets.ui.compose.LocalUseCaseOfMediaRemoteExo
 import xcj.app.appsets.ui.compose.LocalUseCaseOfNavigation
 import xcj.app.appsets.ui.compose.LocalUseCaseOfNowSpaceContent
 import xcj.app.appsets.ui.compose.PageRouteNames
 import xcj.app.appsets.ui.compose.compose_extensions.AnimatedContentIf
 import xcj.app.appsets.ui.compose.custom_component.AnyImage
+import xcj.app.appsets.ui.compose.custom_component.preview_tooling.DesignPreviewCompositionLocalProvider
 import xcj.app.appsets.ui.model.state.NowSpaceContent
 import xcj.app.appsets.usecase.ConversationUseCase
+import xcj.app.appsets.usecase.NowSpaceContentUseCase
 import xcj.app.appsets.usecase.SessionState
+import xcj.app.compose_share.foundation_extension.ProjectPreviewWrapperProviderImpl
 import xcj.app.compose_share.modifier.hazeEffectIfAvailable
 import xcj.app.starter.android.ktx.startWithHttpSchema
+import xcj.app.starter.android.util.UriProvider
+
+
+sealed interface NowSpaceSizeState {
+    object Small : NowSpaceSizeState
+    object Medium : NowSpaceSizeState
+    object Large : NowSpaceSizeState
+}
+
+
+@PreviewWrapper(wrapper = ProjectPreviewWrapperProviderImpl::class)
+@Preview(showBackground = true)
+@Composable
+fun NowSpaceContainerPreview() {
+    DesignPreviewCompositionLocalProvider {
+        val nowSpaceContentUseCase = LocalUseCaseOfNowSpaceContent.current
+        LaunchedEffect(true) {
+            val demo = NowSpaceContent.Demo(tips = "Demo", subTips = "This is a demo")
+            nowSpaceContentUseCase.addContent(demo)
+            val audioPlayer =
+                NowSpaceContent.AudioPlayer(UriProvider.fromUri("http://localhost".toUri()))
+            nowSpaceContentUseCase.addContent(audioPlayer)
+        }
+        NowSpaceContainer(
+            hazeState = null
+        )
+    }
+}
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun NowSpaceContainer(
     modifier: Modifier = Modifier,
-    navController: NavController,
     hazeState: HazeState?,
 ) {
+    val navController = LocalNavControllers.current[KEY_MAIN_NAVI_CONTROLLER]!!
     val nowSpaceContentUseCase = LocalUseCaseOfNowSpaceContent.current
     val conversationUseCase = LocalUseCaseOfConversation.current
     val nowSpaceContents = nowSpaceContentUseCase.contents
@@ -95,9 +133,9 @@ fun NowSpaceContainer(
     ) {
         LazyColumn(
             contentPadding = PaddingValues(
-                top = WindowInsets.statusBarsIgnoringVisibility.asPaddingValues()
+                top = 12.dp + WindowInsets.statusBarsIgnoringVisibility.asPaddingValues()
                     .calculateTopPadding(),
-                bottom = WindowInsets.navigationBarsIgnoringVisibility.asPaddingValues()
+                bottom = 12.dp + WindowInsets.navigationBarsIgnoringVisibility.asPaddingValues()
                     .calculateBottomPadding()
             ),
             verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -113,43 +151,12 @@ fun NowSpaceContainer(
                     hazeState = hazeState,
                     nowSpaceContent = nowSpaceContent,
                     onClick = {
-                        when (nowSpaceContent) {
-                            is NowSpaceContent.AppVersionChecked -> {
-
-                            }
-
-                            is NowSpaceContent.IMMessage -> {
-                                nowSpaceContentUseCase.removeContent(nowSpaceContent)
-                                when (nowSpaceContent.message) {
-                                    is SystemMessage -> {
-
-                                        conversationUseCase.updateCurrentTab(ConversationUseCase.SYSTEM)
-                                        navController.navigate(PageRouteNames.ConversationOverviewPage) {
-                                            popUpTo(PageRouteNames.ConversationOverviewPage) {
-                                                inclusive = true
-                                            }
-                                        }
-
-                                    }
-
-                                    else -> {
-                                        conversationUseCase.updateCurrentSessionBySession(
-                                            nowSpaceContent.session
-                                        )
-                                        navController.navigate(PageRouteNames.ConversationDetailsPage) {
-                                            popUpTo(PageRouteNames.ConversationDetailsPage) {
-                                                inclusive = true
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-
-                            is NowSpaceContent.PlatformPermissionUsageTips -> {
-                                nowSpaceContentUseCase.removeContent(nowSpaceContent)
-                                navController.navigate(PageRouteNames.PrivacyPage)
-                            }
-                        }
+                        handleNowSpaceContentClick(
+                            navController,
+                            nowSpaceContent,
+                            nowSpaceContentUseCase,
+                            conversationUseCase
+                        )
                     },
                     onLongClick = {
 
@@ -181,7 +188,6 @@ private fun QuickStepBarsContainer(
         }
     }
 }
-
 
 @Composable
 private fun QuickStepBar(
@@ -215,6 +221,13 @@ private fun QuickStepBar(
             ) { targetNowSpaceContent ->
                 when (targetNowSpaceContent) {
 
+                    is NowSpaceContent.Demo -> {
+                        DemoBar(
+                            nowSpaceContent = targetNowSpaceContent,
+                            isBarLongPressed = isBarLongPressed,
+                        )
+                    }
+
                     is NowSpaceContent.AppVersionChecked -> {
                         AppVersionCheckedBar(
                             nowSpaceContent = targetNowSpaceContent,
@@ -230,14 +243,34 @@ private fun QuickStepBar(
                     }
 
                     is NowSpaceContent.PlatformPermissionUsageTips -> {
-
                         PlatformPermissionUsageTipsQuickStepBar(
+                            nowSpaceContent = targetNowSpaceContent,
+                            isBarLongPressed = isBarLongPressed
+                        )
+                    }
+
+                    is NowSpaceContent.AudioPlayer -> {
+                        AudioPlayerBar(
                             nowSpaceContent = targetNowSpaceContent,
                             isBarLongPressed = isBarLongPressed
                         )
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+fun DemoBar(
+    modifier: Modifier = Modifier,
+    nowSpaceContent: NowSpaceContent.Demo,
+    isBarLongPressed: Boolean,
+) {
+    Box(modifier = Modifier.fillMaxWidth()) {
+        Column {
+            Text(text = nowSpaceContent.tips)
+            Text(text = nowSpaceContent.subTips, fontSize = 12.sp)
         }
     }
 }
@@ -254,18 +287,13 @@ private fun QuickStepBarContainer(
 ) {
     val navigationUseCase = LocalUseCaseOfNavigation.current
     val conversationUseCase = LocalUseCaseOfConversation.current
+    val mediaRemoteExoUseCase = LocalUseCaseOfMediaRemoteExo.current
     val currentRoute by navigationUseCase.currentRouteState
     val currentSessionState by conversationUseCase.currentSessionState
     val tempNowSpaceContent by rememberUpdatedState(nowSpaceContent)
     val isBarVisible by remember {
         derivedStateOf {
             when (tempNowSpaceContent) {
-
-
-                is NowSpaceContent.AppVersionChecked -> {
-                    true
-                }
-
                 is NowSpaceContent.IMMessage -> {
                     val nowSpaceContentOfIMMessage =
                         tempNowSpaceContent as NowSpaceContent.IMMessage
@@ -275,9 +303,7 @@ private fun QuickStepBarContainer(
                             currentRoute != PageRouteNames.ConversationDetailsPage
                 }
 
-                is NowSpaceContent.PlatformPermissionUsageTips -> {
-                    true
-                }
+                else -> true
             }
         }
     }
@@ -329,12 +355,14 @@ private fun QuickStepBarContainer(
                     .padding(12.dp),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
+                content()
+            }
+            if (isDismissIconVisible) {
                 Box(
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(12.dp)
                 ) {
-                    content()
-                }
-                if (isDismissIconVisible) {
                     Icon(
                         modifier = Modifier
                             .background(
@@ -355,7 +383,7 @@ private fun QuickStepBarContainer(
 }
 
 @Composable
-fun AppVersionCheckedBar(
+private fun AppVersionCheckedBar(
     modifier: Modifier = Modifier,
     nowSpaceContent: NowSpaceContent.AppVersionChecked,
     isBarLongPressed: Boolean,
@@ -573,9 +601,44 @@ private fun PlatformPermissionUsageTipsQuickStepBar(
                 }
             }
         }
-
     }
+}
 
+@Composable
+private fun AudioPlayerBar(
+    modifier: Modifier = Modifier,
+    nowSpaceContent: NowSpaceContent.AudioPlayer,
+    isBarLongPressed: Boolean
+) {
+    val mediaRemoteExoUseCase = LocalUseCaseOfMediaRemoteExo.current
+    val audioPlayerState by mediaRemoteExoUseCase.audioPlayerState
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(12.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Text(text = audioPlayerState.title)
+        Text(text = audioPlayerState.art, fontSize = 12.sp)
+        Box(modifier = Modifier.fillMaxWidth()) {
+            Text(
+                modifier = Modifier.align(Alignment.CenterStart),
+                text = audioPlayerState.currentDuration,
+                fontSize = 12.sp
+            )
+            Text(
+                modifier = Modifier.align(Alignment.CenterEnd),
+                text = audioPlayerState.duration,
+                fontSize = 12.sp,
+            )
+        }
+        LinearProgressIndicator(
+            modifier = Modifier.fillMaxWidth(),
+            progress = {
+                audioPlayerState.progress
+            },
+        )
+    }
 }
 
 private fun barsEnterTransition(): EnterTransition {
@@ -622,4 +685,55 @@ private fun barExitTransition(): ExitTransition {
     return fadeOut(
         animationSpec = tween()
     )
+}
+
+private fun handleNowSpaceContentClick(
+    navController: NavController,
+    nowSpaceContent: NowSpaceContent,
+    nowSpaceContentUseCase: NowSpaceContentUseCase,
+    conversationUseCase: ConversationUseCase,
+) {
+    when (nowSpaceContent) {
+        is NowSpaceContent.Demo -> {
+
+        }
+
+        is NowSpaceContent.AppVersionChecked -> {
+
+        }
+
+        is NowSpaceContent.IMMessage -> {
+            nowSpaceContentUseCase.removeContent(nowSpaceContent)
+            when (nowSpaceContent.message) {
+                is SystemMessage -> {
+                    conversationUseCase.updateCurrentTab(ConversationUseCase.SYSTEM)
+                    navController.navigate(PageRouteNames.ConversationOverviewPage) {
+                        popUpTo(PageRouteNames.ConversationOverviewPage) {
+                            inclusive = true
+                        }
+                    }
+                }
+
+                else -> {
+                    conversationUseCase.updateCurrentSessionBySession(
+                        nowSpaceContent.session
+                    )
+                    navController.navigate(PageRouteNames.ConversationDetailsPage) {
+                        popUpTo(PageRouteNames.ConversationDetailsPage) {
+                            inclusive = true
+                        }
+                    }
+                }
+            }
+        }
+
+        is NowSpaceContent.PlatformPermissionUsageTips -> {
+            nowSpaceContentUseCase.removeContent(nowSpaceContent)
+            navController.navigate(PageRouteNames.PrivacyPage)
+        }
+
+        is NowSpaceContent.AudioPlayer -> {
+
+        }
+    }
 }

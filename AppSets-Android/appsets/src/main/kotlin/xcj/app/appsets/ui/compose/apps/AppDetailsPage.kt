@@ -51,13 +51,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.layout.onPlaced
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
@@ -74,6 +71,7 @@ import xcj.app.appsets.ui.compose.custom_component.VerticalOverscrollBox
 import xcj.app.appsets.ui.compose.theme.ExtraLarge2
 import xcj.app.compose_share.components.BackActionTopBar
 import xcj.app.compose_share.components.DesignHDivider
+import xcj.app.compose_share.components.StatusBarWithTopActionBarSpacer
 import xcj.app.compose_share.modifier.hazeSourceIfAvailable
 import xcj.app.compose_share.modifier.rememberHazeStateIfAvailable
 
@@ -109,27 +107,12 @@ fun AppDetailsPage(
     } else {
         VerticalOverscrollBox {
             val hazeState = rememberHazeStateIfAvailable()
-            val density = LocalDensity.current
-            var backActionBarSize by remember {
-                mutableStateOf(IntSize.Zero)
-            }
-            val backActionsHeight by remember {
-                derivedStateOf {
-                    with(density) {
-                        backActionBarSize.height.toDp()
-                    }
-                }
-            }
             Column(
                 modifier = Modifier
                     .hazeSourceIfAvailable(hazeState)
                     .verticalScroll(rememberScrollState())
             ) {
-                Spacer(
-                    modifier = Modifier.height(
-                        backActionsHeight + 12.dp
-                    )
-                )
+                StatusBarWithTopActionBarSpacer()
                 ApplicationContentComponent(
                     application = application,
                     onGetApplicationClick = onGetApplicationClick,
@@ -154,10 +137,6 @@ fun AppDetailsPage(
             }
 
             BackActionTopBar(
-                modifier = Modifier
-                    .onPlaced {
-                        backActionBarSize = it.size
-                    },
                 hazeState = hazeState,
                 onBackClick = onBackClick
             )

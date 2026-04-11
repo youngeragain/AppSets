@@ -9,12 +9,8 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsIgnoringVisibility
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -42,6 +38,7 @@ import xcj.app.appsets.ui.compose.custom_component.ShowNavBar
 import xcj.app.appsets.ui.compose.custom_component.VerticalOverscrollBox
 import xcj.app.appsets.ui.compose.theme.extShapes
 import xcj.app.appsets.ui.model.page_state.AppCenterPageUIState
+import xcj.app.compose_share.components.statusBarWithTopActionBarPaddingValues
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -75,10 +72,9 @@ fun SimpleApplicationList(
             columns = GridCells.Adaptive(90.dp),
             modifier = Modifier,
             state = rememberLazyGridState(),
-            contentPadding = PaddingValues(
-                top = WindowInsets.statusBarsIgnoringVisibility.asPaddingValues()
-                    .calculateTopPadding() + 12.dp,
-                bottom = 150.dp
+            contentPadding = statusBarWithTopActionBarPaddingValues(
+                bottom = 150.dp,
+                containsTopBarHeight = false
             )
         ) {
             itemsIndexed(items = apps) { index, application ->

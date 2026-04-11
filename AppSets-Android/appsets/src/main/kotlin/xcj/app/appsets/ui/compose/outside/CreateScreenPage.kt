@@ -22,8 +22,6 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -31,7 +29,6 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsIgnoringVisibility
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.wrapContentHeight
@@ -44,49 +41,45 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.onPlaced
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewWrapper
-import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import xcj.app.appsets.ui.compose.LocalUseCaseOfNavigation
 import xcj.app.appsets.ui.compose.LocalUseCaseOfScreenPost
 import xcj.app.appsets.ui.compose.content_selection.ContentSelectionResult
 import xcj.app.appsets.ui.compose.content_selection.ContentSelectionTypes
 import xcj.app.appsets.ui.compose.custom_component.AnyImage
 import xcj.app.appsets.ui.compose.custom_component.HideNavBar
 import xcj.app.appsets.ui.compose.custom_component.VerticalOverscrollBox
+import xcj.app.appsets.ui.compose.custom_component.preview_tooling.DesignPreviewCompositionLocalProvider
 import xcj.app.appsets.ui.compose.quickstep.QuickStepContent
 import xcj.app.appsets.ui.model.ScreenInfoForCreate
 import xcj.app.appsets.ui.model.page_state.CreateScreenPageUIState
-import xcj.app.appsets.ui.viewmodel.MainViewModel
 import xcj.app.appsets.util.compose_state.ComposeStateUpdater
 import xcj.app.appsets.util.compose_state.RuntimeListStateUpdater
-import xcj.app.appsets.util.model.isVideoType
 import xcj.app.compose_share.components.BackActionTopBar
 import xcj.app.compose_share.components.DesignTextField
+import xcj.app.compose_share.components.StatusBarWithTopActionBarSpacer
 import xcj.app.compose_share.foundation_extension.ProjectPreviewWrapperProviderImpl
 import xcj.app.compose_share.modifier.hazeSourceIfAvailable
 import xcj.app.compose_share.modifier.rememberHazeStateIfAvailable
 import xcj.app.starter.android.util.UriProvider
+import xcj.app.starter.android.util.model.isAudioType
+import xcj.app.starter.android.util.model.isImageType
+import xcj.app.starter.android.util.model.isVideoType
 
 @PreviewWrapper(wrapper = ProjectPreviewWrapperProviderImpl::class)
 @Preview(showBackground = true)
@@ -99,14 +92,7 @@ fun CreateScreenPagePreview() {
         mutableStateOf(ScreenInfoForCreate())
     }
 
-    val mainViewModel = remember {
-        MainViewModel()
-    }
-
-    CompositionLocalProvider(
-        LocalUseCaseOfScreenPost provides mainViewModel.screenPostUseCase,
-        LocalUseCaseOfNavigation provides mainViewModel.navigationUseCase
-    ) {
+    DesignPreviewCompositionLocalProvider {
         CreateScreenPage(
             quickStepContents = null,
             createScreenPageUIState = createScreenPageUIState,
@@ -157,18 +143,6 @@ fun CreateScreenPage(
         }
     }
     val hazeState = rememberHazeStateIfAvailable()
-    val density = LocalDensity.current
-    var backActionBarSize by remember {
-        mutableStateOf(IntSize.Zero)
-    }
-    val backActionsHeight by remember {
-        derivedStateOf {
-            with(density) {
-                backActionBarSize.height.toDp()
-            }
-        }
-    }
-
     VerticalOverscrollBox {
         Column(
             modifier = Modifier
@@ -178,12 +152,7 @@ fun CreateScreenPage(
                 .padding(horizontal = 20.dp)
                 .verticalScroll(rememberScrollState())
         ) {
-            val statusBarHeight =
-                WindowInsets.statusBarsIgnoringVisibility.asPaddingValues().calculateTopPadding()
-            val finalTopPadding = remember(backActionsHeight, statusBarHeight) {
-                if (backActionsHeight > 0.dp) backActionsHeight + 12.dp else statusBarHeight + 84.dp
-            }
-            Spacer(modifier = Modifier.height(finalTopPadding))
+            StatusBarWithTopActionBarSpacer()
             NewPostScreenComponent(
                 screenInfoForCreate = screenInfoForCreate,
                 onGenerateClick = onGenerateClick,
@@ -196,9 +165,6 @@ fun CreateScreenPage(
         CreateScreenIndicator(createScreenPageUIState = createScreenPageUIState)
 
         BackActionTopBar(
-            modifier = Modifier.onPlaced {
-                backActionBarSize = it.size
-            },
             hazeState = hazeState,
             backButtonText = stringResource(xcj.app.appsets.R.string.create_screen),
             endButtonText = stringResource(id = xcj.app.appsets.R.string.ok),
@@ -512,26 +478,37 @@ fun NewPostScreenComponent(
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 screenInfoForCreate.mediaUriProviders.forEach { contentUriProvider ->
-                    Box(modifier = Modifier.size(150.dp)) {
-                        AnyImage(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .clip(MaterialTheme.shapes.extraLarge)
-                                .clickable(
-                                    onClick = {
-                                        onMediaClick(contentUriProvider)
-                                    },
-                                ),
-                            model = contentUriProvider.provideUri()
-                        )
+                    Box(
+                        modifier = Modifier
+                            .size(150.dp)
+                            .clip(MaterialTheme.shapes.extraLarge)
+                            .clickable(onClick = {
+                                onMediaClick(contentUriProvider)
+                            })
+                    ) {
+                        if (contentUriProvider.isImageType() || contentUriProvider.isVideoType()) {
+                            AnyImage(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .clip(MaterialTheme.shapes.extraLarge),
+                                model = contentUriProvider.provideUri()
+                            )
+                        }
                         if (contentUriProvider.isVideoType()) {
                             Icon(
                                 painter = painterResource(id = xcj.app.compose_share.R.drawable.ic_slow_motion_video_24),
                                 contentDescription = null,
                                 modifier = Modifier
                                     .align(Alignment.Center)
-                                    .size(24.dp),
-                                tint = Color.White
+                                    .size(24.dp)
+                            )
+                        } else if (contentUriProvider.isAudioType()) {
+                            Icon(
+                                painter = painterResource(id = xcj.app.compose_share.R.drawable.ic_audiotrack_24),
+                                contentDescription = null,
+                                modifier = Modifier
+                                    .align(Alignment.Center)
+                                    .size(24.dp)
                             )
                         }
                         Surface(

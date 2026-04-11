@@ -28,7 +28,7 @@ import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import kotlinx.coroutines.launch
-import xcj.app.appsets.ui.compose.LocalNavHostController
+import xcj.app.appsets.ui.compose.LocalNavControllers
 import xcj.app.appsets.ui.compose.LocalQuickStepContentHandlerRegistry
 import xcj.app.appsets.ui.compose.LocalUseCaseOfAppCreation
 import xcj.app.appsets.ui.compose.LocalUseCaseOfApps
@@ -58,6 +58,8 @@ import xcj.app.starter.android.util.PurpleLogger
 
 private const val TAG = "MainPages"
 
+const val KEY_MAIN_NAVI_CONTROLLER = "MAIN_NAVI_CONTROLLER"
+
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun MainPage() {
@@ -85,12 +87,12 @@ fun MainPage() {
         LocalUseCaseOfApps provides viewModel.appsUseCase,
         LocalUseCaseOfUserInfo provides viewModel.userInfoUseCase,
         LocalUseCaseOfNowSpaceContent provides viewModel.nowSpaceContentUseCase,
-        LocalNavHostController provides navController,
+        LocalNavControllers provides mapOf(KEY_MAIN_NAVI_CONTROLLER to navController),
         LocalVisibilityComposeStateProvider provides viewModel,
         LocalQuickStepContentHandlerRegistry provides quickStepContentHandlerRegistry
     ) {
         Surface {
-            OnScaffoldLaunch(navController = navController)
+            OnScaffoldLaunch()
             Box {
                 Box(
                     modifier = Modifier
@@ -100,7 +102,6 @@ fun MainPage() {
 
                     MainNaviHostPagesContainer(
                         modifier = Modifier.fillMaxSize(),
-                        navController = navController,
                         startPageRoute = PageRouteNames.AppsCenterPage,
                         hazeState = hazeState,
                         hostContextName = MainActivity.TAG
@@ -109,7 +110,6 @@ fun MainPage() {
                     NavigationBarContainer(
                         modifier = Modifier
                             .align(Alignment.BottomCenter),
-                        navController = navController,
                         hazeState = hazeState
                     )
                 }
@@ -119,7 +119,6 @@ fun MainPage() {
                 BottomSheetContainer()
 
                 NowSpaceContainer(
-                    navController = navController,
                     hazeState = hazeState
                 )
 
@@ -129,13 +128,13 @@ fun MainPage() {
 }
 
 @Composable
-private fun OnScaffoldLaunch(navController: NavController) {
+private fun OnScaffoldLaunch() {
     val context = LocalContext.current
     val nowSpaceContentUseCase = LocalUseCaseOfNowSpaceContent.current
     val navigationUseCase = LocalUseCaseOfNavigation.current
     val visibilityComposeStateProvider = LocalVisibilityComposeStateProvider.current
     val localQuickStepContentHandlerRegistry = LocalQuickStepContentHandlerRegistry.current
-
+    val navController = LocalNavControllers.current[KEY_MAIN_NAVI_CONTROLLER]
     val nowSpaceContents = nowSpaceContentUseCase.contents
 
     val appVersionChecked: NowSpaceContent.AppVersionChecked? by remember {
@@ -167,16 +166,18 @@ private fun OnScaffoldLaunch(navController: NavController) {
                     "On Destination Changed"
                 )
             }
-        navController.addOnDestinationChangedListener(destinationChangedListener)
+        navController?.addOnDestinationChangedListener(destinationChangedListener)
 
         QuickStepContentHandlerRegistry.initHandlers(context, localQuickStepContentHandlerRegistry)
 
         onDispose {
-            navController.removeOnDestinationChangedListener(destinationChangedListener)
+            navController?.removeOnDestinationChangedListener(destinationChangedListener)
             QuickStepContentHandlerRegistry.deInitHandlers(localQuickStepContentHandlerRegistry)
         }
     })
 }
+
+const val BLUR_RADIUS_MAX = 30f
 
 @Composable
 private fun Modifier.mainScaffoldHandle(): Modifier = composed {
@@ -189,7 +190,7 @@ private fun Modifier.mainScaffoldHandle(): Modifier = composed {
     LaunchedEffect(immerseContentState.isShow) {
         coroutineScope.launch {
             val target = if (immerseContentState.isShow) {
-                30f
+                BLUR_RADIUS_MAX
             } else {
                 0f
             }
