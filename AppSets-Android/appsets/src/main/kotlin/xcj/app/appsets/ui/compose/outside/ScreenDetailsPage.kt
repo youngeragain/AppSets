@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -83,6 +82,7 @@ import xcj.app.compose_share.components.BackActionTopBar
 import xcj.app.compose_share.components.DesignTextField
 import xcj.app.compose_share.components.LocalVisibilityComposeStateProvider
 import xcj.app.compose_share.components.StatusBarWithTopActionBarSpacer
+import xcj.app.compose_share.components.statusBarWithTopActionBarPaddingValues
 import xcj.app.compose_share.modifier.combinedClickableSingle
 import xcj.app.compose_share.modifier.hazeSourceIfAvailable
 import xcj.app.compose_share.ui.viewmodel.VisibilityComposeStateViewModel.Companion.bottomSheetState
@@ -495,8 +495,7 @@ fun ScreenReviews(
             if (!screenReviews.isNullOrEmpty()) {
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(
-                        top = 68.dp,
+                    contentPadding = statusBarWithTopActionBarPaddingValues(
                         bottom = 150.dp
                     )
                 )

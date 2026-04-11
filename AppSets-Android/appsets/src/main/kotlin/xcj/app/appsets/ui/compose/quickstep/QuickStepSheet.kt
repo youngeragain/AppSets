@@ -196,73 +196,91 @@ fun QuickStepContentComponent(quickStepContent: QuickStepContent) {
         modifier = Modifier
             .widthIn(max = 250.dp)
             .border(
-                1.dp, MaterialTheme.colorScheme.outline,
+                1.dp,
+                MaterialTheme.colorScheme.outline,
                 MaterialTheme.shapes.extraLarge
-            )
-            .padding(8.dp),
+            ),
         horizontalArrangement = Arrangement.spacedBy(6.dp)
     ) {
         when (quickStepContent) {
             is TextQuickStepContent -> {
-                Icon(
-                    painter = painterResource(xcj.app.compose_share.R.drawable.ic_notes_24),
-                    contentDescription = null
-                )
-                Text(
-                    text = quickStepContent.text,
-                    fontSize = 12.sp,
-                    maxLines = 3,
-                    overflow = TextOverflow.Ellipsis
-                )
+                Row(
+                    modifier = Modifier.padding(8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Icon(
+                        painter = painterResource(xcj.app.compose_share.R.drawable.ic_notes_24),
+                        contentDescription = null
+                    )
+                    Text(
+                        text = quickStepContent.text,
+                        fontSize = 12.sp,
+                        maxLines = 3,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
             }
 
             is UriQuickStepContent -> {
                 when {
                     ContentType.isImage(quickStepContent.uriContentType) -> {
-                        /* Icon(
-                             painter = painterResource(xcj.app.compose_share.R.drawable.ic_photo_24),
-                             contentDescription = null
-                         )*/
-                        AnyImage(
-                            modifier = Modifier
-                                .size(120.dp)
-                                .clip(MaterialTheme.shapes.extraLarge),
-                            model = quickStepContent.uri
-                        )
+                        Box(modifier = Modifier.size(120.dp)) {
+                            AnyImage(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .clip(MaterialTheme.shapes.extraLarge),
+                                model = quickStepContent.uri
+                            )
+                        }
                     }
 
                     ContentType.isVideo(quickStepContent.uriContentType) -> {
-                        /*  Icon(
-                              painter = painterResource(xcj.app.compose_share.R.drawable.ic_slow_motion_video_24),
-                              contentDescription = null
-                          )*/
-                        AnyImage(
-                            modifier = Modifier
-                                .size(120.dp)
-                                .clip(MaterialTheme.shapes.extraLarge),
-                            model = quickStepContent.uri
-                        )
+                        Box(modifier = Modifier.size(120.dp)) {
+                            AnyImage(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .clip(MaterialTheme.shapes.extraLarge),
+                                model = quickStepContent.uri
+                            )
+
+                            Icon(
+                                painter = painterResource(id = xcj.app.compose_share.R.drawable.ic_slow_motion_video_24),
+                                contentDescription = null,
+                                modifier = Modifier
+                                    .align(Alignment.Center)
+                                    .size(24.dp)
+                            )
+                        }
                     }
 
                     else -> {
-                        Icon(
-                            painter = painterResource(xcj.app.compose_share.R.drawable.ic_insert_drive_file_24),
-                            contentDescription = null
-                        )
-                        val displayName = quickStepContent.androidUriFile?.displayName
-                        if (!displayName.isNullOrEmpty()) {
-                            Text(text = displayName, fontSize = 12.sp)
+                        Row(
+                            modifier = Modifier.padding(8.dp),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            Icon(
+                                painter = painterResource(xcj.app.compose_share.R.drawable.ic_insert_drive_file_24),
+                                contentDescription = null
+                            )
+                            val displayName = quickStepContent.androidUriFile?.displayName
+                            if (!displayName.isNullOrEmpty()) {
+                                Text(text = displayName, fontSize = 12.sp)
+                            }
                         }
-
                     }
                 }
             }
 
             else -> {
-                Icon(
-                    painter = painterResource(xcj.app.compose_share.R.drawable.ic_insert_drive_file_24),
-                    contentDescription = null
-                )
+                Row(
+                    modifier = Modifier.padding(8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Icon(
+                        painter = painterResource(xcj.app.compose_share.R.drawable.ic_insert_drive_file_24),
+                        contentDescription = null
+                    )
+                }
             }
         }
     }

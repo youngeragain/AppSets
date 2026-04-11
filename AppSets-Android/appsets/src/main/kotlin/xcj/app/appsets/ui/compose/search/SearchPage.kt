@@ -631,6 +631,7 @@ fun SearchedApplicationsPage(
 ) {
     SimpleApplicationList(
         apps = searchedApplications.applications,
+        pageRouteName = PageRouteNames.SearchPage,
         onBioClick = onBioClick,
         onApplicationLongPress = onApplicationLongPress
     )

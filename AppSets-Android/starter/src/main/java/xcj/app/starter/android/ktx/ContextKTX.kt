@@ -199,44 +199,48 @@ suspend fun Context.getSystemFileUri(
         if (it.count == 0) {
             return@withContext null
         }
+        runCatching {
+            val idColumnIndex = cursor.getColumnIndexOrThrow(MediaStore.Files.FileColumns._ID)
+            val displayNameColumnIndex =
+                cursor.getColumnIndexOrThrow(MediaStore.Files.FileColumns.DISPLAY_NAME)
+            val sizeColumnIndex = cursor.getColumnIndexOrThrow(MediaStore.Files.FileColumns.SIZE)
+            val dataColumnIndex = cursor.getColumnIndexOrThrow(MediaStore.Files.FileColumns.DATA)
+            val dataAddedColumnIndex =
+                cursor.getColumnIndexOrThrow(MediaStore.Files.FileColumns.DATE_ADDED)
+            val mimeTypeColumnIndex =
+                cursor.getColumnIndexOrThrow(MediaStore.Files.FileColumns.MIME_TYPE)
 
-        val idColumnIndex = cursor.getColumnIndexOrThrow(MediaStore.Files.FileColumns._ID)
-        val displayNameColumnIndex =
-            cursor.getColumnIndexOrThrow(MediaStore.Files.FileColumns.DISPLAY_NAME)
-        val sizeColumnIndex = cursor.getColumnIndexOrThrow(MediaStore.Files.FileColumns.SIZE)
-        val dataColumnIndex = cursor.getColumnIndexOrThrow(MediaStore.Files.FileColumns.DATA)
-        val dataAddedColumnIndex =
-            cursor.getColumnIndexOrThrow(MediaStore.Files.FileColumns.DATE_ADDED)
-        val mimeTypeColumnIndex =
-            cursor.getColumnIndexOrThrow(MediaStore.Files.FileColumns.MIME_TYPE)
+            if (!it.moveToNext()) {
+                return@withContext null
+            }
+            val id = cursor.getLong(idColumnIndex)
+            val displayName = cursor.getString(displayNameColumnIndex)
+            val size = cursor.getLong(sizeColumnIndex)
+            val data = cursor.getString(dataColumnIndex)
+            val dataAdded = cursor.getString(dataAddedColumnIndex)
+            val mimeType = cursor.getString(mimeTypeColumnIndex)
 
-        if (!it.moveToNext()) {
-            return@withContext null
-        }
-        val id = cursor.getLong(idColumnIndex)
-        val displayName = cursor.getString(displayNameColumnIndex)
-        val size = cursor.getLong(sizeColumnIndex)
-        val data = cursor.getString(dataColumnIndex)
-        val dataAdded = cursor.getString(dataAddedColumnIndex)
-        val mimeType = cursor.getString(mimeTypeColumnIndex)
-
-        if (size == 0L) {
-            PurpleLogger.current.d(
-                TAG,
-                "getSystemFileUris, mediaStoreDataUri size is 0, $displayName"
+            if (size == 0L) {
+                PurpleLogger.current.d(
+                    TAG,
+                    "getSystemFileUris, mediaStoreDataUri size is 0, $displayName"
+                )
+                return@withContext null
+            }
+            MediaStoreDataUri(
+                id = id,
+                uri = uri,
+                date = dataAdded,
+                displayName = displayName,
+                size = size,
+                sizeReadable = ByteUtil.getNetFileSizeDescription(size),
+                mimeType = mimeType
             )
+        }.onSuccess { mediaStoreDataUri ->
+            return@withContext mediaStoreDataUri
+        }.onFailure {
             return@withContext null
         }
-        val mediaStoreDataUri = MediaStoreDataUri(
-            id = id,
-            uri = uri,
-            date = dataAdded,
-            displayName = displayName,
-            size = size,
-            sizeReadable = ByteUtil.getNetFileSizeDescription(size),
-            mimeType = mimeType
-        )
-        return@withContext mediaStoreDataUri
     }
 
     return@withContext null

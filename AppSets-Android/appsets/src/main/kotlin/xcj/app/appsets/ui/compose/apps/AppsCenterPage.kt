@@ -33,6 +33,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import xcj.app.appsets.im.Bio
 import xcj.app.appsets.server.model.Application
+import xcj.app.appsets.ui.compose.PageRouteNames
 import xcj.app.appsets.ui.compose.custom_component.AnyImage
 import xcj.app.appsets.ui.compose.custom_component.ShowNavBar
 import xcj.app.appsets.ui.compose.custom_component.VerticalOverscrollBox
@@ -51,6 +52,7 @@ fun AppsCenterPage(
     val allApplications by rememberUpdatedState(appCenterPageUIState.apps.flatMap { it.applications })
     SimpleApplicationList(
         apps = allApplications,
+        pageRouteName = PageRouteNames.AppsCenterPage,
         onBioClick = onBioClick,
         onApplicationLongPress = onApplicationLongPress
     )
@@ -60,6 +62,7 @@ fun AppsCenterPage(
 @Composable
 fun SimpleApplicationList(
     modifier: Modifier = Modifier,
+    pageRouteName: String,
     apps: List<Application>,
     onBioClick: (Bio) -> Unit,
     onApplicationLongPress: (Application) -> Unit
@@ -74,7 +77,7 @@ fun SimpleApplicationList(
             state = rememberLazyGridState(),
             contentPadding = statusBarWithTopActionBarPaddingValues(
                 bottom = 150.dp,
-                containsTopBarHeight = false
+                containsTopBarHeight = pageRouteName == PageRouteNames.UserProfilePage
             )
         ) {
             itemsIndexed(items = apps) { index, application ->

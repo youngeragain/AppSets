@@ -15,17 +15,13 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsIgnoringVisibility
-import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -50,7 +46,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -62,11 +57,11 @@ import kotlinx.coroutines.launch
 import xcj.app.appsets.im.GenerativeAISessions
 import xcj.app.appsets.im.Session
 import xcj.app.appsets.ui.compose.LocalUseCaseOfConversation
-import xcj.app.appsets.ui.compose.apps.tools.PageIndicator
 import xcj.app.appsets.ui.compose.custom_component.AnyImage
 import xcj.app.appsets.ui.compose.custom_component.DesignBackButton
 import xcj.app.appsets.ui.compose.custom_component.HideNavBar
 import xcj.app.appsets.ui.compose.custom_component.preview_tooling.DesignPreviewCompositionLocalProvider
+import xcj.app.appsets.ui.compose.privacy.ExpressivePageIndicator
 
 data class AIGCSessionTemplate(
     val session: Session,
@@ -102,8 +97,6 @@ fun AIGCMarketPage(
         HorizontalPager(
             modifier = Modifier.fillMaxSize(),
             state = pagerState,
-            pageSpacing = 16.dp,
-            contentPadding = PaddingValues(horizontal = 16.dp)
         ) { pageIndex ->
             when (pageIndex) {
                 0 -> AIModelListPage(
@@ -123,7 +116,7 @@ fun AIGCMarketPage(
             }
         }
 
-        PageIndicator(
+        ExpressivePageIndicator(
             modifier = Modifier
                 .wrapContentHeight()
                 .fillMaxWidth()
@@ -144,6 +137,7 @@ fun AIGCMarketPage(
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun AIModelListPage(
     title: String,
@@ -156,78 +150,72 @@ fun AIModelListPage(
     }
 
     val conversationUseCase = LocalUseCaseOfConversation.current
-    val density = LocalDensity.current
     val coroutineScope = rememberCoroutineScope()
 
     var visible by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) { visible = true }
 
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxSize()
-            .statusBarsPadding()
-            .padding(horizontal = 8.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        Spacer(modifier = Modifier.height(24.dp))
-
-        Text(
-            text = title,
-            style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.ExtraBold,
-            color = MaterialTheme.colorScheme.onSurface,
-            modifier = Modifier.padding(horizontal = 8.dp)
-        )
-
-        Box(modifier = Modifier
-            .fillMaxWidth()
-            .weight(1f)) {
-            LazyColumn(
-                modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-                contentPadding = PaddingValues(
-                    top = 4.dp,
-                    bottom = with(density) {
-                        WindowInsets.systemBars.getBottom(density).toDp()
-                    } + 80.dp
-                )
-            ) {
-                itemsIndexed(
-                    items = sessionsTemplates,
-                    key = { _, item -> item.session.imObj.id }
-                ) { index, sessionTemplate ->
-                    // Animated entry for each item
-                    androidx.compose.animation.AnimatedVisibility(
-                        visible = visible,
-                        enter = fadeIn(spring(stiffness = Spring.StiffnessLow)) +
-                                slideInVertically(spring(stiffness = Spring.StiffnessLow)) { it / 2 }
-                    ) {
-                        AIModelItem(
-                            modifier = Modifier.animateItem(),
-                            sessionTemplate = sessionTemplate,
-                            onAddClick = {
-                                coroutineScope.launch {
-                                    sessionTemplate.addState.value =
-                                        AIGCSessionTemplate.ADD_STATE_ADDING
-                                    conversationUseCase.addAIGCSessionIfAbsent(sessionTemplate.session)
-                                    delay(800)
-                                    sessionTemplate.addState.value =
-                                        AIGCSessionTemplate.ADD_STATE_ADDED
-                                }
-                            }
-                        )
-                    }
+    )
+    {
+        LazyColumn(
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+            contentPadding = PaddingValues(
+                start = 12.dp,
+                top = 24.dp + WindowInsets.statusBarsIgnoringVisibility.asPaddingValues()
+                    .calculateTopPadding(),
+                end = 12.dp,
+                bottom = 150.dp,
+            )
+        ) {
+            item {
+                Column(modifier = Modifier.padding(vertical = 8.dp)) {
+                    Text(
+                        text = title,
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
                 }
             }
-
-            if (sessionsTemplates.isEmpty()) {
-                Text(
-                    text = stringResource(xcj.app.appsets.R.string.no_models_available),
-                    style = MaterialTheme.typography.bodyLarge,
-                    modifier = Modifier.align(Alignment.Center),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+            itemsIndexed(
+                items = sessionsTemplates,
+                key = { _, item -> item.session.imObj.id }
+            ) { index, sessionTemplate ->
+                // Animated entry for each item
+                androidx.compose.animation.AnimatedVisibility(
+                    visible = visible,
+                    enter = fadeIn(spring(stiffness = Spring.StiffnessLow)) +
+                            slideInVertically(spring(stiffness = Spring.StiffnessLow)) { it / 2 }
+                ) {
+                    AIModelItem(
+                        modifier = Modifier.animateItem(),
+                        sessionTemplate = sessionTemplate,
+                        onAddClick = {
+                            coroutineScope.launch {
+                                sessionTemplate.addState.value =
+                                    AIGCSessionTemplate.ADD_STATE_ADDING
+                                conversationUseCase.addAIGCSessionIfAbsent(sessionTemplate.session)
+                                delay(800)
+                                sessionTemplate.addState.value =
+                                    AIGCSessionTemplate.ADD_STATE_ADDED
+                            }
+                        }
+                    )
+                }
             }
+        }
+
+        if (sessionsTemplates.isEmpty()) {
+            Text(
+                text = stringResource(xcj.app.appsets.R.string.no_models_available),
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.align(Alignment.Center),
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
     }
 }

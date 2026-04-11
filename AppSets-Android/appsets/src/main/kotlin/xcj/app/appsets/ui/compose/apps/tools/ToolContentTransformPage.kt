@@ -11,8 +11,11 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -21,6 +24,7 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsIgnoringVisibility
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.wrapContentHeight
@@ -59,6 +63,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import xcj.app.appsets.ui.compose.custom_component.AnyImage
 import xcj.app.appsets.ui.compose.custom_component.HideNavBar
+import xcj.app.appsets.ui.compose.privacy.ExpressivePageIndicator
 import xcj.app.appsets.ui.compose.quickstep.QuickStepContent
 import xcj.app.appsets.ui.compose.quickstep.TextQuickStepContent
 import xcj.app.appsets.util.encrypt.AESHelper
@@ -94,7 +99,7 @@ sealed class TransformedContent(val transformedContent: String?, val bitmap: Bit
     ) : TransformedContent(content, qr)
 }
 
-@OptIn(ExperimentalEncodingApi::class)
+@OptIn(ExperimentalEncodingApi::class, ExperimentalLayoutApi::class)
 @Composable
 fun ToolContentTransformPage(
     quickStepContents: List<QuickStepContent>?,
@@ -209,19 +214,11 @@ fun ToolContentTransformPage(
         transformRunnable(coroutineScope)
     }
     Box(modifier = Modifier.fillMaxSize()) {
-
+        val pagerState = rememberPagerState {
+            2
+        }
         Column {
             StatusBarWithTopActionBarSpacer()
-            val pagerState = rememberPagerState {
-                2
-            }
-            PageIndicator(
-                modifier = Modifier
-                    .wrapContentHeight()
-                    .fillMaxWidth()
-                    .padding(12.dp),
-                pagerState = pagerState
-            )
             HorizontalPager(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -249,6 +246,19 @@ fun ToolContentTransformPage(
                 }
             }
         }
+
+        ExpressivePageIndicator(
+            modifier = Modifier
+                .wrapContentHeight()
+                .fillMaxWidth()
+                .padding(
+                    start = 12.dp,
+                    top = WindowInsets.statusBarsIgnoringVisibility.asPaddingValues()
+                        .calculateTopPadding() + 12.dp,
+                    end = 12.dp
+                ),
+            pagerState = pagerState
+        )
 
         BackActionTopBar(
             hazeState = hazeState,

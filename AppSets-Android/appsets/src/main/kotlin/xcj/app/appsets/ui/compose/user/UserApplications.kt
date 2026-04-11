@@ -10,6 +10,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.sp
 import xcj.app.appsets.im.Bio
 import xcj.app.appsets.server.model.Application
+import xcj.app.appsets.ui.compose.PageRouteNames
 import xcj.app.appsets.ui.compose.apps.SimpleApplicationList
 
 @Composable
@@ -29,6 +30,7 @@ fun UserApplications(
         SimpleApplicationList(
             apps = userApplications,
             onBioClick = onBioClick,
+            pageRouteName = PageRouteNames.UserProfilePage,
             onApplicationLongPress = onApplicationLongPress
         )
     }

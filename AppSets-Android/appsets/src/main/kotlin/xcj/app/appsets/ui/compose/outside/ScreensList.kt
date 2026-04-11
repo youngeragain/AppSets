@@ -35,7 +35,6 @@ import androidx.compose.ui.unit.dp
 import xcj.app.appsets.im.Bio
 import xcj.app.appsets.server.model.ScreenInfo
 import xcj.app.appsets.server.model.ScreenMediaFileUrl
-import xcj.app.appsets.ui.compose.LocalUseCaseOfNavigation
 import xcj.app.appsets.ui.compose.PageRouteNames
 import xcj.app.appsets.ui.compose.custom_component.LoadMoreHandler
 import xcj.app.appsets.ui.compose.custom_component.VerticalOverscrollBox
@@ -101,14 +100,13 @@ private fun LandscapeScreenList(
     onBioClick: (Bio) -> Unit,
     onScreenMediaClick: (ScreenMediaFileUrl, List<ScreenMediaFileUrl>) -> Unit,
 ) {
-    val navigationUseCase = LocalUseCaseOfNavigation.current
     val randomKeyPrefix = remember { Uuid.random().toString() }
     LazyVerticalStaggeredGrid(
         modifier = modifier,
         columns = StaggeredGridCells.Fixed(3),
         contentPadding = statusBarWithTopActionBarPaddingValues(
             bottom = 150.dp,
-            containsTopBarHeight = navigationUseCase.currentRouteState.value == PageRouteNames.UserProfilePage
+            containsTopBarHeight = pageRouteName == PageRouteNames.UserProfilePage
         ),
         horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
         verticalItemSpacing = 6.dp,
@@ -163,14 +161,13 @@ private fun PortraitScreenList(
     onBioClick: (Bio) -> Unit,
     onScreenMediaClick: (ScreenMediaFileUrl, List<ScreenMediaFileUrl>) -> Unit,
 ) {
-    val navigationUseCase = LocalUseCaseOfNavigation.current
     val randomKeyPrefix = remember { Uuid.random().toString() }
     LazyColumn(
         modifier = modifier,
         state = scrollableState as LazyListState,
         contentPadding = statusBarWithTopActionBarPaddingValues(
             bottom = 150.dp,
-            containsTopBarHeight = navigationUseCase.currentRouteState.value == PageRouteNames.UserProfilePage
+            containsTopBarHeight = pageRouteName == PageRouteNames.UserProfilePage
         ),
         verticalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterVertically)
     )

@@ -2,9 +2,8 @@ package xcj.app.appsets.ui.compose.privacy
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.BorderStroke
@@ -24,9 +23,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.statusBarsIgnoringVisibility
-import androidx.compose.foundation.layout.windowInsetsTopHeight
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -51,8 +48,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -63,7 +58,6 @@ import xcj.app.appsets.ui.compose.custom_component.DesignBackButton
 import xcj.app.appsets.ui.compose.custom_component.HideNavBar
 import xcj.app.appsets.ui.compose.custom_component.preview_tooling.DesignPreviewCompositionLocalProvider
 import xcj.app.starter.android.ui.model.PlatformPermissionsUsage
-import kotlin.math.absoluteValue
 
 
 @Preview(showBackground = true)
@@ -101,13 +95,14 @@ fun ExpressivePageIndicator(
             val isSelected = pagerState.currentPage == iteration
             val width by animateDpAsState(
                 targetValue = if (isSelected) 32.dp else 8.dp,
-                animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
+                animationSpec = tween(),
                 label = "width"
             )
             val color by animateColorAsState(
                 targetValue = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant.copy(
                     alpha = 0.5f
                 ),
+                animationSpec = tween(),
                 label = "color"
             )
             Box(
@@ -136,43 +131,15 @@ fun PrivacyPage(
         color = MaterialTheme.colorScheme.background
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
-            // Background decoration
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(
-                        Brush.verticalGradient(
-                            colors = listOf(
-                                MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.1f),
-                                MaterialTheme.colorScheme.background
-                            )
-                        )
-                    )
-            )
-
             HorizontalPager(
                 state = pagerState,
                 verticalAlignment = Alignment.Top,
                 modifier = Modifier.fillMaxSize()
             ) { pageIndex ->
-                Box(
-                    Modifier
-                        .fillMaxSize()
-                        .graphicsLayer {
-                            val pageOffset = (
-                                    (pagerState.currentPage - pageIndex) + pagerState.currentPageOffsetFraction
-                                    ).absoluteValue
-
-                            alpha = 1f - pageOffset.coerceIn(0f, 1f) * 0.5f
-                            scaleX = 1f - pageOffset.coerceIn(0f, 1f) * 0.1f
-                            scaleY = 1f - pageOffset.coerceIn(0f, 1f) * 0.1f
-                        }
-                ) {
-                    if (pageIndex == 0) {
-                        PlatformPermissionsComponent(platformPermissionsUsageList, onRequest)
-                    } else if (pageIndex == 1) {
-                        PrivacyComponent(privacy)
-                    }
+                if (pageIndex == 0) {
+                    PlatformPermissionsComponent(platformPermissionsUsageList, onRequest)
+                } else if (pageIndex == 1) {
+                    PrivacyComponent(privacy)
                 }
             }
 
@@ -189,7 +156,6 @@ fun PrivacyPage(
 
             DesignBackButton(
                 modifier = Modifier
-                    .padding(bottom = 32.dp)
                     .align(Alignment.BottomCenter),
                 onClick = onBackClick
             )
@@ -197,26 +163,31 @@ fun PrivacyPage(
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun PrivacyComponent(privacy: String?) {
     Column(
-        verticalArrangement = Arrangement.spacedBy(16.dp),
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 20.dp)
+            .padding(horizontal = 12.dp)
             .verticalScroll(rememberScrollState())
     ) {
-        Spacer(modifier = Modifier.windowInsetsTopHeight(WindowInsets.statusBars))
-        Spacer(modifier = Modifier.height(40.dp))
-        
-        Text(
-            text = stringResource(xcj.app.appsets.R.string.user_content_privacy_and_notice),
-            fontSize = 28.sp,
-            fontWeight = FontWeight.ExtraBold,
-            color = MaterialTheme.colorScheme.onBackground,
-            lineHeight = 36.sp
+        Spacer(
+            modifier = Modifier.height(
+                24.dp + WindowInsets.statusBarsIgnoringVisibility.asPaddingValues()
+                    .calculateTopPadding()
+            )
         )
-
+        Column(modifier = Modifier.padding(vertical = 8.dp)) {
+            Text(
+                text = stringResource(xcj.app.appsets.R.string.user_content_privacy_and_notice),
+                fontSize = 28.sp,
+                fontWeight = FontWeight.ExtraBold,
+                color = MaterialTheme.colorScheme.onBackground,
+                lineHeight = 36.sp
+            )
+        }
+        Spacer(modifier = Modifier.height(12.dp))
         Surface(
             shape = RoundedCornerShape(24.dp),
             color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
@@ -242,18 +213,19 @@ fun PlatformPermissionsComponent(
     onRequest: (PlatformPermissionsUsage, Int) -> Unit,
 ) {
     LazyColumn(
-        verticalArrangement = Arrangement.spacedBy(16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
         modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 20.dp),
+            .fillMaxWidth(),
         contentPadding = PaddingValues(
-            top = 16.dp + WindowInsets.statusBarsIgnoringVisibility.asPaddingValues()
-                .calculateTopPadding() + 40.dp,
+            start = 12.dp,
+            top = 24.dp + WindowInsets.statusBarsIgnoringVisibility.asPaddingValues()
+                .calculateTopPadding(),
+            end = 12.dp,
             bottom = 150.dp
         )
     ) {
         item {
-            Column(modifier = Modifier.padding(vertical = 12.dp)) {
+            Column(modifier = Modifier.padding(vertical = 8.dp)) {
                 Text(
                     text = stringResource(id = xcj.app.appsets.R.string.platform_permission),
                     fontSize = 28.sp,

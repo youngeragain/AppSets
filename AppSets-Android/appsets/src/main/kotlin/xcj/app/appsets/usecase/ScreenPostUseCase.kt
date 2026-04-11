@@ -16,6 +16,7 @@ import xcj.app.appsets.util.compose_state.ComposeStateUpdater
 import xcj.app.appsets.util.compose_state.SingleStateUpdater
 import xcj.app.appsets.util.ktx.toastSuspend
 import xcj.app.compose_share.dynamic.ComposeLifecycleAware
+import xcj.app.starter.android.ktx.getSystemFileUri
 import xcj.app.starter.android.util.UriProvider
 import xcj.app.starter.server.request
 
@@ -114,7 +115,8 @@ class ScreenPostUseCase(
         screenInfoForCreate.mediaUriProviders.remove(uriProvider)
     }
 
-    fun updateWithQuickStepContentIfNeeded(
+    suspend fun updateWithQuickStepContentIfNeeded(
+        context: Context,
         quickStepContents: List<QuickStepContent>?,
         screenInfoForCreate: ScreenInfoForCreate
     ) {
@@ -129,8 +131,11 @@ class ScreenPostUseCase(
             }
         val uriQuickStepContents = quickStepContents.filterIsInstance<UriQuickStepContent>()
         uriQuickStepContents.forEach { quickStepContent ->
-            val uriProvider = UriProvider.fromUri(quickStepContent.uri)
-            screenInfoForCreate.mediaUriProviders.add(uriProvider)
+            val mediaStoreDataUri =
+                context.getSystemFileUri(quickStepContent.uri) ?: UriProvider.fromUri(
+                    quickStepContent.uri
+                )
+            screenInfoForCreate.mediaUriProviders.add(mediaStoreDataUri)
         }
     }
 
