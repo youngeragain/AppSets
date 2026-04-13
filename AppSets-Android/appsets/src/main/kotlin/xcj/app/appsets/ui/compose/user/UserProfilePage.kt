@@ -219,8 +219,8 @@ fun UserProfileContent(
                         }
 
                         UserAction.ACTION_SCREEN -> {
-                            onLoadMoreScreens(userInfo.uid, true)
                             currentShowContentRoute = CONTENT_SCREEN
+                            onLoadMoreScreens(userInfo.uid, true)
                         }
 
                         UserAction.ACTION_FOLLOW_STATE -> {
@@ -267,10 +267,7 @@ fun UserProfileContent(
             composable(CONTENT_SCREEN) {
                 UserScreens(
                     screens = userScreens,
-                    onBioClick = { bio ->
-                        onBioClick.invoke(bio)
-                        currentShowContentRoute = CONTENT_NONE
-                    },
+                    onBioClick = onBioClick,
                     onLoadMore = {
                         onLoadMoreScreens(userInfo.uid, false)
                     },
@@ -283,10 +280,7 @@ fun UserProfileContent(
                     uid = userInfo.uid,
                     userFollowers = userFollowers,
                     userFollowed = userFollowed,
-                    onBioClick = { userInfo ->
-                        onBioClick.invoke(userInfo)
-                        currentShowContentRoute = CONTENT_NONE
-                    }
+                    onBioClick = onBioClick
                 )
             }
 

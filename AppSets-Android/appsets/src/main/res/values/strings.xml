@@ -365,7 +365,7 @@
     <string name="not_found">Not found</string>
     <string name="bing_search">Bing search</string>
     <string name="baidu_hot_search">Baidu hot search</string>
-    <string name="max_upload_video_size_tips">Max upload video size is 100MB.</string>
+    <string name="max_upload_video_size_tips">Max upload video size is 100MB</string>
     <string name="add">Add</string>
     <string name="no_version_information">There is no version information found</string>
     <string name="version">Version</string>
@@ -491,4 +491,5 @@
     <string name="logo">Logo</string>
     <string name="deprecated">Deprecated</string>
     <string name="rich_media">Rich Media</string>
+    <string name="platform_permission_usage_tips">Understand how applications can use your device permissions</string>
 </resources>

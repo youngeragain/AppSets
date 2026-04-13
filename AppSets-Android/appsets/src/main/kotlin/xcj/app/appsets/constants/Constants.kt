@@ -27,4 +27,6 @@ object Constants {
     const val Wear_OS = "Wear OS"
     const val Ubuntu_Touch = "Ubuntu Touch"
 
+    const val AI_MODEL_INFO = "AI_Model_Info"
+
 }

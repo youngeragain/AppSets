@@ -20,7 +20,7 @@ data class Application(
     val name: String? = null,
     val category: String? = null,
     val platforms: List<AppPlatform>? = null,
-) : Bio, Parcelable {
+) : Bio {
 
     override val bioId: String
         get() = "$BIO_ID_PREFIX${appId}"

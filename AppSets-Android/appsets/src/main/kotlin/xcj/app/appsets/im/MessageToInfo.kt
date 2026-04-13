@@ -1,11 +1,13 @@
 package xcj.app.appsets.im
 
+import kotlinx.parcelize.Parcelize
 import xcj.app.appsets.im.message.IMMessage
 import xcj.app.appsets.server.model.Application
 import xcj.app.appsets.server.model.GroupInfo
 import xcj.app.appsets.server.model.UserInfo
 import xcj.app.starter.android.util.PurpleLogger
 
+@Parcelize
 data class MessageToInfo(
     val toType: String,
     val iconUrl: String?,

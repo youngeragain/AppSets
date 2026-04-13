@@ -4,8 +4,10 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.Ignore
 import androidx.room.PrimaryKey
+import kotlinx.parcelize.Parcelize
 import xcj.app.appsets.im.Bio
 
+@Parcelize
 @Entity(tableName = "UserInfo")
 data class UserInfo(
     /**

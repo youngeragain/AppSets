@@ -9,6 +9,7 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -233,7 +234,7 @@ fun PlatformPermissionsComponent(
                     color = MaterialTheme.colorScheme.onBackground
                 )
                 Text(
-                    text = "了解应用如何使用您的设备权限",
+                    text = stringResource(xcj.app.appsets.R.string.platform_permission_usage_tips),
                     fontSize = 14.sp,
                     color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
                 )
@@ -266,14 +267,12 @@ fun PermissionCard(
     platformPermissionsUsage: PlatformPermissionsUsage,
     onRequest: (PlatformPermissionsUsage, Int) -> Unit,
 ) {
-    Surface(
-        modifier = modifier.padding(vertical = 4.dp),
-        shape = MaterialTheme.shapes.extraLarge,
-        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
-        border = BorderStroke(
-            1.dp,
-            MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)
-        )
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(4.dp)
+            .border(1.dp, MaterialTheme.colorScheme.outline, MaterialTheme.shapes.extraLarge)
+            .clip(MaterialTheme.shapes.extraLarge)
     ) {
         Column(
             modifier = Modifier.padding(16.dp)

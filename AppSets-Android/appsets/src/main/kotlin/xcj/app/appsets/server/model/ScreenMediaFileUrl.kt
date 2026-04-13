@@ -1,18 +1,21 @@
 package xcj.app.appsets.server.model
 
+import android.os.Parcelable
+import kotlinx.parcelize.Parcelize
 import xcj.app.starter.util.ContentType
 
 /**
  * @param mediaFileUrl 主要文件url
  * @param mediaFileCompanionUrl 图片或视频的封面url
  */
+@Parcelize
 data class ScreenMediaFileUrl(
     var mediaFileUrl: String,
     var mediaFileCompanionUrl: String?,
     var mediaType: String,
     var mediaDescription: String,
     var x18Content: Int?,
-) {
+) : Parcelable {
     val isRestrictedContent: Boolean
         get() {
             return x18Content == 1

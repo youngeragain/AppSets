@@ -2,7 +2,6 @@ package xcj.app.appsets.ui.compose.conversation
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -12,13 +11,11 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import xcj.app.appsets.im.Bio
 import xcj.app.appsets.im.GenerativeAISessions
 import xcj.app.appsets.im.IMObj
@@ -46,19 +43,6 @@ fun ConversationDetailsMoreInfoSheetContent(
             .verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        if (imObj.bio is GenerativeAISessions.AIBio) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(12.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = stringResource(xcj.app.appsets.R.string.only_for_learning_purpose),
-                    fontSize = 12.sp,
-                )
-            }
-        }
         if (imObj is IMObj.IMSingle) {
             Row(
                 modifier = Modifier
@@ -70,7 +54,7 @@ fun ConversationDetailsMoreInfoSheetContent(
                     .padding(12.dp)) {
                 Text(text = stringResource(xcj.app.appsets.R.string.check_the_details))
             }
-            if (imObj.bio !is GenerativeAISessions.AIBio) {
+            if (imObj.bio !is GenerativeAISessions.AIModelInfo) {
                 Row(modifier = Modifier
                     .fillMaxWidth()
                     .clip(MaterialTheme.shapes.extraLarge)

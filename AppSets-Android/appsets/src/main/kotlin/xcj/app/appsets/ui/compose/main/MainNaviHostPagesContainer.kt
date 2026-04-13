@@ -76,6 +76,7 @@ import me.saket.telephoto.zoomable.rememberZoomableState
 import me.saket.telephoto.zoomable.zoomable
 import xcj.app.appsets.constants.Constants
 import xcj.app.appsets.im.Bio
+import xcj.app.appsets.im.GenerativeAISessions
 import xcj.app.appsets.im.IMMessageDesignType
 import xcj.app.appsets.im.MessageFromInfo
 import xcj.app.appsets.im.MessageToInfo
@@ -141,6 +142,7 @@ import xcj.app.appsets.ui.compose.conversation.ConversationDetailsPage
 import xcj.app.appsets.ui.compose.conversation.ConversationOverviewPage
 import xcj.app.appsets.ui.compose.conversation.IMBubbleActivity
 import xcj.app.appsets.ui.compose.conversation.ai_model.AIGCMarketPage
+import xcj.app.appsets.ui.compose.conversation.ai_model.AIModelDetailPage
 import xcj.app.appsets.ui.compose.custom_component.AnyImage
 import xcj.app.appsets.ui.compose.group.CreateGroupPage
 import xcj.app.appsets.ui.compose.group.GroupInfoPage
@@ -717,8 +719,15 @@ fun MainNaviHostPagesContainer(
                 },
                 route = PageRouteNames.ConversationAIGCMarketPage
             ) {
+                val context = LocalContext.current
+                val coroutineScope = rememberCoroutineScope()
                 AIGCMarketPage(
-                    onBackClick = navController::navigateUp
+                    onBackClick = navController::navigateUp,
+                    onBioClick = { bio ->
+                        coroutineScope.launch {
+                            onBioClick(context, navController, bio)
+                        }
+                    }
                 )
             }
             composableIf(
@@ -1516,6 +1525,24 @@ fun MainNaviHostPagesContainer(
                     )
                 }
             }
+
+            composableIf(
+                test = {
+                    true
+                },
+                route = PageRouteNames.AIModelDetialsPage
+            ) {
+                val aiModelInfo =
+                    BundleCompat.getParcelable(
+                        it.arguments ?: BundleDefaults.empty,
+                        Constants.AI_MODEL_INFO,
+                        GenerativeAISessions.AIModelInfo::class.java
+                    )
+                AIModelDetailPage(
+                    aiModelInfo = aiModelInfo,
+                    onBackClick = navController::navigateUp,
+                )
+            }
         }
 
         RestrictedContentDialog(
@@ -1643,13 +1670,17 @@ suspend fun onBioClick(
         }
 
         is ScreenInfo -> {
+            navController.navigate(PageRouteNames.ScreenDetailsPage)
             baseViewModel.viewModelScope.launch {
                 baseViewModel.screensUseCase.updateCurrentViewScreen(
                     navController.currentDestination?.route,
                     bio
                 )
             }
-            navController.navigate(PageRouteNames.ScreenDetailsPage)
+        }
+
+        is GenerativeAISessions.AIModelInfo -> {
+            navigateToAIModelDetailsPage(navController, bio)
         }
     }
 }
@@ -1667,6 +1698,21 @@ private fun navigateToAppDetailsPage(
                 val overrideApplication =
                     (appsUseCase.findApplicationById(application) ?: application)
                 putParcelable(Constants.APP_INFO, overrideApplication)
+            }
+        }
+    )
+}
+
+@SuppressLint("RestrictedApi")
+private fun navigateToAIModelDetailsPage(
+    navController: NavHostController,
+    aiModelInfo: GenerativeAISessions.AIModelInfo
+) {
+    navController.navigateWithBundle(
+        PageRouteNames.AIModelDetialsPage,
+        bundleCreator = {
+            bundleOf().apply {
+                putParcelable(Constants.AI_MODEL_INFO, aiModelInfo)
             }
         }
     )

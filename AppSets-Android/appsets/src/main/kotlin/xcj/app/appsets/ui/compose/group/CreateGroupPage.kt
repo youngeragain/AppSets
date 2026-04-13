@@ -33,9 +33,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -46,6 +46,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -139,15 +140,16 @@ fun CreateGroupPage(
         startAnimation = true
     }
 
-    Box(modifier = Modifier.fillMaxSize()) {
-        VerticalOverscrollBox {
+    VerticalOverscrollBox {
+        Column(modifier = Modifier.fillMaxWidth()) {
             Column(
                 modifier = Modifier
+                    .widthIn(max = TextFieldDefaults.MinWidth)
+                    .align(Alignment.CenterHorizontally)
                     .hazeSourceIfAvailable(hazeState)
                     .padding(horizontal = 12.dp)
                     .verticalScroll(rememberScrollState())
                     .imePadding()
-                    .navigationBarsPadding()
                     .animateContentSize(),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             )

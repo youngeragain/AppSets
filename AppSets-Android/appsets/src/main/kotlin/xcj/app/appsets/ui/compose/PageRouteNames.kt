@@ -31,5 +31,7 @@ object PageRouteNames {
     const val CreateGroupPage = "Main/CreateGroupPage"
     const val MediaFallPage = "Media/MediaFallPage"
     const val MediaPage = "Media/MediaPage"
+
+    const val AIModelDetialsPage = "AI/DetailsPage"
 }
 

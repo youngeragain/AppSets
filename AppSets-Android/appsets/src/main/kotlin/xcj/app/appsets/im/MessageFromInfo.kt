@@ -1,7 +1,9 @@
 package xcj.app.appsets.im
 
+import kotlinx.parcelize.Parcelize
 import xcj.app.appsets.server.model.UserRole
 
+@Parcelize
 data class MessageFromInfo(
     val uid: String,
     val name: String?,

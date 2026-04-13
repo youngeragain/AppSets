@@ -1,8 +1,10 @@
 package xcj.app.appsets.server.model
 
+import kotlinx.parcelize.Parcelize
 import xcj.app.appsets.im.Bio
 import java.util.UUID
 
+@Parcelize
 data class ScreenInfo(
     val associateTopics: String?,
     val associateUsers: String?,

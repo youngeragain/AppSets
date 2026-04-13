@@ -241,7 +241,7 @@ private constructor() : ComposeLifecycleAware, UserAccountStateAware {
         if (isLocal) {
             val session = (currentSessionState as? SessionState.Normal)?.session ?: return
             val sessionImObj = session.imObj
-            if (sessionImObj.bio is GenerativeAISessions.AIBio) {
+            if (sessionImObj.bio is GenerativeAISessions.AIModelInfo) {
                 //todo
                 GenerativeAISessions.handleSessionNewMessage(session, imMessage)
             } else {

@@ -9,6 +9,8 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -31,7 +33,6 @@ import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -54,6 +55,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import xcj.app.appsets.im.Bio
 import xcj.app.appsets.im.GenerativeAISessions
 import xcj.app.appsets.im.Session
 import xcj.app.appsets.ui.compose.LocalUseCaseOfConversation
@@ -78,7 +80,14 @@ data class AIGCSessionTemplate(
 @Composable
 fun AIGCMarketPagePreview() {
     DesignPreviewCompositionLocalProvider {
-        AIGCMarketPage(onBackClick = {})
+        AIGCMarketPage(
+            onBackClick = {
+
+            },
+            onBioClick = {
+
+            }
+        )
     }
 }
 
@@ -86,6 +95,7 @@ fun AIGCMarketPagePreview() {
 @Composable
 fun AIGCMarketPage(
     onBackClick: () -> Unit,
+    onBioClick: (Bio) -> Unit
 ) {
     HideNavBar()
     Box(
@@ -98,22 +108,24 @@ fun AIGCMarketPage(
             modifier = Modifier.fillMaxSize(),
             state = pagerState,
         ) { pageIndex ->
-            when (pageIndex) {
-                0 -> AIModelListPage(
-                    title = stringResource(xcj.app.appsets.R.string.online_ai_models),
-                    sessions = GenerativeAISessions.onlineSessions
-                )
-
-                1 -> AIModelListPage(
-                    title = stringResource(xcj.app.appsets.R.string.device_local_ai_models),
-                    sessions = GenerativeAISessions.onDeviceSessions
-                )
-
-                2 -> AIModelListPage(
-                    title = stringResource(xcj.app.appsets.R.string.mixed_ai_models),
-                    sessions = GenerativeAISessions.mixedSessions
-                )
+            val sessions = when (pageIndex) {
+                0 -> GenerativeAISessions.onlineSessions
+                1 -> GenerativeAISessions.onDeviceSessions
+                else -> GenerativeAISessions.mixedSessions
             }
+            val title = when (pageIndex) {
+                0 -> stringResource(xcj.app.appsets.R.string.online_ai_models)
+                1 -> stringResource(xcj.app.appsets.R.string.device_local_ai_models)
+                else -> stringResource(xcj.app.appsets.R.string.mixed_ai_models)
+            }
+
+            AIModelListPage(
+                title = title,
+                sessions = sessions,
+                onItemClick = { session ->
+                    onBioClick(session.imObj.bio)
+                } // 点击进入详情
+            )
         }
 
         ExpressivePageIndicator(
@@ -141,7 +153,8 @@ fun AIGCMarketPage(
 @Composable
 fun AIModelListPage(
     title: String,
-    sessions: List<Session>
+    sessions: List<Session>,
+    onItemClick: (Session) -> Unit,
 ) {
     val sessionsTemplates = remember(sessions) {
         val list = mutableStateListOf<AIGCSessionTemplate>()
@@ -192,8 +205,10 @@ fun AIModelListPage(
                             slideInVertically(spring(stiffness = Spring.StiffnessLow)) { it / 2 }
                 ) {
                     AIModelItem(
-                        modifier = Modifier.animateItem(),
+                        modifier = Modifier
+                            .animateItem(),
                         sessionTemplate = sessionTemplate,
+                        onItemClick = onItemClick,
                         onAddClick = {
                             coroutineScope.launch {
                                 sessionTemplate.addState.value =
@@ -224,13 +239,15 @@ fun AIModelListPage(
 fun AIModelItem(
     modifier: Modifier = Modifier,
     sessionTemplate: AIGCSessionTemplate,
+    onItemClick: (Session) -> Unit,
     onAddClick: () -> Unit
 ) {
-    Surface(
-        modifier = modifier.fillMaxWidth(),
-        shape = MaterialTheme.shapes.extraLarge,
-        color = MaterialTheme.colorScheme.surfaceContainerLow,
-        tonalElevation = 2.dp
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .border(1.dp, MaterialTheme.colorScheme.outline, MaterialTheme.shapes.extraLarge)
+            .clip(MaterialTheme.shapes.extraLarge)
+            .clickable { onItemClick(sessionTemplate.session) }
     ) {
         Row(
             modifier = Modifier.padding(16.dp),
@@ -261,7 +278,7 @@ fun AIModelItem(
                 )
 
                 val bio = sessionTemplate.session.imObj.bio
-                if (bio is GenerativeAISessions.AIBio) {
+                if (bio is GenerativeAISessions.AIModelInfo) {
                     Text(
                         text = bio.description ?: "",
                         style = MaterialTheme.typography.bodySmall,

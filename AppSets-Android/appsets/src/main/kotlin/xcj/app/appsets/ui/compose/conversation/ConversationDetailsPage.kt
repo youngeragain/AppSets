@@ -1174,7 +1174,8 @@ private fun ImMessageItemStartComponent(
                         .clip(MaterialTheme.shapes.large)
                         .clickable {
                             onBioClick(imMessage.fromInfo)
-                        }, imMessage = imMessage
+                        },
+                    imMessage = imMessage
                 )
             }
 
@@ -1186,7 +1187,8 @@ private fun ImMessageItemStartComponent(
                             .clip(MaterialTheme.shapes.large)
                             .clickable {
                                 onBioClick(imMessage.fromInfo)
-                            }, imMessage = imMessage
+                            },
+                        imMessage = imMessage
                     )
                 }
 
