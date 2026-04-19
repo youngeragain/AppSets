@@ -1,15 +1,13 @@
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import com.android.build.api.dsl.LibraryExtension
 
 plugins {
     alias(libs.plugins.android.library)
-    //alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.google.ksp)
-
+    alias(libs.plugins.kotlin.android)
 }
 
-android {
+configure<LibraryExtension> {
     namespace = "xcj.app.launcher"
     compileSdk = libs.versions.android.compileSdk.get().toInt()
 
@@ -40,8 +38,8 @@ android {
 
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
+        sourceCompatibility = JavaVersion.VERSION_21
+        targetCompatibility = JavaVersion.VERSION_21
     }
     buildFeatures {
         compose = true
@@ -50,11 +48,6 @@ android {
     /*composeOptions {
         kotlinCompilerExtensionVersion = "1.5.3"
     }*/
-
-    kotlin {
-        jvmToolchain(17)
-        compilerOptions.jvmTarget.set(JvmTarget.JVM_17)
-    }
 }
 
 dependencies {

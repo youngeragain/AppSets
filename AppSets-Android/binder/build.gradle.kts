@@ -1,10 +1,10 @@
+import com.android.build.api.dsl.ApplicationExtension
+
 plugins {
     alias(libs.plugins.android.library)
-    alias(libs.plugins.kotlin.android)
 }
 
-android {
-
+configure<ApplicationExtension> {
     namespace = "xcj.app.binder"
     compileSdk = libs.versions.android.compileSdk.get().toInt()
     defaultConfig {
@@ -33,15 +33,12 @@ android {
     }
 
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
-    }
-
-    kotlin {
-        jvmToolchain(17)
-        compilerOptions.jvmTarget.set(JvmTarget.JVM_17)
+        sourceCompatibility = JavaVersion.VERSION_21
+        targetCompatibility = JavaVersion.VERSION_21
     }
 }
+
+
 
 dependencies {
     implementation(project(":starter"))

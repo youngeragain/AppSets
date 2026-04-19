@@ -1,12 +1,12 @@
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import com.android.build.api.dsl.TestExtension
 
 plugins {
     alias(libs.plugins.android.test)
-    alias(libs.plugins.kotlin.android)
     alias(libs.plugins.androidx.baselineprofile)
+    alias(libs.plugins.kotlin.android)
 }
 
-android {
+configure<TestExtension> {
     namespace = "xcj.app.baselineprofile"
     compileSdk = libs.versions.android.compileSdk.get().toInt()
     defaultConfig {
@@ -20,13 +20,8 @@ android {
 
 
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
-    }
-
-    kotlin {
-        jvmToolchain(17)
-        compilerOptions.jvmTarget.set(JvmTarget.JVM_17)
+        sourceCompatibility = JavaVersion.VERSION_21
+        targetCompatibility = JavaVersion.VERSION_21
     }
 }
 
@@ -41,7 +36,9 @@ dependencies {
     implementation(libs.androidx.espresso.core)
     implementation(libs.androidx.uiautomator)
     implementation(libs.androidx.benchmark.macro.junit4)
+    implementation(libs.androidx.core.ktx)
 }
+
 
 androidComponents {
     onVariants { v ->

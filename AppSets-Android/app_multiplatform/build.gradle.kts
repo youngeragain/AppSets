@@ -1,13 +1,13 @@
+import com.android.build.api.dsl.ApplicationExtension
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
+    alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.multiplatform)
     alias(libs.plugins.compose.multiplatform)
-    //alias(libs.plugins.android.library)
-    alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
-    alias(libs.plugins.composeHotReload)
+    alias(libs.plugins.compose.hot.reload)
 }
 
 kotlin {
@@ -44,16 +44,13 @@ kotlin {
     }
 }
 
-android {
+configure<ApplicationExtension> {
     namespace = "xcj.app.multiplatform"
 
     compileSdk = libs.versions.android.compileSdk.get().toInt()
 
     defaultConfig {
         minSdk = libs.versions.android.minSdk.get().toInt()
-        targetSdk = libs.versions.android.targetSdk.get().toInt()
-        versionCode = 1
-        versionName = "1.0"
     }
 
     packaging {
@@ -73,7 +70,7 @@ android {
 }
 
 dependencies {
-    debugImplementation(libs.jb.compose.uiTooling)
+    "debugImplementation"(libs.jb.compose.uiTooling)
 }
 
 compose.desktop {

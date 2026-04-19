@@ -2,13 +2,23 @@
 
 package xcj.app.appsets.ui.compose.apps
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
@@ -17,29 +27,44 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import xcj.app.appsets.im.Bio
 import xcj.app.appsets.server.model.Application
+import xcj.app.appsets.ui.compose.LocalNavControllers
 import xcj.app.appsets.ui.compose.PageRouteNames
 import xcj.app.appsets.ui.compose.custom_component.AnyImage
 import xcj.app.appsets.ui.compose.custom_component.ShowNavBar
 import xcj.app.appsets.ui.compose.custom_component.VerticalOverscrollBox
+import xcj.app.appsets.ui.compose.main.KEY_MAIN_NAVI_CONTROLLER
 import xcj.app.appsets.ui.compose.theme.extShapes
 import xcj.app.appsets.ui.model.page_state.AppCenterPageUIState
 import xcj.app.compose_share.components.statusBarWithTopActionBarPaddingValues
+import xcj.app.starter.android.util.PurpleLogger
+
+private const val TAG = "AppsCenterPage"
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -58,7 +83,7 @@ fun AppsCenterPage(
     )
 }
 
-@OptIn(ExperimentalLayoutApi::class)
+@OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun SimpleApplicationList(
     modifier: Modifier = Modifier,
@@ -68,8 +93,39 @@ fun SimpleApplicationList(
     onApplicationLongPress: (Application) -> Unit
 ) {
     val hapticFeedback = LocalHapticFeedback.current
+    val navHostController = LocalNavControllers.current[KEY_MAIN_NAVI_CONTROLLER]
+    var isShowDestination by remember {
+        mutableStateOf(false)
+    }
+    var destinationIconSize by remember {
+        mutableFloatStateOf(1f)
+    }
+    var overscrollOffset by remember {
+        mutableFloatStateOf(0f)
+    }
+    var isSearchPageRouted by remember {
+        mutableStateOf(false)
+    }
+    LaunchedEffect(true) {
+        isSearchPageRouted = false
+    }
+
+    LaunchedEffect(overscrollOffset) {
+        PurpleLogger.current.d(TAG, "overscrollOffset:$overscrollOffset")
+        isShowDestination = overscrollOffset > 0f
+        if (overscrollOffset > 10f && overscrollOffset < 200f) {
+            destinationIconSize = (1f + overscrollOffset / 200f)
+        }
+        if (overscrollOffset >= 500f && !isSearchPageRouted) {
+            isSearchPageRouted = true
+            navHostController?.navigate(PageRouteNames.SearchPage)
+        }
+    }
     VerticalOverscrollBox(
-        modifier = modifier
+        modifier = modifier,
+        onOverscrollOffset = {
+            overscrollOffset = it
+        }
     ) {
         LazyVerticalGrid(
             columns = GridCells.Adaptive(90.dp),
@@ -94,6 +150,55 @@ fun SimpleApplicationList(
                         onApplicationLongPress(application)
                     }
                 )
+            }
+        }
+
+        AnimatedVisibility(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(200.dp),
+            visible = isShowDestination,
+            enter = fadeIn(tween()) + slideInVertically(tween()),
+            exit = fadeOut(tween(50)) + slideOutVertically(tween(50))
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .graphicsLayer {
+                        translationY = overscrollOffset
+                    },
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    Box(
+                        modifier
+                            .size(82.dp)
+                            .clip(MaterialTheme.shapes.extraLarge)
+                            .background(color = MaterialTheme.colorScheme.surface)
+                            .border(
+                                1.dp,
+                                MaterialTheme.colorScheme.outline,
+                                MaterialTheme.shapes.extraLarge
+                            )
+                            .graphicsLayer {
+                                scaleX = destinationIconSize
+                                scaleY = destinationIconSize
+                            },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            painter = painterResource(xcj.app.compose_share.R.drawable.ic_round_search_24),
+                            contentDescription = stringResource(xcj.app.appsets.R.string.search)
+                        )
+                    }
+                    AnimatedVisibility(overscrollOffset > 200f) {
+                        Box(modifier = Modifier.padding(12.dp)) {
+                            Text(text = stringResource(xcj.app.appsets.R.string.search))
+                        }
+                    }
+                }
             }
         }
     }

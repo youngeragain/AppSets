@@ -1,35 +1,33 @@
 //noinspection WrongGradleMethod
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import com.android.build.api.dsl.ApplicationExtension
 import java.util.Properties
 
 plugins {
     alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.androidx.baselineprofile)
     alias(libs.plugins.google.ksp)
-    //alias(libs.plugins.appsets.plugin)
+    alias(libs.plugins.kotlin.android)
 }
 
 apply(from = "custom_build.gradle")
 
-android {
+
+configure<ApplicationExtension> {
     namespace = "xcj.app.container"
     compileSdk = libs.versions.android.compileSdk.get().toInt()
+
     signingConfigs {
-        getKeystoreProperties()?.let { keystoreProperties ->
+        getKeystoreProperties()?.let { props ->
             create("release") {
-                keyAlias = keystoreProperties["keyAlias"] as String
-                keyPassword = keystoreProperties["keyPassword"] as String
-                storeFile = file(keystoreProperties["storeFile"] as String)
-                storePassword = keystoreProperties["storePassword"] as String
+                keyAlias = props.getProperty("keyAlias")
+                keyPassword = props.getProperty("keyPassword")
+                storeFile = file(props.getProperty("storeFile"))
+                storePassword = props.getProperty("storePassword")
             }
         }
-
-        /*create("debug") {
-
-        }*/
     }
+
     defaultConfig {
         applicationId = "xcj.app.container"
         minSdk = libs.versions.android.minSdk.get().toInt()
@@ -38,12 +36,9 @@ android {
         versionName = "2026.02.01"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        //consumerProguardFiles("consumer-rules.pro")
 
         ndk {
-            //noinspection ChromeOsAbiSupport
-            //if(System.getProperty()OSKind.Windows){}
-            abiFilters.add("arm64-v8a")
+            abiFilters += "arm64-v8a"
         }
     }
 
@@ -55,13 +50,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            runCatching {
-                signingConfigs.getByName("release")
-            }.onSuccess {
-                signingConfig = it
-            }.onFailure {
-                println("Release signing config is not found!")
-            }
+            signingConfig = signingConfigs.findByName("release")
         }
         debug {
             isShrinkResources = false
@@ -82,37 +71,30 @@ android {
         }
         create("full") {
             dimension = "version"
-            // This is the default flavor
         }
     }
 
     buildFeatures {
         compose = true
     }
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
-    }
 
-    kotlin {
-        jvmToolchain(17)
-        compilerOptions.jvmTarget.set(JvmTarget.JVM_17)
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_21
+        targetCompatibility = JavaVersion.VERSION_21
     }
 
     packaging {
         resources {
-            excludes.addAll(
-                listOf(
-                    "/META-INF/INDEX.LIST",
-                    "/META-INF/io.netty.versions.properties",
-                    "/META-INF/{AL2.0,LGPL2.1}",
-                    "/META-INF/*.version",
-                    "/META-INF/*.textproto",
-                    "/META-INF/*.kotlin_module",
-                    "/META-INF/com/android/build/grale/*.properties",
-                    "/*.json",
-                    "/*.properties"
-                )
+            excludes += listOf(
+                "/META-INF/INDEX.LIST",
+                "/META-INF/io.netty.versions.properties",
+                "/META-INF/{AL2.0,LGPL2.1}",
+                "/META-INF/*.version",
+                "/META-INF/*.textproto",
+                "/META-INF/*.kotlin_module",
+                "/META-INF/com/android/build/grale/*.properties",
+                "/*.json",
+                "/*.properties"
             )
         }
     }
@@ -126,6 +108,7 @@ dependencies {
     implementation(project(":launcher"))
     implementation(project(":share"))
     implementation(project(":proxy"))
+    implementation(libs.androidx.core.ktx)
 
     baselineProfile(project(":baselineprofile"))
     implementation(libs.androidx.profileinstaller)

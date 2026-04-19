@@ -167,6 +167,7 @@ fun ScreenDetailsPage(
             }
 
             AnimatedVisibility(
+                modifier = Modifier.fillMaxSize(),
                 visible = isShowScreenReviews,
                 enter = fadeIn() + expandIn(expandFrom = Alignment.TopCenter),
                 exit = shrinkOut(shrinkTowards = Alignment.TopCenter) + fadeOut()
