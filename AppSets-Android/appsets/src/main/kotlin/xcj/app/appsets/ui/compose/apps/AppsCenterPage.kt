@@ -5,9 +5,7 @@ package xcj.app.appsets.ui.compose.apps
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -16,7 +14,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -156,20 +153,20 @@ fun SimpleApplicationList(
         AnimatedVisibility(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(200.dp),
+                .height(300.dp),
             visible = isShowDestination,
-            enter = fadeIn(tween()) + slideInVertically(tween()),
-            exit = fadeOut(tween(50)) + slideOutVertically(tween(50))
+            enter = fadeIn(tween()) + slideInVertically(tween())
         ) {
             Box(
                 modifier = Modifier
-                    .fillMaxSize()
+                    .fillMaxWidth()
                     .graphicsLayer {
                         translationY = overscrollOffset
                     },
                 contentAlignment = Alignment.Center
             ) {
                 Column(
+                    modifier = Modifier,
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
                     Box(
