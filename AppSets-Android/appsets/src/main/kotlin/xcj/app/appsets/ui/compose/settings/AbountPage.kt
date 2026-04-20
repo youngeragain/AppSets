@@ -39,7 +39,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -48,12 +47,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import xcj.app.appsets.server.model.UpdateCheckResult
 import xcj.app.appsets.ui.compose.custom_component.preview_tooling.DesignPreviewCompositionLocalProvider
-import xcj.app.appsets.usecase.SystemUseCase
 import xcj.app.compose_share.components.BackActionTopBar
 import xcj.app.compose_share.components.DesignHDivider
+import xcj.app.compose_share.components.LocalHazedStateProvider
 import xcj.app.compose_share.components.StatusBarWithTopActionBarSpacer
 import xcj.app.compose_share.modifier.hazeSourceIfAvailable
-import xcj.app.compose_share.modifier.rememberHazeStateIfAvailable
 
 @Preview(showBackground = true)
 @Composable
@@ -86,12 +84,7 @@ fun AboutPage(
     onWebsiteClick: () -> Unit,
     onHistoryExpandStateChanged: (Boolean) -> Unit,
 ) {
-    val hazeState = rememberHazeStateIfAvailable()
-    val context = LocalContext.current
-    val versionName = remember {
-        SystemUseCase.getAppSetsPackageVersionName(context) ?: ""
-    }
-
+    val hazeState = LocalHazedStateProvider.current
     Box(modifier = Modifier.fillMaxSize()) {
         Column(
             modifier = Modifier
@@ -191,7 +184,6 @@ fun AboutPage(
         }
 
         BackActionTopBar(
-            hazeState = hazeState,
             onBackClick = onBackClick,
             backButtonText = stringResource(xcj.app.appsets.R.string.about)
         )

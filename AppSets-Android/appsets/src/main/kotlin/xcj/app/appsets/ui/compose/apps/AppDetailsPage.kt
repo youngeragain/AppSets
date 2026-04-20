@@ -71,9 +71,9 @@ import xcj.app.appsets.ui.compose.custom_component.VerticalOverscrollBox
 import xcj.app.appsets.ui.compose.theme.ExtraLarge2
 import xcj.app.compose_share.components.BackActionTopBar
 import xcj.app.compose_share.components.DesignHDivider
+import xcj.app.compose_share.components.LocalHazedStateProvider
 import xcj.app.compose_share.components.StatusBarWithTopActionBarSpacer
 import xcj.app.compose_share.modifier.hazeSourceIfAvailable
-import xcj.app.compose_share.modifier.rememberHazeStateIfAvailable
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -91,6 +91,7 @@ fun AppDetailsPage(
 ) {
 
     HideNavBar()
+    val hazeState = LocalHazedStateProvider.current
     if (application == null) {
         Box(modifier = Modifier.fillMaxSize()) {
             Text(
@@ -106,7 +107,6 @@ fun AppDetailsPage(
         }
     } else {
         VerticalOverscrollBox {
-            val hazeState = rememberHazeStateIfAvailable()
             Column(
                 modifier = Modifier
                     .hazeSourceIfAvailable(hazeState)
@@ -137,7 +137,6 @@ fun AppDetailsPage(
             }
 
             BackActionTopBar(
-                hazeState = hazeState,
                 onBackClick = onBackClick
             )
         }

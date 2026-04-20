@@ -55,9 +55,9 @@ import xcj.app.appsets.ui.compose.theme.ExtraLarge2
 import xcj.app.appsets.ui.model.page_state.GroupInfoPageUIState
 import xcj.app.appsets.usecase.RelationsUseCase
 import xcj.app.compose_share.components.BackActionTopBar
+import xcj.app.compose_share.components.LocalHazedStateProvider
 import xcj.app.compose_share.components.StatusBarWithTopActionBarSpacer
 import xcj.app.compose_share.modifier.hazeSourceIfAvailable
-import xcj.app.compose_share.modifier.rememberHazeStateIfAvailable
 import kotlin.math.roundToInt
 
 @Preview(showBackground = true)
@@ -135,8 +135,8 @@ fun GroupInfoPage(
                         }
                     }
                 }
-                val hazeState = rememberHazeStateIfAvailable()
                 val density = LocalDensity.current
+                val hazeState = LocalHazedStateProvider.current
                 val groupAvatarHeight by remember {
                     derivedStateOf {
                         with(density) {
@@ -270,7 +270,6 @@ fun GroupInfoPage(
                         }
                     }
                     BackActionTopBar(
-                        hazeState = hazeState,
                         onBackClick = onBackClick,
                         endButtonText = if (RelationsUseCase.getInstance()
                                 .hasGroupRelated(groupInfoPageUIState.groupInfo.groupId)

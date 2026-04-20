@@ -39,7 +39,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.media3.common.util.UnstableApi
-import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
 import dev.chrisbanes.haze.materials.HazeMaterials
 import xcj.app.appsets.ui.compose.LocalUseCaseOfConversation
@@ -51,15 +50,14 @@ import xcj.app.appsets.ui.model.TabAction
 import xcj.app.appsets.ui.model.TabItem
 import xcj.app.appsets.usecase.NavigationUseCase
 import xcj.app.compose_share.components.DesignHDivider
+import xcj.app.compose_share.components.LocalHazedStateProvider
 import xcj.app.compose_share.modifier.hazeEffectIfAvailable
-import xcj.app.compose_share.modifier.rememberHazeStateIfAvailable
 
 private const val TAG = "NavigationBar"
 
 @Composable
 fun NavigationBar(
     modifier: Modifier = Modifier,
-    hazeState: HazeState?,
     visible: Boolean,
     enable: Boolean,
     inSearchMode: Boolean,
@@ -77,7 +75,6 @@ fun NavigationBar(
         exit = fadeOut() + slideOutVertically(targetOffsetY = { it + it / 20 }),
     ) {
         StandardNavigationBar(
-            hazeState = hazeState,
             enable = enable,
             hostVisible = visible,
             inSearchMode = inSearchMode,
@@ -94,7 +91,6 @@ fun NavigationBar(
 @Composable
 private fun StandardNavigationBar(
     modifier: Modifier = Modifier,
-    hazeState: HazeState?,
     enable: Boolean,
     hostVisible: Boolean,
     inSearchMode: Boolean,
@@ -105,6 +101,7 @@ private fun StandardNavigationBar(
     onSearchBarClick: () -> Unit,
     onBioClick: () -> Unit,
 ) {
+    val hazeState = LocalHazedStateProvider.current
     val modifierOverride = if (!inSearchMode) {
         modifier
             .hazeEffectIfAvailable(
@@ -152,7 +149,6 @@ private fun StandardNavigationBar(
             }
 
             NavigationSearchBar(
-                hazeState = hazeState,
                 enable = enable,
                 inSearchMode = inSearchMode,
                 onBackClick = onBackClick,
@@ -333,14 +329,12 @@ private fun TabItemMain(
 @UnstableApi
 @Composable
 fun NavigationBarPreview() {
-    val hazeState = rememberHazeStateIfAvailable()
     val navigationUseCase = remember {
         NavigationUseCase().apply {
             initTabItems()
         }
     }
     NavigationBar(
-        hazeState = hazeState,
         visible = true,
         enable = true,
         inSearchMode = false,

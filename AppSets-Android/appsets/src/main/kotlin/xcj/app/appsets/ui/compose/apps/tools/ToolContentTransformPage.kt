@@ -74,7 +74,6 @@ import xcj.app.compose_share.components.BackActionTopBar
 import xcj.app.compose_share.components.DesignHDivider
 import xcj.app.compose_share.components.DesignTextField
 import xcj.app.compose_share.components.StatusBarWithTopActionBarSpacer
-import xcj.app.compose_share.modifier.rememberHazeStateIfAvailable
 import xcj.app.starter.util.QrCodeUtil
 import java.io.File
 import kotlin.io.encoding.Base64
@@ -209,7 +208,6 @@ fun ToolContentTransformPage(
         }
     }
 
-    val hazeState = rememberHazeStateIfAvailable()
     LaunchedEffect(key1 = transformType, key2 = content) {
         transformRunnable(coroutineScope)
     }
@@ -261,7 +259,6 @@ fun ToolContentTransformPage(
         )
 
         BackActionTopBar(
-            hazeState = hazeState,
             onBackClick = onBackClick,
         )
     }

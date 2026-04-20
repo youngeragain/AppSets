@@ -24,6 +24,7 @@ import xcj.app.appsets.ui.compose.main.KEY_MAIN_NAVI_CONTROLLER
 import xcj.app.appsets.ui.compose.main.MainNaviHostPagesContainer
 import xcj.app.appsets.ui.viewmodel.IMBubbleViewModel
 import xcj.app.compose_share.components.BottomSheetContainer
+import xcj.app.compose_share.components.LocalHazedStateProvider
 import xcj.app.compose_share.components.LocalVisibilityComposeStateProvider
 import xcj.app.compose_share.modifier.rememberHazeStateIfAvailable
 
@@ -44,13 +45,13 @@ fun ImBubblePage() {
         LocalUseCaseOfNowSpaceContent provides viewModel.nowSpaceContentUseCase,
         LocalNavControllers provides mapOf(KEY_MAIN_NAVI_CONTROLLER to navController),
         LocalVisibilityComposeStateProvider provides viewModel,
+        LocalHazedStateProvider provides hazeState
     ) {
         Surface {
             Box(modifier = Modifier.fillMaxSize()) {
                 MainNaviHostPagesContainer(
                     modifier = Modifier.fillMaxSize(),
                     startPageRoute = PageRouteNames.ConversationOverviewPage,
-                    hazeState = hazeState,
                     hostContextName = IMBubbleActivity.TAG
                 )
 

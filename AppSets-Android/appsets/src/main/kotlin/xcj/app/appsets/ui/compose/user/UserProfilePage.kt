@@ -36,9 +36,9 @@ import xcj.app.appsets.ui.model.UserInfoForModify
 import xcj.app.appsets.ui.model.page_state.UserProfilePageUIState
 import xcj.app.appsets.util.compose_state.ComposeStateUpdater
 import xcj.app.compose_share.components.BackActionTopBar
+import xcj.app.compose_share.components.LocalHazedStateProvider
 import xcj.app.compose_share.components.StatusBarWithTopActionBarSpacer
 import xcj.app.compose_share.modifier.hazeSourceIfAvailable
-import xcj.app.compose_share.modifier.rememberHazeStateIfAvailable
 
 private const val CONTENT_NONE = "None"
 private const val CONTENT_APPLICATION = "Application"
@@ -185,11 +185,10 @@ fun UserProfileContent(
     onSelectUserAvatarClick: (String, ComposeStateUpdater<*>) -> Unit,
     onModifyProfileConfirmClick: (UserInfoForModify) -> Unit,
 ) {
+    val hazeState = LocalHazedStateProvider.current
     var currentShowContentRoute by remember {
         mutableStateOf(CONTENT_NONE)
     }
-    val hazeState = rememberHazeStateIfAvailable()
-
     val navController = rememberNavController()
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -298,7 +297,6 @@ fun UserProfileContent(
         }
 
         BackActionTopBar(
-            hazeState = hazeState,
             onBackClick = {
                 if (currentShowContentRoute != CONTENT_NONE) {
                     currentShowContentRoute = CONTENT_NONE

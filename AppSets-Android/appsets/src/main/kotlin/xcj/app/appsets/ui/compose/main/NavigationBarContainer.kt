@@ -12,7 +12,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavController
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.navOptions
-import dev.chrisbanes.haze.HazeState
 import kotlinx.coroutines.launch
 import xcj.app.appsets.account.LocalAccountManager
 import xcj.app.appsets.ui.compose.LocalNavControllers
@@ -36,8 +35,7 @@ import xcj.app.compose_share.ui.viewmodel.VisibilityComposeStateViewModel.Compan
 
 @Composable
 fun NavigationBarContainer(
-    modifier: Modifier = Modifier,
-    hazeState: HazeState?
+    modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
     val navController = LocalNavControllers.current[KEY_MAIN_NAVI_CONTROLLER]!!
@@ -68,7 +66,6 @@ fun NavigationBarContainer(
     val tabItems by navigationUseCase.tabItems
     NavigationBar(
         modifier = modifier,
-        hazeState = hazeState,
         visible = isBarVisible,
         enable = isBarEnable,
         inSearchMode = inSearchMode,

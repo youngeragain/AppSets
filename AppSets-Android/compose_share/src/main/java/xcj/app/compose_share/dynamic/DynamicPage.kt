@@ -27,9 +27,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import xcj.app.compose_share.components.BackActionTopBar
+import xcj.app.compose_share.components.LocalHazedStateProvider
 import xcj.app.compose_share.components.StatusBarWithTopActionBarSpacer
 import xcj.app.compose_share.modifier.hazeSourceIfAvailable
-import xcj.app.compose_share.modifier.rememberHazeStateIfAvailable
 
 @SuppressLint("UnrememberedMutableState")
 @Preview(showBackground = true)
@@ -47,7 +47,7 @@ fun DynamicPage(
     onDeleteClick: (ComposeMethodsWrapper) -> Unit,
     composeMethods: List<ComposeMethodsWrapper>,
 ) {
-    val hazeState = rememberHazeStateIfAvailable()
+    val hazeState = LocalHazedStateProvider.current
     Box(modifier = Modifier.fillMaxSize()) {
         Box(
             modifier = Modifier
@@ -117,7 +117,6 @@ fun DynamicPage(
         }
 
         BackActionTopBar(
-            hazeState = hazeState,
             onBackClick = onBackClick,
             backButtonText = stringResource(xcj.app.compose_share.R.string.compose_plugin),
             endButtonText = "+",

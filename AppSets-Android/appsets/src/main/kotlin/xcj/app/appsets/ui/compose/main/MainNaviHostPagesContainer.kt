@@ -69,7 +69,6 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import com.google.gson.Gson
-import dev.chrisbanes.haze.HazeState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import me.saket.telephoto.zoomable.rememberZoomableState
@@ -184,6 +183,7 @@ import xcj.app.appsets.util.BundleDefaults
 import xcj.app.appsets.util.compose_state.ComposeStateUpdater
 import xcj.app.appsets.util.compose_state.RuntimeSingleStateUpdater
 import xcj.app.appsets.util.ktx.toast
+import xcj.app.compose_share.components.LocalHazedStateProvider
 import xcj.app.compose_share.components.LocalVisibilityComposeStateProvider
 import xcj.app.compose_share.components.ProgressiveVisibilityComposeState
 import xcj.app.compose_share.components.VisibilityComposeStateProvider
@@ -213,9 +213,9 @@ private const val TAG = "MainNaviHostPagesContainer"
 fun MainNaviHostPagesContainer(
     modifier: Modifier = Modifier,
     startPageRoute: String,
-    hazeState: HazeState?,
     hostContextName: String = MainActivity.TAG
 ) {
+    val hazeState = LocalHazedStateProvider.current
     val navController = LocalNavControllers.current[KEY_MAIN_NAVI_CONTROLLER]!!
     val restrictedContentHandleState = rememberRestrictedContentHandleState()
 

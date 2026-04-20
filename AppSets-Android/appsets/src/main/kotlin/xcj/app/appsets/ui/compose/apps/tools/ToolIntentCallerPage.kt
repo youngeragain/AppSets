@@ -47,9 +47,9 @@ import xcj.app.appsets.ui.compose.quickstep.QuickStepContent
 import xcj.app.appsets.ui.compose.quickstep.TextQuickStepContent
 import xcj.app.compose_share.components.BackActionTopBar
 import xcj.app.compose_share.components.DesignTextField
+import xcj.app.compose_share.components.LocalHazedStateProvider
 import xcj.app.compose_share.components.StatusBarWithTopActionBarSpacer
 import xcj.app.compose_share.modifier.hazeSourceIfAvailable
-import xcj.app.compose_share.modifier.rememberHazeStateIfAvailable
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
@@ -141,7 +141,7 @@ fun ToolIntentCallerPage(
     val calledIntentList = remember {
         mutableStateListOf<IntentCallerModel>()
     }
-    val hazeState = rememberHazeStateIfAvailable()
+    val hazeState = LocalHazedStateProvider.current
     Box(modifier = Modifier.fillMaxSize()) {
         Column(
             modifier = Modifier
@@ -251,7 +251,6 @@ fun ToolIntentCallerPage(
         }
 
         BackActionTopBar(
-            hazeState = hazeState,
             onBackClick = onBackClick
         )
 

@@ -56,21 +56,16 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.layout.onPlaced
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.media3.common.util.UnstableApi
-import dev.chrisbanes.haze.HazeState
 import xcj.app.appsets.constants.Constants
 import xcj.app.appsets.server.model.AppPlatform
 import xcj.app.appsets.server.model.VersionInfo
@@ -91,10 +86,10 @@ import xcj.app.appsets.util.ktx.toast
 import xcj.app.compose_share.components.BackActionTopBar
 import xcj.app.compose_share.components.DesignTextField
 import xcj.app.compose_share.components.DesignVDivider
+import xcj.app.compose_share.components.LocalHazedStateProvider
 import xcj.app.compose_share.components.LocalVisibilityComposeStateProvider
 import xcj.app.compose_share.components.statusBarWithTopActionBarPaddingValues
 import xcj.app.compose_share.modifier.hazeSourceIfAvailable
-import xcj.app.compose_share.modifier.rememberHazeStateIfAvailable
 import xcj.app.compose_share.ui.viewmodel.VisibilityComposeStateViewModel.Companion.bottomSheetState
 import xcj.app.starter.android.util.PurpleLogger
 import xcj.app.starter.android.util.UriProvider
@@ -148,26 +143,11 @@ fun CreateAppPage(
             onBackClick()
         }
     }
-
-    val hazeState = rememberHazeStateIfAvailable()
-    val density = LocalDensity.current
-    var backActionBarSize by remember {
-        mutableStateOf(IntSize.Zero)
-    }
-    val backActionsHeight by remember {
-        derivedStateOf {
-            with(density) {
-                backActionBarSize.height.toDp()
-            }
-        }
-    }
     VerticalOverscrollBox(
         modifier = Modifier.fillMaxSize()
     ) {
 
         CreateApplicationContent(
-            hazeState = hazeState,
-            backActionsHeight = backActionsHeight,
             applicationForCreate = applicationForCreate,
             createStep = createStep,
             platform = platform,
@@ -185,10 +165,6 @@ fun CreateAppPage(
             }
 
         BackActionTopBar(
-            modifier = Modifier.onPlaced {
-                backActionBarSize = it.size
-            },
-            hazeState = hazeState,
             onBackClick = onBackClick,
             backButtonText = titleText,
             endButtonText = stringResource(id = xcj.app.appsets.R.string.ok),
@@ -202,14 +178,13 @@ fun CreateAppPage(
 @Composable
 fun CreateApplicationContent(
     modifier: Modifier = Modifier,
-    hazeState: HazeState?,
-    backActionsHeight: Dp,
     applicationForCreate: ApplicationForCreate,
     createStep: String,
     platform: AppPlatform? = null,
     versionInfo: VersionInfo? = null,
     onChoosePictureClick: (String, Int, ComposeStateUpdater<*>) -> Unit,
 ) {
+    val hazeState = LocalHazedStateProvider.current
     val appCreationUseCase = LocalUseCaseOfAppCreation.current
     val visibilityComposeStateProvider = LocalVisibilityComposeStateProvider.current
     val platformNames = remember {

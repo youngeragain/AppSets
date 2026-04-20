@@ -1,6 +1,7 @@
 package xcj.app.compose_share.components
 
 import androidx.compose.runtime.staticCompositionLocalOf
+import dev.chrisbanes.haze.HazeState
 import xcj.app.compose_share.usecase.ComposeDynamicUseCase
 
 val LocalVisibilityComposeStateProvider =
@@ -8,3 +9,6 @@ val LocalVisibilityComposeStateProvider =
 
 val LocalUseCaseOfComposeDynamic =
     staticCompositionLocalOf<ComposeDynamicUseCase> { error("No ComposeDynamicUseCase provided") }
+
+val LocalHazedStateProvider =
+    staticCompositionLocalOf<HazeState?> { null }

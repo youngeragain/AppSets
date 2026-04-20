@@ -27,9 +27,9 @@ import xcj.app.appsets.ui.compose.main.navigateToAppSetsShareActivity
 import xcj.app.appsets.ui.compose.main.navigateToAppSetsVpnActivity
 import xcj.app.compose_share.components.BackActionTopBar
 import xcj.app.compose_share.components.DesignHDivider
+import xcj.app.compose_share.components.LocalHazedStateProvider
 import xcj.app.compose_share.components.statusBarWithTopActionBarPaddingValues
 import xcj.app.compose_share.modifier.hazeSourceIfAvailable
-import xcj.app.compose_share.modifier.rememberHazeStateIfAvailable
 
 /**
  * @param routeType
@@ -184,7 +184,7 @@ fun ToolStartPage(
 ) {
     HideNavBar()
     val appTools = rememberAppToolList()
-    val hazeState = rememberHazeStateIfAvailable()
+    val hazeState = LocalHazedStateProvider.current
     VerticalOverscrollBox {
         LazyColumn(
             modifier = Modifier.hazeSourceIfAvailable(hazeState),
@@ -224,7 +224,6 @@ fun ToolStartPage(
         }
 
         BackActionTopBar(
-            hazeState = hazeState,
             onBackClick = onBackClick,
             backButtonText = stringResource(xcj.app.appsets.R.string.tools)
         )

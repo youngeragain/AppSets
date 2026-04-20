@@ -3,9 +3,7 @@
 package xcj.app.appsets.ui.compose.apps
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -14,8 +12,9 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
@@ -48,6 +47,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
 import xcj.app.appsets.im.Bio
 import xcj.app.appsets.server.model.Application
 import xcj.app.appsets.ui.compose.LocalNavControllers
@@ -80,7 +80,10 @@ fun AppsCenterPage(
     )
 }
 
-@OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3ExpressiveApi::class)
+@OptIn(
+    ExperimentalLayoutApi::class, ExperimentalMaterial3ExpressiveApi::class,
+    ExperimentalHazeMaterialsApi::class
+)
 @Composable
 fun SimpleApplicationList(
     modifier: Modifier = Modifier,
@@ -110,10 +113,10 @@ fun SimpleApplicationList(
     LaunchedEffect(overscrollOffset) {
         PurpleLogger.current.d(TAG, "overscrollOffset:$overscrollOffset")
         isShowDestination = overscrollOffset > 0f
-        if (overscrollOffset > 10f && overscrollOffset < 200f) {
-            destinationIconSize = (1f + overscrollOffset / 200f)
+        if (overscrollOffset > 10f && overscrollOffset < 300f) {
+            destinationIconSize = (1f + overscrollOffset / 300f)
         }
-        if (overscrollOffset >= 500f && !isSearchPageRouted) {
+        if (overscrollOffset >= 800f && !isSearchPageRouted) {
             isSearchPageRouted = true
             navHostController?.navigate(PageRouteNames.SearchPage)
         }
@@ -152,26 +155,21 @@ fun SimpleApplicationList(
 
         AnimatedVisibility(
             modifier = Modifier
-                .fillMaxWidth()
-                .height(300.dp),
-            visible = isShowDestination,
-            enter = fadeIn(tween()) + slideInVertically(tween())
+                .fillMaxSize(),
+            visible = isShowDestination
         ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .graphicsLayer {
-                        translationY = overscrollOffset
-                    },
-                contentAlignment = Alignment.Center
-            ) {
-                Column(
-                    modifier = Modifier,
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
+            Box(modifier = Modifier.fillMaxSize()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .graphicsLayer {
+                            translationY = overscrollOffset
+                        },
+                )
+                {
                     Box(
                         modifier
-                            .size(82.dp)
+                            .align(Alignment.Center)
                             .clip(MaterialTheme.shapes.extraLarge)
                             .background(color = MaterialTheme.colorScheme.surface)
                             .border(
@@ -179,20 +177,28 @@ fun SimpleApplicationList(
                                 MaterialTheme.colorScheme.outline,
                                 MaterialTheme.shapes.extraLarge
                             )
-                            .graphicsLayer {
-                                scaleX = destinationIconSize
-                                scaleY = destinationIconSize
-                            },
-                        contentAlignment = Alignment.Center
                     ) {
-                        Icon(
-                            painter = painterResource(xcj.app.compose_share.R.drawable.ic_round_search_24),
-                            contentDescription = stringResource(xcj.app.appsets.R.string.search)
-                        )
-                    }
-                    AnimatedVisibility(overscrollOffset > 200f) {
-                        Box(modifier = Modifier.padding(12.dp)) {
-                            Text(text = stringResource(xcj.app.appsets.R.string.search))
+                        Row(
+                            modifier = Modifier
+                                .padding(12.dp)
+                                .animateContentSize(),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Icon(
+                                modifier = Modifier
+                                    .size(24.dp),
+                                painter = painterResource(xcj.app.compose_share.R.drawable.ic_round_search_24),
+                                contentDescription = stringResource(xcj.app.appsets.R.string.search),
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                            AnimatedVisibility(overscrollOffset > 200f) {
+                                Box(modifier = Modifier.padding(horizontal = 12.dp)) {
+                                    Text(
+                                        text = stringResource(xcj.app.appsets.R.string.search),
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
+                                }
+                            }
                         }
                     }
                 }

@@ -29,7 +29,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import dev.chrisbanes.haze.HazeState
 import xcj.app.appsets.account.LocalAccountManager
 import xcj.app.appsets.im.BrokerTest
 import xcj.app.appsets.im.IMOnlineState
@@ -42,7 +41,6 @@ private const val TAG = "NavigationSearchBar"
 @Composable
 fun NavigationSearchBar(
     modifier: Modifier = Modifier,
-    hazeState: HazeState?,
     enable: Boolean,
     inSearchMode: Boolean,
     onBackClick: () -> Unit,
@@ -61,7 +59,6 @@ fun NavigationSearchBar(
             ) { targetInSearchMode ->
                 if (targetInSearchMode) {
                     SearchInputBar(
-                        hazeState = hazeState,
                         onBackClick = onBackClick,
                         onInputContent = onInputContent
                     )

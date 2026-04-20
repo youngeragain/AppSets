@@ -7,7 +7,6 @@ import androidx.compose.ui.Modifier
 import xcj.app.appsets.ui.compose.custom_component.HideNavBar
 import xcj.app.appsets.ui.compose.quickstep.QuickStepContent
 import xcj.app.compose_share.components.BackActionTopBar
-import xcj.app.compose_share.modifier.rememberHazeStateIfAvailable
 
 @Composable
 fun ToolGraphicPage(
@@ -15,10 +14,8 @@ fun ToolGraphicPage(
     onBackClick: () -> Unit
 ) {
     HideNavBar()
-    val hazeState = rememberHazeStateIfAvailable()
     Box(modifier = Modifier.fillMaxSize()) {
         BackActionTopBar(
-            hazeState = hazeState,
             onBackClick = onBackClick
         )
     }

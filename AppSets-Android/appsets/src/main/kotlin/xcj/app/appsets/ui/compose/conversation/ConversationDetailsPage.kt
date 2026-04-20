@@ -110,7 +110,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import coil3.compose.rememberAsyncImagePainter
-import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
 import dev.chrisbanes.haze.materials.HazeMaterials
 import kotlinx.coroutines.Dispatchers
@@ -151,6 +150,7 @@ import xcj.app.appsets.usecase.SessionState
 import xcj.app.appsets.util.compose_state.ComposeStateUpdater
 import xcj.app.appsets.util.compose_state.RuntimeSingleStateUpdater
 import xcj.app.compose_share.components.BackActionTopBar
+import xcj.app.compose_share.components.LocalHazedStateProvider
 import xcj.app.compose_share.components.backActionsBarHeightDp
 import xcj.app.compose_share.modifier.hazeEffectIfAvailable
 import xcj.app.compose_share.modifier.hazeSourceIfAvailable
@@ -261,8 +261,6 @@ fun SessionObjectNormal(
         }
     }
 
-    val hazeState = remember { HazeState() }
-
     var inputTextFiledValue by remember { mutableStateOf(TextFieldValue()) }
 
     val receivedContents = remember { mutableStateListOf<Uri>() }
@@ -319,7 +317,6 @@ fun SessionObjectNormal(
             session = currentSession,
             messages = conversationState.messages,
             scrollState = scrollState,
-            hazeState = hazeState,
             onBioClick = onBioClick,
             onImMessageContentClick = onImMessageContentClick
         )
@@ -327,7 +324,6 @@ fun SessionObjectNormal(
             modifier = Modifier.align(Alignment.TopCenter),
             currentSession = currentSession,
             quickAccessSessions = quickAccessSessions,
-            hazeState = hazeState,
             onBackClick = onBackClick,
             onMoreClick = {
                 onMoreClick(currentSession.imObj)
@@ -340,7 +336,6 @@ fun SessionObjectNormal(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .imePadding(),
-            hazeState = hazeState,
             inputTextState = inputTextFiledValue,
             textFieldAdviser = textFieldAdviser,
             receiveContentListener = receiveContentListener,
@@ -501,13 +496,13 @@ private fun TopBarComponent(
     modifier: Modifier,
     currentSession: Session,
     quickAccessSessions: List<Session>,
-    hazeState: HazeState,
     onBackClick: () -> Unit,
     onMoreClick: () -> Unit,
     onBioClick: (Bio) -> Unit,
     onQuickAccessSessionClick: (Session) -> Unit,
 ) {
     val hapticFeedback = LocalHapticFeedback.current
+    val hazeState = LocalHazedStateProvider.current
     val overrideQuickAccessSessions by remember(quickAccessSessions) {
         val sessions = buildList {
             add(currentSession)
@@ -569,7 +564,6 @@ private fun TopBarComponent(
         }
 
         BackActionTopBar(
-            hazeState = hazeState,
             onBackClick = onBackClick
         )
     }
@@ -596,11 +590,11 @@ private fun ImMessageListComponent(
     appSetsModuleSettings: AppSetsModuleSettings,
     session: Session,
     messages: List<IMMessage<*>>,
-    hazeState: HazeState,
     scrollState: LazyListState,
     onBioClick: (Bio) -> Unit,
     onImMessageContentClick: (IMMessage<*>) -> Unit,
 ) {
+    val hazeState = LocalHazedStateProvider.current
     VerticalOverscrollBox(modifier = modifier) {
         LazyColumn(
             reverseLayout = true,
@@ -1201,7 +1195,6 @@ private fun ImMessageItemStartComponent(
 @Composable
 private fun UserInputComponent(
     modifier: Modifier = Modifier,
-    hazeState: HazeState,
     inputTextState: TextFieldValue,
     textFieldAdviser: TextFieldAdviser,
     receiveContentListener: ReceiveContentListener,
@@ -1240,7 +1233,6 @@ private fun UserInputComponent(
     ) {
         AnimatedVisibility(textFieldAdviser.advises.isNotEmpty()) {
             InputSuggestionsSpace(
-                hazeState = hazeState,
                 textFieldAdviser = textFieldAdviser,
                 onSendClick = onSendClick,
                 resetScroll = resetScroll,
@@ -1250,7 +1242,6 @@ private fun UserInputComponent(
 
         UserInputActionsSpace(
             textFieldValue = inputTextState,
-            hazeState = hazeState,
             expandUserInput = expandUserInput,
             // Only show the keyboard if there's no input selector and text field has focus
             isShowJumpToLatestButton = isShowJumpToLatestButton,
@@ -1280,7 +1271,6 @@ private fun UserInputComponent(
 
         UserInputTextSpace(
             textFieldValue = inputTextState,
-            hazeState = hazeState,
             onTextChanged = onTextChanged,
             receiveContentListener = receiveContentListener,
             expandUserInput = expandUserInput,
@@ -1307,13 +1297,13 @@ private fun UserInputComponent(
 @Composable
 fun InputSuggestionsSpace(
     modifier: Modifier = Modifier,
-    hazeState: HazeState,
     textFieldAdviser: TextFieldAdviser,
     onSendClick: (Int) -> Unit,
     resetScroll: () -> Unit,
     onRemoveAdviseClick: (TextFieldAdviser.Advise) -> Unit,
 ) {
     val hapticFeedback = LocalHapticFeedback.current
+    val hazeState = LocalHazedStateProvider.current
     Column(
         modifier = modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.End
@@ -1416,7 +1406,6 @@ fun InputSuggestionsSpace(
 @Composable
 fun UserInputActionsSpace(
     modifier: Modifier = Modifier,
-    hazeState: HazeState,
     textFieldValue: TextFieldValue,
     expandUserInput: Boolean,
     isShowJumpToLatestButton: Boolean,
@@ -1427,6 +1416,7 @@ fun UserInputActionsSpace(
     onJumpToLatestClick: () -> Unit
 ) {
     val context = LocalContext.current
+    val hazeState = LocalHazedStateProvider.current
     val hapticFeedback = LocalHapticFeedback.current
     val systemUseCase = LocalUseCaseOfSystem.current
     val nowSpaceContentUseCase = LocalUseCaseOfNowSpaceContent.current
@@ -1726,7 +1716,6 @@ fun AudioRecordSpace(
 @Composable
 private fun UserInputTextSpace(
     modifier: Modifier = Modifier,
-    hazeState: HazeState,
     keyboardType: KeyboardType = KeyboardType.Text,
     textFieldValue: TextFieldValue,
     receiveContentListener: ReceiveContentListener,
@@ -1739,7 +1728,7 @@ private fun UserInputTextSpace(
 ) {
 
     val context = LocalContext.current
-
+    val hazeState = LocalHazedStateProvider.current
     val activity = context.asComponentActivityOrNull()
 
 

@@ -66,7 +66,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.net.toUri
 import androidx.navigation.NavController
-import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
 import dev.chrisbanes.haze.materials.HazeMaterials
 import xcj.app.appsets.im.message.SystemMessage
@@ -85,6 +84,7 @@ import xcj.app.appsets.ui.model.state.NowSpaceContent
 import xcj.app.appsets.usecase.ConversationUseCase
 import xcj.app.appsets.usecase.NowSpaceContentUseCase
 import xcj.app.appsets.usecase.SessionState
+import xcj.app.compose_share.components.LocalHazedStateProvider
 import xcj.app.compose_share.foundation_extension.ProjectPreviewWrapperProviderImpl
 import xcj.app.compose_share.modifier.hazeEffectIfAvailable
 import xcj.app.starter.android.ktx.startWithHttpSchema
@@ -111,17 +111,14 @@ fun NowSpaceContainerPreview() {
                 NowSpaceContent.AudioPlayer(UriProvider.fromUri("http://localhost".toUri()))
             nowSpaceContentUseCase.addContent(audioPlayer)
         }
-        NowSpaceContainer(
-            hazeState = null
-        )
+        NowSpaceContainer()
     }
 }
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun NowSpaceContainer(
-    modifier: Modifier = Modifier,
-    hazeState: HazeState?,
+    modifier: Modifier = Modifier
 ) {
     val navController = LocalNavControllers.current[KEY_MAIN_NAVI_CONTROLLER]!!
     val nowSpaceContentUseCase = LocalUseCaseOfNowSpaceContent.current
@@ -148,7 +145,6 @@ fun NowSpaceContainer(
             ) { nowSpaceContent ->
                 QuickStepBar(
                     modifier = Modifier.animateItem(),
-                    hazeState = hazeState,
                     nowSpaceContent = nowSpaceContent,
                     onClick = {
                         handleNowSpaceContentClick(
@@ -192,7 +188,6 @@ private fun QuickStepBarsContainer(
 @Composable
 private fun QuickStepBar(
     modifier: Modifier = Modifier,
-    hazeState: HazeState?,
     nowSpaceContent: NowSpaceContent,
     onClick: () -> Unit,
     onLongClick: () -> Unit,
@@ -205,7 +200,6 @@ private fun QuickStepBar(
     Box(modifier = modifier) {
         QuickStepBarContainer(
             nowSpaceContent = tempNowSpaceContent,
-            hazeState = hazeState,
             onClick = onClick,
             onLongClick = {
                 isBarLongPressed = !isBarLongPressed
@@ -278,13 +272,13 @@ fun DemoBar(
 @Composable
 private fun QuickStepBarContainer(
     modifier: Modifier = Modifier,
-    hazeState: HazeState?,
     nowSpaceContent: NowSpaceContent,
     onClick: () -> Unit,
     onLongClick: () -> Unit,
     onDismissClick: () -> Unit,
     content: @Composable () -> Unit,
 ) {
+    val hazeState = LocalHazedStateProvider.current
     val navigationUseCase = LocalUseCaseOfNavigation.current
     val conversationUseCase = LocalUseCaseOfConversation.current
     val mediaRemoteExoUseCase = LocalUseCaseOfMediaRemoteExo.current

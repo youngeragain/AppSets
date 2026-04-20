@@ -70,7 +70,6 @@ import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
 import dev.chrisbanes.haze.materials.HazeMaterials
 import kotlinx.coroutines.launch
@@ -89,9 +88,9 @@ import xcj.app.appsets.ui.compose.outside.ScreensList
 import xcj.app.appsets.ui.model.page_state.SearchPageUIState
 import xcj.app.appsets.ui.model.state.SearchResult
 import xcj.app.compose_share.components.DesignTextField
+import xcj.app.compose_share.components.LocalHazedStateProvider
 import xcj.app.compose_share.modifier.hazeEffectIfAvailable
 import xcj.app.compose_share.modifier.hazeSourceIfAvailable
-import xcj.app.compose_share.modifier.rememberHazeStateIfAvailable
 import java.util.Locale
 
 @Composable
@@ -124,11 +123,11 @@ fun SearchPage(
 @Composable
 fun SearchInputBar(
     modifier: Modifier = Modifier,
-    hazeState: HazeState?,
     onBackClick: () -> Unit,
     onInputContent: (String) -> Unit
 ) {
     val keyboardController = LocalSoftwareKeyboardController.current
+    val hazeState = LocalHazedStateProvider.current
     val searchUseCase = LocalUseCaseOfSearch.current
     val searchPageState by searchUseCase.searchPageUIState
     val focusRequester = remember {
@@ -361,9 +360,9 @@ fun SearchSuccessPages(
     onApplicationLongPress: (Application) -> Unit,
     onScreenMediaClick: (ScreenMediaFileUrl, List<ScreenMediaFileUrl>) -> Unit,
 ) {
+    val hazeState = LocalHazedStateProvider.current
     val pagerState = rememberPagerState { searchSuccess.results.size }
     val coroutineScope = rememberCoroutineScope()
-    val hazeState = rememberHazeStateIfAvailable()
     LaunchedEffect(pagerState.currentPage) {
 
     }

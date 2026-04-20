@@ -58,10 +58,10 @@ import xcj.app.appsets.util.compose_state.ComposeStateUpdater
 import xcj.app.appsets.util.compose_state.RuntimeSingleStateUpdater
 import xcj.app.compose_share.components.BackActionTopBar
 import xcj.app.compose_share.components.DesignTextField
+import xcj.app.compose_share.components.LocalHazedStateProvider
 import xcj.app.compose_share.components.StatusBarWithTopActionBarSpacer
 import xcj.app.compose_share.foundation_extension.ProjectPreviewWrapperProviderImpl
 import xcj.app.compose_share.modifier.hazeSourceIfAvailable
-import xcj.app.compose_share.modifier.rememberHazeStateIfAvailable
 import xcj.app.starter.android.util.PurpleLogger
 
 private const val TAG = "SignUpPage"
@@ -101,6 +101,7 @@ fun SignUpPage(
     onConfirmClick: (UserInfoForCreate) -> Unit,
 ) {
 
+    val hazeState = LocalHazedStateProvider.current
     LaunchedEffect(key1 = signUpPageUIState, block = {
         if (signUpPageUIState is SignUpPageUIState.SignUpSuccess) {
             onBackClick()
@@ -112,10 +113,8 @@ fun SignUpPage(
             systemUseCase.onComposeDispose("page dispose")
         }
     }
-    val hazeState = rememberHazeStateIfAvailable()
 
     VerticalOverscrollBox {
-
         Column(
             modifier = Modifier
                 .hazeSourceIfAvailable(hazeState)
@@ -480,7 +479,6 @@ fun SignUpPage(
 
 
         BackActionTopBar(
-            hazeState = hazeState,
             onBackClick = onBackClick,
             backButtonText = stringResource(xcj.app.appsets.R.string.create_account),
             endButtonText = stringResource(id = xcj.app.starter.R.string.ok),

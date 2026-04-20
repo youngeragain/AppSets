@@ -38,7 +38,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
 import dev.chrisbanes.haze.materials.HazeMaterials
 import xcj.app.compose_share.modifier.hazeEffectIfAvailable
@@ -63,9 +62,11 @@ sealed interface BackActionModel {
 @Composable
 fun BackActionTopBarPreview() {
     BackActionTopBar(
-        hazeState = null, onBackClick = {
+        onBackClick = {
 
-        }, backButtonText = "Back", endButtonText = "OK"
+        },
+        backButtonText = "Back",
+        endButtonText = "OK"
     )
 }
 
@@ -73,7 +74,6 @@ fun BackActionTopBarPreview() {
 @Composable
 fun BackActionTopBar(
     modifier: Modifier = Modifier,
-    hazeState: HazeState?,
     onBackClick: () -> Unit,
     backIcon: Int? = null,
     backButtonText: String? = null,
@@ -83,8 +83,8 @@ fun BackActionTopBar(
     hazeForEnd: Boolean = true
 ) {
     val context = LocalContext.current
+    val hazeState = LocalHazedStateProvider.current
     val backActionTopBarInfo = LocalBackActionTopBarInfo.current
-
     DisposableEffect(true) {
         onDispose {
             backActionTopBarInfo.barIsShowing.value = false

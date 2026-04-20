@@ -83,9 +83,9 @@ import xcj.app.appsets.util.compose_state.ComposeStateUpdater
 import xcj.app.appsets.util.compose_state.RuntimeSingleStateUpdater
 import xcj.app.compose_share.components.BackActionTopBar
 import xcj.app.compose_share.components.DesignTextField
+import xcj.app.compose_share.components.LocalHazedStateProvider
 import xcj.app.compose_share.components.StatusBarWithTopActionBarSpacer
 import xcj.app.compose_share.modifier.hazeSourceIfAvailable
-import xcj.app.compose_share.modifier.rememberHazeStateIfAvailable
 
 private const val TAG = "CreateGroupPage"
 
@@ -127,13 +127,13 @@ fun CreateGroupPage(
     onSelectGroupIconClick: (String, ComposeStateUpdater<*>) -> Unit
 ) {
     HideNavBar()
+    val hazeState = LocalHazedStateProvider.current
     val systemUseCase = LocalUseCaseOfSystem.current
     DisposableEffect(Unit) {
         onDispose {
             systemUseCase.onComposeDispose("page dispose")
         }
     }
-    val hazeState = rememberHazeStateIfAvailable()
     var startAnimation by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) {
         delay(100)
@@ -403,7 +403,6 @@ fun CreateGroupPage(
         }
 
         BackActionTopBar(
-            hazeState = hazeState,
             backButtonText = stringResource(xcj.app.appsets.R.string.create_group),
             endButtonText = stringResource(xcj.app.appsets.R.string.ok),
             onBackClick = onBackClick,

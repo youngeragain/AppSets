@@ -48,9 +48,9 @@ import xcj.app.appsets.ui.compose.custom_component.HideNavBar
 import xcj.app.appsets.ui.compose.quickstep.QuickStepContent
 import xcj.app.compose_share.components.BackActionTopBar
 import xcj.app.compose_share.components.DesignTextField
+import xcj.app.compose_share.components.LocalHazedStateProvider
 import xcj.app.compose_share.components.StatusBarWithTopActionBarSpacer
 import xcj.app.compose_share.modifier.hazeSourceIfAvailable
-import xcj.app.compose_share.modifier.rememberHazeStateIfAvailable
 import java.util.Calendar
 
 @Composable
@@ -60,7 +60,7 @@ fun ToolWeatherPage(
 ) {
     HideNavBar()
     val configuration = LocalConfiguration.current
-    val hazeState = rememberHazeStateIfAvailable()
+    val hazeState = LocalHazedStateProvider.current
     Box(
         modifier = Modifier.fillMaxSize()
     ) {
@@ -79,7 +79,6 @@ fun ToolWeatherPage(
         }
 
         BackActionTopBar(
-            hazeState = hazeState,
             onBackClick = onBackClick
         )
     }

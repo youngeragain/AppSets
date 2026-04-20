@@ -49,6 +49,7 @@ import xcj.app.appsets.ui.compose.quickstep.QuickStepContentHandlerRegistry
 import xcj.app.appsets.ui.model.state.NowSpaceContent
 import xcj.app.appsets.ui.viewmodel.MainViewModel
 import xcj.app.compose_share.components.BottomSheetContainer
+import xcj.app.compose_share.components.LocalHazedStateProvider
 import xcj.app.compose_share.components.LocalUseCaseOfComposeDynamic
 import xcj.app.compose_share.components.LocalVisibilityComposeStateProvider
 import xcj.app.compose_share.modifier.rememberHazeStateIfAvailable
@@ -89,7 +90,8 @@ fun MainPage() {
         LocalUseCaseOfNowSpaceContent provides viewModel.nowSpaceContentUseCase,
         LocalNavControllers provides mapOf(KEY_MAIN_NAVI_CONTROLLER to navController),
         LocalVisibilityComposeStateProvider provides viewModel,
-        LocalQuickStepContentHandlerRegistry provides quickStepContentHandlerRegistry
+        LocalQuickStepContentHandlerRegistry provides quickStepContentHandlerRegistry,
+        LocalHazedStateProvider provides hazeState
     ) {
         Surface {
             OnScaffoldLaunch()
@@ -103,14 +105,12 @@ fun MainPage() {
                     MainNaviHostPagesContainer(
                         modifier = Modifier.fillMaxSize(),
                         startPageRoute = PageRouteNames.AppsCenterPage,
-                        hazeState = hazeState,
                         hostContextName = MainActivity.TAG
                     )
 
                     NavigationBarContainer(
                         modifier = Modifier
-                            .align(Alignment.BottomCenter),
-                        hazeState = hazeState
+                            .align(Alignment.BottomCenter)
                     )
                 }
 
@@ -118,9 +118,7 @@ fun MainPage() {
 
                 BottomSheetContainer()
 
-                NowSpaceContainer(
-                    hazeState = hazeState
-                )
+                NowSpaceContainer()
 
             }
         }

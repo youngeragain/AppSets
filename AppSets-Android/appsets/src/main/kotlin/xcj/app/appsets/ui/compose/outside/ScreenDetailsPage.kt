@@ -64,7 +64,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -80,6 +79,7 @@ import xcj.app.appsets.ui.compose.custom_component.VerticalOverscrollBox
 import xcj.app.appsets.ui.model.ScreenInfoForCard
 import xcj.app.compose_share.components.BackActionTopBar
 import xcj.app.compose_share.components.DesignTextField
+import xcj.app.compose_share.components.LocalHazedStateProvider
 import xcj.app.compose_share.components.LocalVisibilityComposeStateProvider
 import xcj.app.compose_share.components.StatusBarWithTopActionBarSpacer
 import xcj.app.compose_share.components.statusBarWithTopActionBarPaddingValues
@@ -102,6 +102,7 @@ fun ScreenDetailsPage(
     onPageShowNext: () -> Unit
 ) {
     HideNavBar()
+    val hazeState = LocalHazedStateProvider.current
     if (screenInfoForCard.screenInfo == null) {
         Box(modifier = Modifier.fillMaxSize()) {
             Text(
@@ -122,9 +123,6 @@ fun ScreenDetailsPage(
             mutableStateOf(false)
         }
 
-        val hazeState = remember {
-            HazeState()
-        }
         val coroutineScope = rememberCoroutineScope()
         val likeIconAnimationState = remember {
             AnimationState(0f)
@@ -209,7 +207,6 @@ fun ScreenDetailsPage(
             )
 
             BackActionTopBar(
-                hazeState = hazeState,
                 onBackClick = onBackClick,
                 customEndContent = {
                     ScreenDetailsTopEndActions(

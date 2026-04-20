@@ -73,10 +73,10 @@ import xcj.app.appsets.util.compose_state.ComposeStateUpdater
 import xcj.app.appsets.util.compose_state.RuntimeListStateUpdater
 import xcj.app.compose_share.components.BackActionTopBar
 import xcj.app.compose_share.components.DesignTextField
+import xcj.app.compose_share.components.LocalHazedStateProvider
 import xcj.app.compose_share.components.StatusBarWithTopActionBarSpacer
 import xcj.app.compose_share.foundation_extension.ProjectPreviewWrapperProviderImpl
 import xcj.app.compose_share.modifier.hazeSourceIfAvailable
-import xcj.app.compose_share.modifier.rememberHazeStateIfAvailable
 import xcj.app.starter.android.util.UriProvider
 import xcj.app.starter.android.util.model.isAudioType
 import xcj.app.starter.android.util.model.isImageType
@@ -129,6 +129,7 @@ fun CreateScreenPage(
 
     HideNavBar()
     val context = LocalContext.current
+    val hazeState = LocalHazedStateProvider.current
     val screenPostUseCase = LocalUseCaseOfScreenPost.current
     LaunchedEffect(Unit) {
         screenPostUseCase.updateWithQuickStepContentIfNeeded(
@@ -148,7 +149,7 @@ fun CreateScreenPage(
             onBackClick(true)
         }
     }
-    val hazeState = rememberHazeStateIfAvailable()
+
     VerticalOverscrollBox {
         Column(
             modifier = Modifier
@@ -171,7 +172,6 @@ fun CreateScreenPage(
         CreateScreenIndicator(createScreenPageUIState = createScreenPageUIState)
 
         BackActionTopBar(
-            hazeState = hazeState,
             backButtonText = stringResource(xcj.app.appsets.R.string.create_screen),
             endButtonText = stringResource(id = xcj.app.appsets.R.string.ok),
             onBackClick = {
