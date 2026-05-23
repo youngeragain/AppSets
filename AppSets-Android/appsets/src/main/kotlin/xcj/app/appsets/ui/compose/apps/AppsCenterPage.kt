@@ -116,7 +116,7 @@ fun SimpleApplicationList(
         if (overscrollOffset > 10f && overscrollOffset < 300f) {
             destinationIconSize = (1f + overscrollOffset / 300f)
         }
-        if (overscrollOffset >= 800f && !isSearchPageRouted) {
+        if (overscrollOffset >= 600f && !isSearchPageRouted) {
             isSearchPageRouted = true
             navHostController?.navigate(PageRouteNames.SearchPage)
         }

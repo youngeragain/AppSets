@@ -32,8 +32,8 @@ configure<ApplicationExtension> {
         applicationId = "xcj.app.container"
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
-        versionCode = 20260201
-        versionName = "2026.02.01"
+        versionCode = 20260405
+        versionName = "2026.04.05"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
