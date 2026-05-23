@@ -71,7 +71,4 @@ dependencies {
     implementation(libs.okhttp.logging)
     implementation(libs.retrofit.kotlin.coroutines.adapter)
 
-    testImplementation(libs.junit)
-    androidTestImplementation(libs.androidx.junit)
-    androidTestImplementation(libs.androidx.espresso.core)
 }

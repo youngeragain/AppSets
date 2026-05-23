@@ -53,16 +53,12 @@ configure<LibraryExtension> {
 }
 
 dependencies {
-    compileOnly(project(":starter"))
-    compileOnly(project(":compose_share"))
+    implementation(project(":starter"))
+    implementation(project(":compose_share"))
     implementation(project(":webserver"))
 
     implementation(libs.jmdns)
 
     implementation(libs.coil)
     implementation(libs.coil.compose)
-
-    testImplementation(libs.junit)
-    androidTestImplementation(libs.androidx.junit)
-    androidTestImplementation(libs.androidx.espresso.core)
 }

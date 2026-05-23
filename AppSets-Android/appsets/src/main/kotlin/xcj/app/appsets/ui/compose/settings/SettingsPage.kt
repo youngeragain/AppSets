@@ -43,9 +43,7 @@ import xcj.app.appsets.ui.compose.custom_component.HideNavBar
 import xcj.app.appsets.ui.compose.custom_component.VerticalOverscrollBox
 import xcj.app.appsets.ui.compose.custom_component.preview_tooling.DesignPreviewCompositionLocalProvider
 import xcj.app.compose_share.components.BackActionTopBar
-import xcj.app.compose_share.components.LocalHazedStateProvider
 import xcj.app.compose_share.components.StatusBarWithTopActionBarSpacer
-import xcj.app.compose_share.modifier.hazeSourceIfAvailable
 
 
 @Preview(showBackground = true)
@@ -95,11 +93,9 @@ fun SettingsPage(
     onPrivacyAndPermissionClick: () -> Unit
 ) {
     HideNavBar()
-    val hazeState = LocalHazedStateProvider.current
     VerticalOverscrollBox {
         Column(
             modifier = Modifier
-                .hazeSourceIfAvailable(hazeState)
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState()),
         ) {

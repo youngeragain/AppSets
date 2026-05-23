@@ -53,18 +53,10 @@ configure<LibraryExtension> {
 }
 
 dependencies {
-    compileOnly(project(":starter"))
-    compileOnly(project(":compose_share"))
+    implementation(project(":starter"))
+    implementation(project(":compose_share"))
 
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.livedata.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
-
-    implementation(libs.coil)
-    implementation(libs.coil.network.okhttp)
-    implementation(libs.coil.compose)
-
-    testImplementation(libs.junit)
-    androidTestImplementation(libs.androidx.junit)
-    androidTestImplementation(libs.androidx.espresso.core)
 }

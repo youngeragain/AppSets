@@ -122,7 +122,7 @@ class AppSetsShareActivity : DesignComponentActivity() {
         handleExternalShareContentIfNeeded(intent)
     }
 
-    override fun onNewIntent(intent: Intent?) {
+    override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         handleExternalShareContentIfNeeded(intent)
     }

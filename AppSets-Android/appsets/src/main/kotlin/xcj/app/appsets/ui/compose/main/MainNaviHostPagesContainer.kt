@@ -183,7 +183,7 @@ import xcj.app.appsets.util.BundleDefaults
 import xcj.app.appsets.util.compose_state.ComposeStateUpdater
 import xcj.app.appsets.util.compose_state.RuntimeSingleStateUpdater
 import xcj.app.appsets.util.ktx.toast
-import xcj.app.compose_share.components.LocalHazedStateProvider
+import xcj.app.compose_share.components.LocalHazedState
 import xcj.app.compose_share.components.LocalVisibilityComposeStateProvider
 import xcj.app.compose_share.components.ProgressiveVisibilityComposeState
 import xcj.app.compose_share.components.VisibilityComposeStateProvider
@@ -215,13 +215,12 @@ fun MainNaviHostPagesContainer(
     startPageRoute: String,
     hostContextName: String = MainActivity.TAG
 ) {
-    val hazeState = LocalHazedStateProvider.current
-    val navController = LocalNavControllers.current[KEY_MAIN_NAVI_CONTROLLER]!!
+    val navController = LocalNavControllers.current[KEY_MAIN_NAVI_CONTROLLER] ?: return
+    val hazeState = LocalHazedState.current
     val restrictedContentHandleState = rememberRestrictedContentHandleState()
-
-    Box(modifier = modifier) {
+    Box(modifier = modifier.hazeSourceIfAvailable(hazeState)) {
         DesignNaviHostIf(
-            modifier = Modifier.hazeSourceIfAvailable(hazeState),
+            modifier = Modifier,
             navController = navController,
             startDestination = startPageRoute,
         ) {

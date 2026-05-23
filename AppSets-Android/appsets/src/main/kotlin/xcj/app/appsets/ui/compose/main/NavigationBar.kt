@@ -44,13 +44,14 @@ import dev.chrisbanes.haze.materials.HazeMaterials
 import xcj.app.appsets.ui.compose.LocalUseCaseOfConversation
 import xcj.app.appsets.ui.compose.LocalUseCaseOfScreen
 import xcj.app.appsets.ui.compose.PageRouteNames
+import xcj.app.appsets.ui.compose.custom_component.HorizontalOverscrollBox2
 import xcj.app.appsets.ui.compose.custom_component.ImageButtonComponent
 import xcj.app.appsets.ui.compose.search.NavigationSearchBar
 import xcj.app.appsets.ui.model.TabAction
 import xcj.app.appsets.ui.model.TabItem
 import xcj.app.appsets.usecase.NavigationUseCase
 import xcj.app.compose_share.components.DesignHDivider
-import xcj.app.compose_share.components.LocalHazedStateProvider
+import xcj.app.compose_share.components.LocalHazedState
 import xcj.app.compose_share.modifier.hazeEffectIfAvailable
 
 private const val TAG = "NavigationBar"
@@ -101,13 +102,10 @@ private fun StandardNavigationBar(
     onSearchBarClick: () -> Unit,
     onBioClick: () -> Unit,
 ) {
-    val hazeState = LocalHazedStateProvider.current
+    val hazeState = LocalHazedState.current
     val modifierOverride = if (!inSearchMode) {
         modifier
-            .hazeEffectIfAvailable(
-                hazeState,
-                HazeMaterials.thin()
-            )
+            .hazeEffectIfAvailable(hazeState, HazeMaterials.thin())
             .fillMaxWidth()
             .navigationBarsPadding()
             .imePadding()
@@ -119,45 +117,51 @@ private fun StandardNavigationBar(
     }
     Column(
         modifier = modifierOverride
-    ) {
+    )
+    {
         if (!inSearchMode) {
             DesignHDivider()
             Spacer(modifier = Modifier.height(6.dp))
         }
         val scrollState = rememberScrollState()
-        Row(
-            modifier = Modifier
-                .align(Alignment.CenterHorizontally)
-                .heightIn(min = 48.dp)
-                .horizontalScroll(state = scrollState),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            AnimatedVisibility(
-                visible = !inSearchMode
-            ) {
-                Row {
-                    tabItems.forEach { tabItem ->
-                        TabItemContainer(
-                            modifier = Modifier,
-                            hostVisible = hostVisible,
-                            tabItem = tabItem,
-                            onTabClick = onTabClick
-                        )
+        HorizontalOverscrollBox2(
+            modifier = Modifier.align(Alignment.CenterHorizontally),
+            content = {
+                Row(
+                    modifier = Modifier
+                        .heightIn(min = 48.dp)
+                        .horizontalScroll(state = scrollState),
+                    verticalAlignment = Alignment.CenterVertically
+                )
+                {
+                    AnimatedVisibility(
+                        visible = !inSearchMode
+                    ) {
+                        Row {
+                            tabItems.forEach { tabItem ->
+                                TabItemContainer(
+                                    modifier = Modifier,
+                                    hostVisible = hostVisible,
+                                    tabItem = tabItem,
+                                    onTabClick = onTabClick
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(8.dp))
+                        }
                     }
+
+                    NavigationSearchBar(
+                        enable = enable,
+                        inSearchMode = inSearchMode,
+                        onBackClick = onBackClick,
+                        onInputContent = onInputContent,
+                        onSearchBarClick = onSearchBarClick,
+                        onBioClick = onBioClick
+                    )
                     Spacer(modifier = Modifier.width(8.dp))
                 }
             }
-
-            NavigationSearchBar(
-                enable = enable,
-                inSearchMode = inSearchMode,
-                onBackClick = onBackClick,
-                onInputContent = onInputContent,
-                onSearchBarClick = onSearchBarClick,
-                onBioClick = onBioClick
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-        }
+        )
     }
 }
 

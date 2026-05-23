@@ -74,9 +74,7 @@ import xcj.app.appsets.ui.compose.custom_component.HideNavBar
 import xcj.app.appsets.ui.compose.quickstep.QuickStepContent
 import xcj.app.compose_share.components.BackActionTopBar
 import xcj.app.compose_share.components.DesignTextField
-import xcj.app.compose_share.components.LocalHazedStateProvider
 import xcj.app.compose_share.components.StatusBarWithTopActionBarSpacer
-import xcj.app.compose_share.modifier.hazeSourceIfAvailable
 import xcj.app.starter.android.ktx.asComponentActivityOrNull
 import xcj.app.starter.android.util.FileUtil
 
@@ -91,7 +89,6 @@ fun ToolFileManagerPage(
 ) {
     HideNavBar()
     val context = LocalContext.current
-    val hazeState = LocalHazedStateProvider.current
     val lifecycleOwner = LocalLifecycleOwner.current
     val lifecycle = lifecycleOwner.lifecycle
     val coroutineScope = rememberCoroutineScope()
@@ -156,7 +153,6 @@ fun ToolFileManagerPage(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .hazeSourceIfAvailable(hazeState)
         ) {
             Column(
                 modifier = Modifier

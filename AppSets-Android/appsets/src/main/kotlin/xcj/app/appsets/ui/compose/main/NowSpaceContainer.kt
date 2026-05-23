@@ -84,7 +84,7 @@ import xcj.app.appsets.ui.model.state.NowSpaceContent
 import xcj.app.appsets.usecase.ConversationUseCase
 import xcj.app.appsets.usecase.NowSpaceContentUseCase
 import xcj.app.appsets.usecase.SessionState
-import xcj.app.compose_share.components.LocalHazedStateProvider
+import xcj.app.compose_share.components.LocalHazedState
 import xcj.app.compose_share.foundation_extension.ProjectPreviewWrapperProviderImpl
 import xcj.app.compose_share.modifier.hazeEffectIfAvailable
 import xcj.app.starter.android.ktx.startWithHttpSchema
@@ -278,7 +278,7 @@ private fun QuickStepBarContainer(
     onDismissClick: () -> Unit,
     content: @Composable () -> Unit,
 ) {
-    val hazeState = LocalHazedStateProvider.current
+    val hazeState = LocalHazedState.current
     val navigationUseCase = LocalUseCaseOfNavigation.current
     val conversationUseCase = LocalUseCaseOfConversation.current
     val mediaRemoteExoUseCase = LocalUseCaseOfMediaRemoteExo.current

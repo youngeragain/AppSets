@@ -25,9 +25,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import xcj.app.appsets.server.model.ScreenInfo
 import xcj.app.compose_share.components.BackActionTopBar
-import xcj.app.compose_share.components.LocalHazedStateProvider
 import xcj.app.compose_share.components.StatusBarWithTopActionBarSpacer
-import xcj.app.compose_share.modifier.hazeSourceIfAvailable
 
 @Composable
 fun ScreenEditPage(
@@ -38,11 +36,9 @@ fun ScreenEditPage(
     var isPublic by remember {
         mutableStateOf(screenInfo?.isPublic == 1)
     }
-    val hazeState = LocalHazedStateProvider.current
     Box(modifier = Modifier.fillMaxSize()) {
         Column(
             modifier = Modifier
-                .hazeSourceIfAvailable(hazeState)
                 .padding(start = 12.dp, end = 12.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {

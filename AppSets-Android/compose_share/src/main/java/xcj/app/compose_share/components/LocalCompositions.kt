@@ -10,5 +10,5 @@ val LocalVisibilityComposeStateProvider =
 val LocalUseCaseOfComposeDynamic =
     staticCompositionLocalOf<ComposeDynamicUseCase> { error("No ComposeDynamicUseCase provided") }
 
-val LocalHazedStateProvider =
+val LocalHazedState =
     staticCompositionLocalOf<HazeState?> { null }

@@ -1,0 +1,1 @@
+-keep class xcj.app.bard.purple_module.ComposeEventListener{ *; }

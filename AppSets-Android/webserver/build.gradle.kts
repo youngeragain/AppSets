@@ -39,12 +39,8 @@ configure<LibraryExtension> {
 }
 
 dependencies {
-    compileOnly(project(":starter"))
-    compileOnly(project(":compose_share"))
+    implementation(project(":starter"))
+    implementation(project(":compose_share"))
     //implementation(libs.jetty.server)
     api(libs.netty.all)
-
-    testImplementation(libs.junit)
-    androidTestImplementation(libs.androidx.junit)
-    androidTestImplementation(libs.androidx.espresso.core)
 }

@@ -39,12 +39,8 @@ configure<LibraryExtension> {
 }
 
 dependencies {
-    compileOnly(project(":starter"))
+    implementation(project(":starter"))
 
     implementation(libs.image.compressor)
     implementation(libs.tencent.cos.lite)
-
-    testImplementation(libs.junit)
-    androidTestImplementation(libs.androidx.junit)
-    androidTestImplementation(libs.androidx.espresso.core)
 }

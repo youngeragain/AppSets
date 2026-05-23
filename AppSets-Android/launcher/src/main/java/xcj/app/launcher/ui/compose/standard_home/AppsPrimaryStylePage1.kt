@@ -27,6 +27,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -43,14 +44,7 @@ import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil3.compose.AsyncImage
-import dev.chrisbanes.haze.HazeState
-import xcj.app.compose_share.modifier.hazeSourceIfAvailable
 import xcj.app.launcher.ui.model.StyledAppDefinition
-
-@Composable
-fun AppsPrimaryStylePage1(containerSize: IntSize, onAppClick: (StyledAppDefinition) -> Unit) {
-    AppsPrimaryStylePageVertical1(containerSize, onAppClick)
-}
 
 @OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
 @Composable
@@ -58,24 +52,24 @@ fun AppsPrimaryStylePageVertical1(
     containerSize: IntSize,
     onAppClick: (StyledAppDefinition) -> Unit
 ) {
+    val context = LocalContext.current
+    val density = LocalDensity.current
     val viewModel = viewModel<StandardWindowHomeViewModel>()
     val settings by viewModel.settings
     val space = settings.appCardSpace.dp
-    val density = LocalDensity.current
     val boxWidthDp = with(density) {
         (containerSize.width.toDp() - space * (settings.appCountOnLine + 1)) / settings.appCountOnLine
     }
-    val cardBackgroundColor =
-        (settings.appCardBackgroundState as? WindowHomeBackgroundState.Color)?.color?.let {
-            Color(it)
-        } ?: Color.Transparent
+    val cardBackgroundColor by remember {
+        derivedStateOf {
+            (settings.appCardBackgroundState as? WindowHomeBackgroundState.Color)?.color?.let {
+                Color(it)
+            } ?: Color.Transparent
+        }
+    }
     val cardColors = CardDefaults.outlinedCardColors(containerColor = cardBackgroundColor)
     val appNameColor = Color(settings.appCardAppNameColor)
-    val context = LocalContext.current
     val appDefinitionList = viewModel.apps
-    val hazeState = remember {
-        HazeState()
-    }
     var containerSize by remember {
         mutableStateOf(IntSize.Zero)
     }
@@ -85,7 +79,6 @@ fun AppsPrimaryStylePageVertical1(
             .onSizeChanged {
                 containerSize = it
             }
-            .hazeSourceIfAvailable(hazeState)
     ) {
         FlowRow(
             modifier = Modifier.verticalScroll(rememberScrollState()),

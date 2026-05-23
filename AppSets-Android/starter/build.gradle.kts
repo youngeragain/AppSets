@@ -43,8 +43,10 @@ configure<LibraryExtension> {
 
 dependencies {
     //implementation(project(":purple_native"))
+    api(libs.androidx.annotation)
     api(libs.androidx.appcompat)
     api(libs.androidx.core.ktx)
+
     api(libs.google.gson)
 
     api(libs.retrofit.converter.gson)
@@ -52,9 +54,8 @@ dependencies {
     api(libs.retrofit.kotlin.coroutines.adapter)
 
     api(libs.google.zxing)
-    implementation(libs.androidx.core.ktx)
 
-    testImplementation(libs.junit)
-    androidTestImplementation(libs.androidx.junit)
-    androidTestImplementation(libs.androidx.espresso.core)
+    testApi(libs.junit)
+    androidTestApi(libs.androidx.junit)
+    androidTestApi(libs.androidx.espresso.core)
 }

@@ -51,14 +51,8 @@ configure<LibraryExtension> {
 }
 
 dependencies {
-    val isLib = true
-    if (isLib) {
-        compileOnly(project(":starter"))
-        compileOnly(project(":compose_share"))
-    } else {
-        implementation(project(":starter"))
-        implementation(project(":compose_share"))
-    }
+    implementation(project(":starter"))
+    implementation(project(":compose_share"))
 
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.livedata.ktx)
@@ -66,8 +60,4 @@ dependencies {
 
     implementation(libs.coil)
     implementation(libs.coil.compose)
-
-    testImplementation(libs.junit)
-    androidTestImplementation(libs.androidx.junit)
-    androidTestImplementation(libs.androidx.espresso.core)
 }

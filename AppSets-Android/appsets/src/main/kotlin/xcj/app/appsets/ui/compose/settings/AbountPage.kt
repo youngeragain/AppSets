@@ -49,9 +49,7 @@ import xcj.app.appsets.server.model.UpdateCheckResult
 import xcj.app.appsets.ui.compose.custom_component.preview_tooling.DesignPreviewCompositionLocalProvider
 import xcj.app.compose_share.components.BackActionTopBar
 import xcj.app.compose_share.components.DesignHDivider
-import xcj.app.compose_share.components.LocalHazedStateProvider
 import xcj.app.compose_share.components.StatusBarWithTopActionBarSpacer
-import xcj.app.compose_share.modifier.hazeSourceIfAvailable
 
 @Preview(showBackground = true)
 @Composable
@@ -84,11 +82,9 @@ fun AboutPage(
     onWebsiteClick: () -> Unit,
     onHistoryExpandStateChanged: (Boolean) -> Unit,
 ) {
-    val hazeState = LocalHazedStateProvider.current
     Box(modifier = Modifier.fillMaxSize()) {
         Column(
             modifier = Modifier
-                .hazeSourceIfAvailable(hazeState)
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState()),
         ) {

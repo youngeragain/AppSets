@@ -1,1 +1,1 @@
--keep class xcj.app.screen_share.purple_module.ComposeEventListener{ *; }
+-keep class xcj.app.launcher.purple_module.ComposeEventListener{ *; }

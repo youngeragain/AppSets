@@ -42,9 +42,5 @@ configure<ApplicationExtension> {
 
 dependencies {
     implementation(project(":starter"))
-
-    testImplementation(libs.junit)
-    androidTestImplementation(libs.androidx.junit)
-    androidTestImplementation(libs.androidx.espresso.core)
 }
 

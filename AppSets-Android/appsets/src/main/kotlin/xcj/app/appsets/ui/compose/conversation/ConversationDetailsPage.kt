@@ -150,10 +150,9 @@ import xcj.app.appsets.usecase.SessionState
 import xcj.app.appsets.util.compose_state.ComposeStateUpdater
 import xcj.app.appsets.util.compose_state.RuntimeSingleStateUpdater
 import xcj.app.compose_share.components.BackActionTopBar
-import xcj.app.compose_share.components.LocalHazedStateProvider
+import xcj.app.compose_share.components.LocalHazedState
 import xcj.app.compose_share.components.backActionsBarHeightDp
 import xcj.app.compose_share.modifier.hazeEffectIfAvailable
-import xcj.app.compose_share.modifier.hazeSourceIfAvailable
 import xcj.app.starter.android.ktx.asComponentActivityOrNull
 import xcj.app.starter.android.ktx.startWithHttpSchema
 import xcj.app.starter.android.util.PurpleLogger
@@ -502,7 +501,7 @@ private fun TopBarComponent(
     onQuickAccessSessionClick: (Session) -> Unit,
 ) {
     val hapticFeedback = LocalHapticFeedback.current
-    val hazeState = LocalHazedStateProvider.current
+    val hazeState = LocalHazedState.current
     val overrideQuickAccessSessions by remember(quickAccessSessions) {
         val sessions = buildList {
             add(currentSession)
@@ -594,7 +593,6 @@ private fun ImMessageListComponent(
     onBioClick: (Bio) -> Unit,
     onImMessageContentClick: (IMMessage<*>) -> Unit,
 ) {
-    val hazeState = LocalHazedStateProvider.current
     VerticalOverscrollBox(modifier = modifier) {
         LazyColumn(
             reverseLayout = true,
@@ -608,7 +606,6 @@ private fun ImMessageListComponent(
             modifier = Modifier.run {
                 testTag("ConversationTestTag")
                     .fillMaxSize()
-                    .hazeSourceIfAvailable(hazeState)
             }
         ) {
             itemsIndexed(
@@ -1303,7 +1300,7 @@ fun InputSuggestionsSpace(
     onRemoveAdviseClick: (TextFieldAdviser.Advise) -> Unit,
 ) {
     val hapticFeedback = LocalHapticFeedback.current
-    val hazeState = LocalHazedStateProvider.current
+    val hazeState = LocalHazedState.current
     Column(
         modifier = modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.End
@@ -1416,7 +1413,7 @@ fun UserInputActionsSpace(
     onJumpToLatestClick: () -> Unit
 ) {
     val context = LocalContext.current
-    val hazeState = LocalHazedStateProvider.current
+    val hazeState = LocalHazedState.current
     val hapticFeedback = LocalHapticFeedback.current
     val systemUseCase = LocalUseCaseOfSystem.current
     val nowSpaceContentUseCase = LocalUseCaseOfNowSpaceContent.current
@@ -1728,7 +1725,7 @@ private fun UserInputTextSpace(
 ) {
 
     val context = LocalContext.current
-    val hazeState = LocalHazedStateProvider.current
+    val hazeState = LocalHazedState.current
     val activity = context.asComponentActivityOrNull()
 
 
@@ -1768,7 +1765,8 @@ private fun UserInputTextSpace(
                 .clip(CircleShape)
         }
         Box(
-            modifier = boxModifier.hazeEffectIfAvailable(hazeState, HazeMaterials.thin())
+            modifier = boxModifier
+                .hazeEffectIfAvailable(hazeState, HazeMaterials.thin())
         ) {
 
             BasicTextField(

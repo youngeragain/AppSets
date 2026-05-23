@@ -18,7 +18,7 @@ configure<LibraryExtension> {
         getByName("main") {
             // Changes the directory for Java sources. The default directory is
             // "src/main/java".
-            java.srcDirs("kotlin")
+            java.directories.add("kotlin")
 
             // When you list multiple directories, Gradle uses all of them to collect
             // sources. You should avoid specifying a directory which is a parent to one
@@ -147,26 +147,6 @@ dependencies {
     //implementation(libs.hilt.lifecycle.viewmodel)
     //ksp(libs.hilt.android.complier)
 
-    implementation(libs.androidx.core.ktx)
-    implementation(libs.androidx.appcompat)
-    implementation(libs.androidx.annotation)
     implementation(libs.androidx.recyclerview)
     implementation(libs.androidx.activity.ktx)
-
-    testImplementation(libs.junit)
-    androidTestImplementation(libs.androidx.junit)
-    androidTestImplementation(libs.androidx.espresso.core)
-
-    val composeBom = platform(libs.androidx.compose.bom)
-    implementation(composeBom)
-    implementation(libs.androidx.ui)
-    implementation(libs.androidx.ui.graphics)
-    implementation(libs.androidx.ui.tooling.preview)
-    implementation(libs.androidx.material3)
-
-    testImplementation(composeBom)
-    androidTestImplementation(composeBom)
-    androidTestImplementation(libs.androidx.ui.test.junit4)
-    debugImplementation(libs.androidx.ui.tooling)
-    debugImplementation(libs.androidx.ui.test.manifest)
 }

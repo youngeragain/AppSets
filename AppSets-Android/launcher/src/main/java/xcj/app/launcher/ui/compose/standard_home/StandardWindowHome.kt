@@ -1,6 +1,5 @@
 package xcj.app.launcher.ui.compose.standard_home
 
-import AppSetsTheme
 import android.content.ComponentName
 import android.content.Intent
 import android.content.ServiceConnection
@@ -14,6 +13,7 @@ import androidx.lifecycle.withCreated
 import kotlinx.coroutines.launch
 import xcj.app.launcher.ui.compose.float_home.FloatWindowHomeBinder
 import xcj.app.launcher.ui.compose.float_home.FloatWindowHomeService
+import xcj.app.launcher.ui.compose.theme.AppSetsTheme
 import xcj.app.starter.android.util.PurpleLogger
 
 class StandardWindowHome : ComponentActivity() {

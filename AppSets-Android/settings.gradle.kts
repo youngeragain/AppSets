@@ -23,6 +23,7 @@ data class DesignProjectInfo(val name: String, val enable: Boolean = true, val i
                 DesignProjectInfo(":webrtc", enable = false),
                 DesignProjectInfo(":screen_share", enable = true),
                 DesignProjectInfo(":app_multiplatform", enable = true, isLib = true),
+                DesignProjectInfo(":bard", enable = true, isLib = false),
             )
         }
 

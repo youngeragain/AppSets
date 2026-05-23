@@ -73,10 +73,8 @@ import xcj.app.appsets.util.compose_state.ComposeStateUpdater
 import xcj.app.appsets.util.compose_state.RuntimeListStateUpdater
 import xcj.app.compose_share.components.BackActionTopBar
 import xcj.app.compose_share.components.DesignTextField
-import xcj.app.compose_share.components.LocalHazedStateProvider
 import xcj.app.compose_share.components.StatusBarWithTopActionBarSpacer
 import xcj.app.compose_share.foundation_extension.ProjectPreviewWrapperProviderImpl
-import xcj.app.compose_share.modifier.hazeSourceIfAvailable
 import xcj.app.starter.android.util.UriProvider
 import xcj.app.starter.android.util.model.isAudioType
 import xcj.app.starter.android.util.model.isImageType
@@ -129,7 +127,6 @@ fun CreateScreenPage(
 
     HideNavBar()
     val context = LocalContext.current
-    val hazeState = LocalHazedStateProvider.current
     val screenPostUseCase = LocalUseCaseOfScreenPost.current
     LaunchedEffect(Unit) {
         screenPostUseCase.updateWithQuickStepContentIfNeeded(
@@ -153,7 +150,6 @@ fun CreateScreenPage(
     VerticalOverscrollBox {
         Column(
             modifier = Modifier
-                .hazeSourceIfAvailable(hazeState)
                 .widthIn(TextFieldDefaults.MinWidth)
                 .imePadding()
                 .padding(horizontal = 20.dp)

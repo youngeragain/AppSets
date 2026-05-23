@@ -83,9 +83,7 @@ import xcj.app.appsets.util.compose_state.ComposeStateUpdater
 import xcj.app.appsets.util.compose_state.RuntimeSingleStateUpdater
 import xcj.app.compose_share.components.BackActionTopBar
 import xcj.app.compose_share.components.DesignTextField
-import xcj.app.compose_share.components.LocalHazedStateProvider
 import xcj.app.compose_share.components.StatusBarWithTopActionBarSpacer
-import xcj.app.compose_share.modifier.hazeSourceIfAvailable
 
 private const val TAG = "CreateGroupPage"
 
@@ -127,7 +125,6 @@ fun CreateGroupPage(
     onSelectGroupIconClick: (String, ComposeStateUpdater<*>) -> Unit
 ) {
     HideNavBar()
-    val hazeState = LocalHazedStateProvider.current
     val systemUseCase = LocalUseCaseOfSystem.current
     DisposableEffect(Unit) {
         onDispose {
@@ -146,7 +143,6 @@ fun CreateGroupPage(
                 modifier = Modifier
                     .widthIn(max = TextFieldDefaults.MinWidth)
                     .align(Alignment.CenterHorizontally)
-                    .hazeSourceIfAvailable(hazeState)
                     .padding(horizontal = 12.dp)
                     .verticalScroll(rememberScrollState())
                     .imePadding()

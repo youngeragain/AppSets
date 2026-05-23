@@ -88,9 +88,8 @@ import xcj.app.appsets.ui.compose.outside.ScreensList
 import xcj.app.appsets.ui.model.page_state.SearchPageUIState
 import xcj.app.appsets.ui.model.state.SearchResult
 import xcj.app.compose_share.components.DesignTextField
-import xcj.app.compose_share.components.LocalHazedStateProvider
+import xcj.app.compose_share.components.LocalHazedState
 import xcj.app.compose_share.modifier.hazeEffectIfAvailable
-import xcj.app.compose_share.modifier.hazeSourceIfAvailable
 import java.util.Locale
 
 @Composable
@@ -127,7 +126,7 @@ fun SearchInputBar(
     onInputContent: (String) -> Unit
 ) {
     val keyboardController = LocalSoftwareKeyboardController.current
-    val hazeState = LocalHazedStateProvider.current
+    val hazeState = LocalHazedState.current
     val searchUseCase = LocalUseCaseOfSearch.current
     val searchPageState by searchUseCase.searchPageUIState
     val focusRequester = remember {
@@ -360,7 +359,7 @@ fun SearchSuccessPages(
     onApplicationLongPress: (Application) -> Unit,
     onScreenMediaClick: (ScreenMediaFileUrl, List<ScreenMediaFileUrl>) -> Unit,
 ) {
-    val hazeState = LocalHazedStateProvider.current
+    val hazeState = LocalHazedState.current
     val pagerState = rememberPagerState { searchSuccess.results.size }
     val coroutineScope = rememberCoroutineScope()
     LaunchedEffect(pagerState.currentPage) {
@@ -369,7 +368,7 @@ fun SearchSuccessPages(
 
     Box {
         HorizontalPager(
-            modifier = Modifier.hazeSourceIfAvailable(hazeState),
+            modifier = Modifier,
             state = pagerState,
             verticalAlignment = Alignment.Top
         ) { index ->
@@ -429,9 +428,7 @@ fun SearchSuccessPages(
                         modifier = Modifier
                             .clip(CircleShape)
                             .border(1.dp, MaterialTheme.colorScheme.outline, CircleShape)
-                            .hazeEffectIfAvailable(
-                                hazeState, HazeMaterials.thin()
-                            )
+                            .hazeEffectIfAvailable(hazeState, HazeMaterials.thin())
                             .clickable {
                                 coroutineScope.launch {
                                     pagerState.animateScrollToPage(index)

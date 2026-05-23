@@ -79,12 +79,10 @@ import xcj.app.appsets.ui.compose.custom_component.VerticalOverscrollBox
 import xcj.app.appsets.ui.model.ScreenInfoForCard
 import xcj.app.compose_share.components.BackActionTopBar
 import xcj.app.compose_share.components.DesignTextField
-import xcj.app.compose_share.components.LocalHazedStateProvider
 import xcj.app.compose_share.components.LocalVisibilityComposeStateProvider
 import xcj.app.compose_share.components.StatusBarWithTopActionBarSpacer
 import xcj.app.compose_share.components.statusBarWithTopActionBarPaddingValues
 import xcj.app.compose_share.modifier.combinedClickableSingle
-import xcj.app.compose_share.modifier.hazeSourceIfAvailable
 import xcj.app.compose_share.ui.viewmodel.VisibilityComposeStateViewModel.Companion.bottomSheetState
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -102,7 +100,6 @@ fun ScreenDetailsPage(
     onPageShowNext: () -> Unit
 ) {
     HideNavBar()
-    val hazeState = LocalHazedStateProvider.current
     if (screenInfoForCard.screenInfo == null) {
         Box(modifier = Modifier.fillMaxSize()) {
             Text(
@@ -152,7 +149,6 @@ fun ScreenDetailsPage(
                 modifier = Modifier
                     .fillMaxWidth()
                     .verticalScroll(rememberScrollState())
-                    .hazeSourceIfAvailable(hazeState)
             ) {
                 StatusBarWithTopActionBarSpacer()
                 ScreenDetailsContent(

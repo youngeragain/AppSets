@@ -61,14 +61,14 @@ dependencies {
     api(libs.haze)
     api(libs.haze.materials)
 
-    implementation(libs.google.ksp.api)
+    api(libs.google.ksp.api)
 
 
-    testImplementation(composeBom)
-    androidTestImplementation(composeBom)
-    androidTestImplementation(libs.androidx.ui.test.junit4)
-    debugImplementation(libs.androidx.ui.tooling)
-    debugImplementation(libs.androidx.ui.test.manifest)
+    testApi(composeBom)
+    androidTestApi(composeBom)
+    androidTestApi(libs.androidx.ui.test.junit4)
+    debugApi(libs.androidx.ui.tooling)
+    debugApi(libs.androidx.ui.test.manifest)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

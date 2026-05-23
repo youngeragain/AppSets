@@ -108,14 +108,9 @@ dependencies {
     implementation(project(":launcher"))
     implementation(project(":share"))
     implementation(project(":proxy"))
-    implementation(libs.androidx.core.ktx)
 
     baselineProfile(project(":baselineprofile"))
     implementation(libs.androidx.profileinstaller)
-
-    testImplementation(libs.junit)
-    androidTestImplementation(libs.androidx.junit)
-    androidTestImplementation(libs.androidx.espresso.core)
 }
 
 fun getKeystoreProperties(): Properties? {

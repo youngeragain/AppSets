@@ -55,9 +55,7 @@ import xcj.app.appsets.ui.compose.theme.ExtraLarge2
 import xcj.app.appsets.ui.model.page_state.GroupInfoPageUIState
 import xcj.app.appsets.usecase.RelationsUseCase
 import xcj.app.compose_share.components.BackActionTopBar
-import xcj.app.compose_share.components.LocalHazedStateProvider
 import xcj.app.compose_share.components.StatusBarWithTopActionBarSpacer
-import xcj.app.compose_share.modifier.hazeSourceIfAvailable
 import kotlin.math.roundToInt
 
 @Preview(showBackground = true)
@@ -136,7 +134,6 @@ fun GroupInfoPage(
                     }
                 }
                 val density = LocalDensity.current
-                val hazeState = LocalHazedStateProvider.current
                 val groupAvatarHeight by remember {
                     derivedStateOf {
                         with(density) {
@@ -152,7 +149,6 @@ fun GroupInfoPage(
                 ) {
                     Box(
                         modifier = Modifier
-                            .hazeSourceIfAvailable(hazeState)
                     )
                     {
                         val userInfoList = groupInfoPageUIState.groupInfo.userInfoList

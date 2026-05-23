@@ -40,7 +40,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
 import dev.chrisbanes.haze.materials.HazeMaterials
-import xcj.app.compose_share.modifier.hazeEffectIfAvailable
+import xcj.app.compose_share.modifier.hazeEffectIfAvailable2
 
 private const val TAG = "BackActionTopBar"
 
@@ -79,11 +79,10 @@ fun BackActionTopBar(
     backButtonText: String? = null,
     endButtonText: String? = null,
     onEndButtonClick: (() -> Unit)? = null,
-    customEndContent: (@Composable () -> Unit)? = null,
-    hazeForEnd: Boolean = true
+    customEndContent: (@Composable () -> Unit)? = null
 ) {
     val context = LocalContext.current
-    val hazeState = LocalHazedStateProvider.current
+    val hazeState = LocalHazedState.current
     val backActionTopBarInfo = LocalBackActionTopBarInfo.current
     DisposableEffect(true) {
         onDispose {
@@ -114,7 +113,8 @@ fun BackActionTopBar(
         modifier = boxModifier.onPlaced {
             backActionTopBarInfo.barIsShowing.value = true
             backActionTopBarInfo.barSize.value = it.size
-        }) {
+        }
+    ) {
         Row(
             modifier = Modifier.align(Alignment.CenterStart),
             verticalAlignment = Alignment.CenterVertically,
@@ -123,7 +123,7 @@ fun BackActionTopBar(
             Box(
                 modifier = Modifier
                     .clip(CircleShape)
-                    .hazeEffectIfAvailable(hazeState, HazeMaterials.thin())
+                    .hazeEffectIfAvailable2("${TAG}_BackIcon", hazeState, HazeMaterials.thin())
                     .clickable(onClick = onBackClick)
                     .border(1.dp, MaterialTheme.colorScheme.outline, CircleShape)
                     .padding(12.dp)
@@ -143,18 +143,12 @@ fun BackActionTopBar(
         }
 
         if (!endButtonText.isNullOrEmpty()) {
-            val endModifier = if (hazeState != null && hazeForEnd) {
-                Modifier
-                    .align(Alignment.CenterEnd)
-                    .clip(CircleShape)
-                    .hazeEffectIfAvailable(hazeState, HazeMaterials.thin())
-            } else {
-                Modifier
-                    .align(Alignment.CenterEnd)
-                    .clip(CircleShape)
-            }
             Row(
-                modifier = endModifier.border(1.dp, MaterialTheme.colorScheme.outline, CircleShape)
+                modifier = Modifier
+                    .align(Alignment.CenterEnd)
+                    .clip(CircleShape)
+                    .hazeEffectIfAvailable2("${TAG}_EndButton", hazeState, HazeMaterials.thin())
+                    .border(1.dp, MaterialTheme.colorScheme.outline, CircleShape)
             ) {
                 Box(
                     modifier = Modifier

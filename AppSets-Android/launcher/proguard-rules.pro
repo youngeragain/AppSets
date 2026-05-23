@@ -19,4 +19,4 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
--keep class xcj.app.screen_share.purple_module.ComposeEventListener{ *; }
+-keep class xcj.app.launcher.purple_module.ComposeEventListener{ *; }

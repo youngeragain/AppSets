@@ -86,10 +86,8 @@ import xcj.app.appsets.util.ktx.toast
 import xcj.app.compose_share.components.BackActionTopBar
 import xcj.app.compose_share.components.DesignTextField
 import xcj.app.compose_share.components.DesignVDivider
-import xcj.app.compose_share.components.LocalHazedStateProvider
 import xcj.app.compose_share.components.LocalVisibilityComposeStateProvider
 import xcj.app.compose_share.components.statusBarWithTopActionBarPaddingValues
-import xcj.app.compose_share.modifier.hazeSourceIfAvailable
 import xcj.app.compose_share.ui.viewmodel.VisibilityComposeStateViewModel.Companion.bottomSheetState
 import xcj.app.starter.android.util.PurpleLogger
 import xcj.app.starter.android.util.UriProvider
@@ -184,7 +182,6 @@ fun CreateApplicationContent(
     versionInfo: VersionInfo? = null,
     onChoosePictureClick: (String, Int, ComposeStateUpdater<*>) -> Unit,
 ) {
-    val hazeState = LocalHazedStateProvider.current
     val appCreationUseCase = LocalUseCaseOfAppCreation.current
     val visibilityComposeStateProvider = LocalVisibilityComposeStateProvider.current
     val platformNames = remember {
@@ -230,7 +227,6 @@ fun CreateApplicationContent(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .hazeSourceIfAvailable(hazeState)
             .imePadding()
     ) {
         LazyColumn(
