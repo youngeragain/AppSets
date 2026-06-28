@@ -20,7 +20,7 @@ internal object Res {
    * @return The content of the file as a byte array.
    */
   public suspend fun readBytes(path: String): ByteArray =
-      readResourceBytes("composeResources/appsets_android.app_multiplatform.generated.resources/" + path)
+    readResourceBytes("composeResources/appsets_android.app_multiplatform.generated.resources/" + path)
 
   /**
    * Returns the URI string of the resource file at the specified path.
@@ -31,7 +31,7 @@ internal object Res {
    * @return The URI string of the file.
    */
   public fun getUri(path: String): String =
-      getResourceUri("composeResources/appsets_android.app_multiplatform.generated.resources/" + path)
+    getResourceUri("composeResources/appsets_android.app_multiplatform.generated.resources/" + path)
 
   public object drawable
 
