@@ -44,7 +44,6 @@ import xcj.app.appsets.ui.compose.LocalUseCaseOfScreenPost
 import xcj.app.appsets.ui.compose.LocalUseCaseOfSearch
 import xcj.app.appsets.ui.compose.LocalUseCaseOfSystem
 import xcj.app.appsets.ui.compose.LocalUseCaseOfUserInfo
-import xcj.app.appsets.ui.compose.PageRouteNames
 import xcj.app.appsets.ui.compose.quickstep.QuickStepContentHandlerRegistry
 import xcj.app.appsets.ui.model.state.NowSpaceContent
 import xcj.app.appsets.ui.viewmodel.MainViewModel
@@ -71,6 +70,12 @@ fun MainPage() {
         QuickStepContentHandlerRegistry()
     }
     val hazeState = rememberHazeStateIfAvailable()
+
+    val startPageRoute by remember {
+        derivedStateOf {
+            viewModel.navigationUseCase.getStartPageRoute()
+        }
+    }
 
     CompositionLocalProvider(
         LocalUseCaseOfNavigation provides viewModel.navigationUseCase,
@@ -104,7 +109,7 @@ fun MainPage() {
 
                     MainNaviHostPagesContainer(
                         modifier = Modifier.fillMaxSize(),
-                        startPageRoute = PageRouteNames.AppsCenterPage,
+                        startPageRoute = startPageRoute,
                         hostContextName = MainActivity.TAG
                     )
 

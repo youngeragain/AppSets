@@ -6,7 +6,6 @@ import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -25,6 +24,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsIgnoringVisibility
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -33,7 +33,6 @@ import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.FilledTonalButton
@@ -57,6 +56,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import xcj.app.appsets.ui.compose.custom_component.DesignBackButton
 import xcj.app.appsets.ui.compose.custom_component.HideNavBar
+import xcj.app.appsets.ui.compose.custom_component.VerticalOverscrollBox
 import xcj.app.appsets.ui.compose.custom_component.preview_tooling.DesignPreviewCompositionLocalProvider
 import xcj.app.starter.android.ui.model.PlatformPermissionsUsage
 
@@ -95,7 +95,7 @@ fun ExpressivePageIndicator(
         repeat(pagerState.pageCount) { iteration ->
             val isSelected = pagerState.currentPage == iteration
             val width by animateDpAsState(
-                targetValue = if (isSelected) 32.dp else 8.dp,
+                targetValue = if (isSelected) 16.dp else 8.dp,
                 animationSpec = tween(),
                 label = "width"
             )
@@ -167,43 +167,40 @@ fun PrivacyPage(
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun PrivacyComponent(privacy: String?) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 12.dp)
-            .verticalScroll(rememberScrollState())
-    ) {
-        Spacer(
-            modifier = Modifier.height(
-                24.dp + WindowInsets.statusBarsIgnoringVisibility.asPaddingValues()
-                    .calculateTopPadding()
-            )
-        )
-        Column(modifier = Modifier.padding(vertical = 8.dp)) {
-            Text(
-                text = stringResource(xcj.app.appsets.R.string.user_content_privacy_and_notice),
-                fontSize = 28.sp,
-                fontWeight = FontWeight.ExtraBold,
-                color = MaterialTheme.colorScheme.onBackground,
-                lineHeight = 36.sp
-            )
+    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
+        VerticalOverscrollBox(modifier = Modifier.widthIn(max = 600.dp)) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp)
+                    .verticalScroll(rememberScrollState())
+            ) {
+                Spacer(
+                    modifier = Modifier.height(
+                        32.dp + WindowInsets.statusBarsIgnoringVisibility.asPaddingValues()
+                            .calculateTopPadding()
+                    )
+                )
+
+                Text(
+                    text = stringResource(xcj.app.appsets.R.string.user_content_privacy_and_notice),
+                    style = MaterialTheme.typography.headlineLarge,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = MaterialTheme.colorScheme.onBackground
+                )
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                Text(
+                    text = privacy ?: stringResource(xcj.app.appsets.R.string.not_offered),
+                    style = MaterialTheme.typography.bodyLarge,
+                    lineHeight = 26.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.9f)
+                )
+
+                Spacer(modifier = Modifier.height(150.dp))
+            }
         }
-        Spacer(modifier = Modifier.height(12.dp))
-        Surface(
-            shape = RoundedCornerShape(24.dp),
-            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
-            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.1f))
-        ) {
-            Text(
-                text = privacy ?: stringResource(xcj.app.appsets.R.string.not_offered),
-                fontSize = 14.sp,
-                modifier = Modifier.padding(20.dp),
-                lineHeight = 22.sp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-        
-        Spacer(modifier = Modifier.height(150.dp))
     }
 }
 
@@ -213,49 +210,53 @@ fun PlatformPermissionsComponent(
     platformPermissionsUsageList: List<PlatformPermissionsUsage>,
     onRequest: (PlatformPermissionsUsage, Int) -> Unit,
 ) {
-    LazyColumn(
-        verticalArrangement = Arrangement.spacedBy(12.dp),
-        modifier = Modifier
-            .fillMaxWidth(),
-        contentPadding = PaddingValues(
-            start = 12.dp,
-            top = 24.dp + WindowInsets.statusBarsIgnoringVisibility.asPaddingValues()
-                .calculateTopPadding(),
-            end = 12.dp,
-            bottom = 150.dp
-        )
-    ) {
-        item {
-            Column(modifier = Modifier.padding(vertical = 8.dp)) {
-                Text(
-                    text = stringResource(id = xcj.app.appsets.R.string.platform_permission),
-                    fontSize = 28.sp,
-                    fontWeight = FontWeight.ExtraBold,
-                    color = MaterialTheme.colorScheme.onBackground
+    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
+        VerticalOverscrollBox(modifier = Modifier.widthIn(max = 600.dp)) {
+            LazyColumn(
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier
+                    .fillMaxWidth(),
+                contentPadding = PaddingValues(
+                    start = 12.dp,
+                    top = 24.dp + WindowInsets.statusBarsIgnoringVisibility.asPaddingValues()
+                        .calculateTopPadding(),
+                    end = 12.dp,
+                    bottom = 150.dp
                 )
-                Text(
-                    text = stringResource(xcj.app.appsets.R.string.platform_permission_usage_tips),
-                    fontSize = 14.sp,
-                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
-                )
-            }
-        }
-        items(
-            items = platformPermissionsUsageList,
-            key = { item -> item.name }
-        ) { platformPermissionsUsage ->
-            var visible by remember { mutableStateOf(false) }
-            LaunchedEffect(Unit) { visible = true }
-
-            AnimatedVisibility(
-                visible = visible,
-                enter = fadeIn() + slideInVertically(initialOffsetY = { it / 2 })
             ) {
-                PermissionCard(
-                    modifier = Modifier.animateItem(),
-                    platformPermissionsUsage = platformPermissionsUsage,
-                    onRequest = onRequest
-                )
+                item {
+                    Column(modifier = Modifier.padding(vertical = 8.dp)) {
+                        Text(
+                            text = stringResource(id = xcj.app.appsets.R.string.platform_permission),
+                            fontSize = 28.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
+                        Text(
+                            text = stringResource(xcj.app.appsets.R.string.platform_permission_usage_tips),
+                            fontSize = 14.sp,
+                            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
+                        )
+                    }
+                }
+                items(
+                    items = platformPermissionsUsageList,
+                    key = { item -> item.name }
+                ) { platformPermissionsUsage ->
+                    var visible by remember { mutableStateOf(false) }
+                    LaunchedEffect(Unit) { visible = true }
+
+                    AnimatedVisibility(
+                        visible = visible,
+                        enter = fadeIn() + slideInVertically(initialOffsetY = { it / 2 })
+                    ) {
+                        PermissionCard(
+                            modifier = Modifier.animateItem(),
+                            platformPermissionsUsage = platformPermissionsUsage,
+                            onRequest = onRequest
+                        )
+                    }
+                }
             }
         }
     }

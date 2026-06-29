@@ -3,6 +3,8 @@ package xcj.app.appsets.ui.compose
 
 object PageRouteNames {
 
+    const val DefaultPage = "Others/DefaultPage"
+
     const val PrivacyPage = "Others/PrivacyPage"
     const val LoginPage = "Login/LoginPage"
     const val SignUpPage = "Login/SinUpPage"

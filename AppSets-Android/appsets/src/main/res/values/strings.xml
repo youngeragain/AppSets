@@ -14,7 +14,7 @@
     <string name="more_information_you_can_set_after_login">more information you can set after login</string>
     <string name="user_agreement">This application provides data browsing services, and the user\'s login operation will trigger the privacy policy.
          You can log in to this application only after you agree. You can also revoke your consent by entering the system settings after logging in.
-         Then all your data used in AppSets will be protected as necessary and you will not be able to use the product unless you agree when logging in to the AppSets client again. AppSets can terminate the service at any time, which is subject to the superposition of various factors, so we hope that users will tolerate and understand any problems that arise in this application! When you use AppSets, we will request the client system to provide Partial permissions are required to load functions of the application. Each permission will only be requested by a visual prompt when necessary. Your operation determines the functions provided by AppSets. This is also to avoid permission abuse to the greatest extent! AppSets hopes
+         Then all your data used in AppSets will be protected as necessary, and you will not be able to use the product unless you agree when logging in to the AppSets client again. AppSets can terminate the service at any time, which is subject to the superposition of various factors, so we hope that users will tolerate and understand any problems that arise in this application! When you use AppSets, we will request the client system to provide Partial permissions are required to load functions of the application. Each permission will only be requested by a visual prompt when necessary. Your operation determines the functions provided by AppSets. This is also to avoid permission abuse to the greatest extent! AppSets hopes
      Make an excellent application that complies with system specifications! Permissions will be listed on the permission list page, please refer to it. In addition, there are a few things you need to pay special attention to:\n
          1. Data storage location: We may use the server provided by the cloud service provider. The data is stored on the server and may be migrated and changed at any time! \n
      2. Limited by the level of developers, data may be lost during the transfer, migration and writing process. Please do not use AppSets to save important data!\n
@@ -476,7 +476,7 @@
     <string name="app_platform_permissions_usage_tips">System platform permission usage request</string>
     <string name="app_platform_permissions_usage_tips_des">Some permissions will be used in the future, and setting them now can improve convenience</string>
     <string name="system_content_selection">System Implementation</string>
-    <string name="system_content_selection_des">Best practices to maximize privacy protection, no file permission required</string>
+    <string name="system_content_selection_des">Maximize privacy protection, no file permission required</string>
     <string name="app_custom_content_selection">App Implementation</string>
     <string name="app_custom_content_selection_des">Maximize customization, file permission required</string>
     <string name="choose_implementation">Choose Implementation</string>

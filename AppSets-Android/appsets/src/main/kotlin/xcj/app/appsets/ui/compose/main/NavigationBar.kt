@@ -342,7 +342,7 @@ fun NavigationBarPreview() {
         visible = true,
         enable = true,
         inSearchMode = false,
-        tabItems = navigationUseCase.tabItems.value,
+        tabItems = navigationUseCase.barTabItems.value,
         onTabClick = { tab, tabAction -> },
         onBackClick = {},
         onInputContent = {},

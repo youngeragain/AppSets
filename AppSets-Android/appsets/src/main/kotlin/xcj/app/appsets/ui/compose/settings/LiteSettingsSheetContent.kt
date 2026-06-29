@@ -135,30 +135,26 @@ fun LiteSettingsSheetContent(
                     }
                 }
             }
-
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(MaterialTheme.shapes.extraLarge)
-                    .clickable(
-                        onClick = onBioClick
-                    )
-                    .padding(horizontal = 12.dp, vertical = 6.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                LocalAccountUserAvatar(
-                    onClick = {}
-                )
-                val name = if (loginStatusState is AccountStatus.Logged) {
-                    loginStatusState.userInfo.bioName
-                        ?: stringResource(xcj.app.appsets.R.string.jkx)
-                } else {
-                    stringResource(xcj.app.appsets.R.string.login_to_appsets)
-                }
-                Text(text = name)
-            }
             if (loginStatusState is AccountStatus.Logged) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(MaterialTheme.shapes.extraLarge)
+                        .clickable(
+                            onClick = onBioClick
+                        )
+                        .padding(horizontal = 12.dp, vertical = 6.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    LocalAccountUserAvatar(
+                        onClick = {}
+                    )
+                    Text(
+                        text = loginStatusState.userInfo.bioName
+                            ?: stringResource(xcj.app.appsets.R.string.jkx)
+                    )
+                }
                 Row(
                     modifier = Modifier
                         .fillMaxWidth(1f)

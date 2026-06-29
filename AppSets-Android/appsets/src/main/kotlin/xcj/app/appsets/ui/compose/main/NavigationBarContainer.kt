@@ -63,7 +63,7 @@ fun NavigationBarContainer(
         }
     }
     val isBarVisible by navigationUseCase.barVisible
-    val tabItems by navigationUseCase.tabItems
+    val tabItems by navigationUseCase.barTabItems
     NavigationBar(
         modifier = modifier,
         visible = isBarVisible,

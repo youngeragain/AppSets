@@ -476,7 +476,7 @@
     <string name="app_platform_permissions_usage_tips">系统平台权限使用请求</string>
     <string name="app_platform_permissions_usage_tips_des">一些权限将会在后续使用，现在设置可提高便捷性</string>
     <string name="system_content_selection">系统实现</string>
-    <string name="system_content_selection_des">最佳实践，最大化隐私保护，无需文件权限</string>
+    <string name="system_content_selection_des">最大化隐私保护，无需文件权限</string>
     <string name="app_custom_content_selection">应用实现</string>
     <string name="app_custom_content_selection_des">最大化自定义，需要文件权限</string>
     <string name="choose_implementation">选择实现</string>

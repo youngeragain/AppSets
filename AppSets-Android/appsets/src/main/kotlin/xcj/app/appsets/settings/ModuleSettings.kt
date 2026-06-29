@@ -41,6 +41,8 @@ class AppSetsModuleSettings : ModuleSettings {
         const val KEY_IS_IM_MESSAGE_RELIABILITY = "is_im_message_reliability"
         const val KEY_IS_APP_FIRST_LAUNCH = "is_app_first_launch"
 
+        const val KEY_APP_FEATURES = "app_features"
+
         fun get(): AppSetsModuleSettings {
             val moduleSettings =
                 ModuleHelper.get<AppSetsModuleSettings>(
@@ -87,6 +89,8 @@ class AppSetsModuleSettings : ModuleSettings {
     var isImMessageDateShowSeconds: Boolean = false
 
     var isBackgroundIMEnable: Boolean = true
+
+    var appFeatures: AppFeatures = AppFeatures()
 
     override fun init() {
         prepareNotificationsChanelConfig()
@@ -198,3 +202,11 @@ class AppSetsModuleSettings : ModuleSettings {
         }
     }
 }
+
+data class HomePageFeatures(
+    var isEnableAppCentral: Boolean = true,
+    var isEnableOutSide: Boolean = true,
+    var isEnableConversation: Boolean = true
+)
+
+data class AppFeatures(val homePageFeatures: HomePageFeatures = HomePageFeatures())

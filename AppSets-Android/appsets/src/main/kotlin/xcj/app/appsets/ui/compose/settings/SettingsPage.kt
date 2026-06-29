@@ -1,8 +1,8 @@
 package xcj.app.appsets.ui.compose.settings
 
-
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
@@ -12,15 +12,15 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -30,7 +30,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -44,7 +43,6 @@ import xcj.app.appsets.ui.compose.custom_component.VerticalOverscrollBox
 import xcj.app.appsets.ui.compose.custom_component.preview_tooling.DesignPreviewCompositionLocalProvider
 import xcj.app.compose_share.components.BackActionTopBar
 import xcj.app.compose_share.components.StatusBarWithTopActionBarSpacer
-
 
 @Preview(showBackground = true)
 @Composable
@@ -62,27 +60,16 @@ fun SettingsGroup(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 8.dp, horizontal = 12.dp)
+            .padding(vertical = 12.dp)
     ) {
         Text(
             text = title,
-            style = MaterialTheme.typography.titleSmall,
+            style = MaterialTheme.typography.labelLarge,
             color = MaterialTheme.colorScheme.primary,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(start = 8.dp, bottom = 8.dp)
+            fontWeight = FontWeight.SemiBold,
+            modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp)
         )
-        Surface(
-            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
-            shape = RoundedCornerShape(24.dp),
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Column(
-                modifier = Modifier.padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                content()
-            }
-        }
+        content()
     }
 }
 
@@ -93,39 +80,53 @@ fun SettingsPage(
     onPrivacyAndPermissionClick: () -> Unit
 ) {
     HideNavBar()
-    VerticalOverscrollBox {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState()),
-        ) {
-            StatusBarWithTopActionBarSpacer()
+    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
+        VerticalOverscrollBox(modifier = Modifier.widthIn(max = 600.dp)) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState()),
+            ) {
+                StatusBarWithTopActionBarSpacer()
 
-            SessionSettingsComponent()
+                SessionSettingsComponent()
 
-            SettingsGroup(title = stringResource(xcj.app.appsets.R.string.permissions_and_privacy)) {
-                SettingsClickableItem(
-                    icon = xcj.app.compose_share.R.drawable.ic_outline_privacy_tip_24,
-                    title = stringResource(id = xcj.app.appsets.R.string.check),
-                    onClick = onPrivacyAndPermissionClick
+                HorizontalDivider(
+                    modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp),
+                    thickness = 0.5.dp,
+                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
                 )
+
+                SettingsGroup(title = stringResource(xcj.app.appsets.R.string.permissions_and_privacy)) {
+                    SettingsClickableItem(
+                        icon = xcj.app.compose_share.R.drawable.ic_outline_privacy_tip_24,
+                        title = stringResource(id = xcj.app.appsets.R.string.check),
+                        onClick = onPrivacyAndPermissionClick
+                    )
+                }
+
+                HorizontalDivider(
+                    modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp),
+                    thickness = 0.5.dp,
+                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                )
+
+                SettingsGroup(title = stringResource(xcj.app.appsets.R.string.about)) {
+                    SettingsClickableItem(
+                        icon = xcj.app.compose_share.R.drawable.ic_info_24,
+                        title = stringResource(id = xcj.app.appsets.R.string.check),
+                        onClick = onAboutClick
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(32.dp))
             }
 
-            SettingsGroup(title = stringResource(xcj.app.appsets.R.string.about)) {
-                SettingsClickableItem(
-                    icon = xcj.app.compose_share.R.drawable.ic_info_24,
-                    title = stringResource(id = xcj.app.appsets.R.string.check),
-                    onClick = onAboutClick
-                )
-            }
-
-            Spacer(modifier = Modifier.height(32.dp))
+            BackActionTopBar(
+                backButtonText = stringResource(xcj.app.appsets.R.string.settings),
+                onBackClick = onBackClick
+            )
         }
-
-        BackActionTopBar(
-            backButtonText = stringResource(xcj.app.appsets.R.string.settings),
-            onBackClick = onBackClick
-        )
     }
 }
 
@@ -138,17 +139,16 @@ fun SettingsClickableItem(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
             .clickable(onClick = onClick)
-            .padding(vertical = 8.dp),
+            .padding(horizontal = 24.dp, vertical = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
+        horizontalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         Icon(
             painter = painterResource(id = icon),
             contentDescription = null,
-            modifier = Modifier.size(24.dp),
-            tint = MaterialTheme.colorScheme.onSurfaceVariant
+            modifier = Modifier.size(22.dp),
+            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
         )
         Text(
             text = title,
@@ -158,7 +158,8 @@ fun SettingsClickableItem(
         Icon(
             painter = painterResource(id = xcj.app.compose_share.R.drawable.ic_round_chevron_right_24),
             contentDescription = null,
-            tint = MaterialTheme.colorScheme.outline
+            modifier = Modifier.size(20.dp),
+            tint = MaterialTheme.colorScheme.outlineVariant
         )
     }
 }
@@ -189,6 +190,8 @@ fun SessionSettingsComponent() {
             }
         )
 
+        Spacer(modifier = Modifier.height(16.dp))
+
         SingleChoiceInRowComponent(
             icon = xcj.app.compose_share.R.drawable.ic_round_check_24,
             choiceTitle = xcj.app.appsets.R.string.message_reliability,
@@ -204,6 +207,8 @@ fun SessionSettingsComponent() {
             }
         )
 
+        Spacer(modifier = Modifier.height(16.dp))
+
         SingleChoiceInRowComponent(
             icon = xcj.app.compose_share.R.drawable.ic_round_access_time_24,
             choiceTitle = xcj.app.appsets.R.string.show_time,
@@ -217,6 +222,8 @@ fun SessionSettingsComponent() {
                 coroutineScope.launch { appSetsModuleSettings.onIsIMMessageShowDateChanged(it) }
             }
         )
+
+        Spacer(modifier = Modifier.height(16.dp))
 
         SingleChoiceInRowComponent(
             icon = xcj.app.compose_share.R.drawable.ic_send_24,
@@ -243,36 +250,38 @@ fun <C> SingleChoiceInRowComponent(
     choices: List<Pair<C, Int>>,
     onChoiceClick: (C) -> Unit
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    Column(
+        modifier = Modifier.padding(horizontal = 24.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Icon(
                 painter = painterResource(id = icon),
                 contentDescription = null,
-                modifier = Modifier.size(20.dp),
-                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                modifier = Modifier.size(22.dp),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
             )
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = stringResource(choiceTitle),
-                    style = MaterialTheme.typography.bodyMedium,
+                    style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.Medium
                 )
                 if (choiceSubTitle != null) {
                     Text(
                         text = stringResource(choiceSubTitle),
                         style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                     )
                 }
             }
         }
 
         SingleChoiceSegmentedButtonRow(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(start = 32.dp) // 与图标对齐
+            modifier = Modifier.fillMaxWidth()
         ) {
             choices.forEachIndexed { index, choice ->
                 SegmentedButton(

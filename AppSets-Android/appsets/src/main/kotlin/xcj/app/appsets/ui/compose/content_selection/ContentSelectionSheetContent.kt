@@ -432,7 +432,7 @@ private fun ContentSelectPromptContent(
         ) {
             Box(
                 modifier = Modifier
-                    .size(68.dp)
+                    .size(48.dp)
                     .clip(MaterialTheme.shapes.extShapes.large)
                     .border(
                         1.dp,
@@ -463,7 +463,7 @@ private fun ContentSelectPromptContent(
         ) {
             Image(
                 modifier = Modifier
-                    .size(68.dp)
+                    .size(48.dp)
                     .clip(MaterialTheme.shapes.extShapes.large)
                     .border(
                         1.dp,

@@ -297,14 +297,12 @@ fun AIModelItem(
                 if (state == AIGCSessionTemplate.ADD_STATE_ADDING) {
                     LoadingIndicator(modifier = Modifier.size(32.dp))
                 } else {
-                    val added = state == AIGCSessionTemplate.ADD_STATE_ADDED
                     FilledTonalButton(
                         onClick = onAddClick,
-                        enabled = !added,
                         shape = MaterialTheme.shapes.medium
                     ) {
                         Text(
-                            text = if (added) "✓" else stringResource(xcj.app.appsets.R.string.add),
+                            text = stringResource(xcj.app.appsets.R.string.add),
                             style = MaterialTheme.typography.labelLarge
                         )
                     }
