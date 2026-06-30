@@ -10,7 +10,7 @@ object ModuleHelper {
 
     private val providers: MutableMap<String, KeyedProvider<String, *>> = mutableMapOf()
 
-    fun moduleInitHooks(
+    suspend fun moduleInitHooks(
         iPurpleModule: IPurpleModule,
     ) {
         iPurpleModule.initModule()

@@ -36,31 +36,31 @@ abstract class PurpleContext :
         LocalPurpleCoroutineScope.provide(coroutineScope)
     }
 
-    override fun onInit() {
+    override suspend fun onInit() {
         LocalPurpleEventPublisher.provide(this)
         DefinitionsCollector().collectDefinitions(this)
         DefinitionsInstantiator().doInitDefinitions(this)
         AnythingComponentLoader().loadComponents(this)
     }
 
-    override fun onStart() {
+    override suspend fun onStart() {
 
     }
 
-    override fun onRefresh() {
+    override suspend fun onRefresh() {
         publishEvent(NoticePurpleContextAwareEvent(this))
         publishEvent(PurpleInitEvent())
     }
 
-    override fun onReady() {
+    override suspend fun onReady() {
 
     }
 
-    override fun onStop() {
+    override suspend fun onStop() {
 
     }
 
-    override fun onDestroy() {
+    override suspend fun onDestroy() {
 
     }
 
@@ -84,7 +84,7 @@ abstract class PurpleContext :
         return definitionContextListenerInstanceList
     }
 
-    override fun publishEvent(event: DesignEvent) {
+    override suspend fun publishEvent(event: DesignEvent) {
         var eventOverride = event
         val eventHandlers = getEventHandlers()
         val eventPreHandlers = eventHandlers.filterIsInstance<EventPreHandler>()
@@ -102,7 +102,7 @@ abstract class PurpleContext :
         }
     }
 
-    override fun onEvent(event: DesignEvent) {
+    override suspend fun onEvent(event: DesignEvent) {
 
     }
 

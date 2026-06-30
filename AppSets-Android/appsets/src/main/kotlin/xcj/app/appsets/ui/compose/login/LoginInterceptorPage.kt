@@ -36,7 +36,7 @@ fun LoginInterceptorPage(
         HideNavBar()
         Box(modifier = Modifier.fillMaxSize()) {
             val annotatedString = AnnotatedString(
-                stringResource(xcj.app.appsets.R.string.requires_login_to_appsets)
+                stringResource(xcj.app.appsets.R.string.login)
             )
             Text(
                 text = annotatedString,

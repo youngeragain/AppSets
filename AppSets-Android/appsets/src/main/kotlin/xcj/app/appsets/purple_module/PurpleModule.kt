@@ -14,14 +14,14 @@ class PurpleModule : ModuleRouter, IPurpleModule {
         private const val TAG = "PurpleModuleMain"
     }
 
-    fun onAndroidEvent(event: AndroidEvent) {
+    suspend fun onAndroidEvent(event: AndroidEvent) {
         if ("onApplicationCreated" == event.name) {
             PurpleLogger.current.d(TAG, "initModule")
             ModuleHelper.moduleInitHooks(this)
         }
     }
 
-    override fun initModule() {
+    override suspend fun initModule() {
         AppSetsModuleSettings.get().init()
     }
 

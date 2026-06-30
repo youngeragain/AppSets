@@ -23,19 +23,19 @@ class SimplePurpleForAndroidContext(any: Any) : PurpleContext() {
         return applicationInBackground
     }
 
-    private fun initAndroid() {
+    private suspend fun initAndroid() {
         PurpleLogger.current.d(TAG, "initAndroid")
         androidContexts.simpleInit()
         publishEvent(AndroidEvent("onApplicationCreated"))
     }
 
-    override fun onInit() {
+    override suspend fun onInit() {
         super.onInit()
         PurpleLogger.current.d(TAG, "init")
         initAndroid()
     }
 
-    override fun onStart() {
+    override suspend fun onStart() {
         PurpleLogger.current.d(TAG, "onStart")
         val startDateTime =
             SimpleDateFormat.getDateTimeInstance().format(Calendar.getInstance().time)
@@ -43,37 +43,37 @@ class SimplePurpleForAndroidContext(any: Any) : PurpleContext() {
         publishEvent(purpleStartEvent)
     }
 
-    override fun onRefresh() {
+    override suspend fun onRefresh() {
         super.onRefresh()
         PurpleLogger.current.d(TAG, "onRefresh")
     }
 
-    override fun onReady() {
+    override suspend fun onReady() {
         PurpleLogger.current.d(TAG, "onReady")
     }
 
-    override fun onStop() {
+    override suspend fun onStop() {
         PurpleLogger.current.d(TAG, "onStop")
         val purpleStopEvent = PurpleStopEvent()
         publishEvent(purpleStopEvent)
     }
 
-    override fun onDestroy() {
+    override suspend fun onDestroy() {
         PurpleLogger.current.d(TAG, "onDestroy")
     }
 
-    override fun publishEvent(event: DesignEvent) {
+    override suspend fun publishEvent(event: DesignEvent) {
         super.publishEvent(event)
         PurpleLogger.current.d(TAG, "publishEvent: event:$event")
     }
 
-    override fun onEvent(event: DesignEvent) {
+    override suspend fun onEvent(event: DesignEvent) {
         super.onEvent(event)
         PurpleLogger.current.d(TAG, "onEvent: event:$event")
         dispatchEvent(event)
     }
 
-    private fun dispatchEvent(event: DesignEvent) {
+    private suspend fun dispatchEvent(event: DesignEvent) {
         PurpleLogger.current.d(TAG, "dispatchEvent: event:$event")
         when (event) {
             is NoticePurpleContextAwareEvent -> {
@@ -86,7 +86,7 @@ class SimplePurpleForAndroidContext(any: Any) : PurpleContext() {
         }
     }
 
-    private fun dispatchPurpleContextEvent(event: DesignEvent) {
+    private suspend fun dispatchPurpleContextEvent(event: DesignEvent) {
         PurpleLogger.current.d(TAG, "dispatchPurpleContextEvent")
         val purpleContextListenerList = getPurpleContextListenerList()
         purpleContextListenerList.filterIsInstance<PurpleContextEventListener>().forEach {
@@ -94,7 +94,7 @@ class SimplePurpleForAndroidContext(any: Any) : PurpleContext() {
         }
     }
 
-    private fun dispatchPurpleContextAware(event: NoticePurpleContextAwareEvent) {
+    private suspend fun dispatchPurpleContextAware(event: NoticePurpleContextAwareEvent) {
         PurpleLogger.current.d(TAG, "dispatchPurpleContextAware")
         getAwareList(PurpleContextAware::class.java).forEach {
             it.setPurpleContext(event.purpleContext)

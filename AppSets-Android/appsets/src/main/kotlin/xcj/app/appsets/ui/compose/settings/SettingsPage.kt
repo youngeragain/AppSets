@@ -97,6 +97,14 @@ fun SettingsPage(
                     color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
                 )
 
+                HomePageSettingsComponent()
+
+                HorizontalDivider(
+                    modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp),
+                    thickness = 0.5.dp,
+                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                )
+
                 SettingsGroup(title = stringResource(xcj.app.appsets.R.string.permissions_and_privacy)) {
                     SettingsClickableItem(
                         icon = xcj.app.compose_share.R.drawable.ic_outline_privacy_tip_24,
@@ -236,6 +244,64 @@ fun SessionSettingsComponent() {
             onChoiceClick = {
                 imMessageSendType = it
                 coroutineScope.launch { appSetsModuleSettings.onIMMessageDeliveryTypeChanged(it) }
+            }
+        )
+    }
+}
+
+@Composable
+fun HomePageSettingsComponent() {
+    val coroutineScope = rememberCoroutineScope()
+    val appSetsModuleSettings = remember { AppSetsModuleSettings.get() }
+
+    var isEnableAppCentral by remember { mutableStateOf(appSetsModuleSettings.appFeatures.homePageFeatures.isEnableAppCentral) }
+    var isEnableOutSide by remember { mutableStateOf(appSetsModuleSettings.appFeatures.homePageFeatures.isEnableOutSide) }
+    var isEnableConversation by remember { mutableStateOf(appSetsModuleSettings.appFeatures.homePageFeatures.isEnableConversation) }
+
+    SettingsGroup(title = stringResource(xcj.app.appsets.R.string.appsets_launcher)) {
+        SingleChoiceInRowComponent(
+            icon = xcj.app.compose_share.R.drawable.ic_extension_24,
+            choiceTitle = xcj.app.appsets.R.string.all_apps,
+            currentChoice = isEnableAppCentral,
+            choices = listOf(
+                true to xcj.app.appsets.R.string.show,
+                false to xcj.app.appsets.R.string.hide
+            ),
+            onChoiceClick = {
+                isEnableAppCentral = it
+                coroutineScope.launch { appSetsModuleSettings.onIsEnableAppCentralChanged(it) }
+            }
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        SingleChoiceInRowComponent(
+            icon = xcj.app.compose_share.R.drawable.ic_language_24,
+            choiceTitle = xcj.app.appsets.R.string.out_side,
+            currentChoice = isEnableOutSide,
+            choices = listOf(
+                true to xcj.app.appsets.R.string.show,
+                false to xcj.app.appsets.R.string.hide
+            ),
+            onChoiceClick = {
+                isEnableOutSide = it
+                coroutineScope.launch { appSetsModuleSettings.onIsEnableOutsideChanged(it) }
+            }
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        SingleChoiceInRowComponent(
+            icon = xcj.app.compose_share.R.drawable.ic_bubble_chart_24,
+            choiceTitle = xcj.app.appsets.R.string.conversation,
+            currentChoice = isEnableConversation,
+            choices = listOf(
+                true to xcj.app.appsets.R.string.show,
+                false to xcj.app.appsets.R.string.hide
+            ),
+            onChoiceClick = {
+                isEnableConversation = it
+                coroutineScope.launch { appSetsModuleSettings.onIsEnableConversationChanged(it) }
             }
         )
     }

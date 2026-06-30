@@ -46,7 +46,6 @@
     <string name="this_app_has_been_pinned_do_you_want_to_unpin_it">This app has been pinned. Do you want to unpin it?</string>
     <string name="search">Search</string>
     <string name="no_content">No content</string>
-    <string name="requires_login_to_appsets">Login to AppSets</string>
     <string name="restricted_content_continue_viewing">Restricted content, continue viewing</string>
     <string name="restricted_content_continue_viewing_user_to_view_notify">The other party will be notified of your viewing request, and you can view it after the other party agrees. The platform does not take any responsibility! Send viewing request?</string>
     <string name="an_empty_status">An empty status :)</string>

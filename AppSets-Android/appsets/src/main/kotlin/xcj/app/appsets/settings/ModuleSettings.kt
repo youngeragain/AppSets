@@ -5,7 +5,6 @@ import androidx.core.content.edit
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import xcj.app.appsets.db.room.AppDatabase
 import xcj.app.appsets.notification.NotificationChannels
@@ -20,7 +19,7 @@ import xcj.app.starter.test.LocalPurpleCoroutineScope
 
 interface ModuleSettings {
 
-    fun init()
+    suspend fun init()
 
 }
 
@@ -40,6 +39,10 @@ class AppSetsModuleSettings : ModuleSettings {
         const val KEY_IS_IM_MESSAGE_DATE_SHOW_SECONDS = "is_im_message_date_show_seconds"
         const val KEY_IS_IM_MESSAGE_RELIABILITY = "is_im_message_reliability"
         const val KEY_IS_APP_FIRST_LAUNCH = "is_app_first_launch"
+
+        const val KEY_IS_ENABLE_APP_CENTRAL = "is_enable_app_central"
+        const val KEY_IS_ENABLE_OUTSIDE = "is_enable_outside"
+        const val KEY_IS_ENABLE_CONVERSATION = "is_enable_conversation"
 
         const val KEY_APP_FEATURES = "app_features"
 
@@ -92,12 +95,10 @@ class AppSetsModuleSettings : ModuleSettings {
 
     var appFeatures: AppFeatures = AppFeatures()
 
-    override fun init() {
+    override suspend fun init() {
         prepareNotificationsChanelConfig()
         prepareCoilConfig()
-        LocalPurpleCoroutineScope.current.launch {
-            prepareSettingsConfig()
-        }
+        prepareSettingsConfig()
     }
 
     private suspend fun prepareSettingsConfig() {
@@ -128,6 +129,22 @@ class AppSetsModuleSettings : ModuleSettings {
                     KEY_IS_IM_MESSAGE_DATE_SHOW_SECONDS,
                     false
                 )
+            appFeatures = AppFeatures(
+                homePageFeatures = HomePageFeatures(
+                    isEnableAppCentral = appSettingSharedPreferences.getBoolean(
+                        KEY_IS_ENABLE_APP_CENTRAL,
+                        true
+                    ),
+                    isEnableOutSide = appSettingSharedPreferences.getBoolean(
+                        KEY_IS_ENABLE_OUTSIDE,
+                        true
+                    ),
+                    isEnableConversation = appSettingSharedPreferences.getBoolean(
+                        KEY_IS_ENABLE_CONVERSATION,
+                        true
+                    )
+                )
+            )
         }
     }
 
@@ -180,6 +197,33 @@ class AppSetsModuleSettings : ModuleSettings {
             isBackgroundIMEnable = show
             appSettingSharedPreferences.edit {
                 putBoolean(KEY_IS_IM_MESSAGE_RELIABILITY, show)
+            }
+        }
+    }
+
+    suspend fun onIsEnableAppCentralChanged(enable: Boolean) {
+        withContext(Dispatchers.IO) {
+            appFeatures.homePageFeatures.isEnableAppCentral = enable
+            appSettingSharedPreferences.edit {
+                putBoolean(KEY_IS_ENABLE_APP_CENTRAL, enable)
+            }
+        }
+    }
+
+    suspend fun onIsEnableOutsideChanged(enable: Boolean) {
+        withContext(Dispatchers.IO) {
+            appFeatures.homePageFeatures.isEnableOutSide = enable
+            appSettingSharedPreferences.edit {
+                putBoolean(KEY_IS_ENABLE_OUTSIDE, enable)
+            }
+        }
+    }
+
+    suspend fun onIsEnableConversationChanged(enable: Boolean) {
+        withContext(Dispatchers.IO) {
+            appFeatures.homePageFeatures.isEnableConversation = enable
+            appSettingSharedPreferences.edit {
+                putBoolean(KEY_IS_ENABLE_CONVERSATION, enable)
             }
         }
     }

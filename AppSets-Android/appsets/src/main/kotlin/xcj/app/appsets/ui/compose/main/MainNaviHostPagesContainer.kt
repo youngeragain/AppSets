@@ -1564,7 +1564,10 @@ fun MainNaviHostPagesContainer(
     }
 }
 
-fun publishComposeNaviHostFormedEvent(navController: NavHostController, builder: NavGraphBuilder) {
+suspend fun publishComposeNaviHostFormedEvent(
+    navController: NavHostController,
+    builder: NavGraphBuilder
+) {
     PurpleLogger.current.d(TAG, "publishComposeNaviHostFormedEvent")
     val naviHostParams = NaviHostParams(navController, builder)
     val composeEvent = ComposeEvent(ComposeEvent.EVENT_NAVI_HOST_FORMED, naviHostParams)
@@ -1602,6 +1605,7 @@ fun DesignNaviHostIf(
     if (!test()) {
         return
     }
+    val rememberCoroutineScope = rememberCoroutineScope()
     Box {
         NavHost(
             modifier = modifier,
@@ -1641,7 +1645,9 @@ fun DesignNaviHostIf(
             },
             contentAlignment = Alignment.TopCenter,
             builder = {
-                publishComposeNaviHostFormedEvent(navController, this)
+                rememberCoroutineScope.launch {
+                    publishComposeNaviHostFormedEvent(navController, this@NavHost)
+                }
                 builder()
             },
         )
@@ -1746,9 +1752,8 @@ private fun navigateToCreateAppPage(
     }
     val navDirections: NavDirections = object : NavDirections {
         override val actionId: Int = destinationId
-        override val arguments: Bundle = bundleOf(
-            Constants.CREATE_STEP to createStep
-        ).apply {
+        override val arguments: Bundle = bundleOf().apply {
+            putString(Constants.CREATE_STEP, createStep)
             if (application != null) {
                 putParcelable(Constants.APP_INFO, application)
             }

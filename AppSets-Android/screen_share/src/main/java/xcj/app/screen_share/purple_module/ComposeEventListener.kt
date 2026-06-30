@@ -11,7 +11,7 @@ class ComposeEventListener : PurpleContextEventListener {
         private const val TAG = "ComposeEventListener"
     }
 
-    override fun onEvent(event: DesignEvent) {
+    override suspend fun onEvent(event: DesignEvent) {
         PurpleLogger.current.d(
             TAG,
             "onEvent, event:$event"

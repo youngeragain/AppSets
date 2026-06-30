@@ -1,12 +1,12 @@
 package xcj.app.starter.foundation
 
 interface PurpleLifecycle {
-    fun onInit()
-    fun onStart()
-    fun onRefresh()
-    fun onReady()
-    fun onStop()
-    fun onDestroy()
+    suspend fun onInit()
+    suspend fun onStart()
+    suspend fun onRefresh()
+    suspend fun onReady()
+    suspend fun onStop()
+    suspend fun onDestroy()
 
     sealed interface State {
         data object INITIALED : State
