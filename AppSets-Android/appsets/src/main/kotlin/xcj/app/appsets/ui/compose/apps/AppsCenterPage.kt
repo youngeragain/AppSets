@@ -51,6 +51,7 @@ import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
 import xcj.app.appsets.im.Bio
 import xcj.app.appsets.server.model.Application
 import xcj.app.appsets.ui.compose.LocalNavControllers
+import xcj.app.appsets.ui.compose.LocalUseCaseOfNavigation
 import xcj.app.appsets.ui.compose.PageRouteNames
 import xcj.app.appsets.ui.compose.custom_component.AnyImage
 import xcj.app.appsets.ui.compose.custom_component.ShowNavBar
@@ -110,7 +111,12 @@ fun SimpleApplicationList(
         isSearchPageRouted = false
     }
 
+    val navigationUseCase = LocalUseCaseOfNavigation.current
+
     LaunchedEffect(overscrollOffset) {
+        if (navigationUseCase.currentRouteState.value == PageRouteNames.SearchPage) {
+            return@LaunchedEffect
+        }
         PurpleLogger.current.d(TAG, "overscrollOffset:$overscrollOffset")
         isShowDestination = overscrollOffset > 0f
         if (overscrollOffset > 10f && overscrollOffset < 300f) {

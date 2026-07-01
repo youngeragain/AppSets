@@ -61,9 +61,9 @@ import xcj.app.appsets.im.Session
 import xcj.app.appsets.ui.compose.LocalUseCaseOfConversation
 import xcj.app.appsets.ui.compose.custom_component.AnyImage
 import xcj.app.appsets.ui.compose.custom_component.DesignBackButton
+import xcj.app.appsets.ui.compose.custom_component.ExpressivePageIndicator
 import xcj.app.appsets.ui.compose.custom_component.HideNavBar
 import xcj.app.appsets.ui.compose.custom_component.preview_tooling.DesignPreviewCompositionLocalProvider
-import xcj.app.appsets.ui.compose.privacy.ExpressivePageIndicator
 
 data class AIGCSessionTemplate(
     val session: Session,

@@ -137,277 +137,281 @@ fun CreateGroupPage(
         startAnimation = true
     }
 
-    VerticalOverscrollBox {
-        Column(modifier = Modifier.fillMaxWidth()) {
-            Column(
-                modifier = Modifier
-                    .widthIn(max = TextFieldDefaults.MinWidth)
-                    .align(Alignment.CenterHorizontally)
-                    .padding(horizontal = 12.dp)
-                    .verticalScroll(rememberScrollState())
-                    .imePadding()
-                    .animateContentSize(),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            )
-            {
-                StatusBarWithTopActionBarSpacer()
+    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.TopStart) {
+        VerticalOverscrollBox(modifier = Modifier.widthIn(max = TextFieldDefaults.MinWidth * 2)) {
+            Column(modifier = Modifier.fillMaxWidth()) {
+                Column(
+                    modifier = Modifier
+                        .align(Alignment.Start)
+                        .padding(horizontal = 12.dp)
+                        .verticalScroll(rememberScrollState())
+                        .imePadding()
+                        .animateContentSize(),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                )
+                {
+                    StatusBarWithTopActionBarSpacer()
 
-                // Logo Section with Animation
-                AnimatedVisibility(
-                    visible = startAnimation,
-                    enter = slideInVertically { -20 } + fadeIn()
-                ) {
-                    Column(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalAlignment = Alignment.CenterHorizontally
+                    // Logo Section with Animation
+                    AnimatedVisibility(
+                        visible = startAnimation,
+                        enter = slideInVertically { -20 } + fadeIn()
                     ) {
-                        Text(
-                            text = String.format(
-                                stringResource(id = xcj.app.appsets.R.string.a_is_required_template),
-                                stringResource(id = xcj.app.appsets.R.string.logo),
-                                "*"
-                            ),
-                            modifier = Modifier.padding(vertical = 12.dp),
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
-                        )
-
-                        val interactionSource = remember { MutableInteractionSource() }
-                        val isPressed by interactionSource.collectIsPressedAsState()
-                        val scale by animateFloatAsState(
-                            if (isPressed) 0.95f else 1f,
-                            label = "logoScale"
-                        )
-
-                        val infiniteTransition = rememberInfiniteTransition(label = "logoPulse")
-                        val pulseScale by infiniteTransition.animateFloat(
-                            initialValue = 1f,
-                            targetValue = 1.03f,
-                            animationSpec = infiniteRepeatable(
-                                animation = tween(2000, easing = FastOutSlowInEasing),
-                                repeatMode = RepeatMode.Reverse
-                            ),
-                            label = "pulse"
-                        )
-
-                        Box(
-                            modifier = Modifier
-                                .size(220.dp)
-                                .scale(scale * if (groupInfoForCreate.iconUriProvider.value == null) pulseScale else 1f)
-                                .clip(ExtraLarge2)
-                                .border(
-                                    2.dp,
-                                    if (groupInfoForCreate.iconUriProvider.value != null)
-                                        MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
-                                    else
-                                        MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
-                                    ExtraLarge2
-                                )
-                                .clickable(
-                                    interactionSource = interactionSource,
-                                    indication = null,
-                                    onClick = {
-                                        val composeStateUpdater =
-                                            RuntimeSingleStateUpdater.fromState(groupInfoForCreate.iconUriProvider) { markKey, input ->
-                                                if (input !is ContentSelectionResult.RichMediaContentSelectionResult) {
-                                                    return@fromState
-                                                }
-                                                val uriProviders = input.selectedProvider.provide()
-                                                if (uriProviders.isEmpty()) {
-                                                    return@fromState
-                                                }
-                                                update(uriProviders.first())
-                                            }
-                                        onSelectGroupIconClick(
-                                            "CREATE_GROUP_IMAGE_SELECT_REQUEST",
-                                            composeStateUpdater
-                                        )
-                                    }),
-                            contentAlignment = Alignment.Center
+                        Column(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            val groupIconUri =
-                                groupInfoForCreate.iconUriProvider.value?.provideUri()
+                            Text(
+                                text = String.format(
+                                    stringResource(id = xcj.app.appsets.R.string.a_is_required_template),
+                                    stringResource(id = xcj.app.appsets.R.string.logo),
+                                    "*"
+                                ),
+                                modifier = Modifier.padding(vertical = 12.dp),
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold
+                            )
 
-                            AnimatedContent(
-                                targetState = groupIconUri != null,
-                                transitionSpec = {
-                                    (fadeIn() + scaleIn()).togetherWith(fadeOut() + scaleOut())
-                                },
-                                label = "iconTransition"
-                            ) { hasUri ->
-                                if (hasUri) {
-                                    AnyImage(
-                                        modifier = Modifier.fillMaxSize(),
-                                        model = groupIconUri,
-                                        contentScale = ContentScale.Crop
+                            val interactionSource = remember { MutableInteractionSource() }
+                            val isPressed by interactionSource.collectIsPressedAsState()
+                            val scale by animateFloatAsState(
+                                if (isPressed) 0.95f else 1f,
+                                label = "logoScale"
+                            )
+
+                            val infiniteTransition = rememberInfiniteTransition(label = "logoPulse")
+                            val pulseScale by infiniteTransition.animateFloat(
+                                initialValue = 1f,
+                                targetValue = 1.03f,
+                                animationSpec = infiniteRepeatable(
+                                    animation = tween(2000, easing = FastOutSlowInEasing),
+                                    repeatMode = RepeatMode.Reverse
+                                ),
+                                label = "pulse"
+                            )
+
+                            Box(
+                                modifier = Modifier
+                                    .size(220.dp)
+                                    .scale(scale * if (groupInfoForCreate.iconUriProvider.value == null) pulseScale else 1f)
+                                    .clip(ExtraLarge2)
+                                    .border(
+                                        2.dp,
+                                        if (groupInfoForCreate.iconUriProvider.value != null)
+                                            MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
+                                        else
+                                            MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
+                                        ExtraLarge2
                                     )
-                                } else {
-                                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                        Icon(
-                                            modifier = Modifier.size(24.dp),
-                                            painter = painterResource(xcj.app.compose_share.R.drawable.ic_round_add_24),
-                                            contentDescription = null
+                                    .clickable(
+                                        interactionSource = interactionSource,
+                                        indication = null,
+                                        onClick = {
+                                            val composeStateUpdater =
+                                                RuntimeSingleStateUpdater.fromState(
+                                                    groupInfoForCreate.iconUriProvider
+                                                ) { markKey, input ->
+                                                    if (input !is ContentSelectionResult.RichMediaContentSelectionResult) {
+                                                        return@fromState
+                                                    }
+                                                    val uriProviders =
+                                                        input.selectedProvider.provide()
+                                                    if (uriProviders.isEmpty()) {
+                                                        return@fromState
+                                                    }
+                                                    update(uriProviders.first())
+                                                }
+                                            onSelectGroupIconClick(
+                                                "CREATE_GROUP_IMAGE_SELECT_REQUEST",
+                                                composeStateUpdater
+                                            )
+                                        }),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                val groupIconUri =
+                                    groupInfoForCreate.iconUriProvider.value?.provideUri()
+
+                                AnimatedContent(
+                                    targetState = groupIconUri != null,
+                                    transitionSpec = {
+                                        (fadeIn() + scaleIn()).togetherWith(fadeOut() + scaleOut())
+                                    },
+                                    label = "iconTransition"
+                                ) { hasUri ->
+                                    if (hasUri) {
+                                        AnyImage(
+                                            modifier = Modifier.fillMaxSize(),
+                                            model = groupIconUri,
+                                            contentScale = ContentScale.Crop
                                         )
+                                    } else {
+                                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                            Icon(
+                                                modifier = Modifier.size(24.dp),
+                                                painter = painterResource(xcj.app.compose_share.R.drawable.ic_round_add_24),
+                                                contentDescription = null
+                                            )
+                                        }
                                     }
                                 }
                             }
                         }
                     }
-                }
 
-                // Staggered Items
-                val itemModifiers = List(5) { index ->
-                    val delayTime = 150 + (index * 50)
-                    val alpha by animateFloatAsState(
-                        if (startAnimation) 1f else 0f,
-                        animationSpec = tween(500, delayMillis = delayTime),
-                        label = "itemAlpha$index"
-                    )
-                    val translationY by animateFloatAsState(
-                        if (startAnimation) 0f else 30f,
-                        animationSpec = tween(500, delayMillis = delayTime),
-                        label = "itemSlide$index"
-                    )
-                    Modifier.graphicsLayer {
-                        this.alpha = alpha
-                        this.translationY = translationY
-                    }
-                }
-
-                Column(
-                    modifier = itemModifiers[0],
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Text(
-                        text = stringResource(id = xcj.app.appsets.R.string.status),
-                        fontWeight = FontWeight.Bold,
-                        style = MaterialTheme.typography.titleSmall
-                    )
-                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        FilterChip(
-                            selected = groupInfoForCreate.isPublic.value,
-                            onClick = { groupInfoForCreate.isPublic.value = true },
-                            label = { Text(text = stringResource(id = xcj.app.appsets.R.string.public_)) },
-                            shape = CircleShape,
-                            leadingIcon = if (groupInfoForCreate.isPublic.value) {
-                                {
-                                    Icon(
-                                        painterResource(xcj.app.compose_share.R.drawable.ic_round_check_24),
-                                        null
-                                    )
-                                }
-                            } else null
+                    // Staggered Items
+                    val itemModifiers = List(5) { index ->
+                        val delayTime = 150 + (index * 50)
+                        val alpha by animateFloatAsState(
+                            if (startAnimation) 1f else 0f,
+                            animationSpec = tween(500, delayMillis = delayTime),
+                            label = "itemAlpha$index"
                         )
-                        FilterChip(
-                            selected = !groupInfoForCreate.isPublic.value,
-                            onClick = { groupInfoForCreate.isPublic.value = false },
-                            label = { Text(text = stringResource(id = xcj.app.appsets.R.string.private_)) },
-                            shape = CircleShape,
-                            leadingIcon = if (!groupInfoForCreate.isPublic.value) {
-                                {
-                                    Icon(
-                                        painterResource(xcj.app.compose_share.R.drawable.ic_round_check_24),
-                                        null
-                                    )
-                                }
-                            } else null
+                        val translationY by animateFloatAsState(
+                            if (startAnimation) 0f else 30f,
+                            animationSpec = tween(500, delayMillis = delayTime),
+                            label = "itemSlide$index"
+                        )
+                        Modifier.graphicsLayer {
+                            this.alpha = alpha
+                            this.translationY = translationY
+                        }
+                    }
+
+                    Column(
+                        modifier = itemModifiers[0],
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Text(
+                            text = stringResource(id = xcj.app.appsets.R.string.status),
+                            fontWeight = FontWeight.Bold,
+                            style = MaterialTheme.typography.titleSmall
+                        )
+                        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                            FilterChip(
+                                selected = groupInfoForCreate.isPublic.value,
+                                onClick = { groupInfoForCreate.isPublic.value = true },
+                                label = { Text(text = stringResource(id = xcj.app.appsets.R.string.public_)) },
+                                shape = CircleShape,
+                                leadingIcon = if (groupInfoForCreate.isPublic.value) {
+                                    {
+                                        Icon(
+                                            painterResource(xcj.app.compose_share.R.drawable.ic_round_check_24),
+                                            null
+                                        )
+                                    }
+                                } else null
+                            )
+                            FilterChip(
+                                selected = !groupInfoForCreate.isPublic.value,
+                                onClick = { groupInfoForCreate.isPublic.value = false },
+                                label = { Text(text = stringResource(id = xcj.app.appsets.R.string.private_)) },
+                                shape = CircleShape,
+                                leadingIcon = if (!groupInfoForCreate.isPublic.value) {
+                                    {
+                                        Icon(
+                                            painterResource(xcj.app.compose_share.R.drawable.ic_round_check_24),
+                                            null
+                                        )
+                                    }
+                                } else null
+                            )
+                        }
+                    }
+
+                    Column(
+                        modifier = itemModifiers[1],
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Text(
+                            text = String.format(
+                                stringResource(id = xcj.app.appsets.R.string.a_is_required_template),
+                                stringResource(id = xcj.app.appsets.R.string.name),
+                                "*"
+                            ),
+                            fontWeight = FontWeight.Bold,
+                            style = MaterialTheme.typography.titleSmall
+                        )
+                        DesignTextField(
+                            modifier = Modifier.fillMaxWidth(),
+                            maxLines = 1,
+                            value = groupInfoForCreate.name.value,
+                            onValueChange = {
+                                groupInfoForCreate.name.value =
+                                    if (it.length > 30) it.substring(0, 30) else it
+                            },
+                            placeholder = {
+                                Text(
+                                    text = stringResource(xcj.app.appsets.R.string.group_name),
+                                    fontSize = 12.sp
+                                )
+                            }
                         )
                     }
-                }
 
-                Column(
-                    modifier = itemModifiers[1],
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Text(
-                        text = String.format(
-                            stringResource(id = xcj.app.appsets.R.string.a_is_required_template),
-                            stringResource(id = xcj.app.appsets.R.string.name),
-                            "*"
-                        ),
-                        fontWeight = FontWeight.Bold,
-                        style = MaterialTheme.typography.titleSmall
-                    )
-                    DesignTextField(
-                        modifier = Modifier.fillMaxWidth(),
-                        maxLines = 1,
-                        value = groupInfoForCreate.name.value,
-                        onValueChange = {
-                            groupInfoForCreate.name.value =
-                                if (it.length > 30) it.substring(0, 30) else it
-                        },
-                        placeholder = {
-                            Text(
-                                text = stringResource(xcj.app.appsets.R.string.group_name),
-                                fontSize = 12.sp
-                            )
-                        }
-                    )
-                }
+                    Column(
+                        modifier = itemModifiers[2],
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Text(
+                            text = stringResource(xcj.app.appsets.R.string.maximum_number_of_members),
+                            fontWeight = FontWeight.Bold,
+                            style = MaterialTheme.typography.titleSmall
+                        )
+                        DesignTextField(
+                            modifier = Modifier.fillMaxWidth(),
+                            maxLines = 1,
+                            value = groupInfoForCreate.membersCount.value,
+                            keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
+                            onValueChange = {
+                                groupInfoForCreate.membersCount.value =
+                                    it.toIntOrNull()?.toString() ?: "1000"
+                            },
+                            placeholder = {
+                                Text(
+                                    text = stringResource(xcj.app.appsets.R.string.quantity),
+                                    fontSize = 12.sp
+                                )
+                            }
+                        )
+                    }
 
-                Column(
-                    modifier = itemModifiers[2],
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Text(
-                        text = stringResource(xcj.app.appsets.R.string.maximum_number_of_members),
-                        fontWeight = FontWeight.Bold,
-                        style = MaterialTheme.typography.titleSmall
-                    )
-                    DesignTextField(
-                        modifier = Modifier.fillMaxWidth(),
-                        maxLines = 1,
-                        value = groupInfoForCreate.membersCount.value,
-                        keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
-                        onValueChange = {
-                            groupInfoForCreate.membersCount.value =
-                                it.toIntOrNull()?.toString() ?: "1000"
-                        },
-                        placeholder = {
-                            Text(
-                                text = stringResource(xcj.app.appsets.R.string.quantity),
-                                fontSize = 12.sp
-                            )
-                        }
-                    )
-                }
+                    Column(
+                        modifier = itemModifiers[3],
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Text(
+                            text = stringResource(id = xcj.app.appsets.R.string.introduction),
+                            fontWeight = FontWeight.Bold,
+                            style = MaterialTheme.typography.titleSmall
+                        )
+                        DesignTextField(
+                            modifier = Modifier.fillMaxWidth(),
+                            value = groupInfoForCreate.introduction.value,
+                            onValueChange = { groupInfoForCreate.introduction.value = it },
+                            placeholder = {
+                                Text(
+                                    text = stringResource(xcj.app.appsets.R.string.group_description),
+                                    fontSize = 12.sp
+                                )
+                            }
+                        )
+                    }
 
-                Column(
-                    modifier = itemModifiers[3],
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Text(
-                        text = stringResource(id = xcj.app.appsets.R.string.introduction),
-                        fontWeight = FontWeight.Bold,
-                        style = MaterialTheme.typography.titleSmall
-                    )
-                    DesignTextField(
-                        modifier = Modifier.fillMaxWidth(),
-                        value = groupInfoForCreate.introduction.value,
-                        onValueChange = { groupInfoForCreate.introduction.value = it },
-                        placeholder = {
-                            Text(
-                                text = stringResource(xcj.app.appsets.R.string.group_description),
-                                fontSize = 12.sp
-                            )
-                        }
-                    )
+                    Spacer(modifier = Modifier.height(150.dp))
                 }
-
-                Spacer(modifier = Modifier.height(150.dp))
             }
+
+            BackActionTopBar(
+                backButtonText = stringResource(xcj.app.appsets.R.string.create_group),
+                endButtonText = stringResource(xcj.app.appsets.R.string.ok),
+                onBackClick = onBackClick,
+                onEndButtonClick = {
+                    onConfirmClick(groupInfoForCreate)
+                }
+            )
+
+            CreateGroupIndicator(createGroupPageUIState = createGroupPageUIState)
         }
-
-        BackActionTopBar(
-            backButtonText = stringResource(xcj.app.appsets.R.string.create_group),
-            endButtonText = stringResource(xcj.app.appsets.R.string.ok),
-            onBackClick = onBackClick,
-            onEndButtonClick = {
-                onConfirmClick(groupInfoForCreate)
-            }
-        )
-
-        CreateGroupIndicator(createGroupPageUIState = createGroupPageUIState)
     }
 
 }

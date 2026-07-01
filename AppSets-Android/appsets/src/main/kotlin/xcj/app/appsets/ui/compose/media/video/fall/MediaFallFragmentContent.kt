@@ -321,7 +321,7 @@ fun MediaContentInfoCard(
                                         InstrumentationHelper.BACK_CLICK
                                     )
                                 },
-                                resource = mediaContent.mediaContent.relateUser?.avatarUrl
+                                uri = mediaContent.mediaContent.relateUser?.avatarUrl
                             )
                         }
                     }

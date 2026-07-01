@@ -10,9 +10,7 @@ import androidx.activity.OnBackPressedCallback
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
-import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -1732,9 +1730,7 @@ private fun UserInputTextSpace(
     val userInputTargetHeight = getUserInputHeight(activity, expandUserInput)
 
     val userInputHeightState by animateDpAsState(
-        targetValue = userInputTargetHeight, animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessLow
-        )
+        targetValue = userInputTargetHeight, animationSpec = tween()
     )
 
     var lastFocusState by remember { mutableStateOf(false) }
@@ -1762,7 +1758,13 @@ private fun UserInputTextSpace(
         } else {
             Modifier
                 .height(userInputHeightState)
+                .border(
+                    1.dp,
+                    MaterialTheme.colorScheme.outline,
+                    CircleShape
+                )
                 .clip(CircleShape)
+
         }
         Box(
             modifier = boxModifier

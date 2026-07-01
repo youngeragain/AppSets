@@ -21,11 +21,11 @@ import androidx.compose.ui.unit.dp
 fun ImageButtonComponent(
     modifier: Modifier = Modifier,
     useImage: Boolean = true,
-    resource: Any?,
+    uri: Any?,
     resRotate: Float = 0f,
     onClick: (() -> Unit)? = null
 ) {
-    if (resource == null) {
+    if (uri == null) {
         val overrideModifier = if (onClick == null) {
             modifier
                 .size(42.dp)
@@ -61,9 +61,9 @@ fun ImageButtonComponent(
             contentAlignment = Alignment.Center
         ) {
             if (useImage) {
-                if (resource is Int) {
+                if (uri is Int) {
                     Image(
-                        imageVector = ImageVector.vectorResource(id = resource),
+                        imageVector = ImageVector.vectorResource(id = uri),
                         modifier = Modifier
                             .size(20.dp)
                             .rotate(resRotate),
@@ -71,7 +71,7 @@ fun ImageButtonComponent(
                     )
                 } else {
                     AnyImage(
-                        model = resource,
+                        model = uri,
                         modifier = Modifier
                             .size(42.dp)
                             .clip(CircleShape)
@@ -79,9 +79,9 @@ fun ImageButtonComponent(
                     )
                 }
             } else {
-                if (resource is Int) {
+                if (uri is Int) {
                     Icon(
-                        imageVector = ImageVector.vectorResource(id = resource),
+                        imageVector = ImageVector.vectorResource(id = uri),
                         modifier = Modifier
                             .size(20.dp)
                             .rotate(resRotate),
@@ -89,7 +89,7 @@ fun ImageButtonComponent(
                     )
                 } else {
                     AnyImage(
-                        model = resource,
+                        model = uri,
                         modifier = Modifier
                             .size(42.dp)
                             .clip(CircleShape)

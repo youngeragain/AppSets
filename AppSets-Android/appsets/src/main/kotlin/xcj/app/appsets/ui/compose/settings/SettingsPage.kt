@@ -22,6 +22,7 @@ import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -80,8 +81,8 @@ fun SettingsPage(
     onPrivacyAndPermissionClick: () -> Unit
 ) {
     HideNavBar()
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
-        VerticalOverscrollBox(modifier = Modifier.widthIn(max = 600.dp)) {
+    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.TopStart) {
+        VerticalOverscrollBox(modifier = Modifier.widthIn(max = TextFieldDefaults.MinWidth * 2)) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -260,7 +261,7 @@ fun HomePageSettingsComponent() {
 
     SettingsGroup(title = stringResource(xcj.app.appsets.R.string.appsets_launcher)) {
         SingleChoiceInRowComponent(
-            icon = xcj.app.compose_share.R.drawable.ic_extension_24,
+            icon = xcj.app.compose_share.R.drawable.ic_outline_shopping_bag_24,
             choiceTitle = xcj.app.appsets.R.string.all_apps,
             currentChoice = isEnableAppCentral,
             choices = listOf(
@@ -276,7 +277,7 @@ fun HomePageSettingsComponent() {
         Spacer(modifier = Modifier.height(16.dp))
 
         SingleChoiceInRowComponent(
-            icon = xcj.app.compose_share.R.drawable.ic_language_24,
+            icon = xcj.app.compose_share.R.drawable.ic_explore_24,
             choiceTitle = xcj.app.appsets.R.string.out_side,
             currentChoice = isEnableOutSide,
             choices = listOf(

@@ -1,6 +1,7 @@
 package xcj.app.appsets.ui.compose.search
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -30,10 +31,13 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import xcj.app.appsets.account.LocalAccountManager
+import xcj.app.appsets.im.Bio
 import xcj.app.appsets.im.BrokerTest
 import xcj.app.appsets.im.IMOnlineState
+import xcj.app.appsets.ui.compose.LocalUseCaseOfConversation
 import xcj.app.appsets.ui.compose.custom_component.ImageButtonComponent
 import xcj.app.appsets.ui.model.state.AccountStatus
+import xcj.app.appsets.usecase.SessionState
 import xcj.app.appsets.util.ktx.toast
 
 private const val TAG = "NavigationSearchBar"
@@ -46,7 +50,7 @@ fun NavigationSearchBar(
     onBackClick: () -> Unit,
     onInputContent: (String) -> Unit,
     onSearchBarClick: () -> Unit,
-    onBioClick: () -> Unit,
+    onBioClick: (Bio?) -> Unit,
 ) {
     Column(modifier = modifier) {
         Row(
@@ -69,9 +73,38 @@ fun NavigationSearchBar(
                     )
                 }
             }
-            LocalAccountUserAvatar(onClick = onBioClick)
+            NavigationSearchBarUsersSpace(onBioClick = onBioClick)
         }
         Spacer(modifier = Modifier.height(4.dp))
+    }
+}
+
+@Composable
+fun NavigationSearchBarUsersSpace(onBioClick: (Bio?) -> Unit) {
+    val conversationUseCase = LocalUseCaseOfConversation.current
+    val currentSessionState by remember {
+        derivedStateOf {
+            conversationUseCase.currentSessionState.value as? SessionState.Normal
+        }
+    }
+    Row {
+        AnimatedVisibility(visible = currentSessionState != null) {
+            Row(modifier = Modifier.padding(end = 8.dp)) {
+                AnimatedContent(currentSessionState) { session ->
+                    ImageButtonComponent(
+                        modifier = Modifier,
+                        useImage = false,
+                        uri = session?.session?.imObj?.avatarUrl,
+                        onClick = {
+                            onBioClick(session?.session?.imObj?.bio)
+                        }
+                    )
+                }
+            }
+        }
+        LocalAccountUserAvatar(onClick = {
+            onBioClick(LocalAccountManager.accountStatus.value.userInfo)
+        })
     }
 }
 
@@ -129,7 +162,7 @@ fun LocalAccountUserAvatar(
             }
         }
     }
-    val resource by remember {
+    val imageUri by remember {
         derivedStateOf {
             if (loginState is AccountStatus.Logged) {
                 loginState.userInfo.bioUrl
@@ -151,7 +184,7 @@ fun LocalAccountUserAvatar(
     ImageButtonComponent(
         modifier = modifierOverride,
         useImage = false,
-        resource = resource,
+        uri = imageUri,
         onClick = onClick
     )
 }

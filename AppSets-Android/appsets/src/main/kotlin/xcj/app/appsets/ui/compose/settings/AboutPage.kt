@@ -27,6 +27,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -42,6 +43,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import xcj.app.appsets.server.model.UpdateCheckResult
+import xcj.app.appsets.ui.compose.custom_component.VerticalOverscrollBox
 import xcj.app.appsets.ui.compose.custom_component.preview_tooling.DesignPreviewCompositionLocalProvider
 import xcj.app.compose_share.components.BackActionTopBar
 import xcj.app.compose_share.components.StatusBarWithTopActionBarSpacer
@@ -77,8 +79,8 @@ fun AboutPage(
     onWebsiteClick: () -> Unit,
     onHistoryExpandStateChanged: (Boolean) -> Unit,
 ) {
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
-        Box(modifier = Modifier.widthIn(max = 600.dp)) {
+    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.TopStart) {
+        VerticalOverscrollBox(modifier = Modifier.widthIn(max = TextFieldDefaults.MinWidth * 2)) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -207,8 +209,7 @@ fun AboutActionItem(
             Icon(
                 painter = painterResource(id = xcj.app.compose_share.R.drawable.ic_round_chevron_right_24),
                 contentDescription = null,
-                modifier = Modifier.size(20.dp),
-                tint = MaterialTheme.colorScheme.outlineVariant
+                modifier = Modifier.size(20.dp)
             )
         }
     }

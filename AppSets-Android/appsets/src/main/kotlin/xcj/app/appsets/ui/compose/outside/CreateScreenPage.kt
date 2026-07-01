@@ -37,6 +37,9 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
@@ -54,7 +57,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewWrapper
 import androidx.compose.ui.unit.dp
@@ -147,36 +150,40 @@ fun CreateScreenPage(
         }
     }
 
-    VerticalOverscrollBox {
-        Column(
-            modifier = Modifier
-                .widthIn(TextFieldDefaults.MinWidth)
-                .imePadding()
-                .padding(horizontal = 20.dp)
-                .verticalScroll(rememberScrollState())
-        ) {
-            StatusBarWithTopActionBarSpacer()
-            NewPostScreenComponent(
-                screenInfoForCreate = screenInfoForCreate,
-                onGenerateClick = onGenerateClick,
-                onAddMediaContentClick = onAddMediaContentClick,
-                onRemoveMediaContent = onRemoveMediaContent,
-                onMediaClick = onMediaClick
+    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.TopStart) {
+        VerticalOverscrollBox(modifier = Modifier.widthIn(max = TextFieldDefaults.MinWidth * 2)) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .imePadding()
+                    .padding(horizontal = 24.dp)
+                    .verticalScroll(rememberScrollState())
+            ) {
+                StatusBarWithTopActionBarSpacer()
+                NewPostScreenComponent(
+                    screenInfoForCreate = screenInfoForCreate,
+                    onGenerateClick = onGenerateClick,
+                    onAddMediaContentClick = onAddMediaContentClick,
+                    onRemoveMediaContent = onRemoveMediaContent,
+                    onMediaClick = onMediaClick
+                )
+
+                Spacer(modifier = Modifier.height(150.dp))
+            }
+
+            CreateScreenIndicator(createScreenPageUIState = createScreenPageUIState)
+
+            BackActionTopBar(
+                backButtonText = stringResource(xcj.app.appsets.R.string.create_screen),
+                endButtonText = stringResource(id = xcj.app.appsets.R.string.ok),
+                onBackClick = {
+                    onBackClick(false)
+                },
+                onEndButtonClick = {
+                    onConfirmClick(screenInfoForCreate)
+                }
             )
         }
-
-        CreateScreenIndicator(createScreenPageUIState = createScreenPageUIState)
-
-        BackActionTopBar(
-            backButtonText = stringResource(xcj.app.appsets.R.string.create_screen),
-            endButtonText = stringResource(id = xcj.app.appsets.R.string.ok),
-            onBackClick = {
-                onBackClick(false)
-            },
-            onEndButtonClick = {
-                onConfirmClick(screenInfoForCreate)
-            }
-        )
     }
 }
 
@@ -238,29 +245,19 @@ private fun SectionHeader(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(vertical = 8.dp),
+            .padding(top = 28.dp, bottom = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Surface(
-            color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f),
-            shape = CircleShape,
-            modifier = Modifier.size(28.dp)
-        ) {
-            Box(contentAlignment = Alignment.Center) {
-                Icon(
-                    painter = painterResource(id = icon),
-                    contentDescription = null,
-                    modifier = Modifier.size(16.dp),
-                    tint = MaterialTheme.colorScheme.primary
-                )
-            }
-        }
-        Spacer(modifier = Modifier.width(10.dp))
+        Icon(
+            painter = painterResource(id = icon),
+            contentDescription = null
+        )
+        Spacer(modifier = Modifier.width(12.dp))
         Text(
             text = title,
             style = MaterialTheme.typography.titleSmall,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.primary
+            fontWeight = FontWeight.Medium,
+            color = MaterialTheme.colorScheme.onSurface
         )
         if (content != null) {
             Spacer(modifier = Modifier.weight(1f))
@@ -279,7 +276,7 @@ fun AddMediaButton(
         onClick = onClick,
         modifier = modifier,
         shape = MaterialTheme.shapes.extraLarge,
-        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+        color = Color.Transparent,
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
     ) {
         Box(
@@ -289,7 +286,6 @@ fun AddMediaButton(
             Icon(
                 painter = painterResource(id = icon),
                 contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.size(24.dp)
             )
         }
@@ -310,7 +306,6 @@ fun NewPostScreenComponent(
 ) {
     Column(
         modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(28.dp)
     ) {
         // Status section
         Column {
@@ -318,37 +313,35 @@ fun NewPostScreenComponent(
                 icon = xcj.app.compose_share.R.drawable.ic_info_24,
                 title = stringResource(xcj.app.appsets.R.string.status)
             )
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(MaterialTheme.shapes.extraLarge)
-                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
-                    .padding(4.dp),
-                horizontalArrangement = Arrangement.spacedBy(4.dp)
+
+            val statusChoices = listOf(
+                true to stringResource(id = xcj.app.appsets.R.string.public_),
+                false to stringResource(id = xcj.app.appsets.R.string.private_)
+            )
+
+            SingleChoiceSegmentedButtonRow(
+                modifier = Modifier.fillMaxWidth()
             ) {
-                listOf(
-                    true to stringResource(id = xcj.app.appsets.R.string.public_),
-                    false to stringResource(id = xcj.app.appsets.R.string.private_)
-                ).forEach { (isPublic, label) ->
-                    val selected = screenInfoForCreate.isPublic.value == isPublic
-                    Surface(
+                statusChoices.forEachIndexed { index, (isPublic, label) ->
+                    SegmentedButton(
+                        selected = screenInfoForCreate.isPublic.value == isPublic,
                         onClick = { screenInfoForCreate.isPublic.value = isPublic },
-                        modifier = Modifier.weight(1f),
-                        shape = MaterialTheme.shapes.extraLarge,
-                        color = if (selected) MaterialTheme.colorScheme.surface else Color.Transparent,
-                        contentColor = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-                        tonalElevation = if (selected) 2.dp else 0.dp
-                    ) {
-                        Text(
-                            text = label,
-                            modifier = Modifier.padding(vertical = 10.dp),
-                            textAlign = TextAlign.Center,
-                            style = MaterialTheme.typography.labelLarge,
-                            fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal
-                        )
-                    }
+                        shape = SegmentedButtonDefaults.itemShape(
+                            index = index,
+                            count = statusChoices.size
+                        ),
+                        label = {
+                            Text(
+                                text = label,
+                                style = MaterialTheme.typography.labelLarge,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
+                    )
                 }
             }
+
             val statusTip = if (screenInfoForCreate.isPublic.value) {
                 stringResource(xcj.app.appsets.R.string.screen_will_randomly_appear_on_the_homepage_after_passing_the_review)
             } else {
@@ -357,9 +350,9 @@ fun NewPostScreenComponent(
             Text(
                 text = statusTip,
                 fontSize = 11.sp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
                 modifier = Modifier
-                    .padding(start = 12.dp, top = 8.dp)
+                    .padding(start = 4.dp, top = 8.dp)
                     .animateContentSize()
             )
         }
@@ -370,41 +363,24 @@ fun NewPostScreenComponent(
                 icon = xcj.app.compose_share.R.drawable.ic_notes_24,
                 title = stringResource(xcj.app.appsets.R.string.content)
             ) {
-                Surface(
-                    color = MaterialTheme.colorScheme.primaryContainer,
-                    shape = CircleShape,
+                Text(
+                    text = stringResource(xcj.app.appsets.R.string.generate),
+                    fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.primary,
+                    fontSize = 12.sp,
                     modifier = Modifier
-                        .clip(CircleShape)
                         .clickable(onClick = onGenerateClick)
-                ) {
-                    Row(
-                        Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            painter = painterResource(id = xcj.app.compose_share.R.drawable.ic_gesture_24),
-                            contentDescription = stringResource(xcj.app.appsets.R.string.use_ai_generate),
-                            modifier = Modifier.size(14.dp),
-                            tint = MaterialTheme.colorScheme.onPrimaryContainer
-                        )
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text(
-                            text = stringResource(xcj.app.appsets.R.string.generate),
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                }
+                        .padding(4.dp)
+                )
             }
             DesignTextField(
                 modifier = Modifier
-                    .heightIn(min = 160.dp)
+                    .heightIn(min = 120.dp)
                     .fillMaxWidth(),
                 placeholder = {
                     Text(
                         text = stringResource(xcj.app.appsets.R.string.example_It_s_raining_today),
-                        fontSize = 14.sp
+                        fontSize = 12.sp
                     )
                 },
                 value = screenInfoForCreate.content.value,
@@ -415,51 +391,44 @@ fun NewPostScreenComponent(
         }
 
         // Topics & People section
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            Column(modifier = Modifier.weight(1f)) {
-                SectionHeader(
-                    icon = xcj.app.compose_share.R.drawable.ic_genres_24,
-                    title = stringResource(xcj.app.appsets.R.string.related_topics)
-                )
-                DesignTextField(
-                    modifier = Modifier.fillMaxWidth(),
-                    placeholder = {
-                        Text(
-                            text = stringResource(xcj.app.appsets.R.string.example_smart_car_huawei),
-                            fontSize = 12.sp,
-                            maxLines = 1
-                        )
-                    },
-                    value = screenInfoForCreate.associateTopics.value,
-                    onValueChange = {
-                        screenInfoForCreate.associateTopics.value = it
-                    }
-                )
-            }
+        Column {
+            SectionHeader(
+                icon = xcj.app.compose_share.R.drawable.ic_square_foot_24,
+                title = stringResource(xcj.app.appsets.R.string.related_topics)
+            )
+            DesignTextField(
+                modifier = Modifier.fillMaxWidth(),
+                placeholder = {
+                    Text(
+                        text = stringResource(xcj.app.appsets.R.string.example_smart_car_huawei),
+                        fontSize = 12.sp,
+                        maxLines = 1
+                    )
+                },
+                value = screenInfoForCreate.associateTopics.value,
+                onValueChange = {
+                    screenInfoForCreate.associateTopics.value = it
+                }
+            )
 
-            Column(modifier = Modifier.weight(1f)) {
-                SectionHeader(
-                    icon = xcj.app.compose_share.R.drawable.ic_face_24,
-                    title = stringResource(xcj.app.appsets.R.string.associated_people)
-                )
-                DesignTextField(
-                    modifier = Modifier.fillMaxWidth(),
-                    placeholder = {
-                        Text(
-                            text = stringResource(xcj.app.appsets.R.string.example_jiang_kaixin),
-                            fontSize = 12.sp,
-                            maxLines = 1
-                        )
-                    },
-                    value = screenInfoForCreate.associatePeoples.value,
-                    onValueChange = {
-                        screenInfoForCreate.associatePeoples.value = it
-                    }
-                )
-            }
+            SectionHeader(
+                icon = xcj.app.compose_share.R.drawable.ic_face_24,
+                title = stringResource(xcj.app.appsets.R.string.associated_people)
+            )
+            DesignTextField(
+                modifier = Modifier.fillMaxWidth(),
+                placeholder = {
+                    Text(
+                        text = stringResource(xcj.app.appsets.R.string.example_jiang_kaixin),
+                        fontSize = 12.sp,
+                        maxLines = 1
+                    )
+                },
+                value = screenInfoForCreate.associatePeoples.value,
+                onValueChange = {
+                    screenInfoForCreate.associatePeoples.value = it
+                }
+            )
         }
 
         // Media section
@@ -471,18 +440,15 @@ fun NewPostScreenComponent(
             FlowRow(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clip(MaterialTheme.shapes.extraLarge)
-                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f))
-                    .padding(8.dp)
                     .wrapContentHeight()
                     .animateContentSize(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 screenInfoForCreate.mediaUriProviders.forEach { contentUriProvider ->
                     Box(
                         modifier = Modifier
-                            .size(150.dp)
+                            .size(100.dp)
                             .clip(MaterialTheme.shapes.extraLarge)
                             .clickable(onClick = {
                                 onMediaClick(contentUriProvider)
@@ -502,7 +468,8 @@ fun NewPostScreenComponent(
                                 contentDescription = null,
                                 modifier = Modifier
                                     .align(Alignment.Center)
-                                    .size(24.dp)
+                                    .size(24.dp),
+                                tint = Color.White
                             )
                         } else if (contentUriProvider.isAudioType()) {
                             Icon(
@@ -522,22 +489,22 @@ fun NewPostScreenComponent(
                             },
                             modifier = Modifier
                                 .align(Alignment.TopEnd)
-                                .padding(12.dp)
-                                .size(24.dp),
+                                .padding(6.dp)
+                                .size(20.dp),
                             shape = CircleShape,
-                            color = Color.Black.copy(alpha = 0.5f)
+                            color = Color.Black.copy(alpha = 0.2f)
                         ) {
                             Icon(
                                 painter = painterResource(xcj.app.compose_share.R.drawable.ic_round_close_24),
                                 contentDescription = null,
-                                tint = Color.White,
+                                tint = Color.White.copy(alpha = 0.8f),
                                 modifier = Modifier.padding(4.dp)
                             )
                         }
                     }
                 }
                 AddMediaButton(
-                    modifier = Modifier.size(150.dp),
+                    modifier = Modifier.size(100.dp),
                     onClick = {
                         val composeStateUpdater =
                             RuntimeListStateUpdater.fromState<Void>(null) { _, input ->
@@ -576,7 +543,5 @@ fun NewPostScreenComponent(
                 )
             }
         }
-
-        Spacer(modifier = Modifier.height(150.dp))
     }
 }

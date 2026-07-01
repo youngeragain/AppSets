@@ -75,8 +75,8 @@ val LocalNavControllers =
     staticCompositionLocalOf<Map<String, NavHostController>> { error("No NavController Map provided") }
 
 //提供所有需要登录拦截页面名
-val LocalPageRouteNameNeedLoggedProvider = staticCompositionLocalOf {
-    mutableListOf(
+val LocalPageRouteNamesNeedLoggedProvider = staticCompositionLocalOf {
+    mutableSetOf(
         PageRouteNames.ConversationOverviewPage,
         PageRouteNames.ConversationDetailsPage,
         PageRouteNames.UserProfilePage,

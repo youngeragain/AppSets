@@ -17,7 +17,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavController
 import xcj.app.appsets.account.LocalAccountManager
-import xcj.app.appsets.ui.compose.LocalPageRouteNameNeedLoggedProvider
+import xcj.app.appsets.ui.compose.LocalPageRouteNamesNeedLoggedProvider
 import xcj.app.appsets.ui.compose.PageRouteNames
 import xcj.app.appsets.ui.compose.custom_component.DesignBackButton
 import xcj.app.appsets.ui.compose.custom_component.HideNavBar
@@ -27,37 +27,43 @@ fun LoginInterceptorPage(
     navController: NavController,
     navBackStackEntry: NavBackStackEntry,
     onBackClick: () -> Unit,
+    intercept: () -> Boolean = { true },
     content: @Composable () -> Unit
 ) {
-    if (!LocalAccountManager.isLogged() && LocalPageRouteNameNeedLoggedProvider.current.contains(
-            navBackStackEntry.destination.route
-        )
-    ) {
-        HideNavBar()
-        Box(modifier = Modifier.fillMaxSize()) {
-            val annotatedString = AnnotatedString(
-                stringResource(xcj.app.appsets.R.string.login)
-            )
-            Text(
-                text = annotatedString,
-                modifier = Modifier
-                    .align(Alignment.Center)
-                    .clip(CircleShape)
-                    .clickable(
-                        onClick = {
-                            navController.navigate(PageRouteNames.LoginPage)
-                        }
-                    )
-                    .padding(horizontal = 12.dp, vertical = 6.dp),
-                color = MaterialTheme.colorScheme.primary
-            )
-            DesignBackButton(
-                modifier = Modifier.align(Alignment.BottomCenter),
-                onClick = onBackClick
-            )
-        }
+    val isIntercept = intercept() &&
+            !LocalAccountManager.isLogged() &&
+            LocalPageRouteNamesNeedLoggedProvider.current.contains(navBackStackEntry.destination.route)
+    if (isIntercept) {
+        LoginPromptContent(navController = navController, onBackClick = onBackClick)
     } else {
         content()
+    }
+}
+
+@Composable
+fun LoginPromptContent(navController: NavController, onBackClick: () -> Unit) {
+    HideNavBar()
+    Box(modifier = Modifier.fillMaxSize()) {
+        val annotatedString = AnnotatedString(
+            stringResource(xcj.app.appsets.R.string.login)
+        )
+        Text(
+            text = annotatedString,
+            modifier = Modifier
+                .align(Alignment.Center)
+                .clip(CircleShape)
+                .clickable(
+                    onClick = {
+                        navController.navigate(PageRouteNames.LoginPage)
+                    }
+                )
+                .padding(horizontal = 12.dp, vertical = 6.dp),
+            color = MaterialTheme.colorScheme.primary
+        )
+        DesignBackButton(
+            modifier = Modifier.align(Alignment.BottomCenter),
+            onClick = onBackClick
+        )
     }
 }
 

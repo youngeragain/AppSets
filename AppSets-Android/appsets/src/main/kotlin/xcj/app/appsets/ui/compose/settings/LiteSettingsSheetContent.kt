@@ -168,7 +168,7 @@ fun LiteSettingsSheetContent(
                 ) {
                     ImageButtonComponent(
                         useImage = false,
-                        resource = xcj.app.compose_share.R.drawable.ic_outline_qr_code_24,
+                        uri = xcj.app.compose_share.R.drawable.ic_outline_qr_code_24,
                     )
                     Text(text = stringResource(xcj.app.appsets.R.string.mine_qr_code))
                 }
@@ -188,7 +188,7 @@ fun LiteSettingsSheetContent(
                 ) {
                     ImageButtonComponent(
                         useImage = false,
-                        resource = xcj.app.compose_share.R.drawable.ic_outline_qr_code_scanner_24,
+                        uri = xcj.app.compose_share.R.drawable.ic_outline_qr_code_scanner_24,
                     )
                     Text(text = stringResource(xcj.app.appsets.R.string.scan_qr_code))
                 }
@@ -205,7 +205,7 @@ fun LiteSettingsSheetContent(
             ) {
                 ImageButtonComponent(
                     useImage = false,
-                    resource = xcj.app.compose_share.R.drawable.ic_settings_24,
+                    uri = xcj.app.compose_share.R.drawable.ic_settings_24,
                 )
                 Text(text = stringResource(xcj.app.appsets.R.string.app_settings))
             }
@@ -258,7 +258,7 @@ fun LiteSettingsSheetContent(
                     ) {
                         ImageButtonComponent(
                             useImage = false,
-                            resource = null,
+                            uri = null,
                         )
                         val loginOrLogOutTextRes =
                             if (loginStatusState is AccountStatus.Logged) {

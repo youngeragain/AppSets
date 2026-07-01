@@ -48,7 +48,7 @@
     <string name="no_content">No content</string>
     <string name="restricted_content_continue_viewing">Restricted content, continue viewing</string>
     <string name="restricted_content_continue_viewing_user_to_view_notify">The other party will be notified of your viewing request, and you can view it after the other party agrees. The platform does not take any responsibility! Send viewing request?</string>
-    <string name="an_empty_status">An empty status :)</string>
+    <string name="an_empty_status">Empty:)</string>
     <string name="public_">Public</string>
     <string name="private_">Private</string>
     <string name="screen_expand">Screen expand</string>

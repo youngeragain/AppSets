@@ -29,6 +29,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -110,379 +111,381 @@ fun SignUpPage(
         }
     }
 
-    VerticalOverscrollBox {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .imePadding()
-                .verticalScroll(rememberScrollState())
-        ) {
-            StatusBarWithTopActionBarSpacer()
-            Column(modifier = Modifier.padding(horizontal = 12.dp)) {
-                Spacer(modifier = Modifier.height(12.dp))
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                )
-                {
-                    Text(
-                        text = String.format(
-                            stringResource(id = xcj.app.appsets.R.string.a_is_required_template),
-                            stringResource(id = xcj.app.appsets.R.string.avatar),
-                            "*",
-                        ),
-                        modifier = Modifier.padding(vertical = 12.dp),
-                        fontWeight = FontWeight.Bold
+    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.TopStart) {
+        VerticalOverscrollBox(modifier = Modifier.widthIn(max = TextFieldDefaults.MinWidth * 2)) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .imePadding()
+                    .verticalScroll(rememberScrollState())
+            ) {
+                StatusBarWithTopActionBarSpacer()
+                Column(modifier = Modifier.padding(horizontal = 12.dp)) {
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalAlignment = Alignment.CenterHorizontally
                     )
-                    Box(
-                        modifier = Modifier
-                            .size(250.dp)
-                            .clip(ExtraLarge2)
-                            .border(
-                                1.dp,
-                                MaterialTheme.colorScheme.outline,
-                                ExtraLarge2
-                            )
-                            .clickable(
-                                onClick = {
-                                    val composeStateUpdater =
-                                        RuntimeSingleStateUpdater.fromState(userInfoForCreate.userAvatarUriProvider) { markKey, input ->
-                                            PurpleLogger.current.d(
-                                                TAG,
-                                                "userInfoForCreate.userAvatarUriProvider, inputHandleDSL:\nmarkKey:$markKey\ninput:$input"
-                                            )
-                                            if (input !is ContentSelectionResult.RichMediaContentSelectionResult) {
-                                                return@fromState
+                    {
+                        Text(
+                            text = String.format(
+                                stringResource(id = xcj.app.appsets.R.string.a_is_required_template),
+                                stringResource(id = xcj.app.appsets.R.string.avatar),
+                                "*",
+                            ),
+                            modifier = Modifier.padding(vertical = 12.dp),
+                            fontWeight = FontWeight.Bold
+                        )
+                        Box(
+                            modifier = Modifier
+                                .size(250.dp)
+                                .clip(ExtraLarge2)
+                                .border(
+                                    1.dp,
+                                    MaterialTheme.colorScheme.outline,
+                                    ExtraLarge2
+                                )
+                                .clickable(
+                                    onClick = {
+                                        val composeStateUpdater =
+                                            RuntimeSingleStateUpdater.fromState(userInfoForCreate.userAvatarUriProvider) { markKey, input ->
+                                                PurpleLogger.current.d(
+                                                    TAG,
+                                                    "userInfoForCreate.userAvatarUriProvider, inputHandleDSL:\nmarkKey:$markKey\ninput:$input"
+                                                )
+                                                if (input !is ContentSelectionResult.RichMediaContentSelectionResult) {
+                                                    return@fromState
+                                                }
+                                                val uriProviders = input.selectedProvider.provide()
+                                                if (uriProviders.isEmpty()) {
+                                                    return@fromState
+                                                }
+                                                update(uriProviders.first())
                                             }
-                                            val uriProviders = input.selectedProvider.provide()
-                                            if (uriProviders.isEmpty()) {
-                                                return@fromState
-                                            }
-                                            update(uriProviders.first())
-                                        }
-                                    onSelectUserAvatarClick(
-                                        "SIGN_UP_IMAGE_SELECT_REQUEST",
-                                        composeStateUpdater
+                                        onSelectUserAvatarClick(
+                                            "SIGN_UP_IMAGE_SELECT_REQUEST",
+                                            composeStateUpdater
+                                        )
+                                    }
+                                ),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            val avatarUri =
+                                userInfoForCreate.userAvatarUriProvider.value?.provideUri()
+                            AnimatedContent(
+                                targetState = avatarUri != null,
+                                contentAlignment = Alignment.Center
+                            ) { hasUri ->
+                                if (hasUri) {
+                                    AnyImage(
+                                        model = avatarUri,
+                                        modifier = Modifier
+                                    )
+                                } else {
+                                    Icon(
+                                        painter = painterResource(xcj.app.compose_share.R.drawable.ic_round_add_24),
+                                        contentDescription = stringResource(xcj.app.appsets.R.string.add)
                                     )
                                 }
-                            ),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        val avatarUri =
-                            userInfoForCreate.userAvatarUriProvider.value?.provideUri()
-                        AnimatedContent(
-                            targetState = avatarUri != null,
-                            contentAlignment = Alignment.Center
-                        ) { hasUri ->
-                            if (hasUri) {
-                                AnyImage(
-                                    model = avatarUri,
-                                    modifier = Modifier
-                                )
-                            } else {
-                                Icon(
-                                    painter = painterResource(xcj.app.compose_share.R.drawable.ic_round_add_24),
-                                    contentDescription = stringResource(xcj.app.appsets.R.string.add)
-                                )
                             }
                         }
                     }
-                }
-                Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(12.dp))
 
-                Text(
-                    text = String.format(
-                        stringResource(id = xcj.app.appsets.R.string.a_is_required_template),
-                        stringResource(id = xcj.app.appsets.R.string.account),
-                        "*"
-                    ),
-                    modifier = Modifier.padding(vertical = 10.dp),
-                    fontWeight = FontWeight.Bold
-                )
-                DesignTextField(
-                    modifier = Modifier.fillMaxWidth(),
-                    value = userInfoForCreate.account.value,
-                    onValueChange = {
-                        userInfoForCreate.account.value = it
-                    },
-                    placeholder = {
-                        Text(
-                            text = stringResource(id = xcj.app.appsets.R.string.account),
-                            fontSize = 12.sp
-                        )
-                    })
-                Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = String.format(
+                            stringResource(id = xcj.app.appsets.R.string.a_is_required_template),
+                            stringResource(id = xcj.app.appsets.R.string.account),
+                            "*"
+                        ),
+                        modifier = Modifier.padding(vertical = 10.dp),
+                        fontWeight = FontWeight.Bold
+                    )
+                    DesignTextField(
+                        modifier = Modifier.fillMaxWidth(),
+                        value = userInfoForCreate.account.value,
+                        onValueChange = {
+                            userInfoForCreate.account.value = it
+                        },
+                        placeholder = {
+                            Text(
+                                text = stringResource(id = xcj.app.appsets.R.string.account),
+                                fontSize = 12.sp
+                            )
+                        })
+                    Spacer(modifier = Modifier.height(8.dp))
 
-                Text(
-                    text = String.format(
-                        stringResource(id = xcj.app.appsets.R.string.a_is_required_template),
-                        stringResource(id = xcj.app.appsets.R.string.password),
-                        "*",
-                    ),
-                    modifier = Modifier.padding(vertical = 10.dp),
-                    fontWeight = FontWeight.Bold
-                )
-                DesignTextField(
-                    modifier = Modifier.fillMaxWidth(),
-                    value = userInfoForCreate.password.value,
-                    onValueChange = {
-                        userInfoForCreate.password.value = it
-                    },
-                    placeholder = {
-                        Text(
-                            text = stringResource(id = xcj.app.appsets.R.string.password),
-                            fontSize = 12.sp
-                        )
-                    })
-                Text(
-                    text = String.format(
-                        stringResource(id = xcj.app.appsets.R.string.a_is_required_template),
-                        stringResource(id = xcj.app.appsets.R.string.name),
-                        "*"
-                    ),
-                    modifier = Modifier.padding(vertical = 10.dp),
-                    fontWeight = FontWeight.Bold
-                )
-                DesignTextField(
-                    modifier = Modifier.fillMaxWidth(),
-                    value = userInfoForCreate.userName.value,
-                    onValueChange = {
-                        val userNameFiltered = if (it.length > 30) {
-                            it.substring(0, 30)
-                        } else {
-                            it
-                        }
-                        userInfoForCreate.userName.value = userNameFiltered
-                    },
-                    placeholder = {
-                        Text(
-                            text = stringResource(id = xcj.app.appsets.R.string.name),
-                            fontSize = 12.sp
-                        )
-                    })
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Text(
-                    text = String.format(
-                        stringResource(id = xcj.app.appsets.R.string.a_is_required_template),
-                        stringResource(id = xcj.app.appsets.R.string.brief),
-                        "*"
-                    ),
-                    modifier = Modifier.padding(vertical = 10.dp),
-                    fontWeight = FontWeight.Bold
-                )
-                DesignTextField(
-                    modifier = Modifier.fillMaxWidth(),
-                    value = userInfoForCreate.userIntroduction.value,
-                    onValueChange = {
-                        userInfoForCreate.userIntroduction.value = it
-                    },
-                    placeholder = {
-                        Text(
-                            text = stringResource(xcj.app.appsets.R.string.personal_profile),
-                            fontSize = 12.sp
-                        )
-                    })
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Text(
-                    text = stringResource(xcj.app.appsets.R.string.label),
-                    modifier = Modifier.padding(vertical = 10.dp),
-                    fontWeight = FontWeight.Bold
-                )
-                DesignTextField(
-                    modifier = Modifier.fillMaxWidth(),
-                    value = userInfoForCreate.userTags.value,
-                    onValueChange = {
-                        userInfoForCreate.userTags.value = it
-                    },
-                    placeholder = {
-                        Text(
-                            text = stringResource(xcj.app.appsets.R.string.personal_label_placeholder),
-                            fontSize = 12.sp
-                        )
-                    })
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Text(
-                    text = stringResource(xcj.app.appsets.R.string.sex),
-                    modifier = Modifier.padding(vertical = 10.dp),
-                    fontWeight = FontWeight.Bold
-
-                )
-                DesignTextField(
-                    modifier = Modifier.fillMaxWidth(),
-                    value = userInfoForCreate.userSex.value,
-                    onValueChange = {
-                        userInfoForCreate.userSex.value = it
-                    },
-                    placeholder = {
-                        Text(
-                            text = stringResource(xcj.app.appsets.R.string.sex_placeholder),
-                            fontSize = 12.sp
-                        )
-                    })
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Text(
-                    text = stringResource(xcj.app.appsets.R.string.age),
-                    modifier = Modifier.padding(vertical = 10.dp),
-                    fontWeight = FontWeight.Bold
-                )
-                DesignTextField(
-                    modifier = Modifier.fillMaxWidth(),
-                    value = userInfoForCreate.userAge.value,
-                    onValueChange = {
-                        val toIntOrNull = it.toIntOrNull()
-                        val userAgeFiltered = if (toIntOrNull != null) {
-                            if (toIntOrNull > 150) {
-                                "150"
+                    Text(
+                        text = String.format(
+                            stringResource(id = xcj.app.appsets.R.string.a_is_required_template),
+                            stringResource(id = xcj.app.appsets.R.string.password),
+                            "*",
+                        ),
+                        modifier = Modifier.padding(vertical = 10.dp),
+                        fontWeight = FontWeight.Bold
+                    )
+                    DesignTextField(
+                        modifier = Modifier.fillMaxWidth(),
+                        value = userInfoForCreate.password.value,
+                        onValueChange = {
+                            userInfoForCreate.password.value = it
+                        },
+                        placeholder = {
+                            Text(
+                                text = stringResource(id = xcj.app.appsets.R.string.password),
+                                fontSize = 12.sp
+                            )
+                        })
+                    Text(
+                        text = String.format(
+                            stringResource(id = xcj.app.appsets.R.string.a_is_required_template),
+                            stringResource(id = xcj.app.appsets.R.string.name),
+                            "*"
+                        ),
+                        modifier = Modifier.padding(vertical = 10.dp),
+                        fontWeight = FontWeight.Bold
+                    )
+                    DesignTextField(
+                        modifier = Modifier.fillMaxWidth(),
+                        value = userInfoForCreate.userName.value,
+                        onValueChange = {
+                            val userNameFiltered = if (it.length > 30) {
+                                it.substring(0, 30)
                             } else {
-                                toIntOrNull.toString()
+                                it
                             }
-                        } else {
-                            ""
-                        }
-                        userInfoForCreate.userAge.value = userAgeFiltered
-                    },
-                    placeholder = {
-                        Text(
-                            text = stringResource(id = xcj.app.appsets.R.string.age),
-                            fontSize = 12.sp
-                        )
-                    },
-                    keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number)
-                )
-                Spacer(modifier = Modifier.height(8.dp))
+                            userInfoForCreate.userName.value = userNameFiltered
+                        },
+                        placeholder = {
+                            Text(
+                                text = stringResource(id = xcj.app.appsets.R.string.name),
+                                fontSize = 12.sp
+                            )
+                        })
+                    Spacer(modifier = Modifier.height(8.dp))
 
-                Text(
-                    text = stringResource(xcj.app.appsets.R.string.phone),
-                    modifier = Modifier.padding(vertical = 10.dp),
-                    fontWeight = FontWeight.Bold
-                )
-                DesignTextField(
-                    modifier = Modifier.fillMaxWidth(),
-                    value = userInfoForCreate.userPhone.value,
-                    onValueChange = {
-                        val userPhoneFiltered = it.toIntOrNull()?.toString() ?: ""
-                        userInfoForCreate.userPhone.value = userPhoneFiltered
-                    },
-                    placeholder = {
-                        Text(
-                            text = stringResource(xcj.app.appsets.R.string.phone_number),
-                            fontSize = 12.sp
-                        )
-                    },
-                    keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Phone)
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Text(
-                    text = stringResource(xcj.app.appsets.R.string.email),
-                    modifier = Modifier.padding(vertical = 10.dp),
-                    fontWeight = FontWeight.Bold
-
-                )
-                DesignTextField(
-                    modifier = Modifier.fillMaxWidth(),
-                    value = userInfoForCreate.userEmail.value,
-                    onValueChange = {
-                        userInfoForCreate.userEmail.value = it
-                    },
-                    placeholder = {
-                        Text(
-                            text = stringResource(xcj.app.appsets.R.string.email_address),
-                            fontSize = 12.sp
-                        )
-                    },
-                    keyboardOptions = KeyboardOptions.Default.copy(
-                        keyboardType = KeyboardType.Email,
-                        autoCorrectEnabled = true
+                    Text(
+                        text = String.format(
+                            stringResource(id = xcj.app.appsets.R.string.a_is_required_template),
+                            stringResource(id = xcj.app.appsets.R.string.brief),
+                            "*"
+                        ),
+                        modifier = Modifier.padding(vertical = 10.dp),
+                        fontWeight = FontWeight.Bold
                     )
-                )
-                Spacer(modifier = Modifier.height(8.dp))
+                    DesignTextField(
+                        modifier = Modifier.fillMaxWidth(),
+                        value = userInfoForCreate.userIntroduction.value,
+                        onValueChange = {
+                            userInfoForCreate.userIntroduction.value = it
+                        },
+                        placeholder = {
+                            Text(
+                                text = stringResource(xcj.app.appsets.R.string.personal_profile),
+                                fontSize = 12.sp
+                            )
+                        })
+                    Spacer(modifier = Modifier.height(8.dp))
 
-                Text(
-                    text = stringResource(xcj.app.appsets.R.string.area),
-                    modifier = Modifier.padding(vertical = 10.dp),
-                    fontWeight = FontWeight.Bold
-                )
-                DesignTextField(
-                    modifier = Modifier.fillMaxWidth(),
-                    value = userInfoForCreate.userArea.value,
-                    onValueChange = {
-                        userInfoForCreate.userArea.value = it
-                    },
-                    placeholder = {
-                        Text(
-                            text = stringResource(id = xcj.app.appsets.R.string.area),
-                            fontSize = 12.sp
-                        )
-                    })
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Text(
-                    text = stringResource(xcj.app.appsets.R.string.address),
-                    modifier = Modifier.padding(vertical = 10.dp),
-                    fontWeight = FontWeight.Bold
-                )
-                DesignTextField(
-                    modifier = Modifier.fillMaxWidth(),
-                    value = userInfoForCreate.userAddress.value,
-                    onValueChange = {
-                        userInfoForCreate.userAddress.value = it
-                    },
-                    placeholder = {
-                        Text(
-                            text = stringResource(id = xcj.app.appsets.R.string.address),
-                            fontSize = 12.sp
-                        )
-                    })
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Text(
-                    text = stringResource(id = xcj.app.appsets.R.string.website),
-                    modifier = Modifier.padding(vertical = 10.dp),
-                    fontWeight = FontWeight.Bold
-                )
-                DesignTextField(
-                    modifier = Modifier.fillMaxWidth(),
-                    value = userInfoForCreate.userWebsite.value,
-                    onValueChange = {
-                        val userWebsiteFiltered = if (it.length > 100) {
-                            it.substring(0, 100)
-                        } else {
-                            it
-                        }
-                        userInfoForCreate.userWebsite.value = userWebsiteFiltered
-                    },
-                    placeholder = {
-                        Text(
-                            text = stringResource(id = xcj.app.appsets.R.string.website),
-                            fontSize = 12.sp
-                        )
-                    },
-
-                    keyboardOptions = KeyboardOptions.Default.copy(
-                        keyboardType = KeyboardType.Uri,
-                        autoCorrectEnabled = true
+                    Text(
+                        text = stringResource(xcj.app.appsets.R.string.label),
+                        modifier = Modifier.padding(vertical = 10.dp),
+                        fontWeight = FontWeight.Bold
                     )
-                )
-                Spacer(modifier = Modifier.height(150.dp))
+                    DesignTextField(
+                        modifier = Modifier.fillMaxWidth(),
+                        value = userInfoForCreate.userTags.value,
+                        onValueChange = {
+                            userInfoForCreate.userTags.value = it
+                        },
+                        placeholder = {
+                            Text(
+                                text = stringResource(xcj.app.appsets.R.string.personal_label_placeholder),
+                                fontSize = 12.sp
+                            )
+                        })
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Text(
+                        text = stringResource(xcj.app.appsets.R.string.sex),
+                        modifier = Modifier.padding(vertical = 10.dp),
+                        fontWeight = FontWeight.Bold
+
+                    )
+                    DesignTextField(
+                        modifier = Modifier.fillMaxWidth(),
+                        value = userInfoForCreate.userSex.value,
+                        onValueChange = {
+                            userInfoForCreate.userSex.value = it
+                        },
+                        placeholder = {
+                            Text(
+                                text = stringResource(xcj.app.appsets.R.string.sex_placeholder),
+                                fontSize = 12.sp
+                            )
+                        })
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Text(
+                        text = stringResource(xcj.app.appsets.R.string.age),
+                        modifier = Modifier.padding(vertical = 10.dp),
+                        fontWeight = FontWeight.Bold
+                    )
+                    DesignTextField(
+                        modifier = Modifier.fillMaxWidth(),
+                        value = userInfoForCreate.userAge.value,
+                        onValueChange = {
+                            val toIntOrNull = it.toIntOrNull()
+                            val userAgeFiltered = if (toIntOrNull != null) {
+                                if (toIntOrNull > 150) {
+                                    "150"
+                                } else {
+                                    toIntOrNull.toString()
+                                }
+                            } else {
+                                ""
+                            }
+                            userInfoForCreate.userAge.value = userAgeFiltered
+                        },
+                        placeholder = {
+                            Text(
+                                text = stringResource(id = xcj.app.appsets.R.string.age),
+                                fontSize = 12.sp
+                            )
+                        },
+                        keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number)
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Text(
+                        text = stringResource(xcj.app.appsets.R.string.phone),
+                        modifier = Modifier.padding(vertical = 10.dp),
+                        fontWeight = FontWeight.Bold
+                    )
+                    DesignTextField(
+                        modifier = Modifier.fillMaxWidth(),
+                        value = userInfoForCreate.userPhone.value,
+                        onValueChange = {
+                            val userPhoneFiltered = it.toIntOrNull()?.toString() ?: ""
+                            userInfoForCreate.userPhone.value = userPhoneFiltered
+                        },
+                        placeholder = {
+                            Text(
+                                text = stringResource(xcj.app.appsets.R.string.phone_number),
+                                fontSize = 12.sp
+                            )
+                        },
+                        keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Phone)
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Text(
+                        text = stringResource(xcj.app.appsets.R.string.email),
+                        modifier = Modifier.padding(vertical = 10.dp),
+                        fontWeight = FontWeight.Bold
+
+                    )
+                    DesignTextField(
+                        modifier = Modifier.fillMaxWidth(),
+                        value = userInfoForCreate.userEmail.value,
+                        onValueChange = {
+                            userInfoForCreate.userEmail.value = it
+                        },
+                        placeholder = {
+                            Text(
+                                text = stringResource(xcj.app.appsets.R.string.email_address),
+                                fontSize = 12.sp
+                            )
+                        },
+                        keyboardOptions = KeyboardOptions.Default.copy(
+                            keyboardType = KeyboardType.Email,
+                            autoCorrectEnabled = true
+                        )
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Text(
+                        text = stringResource(xcj.app.appsets.R.string.area),
+                        modifier = Modifier.padding(vertical = 10.dp),
+                        fontWeight = FontWeight.Bold
+                    )
+                    DesignTextField(
+                        modifier = Modifier.fillMaxWidth(),
+                        value = userInfoForCreate.userArea.value,
+                        onValueChange = {
+                            userInfoForCreate.userArea.value = it
+                        },
+                        placeholder = {
+                            Text(
+                                text = stringResource(id = xcj.app.appsets.R.string.area),
+                                fontSize = 12.sp
+                            )
+                        })
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Text(
+                        text = stringResource(xcj.app.appsets.R.string.address),
+                        modifier = Modifier.padding(vertical = 10.dp),
+                        fontWeight = FontWeight.Bold
+                    )
+                    DesignTextField(
+                        modifier = Modifier.fillMaxWidth(),
+                        value = userInfoForCreate.userAddress.value,
+                        onValueChange = {
+                            userInfoForCreate.userAddress.value = it
+                        },
+                        placeholder = {
+                            Text(
+                                text = stringResource(id = xcj.app.appsets.R.string.address),
+                                fontSize = 12.sp
+                            )
+                        })
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Text(
+                        text = stringResource(id = xcj.app.appsets.R.string.website),
+                        modifier = Modifier.padding(vertical = 10.dp),
+                        fontWeight = FontWeight.Bold
+                    )
+                    DesignTextField(
+                        modifier = Modifier.fillMaxWidth(),
+                        value = userInfoForCreate.userWebsite.value,
+                        onValueChange = {
+                            val userWebsiteFiltered = if (it.length > 100) {
+                                it.substring(0, 100)
+                            } else {
+                                it
+                            }
+                            userInfoForCreate.userWebsite.value = userWebsiteFiltered
+                        },
+                        placeholder = {
+                            Text(
+                                text = stringResource(id = xcj.app.appsets.R.string.website),
+                                fontSize = 12.sp
+                            )
+                        },
+
+                        keyboardOptions = KeyboardOptions.Default.copy(
+                            keyboardType = KeyboardType.Uri,
+                            autoCorrectEnabled = true
+                        )
+                    )
+                    Spacer(modifier = Modifier.height(150.dp))
+                }
             }
+
+
+            BackActionTopBar(
+                onBackClick = onBackClick,
+                backButtonText = stringResource(xcj.app.appsets.R.string.create_account),
+                endButtonText = stringResource(id = xcj.app.starter.R.string.ok),
+                onEndButtonClick = {
+                    onConfirmClick(userInfoForCreate)
+                }
+            )
+
+            SignUpIndicator(signUpPageUIState = signUpPageUIState)
         }
-
-
-        BackActionTopBar(
-            onBackClick = onBackClick,
-            backButtonText = stringResource(xcj.app.appsets.R.string.create_account),
-            endButtonText = stringResource(id = xcj.app.starter.R.string.ok),
-            onEndButtonClick = {
-                onConfirmClick(userInfoForCreate)
-            }
-        )
-
-        SignUpIndicator(signUpPageUIState = signUpPageUIState)
     }
 }
 

@@ -1,13 +1,9 @@
 package xcj.app.appsets.ui.compose.privacy
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -22,14 +18,12 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsIgnoringVisibility
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
-import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -37,8 +31,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -55,6 +49,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import xcj.app.appsets.ui.compose.custom_component.DesignBackButton
+import xcj.app.appsets.ui.compose.custom_component.ExpressivePageIndicator
 import xcj.app.appsets.ui.compose.custom_component.HideNavBar
 import xcj.app.appsets.ui.compose.custom_component.VerticalOverscrollBox
 import xcj.app.appsets.ui.compose.custom_component.preview_tooling.DesignPreviewCompositionLocalProvider
@@ -82,41 +77,6 @@ fun PrivacyAndPermissionsPagePreview() {
     }
 }
 
-@Composable
-fun ExpressivePageIndicator(
-    pagerState: PagerState,
-    modifier: Modifier = Modifier
-) {
-    Row(
-        modifier = modifier,
-        horizontalArrangement = Arrangement.Center,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        repeat(pagerState.pageCount) { iteration ->
-            val isSelected = pagerState.currentPage == iteration
-            val width by animateDpAsState(
-                targetValue = if (isSelected) 16.dp else 8.dp,
-                animationSpec = tween(),
-                label = "width"
-            )
-            val color by animateColorAsState(
-                targetValue = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant.copy(
-                    alpha = 0.5f
-                ),
-                animationSpec = tween(),
-                label = "color"
-            )
-            Box(
-                modifier = Modifier
-                    .padding(horizontal = 4.dp)
-                    .clip(CircleShape)
-                    .background(color)
-                    .size(width = width, height = 6.dp)
-            )
-        }
-    }
-}
-
 @OptIn(ExperimentalFoundationApi::class, ExperimentalLayoutApi::class)
 @Composable
 fun PrivacyPage(
@@ -127,48 +87,43 @@ fun PrivacyPage(
 ) {
     HideNavBar()
     val pagerState = rememberPagerState { 2 }
-    Surface(
-        modifier = Modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background
-    ) {
-        Box(modifier = Modifier.fillMaxSize()) {
-            HorizontalPager(
-                state = pagerState,
-                verticalAlignment = Alignment.Top,
-                modifier = Modifier.fillMaxSize()
-            ) { pageIndex ->
-                if (pageIndex == 0) {
-                    PlatformPermissionsComponent(platformPermissionsUsageList, onRequest)
-                } else if (pageIndex == 1) {
-                    PrivacyComponent(privacy)
-                }
+    Box(modifier = Modifier.fillMaxSize()) {
+        HorizontalPager(
+            state = pagerState,
+            verticalAlignment = Alignment.Top,
+            modifier = Modifier.fillMaxSize()
+        ) { pageIndex ->
+            if (pageIndex == 0) {
+                PlatformPermissionsComponent(platformPermissionsUsageList, onRequest)
+            } else if (pageIndex == 1) {
+                PrivacyComponent(privacy)
             }
-
-            ExpressivePageIndicator(
-                modifier = Modifier
-                    .wrapContentHeight()
-                    .fillMaxWidth()
-                    .padding(
-                        top = 16.dp + WindowInsets.statusBarsIgnoringVisibility.asPaddingValues()
-                            .calculateTopPadding()
-                    ),
-                pagerState = pagerState
-            )
-
-            DesignBackButton(
-                modifier = Modifier
-                    .align(Alignment.BottomCenter),
-                onClick = onBackClick
-            )
         }
+
+        ExpressivePageIndicator(
+            modifier = Modifier
+                .wrapContentHeight()
+                .fillMaxWidth()
+                .padding(
+                    top = 16.dp + WindowInsets.statusBarsIgnoringVisibility.asPaddingValues()
+                        .calculateTopPadding()
+                ),
+            pagerState = pagerState
+        )
+
+        DesignBackButton(
+            modifier = Modifier
+                .align(Alignment.BottomCenter),
+            onClick = onBackClick
+        )
     }
 }
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun PrivacyComponent(privacy: String?) {
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
-        VerticalOverscrollBox(modifier = Modifier.widthIn(max = 600.dp)) {
+    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.TopStart) {
+        VerticalOverscrollBox(modifier = Modifier.widthIn(max = TextFieldDefaults.MinWidth * 2)) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -210,8 +165,8 @@ fun PlatformPermissionsComponent(
     platformPermissionsUsageList: List<PlatformPermissionsUsage>,
     onRequest: (PlatformPermissionsUsage, Int) -> Unit,
 ) {
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
-        VerticalOverscrollBox(modifier = Modifier.widthIn(max = 600.dp)) {
+    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.TopStart) {
+        VerticalOverscrollBox(modifier = Modifier.widthIn(max = TextFieldDefaults.MinWidth * 2)) {
             LazyColumn(
                 verticalArrangement = Arrangement.spacedBy(12.dp),
                 modifier = Modifier

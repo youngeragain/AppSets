@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -217,7 +218,7 @@ fun ConversationOverviewPortrait(
     }
 
     Box(
-        modifier = modifier
+        modifier = modifier.fillMaxSize()
     ) {
         HorizontalPager(
             state = pagerState
@@ -309,6 +310,7 @@ fun ConversationOverviewSessionsOfSystem(
             )
         } else {
             LazyColumn(
+                modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(top = with(density) {
                     overviewTabsBarSize.height.toDp()
                 } + 12.dp, bottom = 98.dp)
@@ -360,6 +362,7 @@ fun ConversationOverviewSessionsOfGroup(
 
         } else {
             LazyColumn(
+                modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(top = with(density) {
                     overviewTabsBarSize.height.toDp()
                 } + 12.dp, bottom = 98.dp)
@@ -409,6 +412,7 @@ fun ConversationOverviewSessionsOfUser(
             }
         } else {
             LazyColumn(
+                modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(top = with(density) {
                     overviewTabsBarSize.height.toDp()
                 } + 12.dp, bottom = 98.dp)
@@ -458,6 +462,7 @@ fun ConversationOverviewSessionsOfAI(
             }
         } else {
             LazyColumn(
+                modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(top = with(density) {
                     overviewTabsBarSize.height.toDp()
                 } + 12.dp, bottom = 98.dp)

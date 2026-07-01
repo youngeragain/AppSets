@@ -91,7 +91,17 @@ fun NavigationBarContainer(
         onInputContent = {
             searchUseCase.updateKeywords(it)
         },
-        onBioClick = {
+        onBioClick = { bio ->
+            val loginUserBio = LocalAccountManager.userInfo
+            if (bio != null && bio != loginUserBio) {
+                conversationUseCase.updateCurrentSessionByBio(bio)
+                navController.navigate(PageRouteNames.ConversationDetailsPage) {
+                    popUpTo(PageRouteNames.ConversationDetailsPage) {
+                        inclusive = true
+                    }
+                }
+                return@NavigationBar
+            }
             val bottomSheetState = visibilityComposeStateProvider.bottomSheetState()
             bottomSheetState.show(null) {
                 val generatedQRCodeInfo by qrCodeUseCase.generatedQRCodeInfo

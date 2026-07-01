@@ -62,8 +62,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import xcj.app.appsets.ui.compose.custom_component.AnyImage
+import xcj.app.appsets.ui.compose.custom_component.ExpressivePageIndicator
 import xcj.app.appsets.ui.compose.custom_component.HideNavBar
-import xcj.app.appsets.ui.compose.privacy.ExpressivePageIndicator
 import xcj.app.appsets.ui.compose.quickstep.QuickStepContent
 import xcj.app.appsets.ui.compose.quickstep.TextQuickStepContent
 import xcj.app.appsets.util.encrypt.AESHelper

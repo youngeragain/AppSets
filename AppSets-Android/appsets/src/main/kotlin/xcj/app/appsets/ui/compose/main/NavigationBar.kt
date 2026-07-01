@@ -41,6 +41,7 @@ import androidx.compose.ui.unit.dp
 import androidx.media3.common.util.UnstableApi
 import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
 import dev.chrisbanes.haze.materials.HazeMaterials
+import xcj.app.appsets.im.Bio
 import xcj.app.appsets.ui.compose.LocalUseCaseOfConversation
 import xcj.app.appsets.ui.compose.LocalUseCaseOfScreen
 import xcj.app.appsets.ui.compose.PageRouteNames
@@ -67,7 +68,7 @@ fun NavigationBar(
     onBackClick: () -> Unit,
     onInputContent: (String) -> Unit,
     onSearchBarClick: () -> Unit,
-    onBioClick: () -> Unit,
+    onBioClick: (Bio?) -> Unit,
 ) {
     AnimatedVisibility(
         modifier = modifier,
@@ -100,7 +101,7 @@ private fun StandardNavigationBar(
     onBackClick: () -> Unit,
     onInputContent: (String) -> Unit,
     onSearchBarClick: () -> Unit,
-    onBioClick: () -> Unit,
+    onBioClick: (Bio?) -> Unit,
 ) {
     val hazeState = LocalHazedState.current
     val modifierOverride = if (!inSearchMode) {
@@ -249,7 +250,7 @@ private fun TabItemAction(
                 label = "conversation_overview_add_button_animate"
             )
             ImageButtonComponent(
-                resource = tabAction.icon,
+                uri = tabAction.icon,
                 resRotate = iconRotationState,
                 onClick = {
                     onTabClick(tabItem, tabAction)
@@ -268,7 +269,7 @@ private fun TabItemAction(
                 label = "outside_refresh_button_animate_state"
             )
             ImageButtonComponent(
-                resource = tabAction.icon,
+                uri = tabAction.icon,
                 resRotate = iconRotationState,
                 useImage = false,
                 onClick = {
@@ -279,7 +280,7 @@ private fun TabItemAction(
 
         else -> {
             ImageButtonComponent(
-                resource = tabAction.icon,
+                uri = tabAction.icon,
                 useImage = tabAction.action == TabAction.ACTION_ADD,
                 onClick = {
                     onTabClick(tabItem, tabAction)
@@ -299,7 +300,7 @@ private fun TabItemMain(
     ) {
         if (tabItem is TabItem.SampleTabItem) {
             ImageButtonComponent(
-                resource = tabItem.icon,
+                uri = tabItem.icon,
                 useImage = false,
                 onClick = {
                     onTabClick(tabItem, null)
@@ -318,7 +319,7 @@ private fun TabItemMain(
                 label = "playback_tab_animate"
             )
             ImageButtonComponent(
-                resource = tabItem.icon,
+                uri = tabItem.icon,
                 useImage = false,
                 resRotate = rotation.value,
                 onClick = {
