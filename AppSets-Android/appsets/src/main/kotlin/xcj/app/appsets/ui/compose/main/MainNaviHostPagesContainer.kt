@@ -258,12 +258,11 @@ fun MainNaviHostPagesContainer(
                         }
                     },
                     onApplicationLongPress = { application ->
-                        conversationUseCase.updateCurrentSessionByBio(application)
-                        navController.navigate(PageRouteNames.ConversationDetailsPage) {
-                            popUpTo(PageRouteNames.ConversationDetailsPage) {
-                                inclusive = true
-                            }
-                        }
+                        navigationToConversationPage(
+                            navController,
+                            conversationUseCase,
+                            application
+                        )
                     }
                 )
             }
@@ -367,12 +366,11 @@ fun MainNaviHostPagesContainer(
                             )
                         },
                         onJoinToChatClick = { application ->
-                            conversationUseCase.updateCurrentSessionByBio(application)
-                            navController.navigate(PageRouteNames.ConversationDetailsPage) {
-                                popUpTo(PageRouteNames.ConversationDetailsPage) {
-                                    inclusive = true
-                                }
-                            }
+                            navigationToConversationPage(
+                                navController,
+                                conversationUseCase,
+                                application
+                            )
                         }
                     )
                 }
@@ -951,7 +949,6 @@ fun MainNaviHostPagesContainer(
                 val generatedQRCodeInfo by qrCodeUseCase.generatedQRCodeInfo
                 LoginPage(
                     loginPageUIState = loginPageUIState.value,
-
                     generatedQRCodeInfo = generatedQRCodeInfo,
                     onBackClick = navController::navigateUp,
                     onLoggingFinish = {
@@ -961,7 +958,7 @@ fun MainNaviHostPagesContainer(
                         }
                         navController.navigateWithClearStack(lastNavDestination)
                     },
-                    onSignUpButtonClick = {
+                    onSignUpClick = {
                         navController.navigate(PageRouteNames.SignUpPage)
                     },
                     onQRCodeLoginButtonClick = {
@@ -972,7 +969,7 @@ fun MainNaviHostPagesContainer(
                     onScanQRCodeButtonClick = {
                         navigateToCameraActivity(context, navController)
                     },
-                    onLoginConfirmButtonClick = { account, password ->
+                    onLoginConfirmClick = { account, password ->
                         coroutineScope.launch {
                             val composeStateUpdater =
                                 RuntimeSingleStateUpdater.fromNonNullState(loginPageUIState)
@@ -1215,12 +1212,11 @@ fun MainNaviHostPagesContainer(
                             }
                         },
                         onApplicationLongPress = { application ->
-                            conversationUseCase.updateCurrentSessionByBio(application)
-                            navController.navigate(PageRouteNames.ConversationDetailsPage) {
-                                popUpTo(PageRouteNames.ConversationDetailsPage) {
-                                    inclusive = true
-                                }
-                            }
+                            navigationToConversationPage(
+                                navController,
+                                conversationUseCase,
+                                application
+                            )
                         },
                         onScreenMediaClick = { url, urls ->
                             handleScreenMediaClick(
@@ -1261,12 +1257,11 @@ fun MainNaviHostPagesContainer(
                             }
                         },
                         onChatClick = { groupInfo ->
-                            conversationUseCase.updateCurrentSessionByBio(groupInfo)
-                            navController.navigate(PageRouteNames.ConversationDetailsPage) {
-                                popUpTo(PageRouteNames.ConversationDetailsPage) {
-                                    inclusive = true
-                                }
-                            }
+                            navigationToConversationPage(
+                                navController,
+                                conversationUseCase,
+                                groupInfo
+                            )
                         },
                         onJoinGroupRequestClick = { groupInfo ->
                             systemUseCase.requestJoinGroup(
@@ -1482,12 +1477,11 @@ fun MainNaviHostPagesContainer(
                             systemUseCase.flipFollowToUserState(userInfo, userInfoUseCase)
                         },
                         onChatClick = { userInfo ->
-                            conversationUseCase.updateCurrentSessionByBio(userInfo)
-                            navController.navigate(PageRouteNames.ConversationDetailsPage) {
-                                popUpTo(PageRouteNames.ConversationDetailsPage) {
-                                    inclusive = true
-                                }
-                            }
+                            navigationToConversationPage(
+                                navController,
+                                conversationUseCase,
+                                userInfo
+                            )
                         },
                         onBioClick = { bio ->
                             coroutineScope.launch {
@@ -1495,12 +1489,11 @@ fun MainNaviHostPagesContainer(
                             }
                         },
                         onApplicationLongPress = { application ->
-                            conversationUseCase.updateCurrentSessionByBio(application)
-                            navController.navigate(PageRouteNames.ConversationDetailsPage) {
-                                popUpTo(PageRouteNames.ConversationDetailsPage) {
-                                    inclusive = true
-                                }
-                            }
+                            navigationToConversationPage(
+                                navController,
+                                conversationUseCase,
+                                application
+                            )
                         },
                         onScreenMediaClick = { url, urls ->
                             handleScreenMediaClick(
@@ -1683,6 +1676,9 @@ suspend fun onBioClick(
         }
 
         is Application -> {
+            if (bio.isMock) {
+                return
+            }
             if (baseViewModel is MainViewModel) {
                 navigateToAppDetailsPage(navController, baseViewModel.appsUseCase, bio)
             }
@@ -1703,6 +1699,23 @@ suspend fun onBioClick(
         }
     }
 }
+
+private fun navigationToConversationPage(
+    navController: NavHostController,
+    conversationUseCase: ConversationUseCase,
+    bio: Bio
+) {
+    if (bio is Application && bio.isMock) {
+        return
+    }
+    conversationUseCase.updateCurrentSessionByBio(bio)
+    navController.navigate(PageRouteNames.ConversationDetailsPage) {
+        popUpTo(PageRouteNames.ConversationDetailsPage) {
+            inclusive = true
+        }
+    }
+}
+
 
 @SuppressLint("RestrictedApi")
 private fun navigateToAppDetailsPage(

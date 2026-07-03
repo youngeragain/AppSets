@@ -24,6 +24,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsIgnoringVisibility
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -34,6 +35,7 @@ import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
@@ -60,10 +62,12 @@ import xcj.app.appsets.im.GenerativeAISessions
 import xcj.app.appsets.im.Session
 import xcj.app.appsets.ui.compose.LocalUseCaseOfConversation
 import xcj.app.appsets.ui.compose.custom_component.AnyImage
-import xcj.app.appsets.ui.compose.custom_component.DesignBackButton
 import xcj.app.appsets.ui.compose.custom_component.ExpressivePageIndicator
 import xcj.app.appsets.ui.compose.custom_component.HideNavBar
+import xcj.app.appsets.ui.compose.custom_component.VerticalOverscrollBox
 import xcj.app.appsets.ui.compose.custom_component.preview_tooling.DesignPreviewCompositionLocalProvider
+import xcj.app.compose_share.components.BackActionTopBar
+import xcj.app.compose_share.components.StatusBarWithTopActionBarSpacer
 
 data class AIGCSessionTemplate(
     val session: Session,
@@ -141,10 +145,8 @@ fun AIGCMarketPage(
             pagerState = pagerState
         )
 
-        DesignBackButton(
-            modifier = Modifier
-                .align(Alignment.BottomCenter),
-            onClick = onBackClick
+        BackActionTopBar(
+            onBackClick = onBackClick
         )
     }
 }
@@ -168,22 +170,19 @@ fun AIModelListPage(
     var visible by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) { visible = true }
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-    )
-    {
+    VerticalOverscrollBox(modifier = Modifier.widthIn(max = TextFieldDefaults.MinWidth * 2)) {
         LazyColumn(
             modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(12.dp),
             contentPadding = PaddingValues(
                 start = 12.dp,
-                top = 24.dp + WindowInsets.statusBarsIgnoringVisibility.asPaddingValues()
-                    .calculateTopPadding(),
                 end = 12.dp,
                 bottom = 150.dp,
             )
         ) {
+            item {
+                StatusBarWithTopActionBarSpacer()
+            }
             item {
                 Column(modifier = Modifier.padding(vertical = 8.dp)) {
                     Text(

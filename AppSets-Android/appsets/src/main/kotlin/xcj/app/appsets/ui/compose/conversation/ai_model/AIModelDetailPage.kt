@@ -20,8 +20,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import xcj.app.appsets.im.GenerativeAISessions
 import xcj.app.appsets.ui.compose.custom_component.AnyImage
-import xcj.app.appsets.ui.compose.custom_component.DesignBackButton
 import xcj.app.appsets.ui.compose.theme.ExtraLarge2
+import xcj.app.compose_share.components.BackActionTopBar
 import xcj.app.compose_share.components.StatusBarWithTopActionBarSpacer
 
 @Composable
@@ -29,22 +29,15 @@ fun AIModelDetailPage(
     aiModelInfo: GenerativeAISessions.AIModelInfo?,
     onBackClick: () -> Unit,
 ) {
-    if (aiModelInfo == null) {
-        Box(modifier = Modifier.fillMaxSize()) {
+    Box(modifier = Modifier.fillMaxSize()) {
+        if (aiModelInfo == null) {
             Text(
                 text = stringResource(xcj.app.appsets.R.string.not_found),
                 modifier = Modifier.align(
                     Alignment.Center
                 )
             )
-
-            DesignBackButton(
-                modifier = Modifier.align(Alignment.BottomCenter),
-                onClick = onBackClick
-            )
-        }
-    } else {
-        Box(modifier = Modifier.fillMaxSize()) {
+        } else {
             Column(modifier = Modifier.fillMaxSize()) {
                 // 顶部 Header
                 StatusBarWithTopActionBarSpacer()
@@ -108,11 +101,11 @@ fun AIModelDetailPage(
                     }
                 }
             }
-
-            DesignBackButton(
-                modifier = Modifier.align(Alignment.BottomCenter),
-                onClick = onBackClick
-            )
         }
+
+
+        BackActionTopBar(
+            onBackClick = onBackClick
+        )
     }
 }

@@ -48,11 +48,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import xcj.app.appsets.ui.compose.custom_component.DesignBackButton
 import xcj.app.appsets.ui.compose.custom_component.ExpressivePageIndicator
 import xcj.app.appsets.ui.compose.custom_component.HideNavBar
 import xcj.app.appsets.ui.compose.custom_component.VerticalOverscrollBox
 import xcj.app.appsets.ui.compose.custom_component.preview_tooling.DesignPreviewCompositionLocalProvider
+import xcj.app.compose_share.components.BackActionTopBar
+import xcj.app.compose_share.components.StatusBarWithTopActionBarSpacer
 import xcj.app.starter.android.ui.model.PlatformPermissionsUsage
 
 
@@ -96,7 +97,7 @@ fun PrivacyPage(
             if (pageIndex == 0) {
                 PlatformPermissionsComponent(platformPermissionsUsageList, onRequest)
             } else if (pageIndex == 1) {
-                PrivacyComponent(privacy)
+                PrivacyContentComponent(privacy)
             }
         }
 
@@ -111,17 +112,15 @@ fun PrivacyPage(
             pagerState = pagerState
         )
 
-        DesignBackButton(
-            modifier = Modifier
-                .align(Alignment.BottomCenter),
-            onClick = onBackClick
+        BackActionTopBar(
+            onBackClick = onBackClick
         )
     }
 }
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun PrivacyComponent(privacy: String?) {
+fun PrivacyContentComponent(privacy: String?) {
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.TopStart) {
         VerticalOverscrollBox(modifier = Modifier.widthIn(max = TextFieldDefaults.MinWidth * 2)) {
             Column(
@@ -130,12 +129,7 @@ fun PrivacyComponent(privacy: String?) {
                     .padding(horizontal = 24.dp)
                     .verticalScroll(rememberScrollState())
             ) {
-                Spacer(
-                    modifier = Modifier.height(
-                        32.dp + WindowInsets.statusBarsIgnoringVisibility.asPaddingValues()
-                            .calculateTopPadding()
-                    )
-                )
+                StatusBarWithTopActionBarSpacer()
 
                 Text(
                     text = stringResource(xcj.app.appsets.R.string.user_content_privacy_and_notice),
@@ -179,6 +173,9 @@ fun PlatformPermissionsComponent(
                     bottom = 150.dp
                 )
             ) {
+                item {
+                    StatusBarWithTopActionBarSpacer()
+                }
                 item {
                     Column(modifier = Modifier.padding(vertical = 8.dp)) {
                         Text(

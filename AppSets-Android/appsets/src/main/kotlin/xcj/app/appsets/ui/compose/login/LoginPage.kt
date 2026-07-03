@@ -16,15 +16,13 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FilledTonalButton
@@ -59,21 +57,23 @@ import xcj.app.appsets.server.repository.UserRepository
 import xcj.app.appsets.ui.compose.LocalUseCaseOfNavigation
 import xcj.app.appsets.ui.compose.LocalUseCaseOfQRCode
 import xcj.app.appsets.ui.compose.custom_component.AnyImage
-import xcj.app.appsets.ui.compose.custom_component.DesignBackButton
 import xcj.app.appsets.ui.compose.custom_component.HideNavBar
+import xcj.app.appsets.ui.compose.custom_component.VerticalOverscrollBox
 import xcj.app.appsets.ui.model.page_state.LoginPageUIState
 import xcj.app.appsets.ui.model.state.QRCodeInfoScannedState
 import xcj.app.appsets.usecase.NavigationUseCase
 import xcj.app.appsets.usecase.QRCodeUseCase
+import xcj.app.compose_share.components.BackActionTopBar
 import xcj.app.compose_share.components.DesignTextField
+import xcj.app.compose_share.components.StatusBarWithTopActionBarSpacer
 
 private const val TAG = "LoginPage"
 
-@Preview(showBackground = true, widthDp = 1200, heightDp = 600)
+@Preview(showBackground = true, widthDp = 600, heightDp = 1280)
 @Composable
 fun LoginPagePreview() {
     val configuration = LocalConfiguration.current
-    configuration.orientation = Configuration.ORIENTATION_LANDSCAPE
+    configuration.orientation = Configuration.ORIENTATION_PORTRAIT
     val loginPageUIState by remember {
         mutableStateOf<LoginPageUIState>(LoginPageUIState.LoginStart())
     }
@@ -95,10 +95,10 @@ fun LoginPagePreview() {
             generatedQRCodeInfo = null,
             onBackClick = {},
             onLoggingFinish = {},
-            onSignUpButtonClick = {},
+            onSignUpClick = {},
             onQRCodeLoginButtonClick = {},
             onScanQRCodeButtonClick = {},
-            onLoginConfirmButtonClick = { account, password ->
+            onLoginConfirmClick = { account, password ->
 
             }
         )
@@ -111,10 +111,10 @@ fun LoginPage(
     generatedQRCodeInfo: QRCodeInfoScannedState.AppSetsQRCodeInfo?,
     onBackClick: () -> Unit,
     onLoggingFinish: () -> Unit,
-    onSignUpButtonClick: () -> Unit,
+    onSignUpClick: () -> Unit,
     onQRCodeLoginButtonClick: () -> Unit,
     onScanQRCodeButtonClick: () -> Unit,
-    onLoginConfirmButtonClick: (String, String) -> Unit,
+    onLoginConfirmClick: (String, String) -> Unit,
 ) {
     HideNavBar()
     val configuration = LocalConfiguration.current
@@ -129,54 +129,27 @@ fun LoginPage(
             qrCodeUseCase.onComposeDispose("page dispose")
         }
     }
-    Box(
-        modifier = Modifier.fillMaxSize()
-    ) {
-        if (configuration.orientation == Configuration.ORIENTATION_PORTRAIT) {
-            LoginComponent1(
-                modifier = Modifier,
-                generatedQRCodeInfo = generatedQRCodeInfo,
-                onSignUpButtonClick = onSignUpButtonClick,
-                onQRCodeLoginButtonClick = onQRCodeLoginButtonClick,
-                onScanQRCodeButtonClick = onScanQRCodeButtonClick
-            )
+    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.TopStart) {
+        VerticalOverscrollBox(modifier = Modifier.widthIn(max = TextFieldDefaults.MinWidth * 2)) {
             LoginComponent2(
-                modifier = Modifier.align(Alignment.BottomCenter),
-                onBackClick = onBackClick,
+                modifier = Modifier.fillMaxSize(),
                 loginPageUIState = loginPageUIState,
-                onLoginConfirmButtonClick = onLoginConfirmButtonClick
+                onSignUpClick = onSignUpClick,
+                onLoginConfirmClick = onLoginConfirmClick
             )
-        } else {
-            Row(modifier = Modifier.fillMaxSize()) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxHeight()
-                        .weight(1f)
-                ) {
-                    LoginComponent1(
-                        modifier = Modifier,
-                        generatedQRCodeInfo = generatedQRCodeInfo,
-                        onSignUpButtonClick = onSignUpButtonClick,
-                        onQRCodeLoginButtonClick = onQRCodeLoginButtonClick,
-                        onScanQRCodeButtonClick = onScanQRCodeButtonClick
-                    )
-                }
-                Box(
-                    modifier = Modifier
-                        .fillMaxHeight()
-                        .weight(1f)
-                ) {
-                    LoginComponent2(
-                        modifier = Modifier.align(Alignment.BottomCenter),
-                        onBackClick = onBackClick,
-                        loginPageUIState = loginPageUIState,
-                        onLoginConfirmButtonClick = onLoginConfirmButtonClick
-                    )
-                }
-            }
-        }
 
-        LoginIndicator(loginPageUIState = loginPageUIState)
+            LoginComponent1(
+                modifier = Modifier.fillMaxSize(),
+                generatedQRCodeInfo = generatedQRCodeInfo,
+                onQRCodeLoginClick = onQRCodeLoginButtonClick
+            )
+
+            LoginIndicator(loginPageUIState = loginPageUIState)
+
+            BackActionTopBar(
+                onBackClick = onBackClick
+            )
+        }
     }
 }
 
@@ -184,8 +157,8 @@ fun LoginPage(
 private fun LoginComponent2(
     modifier: Modifier,
     loginPageUIState: LoginPageUIState,
-    onBackClick: () -> Unit,
-    onLoginConfirmButtonClick: (String, String) -> Unit,
+    onSignUpClick: () -> Unit,
+    onLoginConfirmClick: (String, String) -> Unit,
 ) {
     val hapticFeedback = LocalHapticFeedback.current
     var accountText by remember {
@@ -196,11 +169,26 @@ private fun LoginComponent2(
     }
     Box(
         modifier = modifier
-            .fillMaxWidth()
             .padding(horizontal = 12.dp)
             .imePadding()
     ) {
+        Column {
+            StatusBarWithTopActionBarSpacer()
+            Row {
+                TextButton(
+                    onClick = onSignUpClick,
+                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.onSurface)
+                ) {
+                    Text(text = stringResource(id = xcj.app.appsets.R.string.sign_up))
+                }
+            }
+            Text(
+                text = stringResource(id = xcj.app.appsets.R.string.login),
+                fontSize = 138.sp
+            )
+        }
         Column(
+            modifier = Modifier.align(Alignment.BottomStart),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             DesignTextField(
@@ -234,16 +222,12 @@ private fun LoginComponent2(
                 enabled = loginPageUIState is LoginPageUIState.LoginStart,
                 onClick = {
                     hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
-                    onLoginConfirmButtonClick(accountText, passwordText)
+                    onLoginConfirmClick(accountText, passwordText)
                 }
             ) {
                 Text(text = stringResource(id = xcj.app.starter.R.string.ok))
             }
             Spacer(modifier = Modifier.height(12.dp))
-            DesignBackButton(
-                modifier = Modifier.align(Alignment.CenterHorizontally),
-                onClick = onBackClick
-            )
         }
     }
 }
@@ -252,32 +236,13 @@ private fun LoginComponent2(
 private fun LoginComponent1(
     modifier: Modifier,
     generatedQRCodeInfo: QRCodeInfoScannedState.AppSetsQRCodeInfo?,
-    onSignUpButtonClick: () -> Unit,
-    onQRCodeLoginButtonClick: () -> Unit,
-    onScanQRCodeButtonClick: () -> Unit,
+    onQRCodeLoginClick: () -> Unit,
 ) {
-    val scrollState = rememberScrollState()
-    Column(
+    val qrcodeState = generatedQRCodeInfo?.state
+    Box(
         modifier = modifier
-            .statusBarsPadding()
-            .padding(horizontal = 12.dp)
-            .animateContentSize(tween()),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        Row {
-            TextButton(
-                onClick = onSignUpButtonClick,
-                colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.onSurface)
-            ) {
-                Text(text = stringResource(id = xcj.app.appsets.R.string.sign_up))
-            }
-        }
-        Text(
-            text = stringResource(id = xcj.app.appsets.R.string.login),
-            fontSize = 138.sp
-        )
-        val qrcodeState = generatedQRCodeInfo?.state
-        if (!qrcodeState.isNullOrEmpty()) {
+        AnimatedVisibility(visible = !qrcodeState.isNullOrEmpty()) {
             Box(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier
@@ -303,7 +268,7 @@ private fun LoginComponent1(
                     }
 
                     QRCodeUseCase.QR_STATE_NO_EXIST_OR_EXPIRED -> {
-                        TextButton(onClick = onQRCodeLoginButtonClick) {
+                        TextButton(onClick = onQRCodeLoginClick) {
                             Text(text = stringResource(xcj.app.appsets.R.string.invalid_regenerate))
                         }
                     }

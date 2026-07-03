@@ -12,7 +12,6 @@ import xcj.app.io.components.ObjectUploadOptions
 import xcj.app.io.compress.ICompressor
 import xcj.app.starter.android.util.PurpleLogger
 import xcj.app.starter.server.request
-import java.util.UUID
 import kotlin.math.abs
 
 class AppsUseCase(
@@ -37,20 +36,12 @@ class AppsUseCase(
             }
 
         fun createMockApplications(count: Int): List<AppsWithCategory> {
-            val result = mutableListOf<AppsWithCategory>()
-            val applications = mutableListOf<Application>()
-            repeat(count) {
-                val application = Application(appId = UUID.randomUUID().toString())
-                applications.add(application)
-            }
-            val appsWithCategory = AppsWithCategory("", "", applications)
-            result.add(appsWithCategory)
-            return result
+            return emptyList()
         }
     }
 
     val appCenterPageUIState: MutableState<AppCenterPageUIState> =
-        mutableStateOf(AppCenterPageUIState.Loading(createMockApplications(32)))
+        mutableStateOf(AppCenterPageUIState.Loading(createMockApplications(24)))
 
     suspend fun loadHomeApplications() {
         PurpleLogger.current.d(TAG, "loadHomeApplications")

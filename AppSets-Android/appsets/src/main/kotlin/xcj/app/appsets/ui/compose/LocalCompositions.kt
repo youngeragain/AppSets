@@ -77,7 +77,6 @@ val LocalNavControllers =
 //提供所有需要登录拦截页面名
 val LocalPageRouteNamesNeedLoggedProvider = staticCompositionLocalOf {
     mutableSetOf(
-        PageRouteNames.ConversationOverviewPage,
         PageRouteNames.ConversationDetailsPage,
         PageRouteNames.UserProfilePage,
         PageRouteNames.CreateScreenPage,
