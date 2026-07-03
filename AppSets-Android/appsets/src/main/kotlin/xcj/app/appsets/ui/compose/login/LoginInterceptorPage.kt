@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -19,8 +18,8 @@ import androidx.navigation.NavController
 import xcj.app.appsets.account.LocalAccountManager
 import xcj.app.appsets.ui.compose.LocalPageRouteNamesNeedLoggedProvider
 import xcj.app.appsets.ui.compose.PageRouteNames
-import xcj.app.appsets.ui.compose.custom_component.DesignBackButton
 import xcj.app.appsets.ui.compose.custom_component.HideNavBar
+import xcj.app.compose_share.components.BackActionTopBar
 
 @Composable
 fun LoginInterceptorPage(
@@ -58,11 +57,9 @@ fun LoginPromptContent(navController: NavController, onBackClick: () -> Unit) {
                     }
                 )
                 .padding(horizontal = 12.dp, vertical = 6.dp),
-            color = MaterialTheme.colorScheme.primary
         )
-        DesignBackButton(
-            modifier = Modifier.align(Alignment.BottomCenter),
-            onClick = onBackClick
+        BackActionTopBar(
+            onBackClick = onBackClick
         )
     }
 }

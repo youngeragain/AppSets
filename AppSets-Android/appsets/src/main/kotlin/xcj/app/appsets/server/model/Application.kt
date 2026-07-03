@@ -20,6 +20,7 @@ data class Application(
     val name: String? = null,
     val category: String? = null,
     val platforms: List<AppPlatform>? = null,
+    val isMock: Boolean = false
 ) : Bio {
 
     override val bioId: String

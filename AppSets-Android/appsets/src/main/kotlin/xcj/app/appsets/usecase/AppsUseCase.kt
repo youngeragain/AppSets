@@ -40,7 +40,7 @@ class AppsUseCase(
             val result = mutableListOf<AppsWithCategory>()
             val applications = mutableListOf<Application>()
             repeat(count) {
-                val application = Application(appId = UUID.randomUUID().toString())
+                val application = Application(appId = UUID.randomUUID().toString(), isMock = true)
                 applications.add(application)
             }
             val appsWithCategory = AppsWithCategory("", "", applications)
@@ -50,7 +50,7 @@ class AppsUseCase(
     }
 
     val appCenterPageUIState: MutableState<AppCenterPageUIState> =
-        mutableStateOf(AppCenterPageUIState.Loading(createMockApplications(32)))
+        mutableStateOf(AppCenterPageUIState.Loading(createMockApplications(24)))
 
     suspend fun loadHomeApplications() {
         PurpleLogger.current.d(TAG, "loadHomeApplications")
