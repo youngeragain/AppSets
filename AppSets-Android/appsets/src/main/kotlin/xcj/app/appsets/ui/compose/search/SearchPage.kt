@@ -33,6 +33,7 @@ import androidx.compose.foundation.layout.navigationBarsIgnoringVisibility
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
@@ -573,7 +574,8 @@ fun SearchedGroupsPage(
 ) {
     VerticalOverscrollBox {
         LazyColumn(
-            modifier = modifier.fillMaxSize(), contentPadding = PaddingValues(
+            modifier = Modifier.widthIn(max = TextFieldDefaults.MinWidth * 2),
+            contentPadding = PaddingValues(
                 top = WindowInsets.systemBars.asPaddingValues().calculateTopPadding(),
                 bottom = 150.dp
             )
@@ -599,7 +601,8 @@ fun SearchedUsersPage(
 ) {
     VerticalOverscrollBox {
         LazyColumn(
-            modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(
+            modifier = Modifier.widthIn(max = TextFieldDefaults.MinWidth * 2),
+            contentPadding = PaddingValues(
                 top = WindowInsets.systemBars.asPaddingValues().calculateTopPadding(),
                 bottom = 150.dp
             )

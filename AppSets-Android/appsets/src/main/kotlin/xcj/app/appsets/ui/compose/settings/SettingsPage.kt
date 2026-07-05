@@ -14,13 +14,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SegmentedButton
-import androidx.compose.material3.SegmentedButtonDefaults
-import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
@@ -183,10 +182,10 @@ fun SessionSettingsComponent() {
     var imMessageShowDate by remember { mutableStateOf(appSetsModuleSettings.isImMessageShowDate) }
     var imMessageSendType by remember { mutableStateOf(appSetsModuleSettings.imMessageDeliveryType) }
 
-    SettingsGroup(title = stringResource(xcj.app.appsets.R.string.session_settings)) {
+    SettingsGroup(title = stringResource(xcj.app.appsets.R.string.session)) {
         SingleChoiceInRowComponent(
             icon = xcj.app.compose_share.R.drawable.ic_bubble_chart_24,
-            choiceTitle = xcj.app.appsets.R.string.chat_bubble_direction,
+            choiceTitle = xcj.app.appsets.R.string.chat_bubble_alignment,
             currentChoice = imBubbleAlignment,
             choices = listOf(
                 AppSetsModuleSettings.IM_BUBBLE_ALIGNMENT_START_END to xcj.app.appsets.R.string.alignment_to_start_end,
@@ -207,8 +206,8 @@ fun SessionSettingsComponent() {
             choiceSubTitle = xcj.app.appsets.R.string.message_reliability_tips,
             currentChoice = imMessageReliability,
             choices = listOf(
-                false to xcj.app.appsets.R.string.no,
-                true to xcj.app.appsets.R.string.yes
+                true to xcj.app.appsets.R.string.yes,
+                false to xcj.app.appsets.R.string.no
             ),
             onChoiceClick = {
                 imMessageReliability = it
@@ -259,10 +258,10 @@ fun HomePageSettingsComponent() {
     var isEnableOutSide by remember { mutableStateOf(appSetsModuleSettings.appFeatures.homePageFeatures.isEnableOutSide) }
     var isEnableConversation by remember { mutableStateOf(appSetsModuleSettings.appFeatures.homePageFeatures.isEnableConversation) }
 
-    SettingsGroup(title = stringResource(xcj.app.appsets.R.string.appsets_launcher)) {
+    SettingsGroup(title = stringResource(xcj.app.appsets.R.string.home_page)) {
         SingleChoiceInRowComponent(
             icon = xcj.app.compose_share.R.drawable.ic_outline_shopping_bag_24,
-            choiceTitle = xcj.app.appsets.R.string.all_apps,
+            choiceTitle = xcj.app.appsets.R.string.application,
             currentChoice = isEnableAppCentral,
             choices = listOf(
                 true to xcj.app.appsets.R.string.show,
@@ -347,14 +346,15 @@ fun <C> SingleChoiceInRowComponent(
             }
         }
 
-        SingleChoiceSegmentedButtonRow(
-            modifier = Modifier.fillMaxWidth()
+        Row(
+            modifier = Modifier,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             choices.forEachIndexed { index, choice ->
-                SegmentedButton(
+                FilterChip(
                     selected = choice.first == currentChoice,
                     onClick = { onChoiceClick(choice.first) },
-                    shape = SegmentedButtonDefaults.itemShape(index = index, count = choices.size),
+                    shape = CircleShape,
                     label = {
                         Text(
                             text = stringResource(id = choice.second),
@@ -362,7 +362,15 @@ fun <C> SingleChoiceInRowComponent(
                             maxLines = 1,
                             overflow = TextOverflow.MiddleEllipsis
                         )
-                    }
+                    },
+                    leadingIcon = if (choice.first == currentChoice) {
+                        {
+                            Icon(
+                                painterResource(xcj.app.compose_share.R.drawable.ic_round_check_24),
+                                null
+                            )
+                        }
+                    } else null
                 )
             }
         }

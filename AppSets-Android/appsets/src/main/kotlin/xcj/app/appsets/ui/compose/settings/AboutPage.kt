@@ -7,7 +7,6 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -88,22 +87,6 @@ fun AboutPage(
             ) {
                 StatusBarWithTopActionBarSpacer()
 
-                // 头部 Logo 区 - 简约化处理
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 56.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    Image(
-                        modifier = Modifier.size(80.dp),
-                        painter = painterResource(xcj.app.compose_share.R.drawable.ic_launcher_foreground),
-                        contentDescription = "App Icon"
-                    )
-                    Spacer(modifier = Modifier.height(12.dp))
-                    // 如果有版本号可以在这里展示，目前保持简洁
-                }
-
                 // 操作项列表 - 移除卡片背景，使用列表式布局
                 Column(modifier = Modifier.fillMaxWidth()) {
                     AboutActionItem(
@@ -123,8 +106,7 @@ fun AboutPage(
                                 Icon(
                                     modifier = Modifier.rotate(rotateState),
                                     painter = painterResource(id = xcj.app.compose_share.R.drawable.ic_keyboard_arrow_down_24),
-                                    contentDescription = "expand",
-                                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                                    contentDescription = "expand"
                                 )
                             },
                             onClick = {
@@ -162,10 +144,7 @@ fun AboutPage(
                         }
                     }
                 }
-
-                Spacer(modifier = Modifier.height(100.dp))
             }
-
             BackActionTopBar(
                 onBackClick = onBackClick,
                 backButtonText = stringResource(xcj.app.appsets.R.string.about)
@@ -185,7 +164,7 @@ fun AboutActionItem(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
-            .padding(horizontal = 24.dp, vertical = 18.dp),
+            .padding(horizontal = 12.dp, vertical = 18.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(
@@ -231,7 +210,6 @@ fun UpdateHistoryItem(result: UpdateCheckResult) {
                 text = result.newestVersion ?: "Unknown",
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary
             )
             Text(
                 text = result.publishDateTime ?: "",
@@ -249,7 +227,7 @@ fun UpdateHistoryItem(result: UpdateCheckResult) {
                 lineHeight = 18.sp
             )
         }
-        
+
         Spacer(modifier = Modifier.height(12.dp))
         HorizontalDivider(
             thickness = 0.5.dp,

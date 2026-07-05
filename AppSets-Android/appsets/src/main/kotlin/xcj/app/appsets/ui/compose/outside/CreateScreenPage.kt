@@ -35,11 +35,9 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SegmentedButton
-import androidx.compose.material3.SegmentedButtonDefaults
-import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
@@ -277,7 +275,7 @@ fun AddMediaButton(
         modifier = modifier,
         shape = MaterialTheme.shapes.extraLarge,
         color = Color.Transparent,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
     ) {
         Box(
             modifier = Modifier.fillMaxSize(),
@@ -308,40 +306,11 @@ fun NewPostScreenComponent(
         modifier = modifier,
     ) {
         // Status section
-        Column {
+        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             SectionHeader(
                 icon = xcj.app.compose_share.R.drawable.ic_info_24,
                 title = stringResource(xcj.app.appsets.R.string.status)
             )
-
-            val statusChoices = listOf(
-                true to stringResource(id = xcj.app.appsets.R.string.public_),
-                false to stringResource(id = xcj.app.appsets.R.string.private_)
-            )
-
-            SingleChoiceSegmentedButtonRow(
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                statusChoices.forEachIndexed { index, (isPublic, label) ->
-                    SegmentedButton(
-                        selected = screenInfoForCreate.isPublic.value == isPublic,
-                        onClick = { screenInfoForCreate.isPublic.value = isPublic },
-                        shape = SegmentedButtonDefaults.itemShape(
-                            index = index,
-                            count = statusChoices.size
-                        ),
-                        label = {
-                            Text(
-                                text = label,
-                                style = MaterialTheme.typography.labelLarge,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                        }
-                    )
-                }
-            }
-
             val statusTip = if (screenInfoForCreate.isPublic.value) {
                 stringResource(xcj.app.appsets.R.string.screen_will_randomly_appear_on_the_homepage_after_passing_the_review)
             } else {
@@ -349,12 +318,45 @@ fun NewPostScreenComponent(
             }
             Text(
                 text = statusTip,
-                fontSize = 11.sp,
+                fontSize = 12.sp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
                 modifier = Modifier
-                    .padding(start = 4.dp, top = 8.dp)
                     .animateContentSize()
             )
+
+            val statusChoices = listOf(
+                true to stringResource(id = xcj.app.appsets.R.string.public_),
+                false to stringResource(id = xcj.app.appsets.R.string.private_)
+            )
+
+            Row(
+                modifier = Modifier,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                statusChoices.forEachIndexed { index, (isPublic, label) ->
+                    FilterChip(
+                        shape = CircleShape,
+                        label = {
+                            Text(
+                                text = label,
+                                style = MaterialTheme.typography.labelLarge,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        },
+                        leadingIcon = if (screenInfoForCreate.isPublic.value == isPublic) {
+                            {
+                                Icon(
+                                    painterResource(xcj.app.compose_share.R.drawable.ic_round_check_24),
+                                    null
+                                )
+                            }
+                        } else null,
+                        selected = screenInfoForCreate.isPublic.value == isPublic,
+                        onClick = { screenInfoForCreate.isPublic.value = isPublic },
+                    )
+                }
+            }
         }
 
         // Content section

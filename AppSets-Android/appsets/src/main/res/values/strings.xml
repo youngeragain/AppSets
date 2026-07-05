@@ -111,13 +111,13 @@
     <string name="platform_name_english_only">Platform name (English)</string>
     <string name="platform_already_exists">Platform already exists</string>
     <string name="settings">Settings</string>
-    <string name="session_settings">Session settings</string>
-    <string name="chat_bubble_direction">Chat bubble direction</string>
+    <string name="session">Session</string>
+    <string name="chat_bubble_alignment">Chat bubble alignment</string>
     <string name="staggered_left_and_right">Staggered left and right</string>
     <string name="all_to_the_left">All to the left</string>
     <string name="data_sending_method">Data sending type</string>
-    <string name="relay_delivery">Relay delivery</string>
-    <string name="send_directly">Send directly</string>
+    <string name="relay_delivery">Relay</string>
+    <string name="send_directly">Directly</string>
     <string name="add_ons">Add-ons</string>
     <string name="check">Check</string>
     <string name="permissions_and_privacy">Permissions and Privacy</string>
@@ -220,7 +220,7 @@
     <string name="pause">Pause</string>
     <string name="cover">Cover</string>
     <string name="alignment_all_to_start">Start</string>
-    <string name="alignment_to_start_end">Start and end</string>
+    <string name="alignment_to_start_end">Start-end</string>
     <string name="alignment_all_to_end">End</string>
     <string name="location">Location</string>
     <string name="audio">Audio</string>
@@ -491,4 +491,5 @@
     <string name="deprecated">Deprecated</string>
     <string name="rich_media">Rich Media</string>
     <string name="platform_permission_usage_tips">Understand how applications can use your device permissions</string>
+    <string name="home_page">Home Page</string>
 </resources>

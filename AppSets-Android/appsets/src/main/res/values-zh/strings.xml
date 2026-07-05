@@ -111,13 +111,13 @@
     <string name="platform_name_english_only">平台名称(英文)</string>
     <string name="platform_already_exists">平台已存在</string>
     <string name="settings">设置</string>
-    <string name="session_settings">会话设置</string>
-    <string name="chat_bubble_direction">聊天气泡方向</string>
+    <string name="session">会话</string>
+    <string name="chat_bubble_alignment">聊天气泡对齐</string>
     <string name="staggered_left_and_right">左右交错</string>
     <string name="all_to_the_left">全部靠左</string>
     <string name="data_sending_method">数据发送方式</string>
-    <string name="relay_delivery">中转发送</string>
-    <string name="send_directly">直接发送</string>
+    <string name="relay_delivery">中转</string>
+    <string name="send_directly">直接</string>
     <string name="add_ons">加载项</string>
     <string name="check">查看</string>
     <string name="permissions_and_privacy">权限与隐私</string>
@@ -219,9 +219,9 @@
     <string name="play">播放</string>
     <string name="pause">暂停</string>
     <string name="cover">封面</string>
-    <string name="alignment_all_to_start">全部靠左</string>
-    <string name="alignment_to_start_end">左右交错</string>
-    <string name="alignment_all_to_end">全部靠右</string>
+    <string name="alignment_all_to_start">靠左</string>
+    <string name="alignment_to_start_end">交错</string>
+    <string name="alignment_all_to_end">靠右</string>
     <string name="location">位置</string>
     <string name="audio">音频</string>
     <string name="file">文件</string>
@@ -491,5 +491,6 @@
     <string name="deprecated">已弃用</string>
     <string name="rich_media">富媒体</string>
     <string name="platform_permission_usage_tips">了解应用如何使用您的设备权限</string>
+    <string name="home_page">主页</string>
 
 </resources>
