@@ -2,6 +2,7 @@ package xcj.app.starter.test
 
 import xcj.app.starter.android.util.PurpleLogger
 import xcj.app.starter.foundation.Aware
+import xcj.app.starter.foundation.KotlinObject
 
 class DefinitionsInstantiator {
     companion object {
@@ -16,8 +17,13 @@ class DefinitionsInstantiator {
             .flatten()
             .forEach {
                 runCatching {
-                    val customKClassConstructor = it.getConstructor()
-                    customKClassConstructor.newInstance()
+                    if (it.getDeclaredAnnotation(KotlinObject::class.java) != null) {
+                        val declaredField = it.getDeclaredField("INSTANCE")
+                        declaredField.get(null)
+                    } else {
+                        val customKClassConstructor = it.getConstructor()
+                        customKClassConstructor.newInstance()
+                    }
                 }.onSuccess { obj ->
                     purpleContext.definitionInstanceList.add(obj)
                     when (obj) {

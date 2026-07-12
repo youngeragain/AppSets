@@ -187,9 +187,8 @@ fun AIModelListPage(
                 Column(modifier = Modifier.padding(vertical = 8.dp)) {
                     Text(
                         text = title,
-                        style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.ExtraBold,
-                        color = MaterialTheme.colorScheme.onSurface
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
                     )
                 }
             }

@@ -53,9 +53,7 @@ class P2pOneThread(
     private val clientRWThreadMap: MutableMap<P2pShareDevice, ClientRWThread> =
         mutableMapOf()
 
-    private var serverClosed = true
-
-    private var clientClosed = true
+    private var socketClosed = true
 
     override suspend fun writeContent(
         context: Context,
@@ -65,7 +63,7 @@ class P2pOneThread(
             return
         }
         if (isServer) {
-            if (serverClosed) {
+            if (socketClosed) {
                 return
             }
             val wifiP2pDevice = dataSendContent.dstDevice
@@ -88,7 +86,7 @@ class P2pOneThread(
             )
             writeThread?.writeContent(context, dataSendContent)
         } else {
-            if (clientClosed) {
+            if (socketClosed) {
                 return
             }
             var clientRWThread: ClientRWThread? = null
@@ -124,23 +122,23 @@ class P2pOneThread(
             clientSocket.connect(InetSocketAddress(host, port), 5000)
             setupSocketStream(clientSocket, shareDevice)
             this.socket = clientSocket
-            clientClosed = false
+            socketClosed = false
             PurpleLogger.current.d(TAG, "runAsClient, done")
         } catch (e: Exception) {
             PurpleLogger.current.d(TAG, "runAsClient, exception:$e.message")
             socketExceptionListener?.onException(TAG, e)
             logicEstablishListener?.onEstablishResult(false)
-            clientClosed = true
+            socketClosed = true
         }
     }
 
     private fun runAsServer() {
         try {
-            serverClosed = false
+            socketClosed = false
             val serverSocket = ServerSocket(port)
             this.socket = serverSocket
             PurpleLogger.current.d(TAG, "runAsServer, socket opened")
-            while (!serverClosed) {
+            while (!socketClosed) {
                 PurpleLogger.current.d(TAG, "runAsServer accept waiting...")
                 val clientSocket = serverSocket.accept()
                 PurpleLogger.current.d(TAG, "runAsServer accept one, handle clientSocket start")
@@ -153,7 +151,7 @@ class P2pOneThread(
             socketExceptionListener?.onException(TAG, e)
             logicEstablishListener?.onEstablishResult(false)
             PurpleLogger.current.d(TAG, e.message ?: "")
-            serverClosed = true
+            socketClosed = true
         } finally {
 
         }
@@ -209,15 +207,9 @@ class P2pOneThread(
                     deviceName = DeviceName.NONE,
                     deviceAddress = deviceAddress
                 )
-                clientRWThreadMap.put(
-                    mockShareDeviceForClient,
-                    clientRWThread
-                )
+                clientRWThreadMap[mockShareDeviceForClient] = clientRWThread
             } else {
-                clientRWThreadMap.put(
-                    currentDeviceShareDevice,
-                    clientRWThread
-                )
+                clientRWThreadMap[currentDeviceShareDevice] = clientRWThread
             }
 
             readThread.start()
@@ -242,11 +234,7 @@ class P2pOneThread(
     }
 
     fun hasClosed(): Boolean {
-        return if (isServer) {
-            serverClosed
-        } else {
-            clientClosed
-        }
+        return socketClosed
     }
 
     fun close(shareDevice: P2pShareDevice? = null) {
@@ -271,9 +259,7 @@ class P2pOneThread(
                 it.writeThread.setClosed(true)
             }
             clientRWThreadMap.clear()
-
-            serverClosed = true
-            clientClosed = true
+            socketClosed = true
         } catch (e: Exception) {
             PurpleLogger.current.d(TAG, "closeThreads, exception:${e.message}")
         } finally {

@@ -95,9 +95,9 @@ fun PrivacyPage(
             modifier = Modifier.fillMaxSize()
         ) { pageIndex ->
             if (pageIndex == 0) {
-                PlatformPermissionsComponent(platformPermissionsUsageList, onRequest)
+                PlatformPermissionsPage(platformPermissionsUsageList, onRequest)
             } else if (pageIndex == 1) {
-                PrivacyContentComponent(privacy)
+                PrivacyContentPage(privacy)
             }
         }
 
@@ -120,7 +120,7 @@ fun PrivacyPage(
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun PrivacyContentComponent(privacy: String?) {
+fun PrivacyContentPage(privacy: String?) {
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.TopStart) {
         VerticalOverscrollBox(modifier = Modifier.widthIn(max = TextFieldDefaults.MinWidth * 2)) {
             Column(
@@ -133,9 +133,8 @@ fun PrivacyContentComponent(privacy: String?) {
 
                 Text(
                     text = stringResource(xcj.app.appsets.R.string.user_content_privacy_and_notice),
-                    style = MaterialTheme.typography.headlineLarge,
-                    fontWeight = FontWeight.ExtraBold,
-                    color = MaterialTheme.colorScheme.onBackground
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
                 )
 
                 Spacer(modifier = Modifier.height(24.dp))
@@ -144,7 +143,7 @@ fun PrivacyContentComponent(privacy: String?) {
                     text = privacy ?: stringResource(xcj.app.appsets.R.string.not_offered),
                     style = MaterialTheme.typography.bodyLarge,
                     lineHeight = 26.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.9f)
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
 
                 Spacer(modifier = Modifier.height(150.dp))
@@ -155,7 +154,7 @@ fun PrivacyContentComponent(privacy: String?) {
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun PlatformPermissionsComponent(
+fun PlatformPermissionsPage(
     platformPermissionsUsageList: List<PlatformPermissionsUsage>,
     onRequest: (PlatformPermissionsUsage, Int) -> Unit,
 ) {
@@ -167,8 +166,6 @@ fun PlatformPermissionsComponent(
                     .fillMaxWidth(),
                 contentPadding = PaddingValues(
                     start = 12.dp,
-                    top = 24.dp + WindowInsets.statusBarsIgnoringVisibility.asPaddingValues()
-                        .calculateTopPadding(),
                     end = 12.dp,
                     bottom = 150.dp
                 )
@@ -180,14 +177,13 @@ fun PlatformPermissionsComponent(
                     Column(modifier = Modifier.padding(vertical = 8.dp)) {
                         Text(
                             text = stringResource(id = xcj.app.appsets.R.string.platform_permission),
-                            fontSize = 28.sp,
-                            fontWeight = FontWeight.ExtraBold,
-                            color = MaterialTheme.colorScheme.onBackground
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold
                         )
                         Text(
                             text = stringResource(xcj.app.appsets.R.string.platform_permission_usage_tips),
                             fontSize = 14.sp,
-                            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
                 }
@@ -232,16 +228,15 @@ fun PermissionCard(
         ) {
             Text(
                 text = stringResource(id = platformPermissionsUsage.name),
-                fontSize = 18.sp,
+                fontSize = 14.sp,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary
             )
             Spacer(modifier = Modifier.height(8.dp))
             platformPermissionsUsage.androidDefinitionNames.forEach {
                 Text(
                     text = it,
-                    fontSize = 11.sp,
-                    color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.7f)
+                    fontSize = 12.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
             Spacer(modifier = Modifier.height(12.dp))

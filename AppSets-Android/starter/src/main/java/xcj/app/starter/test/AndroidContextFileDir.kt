@@ -5,17 +5,17 @@ import kotlinx.coroutines.withContext
 import java.io.File
 
 data class AndroidContextFileDir(
-    var dynamicAARDir: String? = null,
-    var dynamicAAROPTDir: String? = null,
-    var errorsCacheDir: String? = null,
-    var logsCacheDir: String? = null,
-    var tempCacheDir: String? = null,
-    var tempFilesCacheDir: String? = null,
-    var tempImagesCacheDir: String? = null,
-    var tempVideosCacheDir: String? = null,
-    var tempDbsCacheDir: String? = null,
-    var tempAudiosCacheDir: String? = null,
-    var appSetsShareDir: String? = null,
+    val dynamicAARDir: String? = null,
+    val dynamicAAROPTDir: String? = null,
+    val errorsCacheDir: String? = null,
+    val logsCacheDir: String? = null,
+    val tempCacheDir: String? = null,
+    val tempFilesCacheDir: String? = null,
+    val tempImagesCacheDir: String? = null,
+    val tempVideosCacheDir: String? = null,
+    val tempDbsCacheDir: String? = null,
+    val tempAudiosCacheDir: String? = null,
+    val appSetsShareDir: String? = null,
 ) {
     suspend fun cleanCaches() = withContext(Dispatchers.IO) {
         runCatching {

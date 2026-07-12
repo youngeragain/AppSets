@@ -272,7 +272,7 @@ fun UserProfileContent(
 
             composable(CONTENT_FOLLOWER_FOLLOWED) {
                 UserFollowers(
-                    uid = userInfo.uid,
+                    currentUserInfo = userInfo,
                     userFollowers = userFollowers,
                     userFollowed = userFollowed,
                     onBioClick = onBioClick

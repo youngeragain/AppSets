@@ -39,57 +39,58 @@ class AndroidContexts(application: Application) {
     }
 
     fun simpleInit() {
+        initDirs()
+        initComponentLifecycleCallback()
+    }
 
+    private fun initComponentLifecycleCallback() {
+        val designAppComponentCallback = DesignAppComponentCallback()
+        LocalApplication.current.registerActivityLifecycleCallbacks(designAppComponentCallback)
+    }
+
+    private fun initDirs() {
         runCatching {
-
-            val androidContextFileDir = AndroidContextFileDir()
-
-            LocalAndroidContextFileDir.provide(androidContextFileDir)
-
             PurpleLogger.current.d(
                 TAG,
-                "simpleInit, init cache dir file paths on purple init"
+                "initDirs, init cache dir file paths on purple init"
             )
-
-
             val parentPath0 = LocalApplication.current.getExternalFilesDir(null)?.path ?: return
-            val childPaths0 = listOf<String>(
+            val childPaths0 = listOf(
                 "/dynamic_aar",
                 "/dynamic_aar/opt"
             )
-            initDirs(parentPath0, childPaths0)
-            androidContextFileDir.dynamicAARDir = parentPath0 + childPaths0[0]
-            androidContextFileDir.dynamicAAROPTDir = parentPath0 + childPaths0[1]
-
+            createDirsIfNeeded(parentPath0, childPaths0)
             val parentPath1 =
                 Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)?.path
-            val childPaths1 = listOf<String>(
+            val childPaths1 = listOf(
                 "/AppSets/ContentShare"
             )
-            initDirs(parentPath1, childPaths1)
-            androidContextFileDir.appSetsShareDir = parentPath1 + childPaths1[0]
-
-            val childPaths = listOf<String>(
+            createDirsIfNeeded(parentPath1, childPaths1)
+            val childPaths = listOf(
                 "/errors", "/logs", "/temp", "/temp/files",
                 "/temp/images", "/temp/videos", "/temp/dbs",
                 "/temp/audios"
             )
             val parentPath = LocalApplication.current.externalCacheDir?.path
-            initDirs(parentPath, childPaths)
-            androidContextFileDir.errorsCacheDir = parentPath + childPaths[0]
-            androidContextFileDir.logsCacheDir = parentPath + childPaths[1]
-            androidContextFileDir.tempCacheDir = parentPath + childPaths[2]
-            androidContextFileDir.tempFilesCacheDir = parentPath + childPaths[3]
-            androidContextFileDir.tempImagesCacheDir = parentPath + childPaths[4]
-            androidContextFileDir.tempVideosCacheDir = parentPath + childPaths[5]
-            androidContextFileDir.tempDbsCacheDir = parentPath + childPaths[6]
-            androidContextFileDir.tempAudiosCacheDir = parentPath + childPaths[7]
+            createDirsIfNeeded(parentPath, childPaths)
+            val androidContextFileDir = AndroidContextFileDir(
+                dynamicAARDir = parentPath0 + childPaths0[0],
+                dynamicAAROPTDir = parentPath0 + childPaths0[1],
+                errorsCacheDir = parentPath + childPaths[0],
+                logsCacheDir = parentPath + childPaths[1],
+                tempCacheDir = parentPath + childPaths[2],
+                tempFilesCacheDir = parentPath + childPaths[3],
+                tempImagesCacheDir = parentPath + childPaths[4],
+                tempVideosCacheDir = parentPath + childPaths[5],
+                tempDbsCacheDir = parentPath + childPaths[6],
+                tempAudiosCacheDir = parentPath + childPaths[7],
+                appSetsShareDir = parentPath1 + childPaths1[0],
+            )
+            LocalAndroidContextFileDir.provide(androidContextFileDir)
         }
-        val designAppComponentCallback = DesignAppComponentCallback()
-        LocalApplication.current.registerActivityLifecycleCallbacks(designAppComponentCallback)
     }
 
-    private fun initDirs(parentPath: String?, childPaths: List<String>) {
+    private fun createDirsIfNeeded(parentPath: String?, childPaths: List<String>) {
         childPaths.forEach {
             val dir = File(parentPath + it)
             if (!dir.exists()) {

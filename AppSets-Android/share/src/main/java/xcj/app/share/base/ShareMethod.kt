@@ -23,7 +23,7 @@ import xcj.app.web.webserver.base.DataProgressInfoPool
 import xcj.app.web.webserver.interfaces.ProgressListener
 import java.util.concurrent.CopyOnWriteArrayList
 
-abstract class ShareMethod() : ConnectivityManager.NetworkCallback(), DefaultLifecycleObserver {
+abstract class ShareMethod : ConnectivityManager.NetworkCallback(), DefaultLifecycleObserver {
 
     companion object {
         private const val TAG = "ShareMethod"

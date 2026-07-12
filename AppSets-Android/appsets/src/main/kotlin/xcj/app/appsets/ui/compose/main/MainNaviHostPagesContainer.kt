@@ -743,7 +743,7 @@ fun MainNaviHostPagesContainer(
             }
             composableIf(
                 test = {
-                    hostContextName == MainActivity.TAG
+                    hostContextName == MainActivity.TAG || hostContextName == IMBubbleActivity.TAG
                 },
                 route = PageRouteNames.ConversationOverviewPage
             ) {
