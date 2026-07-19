@@ -47,23 +47,24 @@ fun Modifier.hazeEffectIfAvailable(
     style: HazeStyle = HazeStyle.Unspecified,
     block: (HazeEffectScope.() -> Unit)? = null,
 ): Modifier {
-    return hazeEffectIfAvailable2(
+    return hazeEffectIfAvailableWithTag(
+        effectTag = "hazeEffect",
         state = state,
         style = style,
         block = block
     )
 }
 
-fun Modifier.hazeEffectIfAvailable2(
+fun Modifier.hazeEffectIfAvailableWithTag(
     effectTag: String? = null,
     state: HazeState? = null,
     style: HazeStyle = HazeStyle.Unspecified,
     block: (HazeEffectScope.() -> Unit)? = null,
 ): Modifier {
     if (state == null) {
-        PurpleLogger.current.d(TAG, "hazeEffectIfAvailable2, state is null!, tag:$effectTag")
+        PurpleLogger.current.d(TAG, "hazeEffectIfAvailableWithTag, $effectTag, state is null!")
         return this
     }
-    PurpleLogger.current.d(TAG, "hazeEffectIfAvailable2, get state, tag:$effectTag")
+    PurpleLogger.current.d(TAG, "hazeEffectIfAvailableWithTag, $effectTag, get state")
     return hazeEffect(state, style, block)
 }

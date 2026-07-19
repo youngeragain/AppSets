@@ -48,7 +48,7 @@ import xcj.app.appsets.ui.compose.quickstep.QuickStepContentHandlerRegistry
 import xcj.app.appsets.ui.model.state.NowSpaceContent
 import xcj.app.appsets.ui.viewmodel.MainViewModel
 import xcj.app.compose_share.components.BottomSheetContainer
-import xcj.app.compose_share.components.LocalHazedState
+import xcj.app.compose_share.components.LocalHazedStateMap
 import xcj.app.compose_share.components.LocalUseCaseOfComposeDynamic
 import xcj.app.compose_share.components.LocalVisibilityComposeStateProvider
 import xcj.app.compose_share.modifier.rememberHazeStateIfAvailable
@@ -70,7 +70,9 @@ fun MainPage() {
         QuickStepContentHandlerRegistry()
     }
     val hazeState = rememberHazeStateIfAvailable()
-
+    val hazeStateMap = remember {
+        mutableMapOf("MainHazeState" to hazeState)
+    }
     val startPageRoute by remember {
         derivedStateOf {
             viewModel.navigationUseCase.getStartPageRoute()
@@ -96,7 +98,7 @@ fun MainPage() {
         LocalNavControllers provides mapOf(KEY_MAIN_NAVI_CONTROLLER to navController),
         LocalVisibilityComposeStateProvider provides viewModel,
         LocalQuickStepContentHandlerRegistry provides quickStepContentHandlerRegistry,
-        LocalHazedState provides hazeState
+        LocalHazedStateMap provides hazeStateMap
     ) {
         Surface {
             OnScaffoldLaunch()
@@ -117,14 +119,12 @@ fun MainPage() {
                         modifier = Modifier
                             .align(Alignment.BottomCenter)
                     )
+                    BottomSheetContainer()
                 }
 
                 ImmerseContentContainer()
 
-                BottomSheetContainer()
-
                 NowSpaceContainer()
-
             }
         }
     }

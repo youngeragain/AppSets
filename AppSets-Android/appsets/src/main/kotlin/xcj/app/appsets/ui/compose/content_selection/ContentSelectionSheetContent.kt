@@ -56,14 +56,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FilledTonalIconButton
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
-import androidx.compose.material3.SegmentedButton
-import androidx.compose.material3.SegmentedButtonDefaults
-import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
@@ -94,6 +92,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.IntSize
@@ -106,7 +105,6 @@ import kotlinx.coroutines.launch
 import xcj.app.appsets.ui.compose.LocalUseCaseOfNowSpaceContent
 import xcj.app.appsets.ui.compose.LocalUseCaseOfSystem
 import xcj.app.appsets.ui.compose.camera.CameraComponents
-import xcj.app.appsets.ui.compose.content_selection.ContentSelectionRequest.SelectionTypeParam
 import xcj.app.appsets.ui.compose.content_selection.ContentSelectionResult.RichMediaContentSelectionResult
 import xcj.app.appsets.ui.compose.custom_component.AnyImage
 import xcj.app.appsets.ui.compose.custom_component.DragValue
@@ -124,74 +122,6 @@ import xcj.app.starter.android.util.UriProvider
 import xcj.app.starter.android.util.model.MediaStoreDataUri
 import xcj.app.starter.android.util.model.isVideoType
 import java.io.File
-
-
-typealias CountProvider = (String) -> Int
-
-private val defaultMaxCountProvider: CountProvider
-    get() = { 1 }
-
-fun defaultImageSelectionTypeParam(
-    countProvider: CountProvider = defaultMaxCountProvider
-): List<SelectionTypeParam> =
-    listOf(
-        SelectionTypeParam(ContentSelectionTypes.IMAGE, countProvider)
-    )
-
-fun defaultVideoSelectionTypeParam(
-    countProvider: CountProvider = defaultMaxCountProvider
-): List<SelectionTypeParam> =
-    listOf(
-        SelectionTypeParam(ContentSelectionTypes.VIDEO, countProvider)
-    )
-
-fun defaultAudioSelectionTypeParam(
-    countProvider: CountProvider = defaultMaxCountProvider
-): List<SelectionTypeParam> =
-    listOf(
-        SelectionTypeParam(ContentSelectionTypes.AUDIO, countProvider)
-    )
-
-fun defaultFileSelectionTypeParam(
-    countProvider: CountProvider = defaultMaxCountProvider
-): List<SelectionTypeParam> =
-    listOf(
-        SelectionTypeParam(ContentSelectionTypes.FILE, countProvider)
-    )
-
-fun defaultLocationSelectionTypeParam(
-    countProvider: CountProvider = defaultMaxCountProvider
-): List<SelectionTypeParam> =
-    listOf(
-        SelectionTypeParam(ContentSelectionTypes.LOCATION, countProvider)
-    )
-
-fun defaultCameraSelectionTypeParam(
-    countProvider: CountProvider = defaultMaxCountProvider
-): List<SelectionTypeParam> =
-    listOf(
-        SelectionTypeParam(ContentSelectionTypes.CAMERA, countProvider)
-    )
-
-fun defaultMediaSelectionTypeParam(
-    countProvider: CountProvider = defaultMaxCountProvider
-): List<SelectionTypeParam> =
-    listOf(
-        SelectionTypeParam(ContentSelectionTypes.IMAGE, countProvider),
-        SelectionTypeParam(ContentSelectionTypes.VIDEO, countProvider),
-        SelectionTypeParam(ContentSelectionTypes.AUDIO, countProvider),
-    )
-
-fun defaultAllSelectionTypeParam(
-    countProvider: CountProvider = defaultMaxCountProvider
-): List<SelectionTypeParam> =
-    defaultImageSelectionTypeParam(countProvider) +
-            defaultVideoSelectionTypeParam(countProvider) +
-            defaultAudioSelectionTypeParam(countProvider) +
-            defaultFileSelectionTypeParam(countProvider) +
-            defaultLocationSelectionTypeParam(countProvider) +
-            defaultCameraSelectionTypeParam(countProvider)
-
 
 sealed interface ContentSelectionPageState {
     object StartPrompt : ContentSelectionPageState
@@ -229,9 +159,6 @@ fun ContentSelectionPromptSheetContent(
                     ContentSelectPromptContent(
                         onUseSystemImplClick = {
                             val activity = context.asComponentActivityOrNull()
-                            if (activity == null) {
-                                return@ContentSelectPromptContent
-                            }
                             if (activity !is ActivityThemeInterface) {
                                 return@ContentSelectPromptContent
                             }
@@ -248,7 +175,6 @@ fun ContentSelectionPromptSheetContent(
                                             val systemSelectedContents = listOf(content)
                                             val results =
                                                 RichMediaContentSelectionResult(
-                                                    context,
                                                     contentSelectionRequest,
                                                     contentSelectionRequest.defaultSelectionType
                                                 ) { systemSelectedContents }
@@ -264,7 +190,6 @@ fun ContentSelectionPromptSheetContent(
                                         } else {
                                             val results =
                                                 RichMediaContentSelectionResult(
-                                                    context,
                                                     contentSelectionRequest,
                                                     contentSelectionRequest.defaultSelectionType
                                                 ) { contents }
@@ -324,7 +249,6 @@ fun ContentSelectionPromptSheetContent(
                                 targetContentSelectionPageState.systemSelectedContents
                             val results =
                                 RichMediaContentSelectionResult(
-                                    context,
                                     contentSelectionRequest,
                                     contentSelectionRequest.defaultSelectionType
                                 ) { selectedContents }
@@ -412,9 +336,7 @@ private fun ContentSelectPromptContent(
 ) {
     Column(
         modifier = modifier.padding(
-            start = 12.dp,
-            end = 12.dp,
-            bottom = 24.dp
+            12.dp
         ),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
@@ -627,35 +549,35 @@ private fun AppImplContentSelectionContent(
                     tabsScrollState.animateScrollTo(buttonSize.value.width * pagerState.currentPage)
                 }
 
-                SingleChoiceSegmentedButtonRow(
+                Row(
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
                         .onSizeChanged {
                             choiceSegmentedButtonSize = it
                         }
-                        .horizontalScroll(tabsScrollState)
+                        .horizontalScroll(tabsScrollState),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     Spacer(modifier = Modifier.width(12.dp))
                     selectionTypes.forEachIndexed { index, selectionType ->
-                        SegmentedButton(
-                            modifier = Modifier.onSizeChanged {
-                                buttonSize.value = it
-                            },
+                        FilterChip(
                             selected = index == pagerState.currentPage,
                             onClick = {
                                 coroutineScope.launch {
                                     pagerState.animateScrollToPage(index)
                                 }
                             },
-                            shape = SegmentedButtonDefaults.itemShape(
-                                index = index,
-                                count = selectionTypes.size
-                            ),
-                            icon = {}
-                        ) {
-                            val tabName = getTabName(selectionType)
-                            Text(text = tabName)
-                        }
+                            label = { Text(text = getTabName(selectionType)) },
+                            shape = CircleShape,
+                            leadingIcon = if (index == pagerState.currentPage) {
+                                {
+                                    Icon(
+                                        painterResource(xcj.app.compose_share.R.drawable.ic_round_check_24),
+                                        null
+                                    )
+                                }
+                            } else null
+                        )
                     }
                     Spacer(modifier = Modifier.width(12.dp))
                 }
@@ -814,7 +736,6 @@ private fun CameraContentSelection(
                                     val selectedContents = listOf(uriProvider)
                                     val results =
                                         ContentSelectionResult.RichMediaContentSelectionResult(
-                                            context,
                                             request,
                                             ContentSelectionTypes.IMAGE
                                         ) {
@@ -995,7 +916,6 @@ private fun LocationContentSelection(
                                     info = "四川省成都市武侯区锦悦西路2"
                                 )
                             val results = ContentSelectionResult.LocationContentSelectionResult(
-                                context,
                                 request,
                                 ContentSelectionTypes.LOCATION
                             ) {
@@ -1062,10 +982,14 @@ private fun PictureContentSelection(
         mutableStateOf(IntSize.Zero)
     }
 
+    var gridCount by remember {
+        mutableStateOf(4)
+    }
+
     val itemHeightDp by remember {
         derivedStateOf {
             with(density) {
-                (boxSize.width.toDp() - 2.dp * 6) / 3
+                (boxSize.width.toDp() - 2.dp * gridCount * 2) / gridCount
             }
         }
     }
@@ -1079,7 +1003,7 @@ private fun PictureContentSelection(
     )
     {
         LazyVerticalGrid(
-            columns = GridCells.Fixed(3),
+            columns = GridCells.Fixed(gridCount),
             modifier = Modifier.fillMaxSize(),
             state = gridState,
             contentPadding = PaddingValues(start = 4.dp, top = 4.dp, end = 4.dp, bottom = 150.dp)
@@ -1237,13 +1161,12 @@ private fun VideoContentSelection(
     }
     val contentUris = contentSelectionResultsProvider.contentUris
 
-    val columnState = rememberLazyListState()
-
+    val gridState = rememberLazyGridState()
     LaunchedEffect(true) {
         contentSelectionResultsProvider.load(context, true)
     }
 
-    LoadMoreHandler(scrollableState = columnState) {
+    LoadMoreHandler(scrollableState = gridState) {
         contentSelectionResultsProvider.load(context, false)
     }
     val selectedContents = remember {
@@ -1266,15 +1189,35 @@ private fun VideoContentSelection(
             }
         }
     }
+    var boxSize by remember {
+        mutableStateOf(IntSize.Zero)
+    }
+
+    var gridCount by remember {
+        mutableStateOf(4)
+    }
+
+    val itemHeightDp by remember {
+        derivedStateOf {
+            with(density) {
+                (boxSize.width.toDp() - 2.dp * gridCount * 2) / gridCount
+            }
+        }
+    }
     Box(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+            .fillMaxSize()
+            .onSizeChanged {
+                boxSize = it
+            },
         contentAlignment = Alignment.Center
     ) {
-        LazyColumn(
+
+        LazyVerticalGrid(
+            columns = GridCells.Fixed(gridCount),
             modifier = Modifier.fillMaxSize(),
-            state = columnState,
-            contentPadding = PaddingValues(start = 4.dp, top = 4.dp, end = 4.dp, bottom = 150.dp),
-            verticalArrangement = Arrangement.spacedBy(6.dp)
+            state = gridState,
+            contentPadding = PaddingValues(start = 4.dp, top = 4.dp, end = 4.dp, bottom = 150.dp)
         ) {
             items(
                 items = filteredContentUrls,
@@ -1289,14 +1232,14 @@ private fun VideoContentSelection(
                         modifier = Modifier.fillMaxSize()
                     ) {
                         val itemClipShape = calculateItemClipShape(
-                            250.dp,
+                            itemHeightDp,
                             selectedContents,
                             contentUriProvider
                         )
                         AnyImage(
                             modifier = Modifier
                                 .fillMaxSize()
-                                .height(250.dp)
+                                .height(itemHeightDp)
                                 .clip(itemClipShape)
                                 .border(1.dp, MaterialTheme.colorScheme.outline, itemClipShape)
                                 .clickable(
@@ -1840,7 +1783,6 @@ private fun ActionsAndTips(
                             hapticFeedback.performHapticFeedback(HapticFeedbackType.Confirm)
                             val results =
                                 ContentSelectionResult.RichMediaContentSelectionResult(
-                                    context,
                                     request,
                                     contentSelectionType
                                 ) {
@@ -1855,4 +1797,24 @@ private fun ActionsAndTips(
             }
         }
     }
+}
+
+@Preview
+@Composable
+fun ContentSelectionSheetContentPreview() {
+    val contentSelectionRequest = remember {
+        val selectionTypeParams = defaultAllSelectionTypeParam()
+        ContentSelectionRequest(
+            "contextName",
+            "requestKey",
+            selectionTypeParams,
+            selectionTypeParams.first().selectionType
+        )
+    }
+    AppImplContentSelectionContent(
+        contentSelectionRequest = contentSelectionRequest,
+        onContentSelected = { contentSelectionResult ->
+
+        }
+    )
 }

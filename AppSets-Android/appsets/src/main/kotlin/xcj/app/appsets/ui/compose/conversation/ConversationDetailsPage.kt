@@ -148,9 +148,12 @@ import xcj.app.appsets.usecase.SessionState
 import xcj.app.appsets.util.compose_state.ComposeStateUpdater
 import xcj.app.appsets.util.compose_state.RuntimeSingleStateUpdater
 import xcj.app.compose_share.components.BackActionTopBar
-import xcj.app.compose_share.components.LocalHazedState
+import xcj.app.compose_share.components.HAZE_KEY_OF_PAGE
+import xcj.app.compose_share.components.LocalHazedStateMap
 import xcj.app.compose_share.components.backActionsBarHeightDp
 import xcj.app.compose_share.modifier.hazeEffectIfAvailable
+import xcj.app.compose_share.modifier.hazeSourceIfAvailable
+import xcj.app.compose_share.modifier.rememberHazeStateIfAvailable
 import xcj.app.starter.android.ktx.asComponentActivityOrNull
 import xcj.app.starter.android.ktx.startWithHttpSchema
 import xcj.app.starter.android.util.PurpleLogger
@@ -288,9 +291,14 @@ fun SessionObjectNormal(
     val appSetsModuleSettings = remember {
         AppSetsModuleSettings.get()
     }
+    val hazeState = rememberHazeStateIfAvailable()
 
-    DisposableEffect(Unit) {
+    val hazeStateMap = LocalHazedStateMap.current
+
+    DisposableEffect(true) {
+        hazeStateMap[HAZE_KEY_OF_PAGE] = hazeState
         onDispose {
+            hazeStateMap.remove(HAZE_KEY_OF_PAGE)
             conversationUseCase.onComposeDispose("page dispose")
         }
     }
@@ -499,7 +507,7 @@ private fun TopBarComponent(
     onQuickAccessSessionClick: (Session) -> Unit,
 ) {
     val hapticFeedback = LocalHapticFeedback.current
-    val hazeState = LocalHazedState.current
+    val hazeState = LocalHazedStateMap.current[HAZE_KEY_OF_PAGE]
     val overrideQuickAccessSessions by remember(quickAccessSessions) {
         val sessions = buildList {
             add(currentSession)
@@ -591,8 +599,13 @@ private fun ImMessageListComponent(
     onBioClick: (Bio) -> Unit,
     onImMessageContentClick: (IMMessage<*>) -> Unit,
 ) {
+    val hazeState = LocalHazedStateMap.current[HAZE_KEY_OF_PAGE]
     VerticalOverscrollBox(modifier = modifier) {
         LazyColumn(
+            modifier = Modifier
+                .testTag("ConversationTestTag")
+                .fillMaxSize()
+                .hazeSourceIfAvailable(hazeState),
             reverseLayout = true,
             state = scrollState,
             contentPadding = PaddingValues(
@@ -600,11 +613,7 @@ private fun ImMessageListComponent(
                     .calculateTopPadding() + 150.dp,
                 bottom = WindowInsets.navigationBarsIgnoringVisibility.asPaddingValues()
                     .calculateBottomPadding() + 150.dp
-            ),
-            modifier = Modifier.run {
-                testTag("ConversationTestTag")
-                    .fillMaxSize()
-            }
+            )
         ) {
             itemsIndexed(
                 items = messages, key = { index, imMessage -> imMessage.id }) { _, imMessage ->
@@ -1298,7 +1307,7 @@ fun InputSuggestionsSpace(
     onRemoveAdviseClick: (TextFieldAdviser.Advise) -> Unit,
 ) {
     val hapticFeedback = LocalHapticFeedback.current
-    val hazeState = LocalHazedState.current
+    val hazeState = LocalHazedStateMap.current[HAZE_KEY_OF_PAGE]
     Column(
         modifier = modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.End
@@ -1411,7 +1420,7 @@ fun UserInputActionsSpace(
     onJumpToLatestClick: () -> Unit
 ) {
     val context = LocalContext.current
-    val hazeState = LocalHazedState.current
+    val hazeState = LocalHazedStateMap.current[HAZE_KEY_OF_PAGE]
     val hapticFeedback = LocalHapticFeedback.current
     val systemUseCase = LocalUseCaseOfSystem.current
     val nowSpaceContentUseCase = LocalUseCaseOfNowSpaceContent.current
@@ -1723,7 +1732,7 @@ private fun UserInputTextSpace(
 ) {
 
     val context = LocalContext.current
-    val hazeState = LocalHazedState.current
+    val hazeState = LocalHazedStateMap.current[HAZE_KEY_OF_PAGE]
     val activity = context.asComponentActivityOrNull()
 
 

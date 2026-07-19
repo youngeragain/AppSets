@@ -89,8 +89,12 @@ import xcj.app.appsets.ui.compose.outside.ScreensList
 import xcj.app.appsets.ui.model.page_state.SearchPageUIState
 import xcj.app.appsets.ui.model.state.SearchResult
 import xcj.app.compose_share.components.DesignTextField
-import xcj.app.compose_share.components.LocalHazedState
+import xcj.app.compose_share.components.HAZE_KEY_OF_MAIN
+import xcj.app.compose_share.components.HAZE_KEY_OF_PAGE
+import xcj.app.compose_share.components.LocalHazedStateMap
 import xcj.app.compose_share.modifier.hazeEffectIfAvailable
+import xcj.app.compose_share.modifier.hazeSourceIfAvailable
+import xcj.app.compose_share.modifier.rememberHazeStateIfAvailable
 import java.util.Locale
 
 @Composable
@@ -104,15 +108,18 @@ fun SearchPage(
     val coroutineScope = rememberCoroutineScope()
     val searchUseCase = LocalUseCaseOfSearch.current
     val searchState by searchUseCase.searchPageUIState
-
+    val hazeState = rememberHazeStateIfAvailable()
+    val hazeStateMap = LocalHazedStateMap.current
     DisposableEffect(key1 = true, effect = {
+        hazeStateMap[HAZE_KEY_OF_PAGE] = hazeState
         searchUseCase.attachToSearchFlow(coroutineScope)
         onDispose {
+            hazeStateMap.remove(HAZE_KEY_OF_PAGE)
             searchUseCase.detachToSearchFlow()
         }
     })
 
-    SearchPageResults(
+    SearchResultsPage(
         searchPageUIState = searchState,
         onBioClick = onBioClick,
         onApplicationLongPress = onApplicationLongPress,
@@ -127,7 +134,7 @@ fun SearchInputBar(
     onInputContent: (String) -> Unit
 ) {
     val keyboardController = LocalSoftwareKeyboardController.current
-    val hazeState = LocalHazedState.current
+    val hazeState = LocalHazedStateMap.current[HAZE_KEY_OF_MAIN]
     val searchUseCase = LocalUseCaseOfSearch.current
     val searchPageState by searchUseCase.searchPageUIState
     val focusRequester = remember {
@@ -247,7 +254,7 @@ fun searchBarBorderStroke(searchPageUIState: SearchPageUIState): BorderStroke {
 }
 
 @Composable
-fun SearchPageResults(
+fun SearchResultsPage(
     searchPageUIState: SearchPageUIState,
     onBioClick: (Bio) -> Unit,
     onApplicationLongPress: (Application) -> Unit,
@@ -360,19 +367,16 @@ fun SearchSuccessPages(
     onApplicationLongPress: (Application) -> Unit,
     onScreenMediaClick: (ScreenMediaFileUrl, List<ScreenMediaFileUrl>) -> Unit,
 ) {
-    val hazeState = LocalHazedState.current
+    val hazeState = LocalHazedStateMap.current[HAZE_KEY_OF_PAGE]
     val pagerState = rememberPagerState { searchSuccess.results.size }
     val coroutineScope = rememberCoroutineScope()
-    LaunchedEffect(pagerState.currentPage) {
-
-    }
-
     Box {
         HorizontalPager(
-            modifier = Modifier,
+            modifier = Modifier.hazeSourceIfAvailable(hazeState),
             state = pagerState,
             verticalAlignment = Alignment.Top
-        ) { index ->
+        )
+        { index ->
             when (val searchResult = searchSuccess.results[index]) {
                 is SearchResult.SearchedApplications -> {
                     SearchedApplicationsPage(

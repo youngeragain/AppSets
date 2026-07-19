@@ -27,7 +27,6 @@ import xcj.app.appsets.usecase.UserInfoUseCase
 import xcj.app.appsets.worker.LastSyncWorker
 import xcj.app.compose_share.ui.viewmodel.VisibilityComposeStateViewModel
 import xcj.app.io.components.SimpleFileIO
-import xcj.app.starter.android.ktx.asComponentActivityOrNull
 import xcj.app.starter.android.util.LocalMessenger
 import xcj.app.starter.android.util.PurpleLogger
 import xcj.app.starter.test.AndroidContexts
@@ -80,30 +79,21 @@ abstract class BaseIMViewModel : VisibilityComposeStateViewModel() {
             activity,
             ModuleConstant.MESSAGE_KEY_ON_CONTENT_SELECTION_CLOSE
         ) { contentSelectionRequest ->
-            if (contentSelectionRequest.context.asComponentActivityOrNull() != activity) {
-                return@observe
-            }
-            onContentSelectSheetClosed(activity, contentSelectionRequest)
+            onContentSelectSheetClosed(contentSelectionRequest)
         }
 
         LocalMessenger.observe<String, ContentSelectionRequest>(
             activity,
             ModuleConstant.MESSAGE_KEY_ON_CONTENT_SELECT_REQUEST
         ) { contentSelectionRequest ->
-            if (contentSelectionRequest.context.asComponentActivityOrNull() != activity) {
-                return@observe
-            }
-            onContentSelectionRequest(activity, contentSelectionRequest)
+            onContentSelectionRequest(contentSelectionRequest)
         }
 
         LocalMessenger.observe<String, ContentSelectionResult<*>>(
             activity,
             ModuleConstant.MESSAGE_KEY_ON_CONTENT_SELECT_RESULT
         ) { contentSelectionResult ->
-            if (contentSelectionResult.context.asComponentActivityOrNull() != activity) {
-                return@observe
-            }
-            onContentSelectionResult(activity, contentSelectionResult)
+            onContentSelectionResult(contentSelectionResult)
         }
 
         LocalMessenger.observe<String, IMMessage<*>>(
@@ -181,7 +171,6 @@ abstract class BaseIMViewModel : VisibilityComposeStateViewModel() {
     }
 
     open fun onContentSelectSheetClosed(
-        activity: ComponentActivity,
         contentSelectionRequest: ContentSelectionRequest
     ) {
 
@@ -191,7 +180,6 @@ abstract class BaseIMViewModel : VisibilityComposeStateViewModel() {
      * 请求选择内容时
      */
     open fun onContentSelectionRequest(
-        context: Context,
         contentSelectionRequest: ContentSelectionRequest
     ) {
 
@@ -201,7 +189,6 @@ abstract class BaseIMViewModel : VisibilityComposeStateViewModel() {
      * 选择内容后
      */
     open fun onContentSelectionResult(
-        context: Context,
         contentSelectionResult: ContentSelectionResult<*>
     ) {
 

@@ -40,6 +40,7 @@ import xcj.app.appsets.im.Bio
 import xcj.app.appsets.server.model.GroupInfo
 import xcj.app.appsets.ui.compose.custom_component.AnyImage
 import xcj.app.appsets.ui.compose.custom_component.DesignBackButton
+import xcj.app.appsets.ui.compose.custom_component.HideNavBar
 import xcj.app.appsets.ui.compose.custom_component.VerticalOverscrollBox
 import xcj.app.appsets.ui.compose.theme.ExtraLarge2
 import xcj.app.appsets.ui.model.page_state.GroupInfoPageUIState
@@ -72,6 +73,7 @@ fun GroupInfoPage(
     onChatClick: (GroupInfo) -> Unit,
     onJoinGroupRequestClick: (GroupInfo) -> Unit
 ) {
+    HideNavBar()
     Box(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center

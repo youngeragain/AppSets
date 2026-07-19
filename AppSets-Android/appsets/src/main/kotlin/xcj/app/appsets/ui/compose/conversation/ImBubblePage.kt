@@ -5,9 +5,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
+import dev.chrisbanes.haze.HazeState
 import xcj.app.appsets.ui.compose.LocalNavControllers
 import xcj.app.appsets.ui.compose.LocalUseCaseOfConversation
 import xcj.app.appsets.ui.compose.LocalUseCaseOfGroupInfo
@@ -24,7 +26,7 @@ import xcj.app.appsets.ui.compose.main.KEY_MAIN_NAVI_CONTROLLER
 import xcj.app.appsets.ui.compose.main.MainNaviHostPagesContainer
 import xcj.app.appsets.ui.viewmodel.IMBubbleViewModel
 import xcj.app.compose_share.components.BottomSheetContainer
-import xcj.app.compose_share.components.LocalHazedState
+import xcj.app.compose_share.components.LocalHazedStateMap
 import xcj.app.compose_share.components.LocalVisibilityComposeStateProvider
 import xcj.app.compose_share.modifier.rememberHazeStateIfAvailable
 
@@ -33,6 +35,9 @@ fun ImBubblePage() {
     val viewModel = viewModel<IMBubbleViewModel>()
     val navController = rememberNavController()
     val hazeState = rememberHazeStateIfAvailable()
+    val hazeStateMap: MutableMap<String, HazeState?> = remember {
+        mutableMapOf("MainHazeState" to hazeState)
+    }
     CompositionLocalProvider(
         LocalUseCaseOfSystem provides viewModel.systemUseCase,
         LocalUseCaseOfNavigation provides viewModel.navigationUseCase,
@@ -45,7 +50,7 @@ fun ImBubblePage() {
         LocalUseCaseOfNowSpaceContent provides viewModel.nowSpaceContentUseCase,
         LocalNavControllers provides mapOf(KEY_MAIN_NAVI_CONTROLLER to navController),
         LocalVisibilityComposeStateProvider provides viewModel,
-        LocalHazedState provides hazeState
+        LocalHazedStateMap provides hazeStateMap,
     ) {
         Surface {
             Box(modifier = Modifier.fillMaxSize()) {

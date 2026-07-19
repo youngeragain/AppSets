@@ -40,7 +40,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
 import dev.chrisbanes.haze.materials.HazeMaterials
-import xcj.app.compose_share.modifier.hazeEffectIfAvailable2
+import xcj.app.compose_share.modifier.hazeEffectIfAvailableWithTag
 
 private const val TAG = "BackActionTopBar"
 
@@ -82,7 +82,7 @@ fun BackActionTopBar(
     customEndContent: (@Composable () -> Unit)? = null
 ) {
     val context = LocalContext.current
-    val hazeState = LocalHazedState.current
+    val hazeState = LocalHazedStateMap.current[HAZE_KEY_OF_PAGE]
     val backActionTopBarInfo = LocalBackActionTopBarInfo.current
     DisposableEffect(true) {
         onDispose {
@@ -123,7 +123,11 @@ fun BackActionTopBar(
             Box(
                 modifier = Modifier
                     .clip(CircleShape)
-                    .hazeEffectIfAvailable2("${TAG}_BackIcon", hazeState, HazeMaterials.thin())
+                    .hazeEffectIfAvailableWithTag(
+                        "${TAG}_BackIcon",
+                        hazeState,
+                        HazeMaterials.thin()
+                    )
                     .clickable(onClick = onBackClick)
                     .border(1.dp, MaterialTheme.colorScheme.outline, CircleShape)
                     .padding(12.dp)
@@ -147,7 +151,11 @@ fun BackActionTopBar(
                 modifier = Modifier
                     .align(Alignment.CenterEnd)
                     .clip(CircleShape)
-                    .hazeEffectIfAvailable2("${TAG}_EndButton", hazeState, HazeMaterials.thin())
+                    .hazeEffectIfAvailableWithTag(
+                        "${TAG}_EndButton",
+                        hazeState,
+                        HazeMaterials.thin()
+                    )
                     .border(1.dp, MaterialTheme.colorScheme.outline, CircleShape)
             ) {
                 Box(

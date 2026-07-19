@@ -52,7 +52,8 @@ import xcj.app.appsets.ui.model.TabAction
 import xcj.app.appsets.ui.model.TabItem
 import xcj.app.appsets.usecase.NavigationUseCase
 import xcj.app.compose_share.components.DesignHDivider
-import xcj.app.compose_share.components.LocalHazedState
+import xcj.app.compose_share.components.HAZE_KEY_OF_MAIN
+import xcj.app.compose_share.components.LocalHazedStateMap
 import xcj.app.compose_share.modifier.hazeEffectIfAvailable
 
 private const val TAG = "NavigationBar"
@@ -103,7 +104,7 @@ private fun StandardNavigationBar(
     onSearchBarClick: () -> Unit,
     onBioClick: (Bio?) -> Unit,
 ) {
-    val hazeState = LocalHazedState.current
+    val hazeState = LocalHazedStateMap.current[HAZE_KEY_OF_MAIN]
     val modifierOverride = if (!inSearchMode) {
         modifier
             .hazeEffectIfAvailable(hazeState, HazeMaterials.thin())

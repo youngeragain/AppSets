@@ -185,7 +185,8 @@ import xcj.app.appsets.util.BundleDefaults
 import xcj.app.appsets.util.compose_state.ComposeStateUpdater
 import xcj.app.appsets.util.compose_state.RuntimeSingleStateUpdater
 import xcj.app.appsets.util.ktx.toast
-import xcj.app.compose_share.components.LocalHazedState
+import xcj.app.compose_share.components.HAZE_KEY_OF_MAIN
+import xcj.app.compose_share.components.LocalHazedStateMap
 import xcj.app.compose_share.components.LocalVisibilityComposeStateProvider
 import xcj.app.compose_share.components.ProgressiveVisibilityComposeState
 import xcj.app.compose_share.components.VisibilityComposeStateProvider
@@ -219,7 +220,7 @@ fun MainNaviHostPagesContainer(
     hostContextName: String = MainActivity.TAG
 ) {
     val navController = LocalNavControllers.current[KEY_MAIN_NAVI_CONTROLLER] ?: return
-    val hazeState = LocalHazedState.current
+    val hazeState = LocalHazedStateMap.current[HAZE_KEY_OF_MAIN]
     val restrictedContentHandleState = rememberRestrictedContentHandleState()
     Box(modifier = modifier.hazeSourceIfAvailable(hazeState)) {
         DesignNaviHostIf(
@@ -1906,7 +1907,6 @@ private fun showContentSelectionDialog(
     coroutineScope: CoroutineScope,
 ) {
     val contentSelectionRequest = ContentSelectionRequest(
-        context,
         contextName,
         requestKey,
         requestSelectionTypeParams,
